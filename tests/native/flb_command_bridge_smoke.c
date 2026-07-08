@@ -97,6 +97,12 @@ int main(void)
     if (run_command(context, "launch_plan.build", 1, "\"dry_run\":true") != 0) {
         return 24;
     }
+    if (run_command(context, "launch_plan.build", 1, "\"argv\":[]") != 0) {
+        return 26;
+    }
+    if (run_command(context, "launch_plan.build", 1, "\"preflight\":[]") != 0) {
+        return 27;
+    }
     if (run_command(context, "diagnostics.report", 1, "\"report_id\":\"ulk.diagnostic.minimal\"") != 0) {
         return 25;
     }
@@ -110,7 +116,9 @@ int main(void)
     status = fl_command_client_execute_cabi_v1(context, &request, &response);
     if (status != ULK_STATUS_UNSUPPORTED_VERSION ||
         response.status != ULK_STATUS_UNSUPPORTED_VERSION ||
-        !contains(response.json_payload, "\"status\":\"unsupported\"")) {
+        !contains(response.json_payload, "\"status\":\"unsupported\"") ||
+        !contains(response.json_payload, "\"code\":\"unsupported_command\"") ||
+        !contains(response.json_payload, "Command is not supported by the Universal Launcher command graph")) {
         return 30;
     }
 
@@ -118,7 +126,9 @@ int main(void)
     status = fl_command_client_execute_cabi_v1(context, 0, &response);
     if (status != ULK_STATUS_INVALID_ARGUMENT ||
         response.status != ULK_STATUS_INVALID_ARGUMENT ||
-        !contains(response.json_payload, "\"status\":\"invalid_argument\"")) {
+        !contains(response.json_payload, "\"status\":\"invalid_argument\"") ||
+        !contains(response.json_payload, "\"code\":\"invalid_argument\"") ||
+        !contains(response.json_payload, "Factorio binding command request is invalid")) {
         return 31;
     }
 
