@@ -1,5 +1,6 @@
 #include "command_dispatch.h"
 
+#include "fl_command_client_cabi.h"
 #include "usk/usk_api.h"
 
 #include <algorithm>
@@ -138,6 +139,102 @@ std::string json_escape(const std::string& value)
 std::string quote(const std::string& value)
 {
     return "\"" + json_escape(value) + "\"";
+}
+
+ulk_string_view ulk_view_from_cstr(const char* text)
+{
+    ulk_string_view view;
+    view.data = text;
+    view.size = text == 0 ? 0 : static_cast<ulk_size>(std::strlen(text));
+    return view;
+}
+
+std::string ulk_view_to_string(ulk_string_view view)
+{
+    if (view.data == 0 || view.size == 0) {
+        return "";
+    }
+    return std::string(view.data, view.data + view.size);
+}
+
+std::string json_object_field(const std::string& text, const std::string& key)
+{
+    std::string marker = "\"" + key + "\":";
+    std::size_t marker_pos = text.find(marker);
+    if (marker_pos == std::string::npos) {
+        return "";
+    }
+    std::size_t start = text.find('{', marker_pos + marker.size());
+    if (start == std::string::npos) {
+        return "";
+    }
+
+    int depth = 0;
+    bool in_string = false;
+    bool escaped = false;
+    for (std::size_t index = start; index < text.size(); ++index) {
+        char ch = text[index];
+        if (in_string) {
+            if (escaped) {
+                escaped = false;
+            } else if (ch == '\\') {
+                escaped = true;
+            } else if (ch == '"') {
+                in_string = false;
+            }
+            continue;
+        }
+        if (ch == '"') {
+            in_string = true;
+            continue;
+        }
+        if (ch == '{') {
+            ++depth;
+        } else if (ch == '}') {
+            --depth;
+            if (depth == 0) {
+                return text.substr(start, index - start + 1);
+            }
+        }
+    }
+    return "";
+}
+
+std::string flb_command_response_json(const char* command_name, bool dry_run)
+{
+    flb_context* context = 0;
+    flb_config_v1 config;
+    ulk_command_request_v1 request;
+    ulk_command_response_v1 response;
+
+    std::memset(&config, 0, sizeof(config));
+    std::memset(&request, 0, sizeof(request));
+    std::memset(&response, 0, sizeof(response));
+    config.struct_size = sizeof(config);
+
+    if (flb_context_create_v1(&config, &context) != ULK_STATUS_OK || context == 0) {
+        return "{\"schema\":\"ulk.command_response.v1\",\"status\":\"error\",\"payload\":null,\"error\":{\"code\":\"context_create_failed\",\"message\":\"Factorio binding context could not be created\"}}";
+    }
+
+    request.struct_size = sizeof(request);
+    request.command_name = ulk_view_from_cstr(command_name);
+    request.json_payload = ulk_view_from_cstr("{}");
+    request.dry_run = dry_run ? 1 : 0;
+    (void)fl_command_client_execute_cabi_v1(context, &request, &response);
+    std::string payload = ulk_view_to_string(response.json_payload);
+    flb_context_destroy_v1(context);
+
+    if (payload.empty()) {
+        return "{\"schema\":\"ulk.command_response.v1\",\"status\":\"error\",\"payload\":null,\"error\":{\"code\":\"empty_response\",\"message\":\"Factorio binding returned an empty response\"}}";
+    }
+    return payload;
+}
+
+std::string flb_command_payload_json(const char* command_name, bool dry_run)
+{
+    std::string response = flb_command_response_json(command_name, dry_run);
+    std::string payload = json_object_field(response, "payload");
+    return payload.empty() ? response : payload + "\n";
 }
 
 usk_string_view setup_view_from_cstr(const char* text)
@@ -1042,26 +1139,6 @@ std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
     return manifests;
 }
 
-std::string product_inspect_json()
-{
-    return "{\n"
-           "  \"product_id\": \"factorio\",\n"
-           "  \"display_name\": \"Factorio\",\n"
-           "  \"public_name\": \"FacMan - an unofficial launcher and isolated instance manager for Factorio\",\n"
-           "  \"binding\": \"factorio-product-binding\",\n"
-           "  \"schema_version\": 1,\n"
-           "  \"unofficial\": true,\n"
-           "  \"capabilities\": [\"gui\", \"headless_server\", \"mods\", \"saves\", \"profiles\", \"benchmarks\", \"map_preview\", \"mod_devtools\"],\n"
-           "  \"boundaries\": {\n"
-           "    \"bundles_factorio_binaries\": false,\n"
-           "    \"repairs_foreign_installs\": false,\n"
-           "    \"uninstalls_foreign_installs\": false,\n"
-           "    \"uses_official_branding\": false,\n"
-           "    \"default_run_mode\": \"dry-run\"\n"
-           "  }\n"
-           "}\n";
-}
-
 std::string launch_plan_json(const InstanceRef& instance, const InstallRef& install)
 {
     fs::path config = instance.local_data_root / "config" / "config.ini";
@@ -1674,6 +1751,8 @@ int print_help()
     std::cout << "Usage: facman [--workspace PATH] <command> [options]\n\n";
     std::cout << "Commands:\n";
     std::cout << "  product inspect [--json]\n";
+    std::cout << "  command-graph inspect [--json]\n";
+    std::cout << "  diagnostics report [--json]\n";
     std::cout << "  doctor [--json]\n";
     std::cout << "  installs scan [--path <root>] [--json]\n";
     std::cout << "  installs inspect <install-id> [--json]\n";
@@ -1710,7 +1789,7 @@ int command_product(const std::vector<std::string>& args)
 {
     if (args.size() >= 2 && args[1] == "inspect") {
         if (has_flag(args, "--json")) {
-            std::cout << product_inspect_json();
+            std::cout << flb_command_payload_json("product.inspect", true);
         } else {
             std::cout << "FacMan - an unofficial launcher and isolated instance manager for Factorio\n";
             std::cout << "Product ID: factorio\n";
@@ -1720,6 +1799,38 @@ int command_product(const std::vector<std::string>& args)
         return 0;
     }
     std::cerr << "Unknown product command\n";
+    return 2;
+}
+
+int command_command_graph(const std::vector<std::string>& args)
+{
+    if (args.size() >= 2 && args[1] == "inspect") {
+        if (has_flag(args, "--json")) {
+            std::cout << flb_command_payload_json("command_graph.inspect", true);
+        } else {
+            std::cout << "FacMan command graph\n";
+            std::cout << "Route: CLI -> FLB -> ULK\n";
+            std::cout << "Includes: product.inspect, install_refs.list, launch_plan.build, diagnostics.report\n";
+        }
+        return 0;
+    }
+    std::cerr << "Unknown command-graph command\n";
+    return 2;
+}
+
+int command_diagnostics(const std::vector<std::string>& args)
+{
+    if (args.size() >= 2 && args[1] == "report") {
+        if (has_flag(args, "--json")) {
+            std::cout << flb_command_payload_json("diagnostics.report", true);
+        } else {
+            std::cout << "FacMan diagnostics report\n";
+            std::cout << "Route: CLI -> FLB -> ULK\n";
+            std::cout << "Status: ok\n";
+        }
+        return 0;
+    }
+    std::cerr << "Unknown diagnostics command\n";
     return 2;
 }
 
@@ -2709,6 +2820,12 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     const std::string command = options.args[0];
     if (command == "product") {
         return command_product(options.args);
+    }
+    if (command == "command-graph") {
+        return command_command_graph(options.args);
+    }
+    if (command == "diagnostics") {
+        return command_diagnostics(options.args);
     }
     if (command == "doctor") {
         return command_doctor(options);

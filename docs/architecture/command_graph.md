@@ -49,6 +49,23 @@ commands such as `command_graph.inspect`, `install_refs.list`,
 launcher kernel. Existing CLI workspace commands are still an early frontend
 slice until their behavior is moved behind this command graph.
 
+## CLI Route Proof
+
+The CLI exposes a minimal smoke route over the same C ABI path:
+
+```powershell
+facman product inspect --json
+facman command-graph inspect --json
+facman diagnostics report --json
+```
+
+These commands prove that the native CLI can call the FacMan command client,
+enter the Factorio binding, and delegate generic command graph behavior to the
+universal launcher kernel. Workspace-mutating commands such as install import,
+instance creation, and instance launch planning remain the next thinning target;
+they should move from `apps/cli/` into runtime modules behind the command graph
+instead of becoming permanent CLI-owned backend behavior.
+
 ## Contract Files
 
 Each locked command has a descriptor under `contracts/command/factorio/` and

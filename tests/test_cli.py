@@ -23,7 +23,22 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0, stderr)
         data = json.loads(stdout)
         self.assertEqual(data["product_id"], "factorio")
+        self.assertEqual(data["binding_id"], "flb.factorio")
         self.assertFalse(data["boundaries"]["bundles_factorio_binaries"])
+
+    def test_command_graph_and_diagnostics_route_through_flb_ulk(self) -> None:
+        code, stdout, stderr = invoke(["command-graph", "inspect", "--json"])
+        self.assertEqual(code, 0, stderr)
+        graph = json.loads(stdout)
+        self.assertEqual(graph["schema"], "ulk.command_graph.v1")
+        self.assertIn("launch_plan.build", {command["command"] for command in graph["commands"]})
+
+        code, stdout, stderr = invoke(["diagnostics", "report", "--json"])
+        self.assertEqual(code, 0, stderr)
+        diagnostics = json.loads(stdout)
+        self.assertEqual(diagnostics["schema"], "ulk.diagnostic_report.v1")
+        self.assertEqual(diagnostics["report_id"], "ulk.diagnostic.minimal")
+        self.assertIn("command_graph", {check["id"] for check in diagnostics["checks"]})
 
     def test_doctor_warns_without_installs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
