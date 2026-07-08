@@ -13,7 +13,7 @@ include/flb
 
 apps/{cli,tui,daemon,gui}
   -> runtime/client
-  -> ../universal-launcher
+  -> ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}
   -> runtime/factorio/binding
 
 release/packaging

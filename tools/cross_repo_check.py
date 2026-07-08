@@ -1,13 +1,57 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PROJECTS = ROOT.parent
-UNIVERSAL_SETUP = PROJECTS / "universal-setup"
-UNIVERSAL_LAUNCHER = PROJECTS / "universal-launcher"
+
+
+SPECIFIC_ENV = {
+    "universal-setup": "FLAUNCH_UNIVERSAL_SETUP_ROOT",
+    "universal-launcher": "FLAUNCH_UNIVERSAL_LAUNCHER_ROOT",
+}
+
+
+def candidate_roots(name: str) -> list[Path]:
+    candidates: list[Path] = []
+    specific = os.environ.get(SPECIFIC_ENV[name])
+    universal_root = os.environ.get("FLAUNCH_UNIVERSAL_ROOT")
+    workspace_root = os.environ.get("FLAUNCH_WORKSPACE_ROOT")
+
+    if specific:
+        candidates.append(Path(specific))
+    if universal_root:
+        candidates.append(Path(universal_root) / name)
+    if workspace_root:
+        candidates.append(Path(workspace_root) / "Universal" / name)
+        candidates.append(Path(workspace_root) / name)
+
+    for parent in [ROOT.parent, *ROOT.parents]:
+        candidates.append(parent / name)
+        candidates.append(parent / "Universal" / name)
+
+    unique: list[Path] = []
+    seen: set[Path] = set()
+    for candidate in candidates:
+        resolved = candidate.resolve(strict=False)
+        if resolved not in seen:
+            unique.append(candidate)
+            seen.add(resolved)
+    return unique
+
+
+def repo_root(name: str) -> Path:
+    candidates = candidate_roots(name)
+    for candidate in candidates:
+        if (candidate / "CMakeLists.txt").is_file():
+            return candidate
+    return candidates[0]
+
+
+UNIVERSAL_SETUP = repo_root("universal-setup")
+UNIVERSAL_LAUNCHER = repo_root("universal-launcher")
 
 
 def main(argv: list[str] | None = None) -> int:

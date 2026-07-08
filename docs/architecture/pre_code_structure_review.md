@@ -81,17 +81,18 @@ factorio-launcher:
 
 ## Remaining Risk
 
-The current CMake integration uses sibling repo paths while the three packages
-are still young:
+The current CMake integration uses separate workspace checkout paths while the
+three packages are still young:
 
 ```text
-../universal-setup
-../universal-launcher
+${FLAUNCH_UNIVERSAL_SETUP_ROOT}
+${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}
 ```
 
-That is acceptable for this split commit, but later release work should replace
-it with pinned dependencies, submodules, package-manager integration, or another
-explicit dependency acquisition policy.
+Those roots can come from explicit overrides, environment variables, or common
+relative layouts. That is acceptable for this split commit, but later release
+work should replace it with pinned dependencies, submodules, package-manager
+integration, or another explicit dependency acquisition policy.
 
 ## Next Work Before Feature Code
 

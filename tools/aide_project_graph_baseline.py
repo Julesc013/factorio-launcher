@@ -115,7 +115,7 @@ def runtime_owner(path: str) -> str:
 def build_edges() -> list[dict[str, str]]:
     return [
         {"from": "apps/*", "to": "runtime/client", "type": "uses_client_boundary"},
-        {"from": "../universal-launcher/runtime/launcher", "to": "runtime/factorio/binding", "type": "delegates_product_questions"},
+        {"from": "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/runtime/launcher", "to": "runtime/factorio/binding", "type": "delegates_product_questions"},
         {"from": "runtime/factorio/binding", "to": "content/factorio", "type": "consumes_product_policy"},
         {"from": ".aide", "to": "repo", "type": "observes_and_reports"},
     ]
@@ -130,7 +130,7 @@ def build_findings() -> list[dict[str, Any]]:
             "native command graph not yet implemented",
             "universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers",
             "split repo is scaffolded; native FacMan CLI currently owns the smoke behavior",
-            ["../universal-launcher/runtime/launcher/command/README.md", "../universal-launcher/runtime/launcher/kernel/ulk_api.c"],
+            ["${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/runtime/launcher/command/README.md", "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/runtime/launcher/kernel/ulk_api.c"],
             "Build command registry in universal-launcher before more GUI work.",
             "AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01",
         ),
@@ -152,7 +152,7 @@ def build_findings() -> list[dict[str, Any]]:
             "universal setup and launcher are sibling repositories",
             "FacMan must not own universal setup or launcher runtime implementation",
             "Factorio repo keeps only include/flb and runtime/factorio; universal code moved out",
-            ["include/flb", "runtime/factorio", "../universal-setup", "../universal-launcher"],
+            ["include/flb", "runtime/factorio", "${FLAUNCH_UNIVERSAL_SETUP_ROOT}", "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"],
             "Harden universal repo validators before large native code expansion.",
             "AIDE-BUILD-USK-ULK-SPLIT-READINESS-REPORT-01",
         ),

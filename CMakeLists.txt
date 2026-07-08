@@ -3,13 +3,59 @@ project(facman LANGUAGES C CXX)
 
 option(FLAUNCH_BUILD_NATIVE_APPS "Build native CLI/TUI/daemon scaffolds" ON)
 option(FLAUNCH_BUILD_TESTS "Build FacMan native tests" ON)
-set(FLAUNCH_UNIVERSAL_SETUP_ROOT
-  "${CMAKE_CURRENT_SOURCE_DIR}/../universal-setup"
-  CACHE PATH "Path to the universal-setup repository"
+
+function(flaunch_append_env_candidate out_var env_name suffix)
+  if(DEFINED ENV{${env_name}} AND NOT "$ENV{${env_name}}" STREQUAL "")
+    file(TO_CMAKE_PATH "$ENV{${env_name}}" env_path)
+    list(APPEND ${out_var} "${env_path}${suffix}")
+    set(${out_var} "${${out_var}}" PARENT_SCOPE)
+  endif()
+endfunction()
+
+function(flaunch_find_repo_root out_var repo_name specific_env)
+  set(candidates)
+  flaunch_append_env_candidate(candidates "${specific_env}" "")
+  flaunch_append_env_candidate(candidates "FLAUNCH_UNIVERSAL_ROOT" "/${repo_name}")
+  flaunch_append_env_candidate(candidates "FLAUNCH_WORKSPACE_ROOT" "/Universal/${repo_name}")
+  flaunch_append_env_candidate(candidates "FLAUNCH_WORKSPACE_ROOT" "/${repo_name}")
+  list(APPEND candidates
+    "${CMAKE_CURRENT_SOURCE_DIR}/../${repo_name}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../Universal/${repo_name}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../${repo_name}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Universal/${repo_name}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../${repo_name}"
+  )
+
+  foreach(candidate IN LISTS candidates)
+    if(EXISTS "${candidate}/CMakeLists.txt")
+      set(${out_var} "${candidate}" PARENT_SCOPE)
+      return()
+    endif()
+  endforeach()
+
+  list(GET candidates 0 fallback)
+  set(${out_var} "${fallback}" PARENT_SCOPE)
+endfunction()
+
+function(flaunch_select_repo_root cache_var repo_name specific_env)
+  if(NOT DEFINED ${cache_var} OR NOT EXISTS "${${cache_var}}/CMakeLists.txt")
+    flaunch_find_repo_root(selected_path "${repo_name}" "${specific_env}")
+    if(DEFINED ${cache_var} AND NOT "${${cache_var}}" STREQUAL "" AND NOT EXISTS "${${cache_var}}/CMakeLists.txt")
+      message(STATUS "Ignoring unavailable ${repo_name} path: ${${cache_var}}")
+    endif()
+    set(${cache_var} "${selected_path}" CACHE PATH "Path to the ${repo_name} repository" FORCE)
+  endif()
+endfunction()
+
+flaunch_select_repo_root(
+  FLAUNCH_UNIVERSAL_SETUP_ROOT
+  "universal-setup"
+  "FLAUNCH_UNIVERSAL_SETUP_ROOT"
 )
-set(FLAUNCH_UNIVERSAL_LAUNCHER_ROOT
-  "${CMAKE_CURRENT_SOURCE_DIR}/../universal-launcher"
-  CACHE PATH "Path to the universal-launcher repository"
+flaunch_select_repo_root(
+  FLAUNCH_UNIVERSAL_LAUNCHER_ROOT
+  "universal-launcher"
+  "FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"
 )
 
 if(FLAUNCH_BUILD_TESTS)
@@ -20,7 +66,7 @@ if(NOT TARGET usk_static)
   if(EXISTS "${FLAUNCH_UNIVERSAL_SETUP_ROOT}/CMakeLists.txt")
     add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
   else()
-    message(FATAL_ERROR "universal-setup is required; set FLAUNCH_UNIVERSAL_SETUP_ROOT")
+    message(FATAL_ERROR "universal-setup is required. Tried ${FLAUNCH_UNIVERSAL_SETUP_ROOT}. Set -DFLAUNCH_UNIVERSAL_SETUP_ROOT=..., FLAUNCH_UNIVERSAL_ROOT, or FLAUNCH_WORKSPACE_ROOT.")
   endif()
 endif()
 
@@ -28,7 +74,7 @@ if(NOT TARGET ulk_static)
   if(EXISTS "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/CMakeLists.txt")
     add_subdirectory("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher")
   else()
-    message(FATAL_ERROR "universal-launcher is required; set FLAUNCH_UNIVERSAL_LAUNCHER_ROOT")
+    message(FATAL_ERROR "universal-launcher is required. Tried ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}. Set -DFLAUNCH_UNIVERSAL_LAUNCHER_ROOT=..., FLAUNCH_UNIVERSAL_ROOT, or FLAUNCH_WORKSPACE_ROOT.")
   endif()
 endif()
 

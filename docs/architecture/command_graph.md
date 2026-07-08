@@ -39,7 +39,7 @@ The native C ABI path now exists:
 ```text
 runtime/client/fl_command_client_cabi_execute.c
   -> runtime/factorio/binding/flb_api.c
-  -> ../universal-launcher/runtime/launcher/kernel/ulk_api.c
+  -> ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/runtime/launcher/kernel/ulk_api.c
 ```
 
 The Factorio binding handles `product.inspect` and

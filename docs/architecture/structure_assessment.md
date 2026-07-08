@@ -41,15 +41,16 @@ This is a better fit for a three-repo launcher ecosystem.
 ## Remaining Risks
 
 The universal repos are still young. Factorio CMake currently consumes them as
-sibling checkouts:
+separate workspace checkouts:
 
 ```text
-../universal-setup
-../universal-launcher
+${FLAUNCH_UNIVERSAL_SETUP_ROOT}
+${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}
 ```
 
-That is fine for active design work, but release engineering should eventually
-choose a pinned dependency strategy.
+Those roots are located from explicit overrides, shared workspace environment
+variables, or common relative layouts. That is fine for active design work, but
+release engineering should eventually choose a pinned dependency strategy.
 
 The former Python CLI prototype has been retired. The native CLI now owns the
 initial runnable slice for product inspection, doctor checks, install import,

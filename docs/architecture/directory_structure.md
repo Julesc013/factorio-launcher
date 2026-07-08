@@ -63,16 +63,28 @@ product/
 universal/
 ```
 
-Universal setup and universal launcher are consumed as sibling repositories in
-the early CMake split. Their public ABI headers and implementations live in:
+Universal setup and universal launcher are consumed as separate workspace
+repositories. A common local workspace layout keeps them outside the Factorio
+folder:
 
 ```text
-../universal-setup/include/usk/
-../universal-setup/runtime/setup/
+<workspace>/Universal/universal-setup/include/usk/
+<workspace>/Universal/universal-setup/runtime/setup/
 
-../universal-launcher/include/ulk/
-../universal-launcher/runtime/launcher/
+<workspace>/Universal/universal-launcher/include/ulk/
+<workspace>/Universal/universal-launcher/runtime/launcher/
 ```
+
+CMake and cross-repo checks use a portable locator:
+
+1. explicit CMake cache or environment variables:
+   `FLAUNCH_UNIVERSAL_SETUP_ROOT` and `FLAUNCH_UNIVERSAL_LAUNCHER_ROOT`
+2. shared roots: `FLAUNCH_UNIVERSAL_ROOT` or `FLAUNCH_WORKSPACE_ROOT`
+3. common relative layouts such as `../universal-*`,
+   `../../Universal/universal-*`, and nearby workspace parents
+
+This keeps long-lived checkouts, forks, branches, and contributor machines from
+needing source edits just because repositories are arranged differently.
 
 Python has no product app root. It may be used under `tools/` and `tests/`
 for validators, fixture helpers, and automation, but FacMan runtime entrypoints
