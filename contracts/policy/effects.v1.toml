@@ -1,0 +1,12 @@
+schema_version = 1
+
+[effects]
+none = "No workspace, process, setup, network, or credential effect."
+workspace_read = "Reads FacMan workspace state or local product state without mutation."
+workspace_write = "Writes FacMan workspace state, generated files, exports, logs, or audit material."
+process_execute = "Starts a local product or helper process."
+network_read = "Reads from a network service."
+credential_read = "Reads credentials or tokens."
+setup_preview = "Requests a universal-setup preview, plan, policy, or verification result without mutation."
+setup_mutation = "Requests universal-setup install, repair, uninstall, rollback, or other mutation."
+foreign_owned_refusal = "Refuses because the target install is foreign-owned or otherwise outside setup authority."

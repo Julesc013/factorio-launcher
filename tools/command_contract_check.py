@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COMMAND_ROOT = ROOT / "contracts" / "command" / "factorio"
+EFFECTS_POLICY = ROOT / "contracts" / "policy" / "effects.v1.toml"
 
 EXPECTED_COMMANDS = {
     "product.inspect",
@@ -29,6 +30,8 @@ COMMAND_PATTERN = re.compile(r"^[a-z0-9]+(\.[a-z0-9-]+)+$")
 
 def main() -> int:
     problems: list[str] = []
+    allowed_effects, effects_problems = load_effects_policy()
+    problems.extend(effects_problems)
     contracts = sorted(path for path in COMMAND_ROOT.glob("*.v1.toml") if path.name != "README.md")
     seen: set[str] = set()
     for path in contracts:
@@ -38,7 +41,7 @@ def main() -> int:
             continue
         command_id = contract["command_id"]
         seen.add(command_id)
-        problems.extend(validate_contract(path, contract))
+        problems.extend(validate_contract(path, contract, allowed_effects))
 
     missing = EXPECTED_COMMANDS - seen
     extra = seen - EXPECTED_COMMANDS
@@ -66,11 +69,24 @@ def load_contract(path: Path) -> tuple[dict, list[str]]:
     return data, []
 
 
-def validate_contract(path: Path, contract: dict) -> list[str]:
+def load_effects_policy() -> tuple[set[str], list[str]]:
+    try:
+        with EFFECTS_POLICY.open("rb") as handle:
+            data = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        return set(), [f"{EFFECTS_POLICY.relative_to(ROOT)}: {exc}"]
+    effects = data.get("effects", {})
+    if not isinstance(effects, dict) or not effects:
+        return set(), [f"{EFFECTS_POLICY.relative_to(ROOT)}: effects table must be non-empty"]
+    return set(effects), []
+
+
+def validate_contract(path: Path, contract: dict, allowed_effects: set[str]) -> list[str]:
     problems: list[str] = []
     required = [
         "command_id",
         "cli",
+        "effects",
         "request_schema",
         "response_schema",
         "result_schema",
@@ -109,6 +125,19 @@ def validate_contract(path: Path, contract: dict) -> list[str]:
     for key in ["dry_run_default", "executes_process", "mutates_workspace"]:
         if not isinstance(contract[key], bool):
             problems.append(f"{path.relative_to(ROOT)}: {key} must be boolean")
+    effects = contract["effects"]
+    if not isinstance(effects, list) or not effects:
+        problems.append(f"{path.relative_to(ROOT)}: effects must be a non-empty array")
+    else:
+        unknown = sorted(effect for effect in effects if effect not in allowed_effects)
+        if unknown:
+            problems.append(f"{path.relative_to(ROOT)}: unknown effects {unknown}")
+        if "none" in effects and len(effects) != 1:
+            problems.append(f"{path.relative_to(ROOT)}: none effect must be used alone")
+        if contract["executes_process"] and "process_execute" not in effects:
+            problems.append(f"{path.relative_to(ROOT)}: process commands must declare process_execute")
+        if contract["mutates_workspace"] and "workspace_write" not in effects:
+            problems.append(f"{path.relative_to(ROOT)}: workspace mutation commands must declare workspace_write")
     return problems
 
 

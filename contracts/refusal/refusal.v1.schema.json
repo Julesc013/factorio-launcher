@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/refusal/refusal.v1.schema.json",
+  "title": "FacMan Refusal",
+  "type": "object",
+  "required": ["schema", "code", "reason", "recoverable"],
+  "properties": {
+    "schema": { "const": "common.refusal.v1" },
+    "code": { "type": "string", "minLength": 1 },
+    "severity": { "enum": ["info", "warning", "error", "blocked"] },
+    "reason": { "type": "string", "minLength": 1 },
+    "details": { "type": ["object", "null"] },
+    "recoverable": { "type": "boolean" },
+    "suggested_next_command": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

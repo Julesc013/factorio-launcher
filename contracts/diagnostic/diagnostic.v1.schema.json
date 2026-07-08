@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/diagnostic/diagnostic.v1.schema.json",
+  "title": "FacMan Diagnostic",
+  "type": "object",
+  "required": ["schema_version", "status", "problems", "suggested_fixes"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["ok", "warning", "blocked", "error"] },
+    "problems": { "type": "array", "items": { "type": "string" } },
+    "suggested_fixes": { "type": "array", "items": { "type": "string" } },
+    "redacted": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

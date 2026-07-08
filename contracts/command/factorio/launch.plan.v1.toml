@@ -1,10 +1,11 @@
 command_id = "launch.plan"
 cli = "facman launch plan <instance-id> --json"
+effects = ["workspace_read"]
 request_schema = "contracts/schema/common/command_request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_launch_plan.v1.schema.json"
-result_schema = "contracts/schema/common/result.v1.schema.json"
-refusal_schema = "contracts/schema/common/refusal.v1.schema.json"
-diagnostic_schema = "contracts/schema/common/diagnostic.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
 dry_run_default = true
 executes_process = false
 mutates_workspace = false
