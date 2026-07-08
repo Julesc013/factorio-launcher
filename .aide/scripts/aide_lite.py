@@ -39560,6 +39560,260 @@ def command_show_config(args: argparse.Namespace) -> int:
     return 0
 
 
+def _portable_core_python_fallback(rel: str) -> str | None:
+    if rel in {"core/gateway/__init__.py", "core/providers/__init__.py"}:
+        return '"""Portable AIDE Lite fallback package."""\n'
+    if rel == "core/gateway/gateway_status.py":
+        return '''from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+GATEWAY_STATUS_JSON_PATH = ".aide/gateway/latest-gateway-status.json"
+GATEWAY_STATUS_MD_PATH = ".aide/gateway/latest-gateway-status.md"
+ENDPOINTS = ["/health", "/status", "/route/explain", "/summaries", "/version"]
+
+
+def health_payload():
+    return {
+        "status": "ok",
+        "provider_calls_enabled": False,
+        "model_calls_enabled": False,
+        "outbound_network_enabled": False,
+    }
+
+
+def build_gateway_status(repo_root):
+    root = Path(repo_root)
+    provider_catalog = root / ".aide/providers/provider-catalog.yaml"
+    return {
+        "schema_version": "aide.gateway-status.v0",
+        "generated_by": "aide-lite-portable-fallback",
+        "service": "aide-gateway-skeleton",
+        "mode": "local_skeleton_report_only",
+        "provider_calls_enabled": False,
+        "model_calls_enabled": False,
+        "outbound_network_enabled": False,
+        "raw_prompt_storage": False,
+        "raw_response_storage": False,
+        "readiness": {
+            "gateway_policy": {"present": (root / ".aide/policies/gateway.yaml").exists(), "missing": []},
+            "endpoint_policy": {"present": (root / ".aide/gateway/endpoints.yaml").exists(), "missing": []},
+        },
+        "signals": {
+            "verifier_status": "portable",
+            "golden_task_status": "portable",
+            "provider_adapters": {"present": provider_catalog.exists()},
+            "route": {"route_class": "local", "quality_gate_status": "report_only"},
+        },
+        "summaries": {
+            "provider_or_model_calls": "none",
+            "network_calls": "none",
+        },
+    }
+
+
+def write_gateway_status_files(repo_root):
+    root = Path(repo_root)
+    data = build_gateway_status(root)
+    json_path = root / GATEWAY_STATUS_JSON_PATH
+    md_path = root / GATEWAY_STATUS_MD_PATH
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+    md_path.write_text(
+        "# AIDE Lite Gateway Status\\n\\n"
+        "- provider_or_model_calls: none\\n"
+        "- network_calls: none\\n"
+        "- raw_prompt_storage: false\\n"
+        "- raw_response_storage: false\\n",
+        encoding="utf-8",
+    )
+    return json_path, md_path, data
+
+
+def smoke_gateway(repo_root):
+    return {
+        "result": "PASS",
+        "endpoints": [
+            {"endpoint": "/health", "status_code": 200, "status": "ok"},
+            {"endpoint": "/status", "status_code": 200, "status": "ok"},
+            {"endpoint": "/route/explain", "status_code": 200, "status": "ok"},
+            {"endpoint": "/summaries", "status_code": 200, "status": "ok"},
+            {"endpoint": "/version", "status_code": 200, "status": "ok"},
+        ],
+        "not_found_status_code": 404,
+        "not_found_status": "not_found",
+    }
+'''
+    if rel == "core/gateway/server.py":
+        return '''from __future__ import annotations
+
+
+def serve(repo_root, host="127.0.0.1", port=8765):
+    return {
+        "repo_root": str(repo_root),
+        "host": host,
+        "port": port,
+        "provider_or_model_calls": "none",
+        "network_calls": "none",
+    }
+'''
+    if rel == "core/providers/contracts.py":
+        return '''from __future__ import annotations
+
+
+REQUIRED_FIELDS = [
+    "provider_id",
+    "adapter_class",
+    "provider_class",
+    "privacy_class",
+    "credentials_required",
+    "status",
+]
+'''
+    if rel == "core/providers/registry.py":
+        provider_ids = json.dumps(PROVIDER_REQUIRED_IDS, indent=4)
+        return f'''from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+
+PROVIDER_IDS = {provider_ids}
+
+
+@dataclass(frozen=True)
+class Provider:
+    provider_id: str
+    adapter_class: str = "metadata_only"
+    provider_class: str = "deterministic_or_human"
+    privacy_class: str = "no_live_calls"
+    credentials_required: bool = False
+    status: str = "available_for_metadata"
+
+
+def load_provider_catalog(repo_root):
+    return [Provider(provider_id=item) for item in PROVIDER_IDS]
+
+
+def validate_provider_files(repo_root):
+    root = Path(repo_root)
+    errors = []
+    warnings = []
+    forbidden = [
+        "live_calls_allowed_in_q20: true",
+        "network_calls_allowed_in_q20: true",
+        "model_calls_allowed_in_q20: true",
+        "provider_probe_calls_allowed_in_q20: true",
+    ]
+    for rel in [
+        ".aide/providers/provider-catalog.yaml",
+        ".aide/providers/capability-matrix.yaml",
+        ".aide/providers/adapter-contract.yaml",
+        ".aide/providers/status.yaml",
+    ]:
+        path = root / rel
+        if not path.exists():
+            errors.append(f"missing provider metadata: {{rel}}")
+            continue
+        text = path.read_text(encoding="utf-8")
+        for marker in forbidden:
+            if marker in text:
+                errors.append(f"forbidden live calls marker in {{rel}}: {{marker}}")
+        if rel.endswith("provider-catalog.yaml"):
+            for provider_id in PROVIDER_IDS:
+                if provider_id not in text:
+                    errors.append(f"provider catalog missing family: {{provider_id}}")
+    return {{
+        "result": "FAIL" if errors else "PASS",
+        "errors": errors,
+        "warnings": warnings,
+        "provider_count": len(PROVIDER_IDS),
+    }}
+'''
+    if rel == "core/providers/status.py":
+        provider_ids = json.dumps(PROVIDER_REQUIRED_IDS, indent=4)
+        required_fields = json.dumps(PROVIDER_STATUS_REQUIRED_FIELDS, indent=4)
+        return f'''from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from core.providers import registry
+
+
+PROVIDER_STATUS_JSON_PATH = ".aide/providers/latest-provider-status.json"
+PROVIDER_STATUS_MD_PATH = ".aide/providers/latest-provider-status.md"
+PROVIDER_IDS = {provider_ids}
+REQUIRED_FIELDS = {required_fields}
+
+
+def build_provider_status(repo_root):
+    validation = registry.validate_provider_files(repo_root)
+    return {{
+        "schema_version": "aide.provider-status.v0",
+        "generated_by": "aide-lite-portable-fallback",
+        "provider_adapter_contract": ".aide/providers/adapter-contract.yaml",
+        "live_provider_calls": False,
+        "live_model_calls": False,
+        "network_calls": False,
+        "provider_probe_calls": False,
+        "credentials_configured": False,
+        "gateway_forwarding": False,
+        "raw_prompt_storage": False,
+        "raw_response_storage": False,
+        "provider_family_count": len(PROVIDER_IDS),
+        "provider_ids": PROVIDER_IDS,
+        "provider_class_counts": {{"deterministic_or_human": len(PROVIDER_IDS)}},
+        "adapter_class_counts": {{"metadata_only": len(PROVIDER_IDS)}},
+        "privacy_class_counts": {{"no_live_calls": len(PROVIDER_IDS)}},
+        "status_counts": {{"available_for_metadata": len(PROVIDER_IDS)}},
+        "validation": validation,
+        "no_credentials_in_status": True,
+    }}
+
+
+def write_provider_status_files(repo_root):
+    root = Path(repo_root)
+    data = build_provider_status(root)
+    json_path = root / PROVIDER_STATUS_JSON_PATH
+    md_path = root / PROVIDER_STATUS_MD_PATH
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+    md_path.write_text(
+        "# AIDE Lite Provider Status\\n\\n"
+        "- live_provider_calls: false\\n"
+        "- live_model_calls: false\\n"
+        "- network_calls: none\\n"
+        "- credentials_configured: false\\n",
+        encoding="utf-8",
+    )
+    return json_path, md_path, data
+
+
+def contract_summary(repo_root):
+    return {{
+        "contract_path": ".aide/providers/adapter-contract.yaml",
+        "required_fields": REQUIRED_FIELDS,
+    }}
+
+
+def offline_probe(repo_root):
+    return {{
+        "result": registry.validate_provider_files(repo_root).get("result", "PASS"),
+        "provider_family_count": len(PROVIDER_IDS),
+        "provider_probe_calls": False,
+        "live_provider_calls": False,
+        "live_model_calls": False,
+        "network_calls": False,
+        "credentials_configured": False,
+        "future_credentials_location": ".aide.local/",
+    }}
+'''
+    return None
+
+
 def _write_minimal_repo(root: Path) -> None:
     for rel in REQUIRED_FILES:
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -39631,6 +39885,8 @@ def _write_minimal_repo(root: Path) -> None:
         source = source_root / rel
         if source.exists() and source.is_file():
             write_text(root / rel, read_text(source))
+        elif _portable_core_python_fallback(rel) is not None:
+            write_text(root / rel, _portable_core_python_fallback(rel) or "")
         elif rel.endswith(".json"):
             write_text(root / rel, stable_json_text({"schema_version": "aide.gateway-status.v0", "provider_calls_enabled": False, "model_calls_enabled": False, "outbound_network_enabled": False, "raw_prompt_storage": False, "raw_response_storage": False, "readiness": {}, "signals": {}, "summaries": {}}))
         else:
@@ -39639,6 +39895,8 @@ def _write_minimal_repo(root: Path) -> None:
         source = source_root / rel
         if source.exists() and source.is_file():
             write_text(root / rel, read_text(source))
+        elif _portable_core_python_fallback(rel) is not None:
+            write_text(root / rel, _portable_core_python_fallback(rel) or "")
         elif rel.endswith(".json"):
             write_text(root / rel, stable_json_text({"schema_version": "aide.provider-status.v0", "live_provider_calls": False, "live_model_calls": False, "network_calls": False, "provider_probe_calls": False, "credentials_configured": False, "gateway_forwarding": False, "raw_prompt_storage": False, "raw_response_storage": False, "provider_ids": []}))
         else:
@@ -39930,10 +40188,15 @@ def run_selftest() -> tuple[bool, list[str]]:
         assert review_packet.budget_status == "PASS"
         review_findings = verify_review_packet(root, REVIEW_PACKET_PATH)
         assert not any(finding.severity == "ERROR" for finding in review_findings), review_findings
-        selftest_record = ledger_record_for_file(root, LATEST_PACKET_PATH, surface="task_packet", run_id="selftest")
-        assert selftest_record.approx_tokens > 0
-        assert selftest_record.budget_status in {"within_budget", "near_budget", "over_budget"}
-        ledger_result, merged_records, old_records = merge_ledger_records(root, [selftest_record], "selftest")
+        selftest_records = [
+            ledger_record_for_file(root, LATEST_PACKET_PATH, surface="task_packet", run_id="selftest"),
+            ledger_record_for_file(root, LATEST_CONTEXT_PACKET_PATH, surface="context_packet", run_id="selftest"),
+            ledger_record_for_file(root, REVIEW_PACKET_PATH, surface="review_packet", run_id="selftest"),
+            ledger_record_for_file(root, LATEST_VERIFICATION_REPORT_PATH, surface="verification_report", run_id="selftest"),
+        ]
+        assert all(record.approx_tokens > 0 for record in selftest_records)
+        assert all(record.budget_status in {"within_budget", "near_budget", "over_budget"} for record in selftest_records)
+        ledger_result, merged_records, old_records = merge_ledger_records(root, selftest_records, "selftest")
         assert ledger_result.action in {"written", "unchanged"}
         assert not old_records or all("raw" not in record.path.lower() for record in old_records)
         read_records = read_ledger_records(root)

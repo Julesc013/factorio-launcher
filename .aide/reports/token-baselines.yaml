@@ -1,0 +1,20 @@
+schema_version: aide.token-baselines.v0
+baselines:
+  - name: root_history_baseline
+    purpose: Minimal target-local baseline for compact task packet comparison.
+    paths:
+      - README.md
+      - AGENTS.md
+      - docs/roadmap.md
+  - name: review_baseline
+    purpose: Minimal target-local baseline for review packet comparison.
+    paths:
+      - README.md
+      - docs/architecture/overview.md
+      - docs/architecture/directory_structure.md
+  - name: repo_context_baseline
+    purpose: Minimal target-local baseline for generated context packet comparison.
+    paths:
+      - README.md
+      - docs/architecture/root_grammar.md
+      - docs/product/product_vision.md
