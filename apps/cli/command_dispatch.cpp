@@ -108,6 +108,18 @@ std::string option_value(const std::vector<std::string>& args, const std::string
     return fallback;
 }
 
+std::vector<std::string> option_values(const std::vector<std::string>& args, const std::string& name)
+{
+    std::vector<std::string> values;
+    for (std::size_t index = 0; index + 1 < args.size(); ++index) {
+        if (args[index] == name) {
+            values.push_back(args[index + 1]);
+            ++index;
+        }
+    }
+    return values;
+}
+
 fs::path default_workspace()
 {
     const char* facman = std::getenv("FACMAN_WORKSPACE");
@@ -291,7 +303,18 @@ std::string slugify(const std::string& text)
 
 std::string detect_version(const fs::path& root)
 {
-    fs::path info = root / "data" / "base" / "info.json";
+    const fs::path candidates[] = {
+        root / "data" / "base" / "info.json",
+        root / "Contents" / "Resources" / "data" / "base" / "info.json",
+        root / "Contents" / "data" / "base" / "info.json",
+    };
+    fs::path info;
+    for (const fs::path& candidate : candidates) {
+        if (fs::is_regular_file(candidate)) {
+            info = candidate;
+            break;
+        }
+    }
     if (!fs::is_regular_file(info)) {
         return "unknown";
     }
@@ -300,16 +323,40 @@ std::string detect_version(const fs::path& root)
     return version.empty() ? "unknown" : version;
 }
 
-std::string infer_ownership(const fs::path& root)
+std::string lower_path(const fs::path& path)
 {
-    std::string lower = path_string(root);
+    std::string lower = path_string(path);
     std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
     });
-    if (lower.find("steam") != std::string::npos) {
-        return "foreign_owned";
+    return lower;
+}
+
+std::string infer_source(const fs::path& root)
+{
+    std::string lower = lower_path(root);
+    if (lower.find("steamapps") != std::string::npos || lower.find("steam") != std::string::npos) {
+        return "steam";
     }
     if (lower.find("portable") != std::string::npos) {
+        return "portable";
+    }
+    if (lower.find("headless") != std::string::npos) {
+        return "headless";
+    }
+    if (lower.find(".app") != std::string::npos || lower.find("contents/macos") != std::string::npos) {
+        return "app_bundle";
+    }
+    return "manual";
+}
+
+std::string infer_ownership(const fs::path& root)
+{
+    std::string source = infer_source(root);
+    if (source == "steam") {
+        return "foreign_owned";
+    }
+    if (source == "portable") {
         return "portable";
     }
     return "imported";
@@ -321,7 +368,9 @@ std::string infer_platform(const fs::path& root, const fs::path& executable)
     std::transform(executable_text.begin(), executable_text.end(), executable_text.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
     });
-    if (path_string(root).find("Contents/MacOS") != std::string::npos ||
+    std::string root_text = lower_path(root);
+    if (root_text.find(".app") != std::string::npos ||
+        root_text.find("contents/macos") != std::string::npos ||
         executable_text.find("contents/macos") != std::string::npos) {
         return "macos";
     }
@@ -338,7 +387,7 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
     install.root = fs::absolute(root).lexically_normal();
     install.version = detect_version(install.root);
     install.ownership = infer_ownership(install.root);
-    install.source = "manual";
+    install.source = infer_source(install.root);
     install.verification_status = "invalid";
 
     const fs::path candidates[] = {
@@ -399,8 +448,149 @@ std::string install_json(const InstallRef& install)
     out << "  \"platform\": " << quote(install.platform) << ",\n";
     out << "  \"capabilities\": " << capabilities_json(install.capabilities) << ",\n";
     out << "  \"verification\": {\"status\": " << quote(install.verification_status) << ", \"problems\": []},\n";
+    out << "  \"discovery\": {\"read_only\": true, \"source_family\": " << quote(install.source) << "},\n";
     out << "  \"safe_actions\": {\"repair\": false, \"uninstall\": false}\n";
     out << "}\n";
+    return out.str();
+}
+
+void append_unique_path(std::vector<fs::path>& paths, const fs::path& candidate)
+{
+    fs::path normalized = fs::absolute(candidate).lexically_normal();
+    for (const fs::path& existing : paths) {
+        if (existing == normalized) {
+            return;
+        }
+    }
+    paths.push_back(normalized);
+}
+
+std::vector<fs::path> discovery_roots_from_environment()
+{
+    std::vector<fs::path> roots;
+    const char* value = std::getenv("FACMAN_DISCOVERY_ROOTS");
+    if (value == 0 || *value == 0) {
+        return roots;
+    }
+
+    std::string text = value;
+    std::size_t start = 0;
+    for (;;) {
+        std::size_t end = text.find(';', start);
+        std::string item = text.substr(start, end == std::string::npos ? std::string::npos : end - start);
+        if (!item.empty()) {
+            roots.push_back(item);
+        }
+        if (end == std::string::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+    return roots;
+}
+
+std::vector<fs::path> discovery_search_roots(const std::vector<std::string>& args)
+{
+    std::vector<fs::path> roots;
+    for (const std::string& value : option_values(args, "--path")) {
+        roots.push_back(value);
+    }
+    std::vector<fs::path> env_roots = discovery_roots_from_environment();
+    roots.insert(roots.end(), env_roots.begin(), env_roots.end());
+
+    if (!roots.empty()) {
+        return roots;
+    }
+
+#ifdef _WIN32
+    const char* program_files = std::getenv("ProgramFiles");
+    const char* program_files_x86 = std::getenv("ProgramFiles(x86)");
+    const char* local_app_data = std::getenv("LOCALAPPDATA");
+    if (program_files_x86 && *program_files_x86) {
+        roots.push_back(fs::path(program_files_x86) / "Steam" / "steamapps" / "common" / "Factorio");
+    }
+    if (program_files && *program_files) {
+        roots.push_back(fs::path(program_files) / "Factorio");
+    }
+    if (local_app_data && *local_app_data) {
+        roots.push_back(fs::path(local_app_data) / "Programs" / "Factorio");
+    }
+#else
+    const char* home = std::getenv("HOME");
+    if (home && *home) {
+        roots.push_back(fs::path(home) / "factorio");
+        roots.push_back(fs::path(home) / ".local" / "share" / "Steam" / "steamapps" / "common" / "Factorio");
+        roots.push_back(fs::path(home) / "Applications" / "factorio.app");
+    }
+    roots.push_back("/opt/factorio");
+    roots.push_back("/Applications/factorio.app");
+#endif
+    return roots;
+}
+
+std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
+{
+    std::vector<fs::path> candidates;
+    append_unique_path(candidates, root);
+    append_unique_path(candidates, root / "steamapps" / "common" / "Factorio");
+    append_unique_path(candidates, root / "Factorio");
+    append_unique_path(candidates, root / "factorio");
+    append_unique_path(candidates, root / "factorio.app");
+
+    if (fs::is_directory(root)) {
+        for (const fs::directory_entry& entry : fs::directory_iterator(root)) {
+            if (entry.is_directory()) {
+                std::string name = entry.path().filename().string();
+                std::string lower = lower_path(name);
+                if (lower.find("factorio") != std::string::npos) {
+                    append_unique_path(candidates, entry.path());
+                }
+            }
+        }
+    }
+
+    return candidates;
+}
+
+std::vector<InstallRef> scan_install_candidates(const std::vector<std::string>& args)
+{
+    std::vector<InstallRef> installs;
+    std::vector<fs::path> seen;
+    for (const fs::path& root : discovery_search_roots(args)) {
+        for (const fs::path& candidate : discovery_candidates_for_root(root)) {
+            fs::path normalized = fs::absolute(candidate).lexically_normal();
+            bool duplicate = false;
+            for (const fs::path& existing : seen) {
+                if (existing == normalized) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (duplicate) {
+                continue;
+            }
+            seen.push_back(normalized);
+            if (!fs::exists(normalized)) {
+                continue;
+            }
+            std::string id = slugify(normalized.filename().string());
+            installs.push_back(inspect_install(normalized, id));
+        }
+    }
+    return installs;
+}
+
+std::string installs_array_json(const std::vector<InstallRef>& installs)
+{
+    std::ostringstream out;
+    out << "[";
+    for (std::size_t index = 0; index < installs.size(); ++index) {
+        if (index) {
+            out << ",";
+        }
+        out << install_json(installs[index]);
+    }
+    out << "]\n";
     return out.str();
 }
 
@@ -538,6 +728,8 @@ int print_help()
     std::cout << "Commands:\n";
     std::cout << "  product inspect [--json]\n";
     std::cout << "  doctor [--json]\n";
+    std::cout << "  installs scan [--path <root>] [--json]\n";
+    std::cout << "  installs inspect <install-id> [--json]\n";
     std::cout << "  installs import <factorio-dir> --id <install-id> [--json]\n";
     std::cout << "  instances create <name> --install <install-id> [--template <id>] [--json]\n";
     std::cout << "  launch-plan <instance-id> [--json]\n";
@@ -642,12 +834,43 @@ int command_installs(const CliOptions& options)
         return 0;
     }
 
-    if (options.args[1] == "scan") {
+    if (options.args[1] == "inspect") {
+        if (options.args.size() < 3) {
+            std::cerr << "Missing install id\n";
+            return 2;
+        }
+        InstallRef install;
+        if (!load_install(options.workspace, options.args[2], install)) {
+            std::cerr << "Unknown install reference: " << options.args[2] << "\n";
+            return 1;
+        }
         if (has_flag(options.args, "--json")) {
-            std::cout << "[]\n";
+            std::cout << install_json(install);
         } else {
-            std::cout << "No automatic install discovery candidates implemented in the native CLI yet.\n";
-            std::cout << "Use facman installs import <factorio-dir> --id <install-id>.\n";
+            std::cout << "Install: " << install.install_id << "\n";
+            std::cout << "Root: " << path_string(install.root) << "\n";
+            std::cout << "Version: " << install.version << "\n";
+            std::cout << "Ownership: " << install.ownership << "\n";
+            std::cout << "Verification: " << install.verification_status << "\n";
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "scan") {
+        std::vector<InstallRef> candidates = scan_install_candidates(options.args);
+        if (has_flag(options.args, "--json")) {
+            std::cout << installs_array_json(candidates);
+        } else {
+            if (candidates.empty()) {
+                std::cout << "No Factorio install candidates found.\n";
+                std::cout << "Use facman installs scan --path <folder> or facman installs import <factorio-dir> --id <install-id>.\n";
+            }
+            for (const InstallRef& install : candidates) {
+                std::cout << install.install_id << " "
+                          << install.verification_status << " "
+                          << install.ownership << " "
+                          << path_string(install.root) << "\n";
+            }
         }
         return 0;
     }
