@@ -79,6 +79,11 @@ struct SaveRef {
     std::uintmax_t size;
 };
 
+struct ZipEntry {
+    std::string name;
+    std::vector<unsigned char> data;
+};
+
 std::string path_string(const fs::path& path)
 {
     return path.lexically_normal().string();
@@ -316,6 +321,21 @@ void write_le32(std::ostream& out, std::uint32_t value)
 {
     write_le16(out, static_cast<std::uint16_t>(value & 0xffff));
     write_le16(out, static_cast<std::uint16_t>((value >> 16) & 0xffff));
+}
+
+std::uint16_t read_le16(const std::vector<unsigned char>& data, std::size_t offset)
+{
+    return static_cast<std::uint16_t>(
+        static_cast<std::uint16_t>(data[offset]) |
+        static_cast<std::uint16_t>(data[offset + 1] << 8));
+}
+
+std::uint32_t read_le32(const std::vector<unsigned char>& data, std::size_t offset)
+{
+    return static_cast<std::uint32_t>(data[offset]) |
+           (static_cast<std::uint32_t>(data[offset + 1]) << 8) |
+           (static_cast<std::uint32_t>(data[offset + 2]) << 16) |
+           (static_cast<std::uint32_t>(data[offset + 3]) << 24);
 }
 
 std::uint32_t crc32_bytes(const std::vector<unsigned char>& bytes)
@@ -1198,6 +1218,85 @@ bool write_stored_zip(const fs::path& output_path, const std::vector<std::pair<s
     return true;
 }
 
+bool archive_entry_is_safe(const std::string& name)
+{
+    if (name.empty() || name[0] == '/' || name[0] == '\\') {
+        return false;
+    }
+    if (name.find(':') != std::string::npos || name.find('\\') != std::string::npos) {
+        return false;
+    }
+    fs::path path(name);
+    for (const fs::path& part : path) {
+        if (part == "..") {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool read_stored_zip(const fs::path& input_path, std::vector<ZipEntry>& entries, std::string& error)
+{
+    std::vector<unsigned char> data = read_bytes(input_path);
+    std::size_t offset = 0;
+    entries.clear();
+
+    while (offset + 30 <= data.size()) {
+        std::uint32_t signature = read_le32(data, offset);
+        if (signature == 0x02014b50u || signature == 0x06054b50u) {
+            break;
+        }
+        if (signature != 0x04034b50u) {
+            error = "unsupported zip header";
+            return false;
+        }
+
+        std::uint16_t method = read_le16(data, offset + 8);
+        std::uint32_t compressed_size = read_le32(data, offset + 18);
+        std::uint32_t uncompressed_size = read_le32(data, offset + 22);
+        std::uint16_t name_size = read_le16(data, offset + 26);
+        std::uint16_t extra_size = read_le16(data, offset + 28);
+        std::size_t name_offset = offset + 30;
+        std::size_t data_offset = name_offset + name_size + extra_size;
+        std::size_t next_offset = data_offset + compressed_size;
+
+        if (method != 0) {
+            error = "only stored zip entries are supported";
+            return false;
+        }
+        if (compressed_size != uncompressed_size || data_offset > data.size() || next_offset > data.size()) {
+            error = "zip entry size is invalid";
+            return false;
+        }
+
+        std::string name(data.begin() + static_cast<std::ptrdiff_t>(name_offset),
+                         data.begin() + static_cast<std::ptrdiff_t>(name_offset + name_size));
+        if (!archive_entry_is_safe(name)) {
+            error = "zip entry path is unsafe";
+            return false;
+        }
+
+        ZipEntry entry;
+        entry.name = name;
+        entry.data.assign(data.begin() + static_cast<std::ptrdiff_t>(data_offset),
+                          data.begin() + static_cast<std::ptrdiff_t>(next_offset));
+        entries.push_back(entry);
+        offset = next_offset;
+    }
+
+    return !entries.empty();
+}
+
+const ZipEntry* find_zip_entry(const std::vector<ZipEntry>& entries, const std::string& name)
+{
+    for (const ZipEntry& entry : entries) {
+        if (entry.name == name) {
+            return &entry;
+        }
+    }
+    return 0;
+}
+
 std::vector<unsigned char> bytes_from_text(const std::string& text)
 {
     return std::vector<unsigned char>(text.begin(), text.end());
@@ -1513,6 +1612,7 @@ int print_help()
     std::cout << "  saves backup <save> --instance <instance-id> [--to <path>] [--json]\n";
     std::cout << "  saves clone <save> --instance <source-id> --to-instance <target-id> [--json]\n";
     std::cout << "  export instance <instance-id> <pack.zip> [--json]\n";
+    std::cout << "  import instance <pack.zip> [--id <instance-id>] [--json]\n";
     return 0;
 }
 
@@ -2148,6 +2248,84 @@ int command_export(const CliOptions& options)
     return 0;
 }
 
+int command_import(const CliOptions& options)
+{
+    if (options.args.size() < 3 || options.args[1] != "instance") {
+        std::cerr << "import instance requires <pack.zip>\n";
+        return 2;
+    }
+    ensure_workspace(options.workspace);
+    fs::path pack_path = options.args[2];
+    if (!fs::is_regular_file(pack_path)) {
+        std::cerr << "Instance pack does not exist: " << path_string(pack_path) << "\n";
+        return 1;
+    }
+
+    std::vector<ZipEntry> entries;
+    std::string error;
+    if (!read_stored_zip(pack_path, entries, error)) {
+        std::cerr << "Could not read instance pack: " << error << "\n";
+        return 1;
+    }
+
+    const ZipEntry* manifest_entry = find_zip_entry(entries, "instance.v1.json");
+    if (manifest_entry == 0) {
+        std::cerr << "Instance pack is missing instance.v1.json\n";
+        return 1;
+    }
+    std::string manifest_text(manifest_entry->data.begin(), manifest_entry->data.end());
+
+    InstanceRef instance;
+    instance.instance_id = option_value(options.args, "--id", json_string_value(manifest_text, "instance_id"));
+    if (instance.instance_id.empty()) {
+        std::cerr << "Instance pack has no instance id\n";
+        return 1;
+    }
+    instance.display_name = json_string_value(manifest_text, "display_name");
+    instance.install_ref = json_string_value(manifest_text, "install_ref");
+    instance.factorio_version = json_string_value(manifest_text, "factorio_version");
+    instance.profile = json_string_value(manifest_text, "profile");
+    instance.template_id = json_string_value(manifest_text, "template");
+    instance.local_data_root = options.workspace / "instances" / instance.instance_id;
+
+    if (fs::exists(instance.local_data_root)) {
+        std::cerr << "Instance already exists: " << instance.instance_id << "\n";
+        return 1;
+    }
+
+    for (const ZipEntry& entry : entries) {
+        if (entry.name.rfind("manifest/", 0) == 0) {
+            continue;
+        }
+        fs::path output_path = instance.local_data_root / fs::path(entry.name);
+        if (!archive_entry_is_safe(entry.name)) {
+            std::cerr << "Instance pack contains unsafe path: " << entry.name << "\n";
+            return 1;
+        }
+        fs::create_directories(output_path.parent_path());
+        std::ofstream out(output_path, std::ios::binary);
+        out.write(reinterpret_cast<const char*>(entry.data.data()), static_cast<std::streamsize>(entry.data.size()));
+    }
+
+    write_text(instance_manifest_path(options.workspace, instance.instance_id), instance_json(instance));
+    fs::path lock_path = modset_lock_path(instance);
+    if (fs::is_regular_file(lock_path)) {
+        write_text(workspace_modset_lock_path(options.workspace, instance), read_text(lock_path));
+    }
+
+    if (has_flag(options.args, "--json")) {
+        std::cout << "{\n";
+        std::cout << "  \"schema\": \"factorio.instance_import.v1\",\n";
+        std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+        std::cout << "  \"path\": " << quote(path_string(instance.local_data_root)) << ",\n";
+        std::cout << "  \"files\": " << entries.size() << "\n";
+        std::cout << "}\n";
+    } else {
+        std::cout << "Imported instance " << instance.instance_id << " from " << path_string(pack_path) << "\n";
+    }
+    return 0;
+}
+
 int command_launch_plan(const CliOptions& options)
 {
     if (options.args.size() < 2) {
@@ -2266,6 +2444,9 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     }
     if (command == "export") {
         return command_export(options);
+    }
+    if (command == "import") {
+        return command_import(options);
     }
 
     std::cerr << "Unknown command: " << command << "\n";

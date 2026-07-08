@@ -278,6 +278,19 @@ class CliTests(unittest.TestCase):
             self.assertIn(b"$FACMAN_INSTANCE_ROOT", pack_bytes)
             self.assertNotIn(str(Path(tmp)).encode("utf-8"), pack_bytes)
 
+            code, stdout, stderr = invoke(
+                ["--workspace", tmp, "import", "instance", str(pack), "--id", "restored-world", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            imported = json.loads(stdout)
+            self.assertEqual(imported["schema"], "factorio.instance_import.v1")
+            self.assertEqual(imported["instance_id"], "restored-world")
+            restored_root = Path(tmp) / "instances" / "restored-world"
+            self.assertEqual((restored_root / "saves" / "starter.zip").read_bytes(), b"fake save zip")
+            self.assertIn("$FACMAN_INSTANCE_ROOT", (restored_root / "config" / "config-path.cfg").read_text())
+            restored_manifest = json.loads((restored_root / "instance.v1.json").read_text(encoding="utf-8"))
+            self.assertEqual(Path(restored_manifest["local_data_root"]), restored_root)
+
 
 if __name__ == "__main__":
     unittest.main()
