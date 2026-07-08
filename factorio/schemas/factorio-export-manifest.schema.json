@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/schemas/factorio-export-manifest.schema.json",
+  "title": "Factorio Export Manifest",
+  "type": "object",
+  "required": ["export_id", "export_type", "created_at", "redacted"],
+  "properties": {
+    "export_id": { "type": "string" },
+    "export_type": { "type": "string" },
+    "created_at": { "type": "string" },
+    "redacted": { "type": "boolean" },
+    "contents": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
+
+

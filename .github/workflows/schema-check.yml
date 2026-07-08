@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "schemas/**"
+      - "factorio/schemas/**"
       - "tools/schema_validate.py"
   pull_request:
     paths:
       - "schemas/**"
+      - "factorio/schemas/**"
       - "tools/schema_validate.py"
 
 jobs:
@@ -19,4 +21,3 @@ jobs:
         with:
           python-version: "3.11"
       - run: python tools/schema_validate.py
-

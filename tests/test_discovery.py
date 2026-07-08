@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from factorio_launcher.factorio.discovery.detect_install import inspect_install
+from factorio_launcher.discovery.detect_install import inspect_install
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -19,4 +19,3 @@ class DiscoveryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

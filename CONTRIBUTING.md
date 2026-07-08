@@ -5,16 +5,17 @@ binding before adding TUI or GUI views.
 
 ## Boundaries
 
-- Factorio-specific logic belongs under `src/factorio_launcher/factorio/`.
-- UI command parsing belongs under `src/factorio_launcher/ui/cli/`.
+- Native universal ABI work belongs under `universal/`.
+- Native Factorio product-binding work belongs under `factorio/`.
+- Current Python prototype logic belongs under `launcher/factorio_launcher/`.
+- UI command parsing in the prototype belongs under `launcher/factorio_launcher/ui/cli/`.
 - Setup mutation must remain behind the universal setup adapter.
 - The universal launcher adapter must not learn Factorio-specific mod semantics.
 
 ## Checks
 
 ```bash
-$env:PYTHONPATH = "src"
+$env:PYTHONPATH = "launcher"
 python -m unittest discover -s tests -v
 python tools/schema_validate.py
 ```
-

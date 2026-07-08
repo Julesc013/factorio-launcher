@@ -7,6 +7,12 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
+out/
+bin/
+obj/
+.vs/
+*.user
+*.suo
+CMakeUserPresets.json
 factorio_workspace/
 .factorio-launcher-workspace/
-

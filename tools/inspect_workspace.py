@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from factorio_launcher.app.config import default_workspace
-from factorio_launcher.app.workspace import list_install_refs, list_instances
+from factorio_launcher.core.config import default_workspace
+from factorio_launcher.core.workspace import list_install_refs, list_instances
 
 
 def main() -> int:
@@ -16,4 +16,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

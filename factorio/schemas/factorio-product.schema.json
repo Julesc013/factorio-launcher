@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/schemas/factorio-product.schema.json",
+  "title": "Factorio Product",
+  "type": "object",
+  "required": ["product_id", "display_name", "binding", "capabilities"],
+  "properties": {
+    "product_id": { "const": "factorio" },
+    "display_name": { "type": "string" },
+    "binding": { "type": "string" },
+    "capabilities": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
+
+

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/schemas/command-response.schema.json",
+  "title": "Command Response",
+  "type": "object",
+  "required": ["schema_version", "command_name", "status", "payload"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "command_name": { "type": "string" },
+    "status": { "enum": ["ok", "warning", "blocked", "error"] },
+    "payload": { "type": "object" },
+    "error": {
+      "type": ["object", "null"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "detail": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
+

@@ -18,4 +18,5 @@ jobs:
       - run: factorio-launcher --version
       - run: factorio-launcher product inspect
       - run: factorio-launcher doctor
-
+      - run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_CLI=ON
+      - run: cmake --build build/native-smoke

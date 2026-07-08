@@ -9,9 +9,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> int:
     problems: list[str] = []
-    product_path = ROOT / "product" / "factorio.product.toml"
-    redaction_path = ROOT / "product" / "policy" / "redaction.toml"
-    account_path = ROOT / "product" / "policy" / "account-secrets.toml"
+    product_path = ROOT / "factorio" / "product" / "factorio.product.toml"
+    redaction_path = ROOT / "factorio" / "product" / "policy" / "redaction.toml"
+    account_path = ROOT / "factorio" / "product" / "policy" / "account-secrets.toml"
 
     with product_path.open("rb") as handle:
         product = tomllib.load(handle)
@@ -50,4 +50,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

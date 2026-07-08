@@ -5,7 +5,8 @@
 - `factorio-launcher --version`
 - `factorio-launcher product inspect`
 - `factorio-launcher doctor`
-- schemas, docs, fixtures, and CLI package
+- C ABI policy, command graph policy, schemas, docs, fixtures, native scaffold,
+  and current Python CLI prototype
 
 ## v0.2 - Read-only Install Discovery
 
@@ -67,3 +68,7 @@ No installing, repairing, or uninstalling.
 - no known token leakage
 - no known Steam-owned install mutation
 
+## v1.1+ - TUI and GUI
+
+Only after the command graph stabilizes. CLI, TUI, WinForms, AppKit, GTK, and
+Qt are all frontends over the same command graph/native service/C ABI.
