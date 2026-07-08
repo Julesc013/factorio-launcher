@@ -1,5 +1,6 @@
 #include "command_dispatch.h"
 
+#include "flb_factorio_launch_plan.h"
 #include "fl_command_client_cabi.h"
 #include "usk/usk_api.h"
 
@@ -1116,6 +1117,24 @@ bool load_instance(const fs::path& workspace, const std::string& instance_id, In
     return true;
 }
 
+facman::factorio::launch::InstanceLaunchRef launch_instance_ref(const InstanceRef& instance)
+{
+    facman::factorio::launch::InstanceLaunchRef ref;
+    ref.instance_id = instance.instance_id;
+    ref.profile_id = instance.profile;
+    ref.local_data_root = instance.local_data_root;
+    return ref;
+}
+
+facman::factorio::launch::InstallLaunchRef launch_install_ref(const InstallRef& install)
+{
+    facman::factorio::launch::InstallLaunchRef ref;
+    ref.root = install.root;
+    ref.executable = install.executable;
+    ref.ownership = install.ownership;
+    return ref;
+}
+
 std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
 {
     std::vector<fs::path> manifests;
@@ -1141,25 +1160,10 @@ std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
 
 std::string launch_plan_json(const InstanceRef& instance, const InstallRef& install)
 {
-    fs::path config = instance.local_data_root / "config" / "config.ini";
-    fs::path mods = instance.local_data_root / "mods";
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.launch_plan.v1\",\n";
-    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-    out << "  \"profile_id\": " << quote(instance.profile.empty() ? "gui" : instance.profile) << ",\n";
-    out << "  \"mode\": \"gui\",\n";
-    out << "  \"executable\": " << quote(path_string(install.executable)) << ",\n";
-    out << "  \"app_dir\": " << quote(path_string(install.root)) << ",\n";
-    out << "  \"args\": [\"--config\", " << quote(path_string(config)) << ", \"--mod-directory\", "
-        << quote(path_string(mods)) << "],\n";
-    out << "  \"preflight\": [\"install-structural-check\", \"isolated-write-data-check\"],\n";
-    out << "  \"postrun\": [\"log-index\", \"save-index\"],\n";
-    out << "  \"dry_run_default\": true,\n";
-    out << "  \"ownership\": " << quote(install.ownership) << ",\n";
-    out << "  \"notes\": [\"Launch execution requires --execute.\"]\n";
-    out << "}\n";
-    return out.str();
+    return facman::factorio::launch::build_launch_plan_json(
+        launch_instance_ref(instance),
+        launch_install_ref(install)
+    );
 }
 
 fs::path modset_lock_path(const InstanceRef& instance)
@@ -1581,22 +1585,12 @@ std::vector<std::pair<std::string, std::vector<unsigned char>>> instance_export_
 
 std::vector<std::string> launch_args(const InstanceRef& instance)
 {
-    std::vector<std::string> args;
-    args.push_back("--config");
-    args.push_back(path_string(instance.local_data_root / "config" / "config.ini"));
-    args.push_back("--mod-directory");
-    args.push_back(path_string(instance.local_data_root / "mods"));
-    return args;
+    return facman::factorio::launch::build_launch_args(launch_instance_ref(instance));
 }
 
 std::string command_line_for_display(const fs::path& executable, const std::vector<std::string>& args)
 {
-    std::ostringstream out;
-    out << path_string(executable);
-    for (const std::string& arg : args) {
-        out << " " << arg;
-    }
-    return out.str();
+    return facman::factorio::launch::command_line_for_display(executable, args);
 }
 
 #ifdef _WIN32
