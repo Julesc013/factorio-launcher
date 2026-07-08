@@ -30,6 +30,13 @@ This is a better fit for a three-repo launcher ecosystem.
 - `usk` and `ulk` headers/runtime code moved to their own repositories.
 - Redundant app names are gone: `apps/cli`, `apps/tui`, `apps/daemon`, with
   GUI toolkits grouped under `apps/gui/`.
+- `contracts/` now has a broader spine than schemas: ABI, command, result,
+  refusal, diagnostic, and policy contracts are first-class.
+- `release/profiles/` now has target-specific lanes instead of vague
+  `legacy`/`modern` buckets.
+- `runtime/factorio/c11` and `runtime/factorio/cpp11` are retired in favor of
+  product-domain folders such as `install_validation/`, `modsets/`, and
+  `compat/`.
 
 ## Remaining Risks
 
@@ -60,7 +67,8 @@ python tools\strict_check.py
 
 The validator should fail if retired roots return, if `apps/python_cli/` or a
 Python product `pyproject.toml` returns, if Factorio owns `usk` or `ulk`
-implementation again, or if product content starts containing executable code.
+implementation again, if language-version runtime buckets return, or if product
+content starts containing executable code.
 
 ## Next Structural Work
 

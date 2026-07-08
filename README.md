@@ -30,6 +30,12 @@ Retired roots are intentionally blocked: `source/`, `src/`, `data/`,
 launcher code live in their own sibling repositories, not in this Factorio
 product repo.
 
+Runtime folders are domain folders, not language-version buckets. C/C++ files
+belong under the product domain they implement; folders like `c11/` and
+`cpp11/` are intentionally blocked. `contracts/` is broader than schemas, and
+`release/profiles/` names concrete target lanes such as `windows7`,
+`macos_10_13`, and `linux_appimage`.
+
 The CLI is the first frontend, not the foundation of every other frontend.
 CLI, TUI, the Win32/WinForms GUI, AppKit, GTK, and Qt all sit over the same
 command graph, native launcher service, and C ABI.

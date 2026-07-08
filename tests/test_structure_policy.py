@@ -36,6 +36,10 @@ class StructurePolicyTests(unittest.TestCase):
     def test_runtime_and_client_source_seams_exist(self) -> None:
         self.assertTrue((ROOT / "runtime" / "package" / "fl_runtime_locator.c").is_file())
         self.assertTrue((ROOT / "runtime" / "client" / "fl_command_client.c").is_file())
+        self.assertTrue((ROOT / "runtime" / "factorio" / "install_validation" / "README.md").is_file())
+        self.assertTrue((ROOT / "runtime" / "factorio" / "modsets" / "README.md").is_file())
+        self.assertFalse((ROOT / "runtime" / "factorio" / "c11").exists())
+        self.assertFalse((ROOT / "runtime" / "factorio" / "cpp11").exists())
 
     def test_frontends_are_apps(self) -> None:
         for name in ["cli", "tui", "daemon", "gui"]:
@@ -55,6 +59,23 @@ class StructurePolicyTests(unittest.TestCase):
         self.assertTrue(
             (ROOT / "contracts" / "schema" / "release" / "packaging" / "bundle_manifest.v1.schema.json").is_file()
         )
+
+    def test_contract_spine_exists_beyond_schemas(self) -> None:
+        for path in [
+            "contracts/abi/flb/README.md",
+            "contracts/command/factorio/README.md",
+            "contracts/result/README.md",
+            "contracts/refusal/README.md",
+            "contracts/diagnostic/README.md",
+            "contracts/policy/README.md",
+        ]:
+            self.assertTrue((ROOT / path).is_file(), path)
+
+    def test_release_profiles_are_target_specific(self) -> None:
+        for name in ["dev", "portable", "windows7", "windows10", "macos_10_13", "linux_appimage", "linux_legacy_cli"]:
+            self.assertTrue((ROOT / "release" / "profiles" / name / "README.md").is_file(), name)
+        for vague in ["legacy", "modern"]:
+            self.assertFalse((ROOT / "release" / "profiles" / vague).exists(), vague)
 
 
 if __name__ == "__main__":

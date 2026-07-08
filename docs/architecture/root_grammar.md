@@ -33,3 +33,13 @@ universal/
 
 The root names describe ownership. They must not become lifecycle buckets or
 generic places to put code.
+
+Important refinements:
+
+- `contracts/` is broader than `contracts/schema/`; it also owns ABI,
+  command, result, refusal, diagnostic, and policy contracts.
+- `release/profiles/` uses target-specific names such as `windows7`,
+  `macos_10_13`, and `linux_appimage`, not vague `legacy` or `modern` lanes.
+- `runtime/` folders are domain-based. Language-version folders such as
+  `c11/` and `cpp11/` are forbidden because language is a build property, not
+  an ownership boundary.

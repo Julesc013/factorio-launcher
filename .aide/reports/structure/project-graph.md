@@ -1,22 +1,22 @@
 # Factorio Launcher ProjectGraph Baseline
 
 Status: `PASS_WITH_WARNINGS`
-Files classified: `1141`
+Files classified: `1167`
 Findings: `9`
 
 ## Counts By Kind
 
 - `aide_governance`: 815
 - `aide_local_template`: 6
-- `doc`: 108
+- `doc`: 109
 - `frontend`: 41
-- `implementation`: 39
-- `package_manifest`: 16
-- `product_policy`: 30
-- `public_abi`: 10
-- `schema`: 16
-- `test`: 30
-- `tool`: 11
+- `implementation`: 42
+- `package_manifest`: 25
+- `product_policy`: 31
+- `public_abi`: 11
+- `schema`: 25
+- `test`: 31
+- `tool`: 12
 - `unknown`: 19
 
 ## Findings

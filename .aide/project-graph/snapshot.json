@@ -6394,6 +6394,13 @@
       "root": "apps"
     },
     {
+      "kind": "doc",
+      "lifecycle": "active",
+      "owner": "documentation",
+      "path": "cmake/README.md",
+      "root": "cmake"
+    },
+    {
       "kind": "unknown",
       "lifecycle": "active",
       "owner": "unknown",
@@ -6434,6 +6441,13 @@
       "owner": "unknown",
       "path": "cmake/platform_windows.cmake",
       "root": "cmake"
+    },
+    {
+      "kind": "product_policy",
+      "lifecycle": "active",
+      "owner": "factorio_binding",
+      "path": "content/README.md",
+      "root": "content"
     },
     {
       "kind": "product_policy",
@@ -6644,6 +6658,69 @@
       "owner": "factorio_binding",
       "path": "content/factorio/product/factorio.product.toml",
       "root": "content"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/README.md",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/abi/README.md",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/abi/flb/README.md",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/command/README.md",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/command/factorio/README.md",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/diagnostic/README.md",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/policy/README.md",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/refusal/README.md",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/result/README.md",
+      "root": "contracts"
     },
     {
       "kind": "schema",
@@ -7454,6 +7531,13 @@
       "kind": "public_abi",
       "lifecycle": "active",
       "owner": "abi",
+      "path": "include/README.md",
+      "root": "include"
+    },
+    {
+      "kind": "public_abi",
+      "lifecycle": "active",
+      "owner": "abi",
       "path": "include/flb/flb_api.h",
       "root": "include"
     },
@@ -7519,6 +7603,13 @@
       "owner": "abi",
       "path": "include/flb/flb_result.h",
       "root": "include"
+    },
+    {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/README.md",
+      "root": "release"
     },
     {
       "kind": "package_manifest",
@@ -7633,6 +7724,69 @@
       "root": "release"
     },
     {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/profiles/README.md",
+      "root": "release"
+    },
+    {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/profiles/dev/README.md",
+      "root": "release"
+    },
+    {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/profiles/linux_appimage/README.md",
+      "root": "release"
+    },
+    {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/profiles/linux_legacy_cli/README.md",
+      "root": "release"
+    },
+    {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/profiles/macos_10_13/README.md",
+      "root": "release"
+    },
+    {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/profiles/portable/README.md",
+      "root": "release"
+    },
+    {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/profiles/windows10/README.md",
+      "root": "release"
+    },
+    {
+      "kind": "package_manifest",
+      "lifecycle": "active",
+      "owner": "release",
+      "path": "release/profiles/windows7/README.md",
+      "root": "release"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "implementation",
+      "path": "runtime/README.md",
+      "root": "runtime"
+    },
+    {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "portable_base",
@@ -7706,6 +7860,13 @@
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
+      "path": "runtime/factorio/README.md",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "factorio_binding",
       "path": "runtime/factorio/accounts/README.md",
       "root": "runtime"
     },
@@ -7727,14 +7888,7 @@
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "runtime/factorio/c11/README.md",
-      "root": "runtime"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "factorio_binding",
-      "path": "runtime/factorio/cpp11/README.md",
+      "path": "runtime/factorio/compat/README.md",
       "root": "runtime"
     },
     {
@@ -7749,6 +7903,13 @@
       "lifecycle": "active",
       "owner": "factorio_binding",
       "path": "runtime/factorio/discovery/README.md",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "factorio_binding",
+      "path": "runtime/factorio/install_validation/README.md",
       "root": "runtime"
     },
     {
@@ -7777,6 +7938,13 @@
       "lifecycle": "active",
       "owner": "factorio_binding",
       "path": "runtime/factorio/mods/README.md",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "factorio_binding",
+      "path": "runtime/factorio/modsets/README.md",
       "root": "runtime"
     },
     {
@@ -7904,6 +8072,13 @@
       "owner": "platform_adapter",
       "path": "runtime/platform/windows/README.md",
       "root": "runtime"
+    },
+    {
+      "kind": "test",
+      "lifecycle": "active",
+      "owner": "verification",
+      "path": "tests/README.md",
+      "root": "tests"
     },
     {
       "kind": "test",
@@ -8119,6 +8294,13 @@
       "kind": "tool",
       "lifecycle": "active",
       "owner": "repo_automation",
+      "path": "tools/README.md",
+      "root": "tools"
+    },
+    {
+      "kind": "tool",
+      "lifecycle": "active",
+      "owner": "repo_automation",
       "path": "tools/aide_project_graph_baseline.py",
       "root": "tools"
     },
@@ -8197,15 +8379,15 @@
     "counts_by_kind": {
       "aide_governance": 815,
       "aide_local_template": 6,
-      "doc": 108,
+      "doc": 109,
       "frontend": 41,
-      "implementation": 39,
-      "package_manifest": 16,
-      "product_policy": 30,
-      "public_abi": 10,
-      "schema": 16,
-      "test": 30,
-      "tool": 11,
+      "implementation": 42,
+      "package_manifest": 25,
+      "product_policy": 31,
+      "public_abi": 11,
+      "schema": 25,
+      "test": 31,
+      "tool": 12,
       "unknown": 19
     },
     "counts_by_root": {
@@ -8223,19 +8405,19 @@
       "SECURITY.md": 1,
       "THIRD_PARTY_NOTICES.md": 1,
       "apps": 41,
-      "cmake": 6,
-      "content": 30,
-      "contracts": 16,
+      "cmake": 7,
+      "content": 31,
+      "contracts": 25,
       "docs": 93,
       "examples": 5,
       "external": 1,
-      "include": 10,
-      "release": 16,
-      "runtime": 39,
-      "tests": 30,
-      "tools": 11
+      "include": 11,
+      "release": 25,
+      "runtime": 42,
+      "tests": 31,
+      "tools": 12
     },
-    "file_count": 1141,
+    "file_count": 1167,
     "findings_count": 9,
     "generated_by": "tools/aide_project_graph_baseline.py",
     "project": "factorio-launcher",

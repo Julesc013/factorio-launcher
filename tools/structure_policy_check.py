@@ -116,12 +116,36 @@ ALLOWED_CONTRACT_ROOTS = {"abi", "command", "policy", "result", "refusal", "diag
 ALLOWED_SCHEMA_ROOTS = {"common", "factorio", "release"}
 ALLOWED_RELEASE_ROOTS = {"packaging", "profiles"}
 ALLOWED_PACKAGING_ROOTS = {"linux", "macos", "portable", "windows"}
+ALLOWED_RELEASE_PROFILE_ROOTS = {
+    "dev",
+    "linux_appimage",
+    "linux_legacy_cli",
+    "macos_10_13",
+    "portable",
+    "windows10",
+    "windows7",
+}
 ALLOWED_RUNTIME_ROOTS = {
     "base",
     "client",
     "factorio",
     "package",
     "platform",
+}
+ALLOWED_FACTORIO_RUNTIME_ROOTS = {
+    "accounts",
+    "binding",
+    "compat",
+    "diagnostics",
+    "discovery",
+    "install_validation",
+    "instance",
+    "launch",
+    "mod_portal",
+    "mods",
+    "modsets",
+    "saves",
+    "server",
 }
 
 
@@ -209,6 +233,9 @@ def check_root_namespaces() -> list[str]:
     problems.extend(check_children("contracts/schema", ALLOWED_SCHEMA_ROOTS))
     problems.extend(check_children("release", ALLOWED_RELEASE_ROOTS))
     problems.extend(check_children("release/packaging", ALLOWED_PACKAGING_ROOTS))
+    problems.extend(check_children("release/profiles", ALLOWED_RELEASE_PROFILE_ROOTS))
+    problems.extend(check_children("runtime/factorio", ALLOWED_FACTORIO_RUNTIME_ROOTS))
+    problems.extend(check_no_language_version_runtime_buckets())
     return problems
 
 
@@ -259,6 +286,8 @@ def check_include_is_public_abi_only() -> list[str]:
     include = ROOT / "include"
     allowed = {"flb"}
     for child in include.iterdir():
+        if child.name == "README.md":
+            continue
         if child.is_dir() and child.name in allowed:
             continue
         problems.append(f"include/ contains non-ABI path {child.name}")
@@ -276,12 +305,34 @@ def check_data_is_not_code() -> list[str]:
     return problems
 
 
+def check_no_language_version_runtime_buckets() -> list[str]:
+    problems: list[str] = []
+    forbidden = {"c11", "cpp11", "c17", "cpp17", "cxx11", "cxx17"}
+    for path in (ROOT / "runtime").rglob("*"):
+        if path.is_dir() and path.name.lower() in forbidden:
+            problems.append(f"runtime folders must be domain-based, not language-version buckets: {path.relative_to(ROOT)}")
+    return problems
+
+
 def check_command_graph_spine() -> list[str]:
     required = [
         ROOT / "tests" / "contract" / "command_graph",
         ROOT / "runtime" / "factorio" / "binding",
+        ROOT / "runtime" / "factorio" / "install_validation",
+        ROOT / "runtime" / "factorio" / "modsets",
+        ROOT / "contracts" / "abi" / "flb",
+        ROOT / "contracts" / "command" / "factorio",
+        ROOT / "contracts" / "result",
+        ROOT / "contracts" / "refusal",
+        ROOT / "contracts" / "diagnostic",
+        ROOT / "contracts" / "policy",
         ROOT / "contracts" / "schema" / "factorio",
         ROOT / "contracts" / "schema" / "common",
+        ROOT / "release" / "profiles" / "dev",
+        ROOT / "release" / "profiles" / "windows7",
+        ROOT / "release" / "profiles" / "macos_10_13",
+        ROOT / "release" / "profiles" / "linux_appimage",
+        ROOT / "release" / "profiles" / "linux_legacy_cli",
     ]
     return [f"missing command graph spine path {path.relative_to(ROOT)}" for path in required if not path.exists()]
 

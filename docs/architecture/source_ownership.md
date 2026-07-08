@@ -20,6 +20,13 @@ entrypoints.
 - `contracts/` owns ABI, command, schema, policy, diagnostic, result, and
   refusal contracts.
 - `release/` owns package manifests and release profiles.
+- `release/profiles/` owns named target lanes such as `windows7`,
+  `macos_10_13`, `linux_appimage`, and `linux_legacy_cli`.
+
+Runtime module names are product domains, not language standards. Do not create
+`runtime/factorio/c11`, `runtime/factorio/cpp11`, or similar buckets. Put files
+under the domain they implement, such as `discovery/`, `install_validation/`,
+`launch/`, `mods/`, `modsets/`, or `mod_portal/`.
 
 ## Cross-Repo Boundary
 
@@ -69,6 +76,8 @@ universal/
 apps/*/src/
 apps/*/source/
 runtime/*/source/
+runtime/**/c11/
+runtime/**/cpp11/
 apps/appkit/
 apps/gtk/
 apps/qt/

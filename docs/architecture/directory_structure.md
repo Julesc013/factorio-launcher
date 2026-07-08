@@ -13,7 +13,7 @@ factorio-launcher/
     base/             small private support primitives
     package/          runtime locator, component manifest, extraction, verify
     client/           frontend-neutral command clients and transports
-    factorio/         Factorio binding implementation
+    factorio/         Factorio binding implementation by product domain
     platform/         common, windows, posix, macos, linux adapters
 
   apps/
@@ -40,7 +40,7 @@ factorio-launcher/
 
   release/
     packaging/        platform package manifests
-    profiles/         release/build profile definitions
+    profiles/         target-specific release/build profile definitions
 
   docs/               architecture, product, platform, planning docs
   tests/              unit, contract, integration, fixtures, golden proof
@@ -77,6 +77,11 @@ the early CMake split. Their public ABI headers and implementations live in:
 Python has no product app root. It may be used under `tools/` and `tests/`
 for validators, fixture helpers, and automation, but FacMan runtime entrypoints
 must be native.
+
+Runtime domain folders must not be named after language standards. `c11/`,
+`cpp11/`, `c17/`, and similar buckets are retired; implementation belongs under
+the Factorio domain it serves, such as `install_validation/`, `modsets/`, or
+`mod_portal/`.
 
 GUI frontends are grouped below `apps/gui/` so `apps/` stays organized by
 frontend class first and provider/toolkit second. `win32` is the architecture
