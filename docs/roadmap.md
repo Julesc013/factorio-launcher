@@ -3,6 +3,14 @@
 FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
+## FACMAN-INTEGRATION-HARDEN-01
+
+- Cross-repo boundary proof for `factorio-launcher`, `universal-launcher`, and
+  `universal-setup`.
+- Command, result, refusal, diagnostic, and golden-output contracts.
+- Stale-doc and package-layout readiness checks.
+- Product-only and full sibling-workspace validation modes.
+
 ## FacMan-CANON-01
 
 - Repo structure uses `runtime/content/contracts/release`.
@@ -58,3 +66,42 @@ leaving setup mutation to Universal Setup.
 - Win32/WinForms, AppKit, GTK, and optional Qt frontends render the same command
   graph.
 - No GUI-only behavior.
+
+## Release Readiness Ladder
+
+```text
+R0 - Architecture baseline
+  validators pass
+  contracts exist
+  cross-repo builds pass
+
+R1 - Developer preview
+  fake fixtures
+  dry-run launch plans
+  no real mutation
+
+R2 - Local power-user alpha
+  real install import
+  isolated instances
+  dry-run and execute
+  local modsets
+
+R3 - Safe beta
+  save backups
+  export/import
+  package layouts
+  diagnostics
+
+R4 - Managed install alpha
+  Universal Setup local archive install
+  verify/uninstall managed only
+
+R5 - Native GUI preview
+  Win32/AppKit/GTK shells over command graph
+
+R6 - v1.0
+  stable CLI
+  stable schemas
+  portable packages
+  no known boundary violations
+```

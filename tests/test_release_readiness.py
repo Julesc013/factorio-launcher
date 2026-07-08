@@ -1,0 +1,14 @@
+from __future__ import annotations
+
+import unittest
+
+from tools import release_readiness_check
+
+
+class ReleaseReadinessTests(unittest.TestCase):
+    def test_release_readiness_check(self) -> None:
+        self.assertEqual(release_readiness_check.main(), 0)
+
+
+if __name__ == "__main__":
+    unittest.main()
