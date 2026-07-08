@@ -1,0 +1,64 @@
+schema: flaunch.aide.product_boundaries.v1
+project: factorio-launcher
+repositories:
+  universal_setup:
+    owns:
+      - install
+      - verify
+      - repair
+      - uninstall
+      - stage
+      - commit
+      - rollback
+      - installed_state_manifests
+      - setup_audit
+    forbidden:
+      - factorio_mods
+      - factorio_saves
+      - factorio_mod_portal
+      - factorio_servers
+  universal_launcher:
+    owns:
+      - products
+      - install_refs
+      - instances
+      - profiles
+      - accounts
+      - launch_plans
+      - command_graph
+      - dry_run
+      - audit
+      - diagnostics
+      - daemon_protocol
+    forbidden:
+      - install_mutation
+      - factorio_specific_mod_semantics
+      - factorio_launch_templates
+  factorio_launcher:
+    owns:
+      - factorio_product_binding
+      - factorio_discovery
+      - factorio_validation
+      - factorio_launch_templates
+      - factorio_instance_templates
+      - factorio_mods
+      - factorio_modsets
+      - factorio_saves
+      - factorio_servers
+      - factorio_mod_portal_rules
+      - factorio_account_redaction
+    forbidden:
+      - foreign_install_repair
+      - foreign_install_uninstall
+      - universal_setup_ownership
+      - universal_launcher_ownership
+frontends:
+  rule: presentation_only
+  allowed_transports:
+    - command_graph
+    - json_rpc_daemon
+    - c_abi
+  forbidden:
+    - frontend_specific_hidden_behavior
+    - frontend_owned_launch_plan_generation
+    - frontend_owned_install_mutation

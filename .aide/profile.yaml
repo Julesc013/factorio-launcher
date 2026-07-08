@@ -1,0 +1,58 @@
+schema_version: aide.profile.template.v0
+profile_id: factorio-launcher
+project_name: FLaunch / factorio-launcher
+generated_from: aide-lite-pack-v0
+status: target_initialized
+purpose: >
+  Repo-local AIDE Lite governance for an unofficial Factorio launcher and
+  isolated instance manager. AIDE is development tooling only and is not a
+  launcher runtime dependency.
+current_focus:
+  phase: pre-code-structure-governance
+  primary_goal: >
+    Preserve the current compact launcher layout while assessing whether any
+    directory, ownership, or universal-repo split changes are needed before
+    native command graph implementation begins.
+  next_task: >
+    Establish Factorio Launcher AIDE baseline: architecture truth, safety
+    invariants, Python prototype boundary, native command graph gap, and first
+    WorkUnits for read-only install discovery plus isolated instance creation.
+deferred_surfaces:
+  - Gateway forwarding, provider/model calls, UI, runtime, and autonomous loops remain deferred.
+  - Native GUI implementation remains deferred until command graph stability.
+  - Universal setup and universal launcher repos remain separate architecture discussions.
+runtime:
+  gateway_forwarding: deferred
+  provider_calls: forbidden_until_reviewed_phase
+  model_calls: forbidden_until_reviewed_phase
+product_runtime:
+  depends_on_aide: false
+  python_prototype_runtime: source/prototypes/python_launcher
+  production_runtime_python_dependency: false
+native_direction:
+  public_abi: C-compatible stable ABI
+  internals: C/C++ native kernels with Factorio-specific complexity behind FLB
+  frontends:
+    - CLI
+    - TUI
+    - daemon
+    - WinForms
+    - AppKit
+    - GTK
+    - Qt
+safety_invariants:
+  - no bundled Factorio binaries
+  - no ownership bypass
+  - no passwords or tokens in manifests
+  - no silent writes to the default Factorio data directory
+  - dry-run launch plan by default
+  - install mutation belongs to Universal Setup
+  - cross-product orchestration belongs to Universal Launcher
+local_state:
+  root: .aide.local/
+  committed: false
+notes: >
+  This profile records target-specific launcher truth after safe AIDE Lite Pack
+  import. The launcher may use AIDE for context, validation, review packets,
+  and advisory structure analysis, but product packages must not depend on
+  AIDE or Python.

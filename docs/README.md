@@ -6,9 +6,11 @@ Architecture:
 - [Boundary](architecture/boundary.md)
 - [Naming](architecture/naming.md)
 - [Ownership Model](architecture/ownership_model.md)
+- [Source Ownership](architecture/source_ownership.md)
 - [Workspace Model](architecture/workspace_model.md)
 - [Packaging Model](architecture/packaging_model.md)
 - [Runtime Locator](architecture/runtime_locator.md)
+- [AIDE Lite Integration](architecture/aide_lite_integration.md)
 - [Frontend Command Client](architecture/frontend_client.md)
 - [C ABI Policy](architecture/c_abi_policy.md)
 - [Language Policy](architecture/language_policy.md)
@@ -22,6 +24,7 @@ Architecture:
 - [Product Binding ABI](architecture/product_binding_abi.md)
 - [Security Model](architecture/security_model.md)
 - [Structure Assessment](architecture/structure_assessment.md)
+- [Pre-Code Structure Review](architecture/pre_code_structure_review.md)
 
 Product:
 

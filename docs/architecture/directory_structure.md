@@ -60,6 +60,7 @@ factorio-launcher/
 `source/` is the only implementation source root. Do not create nested `src/`
 or `source/` directories under apps or modules. `apps/` contains frontend
 package/project shells; implementation files live under `source/apps/`.
+The closed root model is enforced by `tools/structure_policy_check.py`.
 
 `source/prototypes/python_launcher/` is transitional. It keeps the current
 runnable prototype alive while the native command graph and C ABI are
@@ -69,3 +70,8 @@ production artifacts. It should shrink over time as native `include/`,
 
 Factorio-specific manifests, policies, and launch templates live under
 `data/factorio/` so the repo root does not pretend they are universal.
+
+Durable AIDE-compatible policy inputs may live under `.aide/policies/`.
+Generated AIDE snapshots, ledgers, reports, queue state, and local knowledge are
+not source truth and stay ignored unless a future task explicitly promotes a
+curated artifact.

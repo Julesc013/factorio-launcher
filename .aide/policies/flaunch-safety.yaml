@@ -1,0 +1,28 @@
+schema: flaunch.aide.safety.v1
+project: factorio-launcher
+runtime:
+  depends_on_aide: false
+  production_python_runtime_dependency: false
+defaults:
+  dry_run_launch_plan: true
+  bundle_factorio_binaries: false
+  bypass_ownership_checks: false
+  use_official_branding_assets: false
+  silently_write_default_data_dir: false
+  globally_swap_mod_folder: false
+  store_passwords_in_manifests: false
+  store_tokens_in_manifests: false
+mutation:
+  install_repair_uninstall_owner: universal_setup
+  factorio_launcher_allowed_mutation:
+    - isolated_instance_roots
+    - launcher_workspace
+    - explicit_operator_requested_exports
+  forbidden:
+    - steam_install_repair
+    - foreign_owned_install_uninstall
+    - default_factorio_data_dir_silent_write
+packaging:
+  bundles_factorio_binaries: false
+  windows_single_exe_temp_execution: false
+  macos_executable_in_resources: false

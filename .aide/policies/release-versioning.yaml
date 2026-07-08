@@ -1,0 +1,24 @@
+schema_version: aide.release-versioning-policy.v0
+policy_id: aide-release-versioning-v0
+status: active
+purpose: >
+  Define local bundle naming and version identity without inventing a public
+  SemVer contract.
+bundle_name: aide-lite-pack-v0
+release_id_policy:
+  - use pack name plus source commit when no stable semver exists
+  - do not invent SemVer
+  - future SemVer only after public compatibility contract
+artifact_naming:
+  zip_archive: aide-lite-pack-v0.zip
+  tar_gz_archive: aide-lite-pack-v0.tar.gz
+  checksums_json: aide-lite-pack-v0.checksums.json
+  sha256sums_text: SHA256SUMS.txt
+  manifest: manifest.yaml
+  install_notes: install.md
+  changelog_preview: CHANGELOG.preview.md
+  release_notes_preview: RELEASE_NOTES.preview.md
+compatibility_statement:
+  public_compatibility_contract: not_established
+  stable_semver: not_established
+  preview_only: true

@@ -87,11 +87,22 @@ universal setup. Cross-product orchestration belongs to universal launcher.
 ```bash
 $env:PYTHONPATH = "source/prototypes/python_launcher"
 python -m unittest discover -s tests -v
+python tools/structure_policy_check.py
 python tools/schema_validate.py
 python tools/security_policy_check.py
 python tools/package_check.py
+python tools/strict_check.py
 python -m factorio_launcher doctor
 ```
+
+## AIDE Lite
+
+This repo includes AIDE Lite as development governance tooling only. It is not
+part of the launcher runtime and must not be bundled in production packages.
+See [docs/architecture/aide_lite_integration.md](docs/architecture/aide_lite_integration.md).
+
+Before large native implementation work, review
+[docs/architecture/pre_code_structure_review.md](docs/architecture/pre_code_structure_review.md).
 
 ## Roadmap
 

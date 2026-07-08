@@ -1,0 +1,39 @@
+schema_version: aide.release-publication-boundary-policy.v0
+policy_id: aide-release-publication-boundary-v0
+status: active
+purpose: >
+  Define the hard Q48 publication boundary and the prerequisites for any later
+  operator-approved publication phase.
+hard_forbidden_actions:
+  - create_git_tag
+  - push_git_tag
+  - create_github_release
+  - upload_release_asset
+  - publish_package
+  - mutate_branch
+  - mutate_github_settings
+  - install_ci
+  - call_network
+  - call_provider_model
+q48_evidence_values:
+  tag_created: false
+  github_release_created: false
+  upload_performed: false
+  branch_mutation: false
+  active_ci_installed: false
+  network_or_github_api_call: false
+future_publication_prerequisites:
+  - clean worktree or accepted generated artifacts
+  - release bundle validation pass
+  - pack-status pass
+  - secret scan pass
+  - changelog/release notes reviewed
+  - publication checklist reviewed
+  - explicit operator approval
+  - tag naming decision
+  - asset list reviewed
+validation_rules:
+  - Generated drafts must state preview_only and no_publish.
+  - Suggested tags must not be created by Q48.
+  - Upload plans must state no_upload.
+  - Publication boundary reports must show no tag, no GitHub Release, no upload, no network/API call, no branch mutation, and no active CI installation.
