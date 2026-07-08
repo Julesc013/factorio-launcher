@@ -4,6 +4,7 @@ import json
 import shutil
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from native_cli import facman_executable, invoke
@@ -149,8 +150,16 @@ class CliTests(unittest.TestCase):
 
     def test_local_mod_import_lock_verify_and_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            mod_zip = Path(tmp) / "example_1.2.3.zip"
-            mod_zip.write_bytes(b"fake local mod zip")
+            mod_zip = Path(tmp) / "filename_only_0.0.1.zip"
+            mod_info = {
+                "name": "metadata-example",
+                "version": "9.8.7",
+                "title": "Metadata Example",
+                "factorio_version": "2.0",
+                "dependencies": ["base >= 2.0", "? space-age >= 2.0", "! conflict-mod"],
+            }
+            with zipfile.ZipFile(mod_zip, "w", compression=zipfile.ZIP_STORED) as archive:
+                archive.writestr("metadata-example_9.8.7/info.json", json.dumps(mod_info))
 
             code, _stdout, stderr = invoke(
                 ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
@@ -166,22 +175,30 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(code, 0, stderr)
             imported = json.loads(stdout)
-            self.assertEqual(imported["name"], "example")
-            self.assertEqual(imported["version"], "1.2.3")
+            self.assertEqual(imported["name"], "metadata-example")
+            self.assertEqual(imported["title"], "Metadata Example")
+            self.assertEqual(imported["version"], "9.8.7")
+            self.assertEqual(imported["factorio_version"], "2.0")
+            self.assertEqual(imported["metadata_source"], "info_json")
+            self.assertEqual(imported["dependencies"], ["base >= 2.0"])
+            self.assertEqual(imported["optional_dependencies"], ["space-age >= 2.0"])
+            self.assertEqual(imported["incompatibilities"], ["conflict-mod"])
             self.assertEqual(len(imported["sha1"]), 40)
 
             code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "lock", "modded", "--json"])
             self.assertEqual(code, 0, stderr)
             lock = json.loads(stdout)
             self.assertEqual(lock["factorio_version"], "2.0.77")
-            self.assertEqual(lock["mods"][0]["file_name"], "example_1.2.3.zip")
+            self.assertEqual(lock["mods"][0]["file_name"], "filename_only_0.0.1.zip")
+            self.assertEqual(lock["mods"][0]["name"], "metadata-example")
+            self.assertEqual(lock["mods"][0]["optional_dependencies"], ["space-age >= 2.0"])
             self.assertTrue((Path(tmp) / "modsets" / "modded.modset-lock.v1.json").is_file())
 
             code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "verify", "modded", "--json"])
             self.assertEqual(code, 0, stderr)
             self.assertEqual(json.loads(stdout)["status"], "ok")
 
-            copied_mod = Path(tmp) / "instances" / "modded" / "mods" / "example_1.2.3.zip"
+            copied_mod = Path(tmp) / "instances" / "modded" / "mods" / "filename_only_0.0.1.zip"
             copied_mod.write_bytes(b"tampered")
             code, stdout, _stderr = invoke(["--workspace", tmp, "modsets", "verify", "modded", "--json"])
             self.assertEqual(code, 1)

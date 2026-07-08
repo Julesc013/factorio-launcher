@@ -60,10 +60,16 @@ struct ProcessResult {
 
 struct ModRef {
     std::string name;
+    std::string title;
     std::string version;
+    std::string factorio_version;
     fs::path file_path;
     std::string file_name;
     std::string sha1;
+    std::string metadata_source;
+    std::vector<std::string> dependencies;
+    std::vector<std::string> optional_dependencies;
+    std::vector<std::string> incompatibilities;
 };
 
 struct SaveRef {
@@ -83,6 +89,10 @@ struct ZipEntry {
     std::string name;
     std::vector<unsigned char> data;
 };
+
+bool read_stored_zip(const fs::path& input_path, std::vector<ZipEntry>& entries, std::string& error);
+
+const ZipEntry* find_mod_info_entry(const std::vector<ZipEntry>& entries);
 
 std::string path_string(const fs::path& path)
 {
@@ -582,6 +592,102 @@ std::string json_string_value(const std::string& text, const std::string& key)
     return value.str();
 }
 
+std::string trim_copy(const std::string& text)
+{
+    std::size_t first = 0;
+    while (first < text.size() && std::isspace(static_cast<unsigned char>(text[first]))) {
+        ++first;
+    }
+    std::size_t last = text.size();
+    while (last > first && std::isspace(static_cast<unsigned char>(text[last - 1]))) {
+        --last;
+    }
+    return text.substr(first, last - first);
+}
+
+std::vector<std::string> json_string_array_value(const std::string& text, const std::string& key)
+{
+    std::vector<std::string> values;
+    std::string token = "\"" + key + "\"";
+    std::size_t key_pos = text.find(token);
+    if (key_pos == std::string::npos) {
+        return values;
+    }
+    std::size_t colon = text.find(':', key_pos + token.size());
+    if (colon == std::string::npos) {
+        return values;
+    }
+    std::size_t position = text.find('[', colon + 1);
+    if (position == std::string::npos) {
+        return values;
+    }
+    ++position;
+
+    while (position < text.size()) {
+        while (position < text.size() && std::isspace(static_cast<unsigned char>(text[position]))) {
+            ++position;
+        }
+        if (position >= text.size() || text[position] == ']') {
+            break;
+        }
+        if (text[position] != '"') {
+            break;
+        }
+        ++position;
+
+        std::ostringstream value;
+        bool escaped = false;
+        for (; position < text.size(); ++position) {
+            char ch = text[position];
+            if (escaped) {
+                switch (ch) {
+                case 'n':
+                    value << '\n';
+                    break;
+                case 'r':
+                    value << '\r';
+                    break;
+                case 't':
+                    value << '\t';
+                    break;
+                case '\\':
+                case '"':
+                case '/':
+                    value << ch;
+                    break;
+                default:
+                    value << ch;
+                    break;
+                }
+                escaped = false;
+                continue;
+            }
+            if (ch == '\\') {
+                escaped = true;
+                continue;
+            }
+            if (ch == '"') {
+                ++position;
+                break;
+            }
+            value << ch;
+        }
+        values.push_back(value.str());
+
+        while (position < text.size() && std::isspace(static_cast<unsigned char>(text[position]))) {
+            ++position;
+        }
+        if (position < text.size() && text[position] == ',') {
+            ++position;
+            continue;
+        }
+        if (position < text.size() && text[position] == ']') {
+            break;
+        }
+    }
+    return values;
+}
+
 std::string slugify(const std::string& text)
 {
     std::string out;
@@ -899,6 +1005,67 @@ fs::path workspace_modset_lock_path(const fs::path& workspace, const InstanceRef
     return workspace / "modsets" / (instance.instance_id + ".modset-lock.v1.json");
 }
 
+void apply_mod_dependency(ModRef& mod, const std::string& dependency)
+{
+    std::string trimmed = trim_copy(dependency);
+    if (trimmed.empty()) {
+        return;
+    }
+    if (trimmed[0] == '?') {
+        mod.optional_dependencies.push_back(trim_copy(trimmed.substr(1)));
+        return;
+    }
+    if (trimmed[0] == '!') {
+        mod.incompatibilities.push_back(trim_copy(trimmed.substr(1)));
+        return;
+    }
+    mod.dependencies.push_back(trimmed);
+}
+
+void apply_mod_info_json(ModRef& mod, const std::string& info_json)
+{
+    std::string metadata_name = json_string_value(info_json, "name");
+    std::string metadata_version = json_string_value(info_json, "version");
+    std::string metadata_title = json_string_value(info_json, "title");
+    std::string metadata_factorio_version = json_string_value(info_json, "factorio_version");
+
+    if (!metadata_name.empty()) {
+        mod.name = metadata_name;
+    }
+    if (!metadata_version.empty()) {
+        mod.version = metadata_version;
+    }
+    if (!metadata_title.empty()) {
+        mod.title = metadata_title;
+    }
+    if (!metadata_factorio_version.empty()) {
+        mod.factorio_version = metadata_factorio_version;
+    }
+
+    mod.dependencies.clear();
+    mod.optional_dependencies.clear();
+    mod.incompatibilities.clear();
+    for (const std::string& dependency : json_string_array_value(info_json, "dependencies")) {
+        apply_mod_dependency(mod, dependency);
+    }
+    mod.metadata_source = "info_json";
+}
+
+void apply_mod_info_from_zip(ModRef& mod)
+{
+    std::vector<ZipEntry> entries;
+    std::string error;
+    if (!read_stored_zip(mod.file_path, entries, error)) {
+        return;
+    }
+    const ZipEntry* info = find_mod_info_entry(entries);
+    if (info == 0) {
+        return;
+    }
+    std::string info_json(info->data.begin(), info->data.end());
+    apply_mod_info_json(mod, info_json);
+}
+
 ModRef mod_ref_from_path(const fs::path& path)
 {
     ModRef mod;
@@ -913,6 +1080,10 @@ ModRef mod_ref_from_path(const fs::path& path)
         mod.name = stem.substr(0, split);
         mod.version = stem.substr(split + 1);
     }
+    mod.title = mod.name;
+    mod.factorio_version = "unknown";
+    mod.metadata_source = "filename";
+    apply_mod_info_from_zip(mod);
     std::vector<unsigned char> bytes = read_bytes(path);
     mod.sha1 = sha1_hex(bytes);
     return mod;
@@ -936,17 +1107,36 @@ std::vector<ModRef> instance_mod_files(const InstanceRef& instance)
     return mods;
 }
 
+std::string string_array_json(const std::vector<std::string>& values)
+{
+    std::ostringstream out;
+    out << "[";
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        if (index) {
+            out << ",";
+        }
+        out << quote(values[index]);
+    }
+    out << "]";
+    return out.str();
+}
+
 std::string mod_ref_json(const ModRef& mod)
 {
     std::ostringstream out;
     out << "{";
     out << "\"name\":" << quote(mod.name) << ",";
+    out << "\"title\":" << quote(mod.title) << ",";
     out << "\"version\":" << quote(mod.version) << ",";
+    out << "\"factorio_version\":" << quote(mod.factorio_version) << ",";
     out << "\"file_name\":" << quote(mod.file_name) << ",";
     out << "\"sha1\":" << quote(mod.sha1) << ",";
     out << "\"source\":\"local\",";
+    out << "\"metadata_source\":" << quote(mod.metadata_source) << ",";
     out << "\"enabled\":true,";
-    out << "\"dependencies\":[]";
+    out << "\"dependencies\":" << string_array_json(mod.dependencies) << ",";
+    out << "\"optional_dependencies\":" << string_array_json(mod.optional_dependencies) << ",";
+    out << "\"incompatibilities\":" << string_array_json(mod.incompatibilities);
     out << "}";
     return out.str();
 }
@@ -1183,6 +1373,22 @@ const ZipEntry* find_zip_entry(const std::vector<ZipEntry>& entries, const std::
     return 0;
 }
 
+const ZipEntry* find_mod_info_entry(const std::vector<ZipEntry>& entries)
+{
+    const ZipEntry* exact = find_zip_entry(entries, "info.json");
+    if (exact != 0) {
+        return exact;
+    }
+    for (const ZipEntry& entry : entries) {
+        const std::string suffix = "/info.json";
+        if (entry.name.size() > suffix.size() &&
+            entry.name.compare(entry.name.size() - suffix.size(), suffix.size(), suffix) == 0) {
+            return &entry;
+        }
+    }
+    return 0;
+}
+
 std::vector<unsigned char> bytes_from_text(const std::string& text)
 {
     return std::vector<unsigned char>(text.begin(), text.end());
@@ -1314,20 +1520,6 @@ std::vector<std::string> launch_args(const InstanceRef& instance)
 std::string command_line_for_display(const fs::path& executable, const std::vector<std::string>& args)
 {
     return facman::factorio::launch::command_line_for_display(executable, args);
-}
-
-std::string string_array_json(const std::vector<std::string>& values)
-{
-    std::ostringstream out;
-    out << "[";
-    for (std::size_t index = 0; index < values.size(); ++index) {
-        if (index) {
-            out << ",";
-        }
-        out << quote(values[index]);
-    }
-    out << "]";
-    return out.str();
 }
 
 std::string launch_preflight_refusal_json(const InstanceRef& instance, const std::vector<std::string>& problems)
