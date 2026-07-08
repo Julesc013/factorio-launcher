@@ -203,6 +203,81 @@ class CliTests(unittest.TestCase):
             self.assertEqual(uninstall["refusal"]["code"], "ownership_denied")
             self.assertFalse(uninstall["mutates_install"])
 
+    def test_saves_backup_clone_and_instance_export_are_portable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Source World", "--install", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Target World", "--install", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            source_save = Path(tmp) / "instances" / "source-world" / "saves" / "starter.zip"
+            source_save.write_bytes(b"fake save zip")
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "saves", "list", "--instance", "source-world", "--json"])
+            self.assertEqual(code, 0, stderr)
+            saves = json.loads(stdout)
+            self.assertEqual(saves["saves"][0]["file_name"], "starter.zip")
+
+            backup = Path(tmp) / "starter.backup.zip"
+            code, stdout, stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "saves",
+                    "backup",
+                    "starter",
+                    "--instance",
+                    "source-world",
+                    "--to",
+                    str(backup),
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(Path(json.loads(stdout)["path"]), backup)
+            self.assertEqual(backup.read_bytes(), b"fake save zip")
+
+            code, stdout, stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "saves",
+                    "clone",
+                    "starter",
+                    "--instance",
+                    "source-world",
+                    "--to-instance",
+                    "target-world",
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 0, stderr)
+            cloned = json.loads(stdout)
+            self.assertEqual(cloned["target_instance_id"], "target-world")
+            self.assertEqual(
+                (Path(tmp) / "instances" / "target-world" / "saves" / "starter.zip").read_bytes(),
+                b"fake save zip",
+            )
+
+            pack = Path(tmp) / "instance.zip"
+            code, stdout, stderr = invoke(["--workspace", tmp, "export", "instance", "source-world", str(pack), "--json"])
+            self.assertEqual(code, 0, stderr)
+            exported = json.loads(stdout)
+            self.assertEqual(exported["schema"], "factorio.instance_export.v1")
+            self.assertIn("local_data_root", exported["redactions"])
+            pack_bytes = pack.read_bytes()
+            self.assertTrue(pack_bytes.startswith(b"PK\x03\x04"))
+            self.assertIn(b"$FACMAN_INSTANCE_ROOT", pack_bytes)
+            self.assertNotIn(str(Path(tmp)).encode("utf-8"), pack_bytes)
+
 
 if __name__ == "__main__":
     unittest.main()

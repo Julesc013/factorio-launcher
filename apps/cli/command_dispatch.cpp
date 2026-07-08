@@ -72,6 +72,13 @@ struct ModRef {
     std::string sha1;
 };
 
+struct SaveRef {
+    std::string name;
+    std::string file_name;
+    fs::path file_path;
+    std::uintmax_t size;
+};
+
 std::string path_string(const fs::path& path)
 {
     return path.lexically_normal().string();
@@ -1191,6 +1198,129 @@ bool write_stored_zip(const fs::path& output_path, const std::vector<std::pair<s
     return true;
 }
 
+std::vector<unsigned char> bytes_from_text(const std::string& text)
+{
+    return std::vector<unsigned char>(text.begin(), text.end());
+}
+
+std::vector<SaveRef> instance_save_files(const InstanceRef& instance)
+{
+    std::vector<SaveRef> saves;
+    fs::path save_root = instance.local_data_root / "saves";
+    if (!fs::exists(save_root)) {
+        return saves;
+    }
+    for (const fs::directory_entry& entry : fs::directory_iterator(save_root)) {
+        if (!entry.is_regular_file() || entry.path().extension() != ".zip") {
+            continue;
+        }
+        SaveRef save;
+        save.file_path = entry.path();
+        save.file_name = entry.path().filename().string();
+        save.name = entry.path().stem().string();
+        save.size = fs::file_size(entry.path());
+        saves.push_back(save);
+    }
+    std::sort(saves.begin(), saves.end(), [](const SaveRef& left, const SaveRef& right) {
+        return left.file_name < right.file_name;
+    });
+    return saves;
+}
+
+std::string save_ref_json(const SaveRef& save)
+{
+    std::ostringstream out;
+    out << "{";
+    out << "\"name\":" << quote(save.name) << ",";
+    out << "\"file_name\":" << quote(save.file_name) << ",";
+    out << "\"path\":" << quote(path_string(save.file_path)) << ",";
+    out << "\"size\":" << save.size;
+    out << "}";
+    return out.str();
+}
+
+std::string saves_json(const InstanceRef& instance)
+{
+    std::vector<SaveRef> saves = instance_save_files(instance);
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.saves.v1\",\n";
+    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+    out << "  \"saves\": [";
+    for (std::size_t index = 0; index < saves.size(); ++index) {
+        if (index) {
+            out << ",";
+        }
+        out << save_ref_json(saves[index]);
+    }
+    out << "]\n";
+    out << "}\n";
+    return out.str();
+}
+
+bool resolve_instance_save(const InstanceRef& instance, const std::string& save_name, SaveRef& out)
+{
+    fs::path save_root = instance.local_data_root / "saves";
+    fs::path candidate = save_root / save_name;
+    if (!fs::is_regular_file(candidate) && candidate.extension() != ".zip") {
+        candidate = save_root / (save_name + ".zip");
+    }
+    if (!fs::is_regular_file(candidate)) {
+        return false;
+    }
+    out.file_path = candidate;
+    out.file_name = candidate.filename().string();
+    out.name = candidate.stem().string();
+    out.size = fs::file_size(candidate);
+    return true;
+}
+
+std::string redacted_instance_json(const InstanceRef& instance)
+{
+    InstanceRef redacted = instance;
+    redacted.local_data_root = "$FACMAN_INSTANCE_ROOT";
+    return instance_json(redacted);
+}
+
+std::string export_manifest_json(const InstanceRef& instance, std::size_t file_count)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.instance_export_manifest.v1\",\n";
+    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+    out << "  \"portable\": true,\n";
+    out << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\"],\n";
+    out << "  \"files\": " << file_count << "\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::vector<std::pair<std::string, std::vector<unsigned char>>> instance_export_files(const InstanceRef& instance)
+{
+    std::vector<std::pair<std::string, std::vector<unsigned char>>> files;
+    files.push_back({"instance.v1.json", bytes_from_text(redacted_instance_json(instance))});
+
+    fs::path config_ini = instance.local_data_root / "config" / "config.ini";
+    if (fs::is_regular_file(config_ini)) {
+        files.push_back({"config/config.ini", read_bytes(config_ini)});
+    }
+    files.push_back({"config/config-path.cfg", bytes_from_text("read-data=$FACMAN_INSTALL_ROOT\nwrite-data=$FACMAN_INSTANCE_ROOT\n")});
+
+    fs::path modset_lock = modset_lock_path(instance);
+    if (fs::is_regular_file(modset_lock)) {
+        files.push_back({"mods/modset-lock.v1.json", read_bytes(modset_lock)});
+    }
+    for (const ModRef& mod : instance_mod_files(instance)) {
+        files.push_back({"mods/" + mod.file_name, read_bytes(mod.file_path)});
+    }
+    for (const SaveRef& save : instance_save_files(instance)) {
+        files.push_back({"saves/" + save.file_name, read_bytes(save.file_path)});
+    }
+
+    files.insert(files.begin(), {"manifest/export.v1.json", bytes_from_text(export_manifest_json(instance, files.size() + 1))});
+    return files;
+}
+
 std::vector<std::string> launch_args(const InstanceRef& instance)
 {
     std::vector<std::string> args;
@@ -1379,6 +1509,10 @@ int print_help()
     std::cout << "  modsets lock <instance-id> [--json]\n";
     std::cout << "  modsets verify <instance-id> [--json]\n";
     std::cout << "  modsets export <instance-id> <pack.zip> [--json]\n";
+    std::cout << "  saves list --instance <instance-id> [--json]\n";
+    std::cout << "  saves backup <save> --instance <instance-id> [--to <path>] [--json]\n";
+    std::cout << "  saves clone <save> --instance <source-id> --to-instance <target-id> [--json]\n";
+    std::cout << "  export instance <instance-id> <pack.zip> [--json]\n";
     return 0;
 }
 
@@ -1865,6 +1999,155 @@ int command_modsets(const CliOptions& options)
     return 2;
 }
 
+int command_saves(const CliOptions& options)
+{
+    if (options.args.size() < 2) {
+        std::cerr << "Missing saves subcommand\n";
+        return 2;
+    }
+    ensure_workspace(options.workspace);
+
+    if (options.args[1] == "list") {
+        std::string instance_id = option_value(options.args, "--instance");
+        if (instance_id.empty()) {
+            std::cerr << "saves list requires --instance <instance-id>\n";
+            return 2;
+        }
+        InstanceRef instance;
+        if (!load_instance(options.workspace, instance_id, instance)) {
+            std::cerr << "Unknown instance: " << instance_id << "\n";
+            return 1;
+        }
+        if (has_flag(options.args, "--json")) {
+            std::cout << saves_json(instance);
+        } else {
+            for (const SaveRef& save : instance_save_files(instance)) {
+                std::cout << save.file_name << "\n";
+            }
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "backup") {
+        if (options.args.size() < 3) {
+            std::cerr << "saves backup requires <save>\n";
+            return 2;
+        }
+        std::string instance_id = option_value(options.args, "--instance");
+        if (instance_id.empty()) {
+            std::cerr << "saves backup requires --instance <instance-id>\n";
+            return 2;
+        }
+        InstanceRef instance;
+        if (!load_instance(options.workspace, instance_id, instance)) {
+            std::cerr << "Unknown instance: " << instance_id << "\n";
+            return 1;
+        }
+        SaveRef save;
+        if (!resolve_instance_save(instance, options.args[2], save)) {
+            std::cerr << "Unknown save in instance: " << options.args[2] << "\n";
+            return 1;
+        }
+        std::string output = option_value(options.args, "--to");
+        fs::path backup_path = output.empty()
+            ? instance.local_data_root / "backups" / (save.name + ".backup.zip")
+            : fs::path(output);
+        if (!backup_path.parent_path().empty()) {
+            fs::create_directories(backup_path.parent_path());
+        }
+        fs::copy_file(save.file_path, backup_path, fs::copy_options::overwrite_existing);
+        if (has_flag(options.args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.save_backup.v1\",\n";
+            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+            std::cout << "  \"save\": " << quote(save.file_name) << ",\n";
+            std::cout << "  \"path\": " << quote(path_string(backup_path)) << "\n";
+            std::cout << "}\n";
+        } else {
+            std::cout << "Backed up " << save.file_name << " to " << path_string(backup_path) << "\n";
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "clone") {
+        if (options.args.size() < 3) {
+            std::cerr << "saves clone requires <save>\n";
+            return 2;
+        }
+        std::string source_id = option_value(options.args, "--instance");
+        std::string target_id = option_value(options.args, "--to-instance");
+        if (source_id.empty() || target_id.empty()) {
+            std::cerr << "saves clone requires --instance <source-id> --to-instance <target-id>\n";
+            return 2;
+        }
+        InstanceRef source;
+        InstanceRef target;
+        if (!load_instance(options.workspace, source_id, source)) {
+            std::cerr << "Unknown source instance: " << source_id << "\n";
+            return 1;
+        }
+        if (!load_instance(options.workspace, target_id, target)) {
+            std::cerr << "Unknown target instance: " << target_id << "\n";
+            return 1;
+        }
+        SaveRef save;
+        if (!resolve_instance_save(source, options.args[2], save)) {
+            std::cerr << "Unknown save in source instance: " << options.args[2] << "\n";
+            return 1;
+        }
+        fs::path clone_path = target.local_data_root / "saves" / save.file_name;
+        fs::create_directories(clone_path.parent_path());
+        fs::copy_file(save.file_path, clone_path, fs::copy_options::overwrite_existing);
+        if (has_flag(options.args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.save_clone.v1\",\n";
+            std::cout << "  \"source_instance_id\": " << quote(source.instance_id) << ",\n";
+            std::cout << "  \"target_instance_id\": " << quote(target.instance_id) << ",\n";
+            std::cout << "  \"save\": " << quote(save.file_name) << ",\n";
+            std::cout << "  \"path\": " << quote(path_string(clone_path)) << "\n";
+            std::cout << "}\n";
+        } else {
+            std::cout << "Cloned " << save.file_name << " to " << target.instance_id << "\n";
+        }
+        return 0;
+    }
+
+    std::cerr << "Unknown saves subcommand\n";
+    return 2;
+}
+
+int command_export(const CliOptions& options)
+{
+    if (options.args.size() < 4 || options.args[1] != "instance") {
+        std::cerr << "export instance requires <instance-id> <pack.zip>\n";
+        return 2;
+    }
+    ensure_workspace(options.workspace);
+    InstanceRef instance;
+    if (!load_instance(options.workspace, options.args[2], instance)) {
+        std::cerr << "Unknown instance: " << options.args[2] << "\n";
+        return 1;
+    }
+    std::vector<std::pair<std::string, std::vector<unsigned char>>> files = instance_export_files(instance);
+    fs::path output_path = options.args[3];
+    if (!write_stored_zip(output_path, files)) {
+        std::cerr << "Failed to write instance export: " << path_string(output_path) << "\n";
+        return 1;
+    }
+    if (has_flag(options.args, "--json")) {
+        std::cout << "{\n";
+        std::cout << "  \"schema\": \"factorio.instance_export.v1\",\n";
+        std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+        std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
+        std::cout << "  \"files\": " << files.size() << ",\n";
+        std::cout << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\"]\n";
+        std::cout << "}\n";
+    } else {
+        std::cout << "Exported instance pack to " << path_string(output_path) << "\n";
+    }
+    return 0;
+}
+
 int command_launch_plan(const CliOptions& options)
 {
     if (options.args.size() < 2) {
@@ -1977,6 +2260,12 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     }
     if (command == "modsets") {
         return command_modsets(options);
+    }
+    if (command == "saves") {
+        return command_saves(options);
+    }
+    if (command == "export") {
+        return command_export(options);
     }
 
     std::cerr << "Unknown command: " << command << "\n";
