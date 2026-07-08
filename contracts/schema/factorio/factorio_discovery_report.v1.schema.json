@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_discovery_report.v1.schema.json",
+  "title": "Factorio Discovery Report",
+  "type": "object",
+  "required": ["schema", "command", "installs"],
+  "properties": {
+    "schema": { "const": "factorio.discovery_report.v1" },
+    "command": { "const": "installs.scan" },
+    "installs": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "read_only": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

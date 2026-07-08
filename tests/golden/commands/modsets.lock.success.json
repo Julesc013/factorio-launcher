@@ -1,0 +1,6 @@
+{
+  "schema": "factorio.modset_lock.v1",
+  "command": "modsets.lock",
+  "instance_id": "modded",
+  "mods": []
+}

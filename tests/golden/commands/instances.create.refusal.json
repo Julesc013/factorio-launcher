@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "instances.create",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unknown_install",
+    "reason": "instance install reference is not registered",
+    "recoverable": true
+  }
+}

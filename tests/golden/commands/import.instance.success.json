@@ -1,0 +1,6 @@
+{
+  "schema": "factorio.instance_import.v1",
+  "command": "import.instance",
+  "instance_id": "restored-world",
+  "status": "ok"
+}

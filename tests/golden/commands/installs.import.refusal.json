@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "installs.import",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "invalid_install",
+    "reason": "path does not look like a Factorio install",
+    "recoverable": true
+  }
+}

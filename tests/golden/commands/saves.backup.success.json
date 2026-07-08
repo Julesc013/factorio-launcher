@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.save_backup.v1",
+  "command": "saves.backup",
+  "instance_id": "source-world",
+  "save": "starter.zip",
+  "path": "starter.backup.zip"
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "run.preview",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unknown_instance",
+    "reason": "run preview instance is not registered",
+    "recoverable": true
+  }
+}

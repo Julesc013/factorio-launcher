@@ -2,27 +2,21 @@
 
 The command graph is the stable model that every frontend calls.
 
-Initial command names:
+Locked native command names:
 
 ```text
 product.inspect
 doctor.run
-doctor.instance
-doctor.install
 installs.scan
-installs.list
-installs.inspect
 installs.import
 instances.create
-instances.clone
-instances.list
-instances.inspect
 launch.plan
-launch.run
-mods.import
+run.preview
+run.execute
 modsets.lock
 saves.backup
-servers.start
+export.instance
+import.instance
 ```
 
 Each command declares:
@@ -54,3 +48,14 @@ commands such as `command_graph.inspect`, `install_refs.list`,
 `launch_plan.build`, and `diagnostics.report` are delegated to the universal
 launcher kernel. Existing CLI workspace commands are still an early frontend
 slice until their behavior is moved behind this command graph.
+
+## Contract Files
+
+Each locked command has a descriptor under `contracts/command/factorio/` and
+golden success/refusal examples under `tests/golden/commands/`.
+
+Validate them with:
+
+```powershell
+py -3 tools/command_contract_check.py
+```

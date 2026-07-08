@@ -1,0 +1,6 @@
+{
+  "schema": "factorio.instance_export.v1",
+  "command": "export.instance",
+  "instance_id": "source-world",
+  "redactions": ["local_data_root", "config-path.cfg"]
+}

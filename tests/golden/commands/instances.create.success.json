@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.instance.v1",
+  "command": "instances.create",
+  "instance_id": "space-age-main",
+  "install_ref": "fixture",
+  "save_policy": "instance-local"
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "product.inspect",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "invalid_request",
+    "reason": "product inspection request is invalid",
+    "recoverable": true
+  }
+}

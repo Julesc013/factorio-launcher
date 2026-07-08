@@ -6,7 +6,7 @@
   "required": ["schema_version", "status"],
   "properties": {
     "schema_version": { "type": "integer", "minimum": 1 },
-    "status": { "enum": ["ok", "warning", "blocked", "error"] },
+    "status": { "enum": ["ok", "warning", "blocked", "refused", "error"] },
     "message": { "type": ["string", "null"] }
   },
   "additionalProperties": true

@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "saves.backup",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unknown_save",
+    "reason": "save is not present in the instance",
+    "recoverable": true
+  }
+}

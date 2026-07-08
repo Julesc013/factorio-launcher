@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "import.instance",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unsafe_archive_path",
+    "reason": "instance pack contains an unsafe archive entry",
+    "recoverable": true
+  }
+}

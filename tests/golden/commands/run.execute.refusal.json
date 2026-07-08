@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "run.execute",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "preflight_failed",
+    "reason": "execute preflight did not pass",
+    "recoverable": true
+  }
+}

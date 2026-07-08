@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.launch_plan.v1",
+  "command": "launch.plan",
+  "instance_id": "space-age-main",
+  "dry_run_default": true,
+  "args": ["--config", "--mod-directory"]
+}

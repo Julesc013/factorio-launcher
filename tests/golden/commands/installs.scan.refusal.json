@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "installs.scan",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "path_unreadable",
+    "reason": "scan root is not readable",
+    "recoverable": true
+  }
+}

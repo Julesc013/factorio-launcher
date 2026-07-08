@@ -1,0 +1,12 @@
+command_id = "installs.scan"
+cli = "facman installs scan --json"
+request_schema = "contracts/schema/common/command_request.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_discovery_report.v1.schema.json"
+result_schema = "contracts/schema/common/result.v1.schema.json"
+refusal_schema = "contracts/schema/common/refusal.v1.schema.json"
+diagnostic_schema = "contracts/schema/common/diagnostic.v1.schema.json"
+dry_run_default = true
+executes_process = false
+mutates_workspace = false
+golden_success = "tests/golden/commands/installs.scan.success.json"
+golden_refusal = "tests/golden/commands/installs.scan.refusal.json"

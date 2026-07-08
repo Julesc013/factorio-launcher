@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "export.instance",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "export_not_safe",
+    "reason": "instance export preflight refused the pack",
+    "recoverable": true
+  }
+}

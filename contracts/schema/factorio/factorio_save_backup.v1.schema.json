@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_save_backup.v1.schema.json",
+  "title": "Factorio Save Backup",
+  "type": "object",
+  "required": ["schema", "command", "instance_id", "save", "path"],
+  "properties": {
+    "schema": { "const": "factorio.save_backup.v1" },
+    "command": { "const": "saves.backup" },
+    "instance_id": { "type": "string", "minLength": 1 },
+    "save": { "type": "string", "minLength": 1 },
+    "path": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": true
+}

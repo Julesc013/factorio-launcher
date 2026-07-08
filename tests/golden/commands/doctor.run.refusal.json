@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "doctor.run",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "workspace_unavailable",
+    "reason": "doctor could not inspect the workspace",
+    "recoverable": true
+  }
+}

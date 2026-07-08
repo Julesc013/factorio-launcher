@@ -7,7 +7,7 @@
   "properties": {
     "schema_version": { "type": "integer", "minimum": 1 },
     "command_name": { "type": "string" },
-    "status": { "enum": ["ok", "warning", "blocked", "error"] },
+    "status": { "enum": ["ok", "warning", "blocked", "refused", "error"] },
     "payload": { "type": "object" },
     "error": {
       "type": ["object", "null"],

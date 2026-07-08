@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.launch_result.v1",
+  "command": "run.execute",
+  "status": "ok",
+  "started": true,
+  "exit_code": 0
+}

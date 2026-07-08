@@ -1,0 +1,6 @@
+{
+  "schema": "factorio.product.v1",
+  "command": "product.inspect",
+  "product_id": "factorio",
+  "status": "ok"
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "factorio.discovery_report.v1",
+  "command": "installs.scan",
+  "read_only": true,
+  "installs": []
+}
