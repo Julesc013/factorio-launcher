@@ -5,7 +5,7 @@ Public product language must make unofficial status obvious.
 Approved wording:
 
 ```text
-FLaunch - an unofficial launcher and instance manager for Factorio
+FacMan - an unofficial launcher and isolated instance manager for Factorio
 Factory Launcher for Factorio
 ```
 

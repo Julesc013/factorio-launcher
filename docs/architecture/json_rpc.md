@@ -9,9 +9,9 @@ Interop layers are added in this order:
 CLI JSON mode is command-granularity interop:
 
 ```bash
-factorio-launcher --json installs.scan
-factorio-launcher --json instances.list
-factorio-launcher --json launch.plan --instance space-age-main
+facman --json installs.scan
+facman --json instances.list
+facman --json launch.plan --instance space-age-main
 ```
 
 The daemon is for long-running operations:

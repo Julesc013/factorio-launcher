@@ -1,6 +1,6 @@
 # Legal Boundaries
 
-FLaunch is unofficial and must not imply endorsement by Wube Software.
+FacMan is unofficial and must not imply endorsement by Wube Software.
 
 Rules:
 
@@ -13,5 +13,5 @@ Rules:
 Recommended public name:
 
 ```text
-FLaunch - an unofficial launcher and instance manager for Factorio
+FacMan - an unofficial launcher and isolated instance manager for Factorio
 ```

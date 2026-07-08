@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "flaunch.packaging.bundle_manifest.v1",
-  "title": "FLaunch Package Bundle Manifest",
+  "$id": "facman.packaging.bundle_manifest.v1",
+  "title": "FacMan Package Bundle Manifest",
   "type": "object",
   "required": ["schema", "artifact_id", "platform", "package_type", "components"],
   "properties": {

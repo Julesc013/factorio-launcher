@@ -1,74 +1,58 @@
 # Roadmap
 
-## v0.1 - Repo Foundation and Product Boundary
+FacMan proves the universal launcher with real Factorio workflows while
+leaving setup mutation to Universal Setup.
 
-- `factorio-launcher --version`
-- `factorio-launcher product inspect`
-- `factorio-launcher doctor`
-- C ABI policy, command graph policy, schemas, docs, fixtures, native scaffold,
-  and current Python CLI prototype
+## FacMan-CANON-01
 
-## v0.2 - Read-only Install Discovery
+- Repo structure uses `runtime/content/contracts/release`.
+- Product identity is FacMan.
+- Python prototype is quarantined under `apps/python_cli`.
+- Native CLI/TUI/daemon scaffold builds.
+- Validators block retired roots and old GUI app layout.
 
-- `installs scan`
-- `installs list`
-- `installs inspect <install-id>`
-- `installs import <path>`
+## ULAUNCH-MIN-01
 
-No installing, repairing, or uninstalling.
+- Minimal Universal Launcher owns product registry, install refs, instances,
+  profiles, account refs, artifact sets, launch plans, diagnostics, and command
+  JSON I/O.
+- No Factorio logic enters Universal Launcher.
 
-## v0.3 - Isolated Instances and Launch Plans
+## FacMan-DISCOVERY-01
 
-- `instances create`
-- `instances list`
-- `launch-plan <instance>`
-- dry-run `run <instance>`
+- `facman product inspect`
+- `facman doctor`
+- `facman installs scan`
+- `facman installs inspect <install-id>`
+- `facman installs import <path>`
+- JSON output for read-only reports.
+- No installing, repairing, uninstalling, or downloading.
 
-## v0.4 - Local Modsets
+## FacMan-INSTANCE-01
 
-- local ZIP import
-- lockfile generation
-- lockfile verification
+- `facman instances create <name> --install <install-id>`
+- `facman instances list`
+- `facman launch-plan <instance>`
+- `facman run <instance> --execute`
+- Default run mode remains dry-run.
+- No silent writes to global Factorio data.
 
-## v0.5 - Mod Portal Adapter
+## FacMan-MODSET-01
 
-- search
-- install
-- update
+- Local ZIP mod import.
+- Modset lockfile generation.
+- Modset verification.
+- Modset export.
 
-## v0.6 - Save Manager and Export/Import
+## FacMan-SETUP-HANDOFF-01
 
-- save import
-- save backup
-- instance export/import
+- Managed install commands call Universal Setup.
+- Ownership classes distinguish managed, foreign-owned, imported, and portable
+  installs.
+- Steam remains foreign-owned.
 
-## v0.7 - Universal Setup Integration
+## FacMan-GUI-01
 
-- managed install flow through universal setup
-- setup audit handoff
-
-## v0.8 - Server Manager
-
-- headless registration
-- server create/start/stop/export
-
-## v0.9 - Modder Tools
-
-- dump data
-- benchmark
-- instrument mod
-- bug report bundles
-
-## v1.0 - Stable CLI and Portable Release
-
-- stable schemas
-- stable CLI names
-- portable workspace mode
-- safe instance isolation
-- no known token leakage
-- no known Steam-owned install mutation
-
-## v1.1+ - TUI and GUI
-
-Only after the command graph stabilizes. CLI, TUI, WinForms, AppKit, GTK, and
-Qt are all frontends over the same command graph/native service/C ABI.
+- Win32/WinForms, AppKit, GTK, and optional Qt frontends render the same command
+  graph.
+- No GUI-only behavior.

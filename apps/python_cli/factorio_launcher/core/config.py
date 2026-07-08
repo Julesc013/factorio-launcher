@@ -5,7 +5,7 @@ from pathlib import Path
 
 from factorio_launcher import __version__
 
-APP_NAME = "factorio-launcher"
+APP_NAME = "facman"
 APP_VERSION = __version__
 PRODUCT_ID = "factorio"
 
@@ -33,7 +33,7 @@ def factorio_schema_dir() -> Path:
 
 
 def default_workspace() -> Path:
-    env_value = os.environ.get("FACTORIO_LAUNCHER_WORKSPACE")
+    env_value = os.environ.get("FACMAN_WORKSPACE") or os.environ.get("FACTORIO_LAUNCHER_WORKSPACE")
     if env_value:
         return Path(env_value).expanduser()
-    return Path.home() / ".factorio-launcher" / "workspace"
+    return Path.home() / ".facman" / "workspace"

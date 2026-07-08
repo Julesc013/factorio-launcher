@@ -1,6 +1,6 @@
 # AIDE Lite Integration
 
-AIDE Lite is repo-local development tooling for FLaunch. It is not a launcher
+AIDE Lite is repo-local development tooling for FacMan. It is not a launcher
 runtime dependency and must not be included in production packages.
 
 The imported pack comes from `Julesc013/aide` `main` at:
@@ -41,7 +41,7 @@ The target profile lives at `.aide/profile.yaml`.
 
 Current target facts:
 
-- Project name: FLaunch / factorio-launcher.
+- Project name: FacMan / factorio-launcher.
 - Purpose: unofficial Factorio launcher and isolated instance manager.
 - Runtime boundary: production packages must not depend on AIDE.
 - Python boundary: the current runnable CLI is a quarantined prototype under
@@ -90,10 +90,10 @@ py -3 .aide/scripts/aide_lite.py review-pack
 py -3 .aide/scripts/aide_lite.py commit check --latest
 ```
 
-`py -3 .aide/scripts/aide_lite.py test` is not part of the required FLaunch
+`py -3 .aide/scripts/aide_lite.py test` is not part of the required FacMan
 proof path after safe import. In this import mode, broad AIDE source roots are
 intentionally skipped, and optional self-tests that import those source roots
-may fail. Do not vendor AIDE source roots into FLaunch just to make optional
+may fail. Do not vendor AIDE source roots into FacMan just to make optional
 AIDE self-tests green.
 
 ## First AIDE Baseline Task

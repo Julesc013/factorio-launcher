@@ -4,9 +4,9 @@ Reference date: 2026-07-08.
 
 Launcher support and Factorio runtime support are separate promises:
 
-- launcher OS support: where FLaunch itself can run
+- launcher OS support: where FacMan itself can run
 - Factorio runtime support: where the selected Factorio version can run
-- managed instance support: where FLaunch can safely isolate instances
+- managed instance support: where FacMan can safely isolate instances
 - upstream support: what Wube currently documents for Factorio
 
 ## Tiers

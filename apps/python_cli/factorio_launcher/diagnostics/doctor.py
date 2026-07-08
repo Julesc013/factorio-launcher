@@ -35,8 +35,8 @@ def run_doctor(workspace: Path) -> dict[str, object]:
     instances = list_instances(workspace)
     if not installs:
         warnings.append("no install references registered yet")
-        suggestions.append("run: factorio-launcher installs scan")
-        suggestions.append("run: factorio-launcher installs import <path>")
+        suggestions.append("run: facman installs scan")
+        suggestions.append("run: facman installs import <path>")
 
     status = "ok"
     if problems:

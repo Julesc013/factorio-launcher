@@ -4,6 +4,6 @@ int main(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
-    puts("factorio-launcher GTK scaffold");
+    puts("FacMan GTK scaffold");
     return 0;
 }

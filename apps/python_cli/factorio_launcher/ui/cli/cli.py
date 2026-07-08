@@ -27,7 +27,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if getattr(args, "version", False):
-        print(f"factorio-launcher {APP_VERSION}")
+        print(f"FacMan {APP_VERSION}")
         return 0
     if not hasattr(args, "handler"):
         parser.print_help()
@@ -41,7 +41,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="factorio-launcher",
+        prog="facman",
         description="Unofficial Factorio launcher and isolated instance manager.",
     )
     parser.add_argument("--version", action="store_true", help="print version and exit")
@@ -49,7 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--workspace",
         type=Path,
         default=default_workspace(),
-        help="workspace root (default: FACTORIO_LAUNCHER_WORKSPACE or user profile)",
+        help="workspace root (default: FACMAN_WORKSPACE, FACTORIO_LAUNCHER_WORKSPACE, or user profile)",
     )
     subparsers = parser.add_subparsers(dest="command")
 

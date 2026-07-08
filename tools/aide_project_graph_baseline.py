@@ -153,7 +153,7 @@ def build_findings() -> list[dict[str, Any]]:
             "info",
             "universal_split",
             "universal setup and launcher are sibling repositories",
-            "FLaunch must not own universal setup or launcher runtime implementation",
+            "FacMan must not own universal setup or launcher runtime implementation",
             "Factorio repo keeps only include/flb and runtime/factorio; universal code moved out",
             ["include/flb", "runtime/factorio", "../universal-setup", "../universal-launcher"],
             "Harden universal repo validators before large native code expansion.",

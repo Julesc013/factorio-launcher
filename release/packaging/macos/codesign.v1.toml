@@ -1,4 +1,4 @@
-schema = "flaunch.packaging.codesign.v1"
+schema = "facman.packaging.codesign.v1"
 platform = "macos"
 sign_app_bundle = true
 sign_macos_tools = true

@@ -25,7 +25,7 @@ class CliTests(unittest.TestCase):
     def test_version(self) -> None:
         code, stdout, stderr = invoke(["--version"])
         self.assertEqual(code, 0, stderr)
-        self.assertIn("factorio-launcher 0.1.0", stdout)
+        self.assertIn("FacMan 0.1.0", stdout)
 
     def test_product_inspect_json(self) -> None:
         code, stdout, stderr = invoke(["product", "inspect", "--json"])
@@ -82,4 +82,3 @@ class CliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -3,6 +3,7 @@
 Architecture:
 
 - [Overview](architecture/overview.md)
+- [Ecosystem Vision](architecture/ecosystem_vision.md)
 - [Boundary](architecture/boundary.md)
 - [Naming](architecture/naming.md)
 - [Ownership Model](architecture/ownership_model.md)
@@ -22,6 +23,7 @@ Architecture:
 - [JSON RPC](architecture/json_rpc.md)
 - [Data Model](architecture/data_model.md)
 - [Directory Structure](architecture/directory_structure.md)
+- [Root Grammar](architecture/root_grammar.md)
 - [Frontend Policy](architecture/frontend_policy.md)
 - [Portability Model](architecture/portability_model.md)
 - [Product Binding ABI](architecture/product_binding_abi.md)
@@ -31,6 +33,7 @@ Architecture:
 
 Product:
 
+- [Product Vision](product/product_vision.md)
 - [Branding](product/branding.md)
 - [Factorio Scope](product/factorio_scope.md)
 - [Legal Boundaries](product/legal_boundaries.md)

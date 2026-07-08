@@ -5,10 +5,10 @@ The first discovery implementation is read-only.
 Commands:
 
 ```bash
-factorio-launcher installs scan
-factorio-launcher installs list
-factorio-launcher installs inspect <install-id>
-factorio-launcher installs import <path>
+facman installs scan
+facman installs list
+facman installs inspect <install-id>
+facman installs import <path>
 ```
 
 Ownership classifications:

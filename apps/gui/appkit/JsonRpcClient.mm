@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
 
-void FLaunchJsonRpcClientPlaceholder(void)
+void FacManJsonRpcClientPlaceholder(void)
 {
 }

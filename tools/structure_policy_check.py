@@ -137,6 +137,7 @@ def main() -> int:
     problems.extend(check_data_is_not_code())
     problems.extend(check_command_graph_spine())
     problems.extend(check_aide_is_not_runtime_dependency())
+    problems.extend(check_facman_identity())
     if problems:
         for problem in problems:
             print(f"structure-check: {problem}", file=sys.stderr)
@@ -294,6 +295,36 @@ def check_aide_is_not_runtime_dependency() -> list[str]:
         text = path.read_text(encoding="utf-8").lower()
         if ".aide" in text or "aide" in text:
             problems.append(f"production package manifest must not bundle AIDE: {path.relative_to(ROOT)}")
+    return problems
+
+
+def check_facman_identity() -> list[str]:
+    problems: list[str] = []
+    required_docs = [
+        ROOT / "docs" / "architecture" / "ecosystem_vision.md",
+        ROOT / "docs" / "architecture" / "root_grammar.md",
+        ROOT / "docs" / "product" / "product_vision.md",
+        ROOT / "docs" / "roadmap.md",
+    ]
+    for path in required_docs:
+        if not path.is_file():
+            problems.append(f"missing FacMan vision document: {path.relative_to(ROOT)}")
+
+    readme = ROOT / "README.md"
+    if readme.is_file() and "FacMan" not in readme.read_text(encoding="utf-8"):
+        problems.append("README.md must use the FacMan product identity")
+
+    product_manifest = ROOT / "content" / "factorio" / "product" / "factorio.product.toml"
+    if product_manifest.is_file():
+        text = product_manifest.read_text(encoding="utf-8")
+        if "FacMan" not in text:
+            problems.append("Factorio product manifest must use the FacMan public name")
+
+    bundle_schema = ROOT / "contracts" / "schema" / "release" / "packaging" / "bundle_manifest.v1.schema.json"
+    if bundle_schema.is_file():
+        text = bundle_schema.read_text(encoding="utf-8")
+        if "facman.packaging." not in text:
+            problems.append("packaging schema must use the facman.packaging namespace")
     return problems
 
 

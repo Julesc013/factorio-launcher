@@ -1,6 +1,6 @@
 # Architecture
 
-FLaunch is the Factorio-facing product binding and app shell for a future
+FacMan is the Factorio-facing product binding and app shell for a future
 universal launcher ecosystem.
 
 ```text

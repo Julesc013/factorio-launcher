@@ -1,4 +1,4 @@
 managed = "universal setup owns install mutation"
-foreign = "external owner; FLaunch read-only"
+foreign = "external owner; FacMan read-only"
 imported = "user-selected folder; repair/uninstall disabled until adoption"
 portable = "user-controlled portable tree; may be adopted only with authorization"

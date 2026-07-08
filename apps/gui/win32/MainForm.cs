@@ -6,7 +6,7 @@ namespace FactorioLauncher.WinForms
     {
         public MainForm()
         {
-            Text = "FLaunch";
+            Text = "FacMan";
             Width = 960;
             Height = 640;
         }

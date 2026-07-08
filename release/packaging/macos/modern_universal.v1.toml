@@ -1,5 +1,5 @@
-schema = "flaunch.packaging.bundle_manifest.v1"
-artifact_id = "FLaunch-<version>-macos-modern-universal"
+schema = "facman.packaging.bundle_manifest.v1"
+artifact_id = "FacMan-<version>-macos-modern-universal"
 platform = "macos"
 support_level = "primary_modern"
 package_type = "dmg"
@@ -7,4 +7,4 @@ architecture = "universal2"
 deployment_target = "11.0"
 python_runtime = false
 bundles_factorio_binaries = false
-base_manifest = "release/packaging/macos/flaunch_app.v1.toml"
+base_manifest = "release/packaging/macos/facman_app.v1.toml"

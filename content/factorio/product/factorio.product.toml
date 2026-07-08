@@ -1,6 +1,6 @@
 product_id = "factorio"
 display_name = "Factorio"
-public_name = "FLaunch - an unofficial launcher and instance manager for Factorio"
+public_name = "FacMan - an unofficial launcher and isolated instance manager for Factorio"
 binding = "factorio-product-binding"
 schema_version = 1
 unofficial = true

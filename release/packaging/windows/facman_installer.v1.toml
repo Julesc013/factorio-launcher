@@ -1,11 +1,11 @@
-schema = "flaunch.packaging.bundle_manifest.v1"
-artifact_id = "FLaunch-Setup-<version>-windows-x64"
+schema = "facman.packaging.bundle_manifest.v1"
+artifact_id = "FacMan-Setup-<version>-windows-x64"
 platform = "windows"
 support_level = "primary"
 package_type = "installer"
 architecture = "x64"
 python_runtime = false
 bundles_factorio_binaries = false
-entrypoint = "FLaunch.exe"
-base_manifest = "release/packaging/windows/flaunch_portable.v1.toml"
+entrypoint = "FacMan.exe"
+base_manifest = "release/packaging/windows/facman_portable.v1.toml"
 installer_features = ["start_menu", "uninstaller", "file_associations"]

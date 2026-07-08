@@ -4,6 +4,6 @@ int main(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
-    puts("factorio-launcher TUI scaffold");
+    puts("FacMan TUI scaffold");
     return 0;
 }

@@ -14,10 +14,10 @@ class PackageManifestTests(unittest.TestCase):
 
     def test_platform_manifests_exist(self) -> None:
         expected = [
-            "release/packaging/windows/flaunch_portable.v1.toml",
-            "release/packaging/windows/flaunch_installer.v1.toml",
-            "release/packaging/windows/flaunch_single_exe.v1.toml",
-            "release/packaging/macos/flaunch_app.v1.toml",
+            "release/packaging/windows/facman_portable.v1.toml",
+            "release/packaging/windows/facman_installer.v1.toml",
+            "release/packaging/windows/facman_single_exe.v1.toml",
+            "release/packaging/macos/facman_app.v1.toml",
             "release/packaging/macos/legacy_x86_64.v1.toml",
             "release/packaging/macos/modern_universal.v1.toml",
             "release/packaging/linux/appimage.v1.toml",

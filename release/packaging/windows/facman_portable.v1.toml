@@ -1,17 +1,17 @@
-schema = "flaunch.packaging.bundle_manifest.v1"
-artifact_id = "FLaunch-<version>-windows-x64-portable"
+schema = "facman.packaging.bundle_manifest.v1"
+artifact_id = "FacMan-<version>-windows-x64-portable"
 platform = "windows"
 support_level = "primary"
 package_type = "portable_zip"
 architecture = "x64"
 python_runtime = false
 bundles_factorio_binaries = false
-entrypoint = "FLaunch.exe"
+entrypoint = "FacMan.exe"
 
 [[components]]
 name = "winforms_gui"
-source_target = "apps/winforms"
-destination = "FLaunch.exe"
+source_target = "apps/gui/win32"
+destination = "FacMan.exe"
 required_platform = "windows"
 architecture = "x64"
 hash = "BUILD_TIME"
@@ -22,8 +22,8 @@ license_notice = "THIRD_PARTY_NOTICES.md"
 
 [[components]]
 name = "console_cli"
-source_target = "flaunch_cli"
-destination = "flaunch.exe"
+source_target = "facman_cli"
+destination = "facman.exe"
 required_platform = "windows"
 architecture = "x64"
 hash = "BUILD_TIME"
@@ -34,8 +34,8 @@ license_notice = "THIRD_PARTY_NOTICES.md"
 
 [[components]]
 name = "console_tui"
-source_target = "flaunch_tui"
-destination = "flaunch-tui.exe"
+source_target = "facman_tui"
+destination = "facman-tui.exe"
 required_platform = "windows"
 architecture = "x64"
 hash = "BUILD_TIME"
@@ -46,8 +46,8 @@ license_notice = "THIRD_PARTY_NOTICES.md"
 
 [[components]]
 name = "daemon"
-source_target = "flaunch_daemon"
-destination = "flaunchd.exe"
+source_target = "facman_daemon"
+destination = "facmand.exe"
 required_platform = "windows"
 architecture = "x64"
 hash = "BUILD_TIME"

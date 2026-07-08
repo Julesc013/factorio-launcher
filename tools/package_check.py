@@ -51,15 +51,15 @@ def validate_manifest(path: Path) -> list[str]:
 
     problems: list[str] = []
     schema = str(manifest.get("schema", ""))
-    if not schema.startswith("flaunch.packaging."):
-        problems.append(f"{path}: schema must use flaunch.packaging namespace")
+    if not schema.startswith("facman.packaging."):
+        problems.append(f"{path}: schema must use facman.packaging namespace")
 
     if manifest.get("python_runtime") is True:
         problems.append(f"{path}: production package must not depend on Python runtime")
     if manifest.get("bundles_factorio_binaries") is True:
         problems.append(f"{path}: must not bundle Factorio binaries")
 
-    if schema == "flaunch.packaging.bundle_manifest.v1":
+    if schema == "facman.packaging.bundle_manifest.v1":
         problems.extend(validate_bundle_manifest(path, manifest))
     return problems
 

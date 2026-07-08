@@ -1,6 +1,6 @@
-# FLaunch - an unofficial launcher and instance manager for Factorio
+# FacMan - an unofficial launcher and isolated instance manager for Factorio
 
-FLaunch is a third-party Factorio launcher focused on isolated, reproducible
+FacMan is a third-party Factorio launcher focused on isolated, reproducible
 environments. It discovers existing installs, creates per-instance data roots,
 generates dry-run launch plans, and keeps install mutation behind a future
 universal setup adapter.
@@ -35,6 +35,14 @@ The CLI is the first frontend, not the foundation of every other frontend.
 CLI, TUI, the Win32/WinForms GUI, AppKit, GTK, and Qt all sit over the same
 command graph, native launcher service, and C ABI.
 
+FacMan's long-term role is to prove the universal launcher with a real product:
+
+```text
+Factorio proves the universal launcher.
+Dominium proves the universal setup.
+FacMan ships as the first serious Factorio product binding.
+```
+
 ## Current Slice
 
 The repository starts with a CLI-first vertical slice:
@@ -57,12 +65,24 @@ $env:PYTHONPATH = "apps/python_cli"
 python -m factorio_launcher --version
 ```
 
-The packaged console command is `factorio-launcher`.
+The packaged console command is `facman`. `factorio-launcher` remains a
+compatibility alias during the prototype phase.
 
 The native CLI scaffold is under `apps/cli/`. The currently
 runnable CLI remains the quarantined Python prototype under
 `apps/python_cli/` until the native command graph reaches
 parity. Production legacy packages should not depend on Python.
+
+## Permanent Rule
+
+```text
+Universal setup mutates installed software state.
+Universal launcher orchestrates runnable product state.
+Factorio binding interprets Factorio-specific facts.
+Frontends present commands and reports.
+Contracts preserve compatibility.
+Validators prevent regression.
+```
 
 ## Architecture Boundary
 

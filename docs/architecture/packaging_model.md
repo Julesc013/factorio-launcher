@@ -1,6 +1,6 @@
 # Packaging Model
 
-FLaunch ships as one seamless user-visible package per platform, not as one
+FacMan ships as one seamless user-visible package per platform, not as one
 giant executable internally.
 
 Each package contains replaceable components:
@@ -25,11 +25,11 @@ profiles.
 The canonical Windows artifact is a portable ZIP:
 
 ```text
-FLaunch-<version>-windows-x64-portable.zip
-  FLaunch.exe
-  flaunch.exe
-  flaunch-tui.exe
-  flaunchd.exe
+FacMan-<version>-windows-x64-portable.zip
+  FacMan.exe
+  facman.exe
+  facman-tui.exe
+  facmand.exe
   bin/
     ulk.dll
     usk.dll
@@ -42,7 +42,7 @@ FLaunch-<version>-windows-x64-portable.zip
 ```
 
 The installer is optional. The single EXE is only a bootstrapper and must
-extract to a versioned `%LOCALAPPDATA%/FLaunch/runtime/...` directory, never to
+extract to a versioned `%LOCALAPPDATA%/FacMan/runtime/...` directory, never to
 `%TEMP%` for normal execution.
 
 ## macOS
@@ -50,12 +50,12 @@ extract to a versioned `%LOCALAPPDATA%/FLaunch/runtime/...` directory, never to
 The macOS package is an `.app` bundle:
 
 ```text
-FLaunch.app/
+FacMan.app/
   Contents/MacOS/
-    FLaunch
-    flaunch
-    flaunch-tui
-    flaunchd
+    FacMan
+    facman
+    facman-tui
+    facmand
   Contents/Frameworks/
     libulk.dylib
     libusk.dylib

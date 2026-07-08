@@ -60,23 +60,23 @@ set_target_properties(flb_factorio_shared PROPERTIES OUTPUT_NAME flb_factorio WI
 add_library(flb_factorio ALIAS flb_factorio_static)
 
 if(FLAUNCH_BUILD_NATIVE_APPS)
-  add_executable(flaunch_cli
+  add_executable(facman_cli
     apps/cli/main.c
     apps/cli/json_mode.c
     apps/cli/command_dispatch.c
   )
-  target_link_libraries(flaunch_cli PRIVATE flaunch_client_static flaunch_runtime_static ulk_static flb_factorio_static)
-  set_target_properties(flaunch_cli PROPERTIES OUTPUT_NAME flaunch)
+  target_link_libraries(facman_cli PRIVATE flaunch_client_static flaunch_runtime_static ulk_static flb_factorio_static)
+  set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 
-  add_executable(flaunch_tui
+  add_executable(facman_tui
     apps/tui/tui_main.c
     apps/tui/tui_command_client.c
     apps/tui/tui_views.c
   )
-  target_link_libraries(flaunch_tui PRIVATE flaunch_client_static flaunch_runtime_static ulk_static)
-  set_target_properties(flaunch_tui PROPERTIES OUTPUT_NAME flaunch-tui)
+  target_link_libraries(facman_tui PRIVATE flaunch_client_static flaunch_runtime_static ulk_static)
+  set_target_properties(facman_tui PROPERTIES OUTPUT_NAME facman-tui)
 
-  add_executable(flaunch_daemon
+  add_executable(facman_daemon
     apps/daemon/main.c
     apps/daemon/cancellation.c
     apps/daemon/platform_named_pipe_windows.c
@@ -84,6 +84,6 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     apps/daemon/progress_events.c
     apps/daemon/rpc_json.c
   )
-  target_link_libraries(flaunch_daemon PRIVATE flaunch_runtime_static ulk_static usk_static flb_factorio_static)
-  set_target_properties(flaunch_daemon PROPERTIES OUTPUT_NAME flaunchd)
+  target_link_libraries(facman_daemon PRIVATE flaunch_runtime_static ulk_static usk_static flb_factorio_static)
+  set_target_properties(facman_daemon PROPERTIES OUTPUT_NAME facmand)
 endif()

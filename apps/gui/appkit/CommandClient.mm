@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
 
-void FLaunchCommandClientPlaceholder(void)
+void FacManCommandClientPlaceholder(void)
 {
 }

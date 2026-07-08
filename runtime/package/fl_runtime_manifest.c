@@ -2,5 +2,5 @@
 
 const char* fl_runtime_manifest_schema(void)
 {
-    return "flaunch.packaging.bundle_manifest.v1";
+    return "facman.packaging.bundle_manifest.v1";
 }

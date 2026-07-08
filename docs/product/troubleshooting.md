@@ -3,16 +3,16 @@
 Start with:
 
 ```bash
-factorio-launcher doctor
-factorio-launcher installs scan
-factorio-launcher installs list
+facman doctor
+facman installs scan
+facman installs list
 ```
 
 For a specific instance:
 
 ```bash
-factorio-launcher launch-plan <instance>
-factorio-launcher run <instance>
+facman launch-plan <instance>
+facman run <instance>
 ```
 
 `run` defaults to dry-run mode. Use `--execute` only after reviewing the launch
