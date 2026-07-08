@@ -105,6 +105,55 @@ class CliTests(unittest.TestCase):
             history = Path(tmp) / "instances" / "exec-fixture" / "logs" / "launch_history.log"
             self.assertIn("--mod-directory", history.read_text(encoding="utf-8"))
 
+    def test_local_mod_import_lock_verify_and_export(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            mod_zip = Path(tmp) / "example_1.2.3.zip"
+            mod_zip.write_bytes(b"fake local mod zip")
+
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Modded", "--install", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            code, stdout, stderr = invoke(
+                ["--workspace", tmp, "mods", "import", str(mod_zip), "--instance", "modded", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            imported = json.loads(stdout)
+            self.assertEqual(imported["name"], "example")
+            self.assertEqual(imported["version"], "1.2.3")
+            self.assertEqual(len(imported["sha1"]), 40)
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "lock", "modded", "--json"])
+            self.assertEqual(code, 0, stderr)
+            lock = json.loads(stdout)
+            self.assertEqual(lock["factorio_version"], "2.0.77")
+            self.assertEqual(lock["mods"][0]["file_name"], "example_1.2.3.zip")
+            self.assertTrue((Path(tmp) / "modsets" / "modded.modset-lock.v1.json").is_file())
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "verify", "modded", "--json"])
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout)["status"], "ok")
+
+            copied_mod = Path(tmp) / "instances" / "modded" / "mods" / "example_1.2.3.zip"
+            copied_mod.write_bytes(b"tampered")
+            code, stdout, _stderr = invoke(["--workspace", tmp, "modsets", "verify", "modded", "--json"])
+            self.assertEqual(code, 1)
+            self.assertEqual(json.loads(stdout)["status"], "error")
+
+            code, _stdout, stderr = invoke(["--workspace", tmp, "modsets", "lock", "modded"])
+            self.assertEqual(code, 0, stderr)
+            pack = Path(tmp) / "pack.zip"
+            code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "export", "modded", str(pack), "--json"])
+            self.assertEqual(code, 0, stderr)
+            exported = json.loads(stdout)
+            self.assertEqual(exported["files"], 2)
+            self.assertTrue(pack.read_bytes().startswith(b"PK\x03\x04"))
+
 
 if __name__ == "__main__":
     unittest.main()

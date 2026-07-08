@@ -1,10 +1,13 @@
 #include "command_dispatch.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -56,6 +59,14 @@ struct ProcessResult {
     bool started;
     int exit_code;
     std::string error;
+};
+
+struct ModRef {
+    std::string name;
+    std::string version;
+    fs::path file_path;
+    std::string file_name;
+    std::string sha1;
 };
 
 std::string path_string(const fs::path& path)
@@ -234,6 +245,117 @@ void write_text(const fs::path& path, const std::string& text)
     fs::create_directories(path.parent_path());
     std::ofstream out(path, std::ios::binary);
     out << text;
+}
+
+std::vector<unsigned char> read_bytes(const fs::path& path)
+{
+    std::ifstream in(path, std::ios::binary);
+    return std::vector<unsigned char>((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+}
+
+void write_le16(std::ostream& out, std::uint16_t value)
+{
+    out.put(static_cast<char>(value & 0xff));
+    out.put(static_cast<char>((value >> 8) & 0xff));
+}
+
+void write_le32(std::ostream& out, std::uint32_t value)
+{
+    write_le16(out, static_cast<std::uint16_t>(value & 0xffff));
+    write_le16(out, static_cast<std::uint16_t>((value >> 16) & 0xffff));
+}
+
+std::uint32_t crc32_bytes(const std::vector<unsigned char>& bytes)
+{
+    std::uint32_t crc = 0xffffffffu;
+    for (unsigned char byte : bytes) {
+        crc ^= byte;
+        for (int bit = 0; bit < 8; ++bit) {
+            crc = (crc >> 1) ^ (0xedb88320u & (0u - (crc & 1u)));
+        }
+    }
+    return crc ^ 0xffffffffu;
+}
+
+std::uint32_t rotate_left(std::uint32_t value, int bits)
+{
+    return (value << bits) | (value >> (32 - bits));
+}
+
+std::string sha1_hex(const std::vector<unsigned char>& input)
+{
+    std::vector<unsigned char> message = input;
+    std::uint64_t bit_length = static_cast<std::uint64_t>(message.size()) * 8u;
+    message.push_back(0x80u);
+    while ((message.size() % 64u) != 56u) {
+        message.push_back(0u);
+    }
+    for (int shift = 56; shift >= 0; shift -= 8) {
+        message.push_back(static_cast<unsigned char>((bit_length >> shift) & 0xffu));
+    }
+
+    std::uint32_t h0 = 0x67452301u;
+    std::uint32_t h1 = 0xefcdab89u;
+    std::uint32_t h2 = 0x98badcfeu;
+    std::uint32_t h3 = 0x10325476u;
+    std::uint32_t h4 = 0xc3d2e1f0u;
+
+    for (std::size_t chunk = 0; chunk < message.size(); chunk += 64u) {
+        std::array<std::uint32_t, 80> words{};
+        for (std::size_t index = 0; index < 16u; ++index) {
+            std::size_t offset = chunk + index * 4u;
+            words[index] =
+                (static_cast<std::uint32_t>(message[offset]) << 24) |
+                (static_cast<std::uint32_t>(message[offset + 1u]) << 16) |
+                (static_cast<std::uint32_t>(message[offset + 2u]) << 8) |
+                static_cast<std::uint32_t>(message[offset + 3u]);
+        }
+        for (std::size_t index = 16u; index < 80u; ++index) {
+            words[index] = rotate_left(words[index - 3u] ^ words[index - 8u] ^ words[index - 14u] ^ words[index - 16u], 1);
+        }
+
+        std::uint32_t a = h0;
+        std::uint32_t b = h1;
+        std::uint32_t c = h2;
+        std::uint32_t d = h3;
+        std::uint32_t e = h4;
+
+        for (std::size_t index = 0; index < 80u; ++index) {
+            std::uint32_t f;
+            std::uint32_t k;
+            if (index < 20u) {
+                f = (b & c) | ((~b) & d);
+                k = 0x5a827999u;
+            } else if (index < 40u) {
+                f = b ^ c ^ d;
+                k = 0x6ed9eba1u;
+            } else if (index < 60u) {
+                f = (b & c) | (b & d) | (c & d);
+                k = 0x8f1bbcdcu;
+            } else {
+                f = b ^ c ^ d;
+                k = 0xca62c1d6u;
+            }
+            std::uint32_t temp = rotate_left(a, 5) + f + e + k + words[index];
+            e = d;
+            d = c;
+            c = rotate_left(b, 30);
+            b = a;
+            a = temp;
+        }
+
+        h0 += a;
+        h1 += b;
+        h2 += c;
+        h3 += d;
+        h4 += e;
+    }
+
+    std::ostringstream out;
+    out << std::hex << std::setfill('0') << std::nouppercase;
+    out << std::setw(8) << h0 << std::setw(8) << h1 << std::setw(8) << h2
+        << std::setw(8) << h3 << std::setw(8) << h4;
+    return out.str();
 }
 
 std::string json_string_value(const std::string& text, const std::string& key)
@@ -749,6 +871,221 @@ std::string launch_plan_json(const InstanceRef& instance, const InstallRef& inst
     return out.str();
 }
 
+fs::path modset_lock_path(const InstanceRef& instance)
+{
+    return instance.local_data_root / "mods" / "modset-lock.v1.json";
+}
+
+fs::path workspace_modset_lock_path(const fs::path& workspace, const InstanceRef& instance)
+{
+    return workspace / "modsets" / (instance.instance_id + ".modset-lock.v1.json");
+}
+
+ModRef mod_ref_from_path(const fs::path& path)
+{
+    ModRef mod;
+    mod.file_path = path;
+    mod.file_name = path.filename().string();
+    std::string stem = path.stem().string();
+    std::size_t split = stem.rfind('_');
+    if (split == std::string::npos || split == 0 || split + 1 >= stem.size()) {
+        mod.name = stem.empty() ? "unknown" : stem;
+        mod.version = "unknown";
+    } else {
+        mod.name = stem.substr(0, split);
+        mod.version = stem.substr(split + 1);
+    }
+    std::vector<unsigned char> bytes = read_bytes(path);
+    mod.sha1 = sha1_hex(bytes);
+    return mod;
+}
+
+std::vector<ModRef> instance_mod_files(const InstanceRef& instance)
+{
+    std::vector<ModRef> mods;
+    fs::path mods_dir = instance.local_data_root / "mods";
+    if (!fs::is_directory(mods_dir)) {
+        return mods;
+    }
+    for (const fs::directory_entry& entry : fs::directory_iterator(mods_dir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".zip") {
+            mods.push_back(mod_ref_from_path(entry.path()));
+        }
+    }
+    std::sort(mods.begin(), mods.end(), [](const ModRef& left, const ModRef& right) {
+        return left.file_name < right.file_name;
+    });
+    return mods;
+}
+
+std::string mod_ref_json(const ModRef& mod)
+{
+    std::ostringstream out;
+    out << "{";
+    out << "\"name\":" << quote(mod.name) << ",";
+    out << "\"version\":" << quote(mod.version) << ",";
+    out << "\"file_name\":" << quote(mod.file_name) << ",";
+    out << "\"sha1\":" << quote(mod.sha1) << ",";
+    out << "\"source\":\"local\",";
+    out << "\"enabled\":true,";
+    out << "\"dependencies\":[]";
+    out << "}";
+    return out.str();
+}
+
+std::string modset_lock_json(const InstanceRef& instance)
+{
+    std::vector<ModRef> mods = instance_mod_files(instance);
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"lockfile_version\": 1,\n";
+    out << "  \"schema\": \"factorio.modset_lock.v1\",\n";
+    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+    out << "  \"factorio_version\": " << quote(instance.factorio_version) << ",\n";
+    out << "  \"mods\": [";
+    for (std::size_t index = 0; index < mods.size(); ++index) {
+        if (index) {
+            out << ",";
+        }
+        out << "\n    " << mod_ref_json(mods[index]);
+    }
+    if (!mods.empty()) {
+        out << "\n  ";
+    }
+    out << "]\n";
+    out << "}\n";
+    return out.str();
+}
+
+struct LockEntry {
+    std::string file_name;
+    std::string sha1;
+};
+
+std::vector<LockEntry> lock_entries(const std::string& text)
+{
+    std::vector<LockEntry> entries;
+    std::size_t position = 0;
+    for (;;) {
+        std::size_t file_pos = text.find("\"file_name\"", position);
+        if (file_pos == std::string::npos) {
+            break;
+        }
+        std::size_t sha_pos = text.find("\"sha1\"", file_pos);
+        if (sha_pos == std::string::npos) {
+            break;
+        }
+        LockEntry entry;
+        entry.file_name = json_string_value(text.substr(file_pos), "file_name");
+        entry.sha1 = json_string_value(text.substr(sha_pos), "sha1");
+        if (!entry.file_name.empty()) {
+            entries.push_back(entry);
+        }
+        position = sha_pos + 6;
+    }
+    return entries;
+}
+
+std::vector<std::string> verify_modset_lock(const InstanceRef& instance)
+{
+    std::vector<std::string> problems;
+    fs::path lock_path = modset_lock_path(instance);
+    if (!fs::is_regular_file(lock_path)) {
+        problems.push_back("missing modset lockfile");
+        return problems;
+    }
+    std::vector<LockEntry> entries = lock_entries(read_text(lock_path));
+    for (const LockEntry& entry : entries) {
+        fs::path mod_path = instance.local_data_root / "mods" / entry.file_name;
+        if (!fs::is_regular_file(mod_path)) {
+            problems.push_back("missing mod file: " + entry.file_name);
+            continue;
+        }
+        std::string actual_sha1 = sha1_hex(read_bytes(mod_path));
+        if (actual_sha1 != entry.sha1) {
+            problems.push_back("sha1 mismatch: " + entry.file_name);
+        }
+    }
+    return problems;
+}
+
+struct ZipRecord {
+    std::string name;
+    std::uint32_t crc;
+    std::uint32_t size;
+    std::uint32_t offset;
+};
+
+bool write_stored_zip(const fs::path& output_path, const std::vector<std::pair<std::string, std::vector<unsigned char>>>& files)
+{
+    if (!output_path.parent_path().empty()) {
+        fs::create_directories(output_path.parent_path());
+    }
+    std::ofstream out(output_path, std::ios::binary);
+    if (!out) {
+        return false;
+    }
+
+    std::vector<ZipRecord> records;
+    for (const auto& file : files) {
+        ZipRecord record;
+        record.name = file.first;
+        record.crc = crc32_bytes(file.second);
+        record.size = static_cast<std::uint32_t>(file.second.size());
+        record.offset = static_cast<std::uint32_t>(out.tellp());
+        records.push_back(record);
+
+        write_le32(out, 0x04034b50u);
+        write_le16(out, 20);
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le32(out, record.crc);
+        write_le32(out, record.size);
+        write_le32(out, record.size);
+        write_le16(out, static_cast<std::uint16_t>(record.name.size()));
+        write_le16(out, 0);
+        out.write(record.name.data(), static_cast<std::streamsize>(record.name.size()));
+        if (!file.second.empty()) {
+            out.write(reinterpret_cast<const char*>(file.second.data()), static_cast<std::streamsize>(file.second.size()));
+        }
+    }
+
+    std::uint32_t central_offset = static_cast<std::uint32_t>(out.tellp());
+    for (const ZipRecord& record : records) {
+        write_le32(out, 0x02014b50u);
+        write_le16(out, 20);
+        write_le16(out, 20);
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le32(out, record.crc);
+        write_le32(out, record.size);
+        write_le32(out, record.size);
+        write_le16(out, static_cast<std::uint16_t>(record.name.size()));
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le16(out, 0);
+        write_le32(out, 0);
+        write_le32(out, record.offset);
+        out.write(record.name.data(), static_cast<std::streamsize>(record.name.size()));
+    }
+    std::uint32_t central_size = static_cast<std::uint32_t>(out.tellp()) - central_offset;
+
+    write_le32(out, 0x06054b50u);
+    write_le16(out, 0);
+    write_le16(out, 0);
+    write_le16(out, static_cast<std::uint16_t>(records.size()));
+    write_le16(out, static_cast<std::uint16_t>(records.size()));
+    write_le32(out, central_size);
+    write_le32(out, central_offset);
+    write_le16(out, 0);
+    return true;
+}
+
 std::vector<std::string> launch_args(const InstanceRef& instance)
 {
     std::vector<std::string> args;
@@ -929,6 +1266,10 @@ int print_help()
     std::cout << "  launch-plan <instance-id> [--json]\n";
     std::cout << "  launch plan <instance-id> [--json]\n";
     std::cout << "  run <instance-id> [--execute]\n";
+    std::cout << "  mods import <mod.zip> --instance <instance-id> [--json]\n";
+    std::cout << "  modsets lock <instance-id> [--json]\n";
+    std::cout << "  modsets verify <instance-id> [--json]\n";
+    std::cout << "  modsets export <instance-id> <pack.zip> [--json]\n";
     return 0;
 }
 
@@ -1158,6 +1499,141 @@ int command_instances(const CliOptions& options)
     return 2;
 }
 
+int command_mods(const CliOptions& options)
+{
+    if (options.args.size() < 2) {
+        std::cerr << "Missing mods subcommand\n";
+        return 2;
+    }
+    ensure_workspace(options.workspace);
+
+    if (options.args[1] == "import") {
+        if (options.args.size() < 3) {
+            std::cerr << "Missing mod zip path\n";
+            return 2;
+        }
+        std::string instance_id = option_value(options.args, "--instance");
+        if (instance_id.empty()) {
+            std::cerr << "mods import requires --instance <instance-id>\n";
+            return 2;
+        }
+        InstanceRef instance;
+        if (!load_instance(options.workspace, instance_id, instance)) {
+            std::cerr << "Unknown instance: " << instance_id << "\n";
+            return 1;
+        }
+        fs::path source = options.args[2];
+        if (!fs::is_regular_file(source) || source.extension() != ".zip") {
+            std::cerr << "Mod import requires a local .zip file\n";
+            return 1;
+        }
+        fs::path destination = instance.local_data_root / "mods" / source.filename();
+        fs::create_directories(destination.parent_path());
+        fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
+        ModRef mod = mod_ref_from_path(destination);
+        if (has_flag(options.args, "--json")) {
+            std::cout << mod_ref_json(mod) << "\n";
+        } else {
+            std::cout << "Imported mod " << mod.name << " " << mod.version << " into " << instance.instance_id << "\n";
+        }
+        return 0;
+    }
+
+    std::cerr << "Unknown mods subcommand\n";
+    return 2;
+}
+
+int command_modsets(const CliOptions& options)
+{
+    if (options.args.size() < 3) {
+        std::cerr << "Missing modsets subcommand or instance id\n";
+        return 2;
+    }
+    ensure_workspace(options.workspace);
+
+    InstanceRef instance;
+    if (!load_instance(options.workspace, options.args[2], instance)) {
+        std::cerr << "Unknown instance: " << options.args[2] << "\n";
+        return 1;
+    }
+
+    if (options.args[1] == "lock") {
+        std::string lock = modset_lock_json(instance);
+        write_text(modset_lock_path(instance), lock);
+        write_text(workspace_modset_lock_path(options.workspace, instance), lock);
+        if (has_flag(options.args, "--json")) {
+            std::cout << lock;
+        } else {
+            std::cout << "Locked modset for " << instance.instance_id << "\n";
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "verify") {
+        std::vector<std::string> problems = verify_modset_lock(instance);
+        if (has_flag(options.args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.modset_verify.v1\",\n";
+            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+            std::cout << "  \"status\": " << quote(problems.empty() ? "ok" : "error") << ",\n";
+            std::cout << "  \"problems\": [";
+            for (std::size_t index = 0; index < problems.size(); ++index) {
+                if (index) {
+                    std::cout << ",";
+                }
+                std::cout << quote(problems[index]);
+            }
+            std::cout << "]\n";
+            std::cout << "}\n";
+        } else if (problems.empty()) {
+            std::cout << "Modset verified for " << instance.instance_id << "\n";
+        } else {
+            for (const std::string& problem : problems) {
+                std::cerr << problem << "\n";
+            }
+        }
+        return problems.empty() ? 0 : 1;
+    }
+
+    if (options.args[1] == "export") {
+        if (options.args.size() < 4) {
+            std::cerr << "modsets export requires <instance-id> <pack.zip>\n";
+            return 2;
+        }
+        fs::path lock_path = modset_lock_path(instance);
+        if (!fs::is_regular_file(lock_path)) {
+            std::string lock = modset_lock_json(instance);
+            write_text(lock_path, lock);
+            write_text(workspace_modset_lock_path(options.workspace, instance), lock);
+        }
+
+        std::vector<std::pair<std::string, std::vector<unsigned char>>> files;
+        files.push_back({"modset-lock.v1.json", read_bytes(lock_path)});
+        for (const ModRef& mod : instance_mod_files(instance)) {
+            files.push_back({"mods/" + mod.file_name, read_bytes(mod.file_path)});
+        }
+        fs::path output_path = options.args[3];
+        if (!write_stored_zip(output_path, files)) {
+            std::cerr << "Failed to write modset export: " << path_string(output_path) << "\n";
+            return 1;
+        }
+        if (has_flag(options.args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.modset_export.v1\",\n";
+            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+            std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
+            std::cout << "  \"files\": " << files.size() << "\n";
+            std::cout << "}\n";
+        } else {
+            std::cout << "Exported modset pack to " << path_string(output_path) << "\n";
+        }
+        return 0;
+    }
+
+    std::cerr << "Unknown modsets subcommand\n";
+    return 2;
+}
+
 int command_launch_plan(const CliOptions& options)
 {
     if (options.args.size() < 2) {
@@ -1264,6 +1740,12 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     }
     if (command == "run") {
         return command_run(options);
+    }
+    if (command == "mods") {
+        return command_mods(options);
+    }
+    if (command == "modsets") {
+        return command_modsets(options);
     }
 
     std::cerr << "Unknown command: " << command << "\n";
