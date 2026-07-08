@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import package_check, schema_validate, security_policy_check, structure_policy_check
+from tools import gui_surface_check, package_check, schema_validate, security_policy_check, structure_policy_check
 
 
 def main() -> int:
@@ -17,6 +17,7 @@ def main() -> int:
         ("schema", schema_validate.main),
         ("security", security_policy_check.main),
         ("package", package_check.main),
+        ("gui-surface", gui_surface_check.main),
     ]
     failed: list[str] = []
     for name, check in checks:
