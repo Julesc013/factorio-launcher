@@ -723,6 +723,31 @@ std::string setup_refusal_json(
     return out.str();
 }
 
+std::string mod_portal_refusal_json(
+    const std::string& operation,
+    const std::string& query,
+    const std::string& instance_id
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.mod_portal_refusal.v1\",\n";
+    out << "  \"operation\": " << quote(operation) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"network_allowed\": false,\n";
+    out << "  \"query\": " << quote(query) << ",\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"usk.refusal.v1\",\n";
+    out << "    \"operation\": " << quote(operation) << ",\n";
+    out << "    \"code\": \"network_forbidden\",\n";
+    out << "    \"reason\": \"Mod Portal network access is not enabled in this portable build\",\n";
+    out << "    \"recoverable\": true\n";
+    out << "  }\n";
+    out << "}\n";
+    return out.str();
+}
+
 void append_unique_path(std::vector<fs::path>& paths, const fs::path& candidate)
 {
     fs::path normalized = fs::absolute(candidate).lexically_normal();
@@ -1605,6 +1630,9 @@ int print_help()
     std::cout << "  launch plan <instance-id> [--json]\n";
     std::cout << "  run <instance-id> [--execute]\n";
     std::cout << "  mods import <mod.zip> --instance <instance-id> [--json]\n";
+    std::cout << "  mods search <query> [--json]\n";
+    std::cout << "  mods install <name> --instance <instance-id> [--json]\n";
+    std::cout << "  mods update --instance <instance-id> [--json]\n";
     std::cout << "  modsets lock <instance-id> [--json]\n";
     std::cout << "  modsets verify <instance-id> [--json]\n";
     std::cout << "  modsets export <instance-id> <pack.zip> [--json]\n";
@@ -1971,6 +1999,68 @@ int command_mods(const CliOptions& options)
         return 2;
     }
     ensure_workspace(options.workspace);
+
+    if (options.args[1] == "search") {
+        if (options.args.size() < 3) {
+            std::cerr << "mods search requires <query>\n";
+            return 2;
+        }
+        std::string result = mod_portal_refusal_json("mods.search", options.args[2], "");
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cout << "Refused: Mod Portal network access is not enabled in this portable build\n";
+            std::cout << "Query: " << options.args[2] << "\n";
+        }
+        return 1;
+    }
+
+    if (options.args[1] == "install") {
+        if (options.args.size() < 3) {
+            std::cerr << "mods install requires <name>\n";
+            return 2;
+        }
+        std::string instance_id = option_value(options.args, "--instance");
+        if (instance_id.empty()) {
+            std::cerr << "mods install requires --instance <instance-id>\n";
+            return 2;
+        }
+        InstanceRef instance;
+        if (!load_instance(options.workspace, instance_id, instance)) {
+            std::cerr << "Unknown instance: " << instance_id << "\n";
+            return 1;
+        }
+        std::string result = mod_portal_refusal_json("mods.install", options.args[2], instance.instance_id);
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cout << "Refused: Mod Portal network access is not enabled in this portable build\n";
+            std::cout << "Mod: " << options.args[2] << "\n";
+            std::cout << "Instance: " << instance.instance_id << "\n";
+        }
+        return 1;
+    }
+
+    if (options.args[1] == "update") {
+        std::string instance_id = option_value(options.args, "--instance");
+        if (instance_id.empty()) {
+            std::cerr << "mods update requires --instance <instance-id>\n";
+            return 2;
+        }
+        InstanceRef instance;
+        if (!load_instance(options.workspace, instance_id, instance)) {
+            std::cerr << "Unknown instance: " << instance_id << "\n";
+            return 1;
+        }
+        std::string result = mod_portal_refusal_json("mods.update", "", instance.instance_id);
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cout << "Refused: Mod Portal network access is not enabled in this portable build\n";
+            std::cout << "Instance: " << instance.instance_id << "\n";
+        }
+        return 1;
+    }
 
     if (options.args[1] == "import") {
         if (options.args.size() < 3) {

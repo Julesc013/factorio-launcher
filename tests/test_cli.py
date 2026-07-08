@@ -291,6 +291,41 @@ class CliTests(unittest.TestCase):
             restored_manifest = json.loads((restored_root / "instance.v1.json").read_text(encoding="utf-8"))
             self.assertEqual(Path(restored_manifest["local_data_root"]), restored_root)
 
+    def test_mod_portal_commands_refuse_without_network_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Portal Test", "--install", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            code, stdout, _stderr = invoke(["--workspace", tmp, "mods", "search", "space", "--json"])
+            self.assertEqual(code, 1)
+            search = json.loads(stdout)
+            self.assertEqual(search["status"], "refused")
+            self.assertFalse(search["network_allowed"])
+            self.assertEqual(search["refusal"]["code"], "network_forbidden")
+
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "mods", "install", "example", "--instance", "portal-test", "--json"]
+            )
+            self.assertEqual(code, 1)
+            install = json.loads(stdout)
+            self.assertEqual(install["operation"], "mods.install")
+            self.assertEqual(install["instance_id"], "portal-test")
+            self.assertEqual(install["refusal"]["code"], "network_forbidden")
+
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "mods", "update", "--instance", "portal-test", "--json"]
+            )
+            self.assertEqual(code, 1)
+            update = json.loads(stdout)
+            self.assertEqual(update["operation"], "mods.update")
+            self.assertEqual(update["refusal"]["code"], "network_forbidden")
+
 
 if __name__ == "__main__":
     unittest.main()
