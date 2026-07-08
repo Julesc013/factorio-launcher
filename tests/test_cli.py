@@ -326,6 +326,47 @@ class CliTests(unittest.TestCase):
             self.assertEqual(update["operation"], "mods.update")
             self.assertEqual(update["refusal"]["code"], "network_forbidden")
 
+    def test_server_profiles_and_dev_tools_are_explicitly_gated(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Server Base", "--install", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            code, stdout, stderr = invoke(
+                ["--workspace", tmp, "servers", "create", "Main Server", "--instance", "server-base", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            server = json.loads(stdout)
+            self.assertEqual(server["server_id"], "main-server")
+            self.assertEqual(server["execution"], "not_implemented")
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "servers", "list", "--json"])
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout)[0]["server_id"], "main-server")
+
+            code, stdout, _stderr = invoke(["--workspace", tmp, "servers", "start", "main-server", "--json"])
+            self.assertEqual(code, 1)
+            start = json.loads(stdout)
+            self.assertEqual(start["operation"], "servers.start")
+            self.assertEqual(start["refusal"]["code"], "execution_not_enabled")
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "dev", "bug-report", "--json"])
+            self.assertEqual(code, 0, stderr)
+            bug_report = json.loads(stdout)
+            self.assertTrue(bug_report["redacts_secrets"])
+            self.assertFalse(bug_report["includes_factorio_binaries"])
+
+            code, stdout, _stderr = invoke(["--workspace", tmp, "dev", "dump-data", "--json"])
+            self.assertEqual(code, 1)
+            dev_refusal = json.loads(stdout)
+            self.assertEqual(dev_refusal["operation"], "dev.dump-data")
+            self.assertEqual(dev_refusal["refusal"]["code"], "execution_not_enabled")
+
 
 if __name__ == "__main__":
     unittest.main()

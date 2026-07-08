@@ -79,6 +79,12 @@ struct SaveRef {
     std::uintmax_t size;
 };
 
+struct ServerRef {
+    std::string server_id;
+    std::string display_name;
+    std::string instance_id;
+};
+
 struct ZipEntry {
     std::string name;
     std::vector<unsigned char> data;
@@ -667,6 +673,57 @@ std::string install_json(const InstallRef& install)
 bool install_owned_by_setup(const InstallRef& install)
 {
     return install.ownership == "managed" || install.ownership == "adopted";
+}
+
+fs::path server_path(const fs::path& workspace, const std::string& server_id)
+{
+    return workspace / "servers" / (server_id + ".server.v1.json");
+}
+
+std::string server_json(const ServerRef& server)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.server.v1\",\n";
+    out << "  \"server_id\": " << quote(server.server_id) << ",\n";
+    out << "  \"display_name\": " << quote(server.display_name) << ",\n";
+    out << "  \"instance_id\": " << quote(server.instance_id) << ",\n";
+    out << "  \"status\": \"stopped\",\n";
+    out << "  \"start_policy\": \"manual\",\n";
+    out << "  \"execution\": \"not_implemented\"\n";
+    out << "}\n";
+    return out.str();
+}
+
+bool load_server(const fs::path& workspace, const std::string& server_id, ServerRef& out)
+{
+    fs::path path = server_path(workspace, server_id);
+    if (!fs::is_regular_file(path)) {
+        return false;
+    }
+    std::string text = read_text(path);
+    out.server_id = json_string_value(text, "server_id");
+    out.display_name = json_string_value(text, "display_name");
+    out.instance_id = json_string_value(text, "instance_id");
+    return true;
+}
+
+std::string server_refusal_json(const std::string& operation, const ServerRef& server, const std::string& reason)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.server_refusal.v1\",\n";
+    out << "  \"operation\": " << quote(operation) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"server_id\": " << quote(server.server_id) << ",\n";
+    out << "  \"instance_id\": " << quote(server.instance_id) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"code\": \"execution_not_enabled\",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"recoverable\": true\n";
+    out << "  }\n";
+    out << "}\n";
+    return out.str();
 }
 
 std::string setup_backed_operation_json(
@@ -1641,6 +1698,11 @@ int print_help()
     std::cout << "  saves clone <save> --instance <source-id> --to-instance <target-id> [--json]\n";
     std::cout << "  export instance <instance-id> <pack.zip> [--json]\n";
     std::cout << "  import instance <pack.zip> [--id <instance-id>] [--json]\n";
+    std::cout << "  servers create <name> --instance <instance-id> [--json]\n";
+    std::cout << "  servers list [--json]\n";
+    std::cout << "  servers start|stop|rcon <server-id> [--json]\n";
+    std::cout << "  dev bug-report [--json]\n";
+    std::cout << "  dev dump-data|dump-icons|benchmark|instrument-mod [--json]\n";
     return 0;
 }
 
@@ -2416,6 +2478,151 @@ int command_import(const CliOptions& options)
     return 0;
 }
 
+int command_servers(const CliOptions& options)
+{
+    if (options.args.size() < 2) {
+        std::cerr << "Missing servers subcommand\n";
+        return 2;
+    }
+    ensure_workspace(options.workspace);
+
+    if (options.args[1] == "create") {
+        if (options.args.size() < 3) {
+            std::cerr << "servers create requires <name>\n";
+            return 2;
+        }
+        std::string instance_id = option_value(options.args, "--instance");
+        if (instance_id.empty()) {
+            std::cerr << "servers create requires --instance <instance-id>\n";
+            return 2;
+        }
+        InstanceRef instance;
+        if (!load_instance(options.workspace, instance_id, instance)) {
+            std::cerr << "Unknown instance: " << instance_id << "\n";
+            return 1;
+        }
+        ServerRef server;
+        server.display_name = options.args[2];
+        server.server_id = option_value(options.args, "--id", slugify(server.display_name));
+        server.instance_id = instance.instance_id;
+        write_text(server_path(options.workspace, server.server_id), server_json(server));
+        if (has_flag(options.args, "--json")) {
+            std::cout << server_json(server);
+        } else {
+            std::cout << "Created server profile " << server.server_id << "\n";
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "list") {
+        std::vector<fs::path> servers = list_json_files(options.workspace / "servers");
+        if (has_flag(options.args, "--json")) {
+            std::cout << "[";
+            for (std::size_t index = 0; index < servers.size(); ++index) {
+                if (index) {
+                    std::cout << ",";
+                }
+                std::cout << read_text(servers[index]);
+            }
+            std::cout << "]\n";
+        } else {
+            for (const fs::path& server_file : servers) {
+                std::cout << server_file.stem().string() << "\n";
+            }
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "start" || options.args[1] == "stop" || options.args[1] == "rcon") {
+        if (options.args.size() < 3) {
+            std::cerr << "servers " << options.args[1] << " requires <server-id>\n";
+            return 2;
+        }
+        ServerRef server;
+        if (!load_server(options.workspace, options.args[2], server)) {
+            std::cerr << "Unknown server: " << options.args[2] << "\n";
+            return 1;
+        }
+        std::string reason = "server process execution is not enabled in this slice";
+        std::string result = server_refusal_json("servers." + options.args[1], server, reason);
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cout << "Refused: " << reason << "\n";
+            std::cout << "Server: " << server.server_id << "\n";
+        }
+        return 1;
+    }
+
+    std::cerr << "Unknown servers subcommand\n";
+    return 2;
+}
+
+std::string dev_refusal_json(const std::string& operation)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.dev_refusal.v1\",\n";
+    out << "  \"operation\": " << quote(operation) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"code\": \"execution_not_enabled\",\n";
+    out << "    \"reason\": \"Factorio execution-based developer tooling is not enabled in this slice\",\n";
+    out << "    \"recoverable\": true\n";
+    out << "  }\n";
+    out << "}\n";
+    return out.str();
+}
+
+int command_dev(const CliOptions& options)
+{
+    if (options.args.size() < 2) {
+        std::cerr << "Missing dev subcommand\n";
+        return 2;
+    }
+    ensure_workspace(options.workspace);
+
+    if (options.args[1] == "bug-report") {
+        std::size_t install_count = list_json_files(options.workspace / "installs" / "installed_state").size();
+        std::size_t instance_count = instance_manifest_files(options.workspace).size();
+        std::size_t server_count = list_json_files(options.workspace / "servers").size();
+        if (has_flag(options.args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.bug_report.v1\",\n";
+            std::cout << "  \"workspace\": " << quote(path_string(options.workspace)) << ",\n";
+            std::cout << "  \"installs\": " << install_count << ",\n";
+            std::cout << "  \"instances\": " << instance_count << ",\n";
+            std::cout << "  \"servers\": " << server_count << ",\n";
+            std::cout << "  \"redacts_secrets\": true,\n";
+            std::cout << "  \"includes_factorio_binaries\": false\n";
+            std::cout << "}\n";
+        } else {
+            std::cout << "FacMan bug report\n";
+            std::cout << "Workspace: " << path_string(options.workspace) << "\n";
+            std::cout << "Installs: " << install_count << "\n";
+            std::cout << "Instances: " << instance_count << "\n";
+            std::cout << "Servers: " << server_count << "\n";
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "dump-data" ||
+        options.args[1] == "dump-icons" ||
+        options.args[1] == "benchmark" ||
+        options.args[1] == "instrument-mod") {
+        std::string result = dev_refusal_json("dev." + options.args[1]);
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cout << "Refused: Factorio execution-based developer tooling is not enabled in this slice\n";
+        }
+        return 1;
+    }
+
+    std::cerr << "Unknown dev subcommand\n";
+    return 2;
+}
+
 int command_launch_plan(const CliOptions& options)
 {
     if (options.args.size() < 2) {
@@ -2537,6 +2744,12 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     }
     if (command == "import") {
         return command_import(options);
+    }
+    if (command == "servers") {
+        return command_servers(options);
+    }
+    if (command == "dev") {
+        return command_dev(options);
     }
 
     std::cerr << "Unknown command: " << command << "\n";
