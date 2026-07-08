@@ -1,0 +1,2 @@
+"""Fixture generation entrypoint placeholder."""
+

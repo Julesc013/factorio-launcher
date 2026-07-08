@@ -1,0 +1,18 @@
+name: Install discovery issue
+description: Report discovery or install registration problems
+title: "[Discovery]: "
+labels: ["area/discovery"]
+body:
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+    validations:
+      required: true
+  - type: textarea
+    id: discovery
+    attributes:
+      label: Discovery output
+    validations:
+      required: true
+

@@ -1,0 +1,6 @@
+template_id = "server"
+description = "Headless server-oriented instance."
+profile = "headless-server"
+create_mod_directory = true
+backup_before_launch = true
+

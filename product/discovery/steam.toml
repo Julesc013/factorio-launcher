@@ -1,0 +1,4 @@
+source = "steam"
+ownership = "foreign"
+notes = "Steam-owned installs are read-only to FLaunch."
+

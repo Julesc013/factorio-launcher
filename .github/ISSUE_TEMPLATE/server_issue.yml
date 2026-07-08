@@ -1,0 +1,12 @@
+name: Server issue
+description: Report headless server workflow problems
+title: "[Server]: "
+labels: ["area/server"]
+body:
+  - type: textarea
+    id: server
+    attributes:
+      label: Server workflow and logs
+    validations:
+      required: true
+

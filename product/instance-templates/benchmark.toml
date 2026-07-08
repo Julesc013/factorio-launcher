@@ -1,0 +1,6 @@
+template_id = "benchmark"
+description = "Benchmark and performance testing instance."
+profile = "benchmark"
+create_mod_directory = true
+backup_before_launch = true
+

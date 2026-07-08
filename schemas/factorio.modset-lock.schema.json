@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/schemas/factorio.modset-lock.schema.json",
+  "title": "Factorio Modset Lockfile",
+  "type": "object",
+  "required": ["lockfile_version", "factorio_version", "mods"],
+  "properties": {
+    "lockfile_version": { "type": "integer", "minimum": 1 },
+    "factorio_version": { "type": "string" },
+    "mods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "enabled", "source"],
+        "properties": {
+          "name": { "type": "string" },
+          "title": { "type": "string" },
+          "version": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "source": { "type": "string" },
+          "file_name": { "type": ["string", "null"] },
+          "sha1": { "type": ["string", "null"] },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "optional_dependencies": { "type": "array", "items": { "type": "string" } },
+          "incompatibilities": { "type": "array", "items": { "type": "string" } },
+          "cache_ref": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
+

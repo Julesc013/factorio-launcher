@@ -1,0 +1,2 @@
+"""TUI app placeholder."""
+

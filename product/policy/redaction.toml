@@ -1,0 +1,3 @@
+redact_keys = ["token", "password", "rcon_password", "session", "secret"]
+redact_replacement = "[REDACTED]"
+

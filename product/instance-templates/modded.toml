@@ -1,0 +1,6 @@
+template_id = "modded"
+description = "General modded play instance with isolated mods and saves."
+profile = "gui"
+create_mod_directory = true
+backup_before_launch = true
+

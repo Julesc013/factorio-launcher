@@ -1,0 +1,5 @@
+include_mods_default = true
+include_saves_default = "ask"
+include_tokens_default = false
+include_machine_local_paths_default = false
+

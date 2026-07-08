@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/schemas/factorio.profile.schema.json",
+  "title": "Factorio Launch Profile",
+  "type": "object",
+  "required": ["profile_id", "mode", "flags", "preflight", "postrun"],
+  "properties": {
+    "profile_id": { "type": "string" },
+    "mode": { "type": "string" },
+    "flags": { "type": "object" },
+    "preflight": { "type": "array", "items": { "type": "string" } },
+    "postrun": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
+

@@ -1,0 +1,2 @@
+"""Diagnostic collection entrypoint placeholder."""
+

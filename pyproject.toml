@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "factorio-launcher"
+version = "0.1.0"
+description = "Unofficial Factorio launcher and isolated instance manager."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Jules C" }]
+keywords = ["factorio", "launcher", "mods", "instances", "server"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Games/Entertainment",
+]
+dependencies = []
+
+[project.scripts]
+factorio-launcher = "factorio_launcher.ui.cli.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

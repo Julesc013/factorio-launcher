@@ -1,0 +1,12 @@
+platform = "linux"
+
+candidate_roots = [
+  "~/factorio",
+  "/opt/factorio",
+  "~/.local/share/Steam/steamapps/common/Factorio",
+]
+
+executables = [
+  "bin/x64/factorio",
+]
+

@@ -1,0 +1,4 @@
+template_id = "low-vram"
+mode = "gui"
+args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--video-memory-usage", "low"]
+

@@ -1,0 +1,7 @@
+template_id = "steam-safe"
+description = "Steam install reference with isolated data root and Steam Cloud warnings."
+profile = "gui"
+create_mod_directory = true
+backup_before_launch = true
+steam_cloud_sensitive = true
+

@@ -1,0 +1,5 @@
+{
+  "profile_id": "gui",
+  "required_args": ["--config", "--mod-directory"]
+}
+

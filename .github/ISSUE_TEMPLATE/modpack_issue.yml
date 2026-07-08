@@ -1,0 +1,16 @@
+name: Modpack issue
+description: Report modset, dependency, or lockfile problems
+title: "[Modpack]: "
+labels: ["area/mods"]
+body:
+  - type: input
+    id: factorio_version
+    attributes:
+      label: Factorio version
+  - type: textarea
+    id: modset
+    attributes:
+      label: Modset or lockfile details
+    validations:
+      required: true
+

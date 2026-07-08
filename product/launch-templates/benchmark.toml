@@ -1,0 +1,4 @@
+template_id = "benchmark"
+mode = "benchmark"
+args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--benchmark", "{save}", "--benchmark-ticks", "{benchmark_ticks}"]
+
