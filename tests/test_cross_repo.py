@@ -30,6 +30,7 @@ class CrossRepoTests(unittest.TestCase):
                 Path("Z:/workspace") / "universal-setup",
             ],
         )
+        self.assertIn(cross_repo_check.ROOT / "external" / "universal-setup", candidates)
 
     def test_product_only_boundaries(self) -> None:
         self.assertEqual(cross_repo_check.main(["--product-only"]), 0)

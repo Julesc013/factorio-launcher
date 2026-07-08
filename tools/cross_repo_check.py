@@ -28,6 +28,7 @@ def candidate_roots(name: str) -> list[Path]:
         candidates.append(Path(workspace_root) / "Universal" / name)
         candidates.append(Path(workspace_root) / name)
 
+    candidates.append(ROOT / "external" / name)
     for parent in [ROOT.parent, *ROOT.parents]:
         candidates.append(parent / name)
         candidates.append(parent / "Universal" / name)

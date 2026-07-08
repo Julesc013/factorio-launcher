@@ -19,6 +19,7 @@ function(flaunch_find_repo_root out_var repo_name specific_env)
   flaunch_append_env_candidate(candidates "FLAUNCH_WORKSPACE_ROOT" "/Universal/${repo_name}")
   flaunch_append_env_candidate(candidates "FLAUNCH_WORKSPACE_ROOT" "/${repo_name}")
   list(APPEND candidates
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/${repo_name}"
     "${CMAKE_CURRENT_SOURCE_DIR}/../${repo_name}"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../Universal/${repo_name}"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../${repo_name}"

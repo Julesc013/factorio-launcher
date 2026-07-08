@@ -117,6 +117,7 @@ instances, profiles, install references, and launch plans belong to
 ## Development
 
 ```bash
+py -3 tools/workspace_config.py doctor
 cmake -S . -B build/native-smoke
 cmake --build build/native-smoke
 $env:FACMAN_CLI_EXE = "$PWD\build\native-smoke\Debug\facman.exe"

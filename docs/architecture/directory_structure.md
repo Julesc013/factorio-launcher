@@ -80,7 +80,8 @@ CMake and cross-repo checks use a portable locator:
 1. explicit CMake cache or environment variables:
    `FLAUNCH_UNIVERSAL_SETUP_ROOT` and `FLAUNCH_UNIVERSAL_LAUNCHER_ROOT`
 2. shared roots: `FLAUNCH_UNIVERSAL_ROOT` or `FLAUNCH_WORKSPACE_ROOT`
-3. common relative layouts such as `../universal-*`,
+3. pinned local checkouts under `external/universal-*`
+4. common relative layouts such as `../universal-*`,
    `../../Universal/universal-*`, and nearby workspace parents
 
 This keeps long-lived checkouts, forks, branches, and contributor machines from
