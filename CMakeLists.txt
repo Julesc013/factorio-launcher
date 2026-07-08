@@ -66,6 +66,10 @@ add_library(flb_factorio_launch_static STATIC runtime/factorio/launch/flb_factor
 target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_static PUBLIC runtime/factorio/launch)
 
+add_library(flb_factorio_discovery_static STATIC runtime/factorio/discovery/flb_factorio_discovery.cpp)
+target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_discovery_static PUBLIC runtime/factorio/discovery)
+
 add_library(flb_factorio_shared SHARED runtime/factorio/binding/flb_api.c)
 target_include_directories(flb_factorio_shared PUBLIC include)
 target_link_libraries(flb_factorio_shared PUBLIC ulk_shared)
@@ -80,7 +84,7 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     apps/cli/command_dispatch.cpp
   )
   target_compile_features(facman_cli PRIVATE cxx_std_17)
-  target_link_libraries(facman_cli PRIVATE flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static)
+  target_link_libraries(facman_cli PRIVATE flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 
   add_executable(facman_tui
