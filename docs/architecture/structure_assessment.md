@@ -15,30 +15,32 @@ contract they are entering:
 
 ```text
 include/   public ABI
-src/       private native implementation
+source/    single private implementation and app-source tree
 apps/      frontend executables and shells
 data/      product-owned manifests, templates, and policy
 schemas/   wire/storage compatibility contracts
-launcher/  current Python prototype
+packaging/ platform package manifests
+source/prototypes/python_launcher/
+           quarantined Python prototype
 docs/      architecture, product, platform, and planning records
 tests/     unit, integration, contract, golden, and fixture coverage
 tools/     repo automation
 cmake/     native build policy
 ```
 
-This is more future-proof than a generic `source/` root because the repo has
-several kinds of source with different compatibility promises. Public ABI
-headers, private native internals, frontend apps, product data, and prototype
-Python code should not share one directory contract.
+This is more future-proof than scattered source roots because the repo has one
+implementation-source contract. Public ABI headers stay in `include/`; all
+private implementation, app, and prototype code lives under `source/`.
 
 ## Problems Fixed Now
 
-- `src/` was renamed to `launcher/` for the current Python prototype.
+- the current Python prototype was moved to
+  `source/prototypes/python_launcher/`.
 - redundant `factorio_launcher/factorio/...` Python nesting was flattened.
 - Factorio product config moved from root `product/` to `data/factorio/`.
 - schemas moved into versioned namespaces under `schemas/common`, `schemas/usk`,
   `schemas/ulk`, and `schemas/factorio`.
-- native roots now use `include/`, `src/`, and `apps/`.
+- native roots now use `include/`, `source/`, and `apps/`.
 - GUI roots now live under `apps/winforms`, `apps/appkit`, `apps/gtk`, and
   `apps/qt`.
 - native executable scaffolds now use explicit app names:
@@ -47,6 +49,8 @@ Python code should not share one directory contract.
   vague universal `ul_` prefix.
 - Python prototype integration adapters now use `integrations/usk` and
   `integrations/ulk` so the bridge layer matches the native vocabulary.
+- the prototype is explicitly documented as a schema/CLI experiment harness,
+  not as the production legacy runtime.
 
 ## Target Shape
 
@@ -58,12 +62,17 @@ include/
   ulk/      C89 public ABI for launcher orchestration
   flb/      C ABI for the Factorio product binding
 
-src/
+source/
   base/     C89 portable primitives
+  client/   frontend-neutral command client transports
+  runtime/  package/runtime locator and component verification
   platform/ common, windows, posix, macos, linux adapters
   usk/      setup kernel internals
   ulk/      launcher kernel internals and command graph
   factorio/ Factorio binding internals
+  apps/     CLI, TUI, daemon, and GUI implementation files
+  prototypes/
+    python_launcher/
 
 apps/
   factorio_cli/
@@ -86,11 +95,18 @@ schemas/
   usk/
   ulk/
   factorio/
+  packaging/
+
+packaging/
+  windows/
+  macos/
+  linux/
+  portable/
 ```
 
 This layout supports forks and optional frontends cleanly. A fork can replace
-`apps/gtk` without touching `src/ulk`; a product binding can add new
-`data/<product>` and `src/<product>` areas without rewriting the setup kernel;
+`apps/gtk` without touching `source/ulk`; a product binding can add new
+`data/<product>` and `source/<product>` areas without rewriting the setup kernel;
 a downstream packager can include CLI-only artifacts without carrying GUI
 toolkit dependencies.
 
@@ -159,7 +175,7 @@ repair behavior is an architecture bug.
 
 The best long-term reorganization is:
 
-1. Build a real C command graph library under `src/ulk/command`.
+1. Build a real C command graph library under `source/ulk/command`.
 2. Port the Python command handlers into native command handlers.
 3. Keep CLI JSON output stable while changing internals.
 4. Introduce `flb_command_execute_v1` behind the public binding ABI.
@@ -204,8 +220,8 @@ Keep legacy support pressure isolated:
 - Windows 7 support notes live in platform docs and build policy
 - macOS deployment target notes live in platform docs and build policy
 - Linux GUI toolkit decisions stay under `apps/`, never inside core
-- no GUI toolkit dependency enters `src/base`, `src/usk`, `src/ulk`, or
-  `src/factorio`
+- no GUI toolkit dependency enters `source/base`, `source/usk`, `source/ulk`,
+  or `source/factorio`
 
 The project should still build a headless CLI/daemon profile on systems with no
 GUI stack installed.

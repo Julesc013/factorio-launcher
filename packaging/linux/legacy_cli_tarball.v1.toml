@@ -1,0 +1,11 @@
+schema = "flaunch.packaging.bundle_manifest.v1"
+artifact_id = "FLaunch-<version>-linux-legacy-cli-x86_64"
+platform = "linux"
+support_level = "legacy_best_effort"
+package_type = "tarball"
+architecture = "x86_64"
+python_runtime = false
+bundles_factorio_binaries = false
+entrypoint = "bin/flaunch"
+gui_stack_required = false
+base_manifest = "packaging/linux/appimage.v1.toml"

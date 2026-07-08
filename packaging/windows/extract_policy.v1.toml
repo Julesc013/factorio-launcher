@@ -1,0 +1,11 @@
+schema = "flaunch.packaging.extract_policy.v1"
+platform = "windows"
+policy_id = "localappdata_versioned_runtime"
+extract_root = "%LOCALAPPDATA%/FLaunch/runtime/<version>-<payload_hash>"
+forbid_temp_execution = true
+atomic_extraction = true
+payload_hash_verification = true
+signature_verification = "where_available"
+partial_marker = ".partial"
+ready_marker = ".ready"
+garbage_collect_old_runtimes = true

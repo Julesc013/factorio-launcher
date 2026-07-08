@@ -1,0 +1,7 @@
+schema = "flaunch.packaging.frontend.v1"
+platform = "linux"
+frontend = "gtk"
+support_level = "primary_modern"
+toolkit = "GTK 3"
+source_root = "source/apps/gtk"
+package_manifest = "packaging/linux/appimage.v1.toml"

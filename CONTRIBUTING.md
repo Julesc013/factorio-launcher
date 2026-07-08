@@ -6,18 +6,21 @@ binding before adding TUI or GUI views.
 ## Boundaries
 
 - Public ABI work belongs under `include/`.
-- Native implementation work belongs under `src/`.
-- Frontend executable work belongs under `apps/`.
+- Native implementation and app source work belongs under `source/`.
+- Frontend executable/package shell work belongs under `apps/`.
 - Product data belongs under `data/`.
-- Current Python prototype logic belongs under `launcher/factorio_launcher/`.
-- UI command parsing in the prototype belongs under `launcher/factorio_launcher/ui/cli/`.
+- Current Python prototype logic belongs under
+  `source/prototypes/python_launcher/factorio_launcher/`.
+- UI command parsing in the prototype belongs under
+  `source/prototypes/python_launcher/factorio_launcher/ui/cli/`.
 - Setup mutation must remain behind the universal setup adapter.
 - The universal launcher adapter must not learn Factorio-specific mod semantics.
 
 ## Checks
 
 ```bash
-$env:PYTHONPATH = "launcher"
+$env:PYTHONPATH = "source/prototypes/python_launcher"
 python -m unittest discover -s tests -v
 python tools/schema_validate.py
+python tools/package_check.py
 ```

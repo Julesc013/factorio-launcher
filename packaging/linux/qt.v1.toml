@@ -1,0 +1,7 @@
+schema = "flaunch.packaging.frontend.v1"
+platform = "linux"
+frontend = "qt"
+support_level = "optional_later"
+toolkit = "Qt 5.15-compatible"
+source_root = "source/apps/qt"
+package_manifest = "packaging/linux/appimage.v1.toml"

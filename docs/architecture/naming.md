@@ -10,7 +10,7 @@ Use this standard everywhere.
 | Platform directories | full lowercase OS name |
 | C/C++ files | lowercase snake_case |
 | Public C headers | `.h` only |
-| Private C++ headers | `.hpp` only inside `src/` |
+| Private C++ headers | `.hpp` only inside `source/` |
 | Public ABI functions | `prefix_module_action_v1` |
 | Public structs | `prefix_module_object_v1` |
 | Opaque handles | `prefix_object` |

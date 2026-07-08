@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flaunch.packaging.bundle_manifest.v1",
+  "title": "FLaunch Package Bundle Manifest",
+  "type": "object",
+  "required": ["schema", "artifact_id", "platform", "package_type", "components"],
+  "properties": {
+    "schema": { "type": "string" },
+    "artifact_id": { "type": "string" },
+    "platform": { "type": "string" },
+    "package_type": { "type": "string" },
+    "components": { "type": "array" }
+  }
+}

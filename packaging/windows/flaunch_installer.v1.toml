@@ -1,0 +1,11 @@
+schema = "flaunch.packaging.bundle_manifest.v1"
+artifact_id = "FLaunch-Setup-<version>-windows-x64"
+platform = "windows"
+support_level = "primary"
+package_type = "installer"
+architecture = "x64"
+python_runtime = false
+bundles_factorio_binaries = false
+entrypoint = "FLaunch.exe"
+base_manifest = "packaging/windows/flaunch_portable.v1.toml"
+installer_features = ["start_menu", "uninstaller", "file_associations"]

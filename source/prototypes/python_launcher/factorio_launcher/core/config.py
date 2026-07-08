@@ -11,10 +11,9 @@ PRODUCT_ID = "factorio"
 
 
 def repo_root() -> Path:
-    candidates = [
-        Path.cwd(),
-        Path(__file__).resolve().parents[3],
-    ]
+    source_path = Path(__file__).resolve()
+    candidates = [Path.cwd()]
+    candidates.extend(source_path.parents)
     for candidate in candidates:
         if (candidate / "data" / "factorio" / "product" / "factorio.product.toml").is_file():
             return candidate

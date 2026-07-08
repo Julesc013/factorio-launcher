@@ -13,11 +13,13 @@ branding assets.
 
 ```text
 include/   public C ABI headers for usk, ulk, and flb
-src/       private native implementation boundaries
+source/    the single private implementation and app-source tree
 apps/      CLI, TUI, daemon, WinForms, AppKit, GTK, and Qt frontends
 data/      Factorio product templates, discovery rules, and policy
 schemas/   versioned compatibility contracts
-launcher/  current Python prototype frontend while native parity is built
+packaging/ versioned platform package manifests
+source/prototypes/python_launcher/
+           Python CLI prototype, excluded from production legacy runtime
 ```
 
 The CLI is the first frontend, not the foundation of every other frontend.
@@ -42,15 +44,16 @@ python -m factorio_launcher run space-age-main
 When running directly from a checkout, use:
 
 ```bash
-$env:PYTHONPATH = "launcher"
+$env:PYTHONPATH = "source/prototypes/python_launcher"
 python -m factorio_launcher --version
 ```
 
 The packaged console command is `factorio-launcher`.
 
-The native CLI scaffold is under `apps/factorio_cli/`; the currently runnable
-CLI remains the Python prototype under `launcher/` until the native command
-graph reaches parity.
+The native CLI scaffold is under `source/apps/factorio_cli/`. The currently
+runnable CLI remains the quarantined Python prototype under
+`source/prototypes/python_launcher/` until the native command graph reaches
+parity. Production legacy packages should not depend on Python.
 
 ## Architecture Boundary
 
@@ -82,9 +85,11 @@ universal setup. Cross-product orchestration belongs to universal launcher.
 ## Development
 
 ```bash
-$env:PYTHONPATH = "launcher"
+$env:PYTHONPATH = "source/prototypes/python_launcher"
 python -m unittest discover -s tests -v
 python tools/schema_validate.py
+python tools/security_policy_check.py
+python tools/package_check.py
 python -m factorio_launcher doctor
 ```
 

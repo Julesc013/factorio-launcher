@@ -7,6 +7,9 @@ Architecture:
 - [Naming](architecture/naming.md)
 - [Ownership Model](architecture/ownership_model.md)
 - [Workspace Model](architecture/workspace_model.md)
+- [Packaging Model](architecture/packaging_model.md)
+- [Runtime Locator](architecture/runtime_locator.md)
+- [Frontend Command Client](architecture/frontend_client.md)
 - [C ABI Policy](architecture/c_abi_policy.md)
 - [Language Policy](architecture/language_policy.md)
 - [Coding Standards](architecture/coding_standards.md)
@@ -37,6 +40,7 @@ Product:
 
 Platform:
 
+- [Support Matrix](platform/support_matrix.md)
 - [Windows 7](platform/windows_7.md)
 - [macOS 10.13](platform/macos_10_13.md)
 - [Linux](platform/linux.md)

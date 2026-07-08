@@ -1,6 +1,6 @@
 project('factorio_gtk', 'c')
 
 executable('factorio_gtk',
-  'src/main.c',
-  'src/command_client.c',
+  '../../source/apps/gtk/main.c',
+  '../../source/apps/gtk/command_client.c',
 )

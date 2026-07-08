@@ -1,0 +1,8 @@
+schema = "flaunch.packaging.codesign.v1"
+platform = "macos"
+sign_app_bundle = true
+sign_macos_tools = true
+sign_frameworks = true
+notarize_modern_artifact = true
+notarize_legacy_artifact = "where_toolchain_supports_it"
+forbid_unsigned_dylibs = true

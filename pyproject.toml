@@ -25,4 +25,4 @@ dependencies = []
 factorio-launcher = "factorio_launcher.ui.cli.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["launcher"]
+where = ["source/prototypes/python_launcher"]
