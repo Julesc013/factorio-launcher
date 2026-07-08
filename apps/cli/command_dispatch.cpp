@@ -10,6 +10,15 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#else
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
 namespace fs = std::filesystem;
 
 namespace {
@@ -41,6 +50,12 @@ struct InstanceRef {
     fs::path local_data_root;
     std::string profile;
     std::string template_id;
+};
+
+struct ProcessResult {
+    bool started;
+    int exit_code;
+    std::string error;
 };
 
 std::string path_string(const fs::path& path)
@@ -619,6 +634,11 @@ bool load_install(const fs::path& workspace, const std::string& install_id, Inst
 
 fs::path instance_manifest_path(const fs::path& workspace, const std::string& instance_id)
 {
+    return workspace / "instances" / instance_id / "instance.v1.json";
+}
+
+fs::path legacy_instance_manifest_path(const fs::path& workspace, const std::string& instance_id)
+{
     return workspace / "instances" / instance_id / "instance.manifest.json";
 }
 
@@ -647,6 +667,9 @@ bool load_instance(const fs::path& workspace, const std::string& instance_id, In
 {
     fs::path path = instance_manifest_path(workspace, instance_id);
     if (!fs::is_regular_file(path)) {
+        path = legacy_instance_manifest_path(workspace, instance_id);
+    }
+    if (!fs::is_regular_file(path)) {
         return false;
     }
     std::string text = read_text(path);
@@ -670,6 +693,11 @@ std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
     for (const fs::directory_entry& entry : fs::directory_iterator(instances)) {
         if (entry.is_directory()) {
             fs::path manifest = entry.path() / "instance.manifest.json";
+            fs::path v1_manifest = entry.path() / "instance.v1.json";
+            if (fs::is_regular_file(v1_manifest)) {
+                manifests.push_back(v1_manifest);
+                continue;
+            }
             if (fs::is_regular_file(manifest)) {
                 manifests.push_back(manifest);
             }
@@ -721,6 +749,172 @@ std::string launch_plan_json(const InstanceRef& instance, const InstallRef& inst
     return out.str();
 }
 
+std::vector<std::string> launch_args(const InstanceRef& instance)
+{
+    std::vector<std::string> args;
+    args.push_back("--config");
+    args.push_back(path_string(instance.local_data_root / "config" / "config.ini"));
+    args.push_back("--mod-directory");
+    args.push_back(path_string(instance.local_data_root / "mods"));
+    return args;
+}
+
+std::string command_line_for_display(const fs::path& executable, const std::vector<std::string>& args)
+{
+    std::ostringstream out;
+    out << path_string(executable);
+    for (const std::string& arg : args) {
+        out << " " << arg;
+    }
+    return out.str();
+}
+
+#ifdef _WIN32
+std::string quote_windows_arg(const std::string& value)
+{
+    if (value.empty()) {
+        return "\"\"";
+    }
+
+    bool needs_quotes = false;
+    for (char ch : value) {
+        if (ch == ' ' || ch == '\t' || ch == '"') {
+            needs_quotes = true;
+            break;
+        }
+    }
+    if (!needs_quotes) {
+        return value;
+    }
+
+    std::string quoted = "\"";
+    std::size_t backslashes = 0;
+    for (char ch : value) {
+        if (ch == '\\') {
+            ++backslashes;
+            continue;
+        }
+        if (ch == '"') {
+            quoted.append(backslashes * 2 + 1, '\\');
+            quoted.push_back('"');
+            backslashes = 0;
+            continue;
+        }
+        quoted.append(backslashes, '\\');
+        backslashes = 0;
+        quoted.push_back(ch);
+    }
+    quoted.append(backslashes * 2, '\\');
+    quoted.push_back('"');
+    return quoted;
+}
+#endif
+
+ProcessResult run_process(const fs::path& executable, const std::vector<std::string>& args)
+{
+    ProcessResult result;
+    result.started = false;
+    result.exit_code = 1;
+
+    if (!fs::is_regular_file(executable)) {
+        result.error = "executable does not exist";
+        return result;
+    }
+
+#ifdef _WIN32
+    std::string command_line = quote_windows_arg(path_string(executable));
+    for (const std::string& arg : args) {
+        command_line += " ";
+        command_line += quote_windows_arg(arg);
+    }
+
+    STARTUPINFOA startup;
+    PROCESS_INFORMATION process;
+    memset(&startup, 0, sizeof(startup));
+    memset(&process, 0, sizeof(process));
+    startup.cb = sizeof(startup);
+
+    std::vector<char> mutable_command(command_line.begin(), command_line.end());
+    mutable_command.push_back('\0');
+
+    if (!CreateProcessA(
+            0,
+            mutable_command.data(),
+            0,
+            0,
+            FALSE,
+            0,
+            0,
+            0,
+            &startup,
+            &process)) {
+        result.error = "CreateProcess failed";
+        return result;
+    }
+
+    result.started = true;
+    WaitForSingleObject(process.hProcess, INFINITE);
+    DWORD exit_code = 1;
+    if (GetExitCodeProcess(process.hProcess, &exit_code)) {
+        result.exit_code = (int)exit_code;
+    }
+    CloseHandle(process.hThread);
+    CloseHandle(process.hProcess);
+    return result;
+#else
+    pid_t pid = fork();
+    if (pid < 0) {
+        result.error = "fork failed";
+        return result;
+    }
+    if (pid == 0) {
+        std::vector<char*> argv;
+        std::string executable_text = path_string(executable);
+        argv.push_back(const_cast<char*>(executable_text.c_str()));
+        for (const std::string& arg : args) {
+            argv.push_back(const_cast<char*>(arg.c_str()));
+        }
+        argv.push_back(0);
+        execv(executable_text.c_str(), argv.data());
+        _exit(127);
+    }
+
+    result.started = true;
+    int status = 0;
+    if (waitpid(pid, &status, 0) < 0) {
+        result.error = "waitpid failed";
+        result.exit_code = 1;
+        return result;
+    }
+    if (WIFEXITED(status)) {
+        result.exit_code = WEXITSTATUS(status);
+    } else if (WIFSIGNALED(status)) {
+        result.exit_code = 128 + WTERMSIG(status);
+    } else {
+        result.exit_code = 1;
+    }
+    return result;
+#endif
+}
+
+void append_launch_history(
+    const InstanceRef& instance,
+    const InstallRef& install,
+    const std::vector<std::string>& args,
+    const ProcessResult& result
+)
+{
+    fs::create_directories(instance.local_data_root / "logs");
+    std::ofstream out(instance.local_data_root / "logs" / "launch_history.log", std::ios::app | std::ios::binary);
+    out << "command=" << command_line_for_display(install.executable, args) << "\n";
+    out << "started=" << (result.started ? "true" : "false") << "\n";
+    out << "exit_code=" << result.exit_code << "\n";
+    if (!result.error.empty()) {
+        out << "error=" << result.error << "\n";
+    }
+    out << "\n";
+}
+
 int print_help()
 {
     std::cout << "FacMan " << kVersion << "\n";
@@ -733,6 +927,7 @@ int print_help()
     std::cout << "  installs import <factorio-dir> --id <install-id> [--json]\n";
     std::cout << "  instances create <name> --install <install-id> [--template <id>] [--json]\n";
     std::cout << "  launch-plan <instance-id> [--json]\n";
+    std::cout << "  launch plan <instance-id> [--json]\n";
     std::cout << "  run <instance-id> [--execute]\n";
     return 0;
 }
@@ -1001,9 +1196,25 @@ int command_run(const CliOptions& options)
         std::cerr << "Unknown install reference: " << instance.install_ref << "\n";
         return 1;
     }
+    std::vector<std::string> args = launch_args(instance);
     if (has_flag(options.args, "--execute")) {
-        std::cerr << "Native launch execution is not implemented yet. Dry-run remains the only safe mode.\n";
-        return 1;
+        ProcessResult result = run_process(install.executable, args);
+        append_launch_history(instance, install, args, result);
+        if (has_flag(options.args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.launch_result.v1\",\n";
+            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+            std::cout << "  \"started\": " << (result.started ? "true" : "false") << ",\n";
+            std::cout << "  \"exit_code\": " << result.exit_code << ",\n";
+            std::cout << "  \"error\": " << quote(result.error) << "\n";
+            std::cout << "}\n";
+        } else if (result.started) {
+            std::cout << "Executed launch plan for " << instance.instance_id << "\n";
+            std::cout << "Process exited with code " << result.exit_code << "\n";
+        } else {
+            std::cerr << "Launch failed: " << result.error << "\n";
+        }
+        return result.started ? result.exit_code : 1;
     }
     if (has_flag(options.args, "--json")) {
         std::cout << launch_plan_json(instance, install);
@@ -1012,7 +1223,7 @@ int command_run(const CliOptions& options)
         std::cout << "Executable: " << path_string(install.executable) << "\n";
         std::cout << "Args: --config " << path_string(instance.local_data_root / "config" / "config.ini")
                   << " --mod-directory " << path_string(instance.local_data_root / "mods") << "\n";
-        std::cout << "Dry-run only. Re-run with --execute once native launch execution is implemented.\n";
+        std::cout << "Dry-run only. Re-run with --execute to run this plan.\n";
     }
     return 0;
 }
@@ -1045,6 +1256,11 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     }
     if (command == "launch-plan") {
         return command_launch_plan(options);
+    }
+    if (command == "launch" && options.args.size() >= 2 && options.args[1] == "plan") {
+        CliOptions launch_options = options;
+        launch_options.args.erase(launch_options.args.begin());
+        return command_launch_plan(launch_options);
     }
     if (command == "run") {
         return command_run(options);

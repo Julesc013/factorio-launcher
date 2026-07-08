@@ -12,8 +12,10 @@ For a specific instance:
 
 ```bash
 facman launch-plan <instance>
+facman launch plan <instance>
 facman run <instance>
 ```
 
 `run` defaults to dry-run mode. Use `--execute` only after reviewing the launch
-plan.
+plan. Execution uses the instance-local config and mod directory and records a
+launch history entry under the instance logs directory.
