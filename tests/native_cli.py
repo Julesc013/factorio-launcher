@@ -16,11 +16,19 @@ def facman_executable() -> Path:
             return path
         raise AssertionError(f"FACMAN_CLI_EXE does not point to a file: {path}")
 
+    preferred = [
+        ROOT / "build" / "native-smoke" / "Debug" / "facman.exe",
+        ROOT / "build" / "native-smoke" / "facman",
+    ]
+    for path in preferred:
+        if path.is_file():
+            return path
+
     candidates: list[Path] = []
     for pattern in ("build/**/facman.exe", "build/**/facman"):
         candidates.extend(path for path in ROOT.glob(pattern) if path.is_file())
     if candidates:
-        return sorted(candidates, key=lambda path: len(path.parts))[0]
+        return sorted(candidates, key=lambda path: path.stat().st_mtime, reverse=True)[0]
 
     raise unittest.SkipTest("native facman executable has not been built")
 
