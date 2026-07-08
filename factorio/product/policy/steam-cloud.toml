@@ -1,4 +1,0 @@
-foreign_owned = true
-warn_on_import = true
-never_write_without_confirmation = true
-

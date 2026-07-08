@@ -16,13 +16,13 @@ def repo_root() -> Path:
         Path(__file__).resolve().parents[3],
     ]
     for candidate in candidates:
-        if (candidate / "factorio" / "product" / "factorio.product.toml").is_file():
+        if (candidate / "data" / "factorio" / "product" / "factorio.product.toml").is_file():
             return candidate
     return Path.cwd()
 
 
 def product_dir() -> Path:
-    return repo_root() / "factorio" / "product"
+    return repo_root() / "data" / "factorio"
 
 
 def schema_dir() -> Path:
@@ -30,7 +30,7 @@ def schema_dir() -> Path:
 
 
 def factorio_schema_dir() -> Path:
-    return repo_root() / "factorio" / "schemas"
+    return repo_root() / "schemas" / "factorio"
 
 
 def default_workspace() -> Path:

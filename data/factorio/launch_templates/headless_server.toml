@@ -1,0 +1,3 @@
+template_id = "headless-server"
+mode = "headless_server"
+args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--start-server", "{save}"]

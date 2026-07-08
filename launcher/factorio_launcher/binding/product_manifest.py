@@ -8,7 +8,7 @@ from factorio_launcher.core.config import product_dir
 
 
 def product_manifest_path() -> Path:
-    return product_dir() / "factorio.product.toml"
+    return product_dir() / "product" / "factorio.product.toml"
 
 
 def load_product_manifest() -> dict[str, Any]:

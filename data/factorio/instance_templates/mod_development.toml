@@ -1,0 +1,5 @@
+template_id = "mod-development"
+description = "Mod development sandbox."
+profile = "mod-dev"
+create_mod_directory = true
+backup_before_launch = true

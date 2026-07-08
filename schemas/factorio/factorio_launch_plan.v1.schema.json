@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/schemas/factorio/factorio_launch_plan.v1.schema.json",
+  "title": "Factorio Launch Plan",
+  "type": "object",
+  "required": ["instance_id", "executable", "args", "preflight", "dry_run_default"],
+  "properties": {
+    "instance_id": { "type": "string" },
+    "executable": { "type": "string" },
+    "args": { "type": "array", "items": { "type": "string" } },
+    "preflight": { "type": "array", "items": { "type": "string" } },
+    "dry_run_default": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

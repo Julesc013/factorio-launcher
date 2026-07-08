@@ -1,0 +1,10 @@
+platform = "macos"
+
+candidate_roots = [
+  "/Applications/factorio.app",
+  "~/Applications/factorio.app",
+]
+
+executables = [
+  "Contents/MacOS/factorio",
+]

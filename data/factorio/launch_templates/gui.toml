@@ -1,0 +1,3 @@
+template_id = "gui"
+mode = "gui"
+args = ["--config", "{config}", "--mod-directory", "{mod_directory}"]

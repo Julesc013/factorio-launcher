@@ -1,4 +1,0 @@
-template_id = "multiplayer-connect"
-mode = "multiplayer_connect"
-args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--mp-connect", "{host}"]
-

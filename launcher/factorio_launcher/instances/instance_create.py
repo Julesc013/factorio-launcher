@@ -28,7 +28,8 @@ INSTANCE_DIRS = [
 
 
 def load_instance_template(template_id: str) -> dict[str, Any]:
-    path = product_dir() / "instance-templates" / f"{template_id}.toml"
+    template_name = template_id.replace("-", "_")
+    path = product_dir() / "instance_templates" / f"{template_name}.toml"
     if not path.exists():
         raise FileNotFoundError(f"instance template not found: {template_id}")
     with path.open("rb") as handle:

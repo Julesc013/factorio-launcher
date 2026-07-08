@@ -1,0 +1,1 @@
+"""Universal setup adapter boundary."""

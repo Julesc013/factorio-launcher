@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/schemas/factorio/factorio_server.v1.schema.json",
+  "title": "Factorio Server",
+  "type": "object",
+  "required": ["schema_version", "server_id", "instance_id"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "server_id": { "type": "string" },
+    "instance_id": { "type": "string" }
+  },
+  "additionalProperties": true
+}

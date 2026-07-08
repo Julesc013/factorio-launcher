@@ -1,4 +1,0 @@
-template_id = "mod-dev"
-mode = "mod_dev"
-args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--instrument-mod", "{mod_name}"]
-

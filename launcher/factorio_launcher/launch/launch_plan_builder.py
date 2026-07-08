@@ -10,7 +10,8 @@ from factorio_launcher.launch.command_builder import render_args
 
 
 def load_launch_template(profile_id: str) -> dict[str, Any]:
-    path = product_dir() / "launch-templates" / f"{profile_id}.toml"
+    template_name = profile_id.replace("-", "_")
+    path = product_dir() / "launch_templates" / f"{template_name}.toml"
     if not path.exists():
         raise FileNotFoundError(f"launch template not found: {profile_id}")
     with path.open("rb") as handle:

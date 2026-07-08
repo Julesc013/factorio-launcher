@@ -1,0 +1,3 @@
+template_id = "map-preview"
+mode = "map_preview"
+args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--generate-map-preview", "{output}"]

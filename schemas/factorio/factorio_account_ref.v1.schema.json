@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/schemas/factorio/factorio_account_ref.v1.schema.json",
+  "title": "Factorio Account Reference",
+  "type": "object",
+  "required": ["account_id", "provider", "secret_ref"],
+  "properties": {
+    "account_id": { "type": "string" },
+    "provider": { "enum": ["factorio-com", "offline"] },
+    "secret_ref": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

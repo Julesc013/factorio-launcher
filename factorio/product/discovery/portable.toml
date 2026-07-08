@@ -1,4 +1,0 @@
-source = "portable"
-ownership = "portable"
-notes = "Portable installs are user-controlled until explicitly adopted by universal setup."
-

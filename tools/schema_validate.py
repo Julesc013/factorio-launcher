@@ -10,13 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> int:
     problems: list[str] = []
-    schemas = sorted((ROOT / "schemas").glob("*.json"))
-    schemas.extend(sorted((ROOT / "factorio" / "schemas").glob("*.json")))
+    schemas = sorted((ROOT / "schemas").glob("**/*.json"))
     if not schemas:
         problems.append("no schema files found")
     for path in schemas:
         problems.extend(validate_schema_file(path))
-    problems.extend(validate_product_manifest(ROOT / "factorio" / "product" / "factorio.product.toml"))
+    problems.extend(validate_product_manifest(ROOT / "data" / "factorio" / "product" / "factorio.product.toml"))
     if problems:
         for problem in problems:
             print(f"schema-check: {problem}", file=sys.stderr)

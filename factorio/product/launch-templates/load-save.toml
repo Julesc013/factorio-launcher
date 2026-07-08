@@ -1,4 +1,0 @@
-template_id = "load-save"
-mode = "load_save"
-args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--load-game", "{save}"]
-

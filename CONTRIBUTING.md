@@ -5,8 +5,10 @@ binding before adding TUI or GUI views.
 
 ## Boundaries
 
-- Native universal ABI work belongs under `universal/`.
-- Native Factorio product-binding work belongs under `factorio/`.
+- Public ABI work belongs under `include/`.
+- Native implementation work belongs under `src/`.
+- Frontend executable work belongs under `apps/`.
+- Product data belongs under `data/`.
 - Current Python prototype logic belongs under `launcher/factorio_launcher/`.
 - UI command parsing in the prototype belongs under `launcher/factorio_launcher/ui/cli/`.
 - Setup mutation must remain behind the universal setup adapter.

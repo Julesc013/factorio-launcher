@@ -1,4 +1,0 @@
-template_id = "host-game"
-mode = "host_game"
-args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--start-server", "{save}"]
-

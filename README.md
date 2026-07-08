@@ -12,14 +12,12 @@ branding assets.
 ## Durable Layout
 
 ```text
-universal/   C89 public ABI and universal launcher kernel scaffold
-factorio/    Factorio binding ABI, native binding source, product data, schemas
-cli/         native CLI frontend scaffold
-tui/         native TUI frontend scaffold
-daemon/      local launcher daemon scaffold
-gui/         WinForms, AppKit, GTK, and optional Qt frontends
-launcher/    current Python prototype frontend while native parity is built
-schemas/     shared command graph / JSON-RPC schemas
+include/   public C ABI headers for usk, ulk, and flb
+src/       private native implementation boundaries
+apps/      CLI, TUI, daemon, WinForms, AppKit, GTK, and Qt frontends
+data/      Factorio product templates, discovery rules, and policy
+schemas/   versioned compatibility contracts
+launcher/  current Python prototype frontend while native parity is built
 ```
 
 The CLI is the first frontend, not the foundation of every other frontend.
@@ -50,9 +48,9 @@ python -m factorio_launcher --version
 
 The packaged console command is `factorio-launcher`.
 
-The native CLI scaffold is under `cli/`; the currently runnable CLI remains the
-Python prototype under `launcher/` until the native command graph reaches
-parity.
+The native CLI scaffold is under `apps/factorio_cli/`; the currently runnable
+CLI remains the Python prototype under `launcher/` until the native command
+graph reaches parity.
 
 ## Architecture Boundary
 
@@ -92,6 +90,6 @@ python -m factorio_launcher doctor
 
 ## Roadmap
 
-The detailed roadmap lives in [docs/ROADMAP.md](docs/ROADMAP.md). The first
+The detailed roadmap lives in [docs/roadmap.md](docs/roadmap.md). The first
 useful target is read-only install discovery plus isolated instance creation
 and launch-plan preview.

@@ -1,0 +1,3 @@
+allow_parallel_default = true
+requires_unique_mod_dir = true
+requires_unique_save_lock = true

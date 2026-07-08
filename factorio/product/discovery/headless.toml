@@ -1,4 +1,0 @@
-source = "headless"
-ownership = "imported"
-notes = "Headless server installs are registered read-only until managed setup exists."
-

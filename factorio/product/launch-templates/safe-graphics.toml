@@ -1,4 +1,0 @@
-template_id = "safe-graphics"
-mode = "gui"
-args = ["--config", "{config}", "--mod-directory", "{mod_directory}", "--force-opengl"]
-

@@ -1,0 +1,6 @@
+template_id = "portable"
+description = "Portable workspace-oriented instance."
+profile = "gui"
+create_mod_directory = true
+backup_before_launch = true
+portable = true
