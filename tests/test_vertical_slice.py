@@ -38,8 +38,9 @@ class VerticalSliceTests(unittest.TestCase):
             )
             self.assertEqual(code, 0, stderr)
             scan = json.loads(stdout)
-            self.assertTrue(scan)
-            self.assertEqual(scan[0]["verification"]["status"], "structural")
+            self.assertEqual(scan["schema"], "factorio.discovery_report.v1")
+            self.assertTrue(scan["installs"])
+            self.assertEqual(scan["installs"][0]["verification"]["status"], "structural")
 
             code, stdout, stderr = invoke(
                 ["--workspace", str(workspace), "installs", "import", str(install_root), "--id", "exec-fixture", "--json"]

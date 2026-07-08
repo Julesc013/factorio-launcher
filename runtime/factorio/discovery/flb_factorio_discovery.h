@@ -27,6 +27,8 @@ std::string install_ref_json(const InstallRef& install);
 
 std::string install_refs_json(const std::vector<InstallRef>& installs);
 
+std::string discovery_report_json(const std::vector<InstallRef>& installs);
+
 bool install_owned_by_setup(const InstallRef& install);
 
 } // namespace facman::factorio::discovery

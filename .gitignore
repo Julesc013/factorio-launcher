@@ -10,6 +10,8 @@ dist/
 build/
 out/
 bin/
+!tests/fixtures/**/bin/
+!tests/fixtures/**/bin/**
 obj/
 .vs/
 *.user

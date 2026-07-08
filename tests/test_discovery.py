@@ -56,10 +56,16 @@ class DiscoveryTests(unittest.TestCase):
             registered = list((Path(tmp) / "installs" / "installed_state").glob("*.json"))
 
         self.assertEqual(code, 0, stderr)
-        installs = json.loads(stdout)
+        report = json.loads(stdout)
+        self.assertEqual(report["schema"], "factorio.discovery_report.v1")
+        self.assertEqual(report["command"], "installs.scan")
+        self.assertEqual(report["read_only"], True)
+        installs = report["installs"]
+        self.assertEqual(report["candidate_count"], len(installs))
         self.assertFalse(registered)
 
         structural = [install for install in installs if install["verification"]["status"] == "structural"]
+        self.assertEqual(report["structural_count"], len(structural))
         by_source = {install["source"]: install for install in structural}
         self.assertEqual(by_source["manual"]["ownership"], "imported")
         self.assertEqual(by_source["portable"]["ownership"], "portable")
@@ -69,6 +75,7 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(by_source["manual"]["discovery"]["read_only"], True)
 
         invalid_candidates = [install for install in installs if install["verification"]["status"] == "invalid"]
+        self.assertEqual(report["invalid_count"], len(invalid_candidates))
         self.assertTrue(invalid_candidates)
 
     def test_imported_install_can_be_inspected_by_id(self) -> None:

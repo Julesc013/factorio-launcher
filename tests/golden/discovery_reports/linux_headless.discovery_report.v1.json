@@ -1,0 +1,36 @@
+{
+  "schema": "factorio.discovery_report.v1",
+  "command": "installs.scan",
+  "read_only": true,
+  "candidate_count": 1,
+  "structural_count": 1,
+  "invalid_count": 0,
+  "installs": [
+    {
+      "schema": "factorio.install_ref.v1",
+      "install_id": "fake-factorio-linux-headless",
+      "product_id": "factorio",
+      "display_name": "Factorio fake-factorio-linux-headless",
+      "root": "tests/fixtures/fake_headless_install",
+      "app_dir": "tests/fixtures/fake_headless_install",
+      "executable": "tests/fixtures/fake_headless_install/bin/x64/factorio.stub",
+      "version": "2.0.77",
+      "ownership": "imported",
+      "source": "headless",
+      "platform": "linux-x64",
+      "capabilities": ["gui", "fixture_stub"],
+      "verification": {
+        "status": "structural",
+        "problems": []
+      },
+      "discovery": {
+        "read_only": true,
+        "source_family": "headless"
+      },
+      "safe_actions": {
+        "repair": false,
+        "uninstall": false
+      }
+    }
+  ]
+}

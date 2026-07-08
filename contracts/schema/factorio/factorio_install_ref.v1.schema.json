@@ -8,7 +8,7 @@
     "install_id": { "type": "string" },
     "product_id": { "const": "factorio" },
     "source": { "type": "string" },
-    "ownership": { "enum": ["managed", "foreign", "imported", "portable"] },
+    "ownership": { "enum": ["managed", "foreign", "foreign_owned", "imported", "portable"] },
     "version": { "type": ["string", "null"] },
     "channel": { "type": ["string", "null"] },
     "platform": { "type": "string" },

@@ -766,9 +766,9 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<std::string>& 
     return factorio_discovery::scan_install_candidates(roots);
 }
 
-std::string installs_array_json(const std::vector<InstallRef>& installs)
+std::string installs_report_json(const std::vector<InstallRef>& installs)
 {
-    return factorio_discovery::install_refs_json(installs);
+    return factorio_discovery::discovery_report_json(installs);
 }
 
 bool load_install(const fs::path& workspace, const std::string& install_id, InstallRef& out)
@@ -1833,7 +1833,7 @@ int command_installs(const CliOptions& options)
     if (options.args[1] == "scan") {
         std::vector<InstallRef> candidates = scan_install_candidates(options.args);
         if (has_flag(options.args, "--json")) {
-            std::cout << installs_array_json(candidates);
+            std::cout << installs_report_json(candidates);
         } else {
             if (candidates.empty()) {
                 std::cout << "No Factorio install candidates found.\n";

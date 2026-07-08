@@ -1,0 +1,36 @@
+{
+  "schema": "factorio.discovery_report.v1",
+  "command": "installs.scan",
+  "read_only": true,
+  "candidate_count": 1,
+  "structural_count": 0,
+  "invalid_count": 1,
+  "installs": [
+    {
+      "schema": "factorio.install_ref.v1",
+      "install_id": "fake-invalid-factorio-folder",
+      "product_id": "factorio",
+      "display_name": "Factorio fake-invalid-factorio-folder",
+      "root": "tests/fixtures/invalid_factorio_folder",
+      "app_dir": "tests/fixtures/invalid_factorio_folder",
+      "executable": "",
+      "version": "unknown",
+      "ownership": "imported",
+      "source": "manual",
+      "platform": "linux-x64",
+      "capabilities": [],
+      "verification": {
+        "status": "invalid",
+        "problems": []
+      },
+      "discovery": {
+        "read_only": true,
+        "source_family": "manual"
+      },
+      "safe_actions": {
+        "repair": false,
+        "uninstall": false
+      }
+    }
+  ]
+}

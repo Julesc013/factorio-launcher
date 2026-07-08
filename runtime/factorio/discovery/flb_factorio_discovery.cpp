@@ -442,6 +442,31 @@ std::string install_refs_json(const std::vector<InstallRef>& installs)
     return out.str();
 }
 
+std::string discovery_report_json(const std::vector<InstallRef>& installs)
+{
+    std::size_t structural_count = 0;
+    std::size_t invalid_count = 0;
+    for (const InstallRef& install : installs) {
+        if (install.verification_status == "structural") {
+            ++structural_count;
+        } else if (install.verification_status == "invalid") {
+            ++invalid_count;
+        }
+    }
+
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.discovery_report.v1\",\n";
+    out << "  \"command\": \"installs.scan\",\n";
+    out << "  \"read_only\": true,\n";
+    out << "  \"candidate_count\": " << installs.size() << ",\n";
+    out << "  \"structural_count\": " << structural_count << ",\n";
+    out << "  \"invalid_count\": " << invalid_count << ",\n";
+    out << "  \"installs\": " << install_refs_json(installs);
+    out << "}\n";
+    return out.str();
+}
+
 bool install_owned_by_setup(const InstallRef& install)
 {
     return install.ownership == "managed" || install.ownership == "adopted";
