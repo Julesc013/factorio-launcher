@@ -20,10 +20,11 @@ factorio-launcher/
     cli/              native console CLI frontend
     tui/              native TUI frontend
     daemon/           daemon / job runner frontend
-    winforms/         Windows .NET Framework 4.8 frontend
-    appkit/           macOS AppKit frontend
-    gtk/              Linux GTK frontend
-    qt/               optional Linux Qt frontend
+    gui/
+      win32/          Windows provider; WinForms .NET Framework 4.8 shell
+      appkit/         macOS AppKit frontend
+      gtk/            Linux GTK frontend
+      qt/             optional Linux Qt frontend
     python_cli/       transitional prototype, not production runtime
 
   content/
@@ -77,3 +78,8 @@ the early CMake split. Their public ABI headers and implementations live in:
 The transitional Python CLI remains under `apps/python_cli/` only so current
 read-only discovery and command-shape tests keep running while the native
 command graph catches up. Production packages must not depend on Python.
+
+GUI frontends are grouped below `apps/gui/` so `apps/` stays organized by
+frontend class first and provider/toolkit second. `win32` is the architecture
+label for the Windows GUI provider; the concrete legacy-compatible shell can
+remain WinForms.

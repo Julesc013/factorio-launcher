@@ -68,16 +68,8 @@ RETIRED_ROOTS = {
     "universal",
 }
 
-FRONTENDS = {
-    "appkit",
-    "cli",
-    "daemon",
-    "gtk",
-    "python_cli",
-    "qt",
-    "tui",
-    "winforms",
-}
+FRONTENDS = {"cli", "daemon", "gui", "python_cli", "tui"}
+GUI_PROVIDERS = {"appkit", "gtk", "qt", "win32"}
 
 SHELL_ALLOWED_FILES = {
     "README.md",
@@ -243,6 +235,12 @@ def check_apps_are_shells() -> list[str]:
     for name in sorted(FRONTENDS):
         if not (apps / name).is_dir():
             problems.append(f"missing app root apps/{name}/")
+    for name in sorted(GUI_PROVIDERS):
+        if not (apps / "gui" / name).is_dir():
+            problems.append(f"missing GUI provider apps/gui/{name}/")
+    for old_name in ["appkit", "gtk", "qt", "winforms"]:
+        if (apps / old_name).exists():
+            problems.append(f"GUI provider must live under apps/gui/, not apps/{old_name}/")
     for path in apps.rglob("*"):
         if path.is_dir():
             if path.name in {"src", "source"}:

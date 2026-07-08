@@ -15,8 +15,8 @@ branding assets.
 include/    Factorio binding public C ABI headers only
 runtime/    reusable private implementation for the Factorio binding, clients,
             package locator, and platform adapters
-apps/       CLI, TUI, daemon, WinForms, AppKit, GTK, Qt, and transitional
-            Python frontend code
+apps/       CLI, TUI, daemon, GUI providers under `apps/gui/`, and
+            transitional Python frontend code
 content/    Factorio product templates, discovery rules, launch templates,
             instance templates, redaction rules, and policy
 contracts/  ABI notes, command law, policies, and versioned JSON schemas
@@ -32,8 +32,8 @@ launcher code live in their own sibling repositories, not in this Factorio
 product repo.
 
 The CLI is the first frontend, not the foundation of every other frontend.
-CLI, TUI, WinForms, AppKit, GTK, and Qt all sit over the same command graph,
-native launcher service, and C ABI.
+CLI, TUI, the Win32/WinForms GUI, AppKit, GTK, and Qt all sit over the same
+command graph, native launcher service, and C ABI.
 
 ## Current Slice
 
@@ -74,7 +74,7 @@ Universal Command Graph       stable command model, schemas, dry-run, audit
         |
 Factorio Product Binding      C ABI outward, C11/C++11 internally
         |
-CLI / TUI / WinForms / AppKit / GTK / Qt frontends
+CLI / TUI / Win32-WinForms / AppKit / GTK / Qt frontends
 ```
 
 This repo owns only the Factorio product binding and Factorio-facing app

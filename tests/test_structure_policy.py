@@ -37,8 +37,12 @@ class StructurePolicyTests(unittest.TestCase):
         self.assertTrue((ROOT / "runtime" / "client" / "fl_command_client.c").is_file())
 
     def test_frontends_are_apps(self) -> None:
-        for name in ["cli", "tui", "daemon", "winforms", "appkit", "gtk", "qt", "python_cli"]:
+        for name in ["cli", "tui", "daemon", "gui", "python_cli"]:
             self.assertTrue((ROOT / "apps" / name).is_dir(), name)
+        for name in ["win32", "appkit", "gtk", "qt"]:
+            self.assertTrue((ROOT / "apps" / "gui" / name).is_dir(), name)
+        for old_gui_root in ["winforms", "appkit", "gtk", "qt"]:
+            self.assertFalse((ROOT / "apps" / old_gui_root).exists(), old_gui_root)
         for old_root in ["gui", "universal", "src", "source", "prototypes"]:
             self.assertFalse((ROOT / old_root).exists(), old_root)
 

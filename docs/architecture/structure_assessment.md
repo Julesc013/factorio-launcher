@@ -20,14 +20,16 @@ This is a better fit for a three-repo launcher ecosystem.
 ## Improvements Over The Old Shape
 
 - `source/` and `src/` are gone.
-- App code lives in `apps/<role>/`; reusable behavior lives in `runtime/`.
+- App code lives in `apps/<role>/`; GUI providers live in
+  `apps/gui/<provider>/`; reusable behavior lives in `runtime/`.
 - Factorio product data is now `content/factorio/`, not a generic `data/`
   drawer.
 - JSON schemas are now under `contracts/schema/`.
 - Package manifests are now under `release/packaging/`.
 - `include/` now contains only `flb`, the Factorio binding public ABI.
 - `usk` and `ulk` headers/runtime code moved to their own repositories.
-- Redundant app names are gone: `apps/cli`, `apps/tui`, `apps/daemon`.
+- Redundant app names are gone: `apps/cli`, `apps/tui`, `apps/daemon`, with
+  GUI toolkits grouped under `apps/gui/`.
 
 ## Remaining Risks
 

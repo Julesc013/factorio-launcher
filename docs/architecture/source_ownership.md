@@ -14,6 +14,7 @@ entrypoints.
 - `runtime/package/` owns package/runtime location and component verification.
 - `runtime/platform/` owns low-level platform adapters.
 - `apps/` owns frontend entrypoints and presentation shells.
+- `apps/gui/` owns GUI provider shells: `win32`, `appkit`, `gtk`, and `qt`.
 - `content/factorio/` owns product templates, discovery rules, launch
   templates, instance templates, redaction rules, and policy.
 - `contracts/` owns ABI, command, schema, policy, diagnostic, result, and
@@ -68,6 +69,10 @@ universal/
 apps/*/src/
 apps/*/source/
 runtime/*/source/
+apps/appkit/
+apps/gtk/
+apps/qt/
+apps/winforms/
 ```
 
 Do not reintroduce `include/usk`, `include/ulk`, `runtime/usk`, or
