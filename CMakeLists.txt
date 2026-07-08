@@ -76,7 +76,7 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     apps/cli/command_dispatch.cpp
   )
   target_compile_features(facman_cli PRIVATE cxx_std_17)
-  target_link_libraries(facman_cli PRIVATE flaunch_client_static flaunch_runtime_static ulk_static flb_factorio_static)
+  target_link_libraries(facman_cli PRIVATE flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 
   add_executable(facman_tui

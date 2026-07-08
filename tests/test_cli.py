@@ -154,6 +154,55 @@ class CliTests(unittest.TestCase):
             self.assertEqual(exported["files"], 2)
             self.assertTrue(pack.read_bytes().startswith(b"PK\x03\x04"))
 
+    def test_managed_install_operations_are_setup_gated(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / "factorio-2.0.77.zip"
+            archive.write_bytes(b"fake local archive")
+
+            code, stdout, stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "installs",
+                    "install-version",
+                    "2.0.77",
+                    "--archive",
+                    str(archive),
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 0, stderr)
+            install_plan = json.loads(stdout)
+            self.assertEqual(install_plan["setup_authority"], "universal-setup")
+            self.assertEqual(install_plan["setup_command"], "install_local.plan")
+            self.assertFalse(install_plan["mutates_install"])
+            self.assertEqual(install_plan["setup_response"]["payload"]["schema"], "usk.install_plan.v1")
+
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "installs", "verify", "fixture", "--json"])
+            self.assertEqual(code, 0, stderr)
+            verify = json.loads(stdout)
+            self.assertEqual(verify["setup_command"], "verify.report")
+            self.assertEqual(verify["setup_response"]["payload"]["schema"], "usk.verify_report.v1")
+
+            code, stdout, _stderr = invoke(["--workspace", tmp, "installs", "repair", "fixture", "--json"])
+            self.assertEqual(code, 1)
+            repair = json.loads(stdout)
+            self.assertEqual(repair["status"], "refused")
+            self.assertEqual(repair["refusal"]["code"], "ownership_denied")
+            self.assertFalse(repair["mutates_install"])
+
+            code, stdout, _stderr = invoke(["--workspace", tmp, "installs", "uninstall", "fixture", "--json"])
+            self.assertEqual(code, 1)
+            uninstall = json.loads(stdout)
+            self.assertEqual(uninstall["status"], "refused")
+            self.assertEqual(uninstall["refusal"]["code"], "ownership_denied")
+            self.assertFalse(uninstall["mutates_install"])
+
 
 if __name__ == "__main__":
     unittest.main()

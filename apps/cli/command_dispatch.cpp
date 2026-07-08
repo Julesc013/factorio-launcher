@@ -1,10 +1,13 @@
 #include "command_dispatch.h"
 
+#include "usk/usk_api.h"
+
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -117,6 +120,49 @@ std::string json_escape(const std::string& value)
 std::string quote(const std::string& value)
 {
     return "\"" + json_escape(value) + "\"";
+}
+
+usk_string_view setup_view_from_cstr(const char* text)
+{
+    usk_string_view view;
+    view.data = text;
+    view.size = text == 0 ? 0 : static_cast<usk_size>(std::strlen(text));
+    return view;
+}
+
+std::string setup_view_to_string(usk_string_view view)
+{
+    if (view.data == 0 || view.size == 0) {
+        return "";
+    }
+    return std::string(view.data, view.data + view.size);
+}
+
+std::string setup_command_response_json(const char* command_name)
+{
+    usk_context* context = 0;
+    usk_command_request_v1 request;
+    usk_command_response_v1 response;
+
+    std::memset(&request, 0, sizeof(request));
+    std::memset(&response, 0, sizeof(response));
+
+    if (usk_context_create_v1(0, &context) != USK_STATUS_OK || context == 0) {
+        return "{\"schema\":\"usk.command_response.v1\",\"status\":\"error\",\"payload\":null,\"error\":{\"code\":\"context_create_failed\",\"message\":\"universal setup context could not be created\"}}";
+    }
+
+    request.struct_size = sizeof(request);
+    request.command_name = setup_view_from_cstr(command_name);
+    request.json_payload = setup_view_from_cstr("{}");
+    request.dry_run = 1;
+    (void)usk_command_execute_v1(context, &request, &response);
+    std::string payload = setup_view_to_string(response.json_payload);
+    usk_context_destroy_v1(context);
+
+    if (payload.empty()) {
+        return "{\"schema\":\"usk.command_response.v1\",\"status\":\"error\",\"payload\":null,\"error\":{\"code\":\"empty_response\",\"message\":\"universal setup returned an empty response\"}}";
+    }
+    return payload;
 }
 
 bool has_flag(const std::vector<std::string>& args, const std::string& flag)
@@ -587,6 +633,65 @@ std::string install_json(const InstallRef& install)
     out << "  \"verification\": {\"status\": " << quote(install.verification_status) << ", \"problems\": []},\n";
     out << "  \"discovery\": {\"read_only\": true, \"source_family\": " << quote(install.source) << "},\n";
     out << "  \"safe_actions\": {\"repair\": false, \"uninstall\": false}\n";
+    out << "}\n";
+    return out.str();
+}
+
+bool install_owned_by_setup(const InstallRef& install)
+{
+    return install.ownership == "managed" || install.ownership == "adopted";
+}
+
+std::string setup_backed_operation_json(
+    const std::string& schema,
+    const std::string& operation,
+    const std::string& status,
+    const std::string& setup_command,
+    const std::string& setup_response,
+    const std::vector<std::pair<std::string, std::string>>& fields
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": " << quote(schema) << ",\n";
+    out << "  \"operation\": " << quote(operation) << ",\n";
+    out << "  \"status\": " << quote(status) << ",\n";
+    out << "  \"setup_authority\": \"universal-setup\",\n";
+    out << "  \"setup_command\": " << quote(setup_command) << ",\n";
+    out << "  \"mutates_install\": false";
+    for (const auto& field : fields) {
+        out << ",\n  " << quote(field.first) << ": " << quote(field.second);
+    }
+    out << ",\n  \"setup_response\": " << setup_response << "\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string setup_refusal_json(
+    const std::string& operation,
+    const InstallRef& install,
+    const std::string& reason,
+    const std::string& setup_response
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.managed_install_refusal.v1\",\n";
+    out << "  \"operation\": " << quote(operation) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"setup_authority\": \"universal-setup\",\n";
+    out << "  \"setup_command\": \"policy.inspect\",\n";
+    out << "  \"mutates_install\": false,\n";
+    out << "  \"install_id\": " << quote(install.install_id) << ",\n";
+    out << "  \"ownership\": " << quote(install.ownership) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"usk.refusal.v1\",\n";
+    out << "    \"operation\": " << quote(operation) << ",\n";
+    out << "    \"code\": \"ownership_denied\",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"recoverable\": true\n";
+    out << "  },\n";
+    out << "  \"setup_response\": " << setup_response << "\n";
     out << "}\n";
     return out.str();
 }
@@ -1262,6 +1367,10 @@ int print_help()
     std::cout << "  installs scan [--path <root>] [--json]\n";
     std::cout << "  installs inspect <install-id> [--json]\n";
     std::cout << "  installs import <factorio-dir> --id <install-id> [--json]\n";
+    std::cout << "  installs install-version <version> --archive <path> [--json]\n";
+    std::cout << "  installs verify <install-id> [--json]\n";
+    std::cout << "  installs repair <install-id> [--json]\n";
+    std::cout << "  installs uninstall <install-id> [--json]\n";
     std::cout << "  instances create <name> --install <install-id> [--template <id>] [--json]\n";
     std::cout << "  launch-plan <instance-id> [--json]\n";
     std::cout << "  launch plan <instance-id> [--json]\n";
@@ -1330,6 +1439,128 @@ int command_installs(const CliOptions& options)
         return 2;
     }
     ensure_workspace(options.workspace);
+
+    if (options.args[1] == "install-version") {
+        if (options.args.size() < 3) {
+            std::cerr << "Missing Factorio version\n";
+            return 2;
+        }
+        std::string archive = option_value(options.args, "--archive");
+        if (archive.empty()) {
+            std::cerr << "installs install-version requires --archive <path>\n";
+            return 2;
+        }
+        fs::path archive_path = fs::absolute(archive).lexically_normal();
+        if (!fs::is_regular_file(archive_path)) {
+            std::cerr << "Archive does not exist: " << path_string(archive_path) << "\n";
+            return 1;
+        }
+
+        std::string setup_response = setup_command_response_json("install_local.plan");
+        std::vector<std::pair<std::string, std::string>> fields = {
+            {"version", options.args[2]},
+            {"archive", path_string(archive_path)},
+            {"ownership", "managed_after_setup_commit"},
+        };
+        std::string result = setup_backed_operation_json(
+            "factorio.managed_install_plan.v1",
+            "install-version",
+            "planned",
+            "install_local.plan",
+            setup_response,
+            fields);
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cout << "Managed install plan created through universal-setup.\n";
+            std::cout << "Version: " << options.args[2] << "\n";
+            std::cout << "Archive: " << path_string(archive_path) << "\n";
+            std::cout << "Mutation: not executed by this preview command\n";
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "verify") {
+        if (options.args.size() < 3) {
+            std::cerr << "Missing install id\n";
+            return 2;
+        }
+        InstallRef install;
+        if (!load_install(options.workspace, options.args[2], install)) {
+            std::cerr << "Unknown install reference: " << options.args[2] << "\n";
+            return 1;
+        }
+        std::string setup_response = setup_command_response_json("verify.report");
+        std::vector<std::pair<std::string, std::string>> fields = {
+            {"install_id", install.install_id},
+            {"ownership", install.ownership},
+            {"root", path_string(install.root)},
+        };
+        std::string result = setup_backed_operation_json(
+            "factorio.install_verify_report.v1",
+            "verify",
+            "reported",
+            "verify.report",
+            setup_response,
+            fields);
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cout << "Install verify report requested through universal-setup.\n";
+            std::cout << "Install: " << install.install_id << "\n";
+            std::cout << "Ownership: " << install.ownership << "\n";
+        }
+        return 0;
+    }
+
+    if (options.args[1] == "repair" || options.args[1] == "uninstall") {
+        std::string operation = options.args[1];
+        if (options.args.size() < 3) {
+            std::cerr << "Missing install id\n";
+            return 2;
+        }
+        InstallRef install;
+        if (!load_install(options.workspace, options.args[2], install)) {
+            std::cerr << "Unknown install reference: " << options.args[2] << "\n";
+            return 1;
+        }
+        if (!install_owned_by_setup(install)) {
+            std::string setup_response = setup_command_response_json("policy.inspect");
+            std::string reason = "setup may not " + operation + " " + install.ownership + " installs";
+            std::string result = setup_refusal_json(operation, install, reason, setup_response);
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cout << "Refused: " << reason << "\n";
+                std::cout << "Install: " << install.install_id << "\n";
+                std::cout << "Ownership: " << install.ownership << "\n";
+            }
+            return 1;
+        }
+
+        std::string setup_command = operation == "uninstall" ? "uninstall.plan" : "diagnostics.report";
+        std::string status = operation == "uninstall" ? "planned" : "refused";
+        std::string setup_response = setup_command_response_json(setup_command.c_str());
+        std::vector<std::pair<std::string, std::string>> fields = {
+            {"install_id", install.install_id},
+            {"ownership", install.ownership},
+            {"root", path_string(install.root)},
+        };
+        std::string result = setup_backed_operation_json(
+            "factorio.managed_install_plan.v1",
+            operation,
+            status,
+            setup_command,
+            setup_response,
+            fields);
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cout << "Managed install " << operation << " routed through universal-setup.\n";
+            std::cout << "Mutation: not executed by this preview command\n";
+        }
+        return status == "planned" ? 0 : 1;
+    }
 
     if (options.args[1] == "import") {
         if (options.args.size() < 3) {
