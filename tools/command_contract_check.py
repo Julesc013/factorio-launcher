@@ -12,6 +12,7 @@ EFFECTS_POLICY = ROOT / "contracts" / "policy" / "effects.v1.toml"
 
 EXPECTED_COMMANDS = {
     "product.inspect",
+    "factorio.product.inspect",
     "doctor.run",
     "installs.scan",
     "installs.import",

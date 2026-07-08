@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.product.v1",
+  "command": "factorio.product.inspect",
+  "product_id": "factorio",
+  "binding_id": "flb.factorio",
+  "status": "ok"
+}

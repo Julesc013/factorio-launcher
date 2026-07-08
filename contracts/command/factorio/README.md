@@ -4,6 +4,7 @@ Owns Factorio-specific command contract notes.
 
 Examples:
 
+- `factorio.product.inspect`
 - `factorio.installs.scan`
 - `factorio.installs.inspect`
 - `factorio.instances.create`
