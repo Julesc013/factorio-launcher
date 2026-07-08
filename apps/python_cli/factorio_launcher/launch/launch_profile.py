@@ -1,2 +1,0 @@
-"""Launch profile model helpers."""
-

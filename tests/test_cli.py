@@ -1,24 +1,14 @@
 from __future__ import annotations
 
-import contextlib
-import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from factorio_launcher.ui.cli.cli import main
+from native_cli import invoke
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
-
-
-def invoke(args: list[str]) -> tuple[int, str, str]:
-    stdout = io.StringIO()
-    stderr = io.StringIO()
-    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-        code = main(args)
-    return code, stdout.getvalue(), stderr.getvalue()
 
 
 class CliTests(unittest.TestCase):

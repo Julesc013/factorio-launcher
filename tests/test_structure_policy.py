@@ -23,9 +23,10 @@ class StructurePolicyTests(unittest.TestCase):
         self.assertFalse((ROOT / "product").exists())
         self.assertFalse((ROOT / "factorio").exists())
 
-    def test_python_package_has_no_redundant_factorio_nesting(self) -> None:
+    def test_python_is_not_a_product_runtime(self) -> None:
         self.assertFalse((ROOT / "launcher").exists())
-        self.assertFalse((ROOT / "apps" / "python_cli" / "factorio_launcher" / "factorio").exists())
+        self.assertFalse((ROOT / "apps" / "python_cli").exists())
+        self.assertFalse((ROOT / "pyproject.toml").exists())
 
     def test_public_abi_prefixes_exist(self) -> None:
         self.assertTrue((ROOT / "include" / "flb" / "flb_api.h").is_file())
@@ -37,7 +38,7 @@ class StructurePolicyTests(unittest.TestCase):
         self.assertTrue((ROOT / "runtime" / "client" / "fl_command_client.c").is_file())
 
     def test_frontends_are_apps(self) -> None:
-        for name in ["cli", "tui", "daemon", "gui", "python_cli"]:
+        for name in ["cli", "tui", "daemon", "gui"]:
             self.assertTrue((ROOT / "apps" / name).is_dir(), name)
         for name in ["win32", "appkit", "gtk", "qt"]:
             self.assertTrue((ROOT / "apps" / "gui" / name).is_dir(), name)

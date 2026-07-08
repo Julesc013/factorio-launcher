@@ -44,8 +44,8 @@ Current target facts:
 - Project name: FacMan / factorio-launcher.
 - Purpose: unofficial Factorio launcher and isolated instance manager.
 - Runtime boundary: production packages must not depend on AIDE.
-- Python boundary: the current runnable CLI is a quarantined prototype under
-  `apps/python_cli/`.
+- Python boundary: Python is allowed for repo tooling, validators, fixtures,
+  and tests, but not for FacMan product runtime entrypoints.
 - Native direction: stable C-compatible ABI, native kernels, CLI/TUI/daemon,
   and platform GUI shells over the command graph.
 - Safety invariants: no bundled Factorio binaries, no ownership bypass, no
@@ -102,6 +102,6 @@ Use this before large code work:
 
 ```text
 Establish Factorio Launcher AIDE baseline: document architecture, safety
-invariants, current Python prototype checks, native command graph gap, and first
-WorkUnits for read-only install discovery plus isolated instance creation.
+invariants, native CLI checks, native command graph gap, and first WorkUnits
+for read-only install discovery plus isolated instance creation.
 ```

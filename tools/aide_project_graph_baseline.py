@@ -63,8 +63,6 @@ def classify(path: str) -> dict[str, Any]:
     elif root == "apps":
         kind = "frontend"
         owner = "frontend"
-        if path.startswith("apps/python_cli/"):
-            lifecycle = "transitional"
     elif root == "content":
         kind = "product_policy"
         owner = "factorio_binding"
@@ -119,7 +117,6 @@ def build_edges() -> list[dict[str, str]]:
         {"from": "apps/*", "to": "runtime/client", "type": "uses_client_boundary"},
         {"from": "../universal-launcher/runtime/launcher", "to": "runtime/factorio/binding", "type": "delegates_product_questions"},
         {"from": "runtime/factorio/binding", "to": "content/factorio", "type": "consumes_product_policy"},
-        {"from": "apps/python_cli", "to": "../universal-launcher/runtime/launcher", "type": "native_successor"},
         {"from": ".aide", "to": "repo", "type": "observes_and_reports"},
     ]
 
@@ -132,20 +129,20 @@ def build_findings() -> list[dict[str, Any]]:
             "native_command_graph",
             "native command graph not yet implemented",
             "universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers",
-            "split repo is scaffolded; Python prototype remains runnable behavior",
+            "split repo is scaffolded; native FacMan CLI currently owns the smoke behavior",
             ["../universal-launcher/runtime/launcher/command/README.md", "../universal-launcher/runtime/launcher/kernel/ulk_api.c"],
             "Build command registry in universal-launcher before more GUI work.",
             "AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01",
         ),
         finding(
             "FLAUNCH-PG-002",
-            "warning",
-            "prototype_boundary",
-            "Python prototype is still current runnable CLI",
-            "Python should be prototype and golden behavior harness only",
-            "pyproject exposes factorio-launcher from apps/python_cli",
-            ["pyproject.toml", "apps/python_cli/factorio_launcher/ui/cli/cli.py"],
-            "Port commands into native command graph while preserving CLI JSON behavior.",
+            "pass",
+            "language_boundary",
+            "Python product runtime is retired",
+            "Python should be tooling, fixtures, validators, and tests only",
+            "apps/python_cli and product pyproject.toml are removed; native facman is built by CMake",
+            ["apps/cli", "CMakeLists.txt", "docs/architecture/language_policy.md"],
+            "Keep product runtime entrypoints native.",
             "AIDE-BUILD-FACTORIO-PROTOTYPE-PARITY-MAP-01",
         ),
         finding(
@@ -219,7 +216,7 @@ def build_findings() -> list[dict[str, Any]]:
             "pass",
             "runtime_boundary",
             "production legacy packages must not depend on Python or AIDE",
-            "AIDE and Python prototype are development/prototype surfaces only",
+            "AIDE and Python are development tooling surfaces only",
             "package check and structure policy enforce runtime separation",
             ["tools/package_check.py", "tools/structure_policy_check.py", "docs/architecture/aide_lite_integration.md"],
             "Keep AIDE and Python out of package manifests.",

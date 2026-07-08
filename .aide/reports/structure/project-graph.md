@@ -1,23 +1,23 @@
 # Factorio Launcher ProjectGraph Baseline
 
 Status: `PASS_WITH_WARNINGS`
-Files classified: `1265`
+Files classified: `1141`
 Findings: `9`
 
 ## Counts By Kind
 
 - `aide_governance`: 815
 - `aide_local_template`: 6
-- `doc`: 102
-- `frontend`: 171
+- `doc`: 108
+- `frontend`: 41
 - `implementation`: 39
 - `package_manifest`: 16
 - `product_policy`: 30
 - `public_abi`: 10
 - `schema`: 16
-- `test`: 29
+- `test`: 30
 - `tool`: 11
-- `unknown`: 20
+- `unknown`: 19
 
 ## Findings
 
@@ -26,24 +26,24 @@ Findings: `9`
 native command graph not yet implemented
 
 - Expected: universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers
-- Observed: split repo is scaffolded; Python prototype remains runnable behavior
+- Observed: split repo is scaffolded; native FacMan CLI currently owns the smoke behavior
 - Recommendation: Build command registry in universal-launcher before more GUI work.
 - Next task: `AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01`
 
-### FLAUNCH-PG-002 - warning
+### FLAUNCH-PG-002 - pass
 
-Python prototype is still current runnable CLI
+Python product runtime is retired
 
-- Expected: Python should be prototype and golden behavior harness only
-- Observed: pyproject exposes factorio-launcher from apps/python_cli
-- Recommendation: Port commands into native command graph while preserving CLI JSON behavior.
+- Expected: Python should be tooling, fixtures, validators, and tests only
+- Observed: apps/python_cli and product pyproject.toml are removed; native facman is built by CMake
+- Recommendation: Keep product runtime entrypoints native.
 - Next task: `AIDE-BUILD-FACTORIO-PROTOTYPE-PARITY-MAP-01`
 
 ### FLAUNCH-PG-003 - info
 
 universal setup and launcher are sibling repositories
 
-- Expected: FLaunch must not own universal setup or launcher runtime implementation
+- Expected: FacMan must not own universal setup or launcher runtime implementation
 - Observed: Factorio repo keeps only include/flb and runtime/factorio; universal code moved out
 - Recommendation: Harden universal repo validators before large native code expansion.
 - Next task: `AIDE-BUILD-USK-ULK-SPLIT-READINESS-REPORT-01`
@@ -97,7 +97,7 @@ no Factorio binaries may be bundled
 
 production legacy packages must not depend on Python or AIDE
 
-- Expected: AIDE and Python prototype are development/prototype surfaces only
+- Expected: AIDE and Python are development tooling surfaces only
 - Observed: package check and structure policy enforce runtime separation
 - Recommendation: Keep AIDE and Python out of package manifests.
 - Next task: `FLAUNCH-RUNTIME-DEPENDENCY-CHECK-01`

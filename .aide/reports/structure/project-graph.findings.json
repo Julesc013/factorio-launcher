@@ -12,7 +12,7 @@
     "expected": "universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers",
     "id": "FLAUNCH-PG-001",
     "next_task": "AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01",
-    "observed": "split repo is scaffolded; Python prototype remains runnable behavior",
+    "observed": "split repo is scaffolded; native FacMan CLI currently owns the smoke behavior",
     "recommendation": "Build command registry in universal-launcher before more GUI work.",
     "severity": "warning",
     "surface": "native_command_graph",
@@ -20,21 +20,23 @@
   },
   {
     "affected_paths": [
-      "pyproject.toml",
-      "apps/python_cli/factorio_launcher/ui/cli/cli.py"
+      "apps/cli",
+      "CMakeLists.txt",
+      "docs/architecture/language_policy.md"
     ],
-    "claim": "Python prototype is still current runnable CLI",
+    "claim": "Python product runtime is retired",
     "evidence_refs": [
-      "pyproject.toml",
-      "apps/python_cli/factorio_launcher/ui/cli/cli.py"
+      "apps/cli",
+      "CMakeLists.txt",
+      "docs/architecture/language_policy.md"
     ],
-    "expected": "Python should be prototype and golden behavior harness only",
+    "expected": "Python should be tooling, fixtures, validators, and tests only",
     "id": "FLAUNCH-PG-002",
     "next_task": "AIDE-BUILD-FACTORIO-PROTOTYPE-PARITY-MAP-01",
-    "observed": "pyproject exposes factorio-launcher from apps/python_cli",
-    "recommendation": "Port commands into native command graph while preserving CLI JSON behavior.",
-    "severity": "warning",
-    "surface": "prototype_boundary",
+    "observed": "apps/python_cli and product pyproject.toml are removed; native facman is built by CMake",
+    "recommendation": "Keep product runtime entrypoints native.",
+    "severity": "pass",
+    "surface": "language_boundary",
     "taxonomy": "project_graph"
   },
   {
@@ -51,7 +53,7 @@
       "../universal-setup",
       "../universal-launcher"
     ],
-    "expected": "FLaunch must not own universal setup or launcher runtime implementation",
+    "expected": "FacMan must not own universal setup or launcher runtime implementation",
     "id": "FLAUNCH-PG-003",
     "next_task": "AIDE-BUILD-USK-ULK-SPLIT-READINESS-REPORT-01",
     "observed": "Factorio repo keeps only include/flb and runtime/factorio; universal code moved out",
@@ -169,7 +171,7 @@
       "tools/structure_policy_check.py",
       "docs/architecture/aide_lite_integration.md"
     ],
-    "expected": "AIDE and Python prototype are development/prototype surfaces only",
+    "expected": "AIDE and Python are development tooling surfaces only",
     "id": "FLAUNCH-PG-009",
     "next_task": "FLAUNCH-RUNTIME-DEPENDENCY-CHECK-01",
     "observed": "package check and structure policy enforce runtime separation",

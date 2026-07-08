@@ -15,8 +15,7 @@ branding assets.
 include/    Factorio binding public C ABI headers only
 runtime/    reusable private implementation for the Factorio binding, clients,
             package locator, and platform adapters
-apps/       CLI, TUI, daemon, GUI providers under `apps/gui/`, and
-            transitional Python frontend code
+apps/       native CLI, TUI, daemon, and GUI providers under `apps/gui/`
 content/    Factorio product templates, discovery rules, launch templates,
             instance templates, redaction rules, and policy
 contracts/  ABI notes, command law, policies, and versioned JSON schemas
@@ -45,33 +44,29 @@ FacMan ships as the first serious Factorio product binding.
 
 ## Current Slice
 
-The repository starts with a CLI-first vertical slice:
+The repository starts with a native CLI-first vertical slice:
 
 ```bash
-python -m factorio_launcher --version
-python -m factorio_launcher product inspect
-python -m factorio_launcher doctor
-python -m factorio_launcher installs scan
-python -m factorio_launcher installs import <factorio-dir>
-python -m factorio_launcher instances create space-age-main --install <install-id>
-python -m factorio_launcher launch-plan space-age-main
-python -m factorio_launcher run space-age-main
+facman --version
+facman product inspect
+facman doctor
+facman installs scan
+facman installs import <factorio-dir> --id <install-id>
+facman instances create space-age-main --install <install-id>
+facman launch-plan space-age-main
+facman run space-age-main
 ```
 
 When running directly from a checkout, use:
 
 ```bash
-$env:PYTHONPATH = "apps/python_cli"
-python -m factorio_launcher --version
+cmake -S . -B build/native-smoke
+cmake --build build/native-smoke
+.\build\native-smoke\Debug\facman.exe --version
 ```
 
-The packaged console command is `facman`. `factorio-launcher` remains a
-compatibility alias during the prototype phase.
-
-The native CLI scaffold is under `apps/cli/`. The currently
-runnable CLI remains the quarantined Python prototype under
-`apps/python_cli/` until the native command graph reaches
-parity. Production legacy packages should not depend on Python.
+The packaged console command is `facman`. Python is used for repository
+tooling, validators, and tests; it is not a FacMan product runtime.
 
 ## Permanent Rule
 
@@ -87,12 +82,12 @@ Validators prevent regression.
 ## Architecture Boundary
 
 ```text
-Universal Setup Kernel        C89 public ABI, C/C++ internal
-Universal Launcher Kernel     C89 public ABI, C/C++ internal
+Universal Setup Kernel        C-compatible public ABI, C/C++ internal
+Universal Launcher Kernel     C-compatible public ABI, C/C++ internal
         |
 Universal Command Graph       stable command model, schemas, dry-run, audit
         |
-Factorio Product Binding      C ABI outward, C11/C++11 internally
+Factorio Product Binding      C ABI outward, C/C++ internally
         |
 CLI / TUI / Win32-WinForms / AppKit / GTK / Qt frontends
 ```
@@ -116,14 +111,16 @@ instances, profiles, install references, and launch plans belong to
 ## Development
 
 ```bash
-$env:PYTHONPATH = "apps/python_cli"
+cmake -S . -B build/native-smoke
+cmake --build build/native-smoke
+$env:FACMAN_CLI_EXE = "$PWD\build\native-smoke\Debug\facman.exe"
 python -m unittest discover -s tests -v
 python tools/structure_policy_check.py
 python tools/schema_validate.py
 python tools/security_policy_check.py
 python tools/package_check.py
 python tools/strict_check.py
-python -m factorio_launcher doctor
+.\build\native-smoke\Debug\facman.exe doctor
 ```
 
 ## AIDE Lite

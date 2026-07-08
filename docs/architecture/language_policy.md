@@ -1,5 +1,10 @@
 # Language Policy
 
+FacMan's primary implementation languages are C, C++, C#, Objective-C, and
+Objective-C++. Python is allowed where it is conventional and useful for
+repository automation, validators, generators, fixtures, and tests, but it is
+not a product runtime language for FacMan packages.
+
 ## Tier 0: Public ABI
 
 Use a C-compatible, C89-callable public ABI style for cross-project and
@@ -33,7 +38,8 @@ containers, builders, and tests. Any C++ implementation must stay behind
 
 ## Tier 2: Factorio Binding
 
-C11/C++11 are allowed internally for Factorio-specific complexity:
+C/C++ are the primary implementation languages for Factorio-specific
+complexity:
 
 - mod dependency resolution
 - Mod Portal cache and indexing
@@ -51,7 +57,22 @@ implementation leak through DLL/shared-library boundaries.
 
 ## Frontends
 
-- CLI and TUI: native frontends over the command graph
+- CLI and TUI: native C/C++ frontends over the command graph
 - Windows GUI: .NET Framework 4.8 WinForms
 - macOS GUI: AppKit Objective-C/Objective-C++
 - Linux GUI: GTK first, Qt optional
+
+## Tooling And Scripts
+
+Python remains appropriate for repo-local tooling:
+
+- validators and policy checks
+- schema checks
+- fixture generation
+- AIDE Lite helpers
+- test harness glue
+- one-off migration scripts
+
+Python must not provide `facman`, `factorio-launcher`, GUI, daemon, or TUI
+runtime entrypoints. The product runtime must build from the native app shells
+and native libraries.

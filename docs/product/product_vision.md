@@ -50,8 +50,8 @@ cross-product marketplace.
 
 ## Non-Goals
 
-Do not start with GUI parity. Do not make WinForms or the Python prototype the
-backend. Do not put Mod Portal logic in Universal Launcher. Do not make
+Do not start with GUI parity. Do not make WinForms, Python tooling, or any
+frontend the backend. Do not put Mod Portal logic in Universal Launcher. Do not make
 Universal Launcher huge before Factorio proves it. Do not make Universal Setup
 huge before Dominium proves it. Do not bundle Factorio binaries, repair Steam
 installs, touch Steam Cloud files silently, store Factorio passwords, or make a

@@ -7,8 +7,10 @@ leaving setup mutation to Universal Setup.
 
 - Repo structure uses `runtime/content/contracts/release`.
 - Product identity is FacMan.
-- Python prototype is quarantined under `apps/python_cli`.
+- Python product runtime is retired; Python remains tooling/tests only.
 - Native CLI/TUI/daemon scaffold builds.
+- Native CLI owns the initial smoke commands for product inspect, doctor,
+  install import, instance create, launch-plan preview, and dry-run run.
 - Validators block retired roots and old GUI app layout.
 
 ## ULAUNCH-MIN-01

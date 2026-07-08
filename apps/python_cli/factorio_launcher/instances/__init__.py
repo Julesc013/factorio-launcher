@@ -1,2 +1,0 @@
-"""Isolated Factorio instance management."""
-

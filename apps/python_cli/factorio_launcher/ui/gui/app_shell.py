@@ -1,2 +1,0 @@
-"""GUI app shell placeholder."""
-

@@ -29,7 +29,6 @@ ALLOWED_TOP_LEVEL = {
     "examples",
     "external",
     "include",
-    "pyproject.toml",
     "release",
     "runtime",
     "tests",
@@ -68,7 +67,7 @@ RETIRED_ROOTS = {
     "universal",
 }
 
-FRONTENDS = {"cli", "daemon", "gui", "python_cli", "tui"}
+FRONTENDS = {"cli", "daemon", "gui", "tui"}
 GUI_PROVIDERS = {"appkit", "gtk", "qt", "win32"}
 
 SHELL_ALLOWED_FILES = {
@@ -136,6 +135,7 @@ def main() -> int:
     problems.extend(check_include_is_public_abi_only())
     problems.extend(check_data_is_not_code())
     problems.extend(check_command_graph_spine())
+    problems.extend(check_python_is_not_product_runtime())
     problems.extend(check_aide_is_not_runtime_dependency())
     problems.extend(check_facman_identity())
     if problems:
@@ -295,6 +295,15 @@ def check_aide_is_not_runtime_dependency() -> list[str]:
         text = path.read_text(encoding="utf-8").lower()
         if ".aide" in text or "aide" in text:
             problems.append(f"production package manifest must not bundle AIDE: {path.relative_to(ROOT)}")
+    return problems
+
+
+def check_python_is_not_product_runtime() -> list[str]:
+    problems: list[str] = []
+    if (ROOT / "apps" / "python_cli").exists():
+        problems.append("apps/python_cli is retired; Python may be used for tools/tests, not product runtime")
+    if (ROOT / "pyproject.toml").exists():
+        problems.append("pyproject.toml is retired; FacMan must not expose a Python product package")
     return problems
 
 

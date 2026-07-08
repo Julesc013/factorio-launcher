@@ -1,2 +1,0 @@
-"""Factorio binding metadata."""
-

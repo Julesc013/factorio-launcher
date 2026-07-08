@@ -44,9 +44,10 @@ sibling checkouts:
 That is fine for active design work, but release engineering should eventually
 choose a pinned dependency strategy.
 
-The Python CLI remains in `apps/python_cli/` as a transitional prototype. It is
-useful for current behavior checks, but production legacy packages must not
-depend on Python.
+The former Python CLI prototype has been retired. The native CLI now owns the
+initial runnable slice for product inspection, doctor checks, install import,
+instance creation, launch-plan preview, and dry-run reporting. Python remains
+available for repo tooling and tests only.
 
 ## Required Enforcement
 
@@ -57,9 +58,9 @@ python tools\structure_policy_check.py
 python tools\strict_check.py
 ```
 
-The validator should fail if retired roots return, if Factorio owns `usk` or
-`ulk` implementation again, or if product content starts containing executable
-code.
+The validator should fail if retired roots return, if `apps/python_cli/` or a
+Python product `pyproject.toml` returns, if Factorio owns `usk` or `ulk`
+implementation again, or if product content starts containing executable code.
 
 ## Next Structural Work
 

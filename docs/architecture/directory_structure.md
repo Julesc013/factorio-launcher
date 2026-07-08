@@ -25,7 +25,6 @@ factorio-launcher/
       appkit/         macOS AppKit frontend
       gtk/            Linux GTK frontend
       qt/             optional Linux Qt frontend
-    python_cli/       transitional prototype, not production runtime
 
   content/
     factorio/         product manifest, discovery rules, templates, policy
@@ -75,9 +74,9 @@ the early CMake split. Their public ABI headers and implementations live in:
 ../universal-launcher/runtime/launcher/
 ```
 
-The transitional Python CLI remains under `apps/python_cli/` only so current
-read-only discovery and command-shape tests keep running while the native
-command graph catches up. Production packages must not depend on Python.
+Python has no product app root. It may be used under `tools/` and `tests/`
+for validators, fixture helpers, and automation, but FacMan runtime entrypoints
+must be native.
 
 GUI frontends are grouped below `apps/gui/` so `apps/` stays organized by
 frontend class first and provider/toolkit second. `win32` is the architecture

@@ -16,11 +16,6 @@
       "type": "consumes_product_policy"
     },
     {
-      "from": "apps/python_cli",
-      "to": "../universal-launcher/runtime/launcher",
-      "type": "native_successor"
-    },
-    {
       "from": ".aide",
       "to": "repo",
       "type": "observes_and_reports"
@@ -40,7 +35,7 @@
       "expected": "universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers",
       "id": "FLAUNCH-PG-001",
       "next_task": "AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01",
-      "observed": "split repo is scaffolded; Python prototype remains runnable behavior",
+      "observed": "split repo is scaffolded; native FacMan CLI currently owns the smoke behavior",
       "recommendation": "Build command registry in universal-launcher before more GUI work.",
       "severity": "warning",
       "surface": "native_command_graph",
@@ -48,21 +43,23 @@
     },
     {
       "affected_paths": [
-        "pyproject.toml",
-        "apps/python_cli/factorio_launcher/ui/cli/cli.py"
+        "apps/cli",
+        "CMakeLists.txt",
+        "docs/architecture/language_policy.md"
       ],
-      "claim": "Python prototype is still current runnable CLI",
+      "claim": "Python product runtime is retired",
       "evidence_refs": [
-        "pyproject.toml",
-        "apps/python_cli/factorio_launcher/ui/cli/cli.py"
+        "apps/cli",
+        "CMakeLists.txt",
+        "docs/architecture/language_policy.md"
       ],
-      "expected": "Python should be prototype and golden behavior harness only",
+      "expected": "Python should be tooling, fixtures, validators, and tests only",
       "id": "FLAUNCH-PG-002",
       "next_task": "AIDE-BUILD-FACTORIO-PROTOTYPE-PARITY-MAP-01",
-      "observed": "pyproject exposes factorio-launcher from apps/python_cli",
-      "recommendation": "Port commands into native command graph while preserving CLI JSON behavior.",
-      "severity": "warning",
-      "surface": "prototype_boundary",
+      "observed": "apps/python_cli and product pyproject.toml are removed; native facman is built by CMake",
+      "recommendation": "Keep product runtime entrypoints native.",
+      "severity": "pass",
+      "surface": "language_boundary",
       "taxonomy": "project_graph"
     },
     {
@@ -79,7 +76,7 @@
         "../universal-setup",
         "../universal-launcher"
       ],
-      "expected": "FLaunch must not own universal setup or launcher runtime implementation",
+      "expected": "FacMan must not own universal setup or launcher runtime implementation",
       "id": "FLAUNCH-PG-003",
       "next_task": "AIDE-BUILD-USK-ULK-SPLIT-READINESS-REPORT-01",
       "observed": "Factorio repo keeps only include/flb and runtime/factorio; universal code moved out",
@@ -197,7 +194,7 @@
         "tools/structure_policy_check.py",
         "docs/architecture/aide_lite_integration.md"
       ],
-      "expected": "AIDE and Python prototype are development/prototype surfaces only",
+      "expected": "AIDE and Python are development tooling surfaces only",
       "id": "FLAUNCH-PG-009",
       "next_task": "FLAUNCH-RUNTIME-DEPENDENCY-CHECK-01",
       "observed": "package check and structure policy enforce runtime separation",
@@ -6113,42 +6110,7 @@
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/appkit/AppDelegate.m",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/appkit/CommandClient.mm",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/appkit/JsonRpcClient.mm",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/appkit/MainWindowController.m",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/appkit/README.md",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/appkit/Screens/README.md",
+      "path": "apps/README.md",
       "root": "apps"
     },
     {
@@ -6162,7 +6124,7 @@
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/cli/command_dispatch.c",
+      "path": "apps/cli/command_dispatch.cpp",
       "root": "apps"
     },
     {
@@ -6246,987 +6208,161 @@
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/gtk/README.md",
+      "path": "apps/gui/appkit/AppDelegate.m",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/gtk/command_client.c",
+      "path": "apps/gui/appkit/CommandClient.mm",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/gtk/main.c",
+      "path": "apps/gui/appkit/JsonRpcClient.mm",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/gtk/meson.build",
+      "path": "apps/gui/appkit/MainWindowController.m",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/gtk/views/README.md",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/__main__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/accounts/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/accounts/account_ref.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/accounts/credential_store.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/accounts/ownership_check.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/accounts/redaction.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/accounts/token_store.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/binding/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/binding/capabilities.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/binding/product_manifest.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/binding/validation.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/core/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/core/config.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/core/workspace.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/devtools/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/devtools/benchmark.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/devtools/bug_report_bundle.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/devtools/dump_data.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/devtools/dump_icons.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/devtools/dump_locale.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/devtools/instrument_mod.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/devtools/map_preview.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/diagnostics/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/diagnostics/crash_collector.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/diagnostics/doctor.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/diagnostics/environment_report.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/diagnostics/launch_explainer.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/diagnostics/log_collector.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/diagnostics/repair_suggestions.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/discovery/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/discovery/detect_install.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/discovery/detect_version.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/installs/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/installs/install_ref.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/installs/migration_plan.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/installs/ownership.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/installs/verification_report.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/config_path.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/instance_clone.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/instance_create.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/instance_export.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/instance_import.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/local_data_root.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/locks.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/instances/write_data_policy.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/ulk/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/ulk/audit_adapter.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/ulk/instance_adapter.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/ulk/launch_plan_adapter.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/ulk/product_registration.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/ulk/profile_adapter.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/usk/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/usk/install_register.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/usk/install_repair.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/usk/install_uninstall.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/usk/install_verify.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/usk/ownership_adapter.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/integrations/usk/setup_client.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/launch/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/launch/command_builder.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/launch/environment_builder.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/launch/launch_plan_builder.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/launch/launch_profile.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/launch/postrun_indexer.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/launch/preflight_checks.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/launch/process_runner.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/api_contract_tests.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/auth_download.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/cache_index.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/client.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/download.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/rate_limit.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/releases.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mod_portal/search.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/dependency_parser.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/dependency_resolver.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/incompatibility_report.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/info_json.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/mod_cache.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/mod_export.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/mod_import.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/mod_zip.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/mods/modset_lock.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/saves/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/saves/save_backup.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/saves/save_export.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/saves/save_import.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/saves/save_index.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/saves/save_migration_report.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/saves/save_modset_detect.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/adminlist.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/banlist.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/headless_launch.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/ports.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/rcon.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/server_instance.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/server_settings.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/servers/whitelist.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/cli.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_dev.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_doctor.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_installs.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_instances.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_mods.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_saves.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_servers.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/command_graph/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/command_graph/commands.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/command_graph/dry_run.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/command_graph/permissions.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/app_shell.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/devtools.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/installs.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/instances.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/mods.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/saves.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/servers.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/settings.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/tui/__init__.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/tui/app.py",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "transitional",
-      "owner": "frontend",
-      "path": "apps/python_cli/factorio_launcher/ui/tui/views.py",
+      "path": "apps/gui/appkit/README.md",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/qt/CMakeLists.txt",
+      "path": "apps/gui/appkit/Screens/README.md",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/qt/README.md",
+      "path": "apps/gui/gtk/README.md",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/qt/command_client.cpp",
+      "path": "apps/gui/gtk/command_client.c",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/qt/main.cpp",
+      "path": "apps/gui/gtk/main.c",
       "root": "apps"
     },
     {
       "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/qt/views/README.md",
+      "path": "apps/gui/gtk/meson.build",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/gtk/views/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/qt/CMakeLists.txt",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/qt/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/qt/command_client.cpp",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/qt/main.cpp",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/qt/views/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/win32/CommandClient.cs",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/win32/FactorioLauncher.WinForms.csproj",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/win32/JsonRpcClient.cs",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/win32/MainForm.cs",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/win32/Program.cs",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/win32/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gui/win32/Screens/README.md",
       "root": "apps"
     },
     {
@@ -7255,55 +6391,6 @@
       "lifecycle": "active",
       "owner": "frontend",
       "path": "apps/tui/tui_views.c",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/winforms/CommandClient.cs",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/winforms/FactorioLauncher.WinForms.csproj",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/winforms/JsonRpcClient.cs",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/winforms/MainForm.cs",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/winforms/Program.cs",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/winforms/README.md",
-      "root": "apps"
-    },
-    {
-      "kind": "frontend",
-      "lifecycle": "active",
-      "owner": "frontend",
-      "path": "apps/winforms/Screens/README.md",
       "root": "apps"
     },
     {
@@ -7688,6 +6775,13 @@
       "kind": "doc",
       "lifecycle": "active",
       "owner": "documentation",
+      "path": "docs/architecture/apps_model.md",
+      "root": "docs"
+    },
+    {
+      "kind": "doc",
+      "lifecycle": "active",
+      "owner": "documentation",
       "path": "docs/architecture/boundary.md",
       "root": "docs"
     },
@@ -7716,6 +6810,13 @@
       "kind": "doc",
       "lifecycle": "active",
       "owner": "documentation",
+      "path": "docs/architecture/data_flow.md",
+      "root": "docs"
+    },
+    {
+      "kind": "doc",
+      "lifecycle": "active",
+      "owner": "documentation",
       "path": "docs/architecture/data_model.md",
       "root": "docs"
     },
@@ -7724,6 +6825,13 @@
       "lifecycle": "active",
       "owner": "documentation",
       "path": "docs/architecture/directory_structure.md",
+      "root": "docs"
+    },
+    {
+      "kind": "doc",
+      "lifecycle": "active",
+      "owner": "documentation",
+      "path": "docs/architecture/ecosystem_vision.md",
       "root": "docs"
     },
     {
@@ -7752,6 +6860,13 @@
       "lifecycle": "active",
       "owner": "documentation",
       "path": "docs/architecture/language_policy.md",
+      "root": "docs"
+    },
+    {
+      "kind": "doc",
+      "lifecycle": "active",
+      "owner": "documentation",
+      "path": "docs/architecture/module_graph.md",
       "root": "docs"
     },
     {
@@ -7801,6 +6916,13 @@
       "lifecycle": "active",
       "owner": "documentation",
       "path": "docs/architecture/product_binding_abi.md",
+      "root": "docs"
+    },
+    {
+      "kind": "doc",
+      "lifecycle": "active",
+      "owner": "documentation",
+      "path": "docs/architecture/root_grammar.md",
       "root": "docs"
     },
     {
@@ -7920,6 +7042,13 @@
       "lifecycle": "active",
       "owner": "documentation",
       "path": "docs/product/modset_lockfile.md",
+      "root": "docs"
+    },
+    {
+      "kind": "doc",
+      "lifecycle": "active",
+      "owner": "documentation",
+      "path": "docs/product/product_vision.md",
       "root": "docs"
     },
     {
@@ -8392,13 +7521,6 @@
       "root": "include"
     },
     {
-      "kind": "unknown",
-      "lifecycle": "active",
-      "owner": "unknown",
-      "path": "pyproject.toml",
-      "root": "pyproject.toml"
-    },
-    {
       "kind": "package_manifest",
       "lifecycle": "active",
       "owner": "release",
@@ -8451,7 +7573,7 @@
       "kind": "package_manifest",
       "lifecycle": "active",
       "owner": "release",
-      "path": "release/packaging/macos/flaunch_app.v1.toml",
+      "path": "release/packaging/macos/facman_app.v1.toml",
       "root": "release"
     },
     {
@@ -8493,21 +7615,21 @@
       "kind": "package_manifest",
       "lifecycle": "active",
       "owner": "release",
-      "path": "release/packaging/windows/flaunch_installer.v1.toml",
+      "path": "release/packaging/windows/facman_installer.v1.toml",
       "root": "release"
     },
     {
       "kind": "package_manifest",
       "lifecycle": "active",
       "owner": "release",
-      "path": "release/packaging/windows/flaunch_portable.v1.toml",
+      "path": "release/packaging/windows/facman_portable.v1.toml",
       "root": "release"
     },
     {
       "kind": "package_manifest",
       "lifecycle": "active",
       "owner": "release",
-      "path": "release/packaging/windows/flaunch_single_exe.v1.toml",
+      "path": "release/packaging/windows/facman_single_exe.v1.toml",
       "root": "release"
     },
     {
@@ -8927,6 +8049,13 @@
       "kind": "test",
       "lifecycle": "active",
       "owner": "verification",
+      "path": "tests/native_cli.py",
+      "root": "tests"
+    },
+    {
+      "kind": "test",
+      "lifecycle": "active",
+      "owner": "verification",
       "path": "tests/test_cli.py",
       "root": "tests"
     },
@@ -9068,16 +8197,16 @@
     "counts_by_kind": {
       "aide_governance": 815,
       "aide_local_template": 6,
-      "doc": 102,
-      "frontend": 171,
+      "doc": 108,
+      "frontend": 41,
       "implementation": 39,
       "package_manifest": 16,
       "product_policy": 30,
       "public_abi": 10,
       "schema": 16,
-      "test": 29,
+      "test": 30,
       "tool": 11,
-      "unknown": 20
+      "unknown": 19
     },
     "counts_by_root": {
       ".aide": 815,
@@ -9093,21 +8222,20 @@
       "README.md": 1,
       "SECURITY.md": 1,
       "THIRD_PARTY_NOTICES.md": 1,
-      "apps": 171,
+      "apps": 41,
       "cmake": 6,
       "content": 30,
       "contracts": 16,
-      "docs": 87,
+      "docs": 93,
       "examples": 5,
       "external": 1,
       "include": 10,
-      "pyproject.toml": 1,
       "release": 16,
       "runtime": 39,
-      "tests": 29,
+      "tests": 30,
       "tools": 11
     },
-    "file_count": 1265,
+    "file_count": 1141,
     "findings_count": 9,
     "generated_by": "tools/aide_project_graph_baseline.py",
     "project": "factorio-launcher",

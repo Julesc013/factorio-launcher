@@ -1,2 +1,0 @@
-"""Installs screen placeholder."""
-

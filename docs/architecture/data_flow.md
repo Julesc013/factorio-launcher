@@ -8,5 +8,6 @@ Factorio discovery/policy content
   -> frontend report
 ```
 
-Managed install operations flow through Universal Setup. GUI, TUI, daemon, CLI,
-and Python prototype shells are presentation or compatibility layers only.
+Managed install operations flow through Universal Setup. GUI, TUI, daemon, and
+CLI shells are presentation layers only; they must not own setup mutation,
+Factorio discovery law, mod resolution, or launch-plan generation.
