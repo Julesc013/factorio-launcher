@@ -22,4 +22,4 @@ Supported layouts:
 - Linux AppImage
 - Linux legacy tarball
 
-Runtime locator code lives under `source/runtime/`.
+Runtime locator code lives under `runtime/package/`.

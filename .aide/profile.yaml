@@ -10,24 +10,22 @@ purpose: >
 current_focus:
   phase: pre-code-structure-governance
   primary_goal: >
-    Preserve the current compact launcher layout while assessing whether any
-    directory, ownership, or universal-repo split changes are needed before
-    native command graph implementation begins.
+    Preserve the ownership-root layout and the three-repo split before native
+    command graph implementation begins.
   next_task: >
-    Establish Factorio Launcher AIDE baseline: architecture truth, safety
-    invariants, Python prototype boundary, native command graph gap, and first
-    WorkUnits for read-only install discovery plus isolated instance creation.
+    Harden cross-repo validators and then port prototype command behavior into
+    the native universal command graph.
 deferred_surfaces:
   - Gateway forwarding, provider/model calls, UI, runtime, and autonomous loops remain deferred.
   - Native GUI implementation remains deferred until command graph stability.
-  - Universal setup and universal launcher repos remain separate architecture discussions.
+  - Universal setup and universal launcher are sibling repos, not Factorio subtrees.
 runtime:
   gateway_forwarding: deferred
   provider_calls: forbidden_until_reviewed_phase
   model_calls: forbidden_until_reviewed_phase
 product_runtime:
   depends_on_aide: false
-  python_prototype_runtime: source/prototypes/python_launcher
+  python_prototype_runtime: apps/python_cli
   production_runtime_python_dependency: false
 native_direction:
   public_abi: C-compatible stable ABI

@@ -20,8 +20,9 @@ be queryable and checkable.
 
 ## Next Task
 
-Establish the AIDE baseline and decide whether the compact directory structure
-needs further changes before native command graph parity work begins.
+Finish the three-repo ownership split, keep the new root grammar enforced, and
+start native command graph parity work only after the universal repos are
+structurally clean.
 
 ## Deferred Surfaces
 
@@ -32,11 +33,15 @@ needs further changes before native command graph parity work begins.
 
 ## Notes
 
-- `source/` is the only implementation source root.
-- `include/` contains public ABI headers.
-- `apps/` contains frontend project/package shells; implementation lives under
-  `source/apps/`.
-- `source/prototypes/python_launcher/` is the current runnable prototype and
+- `source/`, `src/`, `data/`, `schemas/`, and `packaging/` are retired roots.
+- `include/` contains only the Factorio binding public ABI in this repo.
+- `runtime/` contains reusable private implementation.
+- `apps/` contains frontend entrypoints and presentation code.
+- `content/` contains Factorio product content and policy.
+- `contracts/` contains schema, ABI, command, result, diagnostic, refusal, and
+  policy contracts.
+- `release/` contains package manifests and release profiles.
+- `apps/python_cli/` is the current runnable prototype and
   golden behavior harness until native parity.
 - Native command graph implementation is still the major gap.
 - Production packages must not bundle Factorio binaries, credentials, AIDE, or

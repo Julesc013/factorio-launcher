@@ -1,7 +1,7 @@
 # Factorio Launcher ProjectGraph Baseline
 
 Status: `PASS_WITH_WARNINGS`
-Files classified: `1319`
+Files classified: `1265`
 Findings: `9`
 
 ## Counts By Kind
@@ -9,12 +9,12 @@ Findings: `9`
 - `aide_governance`: 815
 - `aide_local_template`: 6
 - `doc`: 102
-- `frontend_shell`: 9
-- `implementation`: 220
+- `frontend`: 171
+- `implementation`: 39
 - `package_manifest`: 16
 - `product_policy`: 30
-- `public_abi`: 32
-- `schema`: 29
+- `public_abi`: 10
+- `schema`: 16
 - `test`: 29
 - `tool`: 11
 - `unknown`: 20
@@ -25,9 +25,9 @@ Findings: `9`
 
 native command graph not yet implemented
 
-- Expected: source/ulk/command should contain real registry, schema routing, dry-run, audit, and handlers
-- Observed: currently scaffolded; Python prototype remains runnable behavior
-- Recommendation: Build command registry before more GUI work.
+- Expected: universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers
+- Observed: split repo is scaffolded; Python prototype remains runnable behavior
+- Recommendation: Build command registry in universal-launcher before more GUI work.
 - Next task: `AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01`
 
 ### FLAUNCH-PG-002 - warning
@@ -35,35 +35,35 @@ native command graph not yet implemented
 Python prototype is still current runnable CLI
 
 - Expected: Python should be prototype and golden behavior harness only
-- Observed: pyproject exposes factorio-launcher from source/prototypes/python_launcher
+- Observed: pyproject exposes factorio-launcher from apps/python_cli
 - Recommendation: Port commands into native command graph while preserving CLI JSON behavior.
 - Next task: `AIDE-BUILD-FACTORIO-PROTOTYPE-PARITY-MAP-01`
 
 ### FLAUNCH-PG-003 - info
 
-universal setup and launcher are incubated/planned siblings
+universal setup and launcher are sibling repositories
 
-- Expected: FLaunch may incubate until API pressure is proven, but must not own universal semantics permanently
-- Observed: include/source/schemas currently contain usk and ulk namespaces
-- Recommendation: Discuss universal repo structure separately before large native code expansion.
+- Expected: FLaunch must not own universal setup or launcher runtime implementation
+- Observed: Factorio repo keeps only include/flb and runtime/factorio; universal code moved out
+- Recommendation: Harden universal repo validators before large native code expansion.
 - Next task: `AIDE-BUILD-USK-ULK-SPLIT-READINESS-REPORT-01`
 
 ### FLAUNCH-PG-004 - pass
 
-source/ is the only implementation source root
+source/ and src/ are retired
 
-- Expected: no src/, launcher/, nested source/, or app-local src/ roots
+- Expected: no src/, source/, launcher/, product/, universal/, data/, schemas/, or packaging roots
 - Observed: structure policy and filesystem match this rule
-- Recommendation: Keep this rule unless a deliberate structure redesign replaces it.
+- Recommendation: Keep retired roots blocked.
 - Next task: `FLAUNCH-CANON-STRUCTURE-01`
 
 ### FLAUNCH-PG-005 - pass
 
-apps/ contains shells, not product logic
+apps/ contains frontend entrypoints and presentation
 
-- Expected: frontend implementation should live under source/apps
-- Observed: apps roots contain shell/readme/project files; implementation roots exist in source/apps
-- Recommendation: Keep apps shell-only.
+- Expected: reusable behavior should live under runtime/ or universal repos
+- Observed: app roots use role names and do not contain nested src/source directories
+- Recommendation: Keep app roots thin.
 - Next task: `FLAUNCH-APPS-SHELL-CHECK-01`
 
 ### FLAUNCH-PG-006 - pass

@@ -1,77 +1,79 @@
 # Directory Structure
 
-Current durable layout:
+This repository is now product-only. It owns the Factorio binding, Factorio
+content/contracts, app frontends, and release manifests. It does not own the
+universal setup or universal launcher kernels.
 
 ```text
 factorio-launcher/
-  cmake/           native build policy and platform checks
-  include/          public C ABI headers for usk, ulk, and flb
-    usk/            universal setup kernel ABI
-    ulk/            universal launcher kernel ABI
-    flb/            Factorio launcher binding ABI
+  include/
+    flb/              Factorio binding public C ABI only
 
-  source/           single private implementation and app-source tree
-    base/           shared portable primitives
-    client/         frontend-neutral command client transports
-    platform/       common, windows, posix, macos, linux adapters
-    runtime/        package/runtime locator and component verification
-    usk/            setup kernel implementation
-    ulk/            launcher kernel implementation
-    factorio/       Factorio binding implementation
-    apps/           CLI, TUI, daemon, and GUI implementation files
-    prototypes/
-      python_launcher/ current Python prototype, not production runtime
+  runtime/
+    base/             small private support primitives
+    package/          runtime locator, component manifest, extraction, verify
+    client/           frontend-neutral command clients and transports
+    factorio/         Factorio binding implementation
+    platform/         common, windows, posix, macos, linux adapters
 
-  apps/             native and platform frontend executables
-    factorio_cli/
-    factorio_tui/
-    factorio_daemon/
-    winforms/
-    appkit/
-    gtk/
-    qt/
+  apps/
+    cli/              native console CLI frontend
+    tui/              native TUI frontend
+    daemon/           daemon / job runner frontend
+    winforms/         Windows .NET Framework 4.8 frontend
+    appkit/           macOS AppKit frontend
+    gtk/              Linux GTK frontend
+    qt/               optional Linux Qt frontend
+    python_cli/       transitional prototype, not production runtime
 
-  data/             product templates, discovery rules, and policy
-    factorio/
-      product/
-      discovery/
-      launch_templates/
-      instance_templates/
-      policy/
+  content/
+    factorio/         product manifest, discovery rules, templates, policy
 
-  schemas/          versioned compatibility contracts
-    common/
-    usk/
-    ulk/
-    factorio/
-    packaging/
+  contracts/
+    abi/              ABI policy and notes
+    command/          command graph contract notes
+    diagnostic/       diagnostic contract notes
+    policy/           repository/product policy contracts
+    result/           result contract notes
+    refusal/          refusal contract notes
+    schema/           versioned JSON schemas
 
-  packaging/        versioned platform package manifests
-    windows/
-    macos/
-    linux/
-    portable/
+  release/
+    packaging/        platform package manifests
+    profiles/         release/build profile definitions
 
-  docs/             architecture, product, and platform documentation
-  tests/            unit, integration, contract, golden, and fixture tests
-  tools/            repo automation and validation tools
+  docs/               architecture, product, platform, planning docs
+  tests/              unit, contract, integration, fixtures, golden proof
+  tools/              validators and repository automation
+  cmake/              native build policy
+  external/           optional third-party dependencies
+  archive/            optional historical retained material
 ```
 
-`source/` is the only implementation source root. Do not create nested `src/`
-or `source/` directories under apps or modules. `apps/` contains frontend
-package/project shells; implementation files live under `source/apps/`.
-The closed root model is enforced by `tools/structure_policy_check.py`.
+Retired roots are blocked by `tools/structure_policy_check.py`:
 
-`source/prototypes/python_launcher/` is transitional. It keeps the current
-runnable prototype alive while the native command graph and C ABI are
-introduced. It is not bundled in Windows 7, macOS legacy, or Linux legacy
-production artifacts. It should shrink over time as native `include/`,
-`source/`, and `apps/` code reaches parity.
+```text
+source/
+src/
+data/
+schemas/
+packaging/
+launcher/
+product/
+universal/
+```
 
-Factorio-specific manifests, policies, and launch templates live under
-`data/factorio/` so the repo root does not pretend they are universal.
+Universal setup and universal launcher are consumed as sibling repositories in
+the early CMake split. Their public ABI headers and implementations live in:
 
-Durable AIDE-compatible policy inputs may live under `.aide/policies/`.
-Generated AIDE snapshots, ledgers, reports, queue state, and local knowledge are
-not source truth and stay ignored unless a future task explicitly promotes a
-curated artifact.
+```text
+../universal-setup/include/usk/
+../universal-setup/runtime/setup/
+
+../universal-launcher/include/ulk/
+../universal-launcher/runtime/launcher/
+```
+
+The transitional Python CLI remains under `apps/python_cli/` only so current
+read-only discovery and command-shape tests keep running while the native
+command graph catches up. Production packages must not depend on Python.

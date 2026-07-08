@@ -3,16 +3,16 @@ name: schema-check
 on:
   push:
     paths:
-      - "schemas/**"
+      - "contracts/schema/**"
       - "tools/schema_validate.py"
       - "tools/package_check.py"
-      - "packaging/**"
+      - "release/packaging/**"
   pull_request:
     paths:
-      - "schemas/**"
+      - "contracts/schema/**"
       - "tools/schema_validate.py"
       - "tools/package_check.py"
-      - "packaging/**"
+      - "release/packaging/**"
 
 jobs:
   schema-check:

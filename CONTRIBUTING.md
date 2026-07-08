@@ -10,16 +10,16 @@ binding before adding TUI or GUI views.
 - Frontend executable/package shell work belongs under `apps/`.
 - Product data belongs under `data/`.
 - Current Python prototype logic belongs under
-  `source/prototypes/python_launcher/factorio_launcher/`.
+  `apps/python_cli/factorio_launcher/`.
 - UI command parsing in the prototype belongs under
-  `source/prototypes/python_launcher/factorio_launcher/ui/cli/`.
+  `apps/python_cli/factorio_launcher/ui/cli/`.
 - Setup mutation must remain behind the universal setup adapter.
 - The universal launcher adapter must not learn Factorio-specific mod semantics.
 
 ## Checks
 
 ```bash
-$env:PYTHONPATH = "source/prototypes/python_launcher"
+$env:PYTHONPATH = "apps/python_cli"
 python -m unittest discover -s tests -v
 python tools/schema_validate.py
 python tools/package_check.py

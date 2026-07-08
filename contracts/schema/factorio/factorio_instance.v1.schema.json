@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_instance.v1.schema.json",
+  "title": "Factorio Instance",
+  "type": "object",
+  "required": ["instance_id", "display_name", "install_ref", "local_data_root", "profile", "concurrency"],
+  "properties": {
+    "instance_id": { "type": "string" },
+    "display_name": { "type": "string" },
+    "install_ref": { "type": "string" },
+    "factorio_version": { "type": ["string", "null"] },
+    "local_data_root": { "type": "string" },
+    "profile": { "type": "string" },
+    "modset": { "type": ["string", "null"] },
+    "save_policy": { "type": "object" },
+    "account_ref": { "type": ["string", "null"] },
+    "concurrency": { "type": "object" },
+    "export_policy": { "type": "object" }
+  },
+  "additionalProperties": true
+}

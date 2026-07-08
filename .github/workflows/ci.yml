@@ -18,5 +18,7 @@ jobs:
       - run: factorio-launcher --version
       - run: factorio-launcher product inspect
       - run: factorio-launcher doctor
+      - run: git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+      - run: git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
       - run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_APPS=ON
       - run: cmake --build build/native-smoke

@@ -1,0 +1,10 @@
+schema = "flaunch.packaging.bundle_manifest.v1"
+artifact_id = "FLaunch-<version>-macos-legacy-x86_64"
+platform = "macos"
+support_level = "legacy_supported"
+package_type = "app_bundle_zip"
+architecture = "x86_64"
+deployment_target = "10.13"
+python_runtime = false
+bundles_factorio_binaries = false
+base_manifest = "release/packaging/macos/flaunch_app.v1.toml"

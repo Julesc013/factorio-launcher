@@ -45,7 +45,7 @@ Current target facts:
 - Purpose: unofficial Factorio launcher and isolated instance manager.
 - Runtime boundary: production packages must not depend on AIDE.
 - Python boundary: the current runnable CLI is a quarantined prototype under
-  `source/prototypes/python_launcher/`.
+  `apps/python_cli/`.
 - Native direction: stable C-compatible ABI, native kernels, CLI/TUI/daemon,
   and platform GUI shells over the command graph.
 - Safety invariants: no bundled Factorio binaries, no ownership bypass, no

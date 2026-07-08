@@ -12,15 +12,24 @@ branding assets.
 ## Durable Layout
 
 ```text
-include/   public C ABI headers for usk, ulk, and flb
-source/    the single private implementation and app-source tree
-apps/      CLI, TUI, daemon, WinForms, AppKit, GTK, and Qt frontends
-data/      Factorio product templates, discovery rules, and policy
-schemas/   versioned compatibility contracts
-packaging/ versioned platform package manifests
-source/prototypes/python_launcher/
-           Python CLI prototype, excluded from production legacy runtime
+include/    Factorio binding public C ABI headers only
+runtime/    reusable private implementation for the Factorio binding, clients,
+            package locator, and platform adapters
+apps/       CLI, TUI, daemon, WinForms, AppKit, GTK, Qt, and transitional
+            Python frontend code
+content/    Factorio product templates, discovery rules, launch templates,
+            instance templates, redaction rules, and policy
+contracts/  ABI notes, command law, policies, and versioned JSON schemas
+release/    package manifests and release profiles
+docs/       human documentation
+tests/      unit, contract, integration, fixture, and golden proof
+tools/      validators and repository automation
 ```
+
+Retired roots are intentionally blocked: `source/`, `src/`, `data/`,
+`schemas/`, and `packaging/` must not return. Universal setup and universal
+launcher code live in their own sibling repositories, not in this Factorio
+product repo.
 
 The CLI is the first frontend, not the foundation of every other frontend.
 CLI, TUI, WinForms, AppKit, GTK, and Qt all sit over the same command graph,
@@ -44,15 +53,15 @@ python -m factorio_launcher run space-age-main
 When running directly from a checkout, use:
 
 ```bash
-$env:PYTHONPATH = "source/prototypes/python_launcher"
+$env:PYTHONPATH = "apps/python_cli"
 python -m factorio_launcher --version
 ```
 
 The packaged console command is `factorio-launcher`.
 
-The native CLI scaffold is under `source/apps/factorio_cli/`. The currently
+The native CLI scaffold is under `apps/cli/`. The currently
 runnable CLI remains the quarantined Python prototype under
-`source/prototypes/python_launcher/` until the native command graph reaches
+`apps/python_cli/` until the native command graph reaches
 parity. Production legacy packages should not depend on Python.
 
 ## Architecture Boundary
@@ -68,9 +77,11 @@ Factorio Product Binding      C ABI outward, C11/C++11 internally
 CLI / TUI / WinForms / AppKit / GTK / Qt frontends
 ```
 
-This repo owns only the Factorio product binding and Factorio-facing app shell.
-Install, repair, uninstall, rollback, and destructive setup mutation belong to
-universal setup. Cross-product orchestration belongs to universal launcher.
+This repo owns only the Factorio product binding and Factorio-facing app
+frontends. Install, repair, uninstall, rollback, and destructive setup mutation
+belong to `universal-setup`. Cross-product orchestration, the command graph,
+instances, profiles, install references, and launch plans belong to
+`universal-launcher`.
 
 ## Safety Defaults
 
@@ -85,7 +96,7 @@ universal setup. Cross-product orchestration belongs to universal launcher.
 ## Development
 
 ```bash
-$env:PYTHONPATH = "source/prototypes/python_launcher"
+$env:PYTHONPATH = "apps/python_cli"
 python -m unittest discover -s tests -v
 python tools/structure_policy_check.py
 python tools/schema_validate.py

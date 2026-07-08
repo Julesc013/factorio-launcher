@@ -57,23 +57,23 @@ def classify(path: str) -> dict[str, Any]:
     if root == "include":
         kind = "public_abi"
         owner = "abi"
-    elif root == "source":
+    elif root == "runtime":
         kind = "implementation"
-        owner = source_owner(path)
-        if path.startswith("source/prototypes/"):
-            lifecycle = "transitional"
+        owner = runtime_owner(path)
     elif root == "apps":
-        kind = "frontend_shell"
+        kind = "frontend"
         owner = "frontend"
-    elif root == "data":
+        if path.startswith("apps/python_cli/"):
+            lifecycle = "transitional"
+    elif root == "content":
         kind = "product_policy"
         owner = "factorio_binding"
-    elif root == "schemas":
+    elif root == "contracts":
         kind = "schema"
         owner = "contract"
-    elif root == "packaging":
+    elif root == "release":
         kind = "package_manifest"
-        owner = "packaging"
+        owner = "release"
     elif root == "docs":
         kind = "doc"
         owner = "documentation"
@@ -101,30 +101,25 @@ def classify(path: str) -> dict[str, Any]:
     }
 
 
-def source_owner(path: str) -> str:
+def runtime_owner(path: str) -> str:
     parts = path.split("/")
     if len(parts) < 2:
         return "implementation"
     return {
-        "apps": "frontend_implementation",
         "base": "portable_base",
         "client": "command_client",
         "factorio": "factorio_binding",
+        "package": "runtime_locator",
         "platform": "platform_adapter",
-        "prototypes": "prototype_harness",
-        "runtime": "runtime_locator",
-        "ulk": "incubated_universal_launcher",
-        "usk": "incubated_universal_setup",
     }.get(parts[1], "implementation")
 
 
 def build_edges() -> list[dict[str, str]]:
     return [
-        {"from": "apps/*", "to": "source/apps/*", "type": "shell_for"},
-        {"from": "source/apps/*", "to": "source/ulk/command", "type": "calls_command_graph"},
-        {"from": "source/ulk/command", "to": "source/factorio/binding", "type": "delegates_product_questions"},
-        {"from": "source/factorio/binding", "to": "data/factorio", "type": "consumes_product_policy"},
-        {"from": "source/prototypes/python_launcher", "to": "source/ulk/command", "type": "native_successor"},
+        {"from": "apps/*", "to": "runtime/client", "type": "uses_client_boundary"},
+        {"from": "../universal-launcher/runtime/launcher", "to": "runtime/factorio/binding", "type": "delegates_product_questions"},
+        {"from": "runtime/factorio/binding", "to": "content/factorio", "type": "consumes_product_policy"},
+        {"from": "apps/python_cli", "to": "../universal-launcher/runtime/launcher", "type": "native_successor"},
         {"from": ".aide", "to": "repo", "type": "observes_and_reports"},
     ]
 
@@ -136,10 +131,10 @@ def build_findings() -> list[dict[str, Any]]:
             "warning",
             "native_command_graph",
             "native command graph not yet implemented",
-            "source/ulk/command should contain real registry, schema routing, dry-run, audit, and handlers",
-            "currently scaffolded; Python prototype remains runnable behavior",
-            ["source/ulk/command/README.md", "source/ulk/kernel/ulk_api.c"],
-            "Build command registry before more GUI work.",
+            "universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers",
+            "split repo is scaffolded; Python prototype remains runnable behavior",
+            ["../universal-launcher/runtime/launcher/command/README.md", "../universal-launcher/runtime/launcher/kernel/ulk_api.c"],
+            "Build command registry in universal-launcher before more GUI work.",
             "AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01",
         ),
         finding(
@@ -148,8 +143,8 @@ def build_findings() -> list[dict[str, Any]]:
             "prototype_boundary",
             "Python prototype is still current runnable CLI",
             "Python should be prototype and golden behavior harness only",
-            "pyproject exposes factorio-launcher from source/prototypes/python_launcher",
-            ["pyproject.toml", "source/prototypes/python_launcher/factorio_launcher/ui/cli/cli.py"],
+            "pyproject exposes factorio-launcher from apps/python_cli",
+            ["pyproject.toml", "apps/python_cli/factorio_launcher/ui/cli/cli.py"],
             "Port commands into native command graph while preserving CLI JSON behavior.",
             "AIDE-BUILD-FACTORIO-PROTOTYPE-PARITY-MAP-01",
         ),
@@ -157,33 +152,33 @@ def build_findings() -> list[dict[str, Any]]:
             "FLAUNCH-PG-003",
             "info",
             "universal_split",
-            "universal setup and launcher are incubated/planned siblings",
-            "FLaunch may incubate until API pressure is proven, but must not own universal semantics permanently",
-            "include/source/schemas currently contain usk and ulk namespaces",
-            ["include/usk", "include/ulk", "source/usk", "source/ulk", "schemas/usk", "schemas/ulk"],
-            "Discuss universal repo structure separately before large native code expansion.",
+            "universal setup and launcher are sibling repositories",
+            "FLaunch must not own universal setup or launcher runtime implementation",
+            "Factorio repo keeps only include/flb and runtime/factorio; universal code moved out",
+            ["include/flb", "runtime/factorio", "../universal-setup", "../universal-launcher"],
+            "Harden universal repo validators before large native code expansion.",
             "AIDE-BUILD-USK-ULK-SPLIT-READINESS-REPORT-01",
         ),
         finding(
             "FLAUNCH-PG-004",
             "pass",
-            "source_roots",
-            "source/ is the only implementation source root",
-            "no src/, launcher/, nested source/, or app-local src/ roots",
+            "retired_roots",
+            "source/ and src/ are retired",
+            "no src/, source/, launcher/, product/, universal/, data/, schemas/, or packaging roots",
             "structure policy and filesystem match this rule",
             ["tools/structure_policy_check.py", "tests/test_structure_policy.py"],
-            "Keep this rule unless a deliberate structure redesign replaces it.",
+            "Keep retired roots blocked.",
             "FLAUNCH-CANON-STRUCTURE-01",
         ),
         finding(
             "FLAUNCH-PG-005",
             "pass",
             "frontend_shells",
-            "apps/ contains shells, not product logic",
-            "frontend implementation should live under source/apps",
-            "apps roots contain shell/readme/project files; implementation roots exist in source/apps",
-            ["apps", "source/apps"],
-            "Keep apps shell-only.",
+            "apps/ contains frontend entrypoints and presentation",
+            "reusable behavior should live under runtime/ or universal repos",
+            "app roots use role names and do not contain nested src/source directories",
+            ["apps", "runtime/client"],
+            "Keep app roots thin.",
             "FLAUNCH-APPS-SHELL-CHECK-01",
         ),
         finding(
@@ -204,7 +199,7 @@ def build_findings() -> list[dict[str, Any]]:
             "dry-run default must remain true",
             "launch plans should be previewed unless execution is explicit",
             "README, product policy, and AIDE safety policy encode dry-run",
-            ["README.md", "data/factorio/product/factorio.product.toml", ".aide/policies/flaunch-safety.yaml"],
+            ["README.md", "content/factorio/product/factorio.product.toml", ".aide/policies/flaunch-safety.yaml"],
             "Keep execution opt-in.",
             "FLAUNCH-SAFETY-REGRESSION-CHECK-01",
         ),

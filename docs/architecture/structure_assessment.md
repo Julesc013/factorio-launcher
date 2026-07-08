@@ -1,227 +1,68 @@
 # Structure Assessment
 
-## Current Assessment
+The repo has left the bootstrap compromise and now uses ownership roots.
 
-The first bootstrap proved the idea quickly but mixed two futures:
+## Current Verdict
 
-- a Python package under a generic source root
-- long-term native ABI and platform frontend plans
-
-That was useful for a runnable v0.1, but it was not the right final shape.
-
-The repo now uses ownership-oriented top-level roots instead of lifecycle
-accidents. The top-level directory name should tell a maintainer what kind of
-contract they are entering:
+The structure is stronger than the previous `source/data/schemas/packaging`
+model because the top-level names now describe ownership:
 
 ```text
-include/   public ABI
-source/    single private implementation and app-source tree
-apps/      frontend executables and shells
-data/      product-owned manifests, templates, and policy
-schemas/   wire/storage compatibility contracts
-packaging/ platform package manifests
-source/prototypes/python_launcher/
-           quarantined Python prototype
-docs/      architecture, product, platform, and planning records
-tests/     unit, integration, contract, golden, and fixture coverage
-tools/     repo automation
-cmake/     native build policy
+runtime/    implementation ownership
+apps/       frontend ownership
+content/    product content ownership
+contracts/  compatibility and policy ownership
+release/    package/release ownership
 ```
 
-This is more future-proof than scattered source roots because the repo has one
-implementation-source contract. Public ABI headers stay in `include/`; all
-private implementation, app, and prototype code lives under `source/`.
+This is a better fit for a three-repo launcher ecosystem.
 
-## Problems Fixed Now
+## Improvements Over The Old Shape
 
-- the current Python prototype was moved to
-  `source/prototypes/python_launcher/`.
-- redundant `factorio_launcher/factorio/...` Python nesting was flattened.
-- Factorio product config moved from root `product/` to `data/factorio/`.
-- schemas moved into versioned namespaces under `schemas/common`, `schemas/usk`,
-  `schemas/ulk`, and `schemas/factorio`.
-- native roots now use `include/`, `source/`, and `apps/`.
-- GUI roots now live under `apps/winforms`, `apps/appkit`, `apps/gtk`, and
-  `apps/qt`.
-- native executable scaffolds now use explicit app names:
-  `apps/factorio_cli`, `apps/factorio_tui`, and `apps/factorio_daemon`.
-- public ABI headers now use `usk_`, `ulk_`, and `flb_` prefixes instead of a
-  vague universal `ul_` prefix.
-- Python prototype integration adapters now use `integrations/usk` and
-  `integrations/ulk` so the bridge layer matches the native vocabulary.
-- the prototype is explicitly documented as a schema/CLI experiment harness,
-  not as the production legacy runtime.
+- `source/` and `src/` are gone.
+- App code lives in `apps/<role>/`; reusable behavior lives in `runtime/`.
+- Factorio product data is now `content/factorio/`, not a generic `data/`
+  drawer.
+- JSON schemas are now under `contracts/schema/`.
+- Package manifests are now under `release/packaging/`.
+- `include/` now contains only `flb`, the Factorio binding public ABI.
+- `usk` and `ulk` headers/runtime code moved to their own repositories.
+- Redundant app names are gone: `apps/cli`, `apps/tui`, `apps/daemon`.
 
-## Target Shape
+## Remaining Risks
 
-The target repository shape is:
+The universal repos are still young. Factorio CMake currently consumes them as
+sibling checkouts:
 
 ```text
-include/
-  usk/      C89 public ABI for setup mutation
-  ulk/      C89 public ABI for launcher orchestration
-  flb/      C ABI for the Factorio product binding
-
-source/
-  base/     C89 portable primitives
-  client/   frontend-neutral command client transports
-  runtime/  package/runtime locator and component verification
-  platform/ common, windows, posix, macos, linux adapters
-  usk/      setup kernel internals
-  ulk/      launcher kernel internals and command graph
-  factorio/ Factorio binding internals
-  apps/     CLI, TUI, daemon, and GUI implementation files
-  prototypes/
-    python_launcher/
-
-apps/
-  factorio_cli/
-  factorio_tui/
-  factorio_daemon/
-  winforms/
-  appkit/
-  gtk/
-  qt/
-
-data/factorio/
-  product/
-  discovery/
-  launch_templates/
-  instance_templates/
-  policy/
-
-schemas/
-  common/
-  usk/
-  ulk/
-  factorio/
-  packaging/
-
-packaging/
-  windows/
-  macos/
-  linux/
-  portable/
+../universal-setup
+../universal-launcher
 ```
 
-This layout supports forks and optional frontends cleanly. A fork can replace
-`apps/gtk` without touching `source/ulk`; a product binding can add new
-`data/<product>` and `source/<product>` areas without rewriting the setup kernel;
-a downstream packager can include CLI-only artifacts without carrying GUI
-toolkit dependencies.
+That is fine for active design work, but release engineering should eventually
+choose a pinned dependency strategy.
 
-## Function and ABI Conventions
+The Python CLI remains in `apps/python_cli/` as a transitional prototype. It is
+useful for current behavior checks, but production legacy packages must not
+depend on Python.
 
-Public C functions use:
+## Required Enforcement
 
-```text
-<prefix>_<module>_<verb>_v<abi-version>
+Run:
+
+```powershell
+python tools\structure_policy_check.py
+python tools\strict_check.py
 ```
 
-Examples:
+The validator should fail if retired roots return, if Factorio owns `usk` or
+`ulk` implementation again, or if product content starts containing executable
+code.
 
-```text
-usk_install_verify_v1
-ulk_command_execute_v1
-ulk_launch_plan_build_v1
-flb_command_execute_v1
-flb_discovery_scan_v1
-```
+## Next Structural Work
 
-Public structs use the same prefix and carry `struct_size` so callers and
-callees can detect version drift. Public headers expose no C++ classes,
-templates, exceptions, STL types, RTTI, or ownership ambiguity.
-
-Private code can use stronger internal language features where they fit:
-C++98 for universal cleanup/state helpers and C++11 for Factorio-specific
-complexity. That freedom stops at the C ABI boundary.
-
-## File Naming Conventions
-
-- C and C++ implementation files use `snake_case`.
-- Public headers use `prefix_module.h`, such as `ulk_command.h`.
-- C# WinForms files keep `PascalCase.cs`.
-- AppKit files keep Objective-C/AppKit conventions:
-  `MainWindowController.m`, `CommandClient.mm`.
-- JSON schemas use `name.v1.schema.json` inside a namespace directory.
-- TOML templates use `snake_case.toml`.
-- Platform directories use full names: `windows`, `macos`, `linux`, `posix`.
-
-Do not revive old names such as `win32`, `commandclient.cpp`,
-`launch-templates`, `instance-templates`, or unversioned schema names.
-
-## Frontend Rule
-
-No frontend is foundational to another frontend. The CLI may be the first and
-best-tested frontend, but the CLI, TUI, WinForms, AppKit, GTK, and Qt shells
-must all call the same command graph, daemon protocol, or direct C ABI.
-
-The forbidden shape is:
-
-```text
-GUI -> TUI -> CLI -> core
-```
-
-The accepted shape is:
-
-```text
-frontends -> command graph / daemon / C ABI -> product binding
-```
-
-GUI-only install logic, mod resolution, launch-plan generation, or hidden
-repair behavior is an architecture bug.
-
-## Optimal Next Refactor
-
-The best long-term reorganization is:
-
-1. Build a real C command graph library under `source/ulk/command`.
-2. Port the Python command handlers into native command handlers.
-3. Keep CLI JSON output stable while changing internals.
-4. Introduce `flb_command_execute_v1` behind the public binding ABI.
-5. Make the Python package a test/prototype harness or delete it after parity.
-6. Split universal setup and universal launcher back into separate repos when
-   the Factorio vertical slice proves the API pressure.
-
-The migration should be boring and contract-first:
-
-1. Freeze command names and schema IDs.
-2. Add native command handlers behind the current CLI JSON behavior.
-3. Keep Python tests as golden behavior checks while native code grows.
-4. Move state mutation behind USK handoff points only when dry-run and audit
-   records exist.
-5. Add daemon mode for long operations after command payloads are stable.
-6. Add GUI frontends only as views over the command graph.
-
-## Naming Standards
-
-- public C symbols: `ulk_` for universal launcher, `usk_` for universal setup,
-  `flb_` for Factorio binding
-- public headers: `snake_case.h`
-- C/C++ source files: `snake_case.c`, `snake_case.cpp`
-- C# types: `PascalCase.cs`
-- Objective-C files: `PascalCase.m`, Objective-C++ bridge files `PascalCase.mm`
-- schemas: `name.v1.schema.json` inside `schemas/common`, `schemas/usk`,
-  `schemas/ulk`, or `schemas/factorio`
-- commands: dotted lowercase names, such as `instances.create`
-
-## Performance Standard
-
-Use JSON-RPC or CLI subprocesses only at command granularity. Never call the
-backend once per file, mod edge, or progress tick. Long-running operations
-belong in the daemon with progress events and cancellation.
-
-## Backportability Standard
-
-Keep legacy support pressure isolated:
-
-- public ABI remains C89-style C
-- Windows native code uses `windows`, not version-specific root names
-- Windows 7 support notes live in platform docs and build policy
-- macOS deployment target notes live in platform docs and build policy
-- Linux GUI toolkit decisions stay under `apps/`, never inside core
-- no GUI toolkit dependency enters `source/base`, `source/usk`, `source/ulk`,
-  or `source/factorio`
-
-The project should still build a headless CLI/daemon profile on systems with no
-GUI stack installed.
+1. Harden `universal-setup` with setup-only validators.
+2. Harden `universal-launcher` with launcher-only validators.
+3. Add cross-repo boundary checks once the dependency acquisition model is
+   settled.
+4. Replace sibling CMake paths with pinned dependencies before release.

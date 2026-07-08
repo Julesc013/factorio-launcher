@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGING = ROOT / "packaging"
+PACKAGING = ROOT / "release" / "packaging"
 
 COMPONENT_FIELDS = {
     "name",
@@ -81,9 +81,9 @@ def validate_bundle_manifest(path: Path, manifest: dict[str, Any]) -> list[str]:
             missing = COMPONENT_FIELDS - set(component)
             if missing:
                 problems.append(f"{path}: component {component.get('name', '<unnamed>')} missing {sorted(missing)}")
-        required = {"schemas", "factorio_data"}
+        required = {"contracts_schema", "factorio_content"}
         if not required.issubset(names):
-            problems.append(f"{path}: component set must include schemas and factorio_data")
+            problems.append(f"{path}: component set must include contracts_schema and factorio_content")
         if any(name.endswith("_shared") for name in names):
             for required_shared in ["ulk_shared", "usk_shared", "flb_factorio_shared"]:
                 if required_shared not in names:
@@ -99,7 +99,7 @@ def validate_bundle_manifest(path: Path, manifest: dict[str, Any]) -> list[str]:
             destination = str(component.get("destination", ""))
             source_target = str(component.get("source_target", ""))
             is_resource = "/Contents/Resources/" in destination
-            is_data = source_target.startswith("data/") or source_target == "schemas"
+            is_data = source_target.startswith("content/") or source_target == "contracts/schema"
             if is_resource and not is_data:
                 problems.append(f"{path}: executable/library component in Contents/Resources: {destination}")
     return problems

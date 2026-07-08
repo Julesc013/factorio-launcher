@@ -1,19 +1,19 @@
 [
   {
     "affected_paths": [
-      "source/ulk/command/README.md",
-      "source/ulk/kernel/ulk_api.c"
+      "../universal-launcher/runtime/launcher/command/README.md",
+      "../universal-launcher/runtime/launcher/kernel/ulk_api.c"
     ],
     "claim": "native command graph not yet implemented",
     "evidence_refs": [
-      "source/ulk/command/README.md",
-      "source/ulk/kernel/ulk_api.c"
+      "../universal-launcher/runtime/launcher/command/README.md",
+      "../universal-launcher/runtime/launcher/kernel/ulk_api.c"
     ],
-    "expected": "source/ulk/command should contain real registry, schema routing, dry-run, audit, and handlers",
+    "expected": "universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers",
     "id": "FLAUNCH-PG-001",
     "next_task": "AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01",
-    "observed": "currently scaffolded; Python prototype remains runnable behavior",
-    "recommendation": "Build command registry before more GUI work.",
+    "observed": "split repo is scaffolded; Python prototype remains runnable behavior",
+    "recommendation": "Build command registry in universal-launcher before more GUI work.",
     "severity": "warning",
     "surface": "native_command_graph",
     "taxonomy": "project_graph"
@@ -21,17 +21,17 @@
   {
     "affected_paths": [
       "pyproject.toml",
-      "source/prototypes/python_launcher/factorio_launcher/ui/cli/cli.py"
+      "apps/python_cli/factorio_launcher/ui/cli/cli.py"
     ],
     "claim": "Python prototype is still current runnable CLI",
     "evidence_refs": [
       "pyproject.toml",
-      "source/prototypes/python_launcher/factorio_launcher/ui/cli/cli.py"
+      "apps/python_cli/factorio_launcher/ui/cli/cli.py"
     ],
     "expected": "Python should be prototype and golden behavior harness only",
     "id": "FLAUNCH-PG-002",
     "next_task": "AIDE-BUILD-FACTORIO-PROTOTYPE-PARITY-MAP-01",
-    "observed": "pyproject exposes factorio-launcher from source/prototypes/python_launcher",
+    "observed": "pyproject exposes factorio-launcher from apps/python_cli",
     "recommendation": "Port commands into native command graph while preserving CLI JSON behavior.",
     "severity": "warning",
     "surface": "prototype_boundary",
@@ -39,27 +39,23 @@
   },
   {
     "affected_paths": [
-      "include/usk",
-      "include/ulk",
-      "source/usk",
-      "source/ulk",
-      "schemas/usk",
-      "schemas/ulk"
+      "include/flb",
+      "runtime/factorio",
+      "../universal-setup",
+      "../universal-launcher"
     ],
-    "claim": "universal setup and launcher are incubated/planned siblings",
+    "claim": "universal setup and launcher are sibling repositories",
     "evidence_refs": [
-      "include/usk",
-      "include/ulk",
-      "source/usk",
-      "source/ulk",
-      "schemas/usk",
-      "schemas/ulk"
+      "include/flb",
+      "runtime/factorio",
+      "../universal-setup",
+      "../universal-launcher"
     ],
-    "expected": "FLaunch may incubate until API pressure is proven, but must not own universal semantics permanently",
+    "expected": "FLaunch must not own universal setup or launcher runtime implementation",
     "id": "FLAUNCH-PG-003",
     "next_task": "AIDE-BUILD-USK-ULK-SPLIT-READINESS-REPORT-01",
-    "observed": "include/source/schemas currently contain usk and ulk namespaces",
-    "recommendation": "Discuss universal repo structure separately before large native code expansion.",
+    "observed": "Factorio repo keeps only include/flb and runtime/factorio; universal code moved out",
+    "recommendation": "Harden universal repo validators before large native code expansion.",
     "severity": "info",
     "surface": "universal_split",
     "taxonomy": "project_graph"
@@ -69,35 +65,35 @@
       "tools/structure_policy_check.py",
       "tests/test_structure_policy.py"
     ],
-    "claim": "source/ is the only implementation source root",
+    "claim": "source/ and src/ are retired",
     "evidence_refs": [
       "tools/structure_policy_check.py",
       "tests/test_structure_policy.py"
     ],
-    "expected": "no src/, launcher/, nested source/, or app-local src/ roots",
+    "expected": "no src/, source/, launcher/, product/, universal/, data/, schemas/, or packaging roots",
     "id": "FLAUNCH-PG-004",
     "next_task": "FLAUNCH-CANON-STRUCTURE-01",
     "observed": "structure policy and filesystem match this rule",
-    "recommendation": "Keep this rule unless a deliberate structure redesign replaces it.",
+    "recommendation": "Keep retired roots blocked.",
     "severity": "pass",
-    "surface": "source_roots",
+    "surface": "retired_roots",
     "taxonomy": "project_graph"
   },
   {
     "affected_paths": [
       "apps",
-      "source/apps"
+      "runtime/client"
     ],
-    "claim": "apps/ contains shells, not product logic",
+    "claim": "apps/ contains frontend entrypoints and presentation",
     "evidence_refs": [
       "apps",
-      "source/apps"
+      "runtime/client"
     ],
-    "expected": "frontend implementation should live under source/apps",
+    "expected": "reusable behavior should live under runtime/ or universal repos",
     "id": "FLAUNCH-PG-005",
     "next_task": "FLAUNCH-APPS-SHELL-CHECK-01",
-    "observed": "apps roots contain shell/readme/project files; implementation roots exist in source/apps",
-    "recommendation": "Keep apps shell-only.",
+    "observed": "app roots use role names and do not contain nested src/source directories",
+    "recommendation": "Keep app roots thin.",
     "severity": "pass",
     "surface": "frontend_shells",
     "taxonomy": "project_graph"
@@ -124,13 +120,13 @@
   {
     "affected_paths": [
       "README.md",
-      "data/factorio/product/factorio.product.toml",
+      "content/factorio/product/factorio.product.toml",
       ".aide/policies/flaunch-safety.yaml"
     ],
     "claim": "dry-run default must remain true",
     "evidence_refs": [
       "README.md",
-      "data/factorio/product/factorio.product.toml",
+      "content/factorio/product/factorio.product.toml",
       ".aide/policies/flaunch-safety.yaml"
     ],
     "expected": "launch plans should be previewed unless execution is explicit",

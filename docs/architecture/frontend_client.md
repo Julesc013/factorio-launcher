@@ -3,7 +3,7 @@
 Every frontend talks to the same command graph. No frontend is the backend for
 another frontend.
 
-The frontend-neutral client layer lives under `source/client/` and supports:
+The frontend-neutral client layer lives under `runtime/client/` and supports:
 
 - CLI JSON command invocation
 - daemon JSON-RPC

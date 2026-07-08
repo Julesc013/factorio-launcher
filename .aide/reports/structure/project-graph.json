@@ -2,27 +2,22 @@
   "edges": [
     {
       "from": "apps/*",
-      "to": "source/apps/*",
-      "type": "shell_for"
+      "to": "runtime/client",
+      "type": "uses_client_boundary"
     },
     {
-      "from": "source/apps/*",
-      "to": "source/ulk/command",
-      "type": "calls_command_graph"
-    },
-    {
-      "from": "source/ulk/command",
-      "to": "source/factorio/binding",
+      "from": "../universal-launcher/runtime/launcher",
+      "to": "runtime/factorio/binding",
       "type": "delegates_product_questions"
     },
     {
-      "from": "source/factorio/binding",
-      "to": "data/factorio",
+      "from": "runtime/factorio/binding",
+      "to": "content/factorio",
       "type": "consumes_product_policy"
     },
     {
-      "from": "source/prototypes/python_launcher",
-      "to": "source/ulk/command",
+      "from": "apps/python_cli",
+      "to": "../universal-launcher/runtime/launcher",
       "type": "native_successor"
     },
     {
@@ -34,19 +29,19 @@
   "findings": [
     {
       "affected_paths": [
-        "source/ulk/command/README.md",
-        "source/ulk/kernel/ulk_api.c"
+        "../universal-launcher/runtime/launcher/command/README.md",
+        "../universal-launcher/runtime/launcher/kernel/ulk_api.c"
       ],
       "claim": "native command graph not yet implemented",
       "evidence_refs": [
-        "source/ulk/command/README.md",
-        "source/ulk/kernel/ulk_api.c"
+        "../universal-launcher/runtime/launcher/command/README.md",
+        "../universal-launcher/runtime/launcher/kernel/ulk_api.c"
       ],
-      "expected": "source/ulk/command should contain real registry, schema routing, dry-run, audit, and handlers",
+      "expected": "universal-launcher should contain real registry, schema routing, dry-run, audit, and handlers",
       "id": "FLAUNCH-PG-001",
       "next_task": "AIDE-BUILD-ULK-COMMAND-REGISTRY-V0-01",
-      "observed": "currently scaffolded; Python prototype remains runnable behavior",
-      "recommendation": "Build command registry before more GUI work.",
+      "observed": "split repo is scaffolded; Python prototype remains runnable behavior",
+      "recommendation": "Build command registry in universal-launcher before more GUI work.",
       "severity": "warning",
       "surface": "native_command_graph",
       "taxonomy": "project_graph"
@@ -54,17 +49,17 @@
     {
       "affected_paths": [
         "pyproject.toml",
-        "source/prototypes/python_launcher/factorio_launcher/ui/cli/cli.py"
+        "apps/python_cli/factorio_launcher/ui/cli/cli.py"
       ],
       "claim": "Python prototype is still current runnable CLI",
       "evidence_refs": [
         "pyproject.toml",
-        "source/prototypes/python_launcher/factorio_launcher/ui/cli/cli.py"
+        "apps/python_cli/factorio_launcher/ui/cli/cli.py"
       ],
       "expected": "Python should be prototype and golden behavior harness only",
       "id": "FLAUNCH-PG-002",
       "next_task": "AIDE-BUILD-FACTORIO-PROTOTYPE-PARITY-MAP-01",
-      "observed": "pyproject exposes factorio-launcher from source/prototypes/python_launcher",
+      "observed": "pyproject exposes factorio-launcher from apps/python_cli",
       "recommendation": "Port commands into native command graph while preserving CLI JSON behavior.",
       "severity": "warning",
       "surface": "prototype_boundary",
@@ -72,27 +67,23 @@
     },
     {
       "affected_paths": [
-        "include/usk",
-        "include/ulk",
-        "source/usk",
-        "source/ulk",
-        "schemas/usk",
-        "schemas/ulk"
+        "include/flb",
+        "runtime/factorio",
+        "../universal-setup",
+        "../universal-launcher"
       ],
-      "claim": "universal setup and launcher are incubated/planned siblings",
+      "claim": "universal setup and launcher are sibling repositories",
       "evidence_refs": [
-        "include/usk",
-        "include/ulk",
-        "source/usk",
-        "source/ulk",
-        "schemas/usk",
-        "schemas/ulk"
+        "include/flb",
+        "runtime/factorio",
+        "../universal-setup",
+        "../universal-launcher"
       ],
-      "expected": "FLaunch may incubate until API pressure is proven, but must not own universal semantics permanently",
+      "expected": "FLaunch must not own universal setup or launcher runtime implementation",
       "id": "FLAUNCH-PG-003",
       "next_task": "AIDE-BUILD-USK-ULK-SPLIT-READINESS-REPORT-01",
-      "observed": "include/source/schemas currently contain usk and ulk namespaces",
-      "recommendation": "Discuss universal repo structure separately before large native code expansion.",
+      "observed": "Factorio repo keeps only include/flb and runtime/factorio; universal code moved out",
+      "recommendation": "Harden universal repo validators before large native code expansion.",
       "severity": "info",
       "surface": "universal_split",
       "taxonomy": "project_graph"
@@ -102,35 +93,35 @@
         "tools/structure_policy_check.py",
         "tests/test_structure_policy.py"
       ],
-      "claim": "source/ is the only implementation source root",
+      "claim": "source/ and src/ are retired",
       "evidence_refs": [
         "tools/structure_policy_check.py",
         "tests/test_structure_policy.py"
       ],
-      "expected": "no src/, launcher/, nested source/, or app-local src/ roots",
+      "expected": "no src/, source/, launcher/, product/, universal/, data/, schemas/, or packaging roots",
       "id": "FLAUNCH-PG-004",
       "next_task": "FLAUNCH-CANON-STRUCTURE-01",
       "observed": "structure policy and filesystem match this rule",
-      "recommendation": "Keep this rule unless a deliberate structure redesign replaces it.",
+      "recommendation": "Keep retired roots blocked.",
       "severity": "pass",
-      "surface": "source_roots",
+      "surface": "retired_roots",
       "taxonomy": "project_graph"
     },
     {
       "affected_paths": [
         "apps",
-        "source/apps"
+        "runtime/client"
       ],
-      "claim": "apps/ contains shells, not product logic",
+      "claim": "apps/ contains frontend entrypoints and presentation",
       "evidence_refs": [
         "apps",
-        "source/apps"
+        "runtime/client"
       ],
-      "expected": "frontend implementation should live under source/apps",
+      "expected": "reusable behavior should live under runtime/ or universal repos",
       "id": "FLAUNCH-PG-005",
       "next_task": "FLAUNCH-APPS-SHELL-CHECK-01",
-      "observed": "apps roots contain shell/readme/project files; implementation roots exist in source/apps",
-      "recommendation": "Keep apps shell-only.",
+      "observed": "app roots use role names and do not contain nested src/source directories",
+      "recommendation": "Keep app roots thin.",
       "severity": "pass",
       "surface": "frontend_shells",
       "taxonomy": "project_graph"
@@ -157,13 +148,13 @@
     {
       "affected_paths": [
         "README.md",
-        "data/factorio/product/factorio.product.toml",
+        "content/factorio/product/factorio.product.toml",
         ".aide/policies/flaunch-safety.yaml"
       ],
       "claim": "dry-run default must remain true",
       "evidence_refs": [
         "README.md",
-        "data/factorio/product/factorio.product.toml",
+        "content/factorio/product/factorio.product.toml",
         ".aide/policies/flaunch-safety.yaml"
       ],
       "expected": "launch plans should be previewed unless execution is explicit",
@@ -6119,66 +6110,1200 @@
       "root": "THIRD_PARTY_NOTICES.md"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/appkit/AppDelegate.m",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/appkit/CommandClient.mm",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/appkit/JsonRpcClient.mm",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/appkit/MainWindowController.m",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
       "path": "apps/appkit/README.md",
       "root": "apps"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/factorio_cli/README.md",
+      "path": "apps/appkit/Screens/README.md",
       "root": "apps"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/factorio_daemon/README.md",
+      "path": "apps/cli/README.md",
       "root": "apps"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
-      "path": "apps/factorio_tui/README.md",
+      "path": "apps/cli/command_dispatch.c",
       "root": "apps"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/cli/command_dispatch.h",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/cli/json_mode.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/cli/json_mode.h",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/cli/main.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/daemon/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/daemon/cancellation.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/daemon/main.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/daemon/platform_named_pipe_windows.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/daemon/platform_unix_socket.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/daemon/progress_events.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/daemon/rpc_json.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
       "path": "apps/gtk/README.md",
       "root": "apps"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gtk/command_client.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gtk/main.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
       "path": "apps/gtk/meson.build",
       "root": "apps"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/gtk/views/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/__main__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/accounts/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/accounts/account_ref.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/accounts/credential_store.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/accounts/ownership_check.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/accounts/redaction.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/accounts/token_store.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/binding/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/binding/capabilities.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/binding/product_manifest.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/binding/validation.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/core/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/core/config.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/core/workspace.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/devtools/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/devtools/benchmark.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/devtools/bug_report_bundle.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/devtools/dump_data.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/devtools/dump_icons.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/devtools/dump_locale.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/devtools/instrument_mod.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/devtools/map_preview.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/diagnostics/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/diagnostics/crash_collector.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/diagnostics/doctor.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/diagnostics/environment_report.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/diagnostics/launch_explainer.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/diagnostics/log_collector.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/diagnostics/repair_suggestions.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/discovery/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/discovery/detect_install.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/discovery/detect_version.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/installs/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/installs/install_ref.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/installs/migration_plan.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/installs/ownership.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/installs/verification_report.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/config_path.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/instance_clone.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/instance_create.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/instance_export.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/instance_import.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/local_data_root.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/locks.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/instances/write_data_policy.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/ulk/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/ulk/audit_adapter.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/ulk/instance_adapter.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/ulk/launch_plan_adapter.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/ulk/product_registration.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/ulk/profile_adapter.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/usk/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/usk/install_register.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/usk/install_repair.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/usk/install_uninstall.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/usk/install_verify.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/usk/ownership_adapter.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/integrations/usk/setup_client.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/launch/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/launch/command_builder.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/launch/environment_builder.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/launch/launch_plan_builder.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/launch/launch_profile.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/launch/postrun_indexer.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/launch/preflight_checks.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/launch/process_runner.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/api_contract_tests.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/auth_download.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/cache_index.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/client.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/download.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/rate_limit.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/releases.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mod_portal/search.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/dependency_parser.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/dependency_resolver.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/incompatibility_report.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/info_json.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/mod_cache.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/mod_export.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/mod_import.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/mod_zip.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/mods/modset_lock.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/saves/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/saves/save_backup.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/saves/save_export.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/saves/save_import.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/saves/save_index.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/saves/save_migration_report.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/saves/save_modset_detect.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/adminlist.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/banlist.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/headless_launch.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/ports.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/rcon.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/server_instance.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/server_settings.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/servers/whitelist.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/cli.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_dev.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_doctor.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_installs.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_instances.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_mods.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_saves.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/cli/commands_servers.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/command_graph/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/command_graph/commands.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/command_graph/dry_run.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/command_graph/permissions.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/app_shell.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/devtools.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/installs.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/instances.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/mods.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/saves.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/servers.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/gui/screens/settings.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/tui/__init__.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/tui/app.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "transitional",
+      "owner": "frontend",
+      "path": "apps/python_cli/factorio_launcher/ui/tui/views.py",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
       "path": "apps/qt/CMakeLists.txt",
       "root": "apps"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
       "path": "apps/qt/README.md",
       "root": "apps"
     },
     {
-      "kind": "frontend_shell",
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/qt/command_client.cpp",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/qt/main.cpp",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/qt/views/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/tui/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/tui/tui_command_client.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/tui/tui_main.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/tui/tui_views.c",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/winforms/CommandClient.cs",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/winforms/FactorioLauncher.WinForms.csproj",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/winforms/JsonRpcClient.cs",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/winforms/MainForm.cs",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/winforms/Program.cs",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
       "lifecycle": "active",
       "owner": "frontend",
       "path": "apps/winforms/README.md",
+      "root": "apps"
+    },
+    {
+      "kind": "frontend",
+      "lifecycle": "active",
+      "owner": "frontend",
+      "path": "apps/winforms/Screens/README.md",
       "root": "apps"
     },
     {
@@ -6227,211 +7352,323 @@
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/discovery/headless.toml",
-      "root": "data"
+      "path": "content/factorio/discovery/headless.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/discovery/linux.toml",
-      "root": "data"
+      "path": "content/factorio/discovery/linux.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/discovery/macos.toml",
-      "root": "data"
+      "path": "content/factorio/discovery/macos.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/discovery/portable.toml",
-      "root": "data"
+      "path": "content/factorio/discovery/portable.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/discovery/steam.toml",
-      "root": "data"
+      "path": "content/factorio/discovery/steam.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/discovery/windows.toml",
-      "root": "data"
+      "path": "content/factorio/discovery/windows.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/instance_templates/benchmark.toml",
-      "root": "data"
+      "path": "content/factorio/instance_templates/benchmark.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/instance_templates/mod_development.toml",
-      "root": "data"
+      "path": "content/factorio/instance_templates/mod_development.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/instance_templates/modded.toml",
-      "root": "data"
+      "path": "content/factorio/instance_templates/modded.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/instance_templates/portable.toml",
-      "root": "data"
+      "path": "content/factorio/instance_templates/portable.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/instance_templates/server.toml",
-      "root": "data"
+      "path": "content/factorio/instance_templates/server.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/instance_templates/steam_safe.toml",
-      "root": "data"
+      "path": "content/factorio/instance_templates/steam_safe.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/instance_templates/vanilla.toml",
-      "root": "data"
+      "path": "content/factorio/instance_templates/vanilla.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/benchmark.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/benchmark.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/gui.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/gui.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/headless_server.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/headless_server.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/host_game.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/host_game.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/load_save.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/load_save.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/low_vram.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/low_vram.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/map_preview.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/map_preview.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/mod_dev.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/mod_dev.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/multiplayer_connect.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/multiplayer_connect.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/launch_templates/safe_graphics.toml",
-      "root": "data"
+      "path": "content/factorio/launch_templates/safe_graphics.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/policy/account_secrets.toml",
-      "root": "data"
+      "path": "content/factorio/policy/account_secrets.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/policy/concurrency.toml",
-      "root": "data"
+      "path": "content/factorio/policy/concurrency.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/policy/export.toml",
-      "root": "data"
+      "path": "content/factorio/policy/export.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/policy/ownership.toml",
-      "root": "data"
+      "path": "content/factorio/policy/ownership.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/policy/redaction.toml",
-      "root": "data"
+      "path": "content/factorio/policy/redaction.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/policy/steam_cloud.toml",
-      "root": "data"
+      "path": "content/factorio/policy/steam_cloud.toml",
+      "root": "content"
     },
     {
       "kind": "product_policy",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "data/factorio/product/factorio.product.toml",
-      "root": "data"
+      "path": "content/factorio/product/factorio.product.toml",
+      "root": "content"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/common/command_request.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/common/command_response.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/common/diagnostic.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/common/result.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_account_ref.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_diagnostic_report.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_export_manifest.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_install_ref.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_instance.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_modset_lock.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_product.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_profile.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_save_index.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/factorio/factorio_server.v1.schema.json",
+      "root": "contracts"
+    },
+    {
+      "kind": "schema",
+      "lifecycle": "active",
+      "owner": "contract",
+      "path": "contracts/schema/release/packaging/bundle_manifest.v1.schema.json",
+      "root": "contracts"
     },
     {
       "kind": "doc",
@@ -7155,272 +8392,6 @@
       "root": "include"
     },
     {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_account_ref.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_allocator.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_api.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_audit.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_command.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_context.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_error.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_install_ref.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_instance.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_launch_plan.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_manifest.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_product.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_profile.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_result.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/ulk/ulk_types.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/usk/usk_api.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/usk/usk_audit.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/usk/usk_context.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/usk/usk_install.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/usk/usk_manifest.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/usk/usk_result.h",
-      "root": "include"
-    },
-    {
-      "kind": "public_abi",
-      "lifecycle": "active",
-      "owner": "abi",
-      "path": "include/usk/usk_verify.h",
-      "root": "include"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/linux/README.md",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/linux/appimage.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/linux/gtk.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/linux/legacy_cli_tarball.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/linux/qt.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/macos/README.md",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/macos/codesign.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/macos/flaunch_app.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/macos/legacy_x86_64.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/macos/modern_universal.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/portable/README.md",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/windows/README.md",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/windows/extract_policy.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/windows/flaunch_installer.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/windows/flaunch_portable.v1.toml",
-      "root": "packaging"
-    },
-    {
-      "kind": "package_manifest",
-      "lifecycle": "active",
-      "owner": "packaging",
-      "path": "packaging/windows/flaunch_single_exe.v1.toml",
-      "root": "packaging"
-    },
-    {
       "kind": "unknown",
       "lifecycle": "active",
       "owner": "unknown",
@@ -7428,1747 +8399,389 @@
       "root": "pyproject.toml"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/common/command_request.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/linux/README.md",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/common/command_response.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/linux/appimage.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/common/diagnostic.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/linux/gtk.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/common/result.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/linux/legacy_cli_tarball.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_account_ref.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/linux/qt.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_diagnostic_report.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/macos/README.md",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_export_manifest.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/macos/codesign.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_install_ref.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/macos/flaunch_app.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_instance.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/macos/legacy_x86_64.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_launch_plan.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/macos/modern_universal.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_modset_lock.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/portable/README.md",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_product.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/windows/README.md",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_profile.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/windows/extract_policy.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_save_index.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/windows/flaunch_installer.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/factorio/factorio_server.v1.schema.json",
-      "root": "schemas"
+      "owner": "release",
+      "path": "release/packaging/windows/flaunch_portable.v1.toml",
+      "root": "release"
     },
     {
-      "kind": "schema",
+      "kind": "package_manifest",
       "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/packaging/bundle_manifest.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/ulk/account_ref.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/ulk/audit_event.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/ulk/command.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/ulk/install_ref.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/ulk/instance.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/ulk/launch_plan.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/ulk/product.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/ulk/profile.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/usk/audit_event.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/usk/install_plan.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/usk/installed_state.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/usk/repair_plan.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "schema",
-      "lifecycle": "active",
-      "owner": "contract",
-      "path": "schemas/usk/setup_manifest.v1.schema.json",
-      "root": "schemas"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/appkit/AppDelegate.m",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/appkit/CommandClient.mm",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/appkit/JsonRpcClient.mm",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/appkit/MainWindowController.m",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/appkit/Screens/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_cli/command_dispatch.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_cli/command_dispatch.h",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_cli/json_mode.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_cli/json_mode.h",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_cli/main.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_daemon/cancellation.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_daemon/main.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_daemon/platform_named_pipe_windows.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_daemon/platform_unix_socket.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_daemon/progress_events.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_daemon/rpc_json.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_tui/tui_command_client.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_tui/tui_main.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/factorio_tui/tui_views.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/gtk/command_client.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/gtk/main.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/gtk/views/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/qt/command_client.cpp",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/qt/main.cpp",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/qt/views/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/winforms/CommandClient.cs",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/winforms/FactorioLauncher.WinForms.csproj",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/winforms/JsonRpcClient.cs",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/winforms/MainForm.cs",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/winforms/Program.cs",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "frontend_implementation",
-      "path": "source/apps/winforms/Screens/README.md",
-      "root": "source"
+      "owner": "release",
+      "path": "release/packaging/windows/flaunch_single_exe.v1.toml",
+      "root": "release"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "portable_base",
-      "path": "source/base/README.md",
-      "root": "source"
+      "path": "runtime/base/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/README.md",
-      "root": "source"
+      "path": "runtime/client/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/fl_command_client.c",
-      "root": "source"
+      "path": "runtime/client/fl_command_client.c",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/fl_command_client.h",
-      "root": "source"
+      "path": "runtime/client/fl_command_client.h",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/fl_command_client_cabi.c",
-      "root": "source"
+      "path": "runtime/client/fl_command_client_cabi.c",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/fl_command_client_cabi.h",
-      "root": "source"
+      "path": "runtime/client/fl_command_client_cabi.h",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/fl_command_client_daemon.c",
-      "root": "source"
+      "path": "runtime/client/fl_command_client_daemon.c",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/fl_command_client_daemon.h",
-      "root": "source"
+      "path": "runtime/client/fl_command_client_daemon.h",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/fl_command_client_json.c",
-      "root": "source"
+      "path": "runtime/client/fl_command_client_json.c",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "command_client",
-      "path": "source/client/fl_command_client_json.h",
-      "root": "source"
+      "path": "runtime/client/fl_command_client_json.h",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/accounts/README.md",
-      "root": "source"
+      "path": "runtime/factorio/accounts/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/binding/README.md",
-      "root": "source"
+      "path": "runtime/factorio/binding/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/binding/flb_api.c",
-      "root": "source"
+      "path": "runtime/factorio/binding/flb_api.c",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/c11/README.md",
-      "root": "source"
+      "path": "runtime/factorio/c11/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/cpp11/README.md",
-      "root": "source"
+      "path": "runtime/factorio/cpp11/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/diagnostics/README.md",
-      "root": "source"
+      "path": "runtime/factorio/diagnostics/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/discovery/README.md",
-      "root": "source"
+      "path": "runtime/factorio/discovery/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/instance/README.md",
-      "root": "source"
+      "path": "runtime/factorio/instance/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/launch/README.md",
-      "root": "source"
+      "path": "runtime/factorio/launch/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/mod_portal/README.md",
-      "root": "source"
+      "path": "runtime/factorio/mod_portal/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/mods/README.md",
-      "root": "source"
+      "path": "runtime/factorio/mods/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/saves/README.md",
-      "root": "source"
+      "path": "runtime/factorio/saves/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "factorio_binding",
-      "path": "source/factorio/server/README.md",
-      "root": "source"
+      "path": "runtime/factorio/server/README.md",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/README.md",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_component.c",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_component.h",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_extract.c",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_extract.h",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_locator.c",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_locator.h",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_manifest.c",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_manifest.h",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_verify.c",
+      "root": "runtime"
+    },
+    {
+      "kind": "implementation",
+      "lifecycle": "active",
+      "owner": "runtime_locator",
+      "path": "runtime/package/fl_runtime_verify.h",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "platform_adapter",
-      "path": "source/platform/common/README.md",
-      "root": "source"
+      "path": "runtime/platform/common/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "platform_adapter",
-      "path": "source/platform/linux/README.md",
-      "root": "source"
+      "path": "runtime/platform/linux/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "platform_adapter",
-      "path": "source/platform/macos/README.md",
-      "root": "source"
+      "path": "runtime/platform/macos/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "platform_adapter",
-      "path": "source/platform/posix/README.md",
-      "root": "source"
+      "path": "runtime/platform/posix/README.md",
+      "root": "runtime"
     },
     {
       "kind": "implementation",
       "lifecycle": "active",
       "owner": "platform_adapter",
-      "path": "source/platform/windows/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/__main__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/accounts/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/accounts/account_ref.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/accounts/credential_store.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/accounts/ownership_check.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/accounts/redaction.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/accounts/token_store.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/binding/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/binding/capabilities.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/binding/product_manifest.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/binding/validation.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/core/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/core/config.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/core/workspace.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/devtools/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/devtools/benchmark.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/devtools/bug_report_bundle.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/devtools/dump_data.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/devtools/dump_icons.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/devtools/dump_locale.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/devtools/instrument_mod.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/devtools/map_preview.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/diagnostics/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/diagnostics/crash_collector.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/diagnostics/doctor.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/diagnostics/environment_report.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/diagnostics/launch_explainer.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/diagnostics/log_collector.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/diagnostics/repair_suggestions.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/discovery/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/discovery/detect_install.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/discovery/detect_version.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/installs/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/installs/install_ref.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/installs/migration_plan.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/installs/ownership.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/installs/verification_report.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/config_path.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/instance_clone.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/instance_create.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/instance_export.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/instance_import.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/local_data_root.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/locks.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/instances/write_data_policy.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/ulk/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/ulk/audit_adapter.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/ulk/instance_adapter.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/ulk/launch_plan_adapter.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/ulk/product_registration.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/ulk/profile_adapter.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/usk/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/usk/install_register.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/usk/install_repair.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/usk/install_uninstall.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/usk/install_verify.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/usk/ownership_adapter.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/integrations/usk/setup_client.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/launch/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/launch/command_builder.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/launch/environment_builder.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/launch/launch_plan_builder.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/launch/launch_profile.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/launch/postrun_indexer.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/launch/preflight_checks.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/launch/process_runner.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/api_contract_tests.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/auth_download.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/cache_index.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/client.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/download.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/rate_limit.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/releases.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mod_portal/search.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/dependency_parser.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/dependency_resolver.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/incompatibility_report.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/info_json.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/mod_cache.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/mod_export.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/mod_import.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/mod_zip.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/mods/modset_lock.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/saves/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/saves/save_backup.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/saves/save_export.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/saves/save_import.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/saves/save_index.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/saves/save_migration_report.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/saves/save_modset_detect.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/adminlist.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/banlist.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/headless_launch.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/ports.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/rcon.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/server_instance.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/server_settings.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/servers/whitelist.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/cli.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/commands_dev.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/commands_doctor.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/commands_installs.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/commands_instances.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/commands_mods.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/commands_saves.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/cli/commands_servers.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/command_graph/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/command_graph/commands.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/command_graph/dry_run.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/command_graph/permissions.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/app_shell.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/screens/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/screens/devtools.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/screens/installs.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/screens/instances.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/screens/mods.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/screens/saves.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/screens/servers.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/gui/screens/settings.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/tui/__init__.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/tui/app.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "transitional",
-      "owner": "prototype_harness",
-      "path": "source/prototypes/python_launcher/factorio_launcher/ui/tui/views.py",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_component.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_component.h",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_extract.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_extract.h",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_locator.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_locator.h",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_manifest.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_manifest.h",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_verify.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "runtime_locator",
-      "path": "source/runtime/fl_runtime_verify.h",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/account/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/audit/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/command/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/cpp98/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/install_ref/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/instance/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/kernel/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/kernel/ulk_api.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/launch/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/product/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_launcher",
-      "path": "source/ulk/profile/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_setup",
-      "path": "source/usk/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_setup",
-      "path": "source/usk/audit/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_setup",
-      "path": "source/usk/install/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_setup",
-      "path": "source/usk/kernel/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_setup",
-      "path": "source/usk/kernel/usk_api.c",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_setup",
-      "path": "source/usk/manifest/README.md",
-      "root": "source"
-    },
-    {
-      "kind": "implementation",
-      "lifecycle": "active",
-      "owner": "incubated_universal_setup",
-      "path": "source/usk/verify/README.md",
-      "root": "source"
+      "path": "runtime/platform/windows/README.md",
+      "root": "runtime"
     },
     {
       "kind": "test",
@@ -9456,12 +9069,12 @@
       "aide_governance": 815,
       "aide_local_template": 6,
       "doc": 102,
-      "frontend_shell": 9,
-      "implementation": 220,
+      "frontend": 171,
+      "implementation": 39,
       "package_manifest": 16,
       "product_policy": 30,
-      "public_abi": 32,
-      "schema": 29,
+      "public_abi": 10,
+      "schema": 16,
       "test": 29,
       "tool": 11,
       "unknown": 20
@@ -9480,21 +9093,21 @@
       "README.md": 1,
       "SECURITY.md": 1,
       "THIRD_PARTY_NOTICES.md": 1,
-      "apps": 9,
+      "apps": 171,
       "cmake": 6,
-      "data": 30,
+      "content": 30,
+      "contracts": 16,
       "docs": 87,
       "examples": 5,
       "external": 1,
-      "include": 32,
-      "packaging": 16,
+      "include": 10,
       "pyproject.toml": 1,
-      "schemas": 29,
-      "source": 220,
+      "release": 16,
+      "runtime": 39,
       "tests": 29,
       "tools": 11
     },
-    "file_count": 1319,
+    "file_count": 1265,
     "findings_count": 9,
     "generated_by": "tools/aide_project_graph_baseline.py",
     "project": "factorio-launcher",

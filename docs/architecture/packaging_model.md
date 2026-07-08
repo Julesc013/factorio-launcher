@@ -10,10 +10,10 @@ Each package contains replaceable components:
 - TUI frontend
 - daemon / job runner
 - universal launcher kernel
-- universal setup adapter or kernel
+- universal setup kernel or setup adapter
 - Factorio binding
-- schemas
-- data/templates
+- `contracts/schema/`
+- `content/factorio/`
 - platform helpers
 
 The package may feel like one app to the user. Internally, components stay
@@ -34,8 +34,10 @@ FLaunch-<version>-windows-x64-portable.zip
     ulk.dll
     usk.dll
     flb_factorio.dll
-  data/
-  schemas/
+  content/
+    factorio/
+  contracts/
+    schema/
   docs/
 ```
 
@@ -59,8 +61,10 @@ FLaunch.app/
     libusk.dylib
     libflb_factorio.dylib
   Contents/Resources/
-    data/
-    schemas/
+    content/
+      factorio/
+    contracts/
+      schema/
     docs/
 ```
 
@@ -73,8 +77,8 @@ or source builds. GTK is the first Linux GUI frontend; Qt remains optional.
 
 ## Manifests
 
-Versioned package manifests live under `packaging/`. They declare component
-names, source targets, package destinations, architecture, hashes, signature
-policy, extraction policy, runtime search path, and license notices.
+Versioned package manifests live under `release/packaging/`. They declare
+component names, source targets, package destinations, architecture, hashes,
+signature policy, extraction policy, runtime search path, and license notices.
 
 `tools/package_check.py` enforces the packaging rules.

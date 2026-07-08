@@ -23,15 +23,15 @@ ALLOWED_TOP_LEVEL = {
     "THIRD_PARTY_NOTICES.md",
     "apps",
     "cmake",
-    "data",
+    "content",
+    "contracts",
     "docs",
     "examples",
     "external",
     "include",
-    "packaging",
     "pyproject.toml",
-    "schemas",
-    "source",
+    "release",
+    "runtime",
     "tests",
     "tools",
 }
@@ -57,8 +57,12 @@ RETIRED_ROOTS = {
     "factorio",
     "gui",
     "launcher",
+    "data",
+    "packaging",
     "product",
     "prototypes",
+    "schemas",
+    "source",
     "src",
     "tui",
     "universal",
@@ -66,11 +70,12 @@ RETIRED_ROOTS = {
 
 FRONTENDS = {
     "appkit",
-    "factorio_cli",
-    "factorio_daemon",
-    "factorio_tui",
+    "cli",
+    "daemon",
     "gtk",
+    "python_cli",
     "qt",
+    "tui",
     "winforms",
 }
 
@@ -105,8 +110,8 @@ CODE_SUFFIXES = {
     ".swift",
 }
 
-ALLOWED_DATA_ROOTS = {"factorio"}
-ALLOWED_FACTORIO_DATA_ROOTS = {
+ALLOWED_CONTENT_ROOTS = {"factorio"}
+ALLOWED_FACTORIO_CONTENT_ROOTS = {
     "discovery",
     "instance_templates",
     "launch_templates",
@@ -116,18 +121,16 @@ ALLOWED_FACTORIO_DATA_ROOTS = {
     "redaction",
 }
 
-ALLOWED_SCHEMA_ROOTS = {"common", "factorio", "packaging", "ulk", "usk"}
+ALLOWED_CONTRACT_ROOTS = {"abi", "command", "policy", "result", "refusal", "diagnostic", "schema"}
+ALLOWED_SCHEMA_ROOTS = {"common", "factorio", "release"}
+ALLOWED_RELEASE_ROOTS = {"packaging", "profiles"}
 ALLOWED_PACKAGING_ROOTS = {"linux", "macos", "portable", "windows"}
-ALLOWED_SOURCE_ROOTS = {
-    "apps",
+ALLOWED_RUNTIME_ROOTS = {
     "base",
     "client",
     "factorio",
+    "package",
     "platform",
-    "prototypes",
-    "runtime",
-    "ulk",
-    "usk",
 }
 
 
@@ -135,7 +138,7 @@ def main() -> int:
     problems: list[str] = []
     problems.extend(check_top_level())
     problems.extend(check_retired_roots())
-    problems.extend(check_single_source_root())
+    problems.extend(check_no_src_or_source_dirs())
     problems.extend(check_root_namespaces())
     problems.extend(check_apps_are_shells())
     problems.extend(check_include_is_public_abi_only())
@@ -193,13 +196,11 @@ def check_retired_roots() -> list[str]:
     return problems
 
 
-def check_single_source_root() -> list[str]:
+def check_no_src_or_source_dirs() -> list[str]:
     problems: list[str] = []
     source_dirs = sorted(path for path in ROOT.rglob("*") if path.is_dir() and path.name == "source")
-    if source_dirs != [ROOT / "source"]:
-        problems.append("source/ must be the only directory named source")
-        for path in source_dirs:
-            problems.append(f"found source directory at {path.relative_to(ROOT)}")
+    for path in source_dirs:
+        problems.append(f"directory named source is retired: {path.relative_to(ROOT)}")
     for path in sorted(ROOT.rglob("*")):
         if path.is_dir() and path.name == "src":
             problems.append(f"directory named src is forbidden: {path.relative_to(ROOT)}")
@@ -208,11 +209,13 @@ def check_single_source_root() -> list[str]:
 
 def check_root_namespaces() -> list[str]:
     problems: list[str] = []
-    problems.extend(check_children("source", ALLOWED_SOURCE_ROOTS))
-    problems.extend(check_children("data", ALLOWED_DATA_ROOTS))
-    problems.extend(check_children("data/factorio", ALLOWED_FACTORIO_DATA_ROOTS))
-    problems.extend(check_children("schemas", ALLOWED_SCHEMA_ROOTS))
-    problems.extend(check_children("packaging", ALLOWED_PACKAGING_ROOTS))
+    problems.extend(check_children("runtime", ALLOWED_RUNTIME_ROOTS))
+    problems.extend(check_children("content", ALLOWED_CONTENT_ROOTS))
+    problems.extend(check_children("content/factorio", ALLOWED_FACTORIO_CONTENT_ROOTS))
+    problems.extend(check_children("contracts", ALLOWED_CONTRACT_ROOTS))
+    problems.extend(check_children("contracts/schema", ALLOWED_SCHEMA_ROOTS))
+    problems.extend(check_children("release", ALLOWED_RELEASE_ROOTS))
+    problems.extend(check_children("release/packaging", ALLOWED_PACKAGING_ROOTS))
     return problems
 
 
@@ -227,7 +230,7 @@ def check_children(relative_root: str, allowed: set[str]) -> list[str]:
             continue
         if child.is_dir() and child.name in allowed:
             continue
-        if child.is_file() and relative_root == "schemas" and child.suffix == ".json":
+        if child.is_file() and relative_root.endswith("schema") and child.suffix == ".json":
             problems.append(f"schema file must live in a schema namespace: {child.relative_to(ROOT)}")
             continue
         problems.append(f"{relative_root}/ contains unexpected path {child.name}")
@@ -237,12 +240,9 @@ def check_children(relative_root: str, allowed: set[str]) -> list[str]:
 def check_apps_are_shells() -> list[str]:
     problems: list[str] = []
     apps = ROOT / "apps"
-    source_apps = ROOT / "source" / "apps"
     for name in sorted(FRONTENDS):
         if not (apps / name).is_dir():
-            problems.append(f"missing app shell apps/{name}/")
-        if not (source_apps / name).is_dir():
-            problems.append(f"missing app implementation source/apps/{name}/")
+            problems.append(f"missing app root apps/{name}/")
     for path in apps.rglob("*"):
         if path.is_dir():
             if path.name in {"src", "source"}:
@@ -252,15 +252,13 @@ def check_apps_are_shells() -> list[str]:
             continue
         if any(path.name.endswith(suffix) for suffix in SHELL_ALLOWED_SUFFIXES):
             continue
-        if path.suffix.lower() in CODE_SUFFIXES:
-            problems.append(f"app shell contains implementation source: {path.relative_to(ROOT)}")
     return problems
 
 
 def check_include_is_public_abi_only() -> list[str]:
     problems: list[str] = []
     include = ROOT / "include"
-    allowed = {"flb", "ulk", "usk"}
+    allowed = {"flb"}
     for child in include.iterdir():
         if child.is_dir() and child.name in allowed:
             continue
@@ -273,18 +271,18 @@ def check_include_is_public_abi_only() -> list[str]:
 
 def check_data_is_not_code() -> list[str]:
     problems: list[str] = []
-    for path in (ROOT / "data").rglob("*"):
+    for path in (ROOT / "content").rglob("*"):
         if path.is_file() and path.suffix.lower() in CODE_SUFFIXES:
-            problems.append(f"data/ must not contain executable source: {path.relative_to(ROOT)}")
+            problems.append(f"content/ must not contain executable source: {path.relative_to(ROOT)}")
     return problems
 
 
 def check_command_graph_spine() -> list[str]:
     required = [
-        ROOT / "source" / "ulk" / "command",
-        ROOT / "schemas" / "ulk" / "command.v1.schema.json",
         ROOT / "tests" / "contract" / "command_graph",
-        ROOT / "source" / "factorio" / "binding",
+        ROOT / "runtime" / "factorio" / "binding",
+        ROOT / "contracts" / "schema" / "factorio",
+        ROOT / "contracts" / "schema" / "common",
     ]
     return [f"missing command graph spine path {path.relative_to(ROOT)}" for path in required if not path.exists()]
 
@@ -294,7 +292,7 @@ def check_aide_is_not_runtime_dependency() -> list[str]:
     pyproject = ROOT / "pyproject.toml"
     if pyproject.is_file() and "aide" in pyproject.read_text(encoding="utf-8").lower():
         problems.append("pyproject.toml must not add AIDE as a runtime dependency")
-    for path in ROOT.joinpath("packaging").glob("**/*.toml"):
+    for path in ROOT.joinpath("release", "packaging").glob("**/*.toml"):
         text = path.read_text(encoding="utf-8").lower()
         if ".aide" in text or "aide" in text:
             problems.append(f"production package manifest must not bundle AIDE: {path.relative_to(ROOT)}")

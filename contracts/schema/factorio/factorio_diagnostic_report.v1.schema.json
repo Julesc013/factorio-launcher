@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_diagnostic_report.v1.schema.json",
+  "title": "Factorio Diagnostic Report",
+  "type": "object",
+  "required": ["status", "problems", "suggested_fixes"],
+  "properties": {
+    "status": { "enum": ["ok", "warning", "blocked"] },
+    "problems": { "type": "array", "items": { "type": "string" } },
+    "suggested_fixes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

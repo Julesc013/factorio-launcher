@@ -9,9 +9,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> int:
     problems: list[str] = []
-    product_path = ROOT / "data" / "factorio" / "product" / "factorio.product.toml"
-    redaction_path = ROOT / "data" / "factorio" / "policy" / "redaction.toml"
-    account_path = ROOT / "data" / "factorio" / "policy" / "account_secrets.toml"
+    product_path = ROOT / "content" / "factorio" / "product" / "factorio.product.toml"
+    redaction_path = ROOT / "content" / "factorio" / "policy" / "redaction.toml"
+    account_path = ROOT / "content" / "factorio" / "policy" / "account_secrets.toml"
 
     with product_path.open("rb") as handle:
         product = tomllib.load(handle)
