@@ -9,5 +9,7 @@ Current implementation:
   `factorio.launch_plan.v1` JSON used by the native CLI vertical slice.
 - `apps/cli/` loads install and instance refs, then delegates launch-plan
   construction here instead of owning the product launch schema directly.
-- Process execution and preflight enforcement are still the next hardening
-  target; this module currently preserves the dry-run-first launch-plan shape.
+- `preflight_launch` checks executable/config/mod-directory presence and local
+  lock files before `run --execute` can spawn a process.
+- Process spawning and post-run audit writing are still hosted by the native CLI
+  slice, with runtime/platform migration remaining a later hardening target.

@@ -56,6 +56,48 @@ std::string quote(const std::string& value)
     return "\"" + json_escape(value) + "\"";
 }
 
+void add_problem_if_missing_file(
+    LaunchPreflightResult& result,
+    const std::filesystem::path& path,
+    const std::string& problem
+)
+{
+    if (!std::filesystem::is_regular_file(path)) {
+        result.problems.push_back(problem + ": " + path_string(path));
+    }
+}
+
+void add_problem_if_missing_directory(
+    LaunchPreflightResult& result,
+    const std::filesystem::path& path,
+    const std::string& problem
+)
+{
+    if (!std::filesystem::is_directory(path)) {
+        result.problems.push_back(problem + ": " + path_string(path));
+    }
+}
+
+void collect_lock_files(
+    LaunchPreflightResult& result,
+    const std::filesystem::path& directory,
+    const std::string& problem
+)
+{
+    if (!std::filesystem::is_directory(directory)) {
+        return;
+    }
+    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory)) {
+        if (!entry.is_regular_file()) {
+            continue;
+        }
+        std::string name = entry.path().filename().string();
+        if (entry.path().extension() == ".lock" || name.find(".lock") != std::string::npos) {
+            result.problems.push_back(problem + ": " + path_string(entry.path()));
+        }
+    }
+}
+
 } // namespace
 
 std::vector<std::string> build_launch_args(const InstanceLaunchRef& instance)
@@ -92,6 +134,30 @@ std::string build_launch_plan_json(
     out << "  \"notes\": [\"Launch execution requires --execute.\"]\n";
     out << "}\n";
     return out.str();
+}
+
+LaunchPreflightResult preflight_launch(
+    const InstanceLaunchRef& instance,
+    const InstallLaunchRef& install
+)
+{
+    LaunchPreflightResult result;
+    result.ok = false;
+
+    add_problem_if_missing_directory(result, install.root, "install root does not exist");
+    add_problem_if_missing_file(result, install.executable, "install executable does not exist");
+    add_problem_if_missing_directory(result, instance.local_data_root, "instance data root does not exist");
+    add_problem_if_missing_file(
+        result,
+        instance.local_data_root / "config" / "config.ini",
+        "instance config does not exist"
+    );
+    add_problem_if_missing_directory(result, instance.local_data_root / "mods", "instance mod directory does not exist");
+    collect_lock_files(result, instance.local_data_root / "locks", "instance lock blocks launch");
+    collect_lock_files(result, instance.local_data_root / "saves", "save lock blocks launch");
+
+    result.ok = result.problems.empty();
+    return result;
 }
 
 std::string command_line_for_display(

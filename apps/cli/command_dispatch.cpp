@@ -1316,6 +1316,39 @@ std::string command_line_for_display(const fs::path& executable, const std::vect
     return facman::factorio::launch::command_line_for_display(executable, args);
 }
 
+std::string string_array_json(const std::vector<std::string>& values)
+{
+    std::ostringstream out;
+    out << "[";
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        if (index) {
+            out << ",";
+        }
+        out << quote(values[index]);
+    }
+    out << "]";
+    return out.str();
+}
+
+std::string launch_preflight_refusal_json(const InstanceRef& instance, const std::vector<std::string>& problems)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.launch_refusal.v1\",\n";
+    out << "  \"operation\": \"run.execute\",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+    out << "  \"started\": false,\n";
+    out << "  \"preflight\": {\"status\": \"failed\", \"problems\": " << string_array_json(problems) << "},\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"code\": \"preflight_failed\",\n";
+    out << "    \"reason\": \"Launch execution preflight failed\",\n";
+    out << "    \"recoverable\": true\n";
+    out << "  }\n";
+    out << "}\n";
+    return out.str();
+}
+
 #ifdef _WIN32
 std::string quote_windows_arg(const std::string& value)
 {
@@ -1453,6 +1486,28 @@ void append_launch_history(
 {
     fs::create_directories(instance.local_data_root / "logs");
     std::ofstream out(instance.local_data_root / "logs" / "launch_history.log", std::ios::app | std::ios::binary);
+    out << "command=" << command_line_for_display(install.executable, args) << "\n";
+    out << "started=" << (result.started ? "true" : "false") << "\n";
+    out << "exit_code=" << result.exit_code << "\n";
+    if (!result.error.empty()) {
+        out << "error=" << result.error << "\n";
+    }
+    out << "\n";
+}
+
+void append_launch_audit(
+    const fs::path& workspace,
+    const InstanceRef& instance,
+    const InstallRef& install,
+    const std::vector<std::string>& args,
+    const ProcessResult& result
+)
+{
+    fs::create_directories(workspace / "audit");
+    std::ofstream out(workspace / "audit" / "launch_events.log", std::ios::app | std::ios::binary);
+    out << "event=run.execute\n";
+    out << "instance_id=" << instance.instance_id << "\n";
+    out << "install_id=" << install.install_id << "\n";
     out << "command=" << command_line_for_display(install.executable, args) << "\n";
     out << "started=" << (result.started ? "true" : "false") << "\n";
     out << "exit_code=" << result.exit_code << "\n";
@@ -2491,12 +2546,27 @@ int command_run(const CliOptions& options)
     }
     std::vector<std::string> args = launch_args(instance);
     if (has_flag(options.args, "--execute")) {
+        facman::factorio::launch::LaunchPreflightResult preflight =
+            facman::factorio::launch::preflight_launch(launch_instance_ref(instance), launch_install_ref(install));
+        if (!preflight.ok) {
+            if (has_flag(options.args, "--json")) {
+                std::cout << launch_preflight_refusal_json(instance, preflight.problems);
+            } else {
+                std::cout << "Refused: launch execution preflight failed\n";
+                for (const std::string& problem : preflight.problems) {
+                    std::cout << "- " << problem << "\n";
+                }
+            }
+            return 1;
+        }
         ProcessResult result = run_process(install.executable, args);
         append_launch_history(instance, install, args, result);
+        append_launch_audit(options.workspace, instance, install, args, result);
         if (has_flag(options.args, "--json")) {
             std::cout << "{\n";
             std::cout << "  \"schema\": \"factorio.launch_result.v1\",\n";
             std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+            std::cout << "  \"preflight\": {\"status\": \"ok\", \"problems\": []},\n";
             std::cout << "  \"started\": " << (result.started ? "true" : "false") << ",\n";
             std::cout << "  \"exit_code\": " << result.exit_code << ",\n";
             std::cout << "  \"error\": " << quote(result.error) << "\n";

@@ -19,9 +19,19 @@ struct InstallLaunchRef {
     std::string ownership;
 };
 
+struct LaunchPreflightResult {
+    bool ok;
+    std::vector<std::string> problems;
+};
+
 std::vector<std::string> build_launch_args(const InstanceLaunchRef& instance);
 
 std::string build_launch_plan_json(
+    const InstanceLaunchRef& instance,
+    const InstallLaunchRef& install
+);
+
+LaunchPreflightResult preflight_launch(
     const InstanceLaunchRef& instance,
     const InstallLaunchRef& install
 );

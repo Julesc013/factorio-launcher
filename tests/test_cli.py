@@ -115,10 +115,37 @@ class CliTests(unittest.TestCase):
             result = json.loads(stdout)
 
             self.assertEqual(code, 2)
+            self.assertEqual(result["preflight"]["status"], "ok")
             self.assertTrue(result["started"])
             self.assertEqual(result["exit_code"], 2)
             history = Path(tmp) / "instances" / "exec-fixture" / "logs" / "launch_history.log"
             self.assertIn("--mod-directory", history.read_text(encoding="utf-8"))
+            audit = Path(tmp) / "audit" / "launch_events.log"
+            self.assertIn("event=run.execute", audit.read_text(encoding="utf-8"))
+
+    def test_run_execute_refuses_failed_preflight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Locked World", "--install", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            lock = Path(tmp) / "instances" / "locked-world" / "locks" / "save.write.lock"
+            lock.write_text("held by another writer\n", encoding="utf-8")
+
+            code, stdout, _stderr = invoke(["--workspace", tmp, "run", "locked-world", "--execute", "--json"])
+            refusal = json.loads(stdout)
+
+            self.assertEqual(code, 1)
+            self.assertEqual(refusal["schema"], "factorio.launch_refusal.v1")
+            self.assertEqual(refusal["refusal"]["code"], "preflight_failed")
+            self.assertFalse(refusal["started"])
+            self.assertTrue(any("lock blocks launch" in problem for problem in refusal["preflight"]["problems"]))
+            self.assertFalse((Path(tmp) / "audit" / "launch_events.log").exists())
 
     def test_local_mod_import_lock_verify_and_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
