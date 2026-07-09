@@ -28,7 +28,7 @@ tui = "bin/facman-tui"
 
 [required_components]
 binaries = ["bin/facman", "bin/facman-tui"]
-libraries = []
+libraries = ["lib/ulk", "lib/usk", "lib/flb_factorio"]
 contracts = "contracts/schema"
 content = "content/factorio"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
