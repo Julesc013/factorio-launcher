@@ -166,7 +166,14 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     NSView *view = [self addTab:@"Settings/About" toTabs:tabs];
     NSTextView *info = [[NSTextView alloc] initWithFrame:NSMakeRect(16, 130, 940, 250)];
     [info setEditable:NO];
-    [info setString:@"FACMAN-APPKIT-SHELL-01\n\nThis app is a thin AppKit frontend over the shared FacMan command graph.\nIt renders required command results returned by the configured backend path and keeps deferred commands disabled or refused with reasons.\n\nIt does not implement Factorio discovery logic, setup mutation, Mod Portal network access, modset resolution, save/export/import behavior, server execution, developer execution, credential storage, or direct Factorio launch behavior in Objective-C."];
+    [info setString:
+        @"FACMAN-APPKIT-SHELL-01\n\n"
+        @"This app is a thin AppKit frontend over the shared FacMan command graph.\n"
+        @"It renders required command results returned by the configured backend path "
+        @"and keeps deferred commands disabled or refused with reasons.\n\n"
+        @"It does not implement Factorio discovery logic, setup mutation, Mod Portal network access, "
+        @"modset resolution, save/export/import behavior, server execution, developer execution, "
+        @"credential storage, or direct Factorio launch behavior in Objective-C."];
     [view addSubview:info];
     [self addButton:@"Run Help" commandId:@"help" toView:view frame:NSMakeRect(16, 80, 132, 30)];
     [self addButton:@"Run Version" commandId:@"version" toView:view frame:NSMakeRect(158, 80, 132, 30)];

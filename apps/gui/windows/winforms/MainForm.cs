@@ -291,7 +291,9 @@ namespace FacMan.WinForms
                 "FACMAN-WINFORMS-SHELL-01\r\n\r\n" +
                 "This app is a thin Windows Forms frontend over the shared FacMan command graph.\r\n" +
                 "It renders required command results returned by the configured backend path and keeps deferred commands disabled or refused with reasons.\r\n\r\n" +
-                "It does not implement Factorio discovery logic, setup mutation, Mod Portal network access, modset resolution, save/export/import behavior, server execution, developer execution, credential storage, or direct Factorio launch behavior in C#.\r\n\r\n" +
+                "It does not implement Factorio discovery logic, setup mutation, Mod Portal network access, modset resolution, " +
+                "save/export/import behavior, server execution, developer execution, credential storage, " +
+                "or direct Factorio launch behavior in C#.\r\n\r\n" +
                 "Set FACMAN_CLI or use the CLI path field above to point at a built facman executable.";
             panel.Controls.Add(info);
 
