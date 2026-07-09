@@ -13,6 +13,7 @@ Architecture:
 - [Runtime Locator](architecture/runtime_locator.md)
 - [AIDE Lite Integration](architecture/aide_lite_integration.md)
 - [Frontend Command Client](architecture/frontend_client.md)
+- [Frontend Contract](architecture/frontend_contract.md)
 - [C ABI Policy](architecture/c_abi_policy.md)
 - [Language Policy](architecture/language_policy.md)
 - [Language And Runtime Policy](architecture/language_and_runtime_policy.md)

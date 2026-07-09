@@ -30,3 +30,7 @@ product bug unless it is purely presentational.
 
 Each distribution package may include CLI, TUI, daemon, and GUI binaries. Each
 executable remains a distinct frontend shell.
+
+Command parity is locked in
+[frontend_contract.md](frontend_contract.md). New frontend work should update
+that contract before adding GUI-specific screens.

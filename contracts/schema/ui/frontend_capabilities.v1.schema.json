@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/ui/frontend_capabilities.v1.schema.json",
+  "title": "FacMan Frontend Capabilities",
+  "type": "object",
+  "required": ["schema", "frontend_id", "kind", "path", "transport", "commands"],
+  "properties": {
+    "schema": { "const": "facman.frontend_capabilities.v1" },
+    "frontend_id": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["cli", "tui", "daemon", "gui"] },
+    "path": { "type": "string", "minLength": 1 },
+    "transport": { "type": "string", "minLength": 1 },
+    "commands": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": ["implemented", "stubbed_with_refusal", "not_supported_with_reason"]
+      }
+    },
+    "refusals": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "reasons": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": false
+}

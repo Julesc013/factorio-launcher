@@ -1,0 +1,395 @@
+schema = "facman.frontend.required_commands.v1"
+owner = "factorio-launcher"
+description = "Command parity contract for FacMan CLI, TUI, daemon, and GUI frontends."
+status_values = ["implemented", "stubbed_with_refusal", "not_supported_with_reason"]
+
+[sets]
+required = [
+  "help",
+  "version",
+  "doctor",
+  "product.inspect",
+  "command_graph.inspect",
+  "installs.scan",
+  "installs.import",
+  "installs.inspect",
+  "instances.list",
+  "instances.create",
+  "launch_plan.build",
+  "run.preview",
+  "diagnostics.export",
+]
+deferred = [
+  "run.execute",
+  "modsets.lock",
+  "saves.backup",
+  "export.instance",
+  "import.instance",
+  "setup.preview",
+]
+
+[[commands]]
+id = "help"
+phase = "required"
+backend_id = "app.help"
+cli = "facman --help"
+
+[[commands]]
+id = "version"
+phase = "required"
+backend_id = "app.version"
+cli = "facman --version"
+
+[[commands]]
+id = "doctor"
+phase = "required"
+backend_id = "doctor.run"
+cli = "facman doctor --json"
+
+[[commands]]
+id = "product.inspect"
+phase = "required"
+backend_id = "product.inspect"
+cli = "facman product inspect --json"
+
+[[commands]]
+id = "command_graph.inspect"
+phase = "required"
+backend_id = "command_graph.inspect"
+cli = "facman command-graph inspect --json"
+
+[[commands]]
+id = "installs.scan"
+phase = "required"
+backend_id = "installs.scan"
+cli = "facman installs scan --json"
+
+[[commands]]
+id = "installs.import"
+phase = "required"
+backend_id = "installs.import"
+cli = "facman installs import <path> --id <install-id> --json"
+
+[[commands]]
+id = "installs.inspect"
+phase = "required"
+backend_id = "installs.inspect"
+cli = "facman installs inspect <install-id> --json"
+
+[[commands]]
+id = "instances.list"
+phase = "required"
+backend_id = "instances.list"
+cli = "facman instances list --json"
+
+[[commands]]
+id = "instances.create"
+phase = "required"
+backend_id = "instances.create"
+cli = "facman instances create <id> --install <install-id> --json"
+
+[[commands]]
+id = "launch_plan.build"
+phase = "required"
+backend_id = "launch.plan"
+cli = "facman launch plan <instance-id> --json"
+
+[[commands]]
+id = "run.preview"
+phase = "required"
+backend_id = "run.preview"
+cli = "facman run <instance-id> --json"
+
+[[commands]]
+id = "diagnostics.export"
+phase = "required"
+backend_id = "diagnostics.report"
+cli = "facman diagnostics report --json"
+
+[[commands]]
+id = "run.execute"
+phase = "deferred"
+backend_id = "run.execute"
+cli = "facman run <instance-id> --execute --json"
+
+[[commands]]
+id = "modsets.lock"
+phase = "deferred"
+backend_id = "modsets.lock"
+cli = "facman modsets lock <instance-id> --json"
+
+[[commands]]
+id = "saves.backup"
+phase = "deferred"
+backend_id = "saves.backup"
+cli = "facman saves backup <instance-id> --json"
+
+[[commands]]
+id = "export.instance"
+phase = "deferred"
+backend_id = "export.instance"
+cli = "facman export instance <instance-id> --output <path> --json"
+
+[[commands]]
+id = "import.instance"
+phase = "deferred"
+backend_id = "import.instance"
+cli = "facman import instance <path> --json"
+
+[[commands]]
+id = "setup.preview"
+phase = "deferred"
+backend_id = "install_local.plan"
+cli = "facman installs install-version <version> --archive <path> --json"
+
+[[frontends]]
+id = "cli"
+kind = "cli"
+path = "apps/cli"
+transport = "direct_c_abi_or_cli_json"
+default_refusal = "frontend_command_not_enabled"
+default_reason = "CLI route is intentionally deferred for this frontend contract phase."
+[frontends.commands]
+help = "implemented"
+version = "implemented"
+doctor = "implemented"
+"product.inspect" = "implemented"
+"command_graph.inspect" = "implemented"
+"installs.scan" = "implemented"
+"installs.import" = "implemented"
+"installs.inspect" = "implemented"
+"instances.list" = "implemented"
+"instances.create" = "implemented"
+"launch_plan.build" = "implemented"
+"run.preview" = "implemented"
+"diagnostics.export" = "implemented"
+"run.execute" = "implemented"
+"modsets.lock" = "implemented"
+"saves.backup" = "implemented"
+"export.instance" = "implemented"
+"import.instance" = "implemented"
+"setup.preview" = "stubbed_with_refusal"
+
+[[frontends]]
+id = "tui"
+kind = "tui"
+path = "apps/tui"
+transport = "command_client"
+default_refusal = "frontend_shell_not_implemented"
+default_reason = "TUI shell is present but does not yet render this command surface."
+[frontends.commands]
+help = "stubbed_with_refusal"
+version = "stubbed_with_refusal"
+doctor = "stubbed_with_refusal"
+"product.inspect" = "stubbed_with_refusal"
+"command_graph.inspect" = "stubbed_with_refusal"
+"installs.scan" = "stubbed_with_refusal"
+"installs.import" = "stubbed_with_refusal"
+"installs.inspect" = "stubbed_with_refusal"
+"instances.list" = "stubbed_with_refusal"
+"instances.create" = "stubbed_with_refusal"
+"launch_plan.build" = "stubbed_with_refusal"
+"run.preview" = "stubbed_with_refusal"
+"diagnostics.export" = "stubbed_with_refusal"
+"run.execute" = "not_supported_with_reason"
+"modsets.lock" = "not_supported_with_reason"
+"saves.backup" = "not_supported_with_reason"
+"export.instance" = "not_supported_with_reason"
+"import.instance" = "not_supported_with_reason"
+"setup.preview" = "not_supported_with_reason"
+
+[[frontends]]
+id = "daemon"
+kind = "daemon"
+path = "apps/daemon"
+transport = "json_rpc"
+default_refusal = "daemon_route_not_implemented"
+default_reason = "Daemon command hosting is scaffolded and must not invent frontend behavior."
+[frontends.commands]
+help = "stubbed_with_refusal"
+version = "stubbed_with_refusal"
+doctor = "stubbed_with_refusal"
+"product.inspect" = "stubbed_with_refusal"
+"command_graph.inspect" = "stubbed_with_refusal"
+"installs.scan" = "stubbed_with_refusal"
+"installs.import" = "stubbed_with_refusal"
+"installs.inspect" = "stubbed_with_refusal"
+"instances.list" = "stubbed_with_refusal"
+"instances.create" = "stubbed_with_refusal"
+"launch_plan.build" = "stubbed_with_refusal"
+"run.preview" = "stubbed_with_refusal"
+"diagnostics.export" = "stubbed_with_refusal"
+"run.execute" = "not_supported_with_reason"
+"modsets.lock" = "not_supported_with_reason"
+"saves.backup" = "not_supported_with_reason"
+"export.instance" = "not_supported_with_reason"
+"import.instance" = "not_supported_with_reason"
+"setup.preview" = "not_supported_with_reason"
+
+[[frontends]]
+id = "windows.winforms"
+kind = "gui"
+path = "apps/gui/windows/winforms"
+transport = "command_client_or_daemon"
+default_refusal = "winforms_shell_not_implemented"
+default_reason = "WinForms shell is the first Windows GUI target but is not command-complete yet."
+[frontends.commands]
+help = "stubbed_with_refusal"
+version = "stubbed_with_refusal"
+doctor = "stubbed_with_refusal"
+"product.inspect" = "stubbed_with_refusal"
+"command_graph.inspect" = "stubbed_with_refusal"
+"installs.scan" = "stubbed_with_refusal"
+"installs.import" = "stubbed_with_refusal"
+"installs.inspect" = "stubbed_with_refusal"
+"instances.list" = "stubbed_with_refusal"
+"instances.create" = "stubbed_with_refusal"
+"launch_plan.build" = "stubbed_with_refusal"
+"run.preview" = "stubbed_with_refusal"
+"diagnostics.export" = "stubbed_with_refusal"
+"run.execute" = "not_supported_with_reason"
+"modsets.lock" = "not_supported_with_reason"
+"saves.backup" = "not_supported_with_reason"
+"export.instance" = "not_supported_with_reason"
+"import.instance" = "not_supported_with_reason"
+"setup.preview" = "not_supported_with_reason"
+
+[[frontends]]
+id = "windows.winui"
+kind = "gui"
+path = "apps/gui/windows/winui"
+transport = "command_client_or_daemon"
+default_refusal = "winui_shell_not_implemented"
+default_reason = "WinUI lane is reserved for modern Windows after WinForms/AppKit shell proof."
+[frontends.commands]
+help = "not_supported_with_reason"
+version = "not_supported_with_reason"
+doctor = "not_supported_with_reason"
+"product.inspect" = "not_supported_with_reason"
+"command_graph.inspect" = "not_supported_with_reason"
+"installs.scan" = "not_supported_with_reason"
+"installs.import" = "not_supported_with_reason"
+"installs.inspect" = "not_supported_with_reason"
+"instances.list" = "not_supported_with_reason"
+"instances.create" = "not_supported_with_reason"
+"launch_plan.build" = "not_supported_with_reason"
+"run.preview" = "not_supported_with_reason"
+"diagnostics.export" = "not_supported_with_reason"
+"run.execute" = "not_supported_with_reason"
+"modsets.lock" = "not_supported_with_reason"
+"saves.backup" = "not_supported_with_reason"
+"export.instance" = "not_supported_with_reason"
+"import.instance" = "not_supported_with_reason"
+"setup.preview" = "not_supported_with_reason"
+
+[[frontends]]
+id = "macos.appkit"
+kind = "gui"
+path = "apps/gui/macos/appkit"
+transport = "command_client_or_daemon"
+default_refusal = "appkit_shell_not_implemented"
+default_reason = "AppKit shell is the first macOS GUI target but is not command-complete yet."
+[frontends.commands]
+help = "stubbed_with_refusal"
+version = "stubbed_with_refusal"
+doctor = "stubbed_with_refusal"
+"product.inspect" = "stubbed_with_refusal"
+"command_graph.inspect" = "stubbed_with_refusal"
+"installs.scan" = "stubbed_with_refusal"
+"installs.import" = "stubbed_with_refusal"
+"installs.inspect" = "stubbed_with_refusal"
+"instances.list" = "stubbed_with_refusal"
+"instances.create" = "stubbed_with_refusal"
+"launch_plan.build" = "stubbed_with_refusal"
+"run.preview" = "stubbed_with_refusal"
+"diagnostics.export" = "stubbed_with_refusal"
+"run.execute" = "not_supported_with_reason"
+"modsets.lock" = "not_supported_with_reason"
+"saves.backup" = "not_supported_with_reason"
+"export.instance" = "not_supported_with_reason"
+"import.instance" = "not_supported_with_reason"
+"setup.preview" = "not_supported_with_reason"
+
+[[frontends]]
+id = "macos.swiftui"
+kind = "gui"
+path = "apps/gui/macos/swiftui"
+transport = "command_client_or_daemon"
+default_refusal = "swiftui_shell_not_implemented"
+default_reason = "SwiftUI lane is reserved for modern macOS after AppKit shell proof."
+[frontends.commands]
+help = "not_supported_with_reason"
+version = "not_supported_with_reason"
+doctor = "not_supported_with_reason"
+"product.inspect" = "not_supported_with_reason"
+"command_graph.inspect" = "not_supported_with_reason"
+"installs.scan" = "not_supported_with_reason"
+"installs.import" = "not_supported_with_reason"
+"installs.inspect" = "not_supported_with_reason"
+"instances.list" = "not_supported_with_reason"
+"instances.create" = "not_supported_with_reason"
+"launch_plan.build" = "not_supported_with_reason"
+"run.preview" = "not_supported_with_reason"
+"diagnostics.export" = "not_supported_with_reason"
+"run.execute" = "not_supported_with_reason"
+"modsets.lock" = "not_supported_with_reason"
+"saves.backup" = "not_supported_with_reason"
+"export.instance" = "not_supported_with_reason"
+"import.instance" = "not_supported_with_reason"
+"setup.preview" = "not_supported_with_reason"
+
+[[frontends]]
+id = "linux.gtk"
+kind = "gui"
+path = "apps/gui/linux/gtk"
+transport = "command_client_or_daemon"
+default_refusal = "gtk_shell_not_implemented"
+default_reason = "GTK lane is scaffolded and must wait for frontend contract proof."
+[frontends.commands]
+help = "stubbed_with_refusal"
+version = "stubbed_with_refusal"
+doctor = "stubbed_with_refusal"
+"product.inspect" = "stubbed_with_refusal"
+"command_graph.inspect" = "stubbed_with_refusal"
+"installs.scan" = "stubbed_with_refusal"
+"installs.import" = "stubbed_with_refusal"
+"installs.inspect" = "stubbed_with_refusal"
+"instances.list" = "stubbed_with_refusal"
+"instances.create" = "stubbed_with_refusal"
+"launch_plan.build" = "stubbed_with_refusal"
+"run.preview" = "stubbed_with_refusal"
+"diagnostics.export" = "stubbed_with_refusal"
+"run.execute" = "not_supported_with_reason"
+"modsets.lock" = "not_supported_with_reason"
+"saves.backup" = "not_supported_with_reason"
+"export.instance" = "not_supported_with_reason"
+"import.instance" = "not_supported_with_reason"
+"setup.preview" = "not_supported_with_reason"
+
+[[frontends]]
+id = "linux.qt"
+kind = "gui"
+path = "apps/gui/linux/qt"
+transport = "command_client_or_daemon"
+default_refusal = "qt_shell_not_implemented"
+default_reason = "Qt lane is scaffolded and must wait for frontend contract proof."
+[frontends.commands]
+help = "stubbed_with_refusal"
+version = "stubbed_with_refusal"
+doctor = "stubbed_with_refusal"
+"product.inspect" = "stubbed_with_refusal"
+"command_graph.inspect" = "stubbed_with_refusal"
+"installs.scan" = "stubbed_with_refusal"
+"installs.import" = "stubbed_with_refusal"
+"installs.inspect" = "stubbed_with_refusal"
+"instances.list" = "stubbed_with_refusal"
+"instances.create" = "stubbed_with_refusal"
+"launch_plan.build" = "stubbed_with_refusal"
+"run.preview" = "stubbed_with_refusal"
+"diagnostics.export" = "stubbed_with_refusal"
+"run.execute" = "not_supported_with_reason"
+"modsets.lock" = "not_supported_with_reason"
+"saves.backup" = "not_supported_with_reason"
+"export.instance" = "not_supported_with_reason"
+"import.instance" = "not_supported_with_reason"
+"setup.preview" = "not_supported_with_reason"

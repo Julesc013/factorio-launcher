@@ -121,7 +121,7 @@ ALLOWED_FACTORIO_CONTENT_ROOTS = {
 }
 
 ALLOWED_CONTRACT_ROOTS = {"abi", "command", "policy", "result", "refusal", "diagnostic", "schema"}
-ALLOWED_SCHEMA_ROOTS = {"common", "factorio", "release"}
+ALLOWED_SCHEMA_ROOTS = {"common", "factorio", "release", "ui"}
 ALLOWED_RELEASE_ROOTS = {"packaging", "profiles"}
 ALLOWED_PACKAGING_ROOTS = {"linux", "macos", "portable", "windows"}
 ALLOWED_RELEASE_PROFILE_ROOTS = {
@@ -347,6 +347,7 @@ def check_command_graph_spine() -> list[str]:
         ROOT / "contracts" / "policy",
         ROOT / "contracts" / "schema" / "factorio",
         ROOT / "contracts" / "schema" / "common",
+        ROOT / "contracts" / "schema" / "ui",
         ROOT / "release" / "profiles" / "dev",
         ROOT / "release" / "profiles" / "windows_legacy_winforms",
         ROOT / "release" / "profiles" / "windows_modern_winui",
