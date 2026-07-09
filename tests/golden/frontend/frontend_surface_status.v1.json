@@ -1,0 +1,10 @@
+{
+  "schema": "facman.frontend_surface_status.v1",
+  "source_contract": "contracts/command/frontend/frontend.required_commands.v1.toml",
+  "native_shell_proof": {
+    "frontends": ["windows.winforms", "macos.appkit"],
+    "required_status": "implemented",
+    "deferred_status": "not_supported_with_reason"
+  },
+  "parity": ["command_graph", "result_shape", "refusal_shape", "effect_risk"]
+}

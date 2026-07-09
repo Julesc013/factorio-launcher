@@ -105,3 +105,12 @@ R6 - v1.0
   portable packages
   no known boundary violations
 ```
+
+## Future Contract Layers
+
+The next layer is tracked in
+[`docs/architecture/future_layers_plan.md`](architecture/future_layers_plan.md).
+That plan keeps capability/effect policy, refusal codes, workspace contracts,
+package contracts, customization, accessibility, redaction, runtime/client
+ownership, Universal Setup transaction work, and diagnostic intelligence as
+bounded work units on top of the current structure.

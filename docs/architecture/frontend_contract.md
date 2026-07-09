@@ -102,4 +102,5 @@ Validate the contract with:
 
 ```powershell
 py -3 tools/frontend_contract_check.py
+py -3 tools/frontend_parity_check.py
 ```
