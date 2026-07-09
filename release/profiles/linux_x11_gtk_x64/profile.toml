@@ -25,13 +25,13 @@ tui = "apps/tui"
 daemon = "apps/daemon"
 
 [entrypoints]
-gui = "usr/bin/facman-gui"
+gui = "usr/bin/facman-gui-gtk"
 cli = "usr/bin/facman"
 tui = "usr/bin/facman-tui"
 daemon = "usr/bin/facmand"
 
 [required_components]
-binaries = ["usr/bin/facman-gui", "usr/bin/facman", "usr/bin/facman-tui", "usr/bin/facmand"]
+binaries = ["usr/bin/facman-gui-gtk", "usr/bin/facman", "usr/bin/facman-tui", "usr/bin/facmand"]
 libraries = ["usr/lib/libulk.so", "usr/lib/libusk.so", "usr/lib/libflb_factorio.so"]
 contracts = "usr/share/facman/contracts/schema"
 content = "usr/share/facman/content/factorio"

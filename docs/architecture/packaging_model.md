@@ -26,11 +26,11 @@ The canonical Windows artifact is a portable ZIP:
 
 ```text
 FacMan-<version>-windows-x64-portable.zip
-  FacMan.exe
-  facman.exe
-  facman-tui.exe
-  facmand.exe
   bin/
+    FacMan.WinForms.exe
+    facman.exe
+    facman-tui.exe
+    facmand.exe
     ulk.dll
     usk.dll
     flb_factorio.dll

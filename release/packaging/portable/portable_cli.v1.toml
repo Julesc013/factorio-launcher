@@ -6,18 +6,18 @@ package_type = "tarball"
 architecture = "configured_by_track"
 python_runtime = false
 bundles_factorio_binaries = false
-entrypoint = "facman"
+entrypoint = "bin/facman"
 
 [[components]]
 name = "console_cli"
 source_target = "facman_cli"
-destination = "facman"
+destination = "bin/facman"
 required_platform = "all"
 architecture = "configured_by_track"
 hash = "BUILD_TIME"
 signature_policy = "manifest_hash"
 extraction_policy = "none"
-runtime_search_path = "."
+runtime_search_path = "bin"
 license_notice = "THIRD_PARTY_NOTICES.md"
 
 [[components]]

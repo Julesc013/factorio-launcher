@@ -25,13 +25,18 @@ tui = "apps/tui"
 daemon = "apps/daemon"
 
 [entrypoints]
-gui = "FacMan.exe"
-cli = "facman.exe"
-tui = "facman-tui.exe"
-daemon = "facmand.exe"
+gui = "bin/FacMan.WinForms.exe"
+cli = "bin/facman.exe"
+tui = "bin/facman-tui.exe"
+daemon = "bin/facmand.exe"
 
 [required_components]
-binaries = ["FacMan.exe", "facman.exe", "facman-tui.exe", "facmand.exe"]
+binaries = [
+  "bin/FacMan.WinForms.exe",
+  "bin/facman.exe",
+  "bin/facman-tui.exe",
+  "bin/facmand.exe",
+]
 libraries = ["bin/ulk.dll", "bin/usk.dll", "bin/flb_factorio.dll"]
 contracts = "contracts/schema"
 content = "content/factorio"

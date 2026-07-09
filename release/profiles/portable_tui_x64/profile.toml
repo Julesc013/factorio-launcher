@@ -23,11 +23,11 @@ cli = "apps/cli"
 tui = "apps/tui"
 
 [entrypoints]
-cli = "facman"
-tui = "facman-tui"
+cli = "bin/facman"
+tui = "bin/facman-tui"
 
 [required_components]
-binaries = ["facman", "facman-tui"]
+binaries = ["bin/facman", "bin/facman-tui"]
 libraries = []
 contracts = "contracts/schema"
 content = "content/factorio"

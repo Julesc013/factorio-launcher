@@ -22,10 +22,10 @@ credential_storage = false
 cli = "apps/cli"
 
 [entrypoints]
-cli = "facman"
+cli = "bin/facman"
 
 [required_components]
-binaries = ["facman"]
+binaries = ["bin/facman"]
 libraries = []
 contracts = "contracts/schema"
 content = "content/factorio"
