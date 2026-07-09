@@ -14,14 +14,16 @@ entrypoints.
 - `runtime/package/` owns package/runtime location and component verification.
 - `runtime/platform/` owns low-level platform adapters.
 - `apps/` owns frontend entrypoints and presentation shells.
-- `apps/gui/` owns GUI provider shells: `win32`, `appkit`, `gtk`, and `qt`.
+- `apps/gui/` owns OS-first GUI shells:
+  `windows/{winforms,winui}`, `macos/{appkit,swiftui}`, and `linux/{gtk,qt}`.
 - `content/factorio/` owns product templates, discovery rules, launch
   templates, instance templates, redaction rules, and policy.
 - `contracts/` owns ABI, command, schema, policy, diagnostic, result, and
   refusal contracts.
 - `release/` owns package manifests and release profiles.
-- `release/profiles/` owns named target lanes such as `windows7`,
-  `macos_10_13`, `linux_appimage`, and `linux_legacy_cli`.
+- `release/profiles/` owns named target lanes such as
+  `windows_legacy_winforms`, `macos_legacy_appkit`, `linux_x11_gtk`,
+  `linux_wayland_qt`, and `portable_cli`.
 
 Runtime module names are product domains, not language standards. Do not create
 `runtime/factorio/c11`, `runtime/factorio/cpp11`, or similar buckets. Put files
@@ -82,6 +84,10 @@ apps/appkit/
 apps/gtk/
 apps/qt/
 apps/winforms/
+apps/gui/win32/
+apps/gui/appkit/
+apps/gui/gtk/
+apps/gui/qt/
 ```
 
 Do not reintroduce `include/usk`, `include/ulk`, `runtime/usk`, or

@@ -1,6 +1,6 @@
 using System.Windows.Forms;
 
-namespace FactorioLauncher.WinForms
+namespace FacMan.WinForms
 {
     public sealed class MainForm : Form
     {

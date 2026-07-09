@@ -3,8 +3,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <RootNamespace>FactorioLauncher.WinForms</RootNamespace>
-    <AssemblyName>FactorioLauncher.WinForms</AssemblyName>
+    <RootNamespace>FacMan.WinForms</RootNamespace>
+    <AssemblyName>FacMan.WinForms</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -13,4 +13,3 @@
     <Compile Include="JsonRpcClient.cs" />
   </ItemGroup>
 </Project>
-

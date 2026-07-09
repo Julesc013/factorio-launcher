@@ -38,8 +38,9 @@ Important refinements:
 
 - `contracts/` is broader than `contracts/schema/`; it also owns ABI,
   command, result, refusal, diagnostic, and policy contracts.
-- `release/profiles/` uses target-specific names such as `windows7`,
-  `macos_10_13`, and `linux_appimage`, not vague `legacy` or `modern` lanes.
+- `release/profiles/` uses target-specific names such as
+  `windows_legacy_winforms`, `macos_legacy_appkit`, and `linux_x11_gtk`, not
+  vague `legacy` or `modern` lanes.
 - `runtime/` folders are domain-based. Language-version folders such as
   `c11/` and `cpp11/` are forbidden because language is a build property, not
   an ownership boundary.

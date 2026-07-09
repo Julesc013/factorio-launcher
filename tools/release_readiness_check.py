@@ -23,11 +23,13 @@ RETIRED_ROOTS = ("source/", "src/", "data/", "schemas/", "packaging/")
 REQUIRED_RELEASE_PROFILES = (
     "dev",
     "portable",
-    "windows7",
-    "windows10",
-    "macos_10_13",
-    "linux_appimage",
-    "linux_legacy_cli",
+    "portable_cli",
+    "windows_legacy_winforms",
+    "windows_modern_winui",
+    "macos_legacy_appkit",
+    "macos_modern_swiftui",
+    "linux_x11_gtk",
+    "linux_wayland_qt",
 )
 
 REQUIRED_PACKAGING_PATHS = (

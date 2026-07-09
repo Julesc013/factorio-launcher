@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace FactorioLauncher.WinForms
+namespace FacMan.WinForms
 {
     internal static class Program
     {

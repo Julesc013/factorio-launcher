@@ -2,10 +2,12 @@
 
 Native GUI providers exist under:
 
-- `apps/gui/win32`
-- `apps/gui/appkit`
-- `apps/gui/gtk`
-- `apps/gui/qt`
+- `apps/gui/windows/winforms`
+- `apps/gui/windows/winui`
+- `apps/gui/macos/appkit`
+- `apps/gui/macos/swiftui`
+- `apps/gui/linux/gtk`
+- `apps/gui/linux/qt`
 
 The GUI phase is readiness, not GUI-only product behavior. Each provider must
 remain a command client over the FacMan command graph, daemon, JSON mode, or C
@@ -19,7 +21,7 @@ mutation markers.
 This keeps the frontend architecture:
 
 ```text
-CLI / TUI / Win32 / AppKit / GTK / Qt
+CLI / TUI / WinForms / WinUI / AppKit / SwiftUI / GTK / Qt
   -> command graph / daemon / C ABI
   -> universal launcher
   -> Factorio binding

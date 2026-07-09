@@ -3,8 +3,8 @@
 Owns named release/build profiles.
 
 Profiles should be target-specific rather than vague. Prefer names like
-`windows7`, `macos_10_13`, and `linux_appimage` over generic `legacy` or
-`modern`.
+`windows_legacy_winforms`, `macos_legacy_appkit`, and `linux_x11_gtk` over
+generic `legacy` or `modern`.
 
 ## Release Readiness Ladder
 

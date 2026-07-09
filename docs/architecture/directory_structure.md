@@ -21,10 +21,15 @@ factorio-launcher/
     tui/              native TUI frontend
     daemon/           daemon / job runner frontend
     gui/
-      win32/          Windows provider; WinForms .NET Framework 4.8 shell
-      appkit/         macOS AppKit frontend
-      gtk/            Linux GTK frontend
-      qt/             optional Linux Qt frontend
+      windows/
+        winforms/     Windows legacy .NET Framework 4.8 shell
+        winui/        Windows modern WinUI shell
+      macos/
+        appkit/       macOS legacy AppKit frontend
+        swiftui/      macOS modern SwiftUI frontend
+      linux/
+        gtk/          Linux X11 GTK frontend
+        qt/           Linux Wayland Qt frontend
 
   content/
     factorio/         product manifest, discovery rules, templates, policy
@@ -96,7 +101,7 @@ Runtime domain folders must not be named after language standards. `c11/`,
 the Factorio domain it serves, such as `install_validation/`, `modsets/`, or
 `mod_portal/`.
 
-GUI frontends are grouped below `apps/gui/` so `apps/` stays organized by
-frontend class first and provider/toolkit second. `win32` is the architecture
-label for the Windows GUI provider; the concrete legacy-compatible shell can
-remain WinForms.
+GUI frontends are grouped below `apps/gui/<os>/<toolkit>/` so multiple
+toolkits can coexist on the same operating system without making `apps/` a
+provider junk drawer. Distributions may bundle multiple frontend executables,
+but each executable remains a thin command client over the shared backend.

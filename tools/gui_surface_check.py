@@ -7,10 +7,12 @@ ROOT = Path(__file__).resolve().parents[1]
 GUI_ROOT = ROOT / "apps" / "gui"
 
 PROVIDERS = {
-    "win32": "CommandClient.cs",
-    "appkit": "CommandClient.mm",
-    "gtk": "command_client.c",
-    "qt": "command_client.cpp",
+    "windows/winforms": "CommandClient.cs",
+    "windows/winui": "CommandClient.cs",
+    "macos/appkit": "CommandClient.mm",
+    "macos/swiftui": "CommandClient.swift",
+    "linux/gtk": "command_client.c",
+    "linux/qt": "command_client.cpp",
 }
 
 FORBIDDEN_SOURCE_MARKERS = (
@@ -49,7 +51,7 @@ def main() -> int:
 def check_provider_source(provider_root: Path) -> list[str]:
     problems: list[str] = []
     for path in provider_root.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in {".c", ".cpp", ".cs", ".m", ".mm"}:
+        if not path.is_file() or path.suffix.lower() not in {".c", ".cpp", ".cs", ".m", ".mm", ".swift"}:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         for marker in FORBIDDEN_SOURCE_MARKERS:

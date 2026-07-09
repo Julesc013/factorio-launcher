@@ -15,7 +15,7 @@ branding assets.
 include/    Factorio binding public C ABI headers only
 runtime/    reusable private implementation for the Factorio binding, clients,
             package locator, and platform adapters
-apps/       native CLI, TUI, daemon, and GUI providers under `apps/gui/`
+apps/       native CLI, TUI, daemon, and OS-first GUI frontends
 content/    Factorio product templates, discovery rules, launch templates,
             instance templates, redaction rules, and policy
 contracts/  ABI notes, command law, policies, and versioned JSON schemas
@@ -33,12 +33,14 @@ product repo.
 Runtime folders are domain folders, not language-version buckets. C/C++ files
 belong under the product domain they implement; folders like `c11/` and
 `cpp11/` are intentionally blocked. `contracts/` is broader than schemas, and
-`release/profiles/` names concrete target lanes such as `windows7`,
-`macos_10_13`, and `linux_appimage`.
+`release/profiles/` names concrete target lanes such as
+`windows_legacy_winforms`, `macos_legacy_appkit`, and `linux_x11_gtk`.
 
 The CLI is the first frontend, not the foundation of every other frontend.
-CLI, TUI, the Win32/WinForms GUI, AppKit, GTK, and Qt all sit over the same
-command graph, native launcher service, and C ABI.
+CLI, TUI, WinForms, WinUI, AppKit, SwiftUI, GTK, and Qt all sit over the same
+command graph, native launcher service, and C ABI. Distribution packages may
+include CLI, TUI, daemon, and GUI entrypoints together, but each executable
+remains a separate frontend shell.
 
 FacMan's long-term role is to prove the universal launcher with a real product:
 
@@ -95,7 +97,7 @@ Universal Command Graph       stable command model, schemas, dry-run, audit
         |
 Factorio Product Binding      C ABI outward, C/C++ internally
         |
-CLI / TUI / Win32-WinForms / AppKit / GTK / Qt frontends
+CLI / TUI / WinForms / WinUI / AppKit / SwiftUI / GTK / Qt frontends
 ```
 
 This repo owns only the Factorio product binding and Factorio-facing app

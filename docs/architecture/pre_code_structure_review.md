@@ -62,7 +62,8 @@ factorio-launcher/
 - `apps/factorio_cli`, `apps/factorio_tui`, and `apps/factorio_daemon` are
   retired in favor of `apps/cli`, `apps/tui`, and `apps/daemon`.
 - Flat GUI app roots such as `apps/winforms`, `apps/appkit`, `apps/gtk`, and
-  `apps/qt` are retired in favor of `apps/gui/{win32,appkit,gtk,qt}`.
+  `apps/qt` are retired in favor of OS-first
+  `apps/gui/{windows,macos,linux}/<toolkit>` lanes.
 - `include/usk` and `include/ulk` are moved to their universal repos.
 - `runtime/usk` and `runtime/ulk` must not appear in this repo.
 

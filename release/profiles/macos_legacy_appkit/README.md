@@ -1,4 +1,4 @@
-# macOS 10.13 Profile
+# macOS Legacy AppKit Profile
 
 Legacy Intel AppKit profile.
 

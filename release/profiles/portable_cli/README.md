@@ -1,6 +1,6 @@
-# Linux Legacy CLI Profile
+# Portable CLI Profile
 
-Legacy Linux CLI/TUI tarball profile.
+Portable CLI/TUI tarball profile.
 
 Expected posture:
 

@@ -1,4 +1,4 @@
-# Windows 7 Profile
+# Windows Legacy WinForms Profile
 
 Best-effort legacy Windows profile.
 

@@ -10,7 +10,7 @@ entrypoint = "FacMan.app/Contents/MacOS/FacMan"
 
 [[components]]
 name = "appkit_gui"
-source_target = "apps/gui/appkit"
+source_target = "apps/gui/macos/appkit"
 destination = "FacMan.app/Contents/MacOS/FacMan"
 required_platform = "macos"
 architecture = "configured_by_track"

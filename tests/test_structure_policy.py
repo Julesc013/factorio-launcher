@@ -44,10 +44,18 @@ class StructurePolicyTests(unittest.TestCase):
     def test_frontends_are_apps(self) -> None:
         for name in ["cli", "tui", "daemon", "gui"]:
             self.assertTrue((ROOT / "apps" / name).is_dir(), name)
-        for name in ["win32", "appkit", "gtk", "qt"]:
+        for name in [
+            "windows/winforms",
+            "windows/winui",
+            "macos/appkit",
+            "macos/swiftui",
+            "linux/gtk",
+            "linux/qt",
+        ]:
             self.assertTrue((ROOT / "apps" / "gui" / name).is_dir(), name)
-        for old_gui_root in ["winforms", "appkit", "gtk", "qt"]:
+        for old_gui_root in ["win32", "winforms", "appkit", "gtk", "qt"]:
             self.assertFalse((ROOT / "apps" / old_gui_root).exists(), old_gui_root)
+            self.assertFalse((ROOT / "apps" / "gui" / old_gui_root).exists(), old_gui_root)
         for old_root in ["gui", "universal", "src", "source", "prototypes"]:
             self.assertFalse((ROOT / old_root).exists(), old_root)
 
@@ -72,7 +80,17 @@ class StructurePolicyTests(unittest.TestCase):
             self.assertTrue((ROOT / path).is_file(), path)
 
     def test_release_profiles_are_target_specific(self) -> None:
-        for name in ["dev", "portable", "windows7", "windows10", "macos_10_13", "linux_appimage", "linux_legacy_cli"]:
+        for name in [
+            "dev",
+            "portable",
+            "portable_cli",
+            "windows_legacy_winforms",
+            "windows_modern_winui",
+            "macos_legacy_appkit",
+            "macos_modern_swiftui",
+            "linux_x11_gtk",
+            "linux_wayland_qt",
+        ]:
             self.assertTrue((ROOT / "release" / "profiles" / name / "README.md").is_file(), name)
         for vague in ["legacy", "modern"]:
             self.assertFalse((ROOT / "release" / "profiles" / vague).exists(), vague)

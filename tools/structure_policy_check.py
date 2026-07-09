@@ -68,7 +68,15 @@ RETIRED_ROOTS = {
 }
 
 FRONTENDS = {"cli", "daemon", "gui", "tui"}
-GUI_PROVIDERS = {"appkit", "gtk", "qt", "win32"}
+GUI_PROVIDERS = {
+    "windows/winforms",
+    "windows/winui",
+    "macos/appkit",
+    "macos/swiftui",
+    "linux/gtk",
+    "linux/qt",
+}
+GUI_OS_ROOTS = {"windows", "macos", "linux"}
 
 SHELL_ALLOWED_FILES = {
     "README.md",
@@ -118,12 +126,14 @@ ALLOWED_RELEASE_ROOTS = {"packaging", "profiles"}
 ALLOWED_PACKAGING_ROOTS = {"linux", "macos", "portable", "windows"}
 ALLOWED_RELEASE_PROFILE_ROOTS = {
     "dev",
-    "linux_appimage",
-    "linux_legacy_cli",
-    "macos_10_13",
+    "linux_wayland_qt",
+    "linux_x11_gtk",
+    "macos_legacy_appkit",
+    "macos_modern_swiftui",
     "portable",
-    "windows10",
-    "windows7",
+    "portable_cli",
+    "windows_legacy_winforms",
+    "windows_modern_winui",
 }
 ALLOWED_RUNTIME_ROOTS = {
     "base",
@@ -264,11 +274,20 @@ def check_apps_are_shells() -> list[str]:
         if not (apps / name).is_dir():
             problems.append(f"missing app root apps/{name}/")
     for name in sorted(GUI_PROVIDERS):
-        if not (apps / "gui" / name).is_dir():
+        if not (apps / "gui" / Path(name)).is_dir():
             problems.append(f"missing GUI provider apps/gui/{name}/")
-    for old_name in ["appkit", "gtk", "qt", "winforms"]:
+    gui_root = apps / "gui"
+    for child in gui_root.iterdir():
+        if child.name == "README.md":
+            continue
+        if child.is_dir() and child.name in GUI_OS_ROOTS:
+            continue
+        problems.append(f"apps/gui/ contains unexpected provider root {child.name}")
+    for old_name in ["appkit", "gtk", "qt", "win32", "winforms"]:
         if (apps / old_name).exists():
             problems.append(f"GUI provider must live under apps/gui/, not apps/{old_name}/")
+        if (gui_root / old_name).exists():
+            problems.append(f"GUI provider must be OS-first, not apps/gui/{old_name}/")
     for path in apps.rglob("*"):
         if path.is_dir():
             if path.name in {"src", "source"}:
@@ -329,10 +348,13 @@ def check_command_graph_spine() -> list[str]:
         ROOT / "contracts" / "schema" / "factorio",
         ROOT / "contracts" / "schema" / "common",
         ROOT / "release" / "profiles" / "dev",
-        ROOT / "release" / "profiles" / "windows7",
-        ROOT / "release" / "profiles" / "macos_10_13",
-        ROOT / "release" / "profiles" / "linux_appimage",
-        ROOT / "release" / "profiles" / "linux_legacy_cli",
+        ROOT / "release" / "profiles" / "windows_legacy_winforms",
+        ROOT / "release" / "profiles" / "windows_modern_winui",
+        ROOT / "release" / "profiles" / "macos_legacy_appkit",
+        ROOT / "release" / "profiles" / "macos_modern_swiftui",
+        ROOT / "release" / "profiles" / "linux_x11_gtk",
+        ROOT / "release" / "profiles" / "linux_wayland_qt",
+        ROOT / "release" / "profiles" / "portable_cli",
     ]
     return [f"missing command graph spine path {path.relative_to(ROOT)}" for path in required if not path.exists()]
 

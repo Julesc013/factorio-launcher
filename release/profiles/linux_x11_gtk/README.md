@@ -1,11 +1,11 @@
-# Linux AppImage Profile
+# Linux X11 GTK Profile
 
-Modern Linux desktop AppImage profile.
+Linux desktop GTK profile.
 
 Expected posture:
 
 - GTK frontend first
-- Qt optional only after command graph stability
+- X11-first compatibility packaging
 - bundled content/contracts and native shared libraries
 
 Do not claim one AppImage supports every distro vintage without a tested glibc
