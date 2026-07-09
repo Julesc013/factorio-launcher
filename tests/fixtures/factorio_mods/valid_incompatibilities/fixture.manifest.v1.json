@@ -1,0 +1,26 @@
+{
+  "expected_dependencies": [
+    {
+      "kind": "required",
+      "name": "base",
+      "operator": ">=",
+      "version": "2.0.0"
+    }
+  ],
+  "expected_incompatibilities": [
+    {
+      "kind": "incompatible",
+      "name": "conflict_mod",
+      "operator": "",
+      "version": ""
+    }
+  ],
+  "expected_name": "incompatible_mod",
+  "expected_optional_dependencies": [],
+  "expected_status": "ok",
+  "expected_version": "1.0.0",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "incompatible_mod_1.0.0.zip"
+  ]
+}

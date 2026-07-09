@@ -1,0 +1,10 @@
+{
+  "expected_name": "duplicate_mod",
+  "expected_refusal_code": "mod_duplicate_versions",
+  "expected_status": "refused",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "duplicate_mod_1.0.0.zip",
+    "duplicate_mod_1.1.0.zip"
+  ]
+}

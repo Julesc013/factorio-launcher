@@ -1,0 +1,10 @@
+{
+  "expected_factorio_version": "2.0",
+  "expected_name": "version_pinned",
+  "expected_status": "ok",
+  "expected_version": "1.0.0",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "version_pinned_1.0.0.zip"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "expected_refusal_code": "mod_zip_malformed_info_json",
+  "expected_status": "refused",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "malformed_info_1.0.0.zip"
+  ]
+}
