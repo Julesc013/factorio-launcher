@@ -1,0 +1,338 @@
+#include "flb_factorio_diagnostics.h"
+
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+
+namespace facman::factorio::diagnostics {
+
+namespace {
+
+std::string lowercase_ascii(std::string value)
+{
+    for (char& ch : value) {
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    }
+    return value;
+}
+
+std::string generic_path(std::filesystem::path path)
+{
+    return path.lexically_normal().generic_string();
+}
+
+std::string json_escape(const std::string& value)
+{
+    std::ostringstream out;
+    for (char raw : value) {
+        unsigned char ch = static_cast<unsigned char>(raw);
+        switch (raw) {
+        case '\\':
+            out << "\\\\";
+            break;
+        case '"':
+            out << "\\\"";
+            break;
+        case '\b':
+            out << "\\b";
+            break;
+        case '\f':
+            out << "\\f";
+            break;
+        case '\n':
+            out << "\\n";
+            break;
+        case '\r':
+            out << "\\r";
+            break;
+        case '\t':
+            out << "\\t";
+            break;
+        default:
+            if (ch < 0x20) {
+                const char* hex = "0123456789abcdef";
+                out << "\\u00" << hex[(ch >> 4) & 0x0f] << hex[ch & 0x0f];
+            } else {
+                out << raw;
+            }
+            break;
+        }
+    }
+    return out.str();
+}
+
+std::string quote(const std::string& value)
+{
+    return "\"" + json_escape(value) + "\"";
+}
+
+bool contains_any_field(const std::string& lower_line, const RedactionPolicy& policy, std::string& matched)
+{
+    for (const std::string& field : policy.field_names) {
+        std::string lower_field = lowercase_ascii(field);
+        if (lower_line.find(lower_field) != std::string::npos) {
+            matched = field;
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string json_like_redaction(const std::string& line, std::size_t separator, const std::string& marker)
+{
+    std::string prefix = line.substr(0, separator + 1);
+    std::string suffix = line.substr(separator + 1);
+    std::string trailing;
+    std::size_t comma = suffix.find_last_not_of(" \t\r");
+    if (comma != std::string::npos && suffix[comma] == ',') {
+        trailing = ",";
+    }
+    return prefix + " " + quote(marker) + trailing;
+}
+
+std::string key_value_redaction(const std::string& line, std::size_t separator, const std::string& marker)
+{
+    std::string prefix = line.substr(0, separator + 1);
+    if (separator < line.size() && line[separator] == ':') {
+        return prefix + " " + marker;
+    }
+    return prefix + marker;
+}
+
+RedactionEvent event_for(
+    const std::string& code,
+    const std::string& severity,
+    const std::string& path,
+    const std::string& rule,
+    const std::string& details
+)
+{
+    RedactionEvent event;
+    event.code = code;
+    event.severity = severity;
+    event.path = path;
+    event.rule = rule;
+    event.details = details;
+    event.retryable = false;
+    return event;
+}
+
+std::string redact_line(
+    const std::string& line,
+    const RedactionPolicy& policy,
+    const std::string& logical_path,
+    std::vector<RedactionEvent>& events
+)
+{
+    std::string lower_line = lowercase_ascii(line);
+    if (line.find(policy.marker) != std::string::npos) {
+        return line;
+    }
+
+    std::string matched_field;
+    bool authorization_bearer =
+        lower_line.find("authorization:") != std::string::npos &&
+        lower_line.find("bearer") != std::string::npos;
+    bool steam_login = lower_line.find("steamloginsecure") != std::string::npos;
+    bool session_cookie = lower_line.find("sessionid") != std::string::npos;
+
+    if (!authorization_bearer && !steam_login && !session_cookie &&
+        !contains_any_field(lower_line, policy, matched_field)) {
+        return line;
+    }
+
+    std::string redacted;
+    if (authorization_bearer) {
+        std::size_t bearer = lower_line.find("bearer");
+        redacted = line.substr(0, bearer + 6) + " " + policy.marker;
+        matched_field = "authorization";
+    } else {
+        std::size_t separator = line.find('=');
+        if (separator == std::string::npos) {
+            separator = line.find(':');
+        }
+        if (separator == std::string::npos) {
+            redacted = policy.marker;
+        } else if (!line.empty() && line.find('"') != std::string::npos && line.find(':') != std::string::npos) {
+            redacted = json_like_redaction(line, separator, policy.marker);
+        } else {
+            redacted = key_value_redaction(line, separator, policy.marker);
+        }
+        if (matched_field.empty()) {
+            matched_field = steam_login ? "steamLoginSecure" : "sessionid";
+        }
+    }
+
+    events.push_back(event_for(
+        "diagnostic_secret_redacted",
+        "warning",
+        logical_path,
+        "field:" + matched_field,
+        "credential-like value was replaced by the redaction marker"
+    ));
+    return redacted;
+}
+
+} // namespace
+
+RedactionPolicy default_redaction_policy()
+{
+    RedactionPolicy policy;
+    policy.field_names = {
+        "api_key",
+        "auth",
+        "auth_token",
+        "cookie",
+        "password",
+        "rcon_password",
+        "secret",
+        "session",
+        "token",
+    };
+    policy.path_fragments = {
+        "account_refs",
+        "credentials",
+        "login.json",
+        "steam/userdata",
+        "tokens",
+    };
+    return policy;
+}
+
+RedactionResult redact_text(const std::string& text, const std::string& logical_path)
+{
+    return redact_text(text, default_redaction_policy(), logical_path);
+}
+
+RedactionResult redact_text(
+    const std::string& text,
+    const RedactionPolicy& policy,
+    const std::string& logical_path
+)
+{
+    RedactionResult result;
+    std::istringstream in(text);
+    std::ostringstream out;
+    std::string line;
+    bool first = true;
+    while (std::getline(in, line)) {
+        if (!first) {
+            out << "\n";
+        }
+        first = false;
+        out << redact_line(line, policy, logical_path, result.events);
+    }
+    if (!text.empty() && text.back() == '\n') {
+        out << "\n";
+    }
+    result.text = out.str();
+    return result;
+}
+
+bool path_denied(const std::filesystem::path& path, const RedactionPolicy& policy)
+{
+    std::string normalized = lowercase_ascii(generic_path(path));
+    for (const std::string& fragment : policy.path_fragments) {
+        if (normalized.find(lowercase_ascii(fragment)) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool archive_path(const std::filesystem::path& path)
+{
+    std::string lower = lowercase_ascii(path.filename().string());
+    const char* extensions[] = {".7z", ".rar", ".tar", ".tar.gz", ".tgz", ".zip"};
+    for (const char* extension : extensions) {
+        std::string ext = extension;
+        if (lower.size() >= ext.size() && lower.substr(lower.size() - ext.size()) == ext) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool looks_binary(const std::vector<unsigned char>& bytes)
+{
+    for (unsigned char byte : bytes) {
+        if (byte == 0) {
+            return true;
+        }
+        if (byte < 0x09) {
+            return true;
+        }
+        if (byte > 0x0d && byte < 0x20) {
+            return true;
+        }
+    }
+    return false;
+}
+
+RedactionSummary summarize_events(const std::vector<RedactionEvent>& events)
+{
+    RedactionSummary summary;
+    for (const RedactionEvent& event : events) {
+        if (event.code == "diagnostic_secret_redacted") {
+            ++summary.redacted_fields;
+        } else if (event.code == "diagnostic_path_excluded") {
+            ++summary.excluded_paths;
+        } else if (event.code == "diagnostic_binary_skipped") {
+            ++summary.binary_files_skipped;
+        } else if (event.code == "diagnostic_archive_unsafe") {
+            ++summary.archive_files_skipped;
+        }
+    }
+    return summary;
+}
+
+std::string redaction_events_json(const std::vector<RedactionEvent>& events)
+{
+    std::ostringstream out;
+    out << "[";
+    for (std::size_t index = 0; index < events.size(); ++index) {
+        const RedactionEvent& event = events[index];
+        if (index) {
+            out << ",";
+        }
+        out << "\n    {\n";
+        out << "      \"code\": " << quote(event.code) << ",\n";
+        out << "      \"severity\": " << quote(event.severity) << ",\n";
+        out << "      \"path\": " << quote(event.path) << ",\n";
+        out << "      \"rule\": " << quote(event.rule) << ",\n";
+        out << "      \"details\": " << quote(event.details) << ",\n";
+        out << "      \"retryable\": " << (event.retryable ? "true" : "false") << "\n";
+        out << "    }";
+    }
+    if (!events.empty()) {
+        out << "\n  ";
+    }
+    out << "]";
+    return out.str();
+}
+
+std::string redaction_report_json(const std::vector<RedactionEvent>& events)
+{
+    RedactionSummary summary = summarize_events(events);
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.diagnostic_redaction_report.v1\",\n";
+    out << "  \"policy_schema\": \"facman.redaction_policy.v1\",\n";
+    out << "  \"marker\": " << quote(redaction_marker()) << ",\n";
+    out << "  \"events\": " << redaction_events_json(events) << ",\n";
+    out << "  \"summary\": {\n";
+    out << "    \"redacted_fields\": " << summary.redacted_fields << ",\n";
+    out << "    \"excluded_paths\": " << summary.excluded_paths << ",\n";
+    out << "    \"binary_files_skipped\": " << summary.binary_files_skipped << ",\n";
+    out << "    \"archive_files_skipped\": " << summary.archive_files_skipped << "\n";
+    out << "  }\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string redaction_marker()
+{
+    return default_redaction_policy().marker;
+}
+
+} // namespace facman::factorio::diagnostics

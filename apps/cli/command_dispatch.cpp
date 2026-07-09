@@ -1,6 +1,7 @@
 #include "command_dispatch.h"
 
 #include "flb_factorio_discovery.h"
+#include "flb_factorio_diagnostics.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modsets.h"
 #include "fl_command_client_cabi.h"
@@ -32,6 +33,7 @@
 
 namespace fs = std::filesystem;
 namespace factorio_discovery = facman::factorio::discovery;
+namespace factorio_diagnostics = facman::factorio::diagnostics;
 namespace factorio_modsets = facman::factorio::modsets;
 
 namespace {
@@ -44,6 +46,7 @@ struct CliOptions {
 };
 
 using InstallRef = factorio_discovery::InstallRef;
+using RedactionEvent = factorio_diagnostics::RedactionEvent;
 using ModRef = factorio_modsets::ModRef;
 using ModsetIssue = factorio_modsets::ModsetIssue;
 
@@ -81,9 +84,20 @@ struct ZipEntry {
     std::vector<unsigned char> data;
 };
 
+struct DiagnosticBundleEntry {
+    std::string path;
+    std::string kind;
+    bool redacted;
+};
+
 std::string path_string(const fs::path& path)
 {
     return path.lexically_normal().string();
+}
+
+std::string generic_path_string(const fs::path& path)
+{
+    return path.lexically_normal().generic_string();
 }
 
 std::string json_escape(const std::string& value)
@@ -672,6 +686,33 @@ std::string mod_portal_refusal_json(
     out << "    \"reason\": \"Mod Portal network access is not enabled in this portable build\",\n";
     out << "    \"recoverable\": true\n";
     out << "  }\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string diagnostic_refusal_json(
+    const std::string& operation,
+    const std::string& instance_id,
+    const std::string& code,
+    const std::string& reason,
+    bool retryable,
+    const std::string& detail
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.diagnostic_refusal.v1\",\n";
+    out << "  \"operation\": " << quote(operation) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"code\": " << quote(code) << ",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"recoverable\": " << (retryable ? "true" : "false") << ",\n";
+    out << "    \"retryable\": " << (retryable ? "true" : "false") << ",\n";
+    out << "    \"severity\": \"blocked\"\n";
+    out << "  },\n";
+    out << "  \"details\": {\"detail\": " << quote(detail) << "}\n";
     out << "}\n";
     return out.str();
 }
@@ -1406,65 +1447,14 @@ std::string redacted_instance_json(const InstanceRef& instance)
     return instance_json(redacted);
 }
 
-std::string lowercase_ascii(std::string value)
+void append_redaction_events(std::vector<RedactionEvent>& target, const std::vector<RedactionEvent>& source)
 {
-    for (char& ch : value) {
-        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-    }
-    return value;
-}
-
-bool line_contains_secret_key(const std::string& lower_line)
-{
-    const char* keys[] = {
-        "api_key",
-        "apikey",
-        "auth",
-        "cookie",
-        "password",
-        "rcon_password",
-        "secret",
-        "session",
-        "token",
-    };
-    for (const char* key : keys) {
-        if (lower_line.find(key) != std::string::npos) {
-            return true;
-        }
-    }
-    return false;
+    target.insert(target.end(), source.begin(), source.end());
 }
 
 std::string redact_secret_text(const std::string& text)
 {
-    std::istringstream in(text);
-    std::ostringstream out;
-    std::string line;
-    bool first = true;
-    while (std::getline(in, line)) {
-        if (!first) {
-            out << "\n";
-        }
-        first = false;
-
-        if (line_contains_secret_key(lowercase_ascii(line))) {
-            std::size_t separator = line.find('=');
-            if (separator == std::string::npos) {
-                separator = line.find(':');
-            }
-            if (separator == std::string::npos) {
-                out << "[REDACTED]";
-            } else {
-                out << line.substr(0, separator + 1) << "[REDACTED]";
-            }
-        } else {
-            out << line;
-        }
-    }
-    if (!text.empty() && text.back() == '\n') {
-        out << "\n";
-    }
-    return out.str();
+    return factorio_diagnostics::redact_text(text, "export").text;
 }
 
 std::string export_manifest_json(const InstanceRef& instance, std::size_t file_count)
@@ -1474,6 +1464,8 @@ std::string export_manifest_json(const InstanceRef& instance, std::size_t file_c
     out << "  \"schema\": \"factorio.instance_export_manifest.v1\",\n";
     out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
     out << "  \"portable\": true,\n";
+    out << "  \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
+    out << "  \"redaction_marker\": " << quote(factorio_diagnostics::redaction_marker()) << ",\n";
     out << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\", \"config.ini secrets\"],\n";
     out << "  \"files\": " << file_count << "\n";
     out << "}\n";
@@ -1504,6 +1496,283 @@ std::vector<std::pair<std::string, std::vector<unsigned char>>> instance_export_
 
     files.insert(files.begin(), {"manifest/export.v1.json", bytes_from_text(export_manifest_json(instance, files.size() + 1))});
     return files;
+}
+
+std::string relative_to_root(const fs::path& root, const fs::path& path)
+{
+    std::error_code error;
+    fs::path relative = fs::relative(path, root, error);
+    if (error) {
+        return generic_path_string(path.filename());
+    }
+    return generic_path_string(relative);
+}
+
+RedactionEvent redaction_event(
+    const std::string& code,
+    const std::string& severity,
+    const std::string& path,
+    const std::string& rule,
+    const std::string& details
+)
+{
+    RedactionEvent event;
+    event.code = code;
+    event.severity = severity;
+    event.path = path;
+    event.rule = rule;
+    event.details = details;
+    event.retryable = false;
+    return event;
+}
+
+void add_diagnostic_text_file(
+    std::vector<std::pair<std::string, std::vector<unsigned char>>>& files,
+    std::vector<DiagnosticBundleEntry>& manifest_entries,
+    std::vector<RedactionEvent>& events,
+    const std::string& entry_path,
+    const std::string& kind,
+    const std::string& text,
+    bool redact
+)
+{
+    std::string payload = text;
+    bool redacted = false;
+    if (redact) {
+        factorio_diagnostics::RedactionResult result = factorio_diagnostics::redact_text(text, entry_path);
+        payload = result.text;
+        redacted = !result.events.empty();
+        append_redaction_events(events, result.events);
+    }
+    files.push_back({entry_path, bytes_from_text(payload)});
+    manifest_entries.push_back({entry_path, kind, redacted});
+}
+
+bool diagnostic_path_allowed(
+    const fs::path& relative_path,
+    std::vector<RedactionEvent>& events,
+    const std::string& logical_path
+)
+{
+    factorio_diagnostics::RedactionPolicy policy = factorio_diagnostics::default_redaction_policy();
+    if (!factorio_diagnostics::path_denied(relative_path, policy)) {
+        return true;
+    }
+    events.push_back(redaction_event(
+        "diagnostic_path_excluded",
+        "warning",
+        logical_path,
+        "path-deny",
+        "sensitive path was excluded from diagnostic bundle"
+    ));
+    return false;
+}
+
+void collect_diagnostic_instance_files(
+    const InstanceRef& instance,
+    std::vector<std::pair<std::string, std::vector<unsigned char>>>& files,
+    std::vector<DiagnosticBundleEntry>& manifest_entries,
+    std::vector<RedactionEvent>& events
+)
+{
+    if (!fs::exists(instance.local_data_root)) {
+        return;
+    }
+    std::vector<fs::path> paths;
+    for (const fs::directory_entry& entry : fs::recursive_directory_iterator(instance.local_data_root)) {
+        if (entry.is_regular_file()) {
+            paths.push_back(entry.path());
+        }
+    }
+    std::sort(paths.begin(), paths.end());
+
+    for (const fs::path& path : paths) {
+        std::string relative_text = relative_to_root(instance.local_data_root, path);
+        if (relative_text == "instance.v1.json") {
+            continue;
+        }
+        std::string entry_path = "instance/" + relative_text;
+        if (!diagnostic_path_allowed(fs::path(relative_text), events, entry_path)) {
+            continue;
+        }
+        if (factorio_diagnostics::archive_path(path)) {
+            events.push_back(redaction_event(
+                "diagnostic_archive_unsafe",
+                "warning",
+                entry_path,
+                "archive-skip",
+                "archive file was excluded from diagnostic bundle"
+            ));
+            continue;
+        }
+
+        std::vector<unsigned char> bytes = read_bytes(path);
+        if (factorio_diagnostics::looks_binary(bytes)) {
+            events.push_back(redaction_event(
+                "diagnostic_binary_skipped",
+                "warning",
+                entry_path,
+                "binary-skip",
+                "binary file was excluded from diagnostic bundle"
+            ));
+            continue;
+        }
+
+        std::string text(bytes.begin(), bytes.end());
+        std::string kind = relative_text.find("log") != std::string::npos ? "log" : "config";
+        add_diagnostic_text_file(files, manifest_entries, events, entry_path, kind, text, true);
+    }
+}
+
+std::string diagnostic_doctor_report_json(const CliOptions& options)
+{
+    std::vector<fs::path> installs = install_ref_files(options.workspace);
+    std::vector<fs::path> instances = instance_manifest_files(options.workspace);
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.diagnostic_report.v1\",\n";
+    out << "  \"command\": \"doctor.run\",\n";
+    out << "  \"status\": " << quote(installs.empty() ? "warning" : "ok") << ",\n";
+    out << "  \"workspace\": \"$FACMAN_WORKSPACE\",\n";
+    out << "  \"registered_installs\": " << installs.size() << ",\n";
+    out << "  \"instances\": " << instances.size() << ",\n";
+    out << "  \"problems\": " << (installs.empty() ? "[\"no install references registered yet\"]" : "[]") << ",\n";
+    out << "  \"suggested_fixes\": " << (installs.empty()
+        ? "[\"run facman installs scan --search-root <folder> --json or facman installs import <factorio-dir> --id <install-id>\"]"
+        : "[]") << ",\n";
+    out << "  \"redacted\": true,\n";
+    out << "  \"redaction_policy\": \"facman.redaction_policy.v1\"\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string diagnostic_bundle_manifest_json(
+    const std::string& instance_id,
+    const std::string& created_at,
+    const std::vector<DiagnosticBundleEntry>& entries,
+    const std::vector<RedactionEvent>& events
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.diagnostic_bundle.v1\",\n";
+    out << "  \"bundle_version\": 1,\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"created_at\": " << quote(created_at) << ",\n";
+    out << "  \"files\": [";
+    for (std::size_t index = 0; index < entries.size(); ++index) {
+        const DiagnosticBundleEntry& entry = entries[index];
+        if (index) {
+            out << ",";
+        }
+        out << "\n    {\"path\": " << quote(entry.path)
+            << ", \"kind\": " << quote(entry.kind)
+            << ", \"redacted\": " << (entry.redacted ? "true" : "false") << "}";
+    }
+    if (!entries.empty()) {
+        out << "\n  ";
+    }
+    out << "],\n";
+    out << "  \"excluded_paths\": [";
+    bool wrote_excluded = false;
+    for (const RedactionEvent& event : events) {
+        if (event.code != "diagnostic_path_excluded") {
+            continue;
+        }
+        if (wrote_excluded) {
+            out << ",";
+        }
+        wrote_excluded = true;
+        out << quote(event.path);
+    }
+    out << "],\n";
+    out << "  \"redaction\": {\n";
+    out << "    \"policy_schema\": \"facman.redaction_policy.v1\",\n";
+    out << "    \"marker\": " << quote(factorio_diagnostics::redaction_marker()) << ",\n";
+    out << "    \"report_path\": \"redaction/report.v1.json\"\n";
+    out << "  }\n";
+    out << "}\n";
+    return out.str();
+}
+
+bool write_diagnostic_bundle(
+    const CliOptions& options,
+    const InstanceRef* instance,
+    const fs::path& output_path,
+    std::size_t& file_count,
+    std::string& report_json
+)
+{
+    std::vector<std::pair<std::string, std::vector<unsigned char>>> files;
+    std::vector<DiagnosticBundleEntry> manifest_entries;
+    std::vector<RedactionEvent> events;
+
+    add_diagnostic_text_file(
+        files,
+        manifest_entries,
+        events,
+        "workspace/workspace.v1.json",
+        "workspace",
+        read_text(options.workspace / "workspace.v1.json"),
+        true
+    );
+
+    std::string instance_id = instance ? instance->instance_id : "workspace";
+    if (instance) {
+        fs::path install_ref = install_path(options.workspace, instance->install_ref);
+        if (fs::is_regular_file(install_ref)) {
+            add_diagnostic_text_file(
+                files,
+                manifest_entries,
+                events,
+                "installs/selected-install-ref.v1.json",
+                "install_ref",
+                read_text(install_ref),
+                true
+            );
+        }
+        add_diagnostic_text_file(
+            files,
+            manifest_entries,
+            events,
+            "instance/instance.v1.json",
+            "instance_manifest",
+            redacted_instance_json(*instance),
+            true
+        );
+        fs::path lock_path = modset_lock_path(*instance);
+        if (fs::is_regular_file(lock_path)) {
+            add_diagnostic_text_file(
+                files,
+                manifest_entries,
+                events,
+                "modsets/modset-lock.v1.json",
+                "modset_lock",
+                read_text(lock_path),
+                true
+            );
+        }
+        collect_diagnostic_instance_files(*instance, files, manifest_entries, events);
+    }
+
+    add_diagnostic_text_file(
+        files,
+        manifest_entries,
+        events,
+        "doctor/doctor.v1.json",
+        "doctor_report",
+        diagnostic_doctor_report_json(options),
+        true
+    );
+
+    report_json = factorio_diagnostics::redaction_report_json(events);
+    files.push_back({"redaction/report.v1.json", bytes_from_text(report_json)});
+    manifest_entries.push_back({"redaction/report.v1.json", "redaction_report", false});
+
+    std::string manifest = diagnostic_bundle_manifest_json(instance_id, utc_now_iso8601(), manifest_entries, events);
+    files.insert(files.begin(), {"manifest/diagnostic-bundle.v1.json", bytes_from_text(manifest)});
+    file_count = files.size();
+    return write_stored_zip(output_path, files);
 }
 
 std::vector<std::string> launch_args(const InstanceRef& instance)
@@ -1711,7 +1980,9 @@ int print_help()
     std::cout << "  product inspect [--json]\n";
     std::cout << "  command-graph inspect [--json]\n";
     std::cout << "  diagnostics report [--json]\n";
-    std::cout << "  doctor [--search-root <root>] [--json]\n";
+    std::cout << "  diagnostics redact <file> [--json]\n";
+    std::cout << "  diagnostics export --instance <id> --out <bundle.zip> [--json]\n";
+    std::cout << "  doctor [--search-root <root>] [--diagnostic-bundle <bundle.zip>] [--json]\n";
     std::cout << "  installs scan [--path <root>] [--search-root <root>] [--json]\n";
     std::cout << "  installs inspect <install-id> [--json]\n";
     std::cout << "  installs import <factorio-dir> --id <install-id> [--json]\n";
@@ -1776,8 +2047,9 @@ int command_command_graph(const std::vector<std::string>& args)
     return 2;
 }
 
-int command_diagnostics(const std::vector<std::string>& args)
+int command_diagnostics(const CliOptions& options)
 {
+    const std::vector<std::string>& args = options.args;
     if (args.size() >= 2 && args[1] == "report") {
         if (has_flag(args, "--json")) {
             std::cout << flb_command_payload_json("diagnostics.report", true);
@@ -1785,6 +2057,119 @@ int command_diagnostics(const std::vector<std::string>& args)
             std::cout << "FacMan diagnostics report\n";
             std::cout << "Route: CLI -> FLB -> ULK\n";
             std::cout << "Status: ok\n";
+        }
+        return 0;
+    }
+    if (args.size() >= 3 && args[1] == "redact") {
+        fs::path input_path = args[2];
+        if (!fs::is_regular_file(input_path)) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.redact",
+                "",
+                "diagnostic_bundle_source_missing",
+                "Redaction source file is missing",
+                true,
+                path_string(input_path)
+            );
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Missing redaction source: " << path_string(input_path) << "\n";
+            }
+            return 1;
+        }
+        std::vector<unsigned char> bytes = read_bytes(input_path);
+        if (factorio_diagnostics::looks_binary(bytes)) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.redact",
+                "",
+                "diagnostic_binary_skipped",
+                "Binary source cannot be redacted as text",
+                false,
+                path_string(input_path)
+            );
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Binary source skipped: " << path_string(input_path) << "\n";
+            }
+            return 1;
+        }
+        factorio_diagnostics::RedactionResult redacted =
+            factorio_diagnostics::redact_text(std::string(bytes.begin(), bytes.end()), generic_path_string(input_path.filename()));
+        if (has_flag(args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.diagnostic_redact.v1\",\n";
+            std::cout << "  \"command\": \"diagnostics.redact\",\n";
+            std::cout << "  \"path\": " << quote(path_string(input_path)) << ",\n";
+            std::cout << "  \"redacted_text\": " << quote(redacted.text) << ",\n";
+            std::cout << "  \"redaction_report\": " << factorio_diagnostics::redaction_report_json(redacted.events) << "\n";
+            std::cout << "}\n";
+        } else {
+            std::cout << redacted.text;
+        }
+        return 0;
+    }
+    if (args.size() >= 2 && args[1] == "export") {
+        ensure_workspace(options.workspace);
+        std::string instance_id = option_value(args, "--instance");
+        std::string output = option_value(args, "--out");
+        if (instance_id.empty() || output.empty()) {
+            std::cerr << "diagnostics export requires --instance <instance-id> --out <bundle.zip>\n";
+            return 2;
+        }
+        InstanceRef instance;
+        if (!load_instance(options.workspace, instance_id, instance)) {
+            std::cerr << "Unknown instance: " << instance_id << "\n";
+            return 1;
+        }
+        fs::path output_path = output;
+        if (fs::exists(output_path)) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.export",
+                instance.instance_id,
+                "diagnostic_bundle_target_exists",
+                "Diagnostic bundle target already exists",
+                true,
+                path_string(output_path)
+            );
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Diagnostic bundle target already exists: " << path_string(output_path) << "\n";
+            }
+            return 1;
+        }
+        std::size_t file_count = 0;
+        std::string report_json;
+        if (!write_diagnostic_bundle(options, &instance, output_path, file_count, report_json)) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.export",
+                instance.instance_id,
+                "diagnostic_bundle_write_refused",
+                "Diagnostic bundle could not be written",
+                true,
+                path_string(output_path)
+            );
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Failed to write diagnostic bundle: " << path_string(output_path) << "\n";
+            }
+            return 1;
+        }
+        if (has_flag(args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.diagnostic_bundle_export.v1\",\n";
+            std::cout << "  \"command\": \"diagnostics.export\",\n";
+            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+            std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
+            std::cout << "  \"files\": " << file_count << ",\n";
+            std::cout << "  \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
+            std::cout << "  \"redaction_report\": " << report_json << "\n";
+            std::cout << "}\n";
+        } else {
+            std::cout << "Exported diagnostic bundle to " << path_string(output_path) << "\n";
         }
         return 0;
     }
@@ -1806,6 +2191,66 @@ int command_doctor(const CliOptions& options)
         }
     }
     bool warning = installs.empty() || invalid_candidates;
+    std::string diagnostic_bundle_output = option_value(options.args, "--diagnostic-bundle");
+    bool diagnostic_bundle_written = false;
+    std::size_t diagnostic_bundle_file_count = 0;
+    std::string diagnostic_bundle_report_json;
+    if (!diagnostic_bundle_output.empty()) {
+        fs::path output_path = diagnostic_bundle_output;
+        if (fs::exists(output_path)) {
+            std::string result = diagnostic_refusal_json(
+                "doctor.run",
+                "",
+                "diagnostic_bundle_target_exists",
+                "Diagnostic bundle target already exists",
+                true,
+                path_string(output_path)
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Diagnostic bundle target already exists: " << path_string(output_path) << "\n";
+            }
+            return 1;
+        }
+        InstanceRef selected_instance;
+        InstanceRef* selected_instance_ptr = nullptr;
+        std::string requested_instance = option_value(options.args, "--instance");
+        if (!requested_instance.empty()) {
+            if (!load_instance(options.workspace, requested_instance, selected_instance)) {
+                std::cerr << "Unknown instance: " << requested_instance << "\n";
+                return 1;
+            }
+            selected_instance_ptr = &selected_instance;
+        } else if (!instances.empty()) {
+            std::string inferred_instance = instances.front().parent_path().filename().string();
+            if (load_instance(options.workspace, inferred_instance, selected_instance)) {
+                selected_instance_ptr = &selected_instance;
+            }
+        }
+        if (!write_diagnostic_bundle(
+                options,
+                selected_instance_ptr,
+                output_path,
+                diagnostic_bundle_file_count,
+                diagnostic_bundle_report_json)) {
+            std::string result = diagnostic_refusal_json(
+                "doctor.run",
+                requested_instance,
+                "diagnostic_bundle_write_refused",
+                "Diagnostic bundle could not be written",
+                true,
+                path_string(output_path)
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Failed to write diagnostic bundle: " << path_string(output_path) << "\n";
+            }
+            return 1;
+        }
+        diagnostic_bundle_written = true;
+    }
     if (has_flag(options.args, "--json")) {
         std::cout << "{\n";
         std::cout << "  \"schema\": \"factorio.diagnostic_report.v1\",\n";
@@ -1866,6 +2311,15 @@ int command_doctor(const CliOptions& options)
         } else {
             std::cout << "[]";
         }
+        if (diagnostic_bundle_written) {
+            std::cout << ",\n";
+            std::cout << "  \"diagnostic_bundle\": {\n";
+            std::cout << "    \"path\": " << quote(path_string(fs::path(diagnostic_bundle_output))) << ",\n";
+            std::cout << "    \"files\": " << diagnostic_bundle_file_count << ",\n";
+            std::cout << "    \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
+            std::cout << "    \"redaction_report\": " << diagnostic_bundle_report_json << "\n";
+            std::cout << "  }";
+        }
         if (has_discovery_roots) {
             std::cout << ",\n";
             std::cout << "  \"discovery\": " << installs_report_json(discovery);
@@ -1879,6 +2333,9 @@ int command_doctor(const CliOptions& options)
         std::cout << "Workspace: " << path_string(options.workspace) << "\n";
         std::cout << "Registered installs: " << installs.size() << "\n";
         std::cout << "Instances: " << instances.size() << "\n";
+        if (diagnostic_bundle_written) {
+            std::cout << "Diagnostic bundle: " << path_string(fs::path(diagnostic_bundle_output)) << "\n";
+        }
         if (has_discovery_roots) {
             std::cout << "Discovery candidates: " << discovery.size() << "\n";
         }
@@ -3167,7 +3624,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
         return command_command_graph(options.args);
     }
     if (command == "diagnostics") {
-        return command_diagnostics(options.args);
+        return command_diagnostics(options);
     }
     if (command == "doctor") {
         return command_doctor(options);

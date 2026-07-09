@@ -386,7 +386,7 @@ class CliTests(unittest.TestCase):
             self.assertTrue(pack_bytes.startswith(b"PK\x03\x04"))
             self.assertIn(b"$FACMAN_INSTANCE_ROOT", pack_bytes)
             self.assertNotIn(str(Path(tmp)).encode("utf-8"), pack_bytes)
-            self.assertIn(b"[REDACTED]", pack_bytes)
+            self.assertIn(b"[FACMAN_REDACTED]", pack_bytes)
             self.assertNotIn(b"super-secret-token", pack_bytes)
             self.assertNotIn(b"service-secret", pack_bytes)
             self.assertNotIn(b"hunter2", pack_bytes)
