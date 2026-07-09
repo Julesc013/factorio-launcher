@@ -8,9 +8,12 @@
     "schema": { "const": "common.refusal.v1" },
     "code": { "type": "string", "minLength": 1 },
     "severity": { "enum": ["info", "warning", "error", "blocked"] },
+    "effect": { "type": "string", "minLength": 1 },
+    "message": { "type": "string", "minLength": 1 },
     "reason": { "type": "string", "minLength": 1 },
     "details": { "type": ["object", "null"] },
     "recoverable": { "type": "boolean" },
+    "retryable": { "type": "boolean" },
     "suggested_next_command": { "type": ["string", "null"] }
   },
   "additionalProperties": true

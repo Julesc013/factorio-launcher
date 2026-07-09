@@ -1,0 +1,214 @@
+schema = "facman.refusal_codes.v1"
+
+required_codes = [
+  "foreign_owned_install_repair_refused",
+  "foreign_owned_install_uninstall_refused",
+  "default_data_dir_write_refused",
+  "steam_cloud_sensitive_path_refused",
+  "mod_portal_network_disabled",
+  "credential_required",
+  "credential_redacted",
+  "setup_authority_required",
+  "launch_preflight_failed",
+  "save_locked",
+  "unsupported_frontend",
+  "unsupported_platform",
+  "schema_version_unsupported",
+  "package_profile_unsupported",
+]
+
+[[code]]
+id = "invalid_request"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The command request does not match the command contract."
+
+[[code]]
+id = "workspace_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The FacMan workspace cannot be read."
+suggested_next_command = "facman doctor --json"
+
+[[code]]
+id = "path_unreadable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested path cannot be read safely."
+
+[[code]]
+id = "invalid_install"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The selected directory is not a valid Factorio install reference."
+
+[[code]]
+id = "unknown_install"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested install id is not registered in the workspace."
+suggested_next_command = "facman installs scan --json"
+
+[[code]]
+id = "unknown_instance"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested instance id is not registered in the workspace."
+suggested_next_command = "facman instances list --json"
+
+[[code]]
+id = "unknown_save"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested save is not available in the selected instance."
+
+[[code]]
+id = "unsafe_archive_path"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The archive contains an unsafe path or cannot be imported safely."
+
+[[code]]
+id = "export_not_safe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The instance export would include unsafe or disallowed content."
+
+[[code]]
+id = "preflight_failed"
+severity = "blocked"
+effect = "process_execute"
+retryable = true
+message = "The launch preflight failed and execution was blocked."
+suggested_next_command = "facman run <instance-id> --json"
+
+[[code]]
+id = "launch_preflight_failed"
+severity = "blocked"
+effect = "process_execute"
+retryable = true
+message = "The launch preflight failed and execution was blocked."
+suggested_next_command = "facman launch plan <instance-id> --json"
+
+[[code]]
+id = "execution_not_enabled"
+severity = "blocked"
+effect = "process_execute"
+retryable = false
+message = "Process execution is not enabled for this command or frontend."
+
+[[code]]
+id = "ownership_denied"
+severity = "blocked"
+effect = "foreign_owned_refusal"
+retryable = false
+message = "The target is outside FacMan setup ownership."
+
+[[code]]
+id = "foreign_owned_install_repair_refused"
+severity = "blocked"
+effect = "foreign_owned_refusal"
+retryable = false
+message = "This install is owned by Steam or another external manager and cannot be repaired by FacMan."
+suggested_next_command = "facman installs inspect <id> --json"
+
+[[code]]
+id = "foreign_owned_install_uninstall_refused"
+severity = "blocked"
+effect = "foreign_owned_refusal"
+retryable = false
+message = "This install is owned by Steam or another external manager and cannot be uninstalled by FacMan."
+suggested_next_command = "facman installs inspect <id> --json"
+
+[[code]]
+id = "default_data_dir_write_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "FacMan refuses to write mutable instance state into the default Factorio data directory."
+
+[[code]]
+id = "steam_cloud_sensitive_path_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The requested path is Steam Cloud sensitive and must not be mutated by FacMan."
+
+[[code]]
+id = "network_forbidden"
+severity = "blocked"
+effect = "network_read"
+retryable = false
+message = "Network access is disabled for this command."
+
+[[code]]
+id = "mod_portal_network_disabled"
+severity = "blocked"
+effect = "network_read"
+retryable = false
+message = "Factorio Mod Portal network behavior is disabled by policy."
+
+[[code]]
+id = "credential_required"
+severity = "blocked"
+effect = "credential_read"
+retryable = true
+message = "The command requires a credential reference from the OS credential store."
+
+[[code]]
+id = "credential_redacted"
+severity = "warning"
+effect = "credential_read"
+retryable = false
+message = "A credential or token was redacted from output."
+
+[[code]]
+id = "setup_authority_required"
+severity = "blocked"
+effect = "setup_mutation"
+retryable = false
+message = "The requested setup mutation requires Universal Setup authority."
+
+[[code]]
+id = "save_locked"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The save is locked or in active use and cannot be mutated safely."
+
+[[code]]
+id = "unsupported_frontend"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The selected frontend does not support this command surface."
+
+[[code]]
+id = "unsupported_platform"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The selected platform does not support this command or package profile."
+
+[[code]]
+id = "schema_version_unsupported"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The requested schema version is unsupported by this build."
+
+[[code]]
+id = "package_profile_unsupported"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The requested package profile is unsupported by this build."

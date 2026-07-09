@@ -1,4 +1,5 @@
 schema_version = 1
+schema = "common.effects.v1"
 
 [effects]
 none = "No workspace, process, setup, network, or credential effect."
@@ -10,3 +11,39 @@ credential_read = "Reads credentials or tokens."
 setup_preview = "Requests a universal-setup preview, plan, policy, or verification result without mutation."
 setup_mutation = "Requests universal-setup install, repair, uninstall, rollback, or other mutation."
 foreign_owned_refusal = "Refuses because the target install is foreign-owned or otherwise outside setup authority."
+
+[risk_tiers.read_only]
+label = "Read-only"
+severity = "info"
+description = "No mutation, execution, credential, setup, or network effect."
+
+[risk_tiers.workspace_write]
+label = "Workspace write"
+severity = "warning"
+description = "May write FacMan workspace state, exports, logs, locks, or audit records."
+
+[risk_tiers.external]
+label = "External effect"
+severity = "danger"
+description = "May execute a process, access the network, or read credential references."
+
+[risk_tiers.setup_mutation]
+label = "Setup mutation"
+severity = "danger"
+description = "Requires Universal Setup authority and may mutate installed software state."
+
+[risk_tiers.blocked]
+label = "Blocked"
+severity = "blocked"
+description = "Refuses because ownership, platform, frontend, or policy does not allow the operation."
+
+[effect_risk]
+none = "read_only"
+workspace_read = "read_only"
+workspace_write = "workspace_write"
+process_execute = "external"
+network_read = "external"
+credential_read = "external"
+setup_preview = "external"
+setup_mutation = "setup_mutation"
+foreign_owned_refusal = "blocked"
