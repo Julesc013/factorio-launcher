@@ -27,3 +27,14 @@ Use workspace mode for the full integration baseline:
 ```powershell
 py -3 tools/cross_repo_check.py
 ```
+
+Use the reproducibility smoke when publishing or validating a fresh clone:
+
+```powershell
+py -3 tools/repro_workspace_smoke.py
+py -3 tools/repro_workspace_smoke.py --build
+```
+
+The smoke keeps quick boundary checks separate from the heavier build matrix so
+single-repo contributors can validate product-only work while release or branch
+handoffs can prove the full sibling workspace.

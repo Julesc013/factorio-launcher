@@ -46,3 +46,19 @@ py -3 tools/cross_repo_check.py
 
 Use product-only mode for single-repo clones. Use full mode when both Universal
 repositories are checked out.
+
+For fresh-clone or branch handoff proof, run the reproducibility smoke:
+
+```bash
+py -3 tools/repro_workspace_smoke.py
+py -3 tools/repro_workspace_smoke.py --build
+```
+
+The smoke supports both flat workspaces and grouped `Factorio/` + `Universal/`
+workspaces, including the layout:
+
+```text
+D:/Projects/Factorio/factorio-launcher
+D:/Projects/Universal/universal-setup
+D:/Projects/Universal/universal-launcher
+```
