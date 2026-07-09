@@ -19,8 +19,8 @@ claiming later product or package readiness.
 | CLI | yes | yes | yes | no | Native CMake and CLI tests cover current behavior. |
 | TUI | scaffolded | yes | no | no | TUI parity is a later frontend milestone. |
 | Daemon | scaffolded | yes | no | no | Daemon transport maturity is later runtime/client work. |
-| WinForms | yes | local Windows yes, remote pending | command-client yes | no | `FACMAN-WINFORMS-SHELL-01` proves a thin GUI over CLI JSON locally. |
-| AppKit | yes | no | no | no | `FACMAN-APPKIT-SHELL-01` is source/static proof until macOS compile CI passes. |
+| WinForms | yes | Windows CI yes | command-client yes | layout only | `FACMAN-WINFORMS-SHELL-01` proves a thin GUI over CLI JSON and is built by the Windows CI lane. |
+| AppKit | yes | macOS CI yes | no | layout only | `FACMAN-APPKIT-SHELL-01` has source/static proof and a macOS compile lane; runtime smoke remains future work. |
 | WinUI | placeholder | no | no | no | Reserved for a later modern Windows lane. |
 | SwiftUI | placeholder | no | no | no | Reserved for a later modern macOS lane. |
 | GTK | placeholder | no | no | no | Reserved until first native shell compile proof is stable. |
@@ -36,3 +36,5 @@ claiming later product or package readiness.
   the frontend binary and required runtime/contracts/content files.
 - `source-static` proof is still valuable, but it is not a substitute for a
   native compiler or package lane.
+- `layout only` means package manifests describe the expected distribution
+  shape and pass validators. It is not a built, signed, or installed package.

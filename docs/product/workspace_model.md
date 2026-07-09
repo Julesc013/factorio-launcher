@@ -41,6 +41,9 @@ fields before export.
 `installs/refs/` is launcher-owned metadata about discovered or imported
 installs. `installs/setup_state_refs/` may point at Universal Setup state, but
 Universal Setup remains the owner of installed software mutation records.
+New writes use `installs/refs/`. Older workspaces that still contain
+`installs/installed_state/` remain readable for compatibility, but new
+workspaces do not create that retired directory.
 
 `instances/<instance_id>/` is the isolation boundary for Factorio runtime
 state. A managed instance must write mutable state under its instance root, not
@@ -50,3 +53,13 @@ The contract schemas are:
 
 - `contracts/schema/factorio/factorio_workspace.v1.schema.json`
 - `contracts/schema/factorio/factorio_instance_root.v1.schema.json`
+
+Runtime invariant tests now cover:
+
+- creation of `workspace.v1.json` and canonical workspace roots
+- install import metadata under `installs/refs/`
+- legacy install-ref read compatibility
+- instance root creation for config, mods, saves, scenarios, logs, locks, and
+  cache
+- no install-tree mutation during import and instance creation
+- redaction of obvious `config.ini` secrets during portable instance export

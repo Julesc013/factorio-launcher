@@ -85,6 +85,7 @@ R2 - Local power-user alpha
   isolated instances
   dry-run and execute
   local modsets
+  workspace invariants and package layout skeletons
 
 R3 - Safe beta
   save backups
@@ -114,3 +115,6 @@ That plan keeps capability/effect policy, refusal codes, workspace contracts,
 package contracts, customization, accessibility, redaction, runtime/client
 ownership, Universal Setup transaction work, and diagnostic intelligence as
 bounded work units on top of the current structure.
+
+R2 product hardening status and follow-up work units are tracked in
+[`docs/product/r2_alpha_hardening.md`](product/r2_alpha_hardening.md).
