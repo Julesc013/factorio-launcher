@@ -51,6 +51,8 @@ jobs:
           py -3 tools/language_runtime_policy_check.py
       - name: Build WinForms shell
         run: dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj
+      - name: Smoke WinForms command client
+        run: py -3 tools/winforms_command_client_smoke.py
 
   appkit-compile:
     runs-on: macos-latest
