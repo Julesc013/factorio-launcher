@@ -33,6 +33,17 @@ required_codes = [
   "mod_duplicate_versions",
   "mod_factorio_version_incompatible",
   "mod_hash_mismatch",
+  "diagnostic_secret_redacted",
+  "diagnostic_path_excluded",
+  "diagnostic_bundle_target_exists",
+  "diagnostic_bundle_policy_invalid",
+  "diagnostic_bundle_source_missing",
+  "diagnostic_bundle_write_refused",
+  "diagnostic_binary_skipped",
+  "diagnostic_archive_unsafe",
+  "export_secret_refused",
+  "redaction_policy_missing",
+  "redaction_policy_invalid",
 ]
 
 [[code]]
@@ -369,3 +380,82 @@ effect = "workspace_read"
 retryable = true
 message = "A local mod ZIP hash no longer matches the modset lockfile."
 suggested_next_command = "facman modsets verify <instance-id> --json"
+
+[[code]]
+id = "diagnostic_secret_redacted"
+severity = "warning"
+effect = "credential_read"
+retryable = false
+message = "A diagnostic or export report redacted credential-like content."
+
+[[code]]
+id = "diagnostic_path_excluded"
+severity = "warning"
+effect = "workspace_read"
+retryable = false
+message = "A diagnostic bundle excluded a sensitive path."
+
+[[code]]
+id = "diagnostic_bundle_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested diagnostic bundle target already exists."
+suggested_next_command = "facman diagnostics export --instance <instance-id> --out <bundle.zip> --json"
+
+[[code]]
+id = "diagnostic_bundle_policy_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The diagnostic redaction policy is invalid and bundle assembly was refused."
+
+[[code]]
+id = "diagnostic_bundle_source_missing"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A requested diagnostic bundle source is missing."
+suggested_next_command = "facman doctor --json"
+
+[[code]]
+id = "diagnostic_bundle_write_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The diagnostic bundle could not be written safely."
+
+[[code]]
+id = "diagnostic_binary_skipped"
+severity = "warning"
+effect = "workspace_read"
+retryable = false
+message = "A binary file was skipped by diagnostic redaction policy."
+
+[[code]]
+id = "diagnostic_archive_unsafe"
+severity = "warning"
+effect = "workspace_read"
+retryable = false
+message = "An archive file was excluded from a diagnostic bundle rather than copied raw."
+
+[[code]]
+id = "export_secret_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "An export was refused because secret-bearing content could not be redacted safely."
+
+[[code]]
+id = "redaction_policy_missing"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The required redaction policy could not be found."
+
+[[code]]
+id = "redaction_policy_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The required redaction policy is malformed or unsupported."

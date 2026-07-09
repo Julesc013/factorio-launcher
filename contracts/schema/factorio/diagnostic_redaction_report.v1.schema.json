@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/diagnostic_redaction_report.v1.schema.json",
+  "title": "Factorio Diagnostic Redaction Report",
+  "type": "object",
+  "required": ["schema", "policy_schema", "marker", "events", "summary"],
+  "properties": {
+    "schema": { "const": "factorio.diagnostic_redaction_report.v1" },
+    "policy_schema": { "const": "facman.redaction_policy.v1" },
+    "marker": { "type": "string" },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "severity", "path", "rule"],
+        "properties": {
+          "code": { "type": "string" },
+          "severity": { "enum": ["info", "warning", "blocked"] },
+          "path": { "type": "string" },
+          "rule": { "type": "string" },
+          "details": { "type": "string" },
+          "retryable": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["redacted_fields", "excluded_paths", "binary_files_skipped", "archive_files_skipped"],
+      "properties": {
+        "redacted_fields": { "type": "integer", "minimum": 0 },
+        "excluded_paths": { "type": "integer", "minimum": 0 },
+        "binary_files_skipped": { "type": "integer", "minimum": 0 },
+        "archive_files_skipped": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
