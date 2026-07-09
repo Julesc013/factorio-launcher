@@ -6,6 +6,6 @@ package_type = "tarball"
 architecture = "x86_64"
 python_runtime = false
 bundles_factorio_binaries = false
-entrypoint = "bin/facman"
+entrypoint = "usr/bin/facman"
 gui_stack_required = false
 base_manifest = "release/packaging/linux/appimage.v1.toml"
