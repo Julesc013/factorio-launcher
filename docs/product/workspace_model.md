@@ -62,4 +62,6 @@ Runtime invariant tests now cover:
 - instance root creation for config, mods, saves, scenarios, logs, locks, and
   cache
 - no install-tree mutation during import and instance creation
+- no fixture install-tree mutation during discovery scan, explicit-root doctor,
+  invalid import refusal, and foreign-owned repair/uninstall refusal
 - redaction of obvious `config.ini` secrets during portable instance export

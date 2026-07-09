@@ -37,13 +37,22 @@ server execution, or GUI-only workflows.
 - Package skeleton validation materializes fixture trees for Windows WinForms,
   macOS AppKit, Linux GTK, portable CLI, and portable TUI without real
   installers, signing, publication, or built package artifacts.
+- Discovery fixture validation scans deterministic fake Factorio install roots
+  for Windows Steam, Windows standalone, Windows portable, macOS app bundle,
+  Linux tarball, Linux headless, Linux OS-package-owned, imported/adoptable,
+  and invalid layouts.
+- Discovery goldens pin source, ownership, platform, capability, path-kind,
+  validation, refusal, and setup-mutation fields without depending on host
+  Factorio state.
+- Read-only invariant tests prove scan, import, doctor, and foreign-owned
+  repair/uninstall refusal do not mutate fixture install trees.
 
 ## Next R2 Work Units
 
 1. `FACMAN-DISCOVERY-FIXTURES-02`
-   - Add more platform install fixtures.
-   - Prove scan remains read-only across portable, Steam, headless, macOS app,
-     invalid, and adopted/imported layouts.
+   - Done for fixture-backed read-only discovery and ownership classification.
+   - Still not real Steam VDF parsing, Windows registry scan, macOS Spotlight
+     scan, Linux package-manager scan, or managed install adoption.
 
 2. `FACMAN-MODZIP-DEPTH-02`
    - Expand local ZIP metadata fixtures.

@@ -38,6 +38,20 @@ leaving setup mutation to Universal Setup.
 - JSON output for read-only reports.
 - No installing, repairing, uninstalling, or downloading.
 
+## FACMAN-DISCOVERY-FIXTURES-02
+
+- Deterministic fake install matrix under `tests/fixtures/factorio_installs/`.
+- Fixture manifests declare source, ownership, platform, capability,
+  validation, and setup-mutation expectations.
+- `facman installs scan --search-root <root> --json` classifies fixture roots
+  without host-machine discovery.
+- `facman doctor --search-root <root> --json` reports invalid explicit
+  candidates without mutating fixture trees.
+- Golden reports under `tests/golden/discovery/` pin read-only discovery
+  summaries.
+- Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager
+  scanning remain deferred.
+
 ## FacMan-INSTANCE-01
 
 - `facman instances create <name> --install <install-id>`
@@ -82,6 +96,7 @@ R1 - Developer preview
 
 R2 - Local power-user alpha
   real install import
+  fixture-backed discovery classification
   isolated instances
   dry-run and execute
   local modsets
