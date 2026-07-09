@@ -46,13 +46,13 @@ jobs:
           dotnet-version: "8.0.x"
       - name: Validate frontend contracts
         run: |
-          py -3 tools/frontend_contract_check.py
-          py -3 tools/gui_surface_check.py
-          py -3 tools/language_runtime_policy_check.py
+          python tools/frontend_contract_check.py
+          python tools/gui_surface_check.py
+          python tools/language_runtime_policy_check.py
       - name: Build WinForms shell
         run: dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj
       - name: Smoke WinForms command client
-        run: py -3 tools/winforms_command_client_smoke.py
+        run: python tools/winforms_command_client_smoke.py
 
   appkit-compile:
     runs-on: macos-latest
