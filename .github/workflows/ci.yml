@@ -5,20 +5,77 @@ on:
   pull_request:
 
 jobs:
-  test:
+  native-and-python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install -e .
-      - run: python -m unittest discover -s tests -v
-      - run: python tools/strict_check.py
-      - run: factorio-launcher --version
-      - run: factorio-launcher product inspect
-      - run: factorio-launcher doctor
-      - run: git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
-      - run: git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
-      - run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_APPS=ON
-      - run: cmake --build build/native-smoke
+      - name: Clone universal repositories
+        run: |
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+      - name: Configure native smoke
+        run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_APPS=ON
+      - name: Build native smoke
+        run: cmake --build build/native-smoke
+      - name: Run native smoke tests
+        run: ctest --test-dir build/native-smoke --output-on-failure
+      - name: Run Python unit tests
+        env:
+          FACMAN_CLI_EXE: ${{ github.workspace }}/build/native-smoke/facman
+        run: python -m unittest discover -s tests -v
+      - name: Run strict policy checks
+        run: python tools/strict_check.py
+      - name: Native CLI smoke
+        run: |
+          ./build/native-smoke/facman --version
+          ./build/native-smoke/facman product inspect
+          ./build/native-smoke/facman doctor
+
+  winforms-compile:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Validate frontend contracts
+        run: |
+          py -3 tools/frontend_contract_check.py
+          py -3 tools/gui_surface_check.py
+          py -3 tools/language_runtime_policy_check.py
+      - name: Build WinForms shell
+        run: dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj
+
+  appkit-compile:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile AppKit shell sources
+        run: |
+          mkdir -p build/appkit-smoke
+          clang -fobjc-arc -fmodules -mmacosx-version-min=10.13 \
+            -Iapps/gui/macos/appkit \
+            -framework Cocoa \
+            -c apps/gui/macos/appkit/AppDelegate.m \
+            -o build/appkit-smoke/AppDelegate.o
+          clang -fobjc-arc -fmodules -mmacosx-version-min=10.13 \
+            -Iapps/gui/macos/appkit \
+            -framework Cocoa \
+            -c apps/gui/macos/appkit/MainWindowController.m \
+            -o build/appkit-smoke/MainWindowController.o
+          clang++ -std=c++17 -fobjc-arc -fmodules -mmacosx-version-min=10.13 \
+            -Iapps/gui/macos/appkit \
+            -framework Cocoa \
+            -c apps/gui/macos/appkit/CommandClient.mm \
+            -o build/appkit-smoke/CommandClient.o
+          clang++ -std=c++17 -fobjc-arc -fmodules -mmacosx-version-min=10.13 \
+            -Iapps/gui/macos/appkit \
+            -framework Cocoa \
+            -c apps/gui/macos/appkit/JsonRpcClient.mm \
+            -o build/appkit-smoke/JsonRpcClient.o
