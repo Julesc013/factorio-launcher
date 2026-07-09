@@ -46,6 +46,21 @@ server execution, or GUI-only workflows.
   Factorio state.
 - Read-only invariant tests prove scan, import, doctor, and foreign-owned
   repair/uninstall refusal do not mutate fixture install trees.
+- Local mod ZIP fixtures cover simple metadata, required dependencies,
+  optional and hidden-optional dependencies, incompatibilities, Factorio
+  version pins, missing `info.json`, malformed `info.json`, invalid filenames,
+  duplicate versions, and explicit incompatibility pairs.
+- Local mod ZIP import validates metadata before copying into an instance and
+  returns structured refusals for unsafe or unsupported ZIPs.
+- Modset lockfiles pin SHA-1, SHA-256, source, enabled state, Factorio version,
+  and structured dependency/incompatibility declarations.
+- Modset lock/export refuse duplicate versions, unsatisfied dependencies,
+  incompatible pairs, invalid mod ZIPs, and incompatible Factorio versions.
+- Modset verification reports SHA-1 and SHA-256 drift with a structured
+  `mod_hash_mismatch` refusal.
+- Mod ZIP tests prove source fixture ZIPs are not mutated, invalid imports do
+  not partially install, and exported modsets avoid secrets and absolute
+  machine-local paths.
 
 ## Next R2 Work Units
 
@@ -55,9 +70,13 @@ server execution, or GUI-only workflows.
      scan, Linux package-manager scan, or managed install adoption.
 
 2. `FACMAN-MODZIP-DEPTH-02`
-   - Expand local ZIP metadata fixtures.
-   - Cover dependency operators, optional dependencies, incompatibilities,
-     missing `info.json`, and malformed archives.
+   - Done for deterministic local ZIP fixtures, metadata parsing, structured
+     dependency and incompatibility parsing, SHA-1/SHA-256 lock entries,
+     invalid ZIP refusals, duplicate-version refusals, and read-only source
+     artifact invariants.
+   - Still not Mod Portal networking, downloaded release selection, compressed
+     production archive compatibility, dependency solving from remote metadata,
+     or account/token behavior.
 
 3. `FACMAN-SAVE-ROUNDTRIP-02`
    - Strengthen backup, clone, export, and import roundtrips with multiple

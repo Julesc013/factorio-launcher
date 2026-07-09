@@ -68,6 +68,22 @@ leaving setup mutation to Universal Setup.
 - Modset verification.
 - Modset export.
 
+## FACMAN-MODZIP-DEPTH-02
+
+- Deterministic synthetic local mod ZIP matrix under
+  `tests/fixtures/factorio_mods/`.
+- `info.json` parsing for name, title, version, Factorio version, author,
+  description, dependencies, optional dependencies, hidden-optional
+  dependencies, and incompatibilities.
+- Lockfiles pin local filenames, SHA-1, SHA-256, source, enabled state, and
+  structured dependency declarations.
+- Goldens under `tests/golden/modsets/` pin valid lockfiles and invalid ZIP
+  refusals.
+- Mutation-invariant tests prove source ZIPs are not modified and invalid
+  imports do not partially install.
+- Mod Portal networking, account login, remote dependency solving, and setup
+  mutation remain deferred.
+
 ## FacMan-SETUP-HANDOFF-01
 
 - Managed install commands call Universal Setup.
