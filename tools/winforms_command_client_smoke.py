@@ -15,22 +15,16 @@ def main() -> int:
     if os.name != "nt":
         print("winforms-command-client-smoke: skipped (requires Windows/.NET Framework)")
         return 0
-    if shutil.which("dotnet") is None:
-        print("winforms-command-client-smoke: dotnet is not available", file=sys.stderr)
+    build_tool = resolve_build_tool()
+    if build_tool is None:
+        print("winforms-command-client-smoke: MSBuild or dotnet is not available", file=sys.stderr)
         return 1
 
     with tempfile.TemporaryDirectory(prefix="facman-winforms-smoke-") as tmp:
         tmp_path = Path(tmp)
         project = write_project(tmp_path)
         program = write_program(tmp_path)
-        build = subprocess.run(
-            ["dotnet", "build", str(project)],
-            cwd=tmp_path,
-            check=False,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        build = run_build(build_tool, project, tmp_path)
         if build.returncode != 0:
             print(build.stdout)
             print(build.stderr, file=sys.stderr)
@@ -87,6 +81,32 @@ def write_project(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     return project
+
+
+def resolve_build_tool() -> str | None:
+    for candidate in ["MSBuild.exe", "msbuild"]:
+        path = shutil.which(candidate)
+        if path is not None:
+            return path
+    dotnet = shutil.which("dotnet")
+    if dotnet is not None:
+        return dotnet
+    return None
+
+
+def run_build(build_tool: str, project: Path, cwd: Path) -> subprocess.CompletedProcess[str]:
+    if Path(build_tool).name.lower().startswith("msbuild"):
+        args = [build_tool, str(project), "/p:Configuration=Debug"]
+    else:
+        args = [build_tool, "build", str(project)]
+    return subprocess.run(
+        args,
+        cwd=cwd,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
 
 def write_program(tmp_path: Path) -> Path:

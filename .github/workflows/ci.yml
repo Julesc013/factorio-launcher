@@ -41,16 +41,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
+      - uses: microsoft/setup-msbuild@v2
       - name: Validate frontend contracts
         run: |
           python tools/frontend_contract_check.py
           python tools/gui_surface_check.py
           python tools/language_runtime_policy_check.py
       - name: Build WinForms shell
-        run: dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj
+        run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Debug
       - name: Smoke WinForms command client
         run: python tools/winforms_command_client_smoke.py
 
