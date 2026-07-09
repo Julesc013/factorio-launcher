@@ -84,6 +84,23 @@ leaving setup mutation to Universal Setup.
 - Mod Portal networking, account login, remote dependency solving, and setup
   mutation remain deferred.
 
+## FACMAN-SAVE-ROUNDTRIP-02
+
+- Deterministic synthetic save fixture matrix under
+  `tests/fixtures/factorio_saves/`.
+- Save backup writes sidecar manifests with source, destination, timestamp,
+  SHA-1, and SHA-256 metadata.
+- Save backup, clone, export, and import refuse existing targets instead of
+  overwriting silently.
+- Malformed save ZIPs return structured `save_malformed` refusals before
+  backup, clone, or export writes outputs.
+- Instance import preflights archive safety and target existence before writing
+  restored instance files.
+- Export/import tests prove saves roundtrip, config secrets are redacted, and
+  source save fixtures are not mutated.
+- Steam Cloud mutation, deep save parsing, map preview, save benchmarking, and
+  save-associated modset inference remain deferred.
+
 ## FacMan-SETUP-HANDOFF-01
 
 - Managed install commands call Universal Setup.

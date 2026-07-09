@@ -65,3 +65,7 @@ Runtime invariant tests now cover:
 - no fixture install-tree mutation during discovery scan, explicit-root doctor,
   invalid import refusal, and foreign-owned repair/uninstall refusal
 - redaction of obvious `config.ini` secrets during portable instance export
+- save backup, clone, export, and import refusals for existing targets without
+  overwriting existing workspace files
+- no source save fixture mutation during backup, clone, export, import, and
+  malformed-save refusal tests

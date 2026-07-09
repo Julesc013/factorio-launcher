@@ -61,6 +61,19 @@ server execution, or GUI-only workflows.
 - Mod ZIP tests prove source fixture ZIPs are not mutated, invalid imports do
   not partially install, and exported modsets avoid secrets and absolute
   machine-local paths.
+- Save fixtures cover valid saves, mod-metadata-adjacent saves, existing
+  targets, duplicate file-name ordering, malformed archives, and
+  secret-adjacent config.
+- Save backup writes a sidecar manifest with source, destination, timestamp,
+  SHA-1, and SHA-256 metadata.
+- Save backup, save clone, instance export, and instance import refuse existing
+  targets instead of overwriting silently.
+- Save backup, clone, and export refuse malformed save ZIPs before writing
+  outputs.
+- Instance import preflights archive safety and target existence before writing
+  the restored instance tree.
+- Save roundtrip tests prove source fixtures are not mutated and instance
+  exports redact config secrets and avoid machine-local workspace paths.
 
 ## Next R2 Work Units
 
@@ -79,8 +92,11 @@ server execution, or GUI-only workflows.
      or account/token behavior.
 
 3. `FACMAN-SAVE-ROUNDTRIP-02`
-   - Strengthen backup, clone, export, and import roundtrips with multiple
-     saves and existing-target refusal behavior.
+   - Done for deterministic save fixtures, backup manifests, clone/import
+     roundtrip, malformed-save refusals, existing-target refusals, redacted
+     exports, and source-fixture non-mutation.
+   - Still not deep Factorio save introspection, Steam Cloud mutation, map
+     preview, benchmark save execution, or save-associated modset inference.
 
 4. `FACMAN-DIAGNOSTIC-REDACTION-02`
    - Route diagnostic bundle assembly through the redaction policy.
