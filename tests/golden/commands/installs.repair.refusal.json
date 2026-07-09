@@ -8,7 +8,7 @@
   "mutates_install": false,
   "ownership": "imported",
   "refusal": {
-    "schema": "usk.refusal.v1",
+    "schema": "common.refusal.v1",
     "operation": "repair",
     "code": "ownership_denied",
     "reason": "setup may not repair imported installs",

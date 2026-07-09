@@ -562,6 +562,7 @@ std::string server_refusal_json(const std::string& operation, const ServerRef& s
     out << "  \"server_id\": " << quote(server.server_id) << ",\n";
     out << "  \"instance_id\": " << quote(server.instance_id) << ",\n";
     out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
     out << "    \"code\": \"execution_not_enabled\",\n";
     out << "    \"reason\": " << quote(reason) << ",\n";
     out << "    \"recoverable\": true\n";
@@ -613,7 +614,7 @@ std::string setup_refusal_json(
     out << "  \"install_id\": " << quote(install.install_id) << ",\n";
     out << "  \"ownership\": " << quote(install.ownership) << ",\n";
     out << "  \"refusal\": {\n";
-    out << "    \"schema\": \"usk.refusal.v1\",\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
     out << "    \"operation\": " << quote(operation) << ",\n";
     out << "    \"code\": \"ownership_denied\",\n";
     out << "    \"reason\": " << quote(reason) << ",\n";
@@ -639,7 +640,7 @@ std::string mod_portal_refusal_json(
     out << "  \"query\": " << quote(query) << ",\n";
     out << "  \"instance_id\": " << quote(instance_id) << ",\n";
     out << "  \"refusal\": {\n";
-    out << "    \"schema\": \"usk.refusal.v1\",\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
     out << "    \"operation\": " << quote(operation) << ",\n";
     out << "    \"code\": \"network_forbidden\",\n";
     out << "    \"reason\": \"Mod Portal network access is not enabled in this portable build\",\n";
@@ -2337,6 +2338,7 @@ std::string dev_refusal_json(const std::string& operation)
     out << "  \"operation\": " << quote(operation) << ",\n";
     out << "  \"status\": \"refused\",\n";
     out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
     out << "    \"code\": \"execution_not_enabled\",\n";
     out << "    \"reason\": \"Factorio execution-based developer tooling is not enabled in this slice\",\n";
     out << "    \"recoverable\": true\n";

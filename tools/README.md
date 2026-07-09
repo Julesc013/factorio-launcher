@@ -16,3 +16,5 @@ Workspace proof tools:
   can optionally run the full build/test matrix with `--build`.
 - `alpha_vertical_slice_check.py` validates golden JSON examples for the current
   FacMan alpha command surface.
+- `refusal_golden_check.py` validates that command refusal goldens use the common
+  FacMan refusal contract.

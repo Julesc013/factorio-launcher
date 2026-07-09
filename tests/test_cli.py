@@ -252,6 +252,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1)
             repair = json.loads(stdout)
             self.assertEqual(repair["status"], "refused")
+            self.assertEqual(repair["refusal"]["schema"], "common.refusal.v1")
             self.assertEqual(repair["refusal"]["code"], "ownership_denied")
             self.assertFalse(repair["mutates_install"])
 
@@ -366,6 +367,7 @@ class CliTests(unittest.TestCase):
             search = json.loads(stdout)
             self.assertEqual(search["status"], "refused")
             self.assertFalse(search["network_allowed"])
+            self.assertEqual(search["refusal"]["schema"], "common.refusal.v1")
             self.assertEqual(search["refusal"]["code"], "network_forbidden")
 
             code, stdout, _stderr = invoke(
@@ -412,6 +414,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1)
             start = json.loads(stdout)
             self.assertEqual(start["operation"], "servers.start")
+            self.assertEqual(start["refusal"]["schema"], "common.refusal.v1")
             self.assertEqual(start["refusal"]["code"], "execution_not_enabled")
 
             code, stdout, stderr = invoke(["--workspace", tmp, "dev", "bug-report", "--json"])
@@ -424,6 +427,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1)
             dev_refusal = json.loads(stdout)
             self.assertEqual(dev_refusal["operation"], "dev.dump-data")
+            self.assertEqual(dev_refusal["refusal"]["schema"], "common.refusal.v1")
             self.assertEqual(dev_refusal["refusal"]["code"], "execution_not_enabled")
 
 

@@ -6,7 +6,7 @@
   "network_allowed": false,
   "query": "space",
   "refusal": {
-    "schema": "usk.refusal.v1",
+    "schema": "common.refusal.v1",
     "operation": "mods.search",
     "code": "network_forbidden",
     "reason": "Mod Portal network access is not enabled in this portable build",
