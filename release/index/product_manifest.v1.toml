@@ -1,0 +1,20 @@
+schema = "facman.product_manifest.v1"
+product_id = "facman"
+product_name = "FacMan"
+package_model = "self_contained_product_distribution"
+global_runtime_required = false
+install_modes = ["portable", "user", "system"]
+universal_components = ["universal_launcher", "universal_setup"]
+
+[boundaries]
+facman_owns = ["factorio_binding", "frontends", "content", "product_packaging"]
+universal_launcher_owns = ["launch_orchestration", "profiles", "artifact_sets"]
+universal_setup_owns = ["install", "verify", "repair", "uninstall", "update", "rollback", "audit"]
+launcher_owned_install_mutation = false
+
+[workspace_policy]
+install_directory_is_workspace = false
+portable_may_bundle_workspace = true
+user_install_workspace_under_user_data = true
+system_install_workspace_under_user_data = true
+uninstall_preserves_workspace_by_default = true

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.product_manifest.v1",
+  "title": "FacMan Product Manifest",
+  "type": "object",
+  "required": [
+    "schema",
+    "product_id",
+    "product_name",
+    "package_model",
+    "global_runtime_required",
+    "install_modes"
+  ],
+  "properties": {
+    "schema": { "const": "facman.product_manifest.v1" },
+    "product_id": { "const": "facman" },
+    "product_name": { "type": "string" },
+    "package_model": { "const": "self_contained_product_distribution" },
+    "global_runtime_required": { "const": false },
+    "install_modes": {
+      "type": "array",
+      "items": { "enum": ["portable", "user", "system"] },
+      "minItems": 3
+    },
+    "universal_components": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 2
+    },
+    "workspace_policy": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

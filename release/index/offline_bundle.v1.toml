@@ -1,0 +1,18 @@
+schema = "facman.offline_bundle.v1"
+id = "facman_offline_bundle_contract_v1"
+package_class = "offline_bundle"
+applies_through = "universal_setup"
+mutates_on_check = false
+requires_payload_verification = true
+requires_audit = true
+rollback_supported = true
+preserves_workspace_by_default = true
+includes = [
+  "payloads",
+  "release_index",
+  "checksums",
+  "install_plan",
+  "contracts",
+  "content",
+  "setup_helper",
+]

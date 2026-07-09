@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.install_receipt.v1",
+  "title": "FacMan Install Receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "install_id",
+    "install_mode",
+    "package_id",
+    "setup_authority",
+    "workspace_preserved"
+  ],
+  "properties": {
+    "schema": { "const": "facman.install_receipt.v1" },
+    "install_id": { "type": "string" },
+    "install_mode": {
+      "enum": ["portable", "user", "system"]
+    },
+    "package_id": { "type": "string" },
+    "setup_authority": { "const": "universal_setup" },
+    "workspace_preserved": { "type": "boolean" },
+    "owned_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "workspace_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

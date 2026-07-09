@@ -26,6 +26,10 @@
     "forbidden_payloads": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "release_contracts": {
+      "type": "array",
+      "items": { "type": "string" }
     }
   },
   "additionalProperties": true

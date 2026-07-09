@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.build_manifest.v1",
+  "title": "FacMan Build Manifest",
+  "type": "object",
+  "required": [
+    "schema",
+    "canonical_version",
+    "filename_version",
+    "channel",
+    "build_kind",
+    "package_revision",
+    "component",
+    "schema_versions",
+    "abi_versions"
+  ],
+  "properties": {
+    "schema": { "const": "facman.build_manifest.v1" },
+    "canonical_version": { "type": "string" },
+    "filename_version": { "type": "string" },
+    "channel": {
+      "enum": ["stable", "beta", "nightly", "pinned"]
+    },
+    "build_kind": {
+      "enum": ["dev", "ci", "beta", "rc", "release", "hotfix"]
+    },
+    "package_revision": { "type": "string" },
+    "component": {
+      "type": "array",
+      "items": { "type": "object" },
+      "minItems": 3
+    },
+    "schema_versions": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    },
+    "abi_versions": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    }
+  },
+  "additionalProperties": true
+}

@@ -12,7 +12,15 @@
       "minItems": 1
     },
     "package_manifest": { "type": "string" },
-    "support_matrix": { "type": "string" }
+    "support_matrix": { "type": "string" },
+    "product_manifest": { "type": "string" },
+    "build_manifest": { "type": "string" },
+    "dependency_lock": { "type": "string" },
+    "install_modes": { "type": "string" },
+    "update_report": { "type": "string" },
+    "offline_bundle": { "type": "string" },
+    "artifact_matrix": { "type": "string" },
+    "profile_catalog": { "type": "string" }
   },
   "additionalProperties": true
 }

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.dependency_lock.v1",
+  "title": "FacMan Dependency Lock",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "global_runtime_required",
+    "component"
+  ],
+  "properties": {
+    "schema": { "const": "facman.dependency_lock.v1" },
+    "id": { "type": "string" },
+    "global_runtime_required": { "const": false },
+    "component": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "version", "abi_version", "pin", "bundled"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string" },
+          "version": { "type": "string" },
+          "abi_version": { "type": "integer", "minimum": 1 },
+          "pin": { "type": "string" },
+          "bundled": { "const": true }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
