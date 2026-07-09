@@ -10,7 +10,19 @@ claiming later product or package readiness.
 | `source-static` | Repo validators confirm files, command IDs, refusal states, and forbidden backend markers. | `tools/gui_surface_check.py`, `tools/frontend_contract_check.py`, `tools/language_runtime_policy_check.py` |
 | `compile` | The platform compiler builds the frontend source on the target operating system or a compatible runner. | Windows `dotnet build`, macOS AppKit clang/xcodebuild smoke, Linux toolkit compile smoke |
 | `runtime-smoke` | The command-client layer can call a fixture backend or CLI and render success/refusal output. | Focused fake-backend smoke tests or platform GUI smoke harnesses |
-| `package-smoke` | The frontend is included in a distribution layout with required runtime files and manifests. | Package contract checks and platform distribution smoke |
+| `package-smoke` | The frontend is included in a distribution layout with required runtime files and manifests. | Package contract checks, package skeleton checks, and platform distribution smoke |
+
+## Package Proof Levels
+
+Package readiness is tracked separately from frontend source readiness:
+
+| Level | Meaning |
+| --- | --- |
+| `contract-only` | Release/profile/package manifests validate. |
+| `skeleton-layout` | A generated fixture package tree validates with placeholders. |
+| `built-artifact` | Real build outputs are copied into a package layout. |
+| `runtime-smoke` | The package can run a command/result/refusal smoke. |
+| `signed-published` | The package is signed/notarized/published for its lane. |
 
 ## Current Status
 
@@ -19,8 +31,8 @@ claiming later product or package readiness.
 | CLI | yes | yes | yes | no | Native CMake and CLI tests cover current behavior. |
 | TUI | scaffolded | yes | no | no | TUI parity is a later frontend milestone. |
 | Daemon | scaffolded | yes | no | no | Daemon transport maturity is later runtime/client work. |
-| WinForms | yes | Windows CI yes | command-client yes | layout only | `FACMAN-WINFORMS-SHELL-01` proves a thin GUI over CLI JSON and is built by the Windows CI lane. |
-| AppKit | yes | macOS CI yes | no | layout only | `FACMAN-APPKIT-SHELL-01` has source/static proof and a macOS compile lane; runtime smoke remains future work. |
+| WinForms | yes | Windows CI yes | command-client yes | skeleton-layout | `FACMAN-WINFORMS-SHELL-01` proves a thin GUI over CLI JSON and is built by the Windows CI lane. |
+| AppKit | yes | macOS CI yes | no | skeleton-layout | `FACMAN-APPKIT-SHELL-01` has source/static proof and a macOS compile lane; runtime smoke remains future work. |
 | WinUI | placeholder | no | no | no | Reserved for a later modern Windows lane. |
 | SwiftUI | placeholder | no | no | no | Reserved for a later modern macOS lane. |
 | GTK | placeholder | no | no | no | Reserved until first native shell compile proof is stable. |
@@ -36,5 +48,5 @@ claiming later product or package readiness.
   the frontend binary and required runtime/contracts/content files.
 - `source-static` proof is still valuable, but it is not a substitute for a
   native compiler or package lane.
-- `layout only` means package manifests describe the expected distribution
-  shape and pass validators. It is not a built, signed, or installed package.
+- `skeleton-layout` means generated package trees exist with placeholders and
+  pass validators. It is not a built, signed, or installed package.

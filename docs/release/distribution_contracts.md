@@ -25,6 +25,9 @@ The first profile set is:
 - `portable_cli_x64`
 - `portable_tui_x64`
 
+`FACMAN-PACKAGE-SKELETON-02` turns those profiles into generated fixture
+package trees. See [package_skeletons.md](package_skeletons.md).
+
 ## Required Package Surface
 
 Every release profile must account for:

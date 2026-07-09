@@ -12,8 +12,9 @@ server execution, or GUI-only workflows.
 - Command effects, refusal codes, workspace contracts, package contracts,
   accessibility/theme contracts, and redaction policy are present.
 - `strict_check.py` runs structure, schema, security, source-format,
-  accessibility, package, package-layout, GUI, language/runtime, command,
-  frontend, alpha-golden, refusal, discovery, and release-readiness checks.
+  accessibility, package, package-layout, package-manifest, package-skeleton,
+  GUI, language/runtime, command, frontend, alpha-golden, refusal, discovery,
+  and release-readiness checks.
 
 ## Hardened In This Slice
 
@@ -33,6 +34,9 @@ server execution, or GUI-only workflows.
 - Package manifest validation checks release profiles, support metadata,
   frontend manifests, install modes, required package paths, license files,
   forbidden payload markers, and CLI/TUI-only GUI toolkit isolation.
+- Package skeleton validation materializes fixture trees for Windows WinForms,
+  macOS AppKit, Linux GTK, portable CLI, and portable TUI without real
+  installers, signing, publication, or built package artifacts.
 
 ## Next R2 Work Units
 
@@ -55,9 +59,9 @@ server execution, or GUI-only workflows.
    - Add tests that secrets do not appear in diagnostics, exports, or logs.
 
 5. `FACMAN-PACKAGE-SKELETON-02`
-   - Materialize fixture package layouts without building real installers.
-   - Turn the contract-backed release profiles into fixture package layouts.
-   - Keep real installers, signing, notarization, and publication deferred.
+   - Done for contract-backed fixture layouts.
+   - Still not a real installer, signed artifact, notarized app, AppImage, DMG,
+     or published package.
 
 ## Still Deferred
 
