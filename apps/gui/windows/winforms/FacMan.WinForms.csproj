@@ -7,8 +7,15 @@
     <AssemblyName>FacMan.WinForms</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="MainForm.cs" />
+    <Compile Include="CommandModels.cs" />
+    <Compile Include="CommandCatalog.cs" />
     <Compile Include="CommandClient.cs" />
     <Compile Include="JsonRpcClient.cs" />
   </ItemGroup>
