@@ -725,6 +725,12 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<std::string>& 
     for (const std::string& value : option_values(args, "--path")) {
         roots.push_back(value);
     }
+    for (const std::string& value : option_values(args, "--search-root")) {
+        roots.push_back(value);
+    }
+    for (const std::string& value : option_values(args, "--roots")) {
+        roots.push_back(value);
+    }
     return factorio_discovery::scan_install_candidates(roots);
 }
 
@@ -1528,7 +1534,7 @@ int print_help()
     std::cout << "  command-graph inspect [--json]\n";
     std::cout << "  diagnostics report [--json]\n";
     std::cout << "  doctor [--json]\n";
-    std::cout << "  installs scan [--path <root>] [--json]\n";
+    std::cout << "  installs scan [--path <root>] [--search-root <root>] [--json]\n";
     std::cout << "  installs inspect <install-id> [--json]\n";
     std::cout << "  installs import <factorio-dir> --id <install-id> [--json]\n";
     std::cout << "  installs install-version <version> --archive <path> [--json]\n";
@@ -1839,7 +1845,7 @@ int command_installs(const CliOptions& options)
         } else {
             if (candidates.empty()) {
                 std::cout << "No Factorio install candidates found.\n";
-                std::cout << "Use facman installs scan --path <folder> or facman installs import <factorio-dir> --id <install-id>.\n";
+                std::cout << "Use facman installs scan --search-root <folder> or facman installs import <factorio-dir> --id <install-id>.\n";
             }
             for (const InstallRef& install : candidates) {
                 std::cout << install.install_id << " "
