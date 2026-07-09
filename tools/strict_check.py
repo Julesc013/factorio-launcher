@@ -22,6 +22,7 @@ from tools import (
     package_skeleton_check,
     refusal_contract_check,
     refusal_golden_check,
+    release_contract_check,
     release_readiness_check,
     schema_validate,
     security_policy_check,
@@ -54,6 +55,7 @@ def main() -> int:
         ("refusal-golden", refusal_golden_check.main),
         ("discovery-golden", discovery_golden_check.main),
         ("release-readiness", release_readiness_check.main),
+        ("release-contract", release_contract_check.main),
     ]
     failed: list[str] = []
     for name, check in checks:

@@ -18,3 +18,5 @@ Workspace proof tools:
   FacMan alpha command surface.
 - `refusal_golden_check.py` validates that command refusal goldens use the common
   FacMan refusal contract.
+- `release_contract_check.py` runs the release/distribution validators under
+  `tools/validators/release/`.

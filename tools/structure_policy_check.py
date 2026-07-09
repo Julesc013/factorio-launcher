@@ -268,6 +268,8 @@ def check_children(relative_root: str, allowed: set[str]) -> list[str]:
     for child in root.iterdir():
         if child.name == "README.md":
             continue
+        if relative_root == "release/profiles" and child.name == "profile_catalog.v1.toml":
+            continue
         if child.is_dir() and child.name in allowed:
             continue
         if child.is_file() and relative_root.endswith("schema") and child.suffix == ".json":
