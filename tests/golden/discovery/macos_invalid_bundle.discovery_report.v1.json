@@ -1,0 +1,24 @@
+{
+  "schema": "factorio.discovery_report.v1",
+  "command": "installs.scan",
+  "read_only": true,
+  "candidate_count": 1,
+  "structural_count": 0,
+  "invalid_count": 1,
+  "install": {
+    "candidate_id": "macos_invalid_bundle",
+    "source": "invalid",
+    "ownership": "imported",
+    "platform": "macos",
+    "capabilities": [],
+    "executable_path_kind": "missing",
+    "app_dir_kind": "app_bundle",
+    "validation_status": "invalid",
+    "setup_mutation_allowed": false,
+    "refusal": {
+      "code": "invalid_factorio_install",
+      "severity": "blocked",
+      "retryable": true
+    }
+  }
+}

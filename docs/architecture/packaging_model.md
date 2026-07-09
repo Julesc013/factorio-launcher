@@ -26,11 +26,11 @@ The canonical Windows artifact is a portable ZIP:
 
 ```text
 FacMan-<version>-windows-x64-portable.zip
-  FacMan.exe
-  facman.exe
-  facman-tui.exe
-  facmand.exe
   bin/
+    FacMan.WinForms.exe
+    facman.exe
+    facman-tui.exe
+    facmand.exe
     ulk.dll
     usk.dll
     flb_factorio.dll
@@ -82,7 +82,35 @@ Versioned package manifests live under `release/packaging/`. They declare
 component names, source targets, package destinations, architecture, hashes,
 signature policy, extraction policy, runtime search path, and license notices.
 
+The distribution contract layer lives beside those manifests:
+
+- `release/index/release_index.v1.toml`
+- `release/index/package_manifest.v1.toml`
+- `release/index/distribution_lanes.v1.toml`
+- `release/index/support_matrix.v1.toml`
+- `release/profiles/*/profile.toml`
+- `release/packaging/common/*.toml`
+
+This layer validates package lanes before real artifacts exist. It proves the
+required binaries, libraries, contracts, content, licenses, frontend manifest,
+package manifest, support matrix, entrypoints, unsupported behavior, and
+minimum runtime floor are declared for each lane.
+
+The first contract-backed lanes are:
+
+- `windows_legacy_winforms_x64`
+- `macos_legacy_appkit_x64`
+- `linux_x11_gtk_x64`
+- `portable_cli_x64`
+- `portable_tui_x64`
+
 `tools/package_check.py` enforces the packaging rules.
+`tools/package_layout_check.py` expands bundle layouts and rejects missing
+contracts/content, duplicate destinations, forbidden payload markers, missing
+license notices, and GUI toolkit leaks into CLI/TUI-only bundles.
+`tools/package_manifest_check.py` validates the release index, profile TOML,
+support matrix, frontend manifest, required paths, install modes, and package
+manifest alignment.
 
 See [../release/distribution_layout.md](../release/distribution_layout.md) for
 the frontend/helper/library layout expected in each package family.
@@ -90,3 +118,6 @@ the frontend/helper/library layout expected in each package family.
 See [../product/install_distribution_modes.md](../product/install_distribution_modes.md)
 for the portable, user-installed, and system-installed mode contract across
 Windows, macOS, and Linux.
+
+See [../release/distribution_contracts.md](../release/distribution_contracts.md)
+for the `FACMAN-DISTRIBUTION-CONTRACT-02` profile contract.

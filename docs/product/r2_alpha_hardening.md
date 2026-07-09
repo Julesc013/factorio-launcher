@@ -12,8 +12,9 @@ server execution, or GUI-only workflows.
 - Command effects, refusal codes, workspace contracts, package contracts,
   accessibility/theme contracts, and redaction policy are present.
 - `strict_check.py` runs structure, schema, security, source-format,
-  accessibility, package, package-layout, GUI, language/runtime, command,
-  frontend, alpha-golden, refusal, discovery, and release-readiness checks.
+  accessibility, package, package-layout, package-manifest, package-skeleton,
+  GUI, language/runtime, command, frontend, alpha-golden, refusal, discovery,
+  and release-readiness checks.
 
 ## Hardened In This Slice
 
@@ -28,31 +29,100 @@ server execution, or GUI-only workflows.
 - Package layout smoke validation expands `base_manifest` inheritance and
   checks relative destinations, entrypoints, duplicate destinations, and
   required contracts/content placement.
+- Distribution contracts define first release profiles for Windows WinForms,
+  macOS AppKit, Linux X11 GTK, portable CLI, and portable TUI lanes.
+- Package manifest validation checks release profiles, support metadata,
+  frontend manifests, install modes, required package paths, license files,
+  forbidden payload markers, and CLI/TUI-only GUI toolkit isolation.
+- Package skeleton validation materializes fixture trees for Windows WinForms,
+  macOS AppKit, Linux GTK, portable CLI, and portable TUI without real
+  installers, signing, publication, or built package artifacts.
+- Discovery fixture validation scans deterministic fake Factorio install roots
+  for Windows Steam, Windows standalone, Windows portable, macOS app bundle,
+  Linux tarball, Linux headless, Linux OS-package-owned, imported/adoptable,
+  and invalid layouts.
+- Discovery goldens pin source, ownership, platform, capability, path-kind,
+  validation, refusal, and setup-mutation fields without depending on host
+  Factorio state.
+- Read-only invariant tests prove scan, import, doctor, and foreign-owned
+  repair/uninstall refusal do not mutate fixture install trees.
+- Local mod ZIP fixtures cover simple metadata, required dependencies,
+  optional and hidden-optional dependencies, incompatibilities, Factorio
+  version pins, missing `info.json`, malformed `info.json`, invalid filenames,
+  duplicate versions, and explicit incompatibility pairs.
+- Local mod ZIP import validates metadata before copying into an instance and
+  returns structured refusals for unsafe or unsupported ZIPs.
+- Modset lockfiles pin SHA-1, SHA-256, source, enabled state, Factorio version,
+  and structured dependency/incompatibility declarations.
+- Modset lock/export refuse duplicate versions, unsatisfied dependencies,
+  incompatible pairs, invalid mod ZIPs, and incompatible Factorio versions.
+- Modset verification reports SHA-1 and SHA-256 drift with a structured
+  `mod_hash_mismatch` refusal.
+- Mod ZIP tests prove source fixture ZIPs are not mutated, invalid imports do
+  not partially install, and exported modsets avoid secrets and absolute
+  machine-local paths.
+- Save fixtures cover valid saves, mod-metadata-adjacent saves, existing
+  targets, duplicate file-name ordering, malformed archives, and
+  secret-adjacent config.
+- Save backup writes a sidecar manifest with source, destination, timestamp,
+  SHA-1, and SHA-256 metadata.
+- Save backup, save clone, instance export, and instance import refuse existing
+  targets instead of overwriting silently.
+- Save backup, clone, and export refuse malformed save ZIPs before writing
+  outputs.
+- Instance import preflights archive safety and target existence before writing
+  the restored instance tree.
+- Save roundtrip tests prove source fixtures are not mutated and instance
+  exports redact config secrets and avoid machine-local workspace paths.
+- Diagnostic redaction policy contracts define field-name, path-name,
+  key-value, pattern, binary-file, archive-file, and allowed-metadata behavior.
+- Runtime diagnostics redaction replaces credential-like values with
+  `[FACMAN_REDACTED]` and emits structured redaction events.
+- Diagnostic bundle export writes redacted workspace, install-ref, instance,
+  config, log, doctor, manifest, and redaction-report entries while excluding
+  denied account/token/Steam-userdata-like paths.
+- Diagnostic bundle tests prove raw secret corpus values do not appear in
+  diagnostics export output, doctor-created bundles, instance exports, or
+  generated bundle contents.
+- Diagnostic tests prove redaction is deterministic and idempotent, binary
+  files are skipped, archive-like files are excluded, and source fixtures are
+  not mutated.
 
 ## Next R2 Work Units
 
 1. `FACMAN-DISCOVERY-FIXTURES-02`
-   - Add more platform install fixtures.
-   - Prove scan remains read-only across portable, Steam, headless, macOS app,
-     invalid, and adopted/imported layouts.
+   - Done for fixture-backed read-only discovery and ownership classification.
+   - Still not real Steam VDF parsing, Windows registry scan, macOS Spotlight
+     scan, Linux package-manager scan, or managed install adoption.
 
 2. `FACMAN-MODZIP-DEPTH-02`
-   - Expand local ZIP metadata fixtures.
-   - Cover dependency operators, optional dependencies, incompatibilities,
-     missing `info.json`, and malformed archives.
+   - Done for deterministic local ZIP fixtures, metadata parsing, structured
+     dependency and incompatibility parsing, SHA-1/SHA-256 lock entries,
+     invalid ZIP refusals, duplicate-version refusals, and read-only source
+     artifact invariants.
+   - Still not Mod Portal networking, downloaded release selection, compressed
+     production archive compatibility, dependency solving from remote metadata,
+     or account/token behavior.
 
 3. `FACMAN-SAVE-ROUNDTRIP-02`
-   - Strengthen backup, clone, export, and import roundtrips with multiple
-     saves and existing-target refusal behavior.
+   - Done for deterministic save fixtures, backup manifests, clone/import
+     roundtrip, malformed-save refusals, existing-target refusals, redacted
+     exports, and source-fixture non-mutation.
+   - Still not deep Factorio save introspection, Steam Cloud mutation, map
+     preview, benchmark save execution, or save-associated modset inference.
 
 4. `FACMAN-DIAGNOSTIC-REDACTION-02`
-   - Route diagnostic bundle assembly through the redaction policy.
-   - Add tests that secrets do not appear in diagnostics, exports, or logs.
+   - Done for redaction policy contracts, runtime redaction, diagnostic bundle
+     assembly, doctor bundle output, redaction reports, secret corpus fixtures,
+     no-leak invariants, deterministic/idempotent redaction, binary skips, and
+     archive exclusions.
+   - Still not Factorio account login, credential-store implementation,
+     Mod Portal token handling, diagnostic upload, or GUI diagnostic UX.
 
 5. `FACMAN-PACKAGE-SKELETON-02`
-   - Materialize fixture package layouts without building real installers.
-   - Validate required binaries, libraries, contracts, content, licenses,
-     frontend manifest, package manifest, and support matrix placement.
+   - Done for contract-backed fixture layouts.
+   - Still not a real installer, signed artifact, notarized app, AppImage, DMG,
+     or published package.
 
 ## Still Deferred
 

@@ -1,0 +1,13 @@
+{
+  "schema": "facman.fixture.factorio_install.v1",
+  "fixture_id": "windows_portable",
+  "description": "Portable Windows archive-style fixture with stub executable only.",
+  "expected": {
+    "source": "portable",
+    "ownership": "portable",
+    "platform": "windows-x64",
+    "capabilities": ["gui"],
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}

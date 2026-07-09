@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release_profile.v1",
+  "title": "FacMan Release Profile",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "lane",
+    "target_os",
+    "target_arch",
+    "minimum_os",
+    "package_types",
+    "install_modes",
+    "package_manifest",
+    "frontend_manifest",
+    "support_matrix"
+  ],
+  "properties": {
+    "schema": { "const": "facman.release_profile.v1" },
+    "id": { "type": "string" },
+    "lane": { "type": "string" },
+    "target_os": { "type": "string" },
+    "target_arch": { "type": "string" },
+    "minimum_os": { "type": "string" },
+    "package_types": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "install_modes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "package_manifest": { "type": "string" },
+    "frontend_manifest": { "type": "string" },
+    "support_matrix": { "type": "string" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/diagnostic_bundle.v1.schema.json",
+  "title": "Factorio Diagnostic Bundle",
+  "type": "object",
+  "required": ["schema", "bundle_version", "instance_id", "files", "redaction"],
+  "properties": {
+    "schema": { "const": "factorio.diagnostic_bundle.v1" },
+    "bundle_version": { "type": "integer", "minimum": 1 },
+    "instance_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "kind"],
+        "properties": {
+          "path": { "type": "string" },
+          "kind": {
+            "enum": [
+              "manifest",
+              "workspace",
+              "install_ref",
+              "instance_manifest",
+              "doctor_report",
+              "config",
+              "log",
+              "modset_lock",
+              "redaction_report"
+            ]
+          },
+          "redacted": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "excluded_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "redaction": {
+      "type": "object",
+      "required": ["policy_schema", "marker"],
+      "properties": {
+        "policy_schema": { "const": "facman.redaction_policy.v1" },
+        "marker": { "type": "string" },
+        "report_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

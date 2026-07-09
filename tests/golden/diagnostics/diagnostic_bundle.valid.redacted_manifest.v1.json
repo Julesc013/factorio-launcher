@@ -1,0 +1,10 @@
+{
+  "schema": "factorio.diagnostic_bundle.v1",
+  "bundle_version": 1,
+  "instance_id": "redaction-proof",
+  "redaction": {
+    "policy_schema": "facman.redaction_policy.v1",
+    "marker": "[FACMAN_REDACTED]",
+    "report_path": "redaction/report.v1.json"
+  }
+}

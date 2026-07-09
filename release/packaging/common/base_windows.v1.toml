@@ -1,0 +1,10 @@
+schema = "facman.packaging.common_profile.v1"
+id = "base_windows"
+target_os = "windows"
+package_types = ["portable_zip", "installer", "self_extracting_bootstrapper"]
+install_modes = ["portable", "user", "system"]
+required_paths = ["bin", "contracts/schema", "content/factorio"]
+license_paths = ["licenses"]
+forbid_absolute_paths = true
+bundles_factorio_binaries = false
+credential_storage = false

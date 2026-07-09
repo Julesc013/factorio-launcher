@@ -1,0 +1,14 @@
+{
+  "schema": "facman.fixture.factorio_install.v1",
+  "fixture_id": "macos_invalid_bundle",
+  "description": "Invalid macOS app-like fixture missing executable and base metadata.",
+  "expected": {
+    "source": "invalid",
+    "ownership": "imported",
+    "platform": "macos",
+    "capabilities": [],
+    "validation_status": "invalid",
+    "diagnostic_code": "invalid_factorio_install",
+    "setup_mutation_allowed": false
+  }
+}

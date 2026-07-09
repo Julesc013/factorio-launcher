@@ -1,0 +1,8 @@
+{
+  "expected_refusal_code": "mod_zip_invalid_filename",
+  "expected_status": "refused",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "badname.zip"
+  ]
+}

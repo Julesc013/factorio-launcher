@@ -1,0 +1,13 @@
+{
+  "schema": "facman.fixture.factorio_install.v1",
+  "fixture_id": "linux_tarball",
+  "description": "Linux tarball-style fixture with stub executable only.",
+  "expected": {
+    "source": "tarball",
+    "ownership": "portable",
+    "platform": "linux-x64",
+    "capabilities": ["gui"],
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}

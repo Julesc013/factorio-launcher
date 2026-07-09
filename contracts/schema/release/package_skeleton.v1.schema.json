@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.package_skeleton.v1",
+  "title": "FacMan Package Skeleton Marker",
+  "type": "object",
+  "required": [
+    "schema",
+    "profile_id",
+    "real_artifact",
+    "purpose",
+    "release_profile",
+    "package_manifest",
+    "entrypoints",
+    "support_paths",
+    "capabilities"
+  ],
+  "properties": {
+    "schema": { "const": "facman.package_skeleton.v1" },
+    "profile_id": { "type": "string" },
+    "real_artifact": { "const": false },
+    "purpose": { "const": "layout validation only" },
+    "release_profile": { "type": "string" },
+    "package_manifest": { "type": "string" },
+    "package_type": { "type": "string" },
+    "target_os": { "type": "string" },
+    "target_arch": { "type": "string" },
+    "install_modes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "entrypoints": { "type": "object" },
+    "support_paths": { "type": "object" },
+    "capabilities": { "type": "object" },
+    "component_destinations": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

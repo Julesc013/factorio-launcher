@@ -1,0 +1,19 @@
+{
+  "expected_dependencies": [
+    {
+      "kind": "required",
+      "name": "base",
+      "operator": ">=",
+      "version": "2.0.0"
+    }
+  ],
+  "expected_incompatibilities": [],
+  "expected_name": "required_deps",
+  "expected_optional_dependencies": [],
+  "expected_status": "ok",
+  "expected_version": "1.0.0",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "required_deps_1.0.0.zip"
+  ]
+}

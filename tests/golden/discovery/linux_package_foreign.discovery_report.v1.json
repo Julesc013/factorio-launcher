@@ -1,0 +1,19 @@
+{
+  "schema": "factorio.discovery_report.v1",
+  "command": "installs.scan",
+  "read_only": true,
+  "candidate_count": 1,
+  "structural_count": 1,
+  "invalid_count": 0,
+  "install": {
+    "candidate_id": "linux_package_foreign",
+    "source": "os_package",
+    "ownership": "foreign_owned",
+    "platform": "linux-x64",
+    "capabilities": ["gui"],
+    "executable_path_kind": "stub",
+    "app_dir_kind": "fixture_root",
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}

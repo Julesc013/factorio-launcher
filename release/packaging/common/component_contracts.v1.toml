@@ -1,0 +1,101 @@
+schema = "facman.packaging.component_manifest.v1"
+id = "facman_component_contracts_v1"
+
+[[component]]
+id = "cli"
+kind = "frontend"
+source = "apps/cli"
+destination = "facman"
+required_platform = "all"
+architecture = "configured_by_profile"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "tui"
+kind = "frontend"
+source = "apps/tui"
+destination = "facman-tui"
+required_platform = "all"
+architecture = "configured_by_profile"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "daemon"
+kind = "daemon"
+source = "apps/daemon"
+destination = "facmand"
+required_platform = "all"
+architecture = "configured_by_profile"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "winforms_gui"
+kind = "frontend"
+source = "apps/gui/windows/winforms"
+destination = "FacMan.exe"
+required_platform = "windows"
+architecture = "x64"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "appkit_gui"
+kind = "frontend"
+source = "apps/gui/macos/appkit"
+destination = "FacMan.app/Contents/MacOS/FacMan"
+required_platform = "macos"
+architecture = "x64"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "gtk_gui"
+kind = "frontend"
+source = "apps/gui/linux/gtk"
+destination = "usr/bin/facman-gui"
+required_platform = "linux"
+architecture = "x64"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "ulk_shared"
+kind = "runtime_library"
+source = "universal-launcher-runtime"
+destination = "profile_specific_library_path"
+required_platform = "all"
+architecture = "configured_by_profile"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "usk_shared"
+kind = "runtime_library"
+source = "universal-setup-runtime"
+destination = "profile_specific_library_path"
+required_platform = "all"
+architecture = "configured_by_profile"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "flb_factorio_shared"
+kind = "factorio_binding"
+source = "factorio-launcher-binding"
+destination = "profile_specific_library_path"
+required_platform = "all"
+architecture = "configured_by_profile"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "contracts_schema"
+kind = "contracts"
+source = "contracts/schema"
+destination = "contracts/schema"
+required_platform = "all"
+architecture = "any"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[component]]
+id = "factorio_content"
+kind = "content"
+source = "content/factorio"
+destination = "content/factorio"
+required_platform = "all"
+architecture = "any"
+license_notice = "THIRD_PARTY_NOTICES.md"

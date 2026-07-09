@@ -1,0 +1,44 @@
+schema = "facman.build_manifest.v1"
+canonical_version = "facman-0.1.0+dev.contract"
+filename_version = "facman-0.1.0-dev.contract"
+channel = "pinned"
+build_kind = "dev"
+package_revision = "0"
+source_commit = "BUILD_TIME"
+dependency_lock = "release/index/dependency_lock.v1.toml"
+
+[[component]]
+id = "facman"
+version = "0.1.0-dev"
+abi_version = 1
+
+[[component]]
+id = "factorio_binding"
+version = "0.1.0-dev"
+abi_version = 1
+
+[[component]]
+id = "universal_launcher"
+version = "BUILD_TIME"
+abi_version = 1
+
+[[component]]
+id = "universal_setup"
+version = "BUILD_TIME"
+abi_version = 1
+
+[schema_versions]
+factorio_instance = 1
+factorio_modset = 1
+launch_plan = 1
+install_ref = 1
+refusal = 1
+release_index = 1
+package_manifest = 1
+
+[abi_versions]
+flb = 1
+ulk = 1
+ulu = 1
+usk = 1
+usu = 1

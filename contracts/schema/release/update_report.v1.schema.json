@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.update_report.v1",
+  "title": "FacMan Update Report",
+  "type": "object",
+  "required": [
+    "schema",
+    "mode",
+    "mutates_install",
+    "mutates_workspace",
+    "apply_authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.update_report.v1" },
+    "mode": { "enum": ["check", "apply_plan"] },
+    "mutates_install": { "const": false },
+    "mutates_workspace": { "const": false },
+    "apply_authority": { "const": "universal_setup" },
+    "compatible_lanes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_migrations": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

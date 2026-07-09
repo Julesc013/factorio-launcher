@@ -1,0 +1,32 @@
+{
+  "expected_dependencies": [
+    {
+      "kind": "required",
+      "name": "base",
+      "operator": ">=",
+      "version": "2.0.0"
+    }
+  ],
+  "expected_incompatibilities": [],
+  "expected_name": "optional_deps",
+  "expected_optional_dependencies": [
+    {
+      "kind": "optional",
+      "name": "optional_mod",
+      "operator": ">=",
+      "version": "1.2.0"
+    },
+    {
+      "kind": "hidden_optional",
+      "name": "load_order_hint",
+      "operator": ">=",
+      "version": "0.5.0"
+    }
+  ],
+  "expected_status": "ok",
+  "expected_version": "1.0.0",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "optional_deps_1.0.0.zip"
+  ]
+}

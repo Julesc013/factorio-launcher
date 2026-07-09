@@ -1,0 +1,13 @@
+{
+  "schema": "factorio.save_backup.v1",
+  "command": "saves.backup",
+  "instance_id": "source-world",
+  "save": "starter.zip",
+  "source_path": "instances/source-world/saves/starter.zip",
+  "destination_path": "backups/starter.backup.zip",
+  "path": "backups/starter.backup.zip",
+  "manifest_path": "backups/starter.backup.zip.manifest.json",
+  "created_at": "2026-07-10T00:00:00Z",
+  "sha1": "1111111111111111111111111111111111111111",
+  "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+}

@@ -10,11 +10,40 @@ required_codes = [
   "credential_redacted",
   "setup_authority_required",
   "launch_preflight_failed",
+  "save_not_found",
   "save_locked",
+  "save_malformed",
+  "save_backup_target_exists",
+  "save_clone_target_exists",
+  "instance_export_target_exists",
+  "instance_import_target_exists",
+  "instance_import_manifest_invalid",
   "unsupported_frontend",
   "unsupported_platform",
   "schema_version_unsupported",
   "package_profile_unsupported",
+  "mod_zip_missing_info_json",
+  "mod_zip_malformed_info_json",
+  "mod_zip_invalid_filename",
+  "mod_zip_name_mismatch",
+  "mod_zip_version_mismatch",
+  "mod_dependency_unsupported_syntax",
+  "mod_dependency_unsatisfied",
+  "mod_incompatibility_detected",
+  "mod_duplicate_versions",
+  "mod_factorio_version_incompatible",
+  "mod_hash_mismatch",
+  "diagnostic_secret_redacted",
+  "diagnostic_path_excluded",
+  "diagnostic_bundle_target_exists",
+  "diagnostic_bundle_policy_invalid",
+  "diagnostic_bundle_source_missing",
+  "diagnostic_bundle_write_refused",
+  "diagnostic_binary_skipped",
+  "diagnostic_archive_unsafe",
+  "export_secret_refused",
+  "redaction_policy_missing",
+  "redaction_policy_invalid",
 ]
 
 [[code]]
@@ -68,6 +97,14 @@ severity = "blocked"
 effect = "workspace_read"
 retryable = true
 message = "The requested save is not available in the selected instance."
+
+[[code]]
+id = "save_not_found"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested save is not available in the selected instance."
+suggested_next_command = "facman saves list --instance <instance-id> --json"
 
 [[code]]
 id = "unsafe_archive_path"
@@ -186,6 +223,49 @@ retryable = true
 message = "The save is locked or in active use and cannot be mutated safely."
 
 [[code]]
+id = "save_malformed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested save archive is malformed or unsupported."
+suggested_next_command = "facman saves list --instance <instance-id> --json"
+
+[[code]]
+id = "save_backup_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested save backup target already exists."
+
+[[code]]
+id = "save_clone_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested save clone target already exists."
+
+[[code]]
+id = "instance_export_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested instance export target already exists."
+
+[[code]]
+id = "instance_import_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested instance import target already exists."
+
+[[code]]
+id = "instance_import_manifest_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The instance import pack manifest is missing, malformed, or unsupported."
+
+[[code]]
 id = "unsupported_frontend"
 severity = "blocked"
 effect = "none"
@@ -212,3 +292,170 @@ severity = "blocked"
 effect = "none"
 retryable = false
 message = "The requested package profile is unsupported by this build."
+
+[[code]]
+id = "mod_zip_missing_info_json"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP does not contain info.json and cannot be imported safely."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_zip_malformed_info_json"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP info.json is malformed or unreadable."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_zip_invalid_filename"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP filename does not follow the expected <name>_<version>.zip shape."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_zip_name_mismatch"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP filename name does not match info.json."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_zip_version_mismatch"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP filename version does not match info.json."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_dependency_unsupported_syntax"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A local mod dependency declaration uses unsupported syntax."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_dependency_unsatisfied"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A required local mod dependency is not present or does not satisfy the requested version."
+suggested_next_command = "facman modsets lock <instance-id> --json"
+
+[[code]]
+id = "mod_incompatibility_detected"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The local modset contains mods that declare an incompatibility with each other."
+suggested_next_command = "facman modsets lock <instance-id> --json"
+
+[[code]]
+id = "mod_duplicate_versions"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local modset contains more than one version of the same mod."
+suggested_next_command = "facman modsets lock <instance-id> --json"
+
+[[code]]
+id = "mod_factorio_version_incompatible"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod is not compatible with the instance Factorio version."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_hash_mismatch"
+severity = "error"
+effect = "workspace_read"
+retryable = true
+message = "A local mod ZIP hash no longer matches the modset lockfile."
+suggested_next_command = "facman modsets verify <instance-id> --json"
+
+[[code]]
+id = "diagnostic_secret_redacted"
+severity = "warning"
+effect = "credential_read"
+retryable = false
+message = "A diagnostic or export report redacted credential-like content."
+
+[[code]]
+id = "diagnostic_path_excluded"
+severity = "warning"
+effect = "workspace_read"
+retryable = false
+message = "A diagnostic bundle excluded a sensitive path."
+
+[[code]]
+id = "diagnostic_bundle_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested diagnostic bundle target already exists."
+suggested_next_command = "facman diagnostics export --instance <instance-id> --out <bundle.zip> --json"
+
+[[code]]
+id = "diagnostic_bundle_policy_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The diagnostic redaction policy is invalid and bundle assembly was refused."
+
+[[code]]
+id = "diagnostic_bundle_source_missing"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A requested diagnostic bundle source is missing."
+suggested_next_command = "facman doctor --json"
+
+[[code]]
+id = "diagnostic_bundle_write_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The diagnostic bundle could not be written safely."
+
+[[code]]
+id = "diagnostic_binary_skipped"
+severity = "warning"
+effect = "workspace_read"
+retryable = false
+message = "A binary file was skipped by diagnostic redaction policy."
+
+[[code]]
+id = "diagnostic_archive_unsafe"
+severity = "warning"
+effect = "workspace_read"
+retryable = false
+message = "An archive file was excluded from a diagnostic bundle rather than copied raw."
+
+[[code]]
+id = "export_secret_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "An export was refused because secret-bearing content could not be redacted safely."
+
+[[code]]
+id = "redaction_policy_missing"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The required redaction policy could not be found."
+
+[[code]]
+id = "redaction_policy_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The required redaction policy is malformed or unsupported."

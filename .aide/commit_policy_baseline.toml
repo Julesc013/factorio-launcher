@@ -1,0 +1,7 @@
+schema = "facman.aide_commit_policy_baseline.v1"
+reason = "Historical public dev commits that predate the strict AIDE commit-body format."
+
+[[commit]]
+sha = "00b8a40"
+subject = "test(mods): add local Factorio mod ZIP fixture matrix"
+reason = "Published before the current commit-body gate was applied to main..dev promotion ranges."

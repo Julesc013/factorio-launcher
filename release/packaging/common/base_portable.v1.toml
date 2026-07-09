@@ -1,0 +1,10 @@
+schema = "facman.packaging.common_profile.v1"
+id = "base_portable"
+target_os = "portable"
+package_types = ["portable_zip", "tarball"]
+install_modes = ["portable", "user", "system"]
+required_paths = ["contracts/schema", "content/factorio"]
+license_paths = ["licenses"]
+forbid_absolute_paths = true
+bundles_factorio_binaries = false
+credential_storage = false

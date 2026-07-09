@@ -1,0 +1,27 @@
+{
+  "lockfile_version": 1,
+  "schema": "factorio.modset_lock.v1",
+  "instance_id": "modzip",
+  "factorio_version": "2.0.77",
+  "mods": [
+    {
+      "schema": "factorio.mod_ref.v1",
+      "name": "simple_mod",
+      "title": "Simple Mod",
+      "version": "1.0.0",
+      "factorio_version": "2.0",
+      "author": "FacMan Fixture",
+      "description": "Synthetic local mod ZIP fixture for FacMan tests.",
+      "file_name": "simple_mod_1.0.0.zip",
+      "sha1": "c07940b77eb587ba551963dc55608dcd45f42da8",
+      "sha256": "6df3be16b89b960bd4bb769a2f7b5df6751fb91efde2fa9535fae4028320ddab",
+      "source": "local",
+      "metadata_source": "info_json",
+      "enabled": true,
+      "validation_status": "ok",
+      "dependencies": [],
+      "optional_dependencies": [],
+      "incompatibilities": []
+    }
+  ]
+}

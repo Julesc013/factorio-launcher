@@ -1,0 +1,8 @@
+{
+  "schema": "facman.factorio_save_fixture.v1",
+  "fixture_id": "existing_target",
+  "expected_status": "valid_with_existing_target",
+  "expected_refusal_codes": ["save_backup_target_exists", "save_clone_target_exists", "instance_import_target_exists"],
+  "contains_real_factorio_assets": false,
+  "mutation_allowed": false
+}

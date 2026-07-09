@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/redaction_policy.v1.schema.json",
+  "title": "FacMan Redaction Policy",
+  "type": "object",
+  "required": ["schema", "markers", "field_names", "path_names", "patterns", "files"],
+  "properties": {
+    "schema": { "const": "facman.redaction_policy.v1" },
+    "markers": {
+      "type": "object",
+      "required": ["redacted"],
+      "properties": {
+        "redacted": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "field_names": {
+      "type": "object",
+      "required": ["deny"],
+      "properties": {
+        "deny": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "path_names": {
+      "type": "object",
+      "required": ["deny"],
+      "properties": {
+        "deny": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "key_values": {
+      "type": "object",
+      "properties": {
+        "separators": {
+          "type": "array",
+          "items": { "enum": ["=", ":"] }
+        },
+        "redact_entire_line_when_unstructured": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "patterns": {
+      "type": "object",
+      "required": ["deny"],
+      "properties": {
+        "deny": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "files": {
+      "type": "object",
+      "required": ["skip_binary_files", "skip_archive_files", "allowed_metadata"],
+      "properties": {
+        "skip_binary_files": { "type": "boolean" },
+        "skip_archive_files": { "type": "boolean" },
+        "allowed_metadata": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release.component.v1",
+  "title": "FacMan Release Component",
+  "type": "object",
+  "required": [
+    "id",
+    "kind",
+    "source",
+    "destination",
+    "required_platform",
+    "architecture",
+    "license_notice"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "frontend",
+        "daemon",
+        "runtime_library",
+        "factorio_binding",
+        "contracts",
+        "content",
+        "license",
+        "support_metadata"
+      ]
+    },
+    "source": { "type": "string" },
+    "destination": { "type": "string" },
+    "required_platform": { "type": "string" },
+    "architecture": { "type": "string" },
+    "license_notice": { "type": "string" },
+    "optional": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

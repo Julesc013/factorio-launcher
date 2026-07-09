@@ -1,0 +1,50 @@
+schema = "facman.redaction_policy.v1"
+
+[markers]
+redacted = "[FACMAN_REDACTED]"
+
+[field_names]
+deny = [
+  "api_key",
+  "auth_token",
+  "cookie",
+  "password",
+  "rcon_password",
+  "secret",
+  "session",
+  "token",
+]
+
+[path_names]
+deny = [
+  "account_refs",
+  "credentials",
+  "login.json",
+  "steam/userdata",
+  "tokens",
+]
+
+[key_values]
+separators = ["=", ":"]
+redact_entire_line_when_unstructured = true
+
+[patterns]
+deny = [
+  "Authorization: Bearer",
+  "password\\s*=\\s*.+",
+  "token\\s*=\\s*.+",
+  "rcon_password\\s*=\\s*.+",
+  "sessionid\\s*=\\s*.+",
+  "steamLoginSecure\\s*=\\s*.+",
+]
+
+[files]
+skip_binary_files = true
+skip_archive_files = true
+allowed_metadata = [
+  "file_name",
+  "relative_path",
+  "sha256",
+  "size",
+  "redaction_event",
+]

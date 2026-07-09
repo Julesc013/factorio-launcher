@@ -18,8 +18,11 @@ from tools import (
     language_runtime_policy_check,
     package_check,
     package_layout_check,
+    package_manifest_check,
+    package_skeleton_check,
     refusal_contract_check,
     refusal_golden_check,
+    release_contract_check,
     release_readiness_check,
     schema_validate,
     security_policy_check,
@@ -40,6 +43,8 @@ def main() -> int:
         ("ui-accessibility", ui_accessibility_check.main),
         ("package", package_check.main),
         ("package-layout", package_layout_check.main),
+        ("package-manifest", package_manifest_check.main),
+        ("package-skeleton", package_skeleton_check.main),
         ("gui-surface", gui_surface_check.main),
         ("language-runtime-policy", language_runtime_policy_check.main),
         ("command-contract", command_contract_check.main),
@@ -50,6 +55,7 @@ def main() -> int:
         ("refusal-golden", refusal_golden_check.main),
         ("discovery-golden", discovery_golden_check.main),
         ("release-readiness", release_readiness_check.main),
+        ("release-contract", release_contract_check.main),
     ]
     failed: list[str] = []
     for name, check in checks:

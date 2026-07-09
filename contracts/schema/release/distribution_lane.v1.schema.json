@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.distribution_lane.v1",
+  "title": "FacMan Distribution Lane",
+  "type": "object",
+  "required": [
+    "id",
+    "target_os",
+    "target_arch",
+    "frontend_family",
+    "package_types",
+    "install_modes",
+    "support_tier"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "target_os": {
+      "type": "string",
+      "enum": ["windows", "macos", "linux", "portable", "source"]
+    },
+    "target_arch": { "type": "string" },
+    "frontend_family": { "type": "string" },
+    "package_types": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "install_modes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["portable", "user", "system"]
+      },
+      "minItems": 1
+    },
+    "support_tier": { "type": "string" },
+    "setup_mutation": { "type": "boolean" },
+    "network_download": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

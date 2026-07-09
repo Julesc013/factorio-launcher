@@ -1,0 +1,35 @@
+{
+  "lockfile_version": 1,
+  "schema": "factorio.modset_lock.v1",
+  "instance_id": "modzip",
+  "factorio_version": "2.0.77",
+  "mods": [
+    {
+      "schema": "factorio.mod_ref.v1",
+      "name": "required_deps",
+      "title": "Required Deps",
+      "version": "1.0.0",
+      "factorio_version": "2.0",
+      "author": "FacMan Fixture",
+      "description": "Synthetic local mod ZIP fixture for FacMan tests.",
+      "file_name": "required_deps_1.0.0.zip",
+      "sha1": "382ada812ca2cd3b9809cf2f6a51bd5bd67e775a",
+      "sha256": "60329eb44fa522048e285091b31b1153a5a9f77511b17625bf01073bae483b75",
+      "source": "local",
+      "metadata_source": "info_json",
+      "enabled": true,
+      "validation_status": "ok",
+      "dependencies": [
+        {
+          "kind": "required",
+          "name": "base",
+          "operator": ">=",
+          "version": "2.0.0",
+          "raw": "base >= 2.0.0"
+        }
+      ],
+      "optional_dependencies": [],
+      "incompatibilities": []
+    }
+  ]
+}

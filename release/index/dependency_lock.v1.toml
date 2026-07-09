@@ -1,0 +1,34 @@
+schema = "facman.dependency_lock.v1"
+id = "facman_dependency_lock_v1"
+lock_kind = "release_time_pinned"
+global_runtime_required = false
+
+[[component]]
+id = "factorio_binding"
+kind = "product_binding"
+version = "0.1.0-dev"
+abi_version = 1
+pin = "BUILD_TIME"
+bundled = true
+source = "factorio-launcher/runtime/factorio"
+install_mutation_authority = false
+
+[[component]]
+id = "universal_launcher"
+kind = "universal_runtime"
+version = "BUILD_TIME"
+abi_version = 1
+pin = "BUILD_TIME"
+bundled = true
+source = "universal-launcher"
+install_mutation_authority = false
+
+[[component]]
+id = "universal_setup"
+kind = "setup_runtime"
+version = "BUILD_TIME"
+abi_version = 1
+pin = "BUILD_TIME"
+bundled = true
+source = "universal-setup"
+install_mutation_authority = true

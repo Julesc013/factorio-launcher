@@ -1,0 +1,273 @@
+schema = "facman.release_profile_catalog.v1"
+
+[[profile]]
+id = "portable_cli"
+status = "planned_family"
+target_os = "portable"
+target_arch = "configured_by_build"
+frontend_stack = "cli"
+minimum_os = "portable_cli_baseline"
+toolchain = "native_c11_runtime"
+package_formats = ["zip", "tar.zst"]
+included_binaries = ["facman"]
+included_libraries = ["flb_factorio", "universal_launcher", "universal_setup"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["facman --version", "facman doctor --json", "facman package verify"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "portable_cli_x64"
+status = "contract_backed"
+target_os = "portable"
+target_arch = "x64"
+frontend_stack = "cli"
+minimum_os = "portable_cli_baseline"
+toolchain = "native_c11_runtime"
+package_formats = ["portable_zip", "tarball"]
+included_binaries = ["facman"]
+included_libraries = ["flb_factorio", "universal_launcher", "universal_setup"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_layout_check", "package_skeleton_check"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = true
+
+[[profile]]
+id = "portable_full"
+status = "planned_family"
+target_os = "portable"
+target_arch = "configured_by_build"
+frontend_stack = "cli_tui_daemon_gui"
+minimum_os = "platform_lane_minimum"
+toolchain = "selected_by_gui_lane"
+package_formats = ["zip", "tar.zst"]
+included_binaries = ["facman", "facman-tui", "facmand", "facman-gui"]
+included_libraries = ["flb_factorio", "universal_launcher", "universal_setup"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["doctor_json", "package_verify", "frontend_contract"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "portable_tui_x64"
+status = "contract_backed"
+target_os = "portable"
+target_arch = "x64"
+frontend_stack = "tui"
+minimum_os = "portable_tui_baseline"
+toolchain = "native_c11_runtime"
+package_formats = ["portable_zip", "tarball"]
+included_binaries = ["facman", "facman-tui"]
+included_libraries = ["flb_factorio", "universal_launcher", "universal_setup"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_layout_check", "package_skeleton_check"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = true
+
+[[profile]]
+id = "windows_legacy_winforms_x86"
+status = "planned_lane"
+target_os = "windows"
+target_arch = "x86"
+frontend_stack = "winforms"
+minimum_os = "windows_7_sp1"
+toolchain = ".NET Framework 4.8"
+package_formats = ["portable_zip", "setup.exe", "msi"]
+included_binaries = ["facman.exe", "facman-tui.exe", "facmand.exe", "FacMan.WinForms.exe"]
+included_libraries = ["flb_factorio.dll", "ulk.dll", "usk.dll"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["doctor_json", "package_verify", "winforms_command_client_smoke"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "windows_legacy_winforms_x64"
+status = "contract_backed"
+target_os = "windows"
+target_arch = "x64"
+frontend_stack = "winforms"
+minimum_os = "windows_7_sp1"
+toolchain = ".NET Framework 4.8"
+package_formats = ["portable_zip", "setup.exe", "msi"]
+included_binaries = ["facman.exe", "facman-tui.exe", "facmand.exe", "FacMan.WinForms.exe"]
+included_libraries = ["flb_factorio.dll", "ulk.dll", "usk.dll"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_layout_check", "package_skeleton_check"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = true
+
+[[profile]]
+id = "windows_modern_winui_x64"
+status = "planned_lane"
+target_os = "windows"
+target_arch = "x64"
+frontend_stack = "winui"
+minimum_os = "windows_10_22h2"
+toolchain = "WinUI 3 and .NET"
+package_formats = ["portable_zip", "setup.exe", "msix"]
+included_binaries = ["facman.exe", "facman-tui.exe", "facmand.exe", "FacMan.WinUI.exe"]
+included_libraries = ["flb_factorio.dll", "ulk.dll", "usk.dll"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["doctor_json", "package_verify", "frontend_contract"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "windows_modern_winui_arm64"
+status = "planned_lane"
+target_os = "windows"
+target_arch = "arm64"
+frontend_stack = "winui"
+minimum_os = "windows_10_22h2"
+toolchain = "WinUI 3 and .NET"
+package_formats = ["portable_zip", "setup.exe", "msix"]
+included_binaries = ["facman.exe", "facman-tui.exe", "facmand.exe", "FacMan.WinUI.exe"]
+included_libraries = ["flb_factorio.dll", "ulk.dll", "usk.dll"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["doctor_json", "package_verify", "frontend_contract"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "macos_legacy_appkit_x64"
+status = "contract_backed"
+target_os = "macos"
+target_arch = "x64"
+frontend_stack = "appkit"
+minimum_os = "macos_10_13"
+toolchain = "legacy_xcode_appkit"
+package_formats = ["app_bundle", "dmg", "pkg"]
+included_binaries = ["FacMan", "facman", "facman-tui", "facmand"]
+included_libraries = ["libflb_factorio.dylib", "libulk.dylib", "libusk.dylib"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_layout_check", "package_skeleton_check"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = true
+
+[[profile]]
+id = "macos_modern_swiftui_universal2"
+status = "planned_lane"
+target_os = "macos"
+target_arch = "universal2"
+frontend_stack = "swiftui"
+minimum_os = "macos_13"
+toolchain = "current_xcode_swiftui"
+package_formats = ["app_bundle", "dmg", "pkg"]
+included_binaries = ["FacMan", "facman", "facman-tui", "facmand"]
+included_libraries = ["libflb_factorio.dylib", "libulk.dylib", "libusk.dylib"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["doctor_json", "package_verify", "frontend_contract"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "linux_x11_gtk_x86"
+status = "planned_lane"
+target_os = "linux"
+target_arch = "x86"
+frontend_stack = "gtk"
+minimum_os = "oldest_supported_x11_base"
+toolchain = "GTK 3"
+package_formats = ["tar.zst", "AppImage", "deb", "rpm"]
+included_binaries = ["facman", "facman-tui", "facmand", "facman-gui-gtk"]
+included_libraries = ["libflb_factorio.so", "libulk.so", "libusk.so"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["doctor_json", "package_verify", "frontend_contract"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "linux_x11_gtk_x64"
+status = "contract_backed"
+target_os = "linux"
+target_arch = "x64"
+frontend_stack = "gtk"
+minimum_os = "oldest_supported_x11_base"
+toolchain = "GTK 3"
+package_formats = ["tar.zst", "AppImage", "deb", "rpm"]
+included_binaries = ["facman", "facman-tui", "facmand", "facman-gui-gtk"]
+included_libraries = ["libflb_factorio.so", "libulk.so", "libusk.so"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_layout_check", "package_skeleton_check"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = true
+
+[[profile]]
+id = "linux_wayland_qt_x64"
+status = "planned_lane"
+target_os = "linux"
+target_arch = "x64"
+frontend_stack = "qt"
+minimum_os = "modern_wayland_base"
+toolchain = "Qt 6"
+package_formats = ["tar.zst", "AppImage", "deb", "rpm"]
+included_binaries = ["facman", "facman-tui", "facmand", "facman-gui-qt"]
+included_libraries = ["libflb_factorio.so", "libulk.so", "libusk.so"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["doctor_json", "package_verify", "frontend_contract"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "linux_wayland_qt_arm64"
+status = "planned_lane"
+target_os = "linux"
+target_arch = "arm64"
+frontend_stack = "qt"
+minimum_os = "modern_wayland_base"
+toolchain = "Qt 6"
+package_formats = ["tar.zst", "AppImage", "deb", "rpm"]
+included_binaries = ["facman", "facman-tui", "facmand", "facman-gui-qt"]
+included_libraries = ["libflb_factorio.so", "libulk.so", "libusk.so"]
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["doctor_json", "package_verify", "frontend_contract"]
+unsupported_features = ["setup_mutation", "auto_update"]
+contract_backed = false
+
+[[profile]]
+id = "source"
+status = "planned_support_package"
+target_os = "source"
+target_arch = "any"
+frontend_stack = "none"
+minimum_os = "not_applicable"
+toolchain = "documented_by_build_manifest"
+package_formats = ["source.tar.gz"]
+included_binaries = []
+included_libraries = []
+install_modes = ["portable", "user", "system"]
+update_support = "not_applicable"
+test_requirements = ["source_archive_contains_contracts", "source_archive_excludes_build_output"]
+unsupported_features = ["runtime_execution"]
+contract_backed = false
+
+[[profile]]
+id = "offline_bundle"
+status = "planned_support_package"
+target_os = "all"
+target_arch = "configured_by_payloads"
+frontend_stack = "none"
+minimum_os = "payload_specific"
+toolchain = "not_applicable"
+package_formats = ["offline-bundle.zip"]
+included_binaries = ["setup_helper"]
+included_libraries = ["payload_specific"]
+install_modes = ["portable", "user", "system"]
+update_support = "apply_through_universal_setup"
+test_requirements = ["payload_verification", "install_plan_validation", "audit_output"]
+unsupported_features = ["direct_launcher_mutation"]
+contract_backed = false

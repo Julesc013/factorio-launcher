@@ -1,0 +1,28 @@
+schema = "facman.install_modes.v1"
+
+[portable]
+admin_required = false
+system_registration_required = false
+state_location = "beside_app_or_explicit_workspace"
+workspace_under_install_dir_allowed = true
+verify_in_place = true
+remove_by_deleting_folder = true
+uninstall_preserves_workspace = true
+
+[user]
+admin_required = false
+system_registration_required = false
+state_location = "user_application_data"
+workspace_under_install_dir_allowed = false
+per_user_shortcuts = true
+per_user_update_repair_uninstall = true
+uninstall_preserves_workspace = true
+
+[system]
+admin_required = true
+system_registration_required = true
+state_location = "per_user_application_data"
+workspace_under_install_dir_allowed = false
+updates_require_elevation = true
+setup_owned_files_only = true
+uninstall_preserves_workspace = true

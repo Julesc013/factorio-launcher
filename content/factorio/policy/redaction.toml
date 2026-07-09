@@ -1,2 +1,23 @@
-redact_keys = ["token", "password", "rcon_password", "session", "secret"]
-redact_replacement = "[REDACTED]"
+redact_keys = [
+  "api_key",
+  "auth",
+  "auth_token",
+  "cookie",
+  "password",
+  "rcon_password",
+  "secret",
+  "session",
+  "token",
+]
+redact_replacement = "[FACMAN_REDACTED]"
+
+deny_path_fragments = [
+  "account_refs",
+  "credentials",
+  "login.json",
+  "steam/userdata",
+  "tokens",
+]
+
+skip_binary_files = true
+skip_archive_files = true

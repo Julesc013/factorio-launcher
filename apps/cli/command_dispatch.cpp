@@ -1,18 +1,22 @@
 #include "command_dispatch.h"
 
 #include "flb_factorio_discovery.h"
+#include "flb_factorio_diagnostics.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modsets.h"
 #include "fl_command_client_cabi.h"
 #include "usk/usk_api.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cctype>
 #include <cstdint>
+#include <ctime>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -29,6 +33,7 @@
 
 namespace fs = std::filesystem;
 namespace factorio_discovery = facman::factorio::discovery;
+namespace factorio_diagnostics = facman::factorio::diagnostics;
 namespace factorio_modsets = facman::factorio::modsets;
 
 namespace {
@@ -41,7 +46,9 @@ struct CliOptions {
 };
 
 using InstallRef = factorio_discovery::InstallRef;
+using RedactionEvent = factorio_diagnostics::RedactionEvent;
 using ModRef = factorio_modsets::ModRef;
+using ModsetIssue = factorio_modsets::ModsetIssue;
 
 struct InstanceRef {
     std::string instance_id;
@@ -77,9 +84,20 @@ struct ZipEntry {
     std::vector<unsigned char> data;
 };
 
+struct DiagnosticBundleEntry {
+    std::string path;
+    std::string kind;
+    bool redacted;
+};
+
 std::string path_string(const fs::path& path)
 {
     return path.lexically_normal().string();
+}
+
+std::string generic_path_string(const fs::path& path)
+{
+    return path.lexically_normal().generic_string();
 }
 
 std::string json_escape(const std::string& value)
@@ -672,6 +690,33 @@ std::string mod_portal_refusal_json(
     return out.str();
 }
 
+std::string diagnostic_refusal_json(
+    const std::string& operation,
+    const std::string& instance_id,
+    const std::string& code,
+    const std::string& reason,
+    bool retryable,
+    const std::string& detail
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.diagnostic_refusal.v1\",\n";
+    out << "  \"operation\": " << quote(operation) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"code\": " << quote(code) << ",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"recoverable\": " << (retryable ? "true" : "false") << ",\n";
+    out << "    \"retryable\": " << (retryable ? "true" : "false") << ",\n";
+    out << "    \"severity\": \"blocked\"\n";
+    out << "  },\n";
+    out << "  \"details\": {\"detail\": " << quote(detail) << "}\n";
+    out << "}\n";
+    return out.str();
+}
+
 fs::path install_path(const fs::path& workspace, const std::string& install_id)
 {
     return workspace / "installs" / "refs" / (install_id + ".json");
@@ -725,7 +770,20 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<std::string>& 
     for (const std::string& value : option_values(args, "--path")) {
         roots.push_back(value);
     }
+    for (const std::string& value : option_values(args, "--search-root")) {
+        roots.push_back(value);
+    }
+    for (const std::string& value : option_values(args, "--roots")) {
+        roots.push_back(value);
+    }
     return factorio_discovery::scan_install_candidates(roots);
+}
+
+bool has_explicit_scan_roots(const std::vector<std::string>& args)
+{
+    return !option_values(args, "--path").empty() ||
+        !option_values(args, "--search-root").empty() ||
+        !option_values(args, "--roots").empty();
 }
 
 std::string installs_report_json(const std::vector<InstallRef>& installs)
@@ -906,6 +964,20 @@ std::string mod_ref_to_json(const ModRef& mod)
     return factorio_modsets::mod_ref_json(mod);
 }
 
+void mark_mod_refused(ModRef& mod, const std::string& code, const std::string& reason, const std::string& detail)
+{
+    mod.valid = false;
+    mod.validation_status = "refused";
+    mod.refusal_code = code;
+    mod.refusal_reason = reason;
+    mod.refusal_detail = detail;
+}
+
+std::vector<ModsetIssue> validate_instance_modset(const InstanceRef& instance)
+{
+    return factorio_modsets::validate_modset(instance_mod_files(instance), instance.factorio_version);
+}
+
 std::string modset_lock_json(const InstanceRef& instance)
 {
     std::vector<ModRef> mods = instance_mod_files(instance);
@@ -933,6 +1005,7 @@ std::string modset_lock_json(const InstanceRef& instance)
 struct LockEntry {
     std::string file_name;
     std::string sha1;
+    std::string sha256;
 };
 
 std::vector<LockEntry> lock_entries(const std::string& text)
@@ -948,9 +1021,13 @@ std::vector<LockEntry> lock_entries(const std::string& text)
         if (sha_pos == std::string::npos) {
             break;
         }
+        std::size_t sha256_pos = text.find("\"sha256\"", file_pos);
         LockEntry entry;
         entry.file_name = json_string_value(text.substr(file_pos), "file_name");
         entry.sha1 = json_string_value(text.substr(sha_pos), "sha1");
+        if (sha256_pos != std::string::npos) {
+            entry.sha256 = json_string_value(text.substr(sha256_pos), "sha256");
+        }
         if (!entry.file_name.empty()) {
             entries.push_back(entry);
         }
@@ -977,6 +1054,12 @@ std::vector<std::string> verify_modset_lock(const InstanceRef& instance)
         std::string actual_sha1 = factorio_modsets::sha1_hex_file(mod_path);
         if (actual_sha1 != entry.sha1) {
             problems.push_back("sha1 mismatch: " + entry.file_name);
+        }
+        if (!entry.sha256.empty()) {
+            std::string actual_sha256 = factorio_modsets::sha256_hex_file(mod_path);
+            if (actual_sha256 != entry.sha256) {
+                problems.push_back("sha256 mismatch: " + entry.file_name);
+            }
         }
     }
     return problems;
@@ -1138,6 +1221,21 @@ const ZipEntry* find_zip_entry(const std::vector<ZipEntry>& entries, const std::
     return 0;
 }
 
+std::string utc_now_iso8601()
+{
+    auto now = std::chrono::system_clock::now();
+    std::time_t raw = std::chrono::system_clock::to_time_t(now);
+    std::tm tm {};
+#ifdef _WIN32
+    gmtime_s(&tm, &raw);
+#else
+    gmtime_r(&raw, &tm);
+#endif
+    std::ostringstream out;
+    out << std::put_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+    return out.str();
+}
+
 std::vector<unsigned char> bytes_from_text(const std::string& text)
 {
     return std::vector<unsigned char>(text.begin(), text.end());
@@ -1215,6 +1313,133 @@ bool resolve_instance_save(const InstanceRef& instance, const std::string& save_
     return true;
 }
 
+bool validate_save_zip(const SaveRef& save, std::string& detail)
+{
+    std::vector<ZipEntry> entries;
+    std::string error;
+    if (!read_stored_zip(save.file_path, entries, error)) {
+        detail = error.empty() ? "save archive has no readable entries" : error;
+        return false;
+    }
+    detail.clear();
+    return true;
+}
+
+bool instance_save_is_locked(const InstanceRef& instance)
+{
+    return fs::exists(instance.local_data_root / "locks" / "save.write.lock");
+}
+
+std::string save_refusal_json(
+    const std::string& command,
+    const std::string& instance_id,
+    const std::string& save_name,
+    const std::string& code,
+    const std::string& reason,
+    bool recoverable,
+    const std::string& detail,
+    const std::string& suggested_next_command
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.save_refusal.v1\",\n";
+    out << "  \"command\": " << quote(command) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"save\": " << quote(save_name) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
+    out << "    \"code\": " << quote(code) << ",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"recoverable\": " << (recoverable ? "true" : "false") << ",\n";
+    out << "    \"retryable\": " << (recoverable ? "true" : "false") << ",\n";
+    out << "    \"severity\": \"blocked\"\n";
+    out << "  },\n";
+    out << "  \"details\": {\"detail\": " << quote(detail) << "},\n";
+    out << "  \"suggested_next_command\": " << quote(suggested_next_command) << "\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string instance_transfer_refusal_json(
+    const std::string& command,
+    const std::string& instance_id,
+    const std::string& code,
+    const std::string& reason,
+    bool recoverable,
+    const std::string& detail
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.instance_transfer_refusal.v1\",\n";
+    out << "  \"command\": " << quote(command) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
+    out << "    \"code\": " << quote(code) << ",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"recoverable\": " << (recoverable ? "true" : "false") << ",\n";
+    out << "    \"retryable\": " << (recoverable ? "true" : "false") << ",\n";
+    out << "    \"severity\": \"blocked\"\n";
+    out << "  },\n";
+    out << "  \"details\": {\"detail\": " << quote(detail) << "}\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string save_backup_result_json(
+    const InstanceRef& instance,
+    const SaveRef& save,
+    const fs::path& backup_path,
+    const fs::path& manifest_path,
+    const std::string& created_at
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.save_backup.v1\",\n";
+    out << "  \"command\": \"saves.backup\",\n";
+    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+    out << "  \"save\": " << quote(save.file_name) << ",\n";
+    out << "  \"source_path\": " << quote(path_string(save.file_path)) << ",\n";
+    out << "  \"destination_path\": " << quote(path_string(backup_path)) << ",\n";
+    out << "  \"path\": " << quote(path_string(backup_path)) << ",\n";
+    out << "  \"manifest_path\": " << quote(path_string(manifest_path)) << ",\n";
+    out << "  \"created_at\": " << quote(created_at) << ",\n";
+    out << "  \"sha1\": " << quote(factorio_modsets::sha1_hex_file(save.file_path)) << ",\n";
+    out << "  \"sha256\": " << quote(factorio_modsets::sha256_hex_file(save.file_path)) << "\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string save_clone_result_json(
+    const InstanceRef& source,
+    const InstanceRef& target,
+    const SaveRef& save,
+    const fs::path& clone_path,
+    const std::string& created_at
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.save_clone.v1\",\n";
+    out << "  \"command\": \"saves.clone\",\n";
+    out << "  \"source_instance_id\": " << quote(source.instance_id) << ",\n";
+    out << "  \"target_instance_id\": " << quote(target.instance_id) << ",\n";
+    out << "  \"save\": " << quote(save.file_name) << ",\n";
+    out << "  \"source_path\": " << quote(path_string(save.file_path)) << ",\n";
+    out << "  \"destination_path\": " << quote(path_string(clone_path)) << ",\n";
+    out << "  \"path\": " << quote(path_string(clone_path)) << ",\n";
+    out << "  \"created_at\": " << quote(created_at) << ",\n";
+    out << "  \"sha1\": " << quote(factorio_modsets::sha1_hex_file(save.file_path)) << ",\n";
+    out << "  \"sha256\": " << quote(factorio_modsets::sha256_hex_file(save.file_path)) << "\n";
+    out << "}\n";
+    return out.str();
+}
+
 std::string redacted_instance_json(const InstanceRef& instance)
 {
     InstanceRef redacted = instance;
@@ -1222,65 +1447,14 @@ std::string redacted_instance_json(const InstanceRef& instance)
     return instance_json(redacted);
 }
 
-std::string lowercase_ascii(std::string value)
+void append_redaction_events(std::vector<RedactionEvent>& target, const std::vector<RedactionEvent>& source)
 {
-    for (char& ch : value) {
-        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-    }
-    return value;
-}
-
-bool line_contains_secret_key(const std::string& lower_line)
-{
-    const char* keys[] = {
-        "api_key",
-        "apikey",
-        "auth",
-        "cookie",
-        "password",
-        "rcon_password",
-        "secret",
-        "session",
-        "token",
-    };
-    for (const char* key : keys) {
-        if (lower_line.find(key) != std::string::npos) {
-            return true;
-        }
-    }
-    return false;
+    target.insert(target.end(), source.begin(), source.end());
 }
 
 std::string redact_secret_text(const std::string& text)
 {
-    std::istringstream in(text);
-    std::ostringstream out;
-    std::string line;
-    bool first = true;
-    while (std::getline(in, line)) {
-        if (!first) {
-            out << "\n";
-        }
-        first = false;
-
-        if (line_contains_secret_key(lowercase_ascii(line))) {
-            std::size_t separator = line.find('=');
-            if (separator == std::string::npos) {
-                separator = line.find(':');
-            }
-            if (separator == std::string::npos) {
-                out << "[REDACTED]";
-            } else {
-                out << line.substr(0, separator + 1) << "[REDACTED]";
-            }
-        } else {
-            out << line;
-        }
-    }
-    if (!text.empty() && text.back() == '\n') {
-        out << "\n";
-    }
-    return out.str();
+    return factorio_diagnostics::redact_text(text, "export").text;
 }
 
 std::string export_manifest_json(const InstanceRef& instance, std::size_t file_count)
@@ -1290,6 +1464,8 @@ std::string export_manifest_json(const InstanceRef& instance, std::size_t file_c
     out << "  \"schema\": \"factorio.instance_export_manifest.v1\",\n";
     out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
     out << "  \"portable\": true,\n";
+    out << "  \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
+    out << "  \"redaction_marker\": " << quote(factorio_diagnostics::redaction_marker()) << ",\n";
     out << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\", \"config.ini secrets\"],\n";
     out << "  \"files\": " << file_count << "\n";
     out << "}\n";
@@ -1320,6 +1496,288 @@ std::vector<std::pair<std::string, std::vector<unsigned char>>> instance_export_
 
     files.insert(files.begin(), {"manifest/export.v1.json", bytes_from_text(export_manifest_json(instance, files.size() + 1))});
     return files;
+}
+
+std::string relative_to_root(const fs::path& root, const fs::path& path)
+{
+    std::error_code error;
+    fs::path relative = fs::relative(path, root, error);
+    if (error) {
+        return generic_path_string(path.filename());
+    }
+    return generic_path_string(relative);
+}
+
+RedactionEvent redaction_event(
+    const std::string& code,
+    const std::string& severity,
+    const std::string& path,
+    const std::string& rule,
+    const std::string& details
+)
+{
+    RedactionEvent event;
+    event.code = code;
+    event.severity = severity;
+    event.path = path;
+    event.rule = rule;
+    event.details = details;
+    event.retryable = false;
+    return event;
+}
+
+void add_diagnostic_text_file(
+    std::vector<std::pair<std::string, std::vector<unsigned char>>>& files,
+    std::vector<DiagnosticBundleEntry>& manifest_entries,
+    std::vector<RedactionEvent>& events,
+    const std::string& entry_path,
+    const std::string& kind,
+    const std::string& text,
+    bool redact
+)
+{
+    std::string payload = text;
+    bool redacted = false;
+    if (redact) {
+        factorio_diagnostics::RedactionResult result = factorio_diagnostics::redact_text(text, entry_path);
+        payload = result.text;
+        redacted = !result.events.empty();
+        append_redaction_events(events, result.events);
+    }
+    files.push_back({entry_path, bytes_from_text(payload)});
+    manifest_entries.push_back({entry_path, kind, redacted});
+}
+
+bool diagnostic_path_allowed(
+    const fs::path& relative_path,
+    std::vector<RedactionEvent>& events,
+    const std::string& logical_path
+)
+{
+    factorio_diagnostics::RedactionPolicy policy = factorio_diagnostics::default_redaction_policy();
+    if (!factorio_diagnostics::path_denied(relative_path, policy)) {
+        return true;
+    }
+    events.push_back(redaction_event(
+        "diagnostic_path_excluded",
+        "warning",
+        logical_path,
+        "path-deny",
+        "sensitive path was excluded from diagnostic bundle"
+    ));
+    return false;
+}
+
+void collect_diagnostic_instance_files(
+    const InstanceRef& instance,
+    std::vector<std::pair<std::string, std::vector<unsigned char>>>& files,
+    std::vector<DiagnosticBundleEntry>& manifest_entries,
+    std::vector<RedactionEvent>& events
+)
+{
+    if (!fs::exists(instance.local_data_root)) {
+        return;
+    }
+    std::vector<fs::path> paths;
+    for (const fs::directory_entry& entry : fs::recursive_directory_iterator(instance.local_data_root)) {
+        if (entry.is_regular_file()) {
+            paths.push_back(entry.path());
+        }
+    }
+    std::sort(paths.begin(), paths.end());
+
+    for (const fs::path& path : paths) {
+        std::string relative_text = relative_to_root(instance.local_data_root, path);
+        if (relative_text == "instance.v1.json") {
+            continue;
+        }
+        std::string entry_path = "instance/" + relative_text;
+        if (!diagnostic_path_allowed(fs::path(relative_text), events, entry_path)) {
+            continue;
+        }
+        if (factorio_diagnostics::archive_path(path)) {
+            events.push_back(redaction_event(
+                "diagnostic_archive_unsafe",
+                "warning",
+                entry_path,
+                "archive-skip",
+                "archive file was excluded from diagnostic bundle"
+            ));
+            continue;
+        }
+
+        std::vector<unsigned char> bytes = read_bytes(path);
+        if (factorio_diagnostics::looks_binary(bytes)) {
+            events.push_back(redaction_event(
+                "diagnostic_binary_skipped",
+                "warning",
+                entry_path,
+                "binary-skip",
+                "binary file was excluded from diagnostic bundle"
+            ));
+            continue;
+        }
+
+        std::string text(bytes.begin(), bytes.end());
+        if (relative_text == "config/config-path.cfg") {
+            text = "read-data=$FACMAN_INSTALL_ROOT\nwrite-data=$FACMAN_INSTANCE_ROOT\n";
+        }
+        std::string kind = relative_text.find("log") != std::string::npos ? "log" : "config";
+        add_diagnostic_text_file(files, manifest_entries, events, entry_path, kind, text, true);
+    }
+}
+
+std::string diagnostic_doctor_report_json(const CliOptions& options)
+{
+    std::vector<fs::path> installs = install_ref_files(options.workspace);
+    std::vector<fs::path> instances = instance_manifest_files(options.workspace);
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.diagnostic_report.v1\",\n";
+    out << "  \"command\": \"doctor.run\",\n";
+    out << "  \"status\": " << quote(installs.empty() ? "warning" : "ok") << ",\n";
+    out << "  \"workspace\": \"$FACMAN_WORKSPACE\",\n";
+    out << "  \"registered_installs\": " << installs.size() << ",\n";
+    out << "  \"instances\": " << instances.size() << ",\n";
+    out << "  \"problems\": " << (installs.empty() ? "[\"no install references registered yet\"]" : "[]") << ",\n";
+    out << "  \"suggested_fixes\": " << (installs.empty()
+        ? "[\"run facman installs scan --search-root <folder> --json or facman installs import <factorio-dir> --id <install-id>\"]"
+        : "[]") << ",\n";
+    out << "  \"redacted\": true,\n";
+    out << "  \"redaction_policy\": \"facman.redaction_policy.v1\"\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string diagnostic_bundle_manifest_json(
+    const std::string& instance_id,
+    const std::string& created_at,
+    const std::vector<DiagnosticBundleEntry>& entries,
+    const std::vector<RedactionEvent>& events
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.diagnostic_bundle.v1\",\n";
+    out << "  \"bundle_version\": 1,\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"created_at\": " << quote(created_at) << ",\n";
+    out << "  \"files\": [";
+    for (std::size_t index = 0; index < entries.size(); ++index) {
+        const DiagnosticBundleEntry& entry = entries[index];
+        if (index) {
+            out << ",";
+        }
+        out << "\n    {\"path\": " << quote(entry.path)
+            << ", \"kind\": " << quote(entry.kind)
+            << ", \"redacted\": " << (entry.redacted ? "true" : "false") << "}";
+    }
+    if (!entries.empty()) {
+        out << "\n  ";
+    }
+    out << "],\n";
+    out << "  \"excluded_paths\": [";
+    bool wrote_excluded = false;
+    for (const RedactionEvent& event : events) {
+        if (event.code != "diagnostic_path_excluded") {
+            continue;
+        }
+        if (wrote_excluded) {
+            out << ",";
+        }
+        wrote_excluded = true;
+        out << quote(event.path);
+    }
+    out << "],\n";
+    out << "  \"redaction\": {\n";
+    out << "    \"policy_schema\": \"facman.redaction_policy.v1\",\n";
+    out << "    \"marker\": " << quote(factorio_diagnostics::redaction_marker()) << ",\n";
+    out << "    \"report_path\": \"redaction/report.v1.json\"\n";
+    out << "  }\n";
+    out << "}\n";
+    return out.str();
+}
+
+bool write_diagnostic_bundle(
+    const CliOptions& options,
+    const InstanceRef* instance,
+    const fs::path& output_path,
+    std::size_t& file_count,
+    std::string& report_json
+)
+{
+    std::vector<std::pair<std::string, std::vector<unsigned char>>> files;
+    std::vector<DiagnosticBundleEntry> manifest_entries;
+    std::vector<RedactionEvent> events;
+
+    add_diagnostic_text_file(
+        files,
+        manifest_entries,
+        events,
+        "workspace/workspace.v1.json",
+        "workspace",
+        read_text(options.workspace / "workspace.v1.json"),
+        true
+    );
+
+    std::string instance_id = instance ? instance->instance_id : "workspace";
+    if (instance) {
+        InstallRef install;
+        if (load_install(options.workspace, instance->install_ref, install)) {
+            install.root = "$FACMAN_INSTALL_ROOT";
+            install.executable = "$FACMAN_INSTALL_ROOT/bin/factorio";
+            add_diagnostic_text_file(
+                files,
+                manifest_entries,
+                events,
+                "installs/selected-install-ref.v1.json",
+                "install_ref",
+                install_json(install),
+                true
+            );
+        }
+        add_diagnostic_text_file(
+            files,
+            manifest_entries,
+            events,
+            "instance/instance.v1.json",
+            "instance_manifest",
+            redacted_instance_json(*instance),
+            true
+        );
+        fs::path lock_path = modset_lock_path(*instance);
+        if (fs::is_regular_file(lock_path)) {
+            add_diagnostic_text_file(
+                files,
+                manifest_entries,
+                events,
+                "modsets/modset-lock.v1.json",
+                "modset_lock",
+                read_text(lock_path),
+                true
+            );
+        }
+        collect_diagnostic_instance_files(*instance, files, manifest_entries, events);
+    }
+
+    add_diagnostic_text_file(
+        files,
+        manifest_entries,
+        events,
+        "doctor/doctor.v1.json",
+        "doctor_report",
+        diagnostic_doctor_report_json(options),
+        true
+    );
+
+    report_json = factorio_diagnostics::redaction_report_json(events);
+    files.push_back({"redaction/report.v1.json", bytes_from_text(report_json)});
+    manifest_entries.push_back({"redaction/report.v1.json", "redaction_report", false});
+
+    std::string manifest = diagnostic_bundle_manifest_json(instance_id, utc_now_iso8601(), manifest_entries, events);
+    files.insert(files.begin(), {"manifest/diagnostic-bundle.v1.json", bytes_from_text(manifest)});
+    file_count = files.size();
+    return write_stored_zip(output_path, files);
 }
 
 std::vector<std::string> launch_args(const InstanceRef& instance)
@@ -1527,8 +1985,10 @@ int print_help()
     std::cout << "  product inspect [--json]\n";
     std::cout << "  command-graph inspect [--json]\n";
     std::cout << "  diagnostics report [--json]\n";
-    std::cout << "  doctor [--json]\n";
-    std::cout << "  installs scan [--path <root>] [--json]\n";
+    std::cout << "  diagnostics redact <file> [--json]\n";
+    std::cout << "  diagnostics export --instance <id> --out <bundle.zip> [--json]\n";
+    std::cout << "  doctor [--search-root <root>] [--diagnostic-bundle <bundle.zip>] [--json]\n";
+    std::cout << "  installs scan [--path <root>] [--search-root <root>] [--json]\n";
     std::cout << "  installs inspect <install-id> [--json]\n";
     std::cout << "  installs import <factorio-dir> --id <install-id> [--json]\n";
     std::cout << "  installs install-version <version> --archive <path> [--json]\n";
@@ -1592,8 +2052,9 @@ int command_command_graph(const std::vector<std::string>& args)
     return 2;
 }
 
-int command_diagnostics(const std::vector<std::string>& args)
+int command_diagnostics(const CliOptions& options)
 {
+    const std::vector<std::string>& args = options.args;
     if (args.size() >= 2 && args[1] == "report") {
         if (has_flag(args, "--json")) {
             std::cout << flb_command_payload_json("diagnostics.report", true);
@@ -1601,6 +2062,119 @@ int command_diagnostics(const std::vector<std::string>& args)
             std::cout << "FacMan diagnostics report\n";
             std::cout << "Route: CLI -> FLB -> ULK\n";
             std::cout << "Status: ok\n";
+        }
+        return 0;
+    }
+    if (args.size() >= 3 && args[1] == "redact") {
+        fs::path input_path = args[2];
+        if (!fs::is_regular_file(input_path)) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.redact",
+                "",
+                "diagnostic_bundle_source_missing",
+                "Redaction source file is missing",
+                true,
+                path_string(input_path)
+            );
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Missing redaction source: " << path_string(input_path) << "\n";
+            }
+            return 1;
+        }
+        std::vector<unsigned char> bytes = read_bytes(input_path);
+        if (factorio_diagnostics::looks_binary(bytes)) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.redact",
+                "",
+                "diagnostic_binary_skipped",
+                "Binary source cannot be redacted as text",
+                false,
+                path_string(input_path)
+            );
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Binary source skipped: " << path_string(input_path) << "\n";
+            }
+            return 1;
+        }
+        factorio_diagnostics::RedactionResult redacted =
+            factorio_diagnostics::redact_text(std::string(bytes.begin(), bytes.end()), generic_path_string(input_path.filename()));
+        if (has_flag(args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.diagnostic_redact.v1\",\n";
+            std::cout << "  \"command\": \"diagnostics.redact\",\n";
+            std::cout << "  \"path\": " << quote(path_string(input_path)) << ",\n";
+            std::cout << "  \"redacted_text\": " << quote(redacted.text) << ",\n";
+            std::cout << "  \"redaction_report\": " << factorio_diagnostics::redaction_report_json(redacted.events) << "\n";
+            std::cout << "}\n";
+        } else {
+            std::cout << redacted.text;
+        }
+        return 0;
+    }
+    if (args.size() >= 2 && args[1] == "export") {
+        ensure_workspace(options.workspace);
+        std::string instance_id = option_value(args, "--instance");
+        std::string output = option_value(args, "--out");
+        if (instance_id.empty() || output.empty()) {
+            std::cerr << "diagnostics export requires --instance <instance-id> --out <bundle.zip>\n";
+            return 2;
+        }
+        InstanceRef instance;
+        if (!load_instance(options.workspace, instance_id, instance)) {
+            std::cerr << "Unknown instance: " << instance_id << "\n";
+            return 1;
+        }
+        fs::path output_path = output;
+        if (fs::exists(output_path)) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.export",
+                instance.instance_id,
+                "diagnostic_bundle_target_exists",
+                "Diagnostic bundle target already exists",
+                true,
+                path_string(output_path)
+            );
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Diagnostic bundle target already exists: " << path_string(output_path) << "\n";
+            }
+            return 1;
+        }
+        std::size_t file_count = 0;
+        std::string report_json;
+        if (!write_diagnostic_bundle(options, &instance, output_path, file_count, report_json)) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.export",
+                instance.instance_id,
+                "diagnostic_bundle_write_refused",
+                "Diagnostic bundle could not be written",
+                true,
+                path_string(output_path)
+            );
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Failed to write diagnostic bundle: " << path_string(output_path) << "\n";
+            }
+            return 1;
+        }
+        if (has_flag(args, "--json")) {
+            std::cout << "{\n";
+            std::cout << "  \"schema\": \"factorio.diagnostic_bundle_export.v1\",\n";
+            std::cout << "  \"command\": \"diagnostics.export\",\n";
+            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+            std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
+            std::cout << "  \"files\": " << file_count << ",\n";
+            std::cout << "  \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
+            std::cout << "  \"redaction_report\": " << report_json << "\n";
+            std::cout << "}\n";
+        } else {
+            std::cout << "Exported diagnostic bundle to " << path_string(output_path) << "\n";
         }
         return 0;
     }
@@ -1613,18 +2187,149 @@ int command_doctor(const CliOptions& options)
     ensure_workspace(options.workspace);
     std::vector<fs::path> installs = install_ref_files(options.workspace);
     std::vector<fs::path> instances = instance_manifest_files(options.workspace);
-    bool warning = installs.empty();
+    bool has_discovery_roots = has_explicit_scan_roots(options.args);
+    std::vector<InstallRef> discovery = has_discovery_roots ? scan_install_candidates(options.args) : std::vector<InstallRef>();
+    bool invalid_candidates = false;
+    for (const InstallRef& install : discovery) {
+        if (install.verification_status == "invalid") {
+            invalid_candidates = true;
+        }
+    }
+    bool warning = installs.empty() || invalid_candidates;
+    std::string diagnostic_bundle_output = option_value(options.args, "--diagnostic-bundle");
+    bool diagnostic_bundle_written = false;
+    std::size_t diagnostic_bundle_file_count = 0;
+    std::string diagnostic_bundle_report_json;
+    if (!diagnostic_bundle_output.empty()) {
+        fs::path output_path = diagnostic_bundle_output;
+        if (fs::exists(output_path)) {
+            std::string result = diagnostic_refusal_json(
+                "doctor.run",
+                "",
+                "diagnostic_bundle_target_exists",
+                "Diagnostic bundle target already exists",
+                true,
+                path_string(output_path)
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Diagnostic bundle target already exists: " << path_string(output_path) << "\n";
+            }
+            return 1;
+        }
+        InstanceRef selected_instance;
+        InstanceRef* selected_instance_ptr = nullptr;
+        std::string requested_instance = option_value(options.args, "--instance");
+        if (!requested_instance.empty()) {
+            if (!load_instance(options.workspace, requested_instance, selected_instance)) {
+                std::cerr << "Unknown instance: " << requested_instance << "\n";
+                return 1;
+            }
+            selected_instance_ptr = &selected_instance;
+        } else if (!instances.empty()) {
+            std::string inferred_instance = instances.front().parent_path().filename().string();
+            if (load_instance(options.workspace, inferred_instance, selected_instance)) {
+                selected_instance_ptr = &selected_instance;
+            }
+        }
+        if (!write_diagnostic_bundle(
+                options,
+                selected_instance_ptr,
+                output_path,
+                diagnostic_bundle_file_count,
+                diagnostic_bundle_report_json)) {
+            std::string result = diagnostic_refusal_json(
+                "doctor.run",
+                requested_instance,
+                "diagnostic_bundle_write_refused",
+                "Diagnostic bundle could not be written",
+                true,
+                path_string(output_path)
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Failed to write diagnostic bundle: " << path_string(output_path) << "\n";
+            }
+            return 1;
+        }
+        diagnostic_bundle_written = true;
+    }
     if (has_flag(options.args, "--json")) {
         std::cout << "{\n";
+        std::cout << "  \"schema\": \"factorio.diagnostic_report.v1\",\n";
+        std::cout << "  \"command\": \"doctor.run\",\n";
         std::cout << "  \"status\": " << quote(warning ? "warning" : "ok") << ",\n";
         std::cout << "  \"workspace\": " << quote(path_string(options.workspace)) << ",\n";
         std::cout << "  \"registered_installs\": " << installs.size() << ",\n";
         std::cout << "  \"instances\": " << instances.size() << ",\n";
+        std::cout << "  \"problems\": [";
+        bool wrote_problem = false;
+        if (installs.empty()) {
+            std::cout << quote("no install references registered yet");
+            wrote_problem = true;
+        }
+        if (invalid_candidates) {
+            if (wrote_problem) {
+                std::cout << ",";
+            }
+            std::cout << quote("invalid Factorio install candidates found");
+            wrote_problem = true;
+        }
+        std::cout << "],\n";
+        std::cout << "  \"suggested_fixes\": [";
+        bool wrote_fix = false;
+        if (installs.empty()) {
+            std::cout << quote("run facman installs scan --search-root <folder> --json or facman installs import <factorio-dir> --id <install-id>");
+            wrote_fix = true;
+        }
+        if (invalid_candidates) {
+            if (wrote_fix) {
+                std::cout << ",";
+            }
+            std::cout << quote("inspect invalid candidates and choose a valid Factorio install root");
+        }
+        std::cout << "],\n";
+        std::cout << "  \"checks\": [";
+        std::cout << "{\"id\":\"workspace\",\"status\":\"ok\"},";
+        std::cout << "{\"id\":\"install_refs\",\"status\":\"" << (installs.empty() ? "warning" : "ok") << "\"}";
+        if (has_discovery_roots) {
+            std::cout << ",{\"id\":\"discovery_candidates\",\"status\":\"" << (invalid_candidates ? "warning" : "ok") << "\"}";
+        }
+        std::cout << "],\n";
         std::cout << "  \"warnings\": ";
         if (warning) {
-            std::cout << "[\"no install references registered yet\"]\n";
+            std::cout << "[";
+            bool wrote_warning = false;
+            if (installs.empty()) {
+                std::cout << quote("no install references registered yet");
+                wrote_warning = true;
+            }
+            if (invalid_candidates) {
+                if (wrote_warning) {
+                    std::cout << ",";
+                }
+                std::cout << quote("invalid Factorio install candidates found");
+            }
+            std::cout << "]";
         } else {
-            std::cout << "[]\n";
+            std::cout << "[]";
+        }
+        if (diagnostic_bundle_written) {
+            std::cout << ",\n";
+            std::cout << "  \"diagnostic_bundle\": {\n";
+            std::cout << "    \"path\": " << quote(path_string(fs::path(diagnostic_bundle_output))) << ",\n";
+            std::cout << "    \"files\": " << diagnostic_bundle_file_count << ",\n";
+            std::cout << "    \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
+            std::cout << "    \"redaction_report\": " << diagnostic_bundle_report_json << "\n";
+            std::cout << "  }";
+        }
+        if (has_discovery_roots) {
+            std::cout << ",\n";
+            std::cout << "  \"discovery\": " << installs_report_json(discovery);
+        } else {
+            std::cout << "\n";
         }
         std::cout << "}\n";
     } else {
@@ -1633,9 +2338,20 @@ int command_doctor(const CliOptions& options)
         std::cout << "Workspace: " << path_string(options.workspace) << "\n";
         std::cout << "Registered installs: " << installs.size() << "\n";
         std::cout << "Instances: " << instances.size() << "\n";
+        if (diagnostic_bundle_written) {
+            std::cout << "Diagnostic bundle: " << path_string(fs::path(diagnostic_bundle_output)) << "\n";
+        }
+        if (has_discovery_roots) {
+            std::cout << "Discovery candidates: " << discovery.size() << "\n";
+        }
         if (warning) {
-            std::cout << "Warning: no install references registered yet\n";
-            std::cout << "Suggestion: run facman installs import <factorio-dir> --id <install-id>\n";
+            if (installs.empty()) {
+                std::cout << "Warning: no install references registered yet\n";
+            }
+            if (invalid_candidates) {
+                std::cout << "Warning: invalid Factorio install candidates found\n";
+            }
+            std::cout << "Suggestion: run facman installs scan --search-root <folder> --json or facman installs import <factorio-dir> --id <install-id>\n";
         }
     }
     return 0;
@@ -1839,7 +2555,7 @@ int command_installs(const CliOptions& options)
         } else {
             if (candidates.empty()) {
                 std::cout << "No Factorio install candidates found.\n";
-                std::cout << "Use facman installs scan --path <folder> or facman installs import <factorio-dir> --id <install-id>.\n";
+                std::cout << "Use facman installs scan --search-root <folder> or facman installs import <factorio-dir> --id <install-id>.\n";
             }
             for (const InstallRef& install : candidates) {
                 std::cout << install.install_id << " "
@@ -2029,10 +2745,29 @@ int command_mods(const CliOptions& options)
             std::cerr << "Mod import requires a local .zip file\n";
             return 1;
         }
+        ModRef mod = mod_ref_from_path(source);
+        if (mod.valid && !factorio_modsets::factorio_versions_compatible(mod.factorio_version, instance.factorio_version)) {
+            mark_mod_refused(
+                mod,
+                "mod_factorio_version_incompatible",
+                "Mod factorio_version is not compatible with this instance",
+                mod.factorio_version + " != " + factorio_modsets::factorio_minor_version(instance.factorio_version)
+            );
+        }
+        if (!mod.valid) {
+            std::string result = factorio_modsets::mod_refusal_json("mods.import", instance.instance_id, source, mod);
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Refused: " << mod.refusal_reason << "\n";
+                std::cerr << "Code: " << mod.refusal_code << "\n";
+            }
+            return 1;
+        }
         fs::path destination = instance.local_data_root / "mods" / source.filename();
         fs::create_directories(destination.parent_path());
         fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
-        ModRef mod = mod_ref_from_path(destination);
+        mod.file_path = destination;
         if (has_flag(options.args, "--json")) {
             std::cout << mod_ref_to_json(mod) << "\n";
         } else {
@@ -2060,6 +2795,21 @@ int command_modsets(const CliOptions& options)
     }
 
     if (options.args[1] == "lock") {
+        std::vector<ModsetIssue> issues = validate_instance_modset(instance);
+        if (!issues.empty()) {
+            std::string result = factorio_modsets::modset_refusal_json(
+                "modsets.lock",
+                instance.instance_id,
+                issues[0]
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Refused: " << issues[0].reason << "\n";
+                std::cerr << "Code: " << issues[0].code << "\n";
+            }
+            return 1;
+        }
         std::string lock = modset_lock_json(instance);
         write_text(modset_lock_path(instance), lock);
         write_text(workspace_modset_lock_path(options.workspace, instance), lock);
@@ -2085,7 +2835,20 @@ int command_modsets(const CliOptions& options)
                 }
                 std::cout << quote(problems[index]);
             }
-            std::cout << "]\n";
+            std::cout << "]";
+            if (!problems.empty()) {
+                std::cout << ",\n";
+                std::cout << "  \"refusal\": {\n";
+                std::cout << "    \"schema\": \"common.refusal.v1\",\n";
+                std::cout << "    \"code\": \"mod_hash_mismatch\",\n";
+                std::cout << "    \"reason\": \"One or more locked mod hashes do not match local artifacts\",\n";
+                std::cout << "    \"recoverable\": true,\n";
+                std::cout << "    \"retryable\": true,\n";
+                std::cout << "    \"severity\": \"error\"\n";
+                std::cout << "  }\n";
+            } else {
+                std::cout << "\n";
+            }
             std::cout << "}\n";
         } else if (problems.empty()) {
             std::cout << "Modset verified for " << instance.instance_id << "\n";
@@ -2101,6 +2864,21 @@ int command_modsets(const CliOptions& options)
         if (options.args.size() < 4) {
             std::cerr << "modsets export requires <instance-id> <pack.zip>\n";
             return 2;
+        }
+        std::vector<ModsetIssue> issues = validate_instance_modset(instance);
+        if (!issues.empty()) {
+            std::string result = factorio_modsets::modset_refusal_json(
+                "modsets.export",
+                instance.instance_id,
+                issues[0]
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Refused: " << issues[0].reason << "\n";
+                std::cerr << "Code: " << issues[0].code << "\n";
+            }
+            return 1;
         }
         fs::path lock_path = modset_lock_path(instance);
         if (!fs::is_regular_file(lock_path)) {
@@ -2180,26 +2958,100 @@ int command_saves(const CliOptions& options)
             std::cerr << "Unknown instance: " << instance_id << "\n";
             return 1;
         }
+        if (instance_save_is_locked(instance)) {
+            std::string result = save_refusal_json(
+                "saves.backup",
+                instance.instance_id,
+                options.args[2],
+                "save_locked",
+                "Save writes are locked for this instance",
+                true,
+                path_string(instance.local_data_root / "locks" / "save.write.lock"),
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Save is locked: " << options.args[2] << "\n";
+            }
+            return 1;
+        }
         SaveRef save;
         if (!resolve_instance_save(instance, options.args[2], save)) {
-            std::cerr << "Unknown save in instance: " << options.args[2] << "\n";
+            std::string result = save_refusal_json(
+                "saves.backup",
+                instance.instance_id,
+                options.args[2],
+                "save_not_found",
+                "Save is not present in the instance",
+                true,
+                "No matching .zip save exists under the instance saves directory.",
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Unknown save in instance: " << options.args[2] << "\n";
+            }
+            return 1;
+        }
+        std::string validation_detail;
+        if (!validate_save_zip(save, validation_detail)) {
+            std::string result = save_refusal_json(
+                "saves.backup",
+                instance.instance_id,
+                save.file_name,
+                "save_malformed",
+                "Save archive is malformed or unsupported",
+                true,
+                validation_detail,
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Malformed save archive: " << save.file_name << "\n";
+            }
             return 1;
         }
         std::string output = option_value(options.args, "--to");
         fs::path backup_path = output.empty()
             ? instance.local_data_root / "backups" / (save.name + ".backup.zip")
             : fs::path(output);
+        if (fs::exists(backup_path)) {
+            std::string result = save_refusal_json(
+                "saves.backup",
+                instance.instance_id,
+                save.file_name,
+                "save_backup_target_exists",
+                "Save backup target already exists",
+                true,
+                path_string(backup_path),
+                "facman saves backup <save> --instance <instance-id> --to <new-path> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Backup target already exists: " << path_string(backup_path) << "\n";
+            }
+            return 1;
+        }
         if (!backup_path.parent_path().empty()) {
             fs::create_directories(backup_path.parent_path());
         }
-        fs::copy_file(save.file_path, backup_path, fs::copy_options::overwrite_existing);
+        std::error_code copy_error;
+        bool copied = fs::copy_file(save.file_path, backup_path, fs::copy_options::none, copy_error);
+        if (!copied || copy_error) {
+            std::cerr << "Failed to copy save backup: " << path_string(backup_path) << "\n";
+            return 1;
+        }
+        fs::path manifest_path = backup_path;
+        manifest_path += ".manifest.json";
+        std::string created_at = utc_now_iso8601();
+        std::string result = save_backup_result_json(instance, save, backup_path, manifest_path, created_at);
+        write_text(manifest_path, result);
         if (has_flag(options.args, "--json")) {
-            std::cout << "{\n";
-            std::cout << "  \"schema\": \"factorio.save_backup.v1\",\n";
-            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-            std::cout << "  \"save\": " << quote(save.file_name) << ",\n";
-            std::cout << "  \"path\": " << quote(path_string(backup_path)) << "\n";
-            std::cout << "}\n";
+            std::cout << result;
         } else {
             std::cout << "Backed up " << save.file_name << " to " << path_string(backup_path) << "\n";
         }
@@ -2227,22 +3079,94 @@ int command_saves(const CliOptions& options)
             std::cerr << "Unknown target instance: " << target_id << "\n";
             return 1;
         }
+        if (instance_save_is_locked(source) || instance_save_is_locked(target)) {
+            std::string lock_path = instance_save_is_locked(source)
+                ? path_string(source.local_data_root / "locks" / "save.write.lock")
+                : path_string(target.local_data_root / "locks" / "save.write.lock");
+            std::string result = save_refusal_json(
+                "saves.clone",
+                source.instance_id,
+                options.args[2],
+                "save_locked",
+                "Save writes are locked for source or target instance",
+                true,
+                lock_path,
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Save is locked: " << options.args[2] << "\n";
+            }
+            return 1;
+        }
         SaveRef save;
         if (!resolve_instance_save(source, options.args[2], save)) {
-            std::cerr << "Unknown save in source instance: " << options.args[2] << "\n";
+            std::string result = save_refusal_json(
+                "saves.clone",
+                source.instance_id,
+                options.args[2],
+                "save_not_found",
+                "Save is not present in the source instance",
+                true,
+                "No matching .zip save exists under the source instance saves directory.",
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Unknown save in source instance: " << options.args[2] << "\n";
+            }
+            return 1;
+        }
+        std::string validation_detail;
+        if (!validate_save_zip(save, validation_detail)) {
+            std::string result = save_refusal_json(
+                "saves.clone",
+                source.instance_id,
+                save.file_name,
+                "save_malformed",
+                "Save archive is malformed or unsupported",
+                true,
+                validation_detail,
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Malformed save archive: " << save.file_name << "\n";
+            }
             return 1;
         }
         fs::path clone_path = target.local_data_root / "saves" / save.file_name;
+        if (fs::exists(clone_path)) {
+            std::string result = save_refusal_json(
+                "saves.clone",
+                target.instance_id,
+                save.file_name,
+                "save_clone_target_exists",
+                "Save clone target already exists",
+                true,
+                path_string(clone_path),
+                "facman saves clone <save> --instance <source-id> --to-instance <new-target-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Clone target already exists: " << path_string(clone_path) << "\n";
+            }
+            return 1;
+        }
         fs::create_directories(clone_path.parent_path());
-        fs::copy_file(save.file_path, clone_path, fs::copy_options::overwrite_existing);
+        std::error_code copy_error;
+        bool copied = fs::copy_file(save.file_path, clone_path, fs::copy_options::none, copy_error);
+        if (!copied || copy_error) {
+            std::cerr << "Failed to copy save clone: " << path_string(clone_path) << "\n";
+            return 1;
+        }
+        std::string result = save_clone_result_json(source, target, save, clone_path, utc_now_iso8601());
         if (has_flag(options.args, "--json")) {
-            std::cout << "{\n";
-            std::cout << "  \"schema\": \"factorio.save_clone.v1\",\n";
-            std::cout << "  \"source_instance_id\": " << quote(source.instance_id) << ",\n";
-            std::cout << "  \"target_instance_id\": " << quote(target.instance_id) << ",\n";
-            std::cout << "  \"save\": " << quote(save.file_name) << ",\n";
-            std::cout << "  \"path\": " << quote(path_string(clone_path)) << "\n";
-            std::cout << "}\n";
+            std::cout << result;
         } else {
             std::cout << "Cloned " << save.file_name << " to " << target.instance_id << "\n";
         }
@@ -2265,8 +3189,43 @@ int command_export(const CliOptions& options)
         std::cerr << "Unknown instance: " << options.args[2] << "\n";
         return 1;
     }
-    std::vector<std::pair<std::string, std::vector<unsigned char>>> files = instance_export_files(instance);
     fs::path output_path = options.args[3];
+    if (fs::exists(output_path)) {
+        std::string result = instance_transfer_refusal_json(
+            "export.instance",
+            instance.instance_id,
+            "instance_export_target_exists",
+            "Instance export target already exists",
+            true,
+            path_string(output_path)
+        );
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cerr << "Instance export target already exists: " << path_string(output_path) << "\n";
+        }
+        return 1;
+    }
+    for (const SaveRef& save : instance_save_files(instance)) {
+        std::string validation_detail;
+        if (!validate_save_zip(save, validation_detail)) {
+            std::string result = instance_transfer_refusal_json(
+                "export.instance",
+                instance.instance_id,
+                "save_malformed",
+                "Save archive is malformed or unsupported",
+                true,
+                save.file_name + ": " + validation_detail
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Malformed save archive: " << save.file_name << "\n";
+            }
+            return 1;
+        }
+    }
+    std::vector<std::pair<std::string, std::vector<unsigned char>>> files = instance_export_files(instance);
     if (!write_stored_zip(output_path, files)) {
         std::cerr << "Failed to write instance export: " << path_string(output_path) << "\n";
         return 1;
@@ -2293,30 +3252,84 @@ int command_import(const CliOptions& options)
     }
     ensure_workspace(options.workspace);
     fs::path pack_path = options.args[2];
-    if (!fs::is_regular_file(pack_path)) {
-        std::cerr << "Instance pack does not exist: " << path_string(pack_path) << "\n";
+    auto refuse = [&](const std::string& instance_id,
+                      const std::string& code,
+                      const std::string& reason,
+                      bool recoverable,
+                      const std::string& detail) -> int {
+        std::string result = instance_transfer_refusal_json(
+            "import.instance",
+            instance_id,
+            code,
+            reason,
+            recoverable,
+            detail
+        );
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cerr << reason << ": " << detail << "\n";
+        }
         return 1;
+    };
+
+    if (!fs::is_regular_file(pack_path)) {
+        return refuse(
+            "",
+            "instance_import_manifest_invalid",
+            "Instance pack does not exist",
+            true,
+            path_string(pack_path)
+        );
     }
 
     std::vector<ZipEntry> entries;
     std::string error;
     if (!read_stored_zip(pack_path, entries, error)) {
-        std::cerr << "Could not read instance pack: " << error << "\n";
-        return 1;
+        bool unsafe = error == "zip entry path is unsafe";
+        return refuse(
+            "",
+            unsafe ? "unsafe_archive_path" : "instance_import_manifest_invalid",
+            unsafe ? "Instance pack contains an unsafe archive entry" : "Could not read instance pack",
+            !unsafe,
+            error
+        );
+    }
+
+    for (const ZipEntry& entry : entries) {
+        if (!archive_entry_is_safe(entry.name)) {
+            return refuse(
+                "",
+                "unsafe_archive_path",
+                "Instance pack contains an unsafe archive entry",
+                false,
+                entry.name
+            );
+        }
     }
 
     const ZipEntry* manifest_entry = find_zip_entry(entries, "instance.v1.json");
     if (manifest_entry == 0) {
-        std::cerr << "Instance pack is missing instance.v1.json\n";
-        return 1;
+        return refuse(
+            "",
+            "instance_import_manifest_invalid",
+            "Instance pack is missing instance.v1.json",
+            true,
+            path_string(pack_path)
+        );
     }
     std::string manifest_text(manifest_entry->data.begin(), manifest_entry->data.end());
 
     InstanceRef instance;
     instance.instance_id = option_value(options.args, "--id", json_string_value(manifest_text, "instance_id"));
     if (instance.instance_id.empty()) {
-        std::cerr << "Instance pack has no instance id\n";
-        return 1;
+        return refuse(
+            "",
+            "instance_import_manifest_invalid",
+            "Instance pack has no instance id",
+            true,
+            path_string(pack_path)
+        );
     }
     instance.display_name = json_string_value(manifest_text, "display_name");
     instance.install_ref = json_string_value(manifest_text, "install_ref");
@@ -2326,8 +3339,13 @@ int command_import(const CliOptions& options)
     instance.local_data_root = options.workspace / "instances" / instance.instance_id;
 
     if (fs::exists(instance.local_data_root)) {
-        std::cerr << "Instance already exists: " << instance.instance_id << "\n";
-        return 1;
+        return refuse(
+            instance.instance_id,
+            "instance_import_target_exists",
+            "Instance import target already exists",
+            true,
+            path_string(instance.local_data_root)
+        );
     }
 
     for (const ZipEntry& entry : entries) {
@@ -2335,10 +3353,6 @@ int command_import(const CliOptions& options)
             continue;
         }
         fs::path output_path = instance.local_data_root / fs::path(entry.name);
-        if (!archive_entry_is_safe(entry.name)) {
-            std::cerr << "Instance pack contains unsafe path: " << entry.name << "\n";
-            return 1;
-        }
         fs::create_directories(output_path.parent_path());
         std::ofstream out(output_path, std::ios::binary);
         out.write(reinterpret_cast<const char*>(entry.data.data()), static_cast<std::streamsize>(entry.data.size()));
@@ -2615,7 +3629,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
         return command_command_graph(options.args);
     }
     if (command == "diagnostics") {
-        return command_diagnostics(options.args);
+        return command_diagnostics(options);
     }
     if (command == "doctor") {
         return command_doctor(options);

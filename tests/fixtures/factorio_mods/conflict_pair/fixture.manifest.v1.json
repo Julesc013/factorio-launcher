@@ -1,0 +1,9 @@
+{
+  "expected_name": "conflict_mod",
+  "expected_refusal_code": "mod_incompatibility_detected",
+  "expected_status": "refused_with_valid_incompatibilities",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "conflict_mod_1.0.0.zip"
+  ]
+}

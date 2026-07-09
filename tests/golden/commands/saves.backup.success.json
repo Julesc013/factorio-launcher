@@ -3,5 +3,11 @@
   "command": "saves.backup",
   "instance_id": "source-world",
   "save": "starter.zip",
-  "path": "starter.backup.zip"
+  "source_path": "instances/source-world/saves/starter.zip",
+  "destination_path": "starter.backup.zip",
+  "path": "starter.backup.zip",
+  "manifest_path": "starter.backup.zip.manifest.json",
+  "created_at": "2026-07-10T00:00:00Z",
+  "sha1": "1111111111111111111111111111111111111111",
+  "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
 }

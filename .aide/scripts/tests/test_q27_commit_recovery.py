@@ -64,6 +64,77 @@ class Q27CommitRecoveryTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("result: PASS", buffer.getvalue())
 
+    def test_commit_policy_baseline_loads_explicit_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            aide_lite.write_text(
+                root / aide_lite.COMMIT_POLICY_BASELINE_PATH,
+                """schema = "facman.aide_commit_policy_baseline.v1"
+reason = "Fixture baseline."
+
+[[commit]]
+sha = "00b8a40"
+subject = "test(mods): add local Factorio mod ZIP fixture matrix"
+reason = "Published before current commit-body gate."
+""",
+            )
+            entries = aide_lite.load_commit_policy_baseline(root)
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0].sha, "00b8a40")
+        self.assertEqual(entries[0].subject, "test(mods): add local Factorio mod ZIP fixture matrix")
+
+    def test_commit_range_baseline_acknowledges_only_matching_history(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            aide_lite.write_text(
+                root / aide_lite.COMMIT_POLICY_BASELINE_PATH,
+                """schema = "facman.aide_commit_policy_baseline.v1"
+reason = "Fixture baseline."
+
+[[commit]]
+sha = "00b8a40"
+subject = "test(mods): add local Factorio mod ZIP fixture matrix"
+reason = "Published before current commit-body gate."
+""",
+            )
+            commits = [
+                (
+                    "00b8a40f00d11111111111111111111111111111",
+                    "test(mods): add local Factorio mod ZIP fixture matrix",
+                    "test(mods): add local Factorio mod ZIP fixture matrix\n",
+                )
+            ]
+            results, any_fail, baseline_count = aide_lite.validate_commit_range_messages(root, commits)
+        self.assertFalse(any_fail)
+        self.assertEqual(baseline_count, 1)
+        self.assertEqual(results[0][2], "BASELINE")
+
+    def test_commit_range_baseline_does_not_waive_new_bad_commits(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            aide_lite.write_text(
+                root / aide_lite.COMMIT_POLICY_BASELINE_PATH,
+                """schema = "facman.aide_commit_policy_baseline.v1"
+reason = "Fixture baseline."
+
+[[commit]]
+sha = "00b8a40"
+subject = "test(mods): add local Factorio mod ZIP fixture matrix"
+reason = "Published before current commit-body gate."
+""",
+            )
+            commits = [
+                (
+                    "1234567f00d11111111111111111111111111111",
+                    "test(mods): add local Factorio mod ZIP fixture matrix",
+                    "test(mods): add local Factorio mod ZIP fixture matrix\n",
+                )
+            ]
+            results, any_fail, baseline_count = aide_lite.validate_commit_range_messages(root, commits)
+        self.assertTrue(any_fail)
+        self.assertEqual(baseline_count, 0)
+        self.assertEqual(results[0][2], "FAIL")
+
     def test_changelog_preview_groups_and_reports_malformed(self) -> None:
         data = {
             "schema_version": "aide.changelog-preview.v0",

@@ -1,0 +1,65 @@
+schema = "facman.release_profile.v1"
+id = "windows_legacy_winforms_x64"
+lane = "windows_legacy_winforms"
+target_os = "windows"
+target_arch = "x64"
+minimum_os = "windows_7_sp1"
+runtime_floor = ".NET Framework 4.8"
+support_tier = "legacy_best_effort"
+package_types = ["portable_zip", "installer", "self_extracting_bootstrapper"]
+install_modes = ["portable", "user", "system"]
+package_manifest = "release/packaging/windows/facman_portable.v1.toml"
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+release_index = "release/index/release_index.v1.toml"
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+bundles_factorio_binaries = false
+credential_storage = false
+
+[frontends]
+gui = "apps/gui/windows/winforms"
+cli = "apps/cli"
+tui = "apps/tui"
+daemon = "apps/daemon"
+
+[entrypoints]
+gui = "bin/FacMan.WinForms.exe"
+cli = "bin/facman.exe"
+tui = "bin/facman-tui.exe"
+daemon = "bin/facmand.exe"
+
+[required_components]
+binaries = [
+  "bin/FacMan.WinForms.exe",
+  "bin/facman.exe",
+  "bin/facman-tui.exe",
+  "bin/facmand.exe",
+]
+libraries = ["bin/ulk.dll", "bin/usk.dll", "bin/flb_factorio.dll"]
+contracts = "contracts/schema"
+content = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/windows/facman_portable.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+
+[capabilities]
+setup_mutation = false
+network_download = false
+mod_portal_download = false
+server_execution = false
+devtool_execution = false
+auto_update = false
+
+[unsupported]
+features = [
+  "mod_portal_download",
+  "network_download",
+  "setup_mutation",
+  "server_execution",
+  "devtool_execution",
+  "auto_update",
+]
+commands = ["mod_portal.download", "server.execute", "devtools.execute", "setup.apply"]

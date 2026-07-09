@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.diagnostic_redaction_report.v1",
+  "policy_schema": "facman.redaction_policy.v1",
+  "marker": "[FACMAN_REDACTED]",
+  "summary": {
+    "redacted_fields": 12,
+    "excluded_paths": 2,
+    "binary_files_skipped": 1,
+    "archive_files_skipped": 1
+  }
+}

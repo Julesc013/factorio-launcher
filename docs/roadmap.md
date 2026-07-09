@@ -38,6 +38,20 @@ leaving setup mutation to Universal Setup.
 - JSON output for read-only reports.
 - No installing, repairing, uninstalling, or downloading.
 
+## FACMAN-DISCOVERY-FIXTURES-02
+
+- Deterministic fake install matrix under `tests/fixtures/factorio_installs/`.
+- Fixture manifests declare source, ownership, platform, capability,
+  validation, and setup-mutation expectations.
+- `facman installs scan --search-root <root> --json` classifies fixture roots
+  without host-machine discovery.
+- `facman doctor --search-root <root> --json` reports invalid explicit
+  candidates without mutating fixture trees.
+- Golden reports under `tests/golden/discovery/` pin read-only discovery
+  summaries.
+- Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager
+  scanning remain deferred.
+
 ## FacMan-INSTANCE-01
 
 - `facman instances create <name> --install <install-id>`
@@ -53,6 +67,56 @@ leaving setup mutation to Universal Setup.
 - Modset lockfile generation.
 - Modset verification.
 - Modset export.
+
+## FACMAN-MODZIP-DEPTH-02
+
+- Deterministic synthetic local mod ZIP matrix under
+  `tests/fixtures/factorio_mods/`.
+- `info.json` parsing for name, title, version, Factorio version, author,
+  description, dependencies, optional dependencies, hidden-optional
+  dependencies, and incompatibilities.
+- Lockfiles pin local filenames, SHA-1, SHA-256, source, enabled state, and
+  structured dependency declarations.
+- Goldens under `tests/golden/modsets/` pin valid lockfiles and invalid ZIP
+  refusals.
+- Mutation-invariant tests prove source ZIPs are not modified and invalid
+  imports do not partially install.
+- Mod Portal networking, account login, remote dependency solving, and setup
+  mutation remain deferred.
+
+## FACMAN-SAVE-ROUNDTRIP-02
+
+- Deterministic synthetic save fixture matrix under
+  `tests/fixtures/factorio_saves/`.
+- Save backup writes sidecar manifests with source, destination, timestamp,
+  SHA-1, and SHA-256 metadata.
+- Save backup, clone, export, and import refuse existing targets instead of
+  overwriting silently.
+- Malformed save ZIPs return structured `save_malformed` refusals before
+  backup, clone, or export writes outputs.
+- Instance import preflights archive safety and target existence before writing
+  restored instance files.
+- Export/import tests prove saves roundtrip, config secrets are redacted, and
+  source save fixtures are not mutated.
+- Steam Cloud mutation, deep save parsing, map preview, save benchmarking, and
+  save-associated modset inference remain deferred.
+
+## FACMAN-DIAGNOSTIC-REDACTION-02
+
+- Redaction policy contracts cover field-name, path-name, key-value, pattern,
+  binary-file, archive-file, and allowed-metadata rules.
+- `runtime/factorio/diagnostics/` owns deterministic text redaction, sensitive
+  path exclusion, binary/archive skips, and redaction report JSON.
+- `facman diagnostics redact <file> --json` proves deterministic and
+  idempotent text redaction.
+- `facman diagnostics export --instance <id> --out <bundle.zip> --json` writes
+  redacted diagnostic bundles with manifest and redaction report entries.
+- `facman doctor --diagnostic-bundle <bundle.zip> --json` uses the same bundle
+  assembly path.
+- Secret corpus tests prove diagnostics, doctor-created bundles, logs/config
+  collection, and instance exports do not contain raw fake secret values.
+- Factorio account login, credential-store implementation, diagnostic upload,
+  Mod Portal token behavior, and GUI diagnostic UX remain deferred.
 
 ## FacMan-SETUP-HANDOFF-01
 
@@ -82,16 +146,17 @@ R1 - Developer preview
 
 R2 - Local power-user alpha
   real install import
+  fixture-backed discovery classification
   isolated instances
   dry-run and execute
   local modsets
   workspace invariants and package layout skeletons
+  save roundtrip and diagnostic redaction proofs
 
 R3 - Safe beta
-  save backups
-  export/import
-  package layouts
-  diagnostics
+  built package artifacts
+  package runtime smoke
+  diagnostic UX polish
 
 R4 - Managed install alpha
   Universal Setup local archive install

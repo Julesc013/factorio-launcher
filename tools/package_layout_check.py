@@ -14,6 +14,38 @@ WRAPPER_PACKAGE_TYPES = {
     "self_extracting_bootstrapper",
 }
 
+ALLOWED_PACKAGE_TYPES = {
+    "portable_zip",
+    "installer",
+    "app_bundle",
+    "dmg",
+    "appimage",
+    "tarball",
+    "source_archive",
+    "self_extracting_bootstrapper",
+}
+
+FORBIDDEN_PAYLOAD_MARKERS = {
+    "factorio.exe",
+    "Factorio.app",
+    "steamapps",
+    "mod_portal_credentials",
+    "password",
+    "token",
+}
+
+GUI_TOOLKIT_MARKERS = {
+    "winforms",
+    "winui",
+    "appkit",
+    "swiftui",
+    "gtk",
+    "qt",
+    "FacMan.exe",
+    "FacMan.app",
+    "facman-gui",
+}
+
 
 def main() -> int:
     problems: list[str] = []
@@ -53,20 +85,41 @@ def validate_bundle_layout(path: Path) -> list[str]:
     problems: list[str] = []
     package_type = str(expanded.get("package_type", ""))
     entrypoint = str(expanded.get("entrypoint", ""))
+    platform = str(expanded.get("platform", ""))
     components = expanded.get("components", [])
     if not isinstance(components, list) or not components:
         return [f"{path}: expanded bundle has no components"]
+    if package_type not in ALLOWED_PACKAGE_TYPES:
+        problems.append(f"{path}: unsupported package_type {package_type}")
+    if expanded.get("bundles_factorio_binaries") is not False:
+        problems.append(f"{path}: bundles_factorio_binaries must be false")
 
     normalized_destinations: dict[str, str] = {}
     component_names: set[str] = set()
     for component in components:
         name = str(component.get("name", ""))
+        source_target = str(component.get("source_target", ""))
         destination = str(component.get("destination", ""))
+        license_notice = str(component.get("license_notice", ""))
         component_names.add(name)
+        for label, value in [
+            (f"component {name} source_target", source_target),
+            (f"component {name} destination", destination),
+            (f"component {name} license_notice", license_notice),
+        ]:
+            problems.extend(validate_no_forbidden_payload_marker(path, label, value))
         destination_problem = validate_relative_layout_path(path, f"component {name} destination", destination)
         if destination_problem:
             problems.append(destination_problem)
             continue
+        if "/" in source_target or "\\" in source_target:
+            source_problem = validate_relative_layout_path(path, f"component {name} source_target", source_target)
+            if source_problem:
+                problems.append(source_problem)
+        if not license_notice:
+            problems.append(f"{path}: component {name} missing license_notice")
+        elif not (ROOT / license_notice).is_file():
+            problems.append(f"{path}: component {name} license_notice does not exist: {license_notice}")
         normalized = normalize_layout_path(destination)
         if normalized in normalized_destinations:
             first = normalized_destinations[normalized]
@@ -79,6 +132,8 @@ def validate_bundle_layout(path: Path) -> list[str]:
         problems.append(f"{path}: expanded layout missing factorio_content component")
     problems.extend(validate_named_destination_contains(path, components, "contracts_schema", "contracts/schema"))
     problems.extend(validate_named_destination_contains(path, components, "factorio_content", "content/factorio"))
+    if platform == "portable" or expanded.get("gui_stack_required") is False:
+        problems.extend(validate_no_gui_toolkit_leak(path, components))
 
     if not entrypoint:
         problems.append(f"{path}: expanded layout missing entrypoint")
@@ -142,6 +197,28 @@ def validate_named_destination_contains(
     if expected_fragment not in destination:
         return [f"{path}: {name} destination must contain {expected_fragment}: {destination}"]
     return []
+
+
+def validate_no_forbidden_payload_marker(path: Path, label: str, value: str) -> list[str]:
+    lowered = value.lower()
+    return [
+        f"{path}: {label} contains forbidden payload marker {marker}"
+        for marker in sorted(FORBIDDEN_PAYLOAD_MARKERS)
+        if marker.lower() in lowered
+    ]
+
+
+def validate_no_gui_toolkit_leak(path: Path, components: list[dict[str, Any]]) -> list[str]:
+    problems: list[str] = []
+    for component in components:
+        name = str(component.get("name", ""))
+        for key in ["name", "source_target", "destination", "runtime_search_path"]:
+            value = str(component.get(key, ""))
+            lowered = value.lower()
+            for marker in sorted(GUI_TOOLKIT_MARKERS):
+                if marker.lower() in lowered:
+                    problems.append(f"{path}: CLI/TUI-only bundle leaks GUI marker in {name}.{key}: {value}")
+    return problems
 
 
 if __name__ == "__main__":

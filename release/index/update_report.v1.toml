@@ -1,0 +1,18 @@
+schema = "facman.update_report.v1"
+mode = "check"
+current_version = "facman-0.1.0+dev.contract"
+available_version = "facman-0.1.0+dev.contract"
+channel = "pinned"
+mutates_install = false
+mutates_workspace = false
+downloads_payload = false
+apply_authority = "universal_setup"
+compatible_lanes = [
+  "windows_legacy_winforms_x64",
+  "macos_legacy_appkit_x64",
+  "linux_x11_gtk_x64",
+  "portable_cli_x64",
+  "portable_tui_x64",
+]
+required_migrations = []
+signature_status = "deferred_until_signing_ready"

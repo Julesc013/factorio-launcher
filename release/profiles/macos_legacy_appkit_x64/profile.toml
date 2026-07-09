@@ -1,0 +1,69 @@
+schema = "facman.release_profile.v1"
+id = "macos_legacy_appkit_x64"
+lane = "macos_legacy_appkit"
+target_os = "macos"
+target_arch = "x64"
+minimum_os = "macos_10_13"
+runtime_floor = "legacy Xcode/AppKit compatible toolchain"
+support_tier = "legacy_supported"
+package_types = ["app_bundle", "dmg"]
+install_modes = ["portable", "user", "system"]
+package_manifest = "release/packaging/macos/legacy_x86_64.v1.toml"
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+release_index = "release/index/release_index.v1.toml"
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+bundles_factorio_binaries = false
+credential_storage = false
+
+[frontends]
+gui = "apps/gui/macos/appkit"
+cli = "apps/cli"
+tui = "apps/tui"
+daemon = "apps/daemon"
+
+[entrypoints]
+gui = "FacMan.app/Contents/MacOS/FacMan"
+cli = "FacMan.app/Contents/MacOS/facman"
+tui = "FacMan.app/Contents/MacOS/facman-tui"
+daemon = "FacMan.app/Contents/MacOS/facmand"
+
+[required_components]
+binaries = [
+  "FacMan.app/Contents/MacOS/FacMan",
+  "FacMan.app/Contents/MacOS/facman",
+  "FacMan.app/Contents/MacOS/facman-tui",
+  "FacMan.app/Contents/MacOS/facmand",
+]
+libraries = [
+  "FacMan.app/Contents/Frameworks/libulk.dylib",
+  "FacMan.app/Contents/Frameworks/libusk.dylib",
+  "FacMan.app/Contents/Frameworks/libflb_factorio.dylib",
+]
+contracts = "FacMan.app/Contents/Resources/contracts/schema"
+content = "FacMan.app/Contents/Resources/content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/macos/legacy_x86_64.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+
+[capabilities]
+setup_mutation = false
+network_download = false
+mod_portal_download = false
+server_execution = false
+devtool_execution = false
+auto_update = false
+
+[unsupported]
+features = [
+  "mod_portal_download",
+  "network_download",
+  "setup_mutation",
+  "server_execution",
+  "devtool_execution",
+  "auto_update",
+]
+commands = ["mod_portal.download", "server.execute", "devtools.execute", "setup.apply"]

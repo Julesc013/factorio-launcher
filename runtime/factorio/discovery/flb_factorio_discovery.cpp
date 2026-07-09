@@ -81,6 +81,40 @@ std::string json_string_value(const std::string& text, const std::string& key)
     return value.str();
 }
 
+std::vector<std::string> json_string_array_values(const std::string& text, const std::string& key)
+{
+    std::vector<std::string> values;
+    std::string marker = "\"" + key + "\"";
+    std::size_t position = text.find(marker);
+    if (position == std::string::npos) {
+        return values;
+    }
+    position = text.find('[', position + marker.size());
+    if (position == std::string::npos) {
+        return values;
+    }
+    std::size_t end = text.find(']', position + 1);
+    if (end == std::string::npos) {
+        return values;
+    }
+
+    std::string array_text = text.substr(position + 1, end - position - 1);
+    std::size_t cursor = 0;
+    while (cursor < array_text.size()) {
+        std::size_t quote_start = array_text.find('"', cursor);
+        if (quote_start == std::string::npos) {
+            break;
+        }
+        std::size_t quote_end = array_text.find('"', quote_start + 1);
+        if (quote_end == std::string::npos) {
+            break;
+        }
+        values.push_back(array_text.substr(quote_start + 1, quote_end - quote_start - 1));
+        cursor = quote_end + 1;
+    }
+    return values;
+}
+
 std::string slugify(const std::string& text)
 {
     std::string out;
@@ -155,6 +189,7 @@ std::string detect_version(const fs::path& root)
 {
     const fs::path candidates[] = {
         root / "data" / "base" / "info.json",
+        root / "Factorio.app" / "Contents" / "Resources" / "data" / "base" / "info.json",
         root / "Contents" / "Resources" / "data" / "base" / "info.json",
         root / "Contents" / "data" / "base" / "info.json",
     };
@@ -190,6 +225,15 @@ std::string infer_source(const fs::path& root)
     if (lower.find("portable") != std::string::npos) {
         return "portable";
     }
+    if (lower.find("standalone") != std::string::npos) {
+        return "standalone";
+    }
+    if (lower.find("tarball") != std::string::npos) {
+        return "tarball";
+    }
+    if (lower.find("package") != std::string::npos) {
+        return "os_package";
+    }
     if (lower.find("headless") != std::string::npos) {
         return "headless";
     }
@@ -202,10 +246,10 @@ std::string infer_source(const fs::path& root)
 std::string infer_ownership(const fs::path& root)
 {
     std::string source = infer_source(root);
-    if (source == "steam") {
+    if (source == "steam" || source == "os_package" || source == "standalone") {
         return "foreign_owned";
     }
-    if (source == "portable") {
+    if (source == "portable" || source == "tarball") {
         return "portable";
     }
     return "imported";
@@ -219,6 +263,7 @@ std::string infer_platform(const fs::path& root, const fs::path& executable)
     });
     std::string root_text = lower_path(root);
     if (root_text.find(".app") != std::string::npos ||
+        root_text.find("factorio.app") != std::string::npos ||
         root_text.find("contents/macos") != std::string::npos ||
         executable_text.find("contents/macos") != std::string::npos) {
         return "macos";
@@ -227,6 +272,56 @@ std::string infer_platform(const fs::path& root, const fs::path& executable)
         return "windows-x64";
     }
     return "linux-x64";
+}
+
+bool has_suffix(const std::string& text, const std::string& suffix)
+{
+    return text.size() >= suffix.size() &&
+        text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+fs::path fixture_manifest_path(const fs::path& root)
+{
+    fs::path manifest = root / "fixture.manifest.v1.json";
+    if (fs::is_regular_file(manifest)) {
+        return manifest;
+    }
+    return fs::path();
+}
+
+std::string executable_path_kind(const fs::path& executable)
+{
+    if (executable.empty()) {
+        return "missing";
+    }
+    std::string filename = executable.filename().string();
+    if (has_suffix(filename, ".stub")) {
+        return "stub";
+    }
+    return "candidate";
+}
+
+std::string app_dir_kind(const fs::path& root)
+{
+    std::string lower = lower_path(root);
+    if (lower.find(".app") != std::string::npos || fs::is_directory(root / "Factorio.app")) {
+        return "app_bundle";
+    }
+    if (fs::is_regular_file(root / "fixture.manifest.v1.json")) {
+        return "fixture_root";
+    }
+    return "install_root";
+}
+
+std::string non_empty_or(const std::string& value, const std::string& fallback)
+{
+    return value.empty() ? fallback : value;
+}
+
+bool manifest_expected_structural(const std::string& manifest_text)
+{
+    std::string status = json_string_value(manifest_text, "validation_status");
+    return status.empty() || status == "structural";
 }
 
 std::string capabilities_json(const std::vector<std::string>& capabilities)
@@ -317,20 +412,53 @@ std::vector<fs::path> discovery_search_roots(const std::vector<fs::path>& explic
 std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
 {
     std::vector<fs::path> candidates;
-    append_unique_path(candidates, root);
+    std::vector<fs::path> fixture_children;
+    bool root_is_fixture = fs::is_regular_file(root / "fixture.manifest.v1.json");
+
+    if (root_is_fixture) {
+        append_unique_path(candidates, root);
+        return candidates;
+    }
+
+    if (fs::is_directory(root)) {
+        std::vector<fs::path> children;
+        for (const fs::directory_entry& entry : fs::directory_iterator(root)) {
+            if (entry.is_directory()) {
+                children.push_back(entry.path());
+            }
+        }
+        std::sort(children.begin(), children.end());
+        for (const fs::path& child : children) {
+            if (fs::is_regular_file(child / "fixture.manifest.v1.json")) {
+                fixture_children.push_back(child);
+            }
+        }
+    }
+
+    if (fixture_children.empty()) {
+        append_unique_path(candidates, root);
+    }
+    for (const fs::path& child : fixture_children) {
+        append_unique_path(candidates, child);
+    }
     append_unique_path(candidates, root / "steamapps" / "common" / "Factorio");
     append_unique_path(candidates, root / "Factorio");
     append_unique_path(candidates, root / "factorio");
     append_unique_path(candidates, root / "factorio.app");
 
     if (fs::is_directory(root)) {
+        std::vector<fs::path> children;
         for (const fs::directory_entry& entry : fs::directory_iterator(root)) {
             if (entry.is_directory()) {
-                std::string name = entry.path().filename().string();
-                std::string lower = lower_path(name);
-                if (lower.find("factorio") != std::string::npos) {
-                    append_unique_path(candidates, entry.path());
-                }
+                children.push_back(entry.path());
+            }
+        }
+        std::sort(children.begin(), children.end());
+        for (const fs::path& child : children) {
+            std::string name = child.filename().string();
+            std::string lower = lower_path(name);
+            if (lower.find("factorio") != std::string::npos) {
+                append_unique_path(candidates, child);
             }
         }
     }
@@ -344,7 +472,14 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
 {
     InstallRef install;
     install.install_id = install_id;
+    install.candidate_id = install_id;
     install.root = fs::absolute(root).lexically_normal();
+    fs::path fixture_manifest = fixture_manifest_path(install.root);
+    std::string fixture_text = fs::is_regular_file(fixture_manifest) ? read_text(fixture_manifest) : "";
+    std::string fixture_id = json_string_value(fixture_text, "fixture_id");
+    if (!fixture_id.empty()) {
+        install.candidate_id = fixture_id;
+    }
     install.version = detect_version(install.root);
     install.ownership = infer_ownership(install.root);
     install.source = infer_source(install.root);
@@ -353,6 +488,8 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
     const fs::path candidates[] = {
         install.root / "bin" / "x64" / "factorio.exe",
         install.root / "bin" / "x64" / "factorio",
+        install.root / "Factorio.app" / "Contents" / "MacOS" / "factorio",
+        install.root / "Factorio.app" / "Contents" / "MacOS" / "factorio.stub",
         install.root / "Contents" / "MacOS" / "factorio",
         install.root / "bin" / "x64" / "factorio.exe.stub",
         install.root / "bin" / "x64" / "factorio.stub",
@@ -374,6 +511,27 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
         }
     }
     install.platform = infer_platform(install.root, install.executable);
+    install.executable_path_kind = executable_path_kind(install.executable);
+    install.app_dir_kind = app_dir_kind(install.root);
+
+    if (!fixture_text.empty()) {
+        std::vector<std::string> manifest_capabilities = json_string_array_values(fixture_text, "capabilities");
+        install.source = non_empty_or(json_string_value(fixture_text, "source"), install.source);
+        install.ownership = non_empty_or(json_string_value(fixture_text, "ownership"), install.ownership);
+        install.platform = non_empty_or(json_string_value(fixture_text, "platform"), install.platform);
+        if (!manifest_capabilities.empty()) {
+            install.capabilities = manifest_capabilities;
+        }
+        if (!manifest_expected_structural(fixture_text)) {
+            install.verification_status = "invalid";
+            install.capabilities.clear();
+            install.source = non_empty_or(json_string_value(fixture_text, "source"), "invalid");
+        }
+        install.diagnostic_code = json_string_value(fixture_text, "diagnostic_code");
+    }
+    if (install.verification_status == "invalid" && install.diagnostic_code.empty()) {
+        install.diagnostic_code = "invalid_factorio_install";
+    }
     return install;
 }
 
@@ -411,6 +569,7 @@ std::string install_ref_json(const InstallRef& install)
     out << "{\n";
     out << "  \"schema\": \"factorio.install_ref.v1\",\n";
     out << "  \"install_id\": " << quote(install.install_id) << ",\n";
+    out << "  \"candidate_id\": " << quote(install.candidate_id.empty() ? install.install_id : install.candidate_id) << ",\n";
     out << "  \"product_id\": \"factorio\",\n";
     out << "  \"display_name\": " << quote("Factorio " + install.install_id) << ",\n";
     out << "  \"root\": " << quote(path_string(install.root)) << ",\n";
@@ -421,7 +580,17 @@ std::string install_ref_json(const InstallRef& install)
     out << "  \"source\": " << quote(install.source) << ",\n";
     out << "  \"platform\": " << quote(install.platform) << ",\n";
     out << "  \"capabilities\": " << capabilities_json(install.capabilities) << ",\n";
-    out << "  \"verification\": {\"status\": " << quote(install.verification_status) << ", \"problems\": []},\n";
+    out << "  \"executable_path_kind\": " << quote(install.executable_path_kind) << ",\n";
+    out << "  \"app_dir_kind\": " << quote(install.app_dir_kind) << ",\n";
+    out << "  \"setup_mutation_allowed\": " << (install.setup_mutation_allowed ? "true" : "false") << ",\n";
+    out << "  \"verification\": {\"status\": " << quote(install.verification_status) << ", \"problems\": []";
+    if (!install.diagnostic_code.empty()) {
+        out << ", \"diagnostic_code\": " << quote(install.diagnostic_code);
+    }
+    out << "},\n";
+    if (!install.diagnostic_code.empty()) {
+        out << "  \"refusal\": {\"code\": " << quote(install.diagnostic_code) << ", \"severity\": \"blocked\", \"retryable\": true},\n";
+    }
     out << "  \"discovery\": {\"read_only\": true, \"source_family\": " << quote(install.source) << "},\n";
     out << "  \"safe_actions\": {\"repair\": false, \"uninstall\": false}\n";
     out << "}\n";

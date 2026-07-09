@@ -1,0 +1,15 @@
+schema = "facman.packaging.common_profile.v1"
+id = "base_macos"
+target_os = "macos"
+package_types = ["app_bundle", "dmg"]
+install_modes = ["portable", "user", "system"]
+required_paths = [
+  "FacMan.app/Contents/MacOS",
+  "FacMan.app/Contents/Frameworks",
+  "FacMan.app/Contents/Resources/contracts",
+  "FacMan.app/Contents/Resources/content",
+]
+license_paths = ["FacMan.app/Contents/Resources/licenses"]
+forbid_absolute_paths = true
+bundles_factorio_binaries = false
+credential_storage = false

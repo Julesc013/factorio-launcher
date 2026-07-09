@@ -24,15 +24,23 @@ REQUIRED_RELEASE_PROFILES = (
     "dev",
     "portable",
     "portable_cli",
+    "portable_cli_x64",
+    "portable_tui_x64",
     "windows_legacy_winforms",
+    "windows_legacy_winforms_x64",
     "windows_modern_winui",
     "macos_legacy_appkit",
+    "macos_legacy_appkit_x64",
     "macos_modern_swiftui",
     "linux_x11_gtk",
+    "linux_x11_gtk_x64",
     "linux_wayland_qt",
 )
 
 REQUIRED_PACKAGING_PATHS = (
+    "release/index/release_index.v1.toml",
+    "release/index/package_manifest.v1.toml",
+    "release/index/support_matrix.v1.toml",
     "release/packaging/windows/facman_portable.v1.toml",
     "release/packaging/windows/facman_single_exe.v1.toml",
     "release/packaging/macos/facman_app.v1.toml",
@@ -105,6 +113,16 @@ def check_release_profiles() -> list[str]:
         path = ROOT / "release" / "profiles" / profile / "README.md"
         if not path.is_file():
             problems.append(f"missing release profile {path.relative_to(ROOT)}")
+    for profile in [
+        "windows_legacy_winforms_x64",
+        "macos_legacy_appkit_x64",
+        "linux_x11_gtk_x64",
+        "portable_cli_x64",
+        "portable_tui_x64",
+    ]:
+        path = ROOT / "release" / "profiles" / profile / "profile.toml"
+        if not path.is_file():
+            problems.append(f"missing release profile contract {path.relative_to(ROOT)}")
     profiles_readme = (ROOT / "release" / "profiles" / "README.md").read_text(encoding="utf-8")
     if "R0" not in profiles_readme or "R6" not in profiles_readme:
         problems.append("release/profiles/README.md: missing release readiness ladder")

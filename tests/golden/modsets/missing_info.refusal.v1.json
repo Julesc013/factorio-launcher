@@ -1,0 +1,21 @@
+{
+  "schema": "factorio.mod_refusal.v1",
+  "command": "mods.import",
+  "status": "refused",
+  "instance_id": "modzip",
+  "file_name": "missing_info_1.0.0.zip",
+  "path": "tests/fixtures/factorio_mods/missing_info_json/missing_info_1.0.0.zip",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "mod_zip_missing_info_json",
+    "reason": "Mod ZIP does not contain info.json",
+    "recoverable": true,
+    "retryable": true,
+    "severity": "blocked"
+  },
+  "details": {
+    "metadata_source": "unavailable",
+    "detail": "missing_info_1.0.0.zip"
+  },
+  "suggested_next_command": "facman mods import <mod.zip> --instance <id> --json"
+}

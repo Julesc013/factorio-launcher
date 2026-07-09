@@ -30,6 +30,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10 fallback.
+    tomllib = None
+
 
 GENERATOR_NAME = "aide-lite"
 GENERATOR_VERSION = "q24.existing-tool-adapter-compiler.v0"
@@ -69,6 +74,7 @@ SELFTEST_GOLDEN_TASK_IDS = (
     "install_no_apply_golden",
 )
 COMMIT_MESSAGE_POLICY_PATH = ".aide/policies/commit-messages.yaml"
+COMMIT_POLICY_BASELINE_PATH = ".aide/commit_policy_baseline.toml"
 COMMIT_MESSAGE_STANDARD_PATH = ".aide/reports/aide-commit-message-standard.md"
 COMMIT_MESSAGE_HOOK_TEMPLATE_PATH = ".aide/hooks/commit-msg"
 COMMIT_TEMPLATE_PATH = ".aide/git/commit-template.md"
@@ -3622,6 +3628,13 @@ class Check:
 
 
 @dataclass(frozen=True)
+class CommitPolicyBaselineEntry:
+    sha: str
+    subject: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class AdapterStatus:
     status: str
     action_hint: str
@@ -4466,6 +4479,107 @@ def validate_commit_message_text(text: str) -> list[Check]:
     ]:
         check_pass(checks, forbidden not in lowered, f"commit message excludes {forbidden}")
     return checks
+
+
+def parse_baseline_scalar(value: str) -> str:
+    stripped = value.strip()
+    if stripped.startswith('"') and stripped.endswith('"'):
+        return stripped[1:-1].replace('\\"', '"')
+    return stripped
+
+
+def parse_commit_policy_baseline_fallback(text: str) -> dict[str, object]:
+    data: dict[str, object] = {"commit": []}
+    current_commit: dict[str, str] | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if line == "[[commit]]":
+            current_commit = {}
+            commits = data.setdefault("commit", [])
+            if isinstance(commits, list):
+                commits.append(current_commit)
+            continue
+        if "=" not in line:
+            continue
+        key, raw_value = line.split("=", 1)
+        target = current_commit if current_commit is not None else data
+        target[key.strip()] = parse_baseline_scalar(raw_value)
+    return data
+
+
+def load_commit_policy_baseline(repo_root: Path) -> list[CommitPolicyBaselineEntry]:
+    path = repo_root / COMMIT_POLICY_BASELINE_PATH
+    if not path.exists():
+        return []
+    text = read_text(path)
+    raw = tomllib.loads(text) if tomllib is not None else parse_commit_policy_baseline_fallback(text)
+    schema = str(raw.get("schema", "")).strip()
+    if schema != "facman.aide_commit_policy_baseline.v1":
+        raise ValueError(f"commit policy baseline has unsupported schema: {schema or '<missing>'}")
+    commits = raw.get("commit", [])
+    if not isinstance(commits, list):
+        raise ValueError("commit policy baseline field must be a commit array")
+    entries: list[CommitPolicyBaselineEntry] = []
+    for index, item in enumerate(commits, start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"commit policy baseline entry {index} must be a table")
+        sha = str(item.get("sha", "")).strip().lower()
+        subject = str(item.get("subject", "")).strip()
+        reason = str(item.get("reason", "")).strip()
+        if len(sha) < 7 or not re.match(r"^[0-9a-f]+$", sha):
+            raise ValueError(f"commit policy baseline entry {index} has invalid sha")
+        if not subject:
+            raise ValueError(f"commit policy baseline entry {index} is missing subject")
+        if not reason:
+            raise ValueError(f"commit policy baseline entry {index} is missing reason")
+        entries.append(CommitPolicyBaselineEntry(sha=sha, subject=subject, reason=reason))
+    return entries
+
+
+def commit_policy_baseline_match(
+    commit_hash: str,
+    subject: str,
+    entries: Iterable[CommitPolicyBaselineEntry],
+) -> CommitPolicyBaselineEntry | None:
+    normalized_hash = commit_hash.strip().lower()
+    normalized_subject = subject.strip()
+    for entry in entries:
+        if normalized_hash.startswith(entry.sha) and normalized_subject == entry.subject:
+            return entry
+    return None
+
+
+def validate_commit_range_messages(
+    repo_root: Path,
+    commits: list[tuple[str, str, str]],
+) -> tuple[list[tuple[str, str, str, list[Check]]], bool, int]:
+    baseline_entries = load_commit_policy_baseline(repo_root)
+    results: list[tuple[str, str, str, list[Check]]] = []
+    any_fail = False
+    baseline_count = 0
+    for commit_hash, subject, message in commits:
+        checks = validate_commit_message_text(message)
+        result = commit_message_result(checks)
+        if result == "FAIL":
+            baseline_entry = commit_policy_baseline_match(commit_hash, subject, baseline_entries)
+            if baseline_entry is not None:
+                baseline_count += 1
+                waived = [
+                    Check("WARN", f"commit message baseline acknowledged: {baseline_entry.reason}"),
+                ]
+                waived.extend(
+                    Check("WARN", f"baseline waived failure: {check.message}")
+                    for check in checks
+                    if check.severity == "FAIL"
+                )
+                checks = waived
+                result = "BASELINE"
+            else:
+                any_fail = True
+        results.append((commit_hash, subject, result, checks))
+    return results, any_fail, baseline_count
 
 
 def commit_message_result(checks: Iterable[Check]) -> str:
@@ -32104,20 +32218,16 @@ def command_commit_check(args: argparse.Namespace) -> int:
         raise ValueError("use exactly one of --message-file, --message, --latest, or --range")
     if args.range:
         commits = git_commit_messages_for_range(args.repo_root, args.range, max_count=args.max_count)
-        results: list[tuple[str, str, str, list[Check]]] = []
-        any_fail = False
-        for commit_hash, subject, message in commits:
-            checks = validate_commit_message_text(message)
-            result = commit_message_result(checks)
-            if result == "FAIL":
-                any_fail = True
-            results.append((commit_hash, subject, result, checks))
+        results, any_fail, baseline_count = validate_commit_range_messages(args.repo_root, commits)
         range_result = "FAIL" if any_fail else ("PASS" if commits else "WARN")
         print("AIDE Lite commit range check")
         print(f"result: {range_result}")
         print(f"range: {args.range}")
         print(f"commit_count: {len(commits)}")
         print(f"policy: {COMMIT_MESSAGE_POLICY_PATH}")
+        baseline_path = args.repo_root / COMMIT_POLICY_BASELINE_PATH
+        print(f"baseline: {COMMIT_POLICY_BASELINE_PATH if baseline_path.exists() else 'none'}")
+        print(f"baseline_count: {baseline_count}")
         for commit_hash, subject, result, checks in results:
             print(f"- {commit_hash[:7]} {result} {subject}")
             for check in checks:

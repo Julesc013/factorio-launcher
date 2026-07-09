@@ -66,6 +66,16 @@ Platform:
 Release:
 
 - [Distribution Layout](release/distribution_layout.md)
+- [Distribution Contracts](release/distribution_contracts.md)
+- [Package Skeletons](release/package_skeletons.md)
+- [Release Model](release/RELEASE_MODEL.md)
+- [Distribution Matrix](release/DISTRIBUTION_MATRIX.md)
+- [Install Modes](release/INSTALL_MODES.md)
+- [Versioning](release/VERSIONING.md)
+- [Update Model](release/UPDATE_MODEL.md)
+- [Package Layout](release/PACKAGE_LAYOUT.md)
+- [Offline Bundles](release/OFFLINE_BUNDLES.md)
+- [Support Policy](release/SUPPORT_POLICY.md)
 
 Planning:
 

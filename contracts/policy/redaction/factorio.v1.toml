@@ -19,7 +19,7 @@ forbidden_plaintext_fields = [
   "mod_portal_token",
 ]
 
-diagnostic_replacement = "[REDACTED]"
+diagnostic_replacement = "[FACMAN_REDACTED]"
 allow_credentials_in_manifests = false
 allow_credentials_in_logs = false
 credential_store_required = true

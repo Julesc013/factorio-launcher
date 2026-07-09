@@ -2,22 +2,58 @@ schema = "facman.packaging.bundle_manifest.v1"
 artifact_id = "FacMan-<version>-portable-cli"
 platform = "portable"
 support_level = "portable"
-package_type = "portable_tarball"
+package_type = "tarball"
 architecture = "configured_by_track"
 python_runtime = false
 bundles_factorio_binaries = false
-entrypoint = "facman"
+entrypoint = "bin/facman"
 
 [[components]]
 name = "console_cli"
 source_target = "facman_cli"
-destination = "facman"
+destination = "bin/facman"
 required_platform = "all"
 architecture = "configured_by_track"
 hash = "BUILD_TIME"
 signature_policy = "manifest_hash"
 extraction_policy = "none"
-runtime_search_path = "."
+runtime_search_path = "bin"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "ulk_shared"
+source_target = "ulk_shared"
+destination = "lib/ulk"
+required_platform = "all"
+architecture = "configured_by_track"
+hash = "BUILD_TIME"
+signature_policy = "manifest_hash"
+extraction_policy = "none"
+runtime_search_path = "lib"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "usk_shared"
+source_target = "usk_shared"
+destination = "lib/usk"
+required_platform = "all"
+architecture = "configured_by_track"
+hash = "BUILD_TIME"
+signature_policy = "manifest_hash"
+extraction_policy = "none"
+runtime_search_path = "lib"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "flb_factorio_shared"
+source_target = "flb_factorio_shared"
+destination = "lib/flb_factorio"
+required_platform = "all"
+architecture = "configured_by_track"
+hash = "BUILD_TIME"
+signature_policy = "manifest_hash"
+extraction_policy = "none"
+runtime_search_path = "lib"
 license_notice = "THIRD_PARTY_NOTICES.md"
 
 [[components]]

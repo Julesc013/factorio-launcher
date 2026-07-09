@@ -1,0 +1,21 @@
+{
+  "schema": "factorio.mod_refusal.v1",
+  "command": "mods.import",
+  "status": "refused",
+  "instance_id": "modzip",
+  "file_name": "old_factorio_only_1.0.0.zip",
+  "path": "tests/fixtures/factorio_mods/factorio_version_mismatch/old_factorio_only_1.0.0.zip",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "mod_factorio_version_incompatible",
+    "reason": "Mod factorio_version is not compatible with this instance",
+    "recoverable": true,
+    "retryable": true,
+    "severity": "blocked"
+  },
+  "details": {
+    "metadata_source": "info_json",
+    "detail": "1.1 != 2.0"
+  },
+  "suggested_next_command": "facman mods import <mod.zip> --instance <id> --json"
+}

@@ -1,0 +1,4 @@
+Cookie: sessionid=cookie-session-value; steamLoginSecure=steam-login-secure-value
+sessionid=cookie-session-value
+steamLoginSecure=steam-login-secure-value
+normal cookie log line

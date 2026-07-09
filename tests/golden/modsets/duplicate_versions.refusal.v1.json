@@ -1,0 +1,19 @@
+{
+  "schema": "factorio.modset_refusal.v1",
+  "command": "modsets.lock",
+  "status": "refused",
+  "instance_id": "modzip",
+  "file_name": "duplicate_mod_1.1.0.zip",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "mod_duplicate_versions",
+    "reason": "Multiple versions of the same mod are present",
+    "recoverable": true,
+    "retryable": true,
+    "severity": "blocked"
+  },
+  "details": {
+    "detail": "duplicate_mod has 1.0.0 and 1.1.0"
+  },
+  "suggested_next_command": "facman modsets lock <instance-id> --json"
+}

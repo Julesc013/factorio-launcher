@@ -1,0 +1,8 @@
+{
+  "schema": "facman.factorio_save_fixture.v1",
+  "fixture_id": "malformed_save",
+  "expected_status": "refused",
+  "expected_refusal_code": "save_malformed",
+  "contains_real_factorio_assets": false,
+  "mutation_allowed": false
+}

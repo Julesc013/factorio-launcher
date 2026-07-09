@@ -1,0 +1,10 @@
+schema = "facman.packaging.common_profile.v1"
+id = "base_linux"
+target_os = "linux"
+package_types = ["appimage", "tarball"]
+install_modes = ["portable", "user", "system"]
+required_paths = ["usr/bin", "usr/lib", "usr/share/facman/contracts", "usr/share/facman/content"]
+license_paths = ["usr/share/facman/licenses"]
+forbid_absolute_paths = true
+bundles_factorio_binaries = false
+credential_storage = false

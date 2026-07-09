@@ -1,0 +1,19 @@
+{
+  "schema": "factorio.discovery_report.v1",
+  "command": "installs.scan",
+  "read_only": true,
+  "candidate_count": 1,
+  "structural_count": 1,
+  "invalid_count": 0,
+  "install": {
+    "candidate_id": "macos_app_bundle",
+    "source": "app_bundle",
+    "ownership": "imported",
+    "platform": "macos",
+    "capabilities": ["gui"],
+    "executable_path_kind": "stub",
+    "app_dir_kind": "app_bundle",
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}

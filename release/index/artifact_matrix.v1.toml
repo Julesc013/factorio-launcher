@@ -1,0 +1,43 @@
+schema = "facman.artifact_matrix.v1"
+
+[[artifact]]
+phase = 1
+profile_id = "windows_legacy_winforms_x64"
+release_class = "portable_archive"
+pattern = "facman-<version>-windows-winforms-x64-portable.zip"
+
+[[artifact]]
+phase = 1
+profile_id = "windows_legacy_winforms_x64"
+release_class = "user_installer"
+pattern = "facman-<version>-windows-winforms-x64-setup.exe"
+
+[[artifact]]
+phase = 1
+profile_id = "macos_legacy_appkit_x64"
+release_class = "user_installer"
+pattern = "facman-<version>-macos-appkit-x64.dmg"
+
+[[artifact]]
+phase = 1
+profile_id = "linux_x11_gtk_x64"
+release_class = "portable_archive"
+pattern = "facman-<version>-linux-gtk-x64.tar.zst"
+
+[[artifact]]
+phase = 1
+profile_id = "source"
+release_class = "developer_sdk"
+pattern = "facman-<version>-source.tar.gz"
+
+[[artifact]]
+phase = 1
+profile_id = "release_metadata"
+release_class = "release_manifest"
+pattern = "facman-<version>-release_manifest.json"
+
+[[artifact]]
+phase = 4
+profile_id = "offline_bundle"
+release_class = "offline_bundle"
+pattern = "facman-<version>-offline-bundle.zip"

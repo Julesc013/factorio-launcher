@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GOLDEN_DIR = ROOT / "tests" / "golden" / "discovery_reports"
+FIXTURE_GOLDEN_DIR = ROOT / "tests" / "golden" / "discovery"
 
 EXPECTED = {
     "steam_windows.discovery_report.v1.json": {
@@ -40,6 +41,19 @@ EXPECTED = {
     },
 }
 
+EXPECTED_FIXTURE_GOLDENS = {
+    "imported_adoptable.discovery_report.v1.json",
+    "invalid.discovery_report.v1.json",
+    "linux_headless.discovery_report.v1.json",
+    "linux_package_foreign.discovery_report.v1.json",
+    "linux_tarball.discovery_report.v1.json",
+    "macos_app_bundle.discovery_report.v1.json",
+    "macos_invalid_bundle.discovery_report.v1.json",
+    "windows_portable.discovery_report.v1.json",
+    "windows_standalone.discovery_report.v1.json",
+    "windows_steam.discovery_report.v1.json",
+}
+
 
 def main() -> int:
     problems: list[str] = []
@@ -55,6 +69,7 @@ def main() -> int:
             problems.append(f"{GOLDEN_DIR / name}: unexpected discovery golden")
         for name in sorted(set(EXPECTED) & actual_names):
             problems.extend(validate_golden(GOLDEN_DIR / name, EXPECTED[name]))
+    problems.extend(validate_fixture_golden_set())
 
     if problems:
         for problem in problems:
@@ -62,6 +77,61 @@ def main() -> int:
         return 1
     print("discovery-golden-check: ok")
     return 0
+
+
+def validate_fixture_golden_set() -> list[str]:
+    problems: list[str] = []
+    if not FIXTURE_GOLDEN_DIR.is_dir():
+        return [f"{FIXTURE_GOLDEN_DIR}: missing discovery fixture golden directory"]
+
+    actual_names = {path.name for path in FIXTURE_GOLDEN_DIR.glob("*.json")}
+    for name in sorted(EXPECTED_FIXTURE_GOLDENS - actual_names):
+        problems.append(f"{FIXTURE_GOLDEN_DIR / name}: missing required fixture golden")
+    for name in sorted(actual_names - EXPECTED_FIXTURE_GOLDENS):
+        problems.append(f"{FIXTURE_GOLDEN_DIR / name}: unexpected fixture golden")
+    for name in sorted(actual_names & EXPECTED_FIXTURE_GOLDENS):
+        problems.extend(validate_fixture_golden(FIXTURE_GOLDEN_DIR / name))
+    return problems
+
+
+def validate_fixture_golden(path: Path) -> list[str]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"{path}: {exc}"]
+    problems: list[str] = []
+    if data.get("schema") != "factorio.discovery_report.v1":
+        problems.append(f"{path}: schema must be factorio.discovery_report.v1")
+    if data.get("command") != "installs.scan":
+        problems.append(f"{path}: command must be installs.scan")
+    if data.get("read_only") is not True:
+        problems.append(f"{path}: read_only must be true")
+    install = data.get("install")
+    if not isinstance(install, dict):
+        return problems + [f"{path}: fixture golden must contain install object"]
+    required = [
+        "candidate_id",
+        "source",
+        "ownership",
+        "platform",
+        "capabilities",
+        "executable_path_kind",
+        "app_dir_kind",
+        "validation_status",
+        "setup_mutation_allowed",
+    ]
+    for key in required:
+        if key not in install:
+            problems.append(f"{path}: install missing {key}")
+    if install.get("setup_mutation_allowed") is not False:
+        problems.append(f"{path}: setup_mutation_allowed must be false")
+    if install.get("validation_status") == "invalid":
+        refusal = install.get("refusal")
+        if not isinstance(refusal, dict):
+            problems.append(f"{path}: invalid fixture golden must include refusal")
+        elif refusal.get("code") != "invalid_factorio_install":
+            problems.append(f"{path}: invalid fixture refusal code must be invalid_factorio_install")
+    return problems
 
 
 def validate_golden(path: Path, expected: dict[str, str]) -> list[str]:
