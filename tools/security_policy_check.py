@@ -12,6 +12,7 @@ def main() -> int:
     product_path = ROOT / "content" / "factorio" / "product" / "factorio.product.toml"
     redaction_path = ROOT / "content" / "factorio" / "policy" / "redaction.toml"
     account_path = ROOT / "content" / "factorio" / "policy" / "account_secrets.toml"
+    redaction_contract_path = ROOT / "contracts" / "policy" / "redaction" / "factorio.v1.toml"
 
     with product_path.open("rb") as handle:
         product = tomllib.load(handle)
@@ -39,6 +40,21 @@ def main() -> int:
         problems.append(f"{account_path}: store_passwords must be false")
     if account.get("store_tokens_in_manifest") is not False:
         problems.append(f"{account_path}: store_tokens_in_manifest must be false")
+
+    with redaction_contract_path.open("rb") as handle:
+        redaction_contract = tomllib.load(handle)
+    if redaction_contract.get("schema") != "facman.redaction.factorio.v1":
+        problems.append(f"{redaction_contract_path}: invalid schema")
+    for key in ["allow_credentials_in_manifests", "allow_credentials_in_logs"]:
+        if redaction_contract.get(key) is not False:
+            problems.append(f"{redaction_contract_path}: {key} must be false")
+    for key in ["credential_store_required", "export_redaction_required"]:
+        if redaction_contract.get(key) is not True:
+            problems.append(f"{redaction_contract_path}: {key} must be true")
+    forbidden = set(redaction_contract.get("forbidden_plaintext_fields", []))
+    for key in ["password", "token", "secret"]:
+        if key not in forbidden:
+            problems.append(f"{redaction_contract_path}: missing forbidden plaintext field {key}")
 
     if problems:
         for problem in problems:

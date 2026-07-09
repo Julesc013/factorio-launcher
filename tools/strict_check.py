@@ -23,6 +23,7 @@ from tools import (
     security_policy_check,
     source_format_check,
     structure_policy_check,
+    ui_accessibility_check,
     workspace_contract_check,
 )
 
@@ -34,6 +35,7 @@ def main() -> int:
         ("schema", schema_validate.main),
         ("security", security_policy_check.main),
         ("source-format", source_format_check.main),
+        ("ui-accessibility", ui_accessibility_check.main),
         ("package", package_check.main),
         ("gui-surface", gui_surface_check.main),
         ("language-runtime-policy", language_runtime_policy_check.main),

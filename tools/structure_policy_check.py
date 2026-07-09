@@ -118,6 +118,8 @@ ALLOWED_FACTORIO_CONTENT_ROOTS = {
     "policy",
     "product",
     "redaction",
+    "strings",
+    "ui",
 }
 
 ALLOWED_CONTRACT_ROOTS = {"abi", "command", "policy", "result", "refusal", "diagnostic", "schema"}
@@ -154,6 +156,7 @@ ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "mod_portal",
     "mods",
     "modsets",
+    "redaction",
     "saves",
     "server",
 }

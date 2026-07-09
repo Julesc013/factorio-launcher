@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/ui/strings.v1.schema.json",
+  "title": "FacMan UI Strings",
+  "type": "object",
+  "required": ["schema", "locale", "strings"],
+  "properties": {
+    "schema": { "const": "facman.ui.strings.v1" },
+    "locale": { "type": "string", "minLength": 2 },
+    "strings": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": false
+}

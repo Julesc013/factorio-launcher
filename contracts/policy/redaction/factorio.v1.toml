@@ -1,0 +1,27 @@
+schema = "facman.redaction.factorio.v1"
+
+redact_keys = [
+  "token",
+  "password",
+  "rcon_password",
+  "session",
+  "secret",
+  "api_key",
+  "auth",
+  "cookie",
+]
+
+forbidden_plaintext_fields = [
+  "password",
+  "token",
+  "session",
+  "secret",
+  "mod_portal_token",
+]
+
+diagnostic_replacement = "[REDACTED]"
+allow_credentials_in_manifests = false
+allow_credentials_in_logs = false
+credential_store_required = true
+rate_limit_failed_logins = true
+export_redaction_required = true

@@ -1,0 +1,20 @@
+schema = "facman.ui.theme.v1"
+theme_id = "default"
+name = "FacMan Default"
+high_contrast = false
+
+[colors]
+background = "#1F2529"
+foreground = "#F2F4F5"
+accent = "#4EA1D3"
+warning = "#D6A84F"
+danger = "#D86055"
+focus = "#8FD14F"
+
+[accessibility]
+keyboard_navigation = true
+screen_reader_labels = true
+color_only_semantics = false
+font_scaling = true
+high_contrast_ready = true
+reduced_motion = true

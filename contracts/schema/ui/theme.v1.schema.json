@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/ui/theme.v1.schema.json",
+  "title": "FacMan UI Theme",
+  "type": "object",
+  "required": ["schema", "theme_id", "name", "high_contrast", "colors", "accessibility"],
+  "properties": {
+    "schema": { "const": "facman.ui.theme.v1" },
+    "theme_id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "high_contrast": { "type": "boolean" },
+    "colors": {
+      "type": "object",
+      "required": ["background", "foreground", "accent", "warning", "danger", "focus"],
+      "additionalProperties": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+    },
+    "accessibility": {
+      "type": "object",
+      "required": [
+        "keyboard_navigation",
+        "screen_reader_labels",
+        "color_only_semantics",
+        "font_scaling",
+        "high_contrast_ready",
+        "reduced_motion"
+      ],
+      "properties": {
+        "keyboard_navigation": { "type": "boolean" },
+        "screen_reader_labels": { "type": "boolean" },
+        "color_only_semantics": { "type": "boolean" },
+        "font_scaling": { "type": "boolean" },
+        "high_contrast_ready": { "type": "boolean" },
+        "reduced_motion": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

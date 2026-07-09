@@ -1,0 +1,20 @@
+schema = "facman.ui.theme.v1"
+theme_id = "high_contrast"
+name = "FacMan High Contrast"
+high_contrast = true
+
+[colors]
+background = "#000000"
+foreground = "#FFFFFF"
+accent = "#00B7FF"
+warning = "#FFD400"
+danger = "#FF4A4A"
+focus = "#7CFF00"
+
+[accessibility]
+keyboard_navigation = true
+screen_reader_labels = true
+color_only_semantics = false
+font_scaling = true
+high_contrast_ready = true
+reduced_motion = true
