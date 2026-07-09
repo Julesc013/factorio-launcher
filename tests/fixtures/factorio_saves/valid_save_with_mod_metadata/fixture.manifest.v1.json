@@ -1,0 +1,9 @@
+{
+  "schema": "facman.factorio_save_fixture.v1",
+  "fixture_id": "valid_save_with_mod_metadata",
+  "expected_status": "valid",
+  "expected_save": "modded.zip",
+  "expected_metadata": ["mod-list.json"],
+  "contains_real_factorio_assets": false,
+  "mutation_allowed": false
+}

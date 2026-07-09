@@ -1,0 +1,9 @@
+{
+  "schema": "facman.factorio_save_fixture.v1",
+  "fixture_id": "duplicate_save_names",
+  "expected_status": "valid_with_distinct_files",
+  "expected_saves": ["starter.backup.zip", "starter.zip"],
+  "deterministic_order": "file_name_ascending",
+  "contains_real_factorio_assets": false,
+  "mutation_allowed": false
+}

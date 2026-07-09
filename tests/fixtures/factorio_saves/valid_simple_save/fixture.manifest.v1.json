@@ -1,0 +1,9 @@
+{
+  "schema": "facman.factorio_save_fixture.v1",
+  "fixture_id": "valid_simple_save",
+  "expected_status": "valid",
+  "expected_save": "starter.zip",
+  "expected_operations": ["list", "backup", "clone", "export", "import"],
+  "contains_real_factorio_assets": false,
+  "mutation_allowed": false
+}
