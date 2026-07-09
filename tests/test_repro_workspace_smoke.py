@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from tools import repro_workspace_smoke
 
@@ -15,7 +16,8 @@ class ReproWorkspaceSmokeTests(unittest.TestCase):
             setup = make_repo(workspace / "Universal" / "universal-setup", "universal-setup")
             launcher = make_repo(workspace / "Universal" / "universal-launcher", "universal-launcher")
 
-            repos = repro_workspace_smoke.resolve_workspace_repos(workspace_root=workspace)
+            with patch.dict("os.environ", {}, clear=True):
+                repos = repro_workspace_smoke.resolve_workspace_repos(workspace_root=workspace)
 
         self.assertEqual(repos["factorio-launcher"], factorio.resolve(strict=False))
         self.assertEqual(repos["universal-setup"], setup.resolve(strict=False))
@@ -61,6 +63,21 @@ class ReproWorkspaceSmokeTests(unittest.TestCase):
             problems = repro_workspace_smoke.check_workspace(repos, require_git=True)
 
         self.assertTrue(any("contains product-specific path runtime/factorio" in problem for problem in problems))
+
+    def test_repro_build_root_is_outside_repos_and_keyed_by_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            repos = {
+                "factorio-launcher": make_repo(workspace / "factorio-launcher", "factorio-launcher"),
+                "universal-setup": make_repo(workspace / "universal-setup", "universal-setup"),
+                "universal-launcher": make_repo(workspace / "universal-launcher", "universal-launcher"),
+            }
+
+            build_root = repro_workspace_smoke.repro_build_root(repos)
+
+        self.assertIn("facman-repro-smoke", build_root.as_posix())
+        for repo in repos.values():
+            self.assertFalse(build_root.is_relative_to(repo.resolve(strict=False)))
 
 
 def make_repo(root: Path, name: str) -> Path:

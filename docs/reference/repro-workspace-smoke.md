@@ -46,6 +46,11 @@ Use the full build mode for publication or branch handoff proof:
 py -3 tools/repro_workspace_smoke.py --build
 ```
 
+Full build mode uses out-of-tree build directories under a temp
+`facman-repro-smoke` root keyed by the resolved checkout paths. That avoids stale
+`CMakeCache.txt` failures when repositories are moved between parent folders.
+Use `--build-root <path>` to choose an explicit scratch build root.
+
 Full build mode runs:
 
 ```text

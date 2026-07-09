@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import shlex
 import subprocess
 import sys
+import tempfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -61,6 +63,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Run the full CMake, ctest, AIDE Lite, strict, and unittest validation matrix.",
     )
     parser.add_argument(
+        "--build-root",
+        type=Path,
+        help="Out-of-tree build root. Defaults to a temp path keyed by the resolved repo paths.",
+    )
+    parser.add_argument(
         "--require-git",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -94,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.build:
         return 0
 
-    return run_validation_matrix(repos, python_command(args.python))
+    return run_validation_matrix(repos, python_command(args.python), repro_build_root(repos, args.build_root))
 
 
 def resolve_workspace_repos(workspace_root: Path | None = None, factorio_root: Path | None = None) -> dict[str, Path]:
@@ -253,21 +260,55 @@ def python_command(value: str | None) -> list[str]:
     return shlex.split(value, posix=os.name != "nt")
 
 
-def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str]) -> int:
+def repro_build_root(repos: dict[str, Path], build_root: Path | None = None) -> Path:
+    if build_root is not None:
+        return build_root.resolve(strict=False)
+    key = "|".join(str(repos[name].resolve(strict=False)) for name in REPO_NAMES)
+    digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:12]
+    return (Path(tempfile.gettempdir()) / "facman-repro-smoke" / digest).resolve(strict=False)
+
+
+def repo_build_dir(build_root: Path, name: str) -> Path:
+    return build_root / name
+
+
+def facman_executable(build_root: Path) -> Path:
+    if os.name == "nt":
+        return repo_build_dir(build_root, "factorio-launcher") / "Debug" / "facman.exe"
+    return repo_build_dir(build_root, "factorio-launcher") / "facman"
+
+
+def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str], build_root: Path) -> int:
+    build_dirs = {name: repo_build_dir(build_root, name) for name in REPO_NAMES}
     env = os.environ.copy()
     env["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(repos["universal-setup"])
     env["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(repos["universal-launcher"])
+    env["FACMAN_CLI_EXE"] = str(facman_executable(build_root))
+    print(f"repro-workspace-smoke: build-root={build_root}")
 
     steps = [
-        ("universal-launcher cmake configure", repos["universal-launcher"], ["cmake", "-S", ".", "-B", "build/native-smoke"]),
-        ("universal-launcher cmake build", repos["universal-launcher"], ["cmake", "--build", "build/native-smoke"]),
-        ("universal-launcher ctest", repos["universal-launcher"], ["ctest", "--test-dir", "build/native-smoke", "-C", "Debug", "--output-on-failure"]),
-        ("universal-setup cmake configure", repos["universal-setup"], ["cmake", "-S", ".", "-B", "build/native-smoke"]),
-        ("universal-setup cmake build", repos["universal-setup"], ["cmake", "--build", "build/native-smoke"]),
-        ("universal-setup ctest", repos["universal-setup"], ["ctest", "--test-dir", "build/native-smoke", "-C", "Debug", "--output-on-failure"]),
-        ("factorio-launcher aide-lite", repos["factorio-launcher"], [*python_cmd, ".aide/scripts/aide_lite.py", "test"]),
-        ("factorio-launcher strict", repos["factorio-launcher"], [*python_cmd, "tools/strict_check.py"]),
-        ("factorio-launcher unittest", repos["factorio-launcher"], [*python_cmd, "-m", "unittest", "discover", "-s", "tests", "-v"]),
+        (
+            "universal-launcher cmake configure",
+            repos["universal-launcher"],
+            ["cmake", "-S", ".", "-B", str(build_dirs["universal-launcher"])],
+        ),
+        ("universal-launcher cmake build", repos["universal-launcher"], ["cmake", "--build", str(build_dirs["universal-launcher"])]),
+        (
+            "universal-launcher ctest",
+            repos["universal-launcher"],
+            ["ctest", "--test-dir", str(build_dirs["universal-launcher"]), "-C", "Debug", "--output-on-failure"],
+        ),
+        (
+            "universal-setup cmake configure",
+            repos["universal-setup"],
+            ["cmake", "-S", ".", "-B", str(build_dirs["universal-setup"])],
+        ),
+        ("universal-setup cmake build", repos["universal-setup"], ["cmake", "--build", str(build_dirs["universal-setup"])]),
+        (
+            "universal-setup ctest",
+            repos["universal-setup"],
+            ["ctest", "--test-dir", str(build_dirs["universal-setup"]), "-C", "Debug", "--output-on-failure"],
+        ),
         (
             "factorio-launcher cmake configure",
             repos["factorio-launcher"],
@@ -276,15 +317,22 @@ def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str]) -> 
                 "-S",
                 ".",
                 "-B",
-                "build/native-smoke",
+                str(build_dirs["factorio-launcher"]),
                 f"-DFLAUNCH_UNIVERSAL_SETUP_ROOT={repos['universal-setup'].as_posix()}",
                 f"-DFLAUNCH_UNIVERSAL_LAUNCHER_ROOT={repos['universal-launcher'].as_posix()}",
                 "-DFLAUNCH_BUILD_NATIVE_APPS=ON",
                 "-DFLAUNCH_BUILD_TESTS=ON",
             ],
         ),
-        ("factorio-launcher cmake build", repos["factorio-launcher"], ["cmake", "--build", "build/native-smoke"]),
-        ("factorio-launcher ctest", repos["factorio-launcher"], ["ctest", "--test-dir", "build/native-smoke", "-C", "Debug", "--output-on-failure"]),
+        ("factorio-launcher cmake build", repos["factorio-launcher"], ["cmake", "--build", str(build_dirs["factorio-launcher"])]),
+        (
+            "factorio-launcher ctest",
+            repos["factorio-launcher"],
+            ["ctest", "--test-dir", str(build_dirs["factorio-launcher"]), "-C", "Debug", "--output-on-failure"],
+        ),
+        ("factorio-launcher aide-lite", repos["factorio-launcher"], [*python_cmd, ".aide/scripts/aide_lite.py", "test"]),
+        ("factorio-launcher strict", repos["factorio-launcher"], [*python_cmd, "tools/strict_check.py"]),
+        ("factorio-launcher unittest", repos["factorio-launcher"], [*python_cmd, "-m", "unittest", "discover", "-s", "tests", "-v"]),
     ]
     for label, cwd, command in steps:
         code = run_step(label, cwd, command, env)
