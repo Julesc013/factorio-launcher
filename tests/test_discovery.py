@@ -53,7 +53,9 @@ class DiscoveryTests(unittest.TestCase):
                     str(invalid),
                 ]
             )
-            registered = list((Path(tmp) / "installs" / "installed_state").glob("*.json"))
+            install_root = Path(tmp) / "installs"
+            registered = list((install_root / "refs").glob("*.json"))
+            registered += list((install_root / "installed_state").glob("*.json"))
 
         self.assertEqual(code, 0, stderr)
         report = json.loads(stdout)
@@ -92,6 +94,35 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(install["install_id"], "fixture")
         self.assertEqual(install["verification"]["status"], "structural")
         self.assertEqual(install["safe_actions"], {"repair": False, "uninstall": False})
+
+    def test_legacy_install_refs_remain_readable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "legacy-fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            canonical = workspace / "installs" / "refs" / "legacy-fixture.json"
+            legacy = workspace / "installs" / "installed_state" / "legacy-fixture.json"
+            legacy.parent.mkdir(parents=True)
+            legacy.write_text(canonical.read_text(encoding="utf-8"), encoding="utf-8")
+            canonical.unlink()
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "installs", "inspect", "legacy-fixture", "--json"])
+            self.assertEqual(code, 0, stderr)
+            install = json.loads(stdout)
+            self.assertEqual(install["install_id"], "legacy-fixture")
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "installs", "list", "--json"])
+            self.assertEqual(code, 0, stderr)
+            listed = json.loads(stdout)
+            self.assertEqual([item["install_id"] for item in listed], ["legacy-fixture"])
+
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Legacy Fixture", "--install", "legacy-fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
 
 
+def relative_files(root: Path) -> list[str]:
+    return sorted(path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file())
+
+
 class CliTests(unittest.TestCase):
     def test_version(self) -> None:
         code, stdout, stderr = invoke(["--version"])
@@ -50,11 +54,17 @@ class CliTests(unittest.TestCase):
 
     def test_import_instance_and_launch_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            install_files_before = relative_files(FIXTURE_INSTALL)
             code, stdout, stderr = invoke(
                 ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
             )
             self.assertEqual(code, 0, stderr)
             self.assertIn("Registered fixture", stdout)
+            self.assertTrue((workspace / "workspace.v1.json").is_file())
+            self.assertTrue((workspace / "installs" / "refs" / "fixture.json").is_file())
+            self.assertTrue((workspace / "installs" / "setup_state_refs").is_dir())
+            self.assertFalse((workspace / "installs" / "installed_state").exists())
 
             code, stdout, stderr = invoke(
                 [
@@ -73,7 +83,11 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr)
             instance = json.loads(stdout)
             self.assertEqual(instance["instance_id"], "space-age-main")
-            self.assertTrue((Path(tmp) / "instances" / "space-age-main" / "instance.v1.json").is_file())
+            instance_root = workspace / "instances" / "space-age-main"
+            self.assertTrue((instance_root / "instance.v1.json").is_file())
+            for child in ("config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "locks", "cache"):
+                self.assertTrue((instance_root / child).is_dir(), child)
+            self.assertEqual(relative_files(FIXTURE_INSTALL), install_files_before)
 
             code, stdout, stderr = invoke(["--workspace", tmp, "launch-plan", "space-age-main", "--json"])
             self.assertEqual(code, 0, stderr)
@@ -280,6 +294,11 @@ class CliTests(unittest.TestCase):
 
             source_save = Path(tmp) / "instances" / "source-world" / "saves" / "starter.zip"
             source_save.write_bytes(b"fake save zip")
+            source_config = Path(tmp) / "instances" / "source-world" / "config" / "config.ini"
+            source_config.write_text(
+                "[path]\ntoken=super-secret-token\nrcon_password=hunter2\n",
+                encoding="utf-8",
+            )
 
             code, stdout, stderr = invoke(["--workspace", tmp, "saves", "list", "--instance", "source-world", "--json"])
             self.assertEqual(code, 0, stderr)
@@ -333,10 +352,14 @@ class CliTests(unittest.TestCase):
             exported = json.loads(stdout)
             self.assertEqual(exported["schema"], "factorio.instance_export.v1")
             self.assertIn("local_data_root", exported["redactions"])
+            self.assertIn("config.ini secrets", exported["redactions"])
             pack_bytes = pack.read_bytes()
             self.assertTrue(pack_bytes.startswith(b"PK\x03\x04"))
             self.assertIn(b"$FACMAN_INSTANCE_ROOT", pack_bytes)
             self.assertNotIn(str(Path(tmp)).encode("utf-8"), pack_bytes)
+            self.assertIn(b"[REDACTED]", pack_bytes)
+            self.assertNotIn(b"super-secret-token", pack_bytes)
+            self.assertNotIn(b"hunter2", pack_bytes)
 
             code, stdout, stderr = invoke(
                 ["--workspace", tmp, "import", "instance", str(pack), "--id", "restored-world", "--json"]

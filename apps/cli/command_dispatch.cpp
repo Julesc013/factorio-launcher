@@ -346,7 +346,8 @@ fs::path repo_root()
 void ensure_workspace(const fs::path& workspace)
 {
     const char* dirs[] = {
-        "installs/installed_state",
+        "installs/refs",
+        "installs/setup_state_refs",
         "instances",
         "modsets",
         "saves",
@@ -359,9 +360,30 @@ void ensure_workspace(const fs::path& workspace)
         "cache/checksums",
         "audit",
         "diagnostics/reports",
+        "exports",
     };
     for (const char* dir : dirs) {
         fs::create_directories(workspace / dir);
+    }
+    fs::path manifest = workspace / "workspace.v1.json";
+    if (!fs::is_regular_file(manifest)) {
+        std::ofstream out(manifest, std::ios::binary);
+        out << "{\n";
+        out << "  \"schema\": \"facman.factorio.workspace.v1\",\n";
+        out << "  \"workspace_id\": \"local\",\n";
+        out << "  \"layout_version\": 1,\n";
+        out << "  \"roots\": {\n";
+        out << "    \"installs\": \"installs\",\n";
+        out << "    \"instances\": \"instances\",\n";
+        out << "    \"profiles\": \"profiles\",\n";
+        out << "    \"modsets\": \"modsets\",\n";
+        out << "    \"accounts\": \"accounts\",\n";
+        out << "    \"cache\": \"cache\",\n";
+        out << "    \"audit\": \"audit\",\n";
+        out << "    \"diagnostics\": \"diagnostics\",\n";
+        out << "    \"exports\": \"exports\"\n";
+        out << "  }\n";
+        out << "}\n";
     }
 }
 
@@ -652,7 +674,34 @@ std::string mod_portal_refusal_json(
 
 fs::path install_path(const fs::path& workspace, const std::string& install_id)
 {
+    return workspace / "installs" / "refs" / (install_id + ".json");
+}
+
+fs::path legacy_install_path(const fs::path& workspace, const std::string& install_id)
+{
     return workspace / "installs" / "installed_state" / (install_id + ".json");
+}
+
+bool contains_install_ref(const std::vector<fs::path>& files, const fs::path& candidate)
+{
+    for (const fs::path& file : files) {
+        if (file.stem() == candidate.stem()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::vector<fs::path> install_ref_files(const fs::path& workspace)
+{
+    std::vector<fs::path> files = list_json_files(workspace / "installs" / "refs");
+    for (const fs::path& legacy : list_json_files(workspace / "installs" / "installed_state")) {
+        if (!contains_install_ref(files, legacy)) {
+            files.push_back(legacy);
+        }
+    }
+    std::sort(files.begin(), files.end());
+    return files;
 }
 
 InstallRef inspect_install(const fs::path& root, const std::string& install_id)
@@ -687,6 +736,9 @@ std::string installs_report_json(const std::vector<InstallRef>& installs)
 bool load_install(const fs::path& workspace, const std::string& install_id, InstallRef& out)
 {
     fs::path path = install_path(workspace, install_id);
+    if (!fs::is_regular_file(path)) {
+        path = legacy_install_path(workspace, install_id);
+    }
     if (!fs::is_regular_file(path)) {
         return false;
     }
@@ -1170,6 +1222,67 @@ std::string redacted_instance_json(const InstanceRef& instance)
     return instance_json(redacted);
 }
 
+std::string lowercase_ascii(std::string value)
+{
+    for (char& ch : value) {
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    }
+    return value;
+}
+
+bool line_contains_secret_key(const std::string& lower_line)
+{
+    const char* keys[] = {
+        "api_key",
+        "apikey",
+        "auth",
+        "cookie",
+        "password",
+        "rcon_password",
+        "secret",
+        "session",
+        "token",
+    };
+    for (const char* key : keys) {
+        if (lower_line.find(key) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string redact_secret_text(const std::string& text)
+{
+    std::istringstream in(text);
+    std::ostringstream out;
+    std::string line;
+    bool first = true;
+    while (std::getline(in, line)) {
+        if (!first) {
+            out << "\n";
+        }
+        first = false;
+
+        if (line_contains_secret_key(lowercase_ascii(line))) {
+            std::size_t separator = line.find('=');
+            if (separator == std::string::npos) {
+                separator = line.find(':');
+            }
+            if (separator == std::string::npos) {
+                out << "[REDACTED]";
+            } else {
+                out << line.substr(0, separator + 1) << "[REDACTED]";
+            }
+        } else {
+            out << line;
+        }
+    }
+    if (!text.empty() && text.back() == '\n') {
+        out << "\n";
+    }
+    return out.str();
+}
+
 std::string export_manifest_json(const InstanceRef& instance, std::size_t file_count)
 {
     std::ostringstream out;
@@ -1177,7 +1290,7 @@ std::string export_manifest_json(const InstanceRef& instance, std::size_t file_c
     out << "  \"schema\": \"factorio.instance_export_manifest.v1\",\n";
     out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
     out << "  \"portable\": true,\n";
-    out << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\"],\n";
+    out << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\", \"config.ini secrets\"],\n";
     out << "  \"files\": " << file_count << "\n";
     out << "}\n";
     return out.str();
@@ -1190,7 +1303,7 @@ std::vector<std::pair<std::string, std::vector<unsigned char>>> instance_export_
 
     fs::path config_ini = instance.local_data_root / "config" / "config.ini";
     if (fs::is_regular_file(config_ini)) {
-        files.push_back({"config/config.ini", read_bytes(config_ini)});
+        files.push_back({"config/config.ini", bytes_from_text(redact_secret_text(read_text(config_ini)))});
     }
     files.push_back({"config/config-path.cfg", bytes_from_text("read-data=$FACMAN_INSTALL_ROOT\nwrite-data=$FACMAN_INSTANCE_ROOT\n")});
 
@@ -1498,7 +1611,7 @@ int command_diagnostics(const std::vector<std::string>& args)
 int command_doctor(const CliOptions& options)
 {
     ensure_workspace(options.workspace);
-    std::vector<fs::path> installs = list_json_files(options.workspace / "installs" / "installed_state");
+    std::vector<fs::path> installs = install_ref_files(options.workspace);
     std::vector<fs::path> instances = instance_manifest_files(options.workspace);
     bool warning = installs.empty();
     if (has_flag(options.args, "--json")) {
@@ -1679,7 +1792,7 @@ int command_installs(const CliOptions& options)
     }
 
     if (options.args[1] == "list") {
-        std::vector<fs::path> installs = list_json_files(options.workspace / "installs" / "installed_state");
+        std::vector<fs::path> installs = install_ref_files(options.workspace);
         if (has_flag(options.args, "--json")) {
             std::cout << "[";
             for (std::size_t index = 0; index < installs.size(); ++index) {
@@ -2164,7 +2277,7 @@ int command_export(const CliOptions& options)
         std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
         std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
         std::cout << "  \"files\": " << files.size() << ",\n";
-        std::cout << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\"]\n";
+        std::cout << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\", \"config.ini secrets\"]\n";
         std::cout << "}\n";
     } else {
         std::cout << "Exported instance pack to " << path_string(output_path) << "\n";
@@ -2356,7 +2469,7 @@ int command_dev(const CliOptions& options)
     ensure_workspace(options.workspace);
 
     if (options.args[1] == "bug-report") {
-        std::size_t install_count = list_json_files(options.workspace / "installs" / "installed_state").size();
+        std::size_t install_count = install_ref_files(options.workspace).size();
         std::size_t instance_count = instance_manifest_files(options.workspace).size();
         std::size_t server_count = list_json_files(options.workspace / "servers").size();
         if (has_flag(options.args, "--json")) {
