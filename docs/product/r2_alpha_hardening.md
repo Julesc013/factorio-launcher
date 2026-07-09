@@ -74,6 +74,19 @@ server execution, or GUI-only workflows.
   the restored instance tree.
 - Save roundtrip tests prove source fixtures are not mutated and instance
   exports redact config secrets and avoid machine-local workspace paths.
+- Diagnostic redaction policy contracts define field-name, path-name,
+  key-value, pattern, binary-file, archive-file, and allowed-metadata behavior.
+- Runtime diagnostics redaction replaces credential-like values with
+  `[FACMAN_REDACTED]` and emits structured redaction events.
+- Diagnostic bundle export writes redacted workspace, install-ref, instance,
+  config, log, doctor, manifest, and redaction-report entries while excluding
+  denied account/token/Steam-userdata-like paths.
+- Diagnostic bundle tests prove raw secret corpus values do not appear in
+  diagnostics export output, doctor-created bundles, instance exports, or
+  generated bundle contents.
+- Diagnostic tests prove redaction is deterministic and idempotent, binary
+  files are skipped, archive-like files are excluded, and source fixtures are
+  not mutated.
 
 ## Next R2 Work Units
 
@@ -99,8 +112,12 @@ server execution, or GUI-only workflows.
      preview, benchmark save execution, or save-associated modset inference.
 
 4. `FACMAN-DIAGNOSTIC-REDACTION-02`
-   - Route diagnostic bundle assembly through the redaction policy.
-   - Add tests that secrets do not appear in diagnostics, exports, or logs.
+   - Done for redaction policy contracts, runtime redaction, diagnostic bundle
+     assembly, doctor bundle output, redaction reports, secret corpus fixtures,
+     no-leak invariants, deterministic/idempotent redaction, binary skips, and
+     archive exclusions.
+   - Still not Factorio account login, credential-store implementation,
+     Mod Portal token handling, diagnostic upload, or GUI diagnostic UX.
 
 5. `FACMAN-PACKAGE-SKELETON-02`
    - Done for contract-backed fixture layouts.

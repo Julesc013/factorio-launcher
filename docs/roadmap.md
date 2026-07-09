@@ -101,6 +101,23 @@ leaving setup mutation to Universal Setup.
 - Steam Cloud mutation, deep save parsing, map preview, save benchmarking, and
   save-associated modset inference remain deferred.
 
+## FACMAN-DIAGNOSTIC-REDACTION-02
+
+- Redaction policy contracts cover field-name, path-name, key-value, pattern,
+  binary-file, archive-file, and allowed-metadata rules.
+- `runtime/factorio/diagnostics/` owns deterministic text redaction, sensitive
+  path exclusion, binary/archive skips, and redaction report JSON.
+- `facman diagnostics redact <file> --json` proves deterministic and
+  idempotent text redaction.
+- `facman diagnostics export --instance <id> --out <bundle.zip> --json` writes
+  redacted diagnostic bundles with manifest and redaction report entries.
+- `facman doctor --diagnostic-bundle <bundle.zip> --json` uses the same bundle
+  assembly path.
+- Secret corpus tests prove diagnostics, doctor-created bundles, logs/config
+  collection, and instance exports do not contain raw fake secret values.
+- Factorio account login, credential-store implementation, diagnostic upload,
+  Mod Portal token behavior, and GUI diagnostic UX remain deferred.
+
 ## FacMan-SETUP-HANDOFF-01
 
 - Managed install commands call Universal Setup.
@@ -134,12 +151,12 @@ R2 - Local power-user alpha
   dry-run and execute
   local modsets
   workspace invariants and package layout skeletons
+  save roundtrip and diagnostic redaction proofs
 
 R3 - Safe beta
-  save backups
-  export/import
-  package layouts
-  diagnostics
+  built package artifacts
+  package runtime smoke
+  diagnostic UX polish
 
 R4 - Managed install alpha
   Universal Setup local archive install

@@ -36,7 +36,7 @@ workspace/
 The workspace stores references to accounts, installs, profiles, modsets, and
 instances. It does not store plaintext passwords or tokens. Credential values
 belong in an OS credential store and diagnostics must redact credential-like
-fields before export.
+fields with `[FACMAN_REDACTED]` before export.
 
 `installs/refs/` is launcher-owned metadata about discovered or imported
 installs. `installs/setup_state_refs/` may point at Universal Setup state, but
@@ -69,3 +69,11 @@ Runtime invariant tests now cover:
   overwriting existing workspace files
 - no source save fixture mutation during backup, clone, export, import, and
   malformed-save refusal tests
+- diagnostic bundle export through the shared redaction policy
+- no raw secret corpus values in diagnostic bundles, doctor-created bundles,
+  or instance exports
+- diagnostic exclusion of account-ref, token, and Steam-userdata-like paths
+- diagnostic skipping of binary files and archive-like files instead of copying
+  them raw
+- normalization of diagnostic bundle install/config paths to portable
+  placeholders
