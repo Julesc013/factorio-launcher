@@ -40,6 +40,20 @@ LONG_LINE_ALLOWLIST_FILES = {
 
 MINIFIED_ALLOWLIST_FILES: set[str] = set()
 
+PHYSICAL_LINE_GUARD_SCOPES = {
+    ".github/workflows/",
+    "contracts/",
+    "release/",
+    "tools/",
+}
+
+PHYSICAL_LINE_GUARD_SUFFIXES = {
+    ".py",
+    ".toml",
+    ".yaml",
+    ".yml",
+}
+
 REVIEWABLE_REQUIRED_FILES = {
     ".github/workflows/ci.yml",
     ".github/workflows/security.yml",
@@ -109,6 +123,16 @@ def validate_file(path: Path, rel: str) -> list[str]:
         problems.append(
             f"{rel}: looks minified or collapsed: {size} bytes across {physical_lines} physical LF lines"
         )
+    if (
+        requires_physical_line_guard(rel)
+        and size > MINIFIED_SIZE_LIMIT
+        and physical_lines < MINIFIED_MIN_LINES
+        and not minified_allowed(rel)
+    ):
+        problems.append(
+            f"{rel}: package/discovery tooling must stay physically reviewable "
+            f"({size} bytes across {physical_lines} physical LF lines)"
+        )
     if not long_lines_allowed(rel):
         for index, line in enumerate(lines, start=1):
             if len(line) > LONG_LINE_LIMIT:
@@ -135,6 +159,13 @@ def cr_only_line_endings_present(text: str) -> bool:
 
 def minified_allowed(rel: str) -> bool:
     return rel in MINIFIED_ALLOWLIST_FILES
+
+
+def requires_physical_line_guard(rel: str) -> bool:
+    path = Path(rel)
+    if path.suffix.lower() not in PHYSICAL_LINE_GUARD_SUFFIXES:
+        return False
+    return any(rel.startswith(prefix) for prefix in PHYSICAL_LINE_GUARD_SCOPES)
 
 
 def long_lines_allowed(rel: str) -> bool:

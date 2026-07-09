@@ -27,6 +27,7 @@ class SourceFormatCheckTests(unittest.TestCase):
             problems = source_format_check.validate_file(path, "contracts/command/frontend/collapsed.toml")
 
         self.assertTrue(any("looks minified or collapsed" in problem for problem in problems))
+        self.assertTrue(any("must stay physically reviewable" in problem for problem in problems))
 
     def test_large_one_line_workflow_yaml_file_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -36,6 +37,25 @@ class SourceFormatCheckTests(unittest.TestCase):
             problems = source_format_check.validate_file(path, ".github/workflows/collapsed.yml")
 
         self.assertTrue(any("looks minified or collapsed" in problem for problem in problems))
+        self.assertTrue(any("must stay physically reviewable" in problem for problem in problems))
+
+    def test_package_and_discovery_tool_scopes_have_explicit_physical_line_guard(self) -> None:
+        guarded = [
+            "tools/package_skeleton_check.py",
+            "release/packaging/portable/portable_cli.v1.toml",
+            "contracts/command/frontend/frontend.required_commands.v1.toml",
+            ".github/workflows/security.yml",
+        ]
+        for rel in guarded:
+            with self.subTest(rel=rel):
+                self.assertTrue(source_format_check.requires_physical_line_guard(rel))
+
+    def test_generated_golden_collapse_is_not_scope_guarded_by_default(self) -> None:
+        self.assertFalse(
+            source_format_check.requires_physical_line_guard(
+                "tests/golden/discovery/windows_steam.discovery_report.v1.json"
+            )
+        )
 
     def test_cr_only_line_endings_fail(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
