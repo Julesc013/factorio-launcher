@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from tools import package_check, package_layout_check, package_manifest_check
+from tools import package_check, package_layout_check, package_manifest_check, package_skeleton_check
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,6 +17,9 @@ class PackageManifestTests(unittest.TestCase):
 
     def test_package_manifest_check(self) -> None:
         self.assertEqual(package_manifest_check.main(), 0)
+
+    def test_package_skeleton_check(self) -> None:
+        self.assertEqual(package_skeleton_check.main([]), 0)
 
     def test_platform_manifests_exist(self) -> None:
         expected = [
