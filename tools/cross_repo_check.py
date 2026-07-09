@@ -94,9 +94,13 @@ def check_sibling_repos() -> list[str]:
         UNIVERSAL_SETUP / "include" / "usk" / "usk_api.h",
         UNIVERSAL_SETUP / "runtime" / "setup" / "kernel" / "usk_api.c",
         UNIVERSAL_SETUP / "contracts" / "schema" / "setup" / "install_plan.v1.schema.json",
+        UNIVERSAL_SETUP / "tools" / "strict_check.py",
+        UNIVERSAL_SETUP / "apps" / "gui" / "README.md",
         UNIVERSAL_LAUNCHER / "include" / "ulk" / "ulk_api.h",
         UNIVERSAL_LAUNCHER / "runtime" / "launcher" / "kernel" / "ulk_api.c",
         UNIVERSAL_LAUNCHER / "docs" / "architecture" / "command_graph.md",
+        UNIVERSAL_LAUNCHER / "tools" / "strict_check.py",
+        UNIVERSAL_LAUNCHER / "apps" / "gui" / "README.md",
     ]
     return [f"missing sibling path {path}" for path in required if not path.exists()]
 
@@ -105,14 +109,25 @@ def check_sibling_boundaries() -> list[str]:
     problems: list[str] = []
     if UNIVERSAL_LAUNCHER.exists():
         problems.extend(check_no_path_token(UNIVERSAL_LAUNCHER, ("factorio", "mod_portal", "modset")))
+        problems.extend(check_no_universal_gui_toolkit_dirs(UNIVERSAL_LAUNCHER))
         for forbidden in ["runtime/setup", "include/usk"]:
             if (UNIVERSAL_LAUNCHER / forbidden).exists():
                 problems.append(f"universal-launcher must not own setup path {forbidden}")
     if UNIVERSAL_SETUP.exists():
         problems.extend(check_no_path_token(UNIVERSAL_SETUP, ("factorio", "mod_portal", "modset", "save_manager")))
+        problems.extend(check_no_universal_gui_toolkit_dirs(UNIVERSAL_SETUP))
         for forbidden in ["runtime/launcher", "include/ulk"]:
             if (UNIVERSAL_SETUP / forbidden).exists():
                 problems.append(f"universal-setup must not own launcher path {forbidden}")
+    return problems
+
+
+def check_no_universal_gui_toolkit_dirs(root: Path) -> list[str]:
+    problems: list[str] = []
+    for provider in ["win32", "appkit", "gtk", "qt", "winforms", "winui", "swiftui"]:
+        path = root / "apps" / "gui" / provider
+        if path.exists():
+            problems.append(f"{root.name} must not own product GUI toolkit path apps/gui/{provider}")
     return problems
 
 

@@ -64,6 +64,20 @@ class ReproWorkspaceSmokeTests(unittest.TestCase):
 
         self.assertTrue(any("contains product-specific path runtime/factorio" in problem for problem in problems))
 
+    def test_check_workspace_rejects_universal_gui_toolkit_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            repos = {
+                "factorio-launcher": make_repo(workspace / "factorio-launcher", "factorio-launcher"),
+                "universal-setup": make_repo(workspace / "universal-setup", "universal-setup"),
+                "universal-launcher": make_repo(workspace / "universal-launcher", "universal-launcher"),
+            }
+            repos["universal-setup"].joinpath("apps", "gui", "win32").mkdir(parents=True)
+
+            problems = repro_workspace_smoke.check_workspace(repos, require_git=True)
+
+        self.assertTrue(any("must not own product GUI toolkit path apps/gui/win32" in problem for problem in problems))
+
     def test_repro_build_root_is_outside_repos_and_keyed_by_workspace(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)

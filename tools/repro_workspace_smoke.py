@@ -26,12 +26,16 @@ REPO_MARKERS = {
         "include/usk/usk_api.h",
         "runtime/setup/kernel/usk_api.c",
         "contracts/schema/setup/install_plan.v1.schema.json",
+        "tools/strict_check.py",
+        "apps/gui/README.md",
     ],
     "universal-launcher": [
         "CMakeLists.txt",
         "include/ulk/ulk_api.h",
         "runtime/launcher/kernel/ulk_api.c",
         "docs/architecture/command_graph.md",
+        "tools/strict_check.py",
+        "apps/gui/README.md",
     ],
 }
 
@@ -212,14 +216,25 @@ def check_universal_boundaries(repos: dict[str, Path]) -> list[str]:
     problems: list[str] = []
     if launcher.exists():
         problems.extend(check_no_path_token(launcher, ("factorio", "mod_portal", "modset")))
+        problems.extend(check_no_universal_gui_toolkit_dirs(launcher))
         for forbidden in ["runtime/setup", "include/usk"]:
             if (launcher / forbidden).exists():
                 problems.append(f"universal-launcher must not own setup path {forbidden}")
     if setup.exists():
         problems.extend(check_no_path_token(setup, ("factorio", "mod_portal", "modset", "save_manager")))
+        problems.extend(check_no_universal_gui_toolkit_dirs(setup))
         for forbidden in ["runtime/launcher", "include/ulk"]:
             if (setup / forbidden).exists():
                 problems.append(f"universal-setup must not own launcher path {forbidden}")
+    return problems
+
+
+def check_no_universal_gui_toolkit_dirs(root: Path) -> list[str]:
+    problems: list[str] = []
+    for provider in ["win32", "appkit", "gtk", "qt", "winforms", "winui", "swiftui"]:
+        path = root / "apps" / "gui" / provider
+        if path.exists():
+            problems.append(f"{root.name} must not own product GUI toolkit path apps/gui/{provider}")
     return problems
 
 
@@ -298,6 +313,7 @@ def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str], bui
             repos["universal-launcher"],
             ["ctest", "--test-dir", str(build_dirs["universal-launcher"]), "-C", "Debug", "--output-on-failure"],
         ),
+        ("universal-launcher strict", repos["universal-launcher"], [*python_cmd, "tools/strict_check.py"]),
         (
             "universal-setup cmake configure",
             repos["universal-setup"],
@@ -309,6 +325,7 @@ def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str], bui
             repos["universal-setup"],
             ["ctest", "--test-dir", str(build_dirs["universal-setup"]), "-C", "Debug", "--output-on-failure"],
         ),
+        ("universal-setup strict", repos["universal-setup"], [*python_cmd, "tools/strict_check.py"]),
         (
             "factorio-launcher cmake configure",
             repos["factorio-launcher"],
