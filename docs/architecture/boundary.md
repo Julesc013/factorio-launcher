@@ -38,7 +38,7 @@
 - modder workflows
 
 Frontends must not stack on top of each other as real architecture. CLI, TUI,
-the Win32/WinForms GUI, AppKit, GTK, and Qt all call the same command
+WinForms, WinUI, AppKit, SwiftUI, GTK, and Qt all call the same command
 graph/native launcher service/C ABI.
 
 `factorio-launcher` must not directly implement repair, uninstall, or managed

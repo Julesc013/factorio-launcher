@@ -20,8 +20,8 @@ This is a better fit for a three-repo launcher ecosystem.
 ## Improvements Over The Old Shape
 
 - `source/` and `src/` are gone.
-- App code lives in `apps/<role>/`; GUI providers live in
-  `apps/gui/<provider>/`; reusable behavior lives in `runtime/`.
+- App code lives in `apps/<role>/`; GUI providers live in OS-first
+  `apps/gui/<os>/<toolkit>/` lanes; reusable behavior lives in `runtime/`.
 - Factorio product data is now `content/factorio/`, not a generic `data/`
   drawer.
 - JSON schemas are now under `contracts/schema/`.

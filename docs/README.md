@@ -15,6 +15,7 @@ Architecture:
 - [Frontend Command Client](architecture/frontend_client.md)
 - [C ABI Policy](architecture/c_abi_policy.md)
 - [Language Policy](architecture/language_policy.md)
+- [Language And Runtime Policy](architecture/language_and_runtime_policy.md)
 - [Coding Standards](architecture/coding_standards.md)
 - [Command Graph](architecture/command_graph.md)
 - [Module Graph](architecture/module_graph.md)
@@ -52,9 +53,18 @@ Product:
 Platform:
 
 - [Support Matrix](platform/support_matrix.md)
+- [Compatibility Tiers](platform/compatibility_tiers.md)
+- [Frontend Targets](platform/frontend_targets.md)
+- [Windows Targets](platform/windows_targets.md)
+- [macOS Targets](platform/macos_targets.md)
+- [Linux Targets](platform/linux_targets.md)
 - [Windows 7](platform/windows_7.md)
 - [macOS 10.13](platform/macos_10_13.md)
 - [Linux](platform/linux.md)
+
+Release:
+
+- [Distribution Layout](release/distribution_layout.md)
 
 Planning:
 

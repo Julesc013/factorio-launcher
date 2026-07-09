@@ -5,7 +5,7 @@ giant executable internally.
 
 Each package contains replaceable components:
 
-- GUI frontend
+- GUI frontend for the selected release profile
 - CLI frontend
 - TUI frontend
 - daemon / job runner
@@ -72,8 +72,9 @@ Executables and dylibs do not live in `Contents/Resources`.
 
 ## Linux
 
-Modern Linux GUI packages use AppImage. Old Linux targets use CLI/TUI tarballs
-or source builds. GTK is the first Linux GUI frontend; Qt remains optional.
+Linux GUI packages are profile-specific. `linux_x11_gtk` packages the GTK
+frontend, `linux_wayland_qt` packages the Qt frontend, and `portable_cli`
+keeps old distro/server lanes free of GUI toolkit requirements.
 
 ## Manifests
 
@@ -82,3 +83,6 @@ component names, source targets, package destinations, architecture, hashes,
 signature policy, extraction policy, runtime search path, and license notices.
 
 `tools/package_check.py` enforces the packaging rules.
+
+See [../release/distribution_layout.md](../release/distribution_layout.md) for
+the frontend/helper/library layout expected in each package family.

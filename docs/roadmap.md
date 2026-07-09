@@ -63,8 +63,8 @@ leaving setup mutation to Universal Setup.
 
 ## FacMan-GUI-01
 
-- Win32/WinForms, AppKit, GTK, and optional Qt frontends render the same command
-  graph.
+- WinForms, WinUI, AppKit, SwiftUI, GTK, and Qt frontends render the same
+  command graph from OS-first GUI lanes.
 - No GUI-only behavior.
 
 ## Release Readiness Ladder
@@ -97,7 +97,7 @@ R4 - Managed install alpha
   verify/uninstall managed only
 
 R5 - Native GUI preview
-  Win32/AppKit/GTK shells over command graph
+  WinForms/AppKit first shells over command graph
 
 R6 - v1.0
   stable CLI

@@ -13,14 +13,15 @@ Launcher support and Factorio runtime support are separate promises:
 
 | Platform | Support level | Artifact |
 | --- | ---: | --- |
-| Windows 10/11 | Primary | installer + portable ZIP |
-| Windows 7 SP1 + .NET Framework 4.8 | Legacy best-effort | portable ZIP + optional installer |
-| macOS 11+ | Primary modern | signed/notarized universal `.app` |
-| macOS 10.13-10.15 Intel | Legacy supported | x86_64 AppKit `.app` |
+| Windows modern WinUI | Primary | installer + portable ZIP |
+| Windows legacy WinForms | Legacy best-effort | portable ZIP + optional installer |
+| macOS modern SwiftUI | Primary modern | signed/notarized universal `.app` |
+| macOS legacy AppKit | Legacy supported | x86_64 AppKit `.app` |
 | macOS 10.10-10.12 Intel | Experimental legacy | CLI/basic GUI only if tested |
 | macOS 10.9 | Not primary | source/experimental only |
-| Linux modern desktop | Primary | AppImage |
-| Linux old desktop/server | Best-effort | legacy CLI/TUI tarball |
+| Linux Wayland Qt | Primary modern | GUI tarball/AppImage profile |
+| Linux X11 GTK | Compatibility desktop | GUI tarball/AppImage profile |
+| Linux old desktop/server | Best-effort | portable CLI/TUI tarball |
 | Linux 2010-era GUI | Experimental | source build or special legacy AppImage |
 
 ## Windows

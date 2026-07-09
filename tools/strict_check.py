@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import alpha_vertical_slice_check, command_contract_check, discovery_golden_check, gui_surface_check, package_check, refusal_golden_check, release_readiness_check, schema_validate, security_policy_check, structure_policy_check
+from tools import alpha_vertical_slice_check, command_contract_check, discovery_golden_check, gui_surface_check, language_runtime_policy_check, package_check, refusal_golden_check, release_readiness_check, schema_validate, security_policy_check, structure_policy_check
 
 
 def main() -> int:
@@ -18,6 +18,7 @@ def main() -> int:
         ("security", security_policy_check.main),
         ("package", package_check.main),
         ("gui-surface", gui_surface_check.main),
+        ("language-runtime-policy", language_runtime_policy_check.main),
         ("command-contract", command_contract_check.main),
         ("alpha-vertical-slice", alpha_vertical_slice_check.main),
         ("refusal-golden", refusal_golden_check.main),

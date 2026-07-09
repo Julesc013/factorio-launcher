@@ -9,9 +9,9 @@ Universal Launcher Kernel     C89 public ABI, C/C++ internal
         |
 Universal Command Graph       stable command model, schemas, dry-run, audit
         |
-Factorio Product Binding      C ABI outward, C11/C++11 internally
+Factorio Product Binding      C ABI outward, native C/C++ internally
         |
-CLI / TUI / WinForms / AppKit / GTK / Qt frontends
+CLI / TUI / WinForms / WinUI / AppKit / SwiftUI / GTK / Qt frontends
 ```
 
 The CLI is the first frontend and may expose JSON for early GUI integration,

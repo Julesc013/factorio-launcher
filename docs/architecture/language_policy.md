@@ -58,9 +58,14 @@ implementation leak through DLL/shared-library boundaries.
 ## Frontends
 
 - CLI and TUI: native C/C++ frontends over the command graph
-- Windows GUI: .NET Framework 4.8 WinForms
-- macOS GUI: AppKit Objective-C/Objective-C++
-- Linux GUI: GTK first, Qt optional
+- Windows GUI: WinForms legacy lane and WinUI modern lane
+- macOS GUI: AppKit legacy lane and SwiftUI modern lane
+- Linux GUI: GTK X11 lane and Qt Wayland lane
+
+Toolkit-required language/runtime floors are isolated to their frontend
+folders. See
+[language_and_runtime_policy.md](language_and_runtime_policy.md) for the
+enforced root-level policy.
 
 ## Tooling And Scripts
 
