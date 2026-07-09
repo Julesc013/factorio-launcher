@@ -24,6 +24,10 @@ not_supported_with_reason
 with a structured reason. `not_supported_with_reason` means the lane is not
 yet expected to expose that command.
 
+Command parity is not the same as build, runtime, or package readiness. The
+frontend proof ladder lives in
+[`docs/quality/frontend_proof_levels.md`](../quality/frontend_proof_levels.md).
+
 ## Required Commands
 
 ```text

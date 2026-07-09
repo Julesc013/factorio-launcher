@@ -17,3 +17,8 @@ another frontend.
 
 Distribution packages may include CLI, TUI, daemon, and GUI binaries together.
 Individual executables remain purpose-built shells.
+
+Proof status is tracked separately from lane existence. See
+[`docs/quality/frontend_proof_levels.md`](../quality/frontend_proof_levels.md)
+for the current source-static, compile, runtime-smoke, and package-smoke status
+of each frontend.
