@@ -413,6 +413,12 @@ std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
 {
     std::vector<fs::path> candidates;
     std::vector<fs::path> fixture_children;
+    bool root_is_fixture = fs::is_regular_file(root / "fixture.manifest.v1.json");
+
+    if (root_is_fixture) {
+        append_unique_path(candidates, root);
+        return candidates;
+    }
 
     if (fs::is_directory(root)) {
         std::vector<fs::path> children;
@@ -429,7 +435,7 @@ std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
         }
     }
 
-    if (fixture_children.empty() || fs::is_regular_file(root / "fixture.manifest.v1.json")) {
+    if (fixture_children.empty()) {
         append_unique_path(candidates, root);
     }
     for (const fs::path& child : fixture_children) {
