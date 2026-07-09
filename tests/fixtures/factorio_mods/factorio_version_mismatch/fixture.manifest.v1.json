@@ -1,0 +1,9 @@
+{
+  "expected_name": "old_factorio_only",
+  "expected_refusal_code": "mod_factorio_version_incompatible",
+  "expected_status": "refused",
+  "schema": "facman.factorio_mod_fixture.v1",
+  "zip_files": [
+    "old_factorio_only_1.0.0.zip"
+  ]
+}

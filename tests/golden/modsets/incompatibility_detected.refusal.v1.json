@@ -1,0 +1,19 @@
+{
+  "schema": "factorio.modset_refusal.v1",
+  "command": "modsets.lock",
+  "status": "refused",
+  "instance_id": "modzip",
+  "file_name": "incompatible_mod_1.0.0.zip",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "mod_incompatibility_detected",
+    "reason": "Modset contains incompatible mods together",
+    "recoverable": false,
+    "retryable": false,
+    "severity": "blocked"
+  },
+  "details": {
+    "detail": "incompatible_mod conflicts with conflict_mod"
+  },
+  "suggested_next_command": "facman modsets lock <instance-id> --json"
+}

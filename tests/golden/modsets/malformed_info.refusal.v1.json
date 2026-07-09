@@ -1,0 +1,21 @@
+{
+  "schema": "factorio.mod_refusal.v1",
+  "command": "mods.import",
+  "status": "refused",
+  "instance_id": "modzip",
+  "file_name": "malformed_info_1.0.0.zip",
+  "path": "tests/fixtures/factorio_mods/malformed_info_json/malformed_info_1.0.0.zip",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "mod_zip_malformed_info_json",
+    "reason": "Mod ZIP info.json is malformed",
+    "recoverable": true,
+    "retryable": true,
+    "severity": "blocked"
+  },
+  "details": {
+    "metadata_source": "unavailable",
+    "detail": "version must be a string"
+  },
+  "suggested_next_command": "facman mods import <mod.zip> --instance <id> --json"
+}

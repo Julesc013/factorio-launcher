@@ -1,0 +1,50 @@
+{
+  "lockfile_version": 1,
+  "schema": "factorio.modset_lock.v1",
+  "instance_id": "modzip",
+  "factorio_version": "2.0.77",
+  "mods": [
+    {
+      "schema": "factorio.mod_ref.v1",
+      "name": "optional_deps",
+      "title": "Optional Deps",
+      "version": "1.0.0",
+      "factorio_version": "2.0",
+      "author": "FacMan Fixture",
+      "description": "Synthetic local mod ZIP fixture for FacMan tests.",
+      "file_name": "optional_deps_1.0.0.zip",
+      "sha1": "13f26719ffe4bdf564b94fa20752c83457b9e58e",
+      "sha256": "b2d27249c1a1bf4940f2ef80ace420c3b1b9c469f9a41448284a03546285e9fb",
+      "source": "local",
+      "metadata_source": "info_json",
+      "enabled": true,
+      "validation_status": "ok",
+      "dependencies": [
+        {
+          "kind": "required",
+          "name": "base",
+          "operator": ">=",
+          "version": "2.0.0",
+          "raw": "base >= 2.0.0"
+        }
+      ],
+      "optional_dependencies": [
+        {
+          "kind": "optional",
+          "name": "optional_mod",
+          "operator": ">=",
+          "version": "1.2.0",
+          "raw": "? optional_mod >= 1.2.0"
+        },
+        {
+          "kind": "hidden_optional",
+          "name": "load_order_hint",
+          "operator": ">=",
+          "version": "0.5.0",
+          "raw": "~ load_order_hint >= 0.5.0"
+        }
+      ],
+      "incompatibilities": []
+    }
+  ]
+}
