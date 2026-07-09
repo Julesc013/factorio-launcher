@@ -1,0 +1,13 @@
+{
+  "schema": "facman.fixture.factorio_install.v1",
+  "fixture_id": "imported_adoptable",
+  "description": "Manually selected install fixture that remains imported until an explicit adopt flow exists.",
+  "expected": {
+    "source": "manual",
+    "ownership": "imported",
+    "platform": "linux-x64",
+    "capabilities": ["gui"],
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}

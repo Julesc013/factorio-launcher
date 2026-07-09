@@ -1,0 +1,13 @@
+{
+  "schema": "facman.fixture.factorio_install.v1",
+  "fixture_id": "windows_steam",
+  "description": "Steam-style Windows install fixture with stub executable only.",
+  "expected": {
+    "source": "steam",
+    "ownership": "foreign_owned",
+    "platform": "windows-x64",
+    "capabilities": ["gui"],
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}

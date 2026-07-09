@@ -1,0 +1,13 @@
+{
+  "schema": "facman.fixture.factorio_install.v1",
+  "fixture_id": "linux_headless",
+  "description": "Linux headless server fixture with stub executable only.",
+  "expected": {
+    "source": "headless",
+    "ownership": "portable",
+    "platform": "linux-x64",
+    "capabilities": ["headless_server"],
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}

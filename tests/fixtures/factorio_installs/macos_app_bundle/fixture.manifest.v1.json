@@ -1,0 +1,13 @@
+{
+  "schema": "facman.fixture.factorio_install.v1",
+  "fixture_id": "macos_app_bundle",
+  "description": "macOS app bundle fixture with stub executable only.",
+  "expected": {
+    "source": "app_bundle",
+    "ownership": "imported",
+    "platform": "macos",
+    "capabilities": ["gui"],
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}

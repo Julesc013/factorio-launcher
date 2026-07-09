@@ -1,0 +1,13 @@
+{
+  "schema": "facman.fixture.factorio_install.v1",
+  "fixture_id": "linux_package_foreign",
+  "description": "Linux OS-package-owned fixture with stub executable only.",
+  "expected": {
+    "source": "os_package",
+    "ownership": "foreign_owned",
+    "platform": "linux-x64",
+    "capabilities": ["gui"],
+    "validation_status": "structural",
+    "setup_mutation_allowed": false
+  }
+}
