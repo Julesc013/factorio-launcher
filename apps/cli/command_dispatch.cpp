@@ -734,6 +734,13 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<std::string>& 
     return factorio_discovery::scan_install_candidates(roots);
 }
 
+bool has_explicit_scan_roots(const std::vector<std::string>& args)
+{
+    return !option_values(args, "--path").empty() ||
+        !option_values(args, "--search-root").empty() ||
+        !option_values(args, "--roots").empty();
+}
+
 std::string installs_report_json(const std::vector<InstallRef>& installs)
 {
     return factorio_discovery::discovery_report_json(installs);
@@ -1533,7 +1540,7 @@ int print_help()
     std::cout << "  product inspect [--json]\n";
     std::cout << "  command-graph inspect [--json]\n";
     std::cout << "  diagnostics report [--json]\n";
-    std::cout << "  doctor [--json]\n";
+    std::cout << "  doctor [--search-root <root>] [--json]\n";
     std::cout << "  installs scan [--path <root>] [--search-root <root>] [--json]\n";
     std::cout << "  installs inspect <install-id> [--json]\n";
     std::cout << "  installs import <factorio-dir> --id <install-id> [--json]\n";
@@ -1619,18 +1626,80 @@ int command_doctor(const CliOptions& options)
     ensure_workspace(options.workspace);
     std::vector<fs::path> installs = install_ref_files(options.workspace);
     std::vector<fs::path> instances = instance_manifest_files(options.workspace);
-    bool warning = installs.empty();
+    bool has_discovery_roots = has_explicit_scan_roots(options.args);
+    std::vector<InstallRef> discovery = has_discovery_roots ? scan_install_candidates(options.args) : std::vector<InstallRef>();
+    bool invalid_candidates = false;
+    for (const InstallRef& install : discovery) {
+        if (install.verification_status == "invalid") {
+            invalid_candidates = true;
+        }
+    }
+    bool warning = installs.empty() || invalid_candidates;
     if (has_flag(options.args, "--json")) {
         std::cout << "{\n";
+        std::cout << "  \"schema\": \"factorio.diagnostic_report.v1\",\n";
+        std::cout << "  \"command\": \"doctor.run\",\n";
         std::cout << "  \"status\": " << quote(warning ? "warning" : "ok") << ",\n";
         std::cout << "  \"workspace\": " << quote(path_string(options.workspace)) << ",\n";
         std::cout << "  \"registered_installs\": " << installs.size() << ",\n";
         std::cout << "  \"instances\": " << instances.size() << ",\n";
+        std::cout << "  \"problems\": [";
+        bool wrote_problem = false;
+        if (installs.empty()) {
+            std::cout << quote("no install references registered yet");
+            wrote_problem = true;
+        }
+        if (invalid_candidates) {
+            if (wrote_problem) {
+                std::cout << ",";
+            }
+            std::cout << quote("invalid Factorio install candidates found");
+            wrote_problem = true;
+        }
+        std::cout << "],\n";
+        std::cout << "  \"suggested_fixes\": [";
+        bool wrote_fix = false;
+        if (installs.empty()) {
+            std::cout << quote("run facman installs scan --search-root <folder> --json or facman installs import <factorio-dir> --id <install-id>");
+            wrote_fix = true;
+        }
+        if (invalid_candidates) {
+            if (wrote_fix) {
+                std::cout << ",";
+            }
+            std::cout << quote("inspect invalid candidates and choose a valid Factorio install root");
+        }
+        std::cout << "],\n";
+        std::cout << "  \"checks\": [";
+        std::cout << "{\"id\":\"workspace\",\"status\":\"ok\"},";
+        std::cout << "{\"id\":\"install_refs\",\"status\":\"" << (installs.empty() ? "warning" : "ok") << "\"}";
+        if (has_discovery_roots) {
+            std::cout << ",{\"id\":\"discovery_candidates\",\"status\":\"" << (invalid_candidates ? "warning" : "ok") << "\"}";
+        }
+        std::cout << "],\n";
         std::cout << "  \"warnings\": ";
         if (warning) {
-            std::cout << "[\"no install references registered yet\"]\n";
+            std::cout << "[";
+            bool wrote_warning = false;
+            if (installs.empty()) {
+                std::cout << quote("no install references registered yet");
+                wrote_warning = true;
+            }
+            if (invalid_candidates) {
+                if (wrote_warning) {
+                    std::cout << ",";
+                }
+                std::cout << quote("invalid Factorio install candidates found");
+            }
+            std::cout << "]";
         } else {
-            std::cout << "[]\n";
+            std::cout << "[]";
+        }
+        if (has_discovery_roots) {
+            std::cout << ",\n";
+            std::cout << "  \"discovery\": " << installs_report_json(discovery);
+        } else {
+            std::cout << "\n";
         }
         std::cout << "}\n";
     } else {
@@ -1639,9 +1708,17 @@ int command_doctor(const CliOptions& options)
         std::cout << "Workspace: " << path_string(options.workspace) << "\n";
         std::cout << "Registered installs: " << installs.size() << "\n";
         std::cout << "Instances: " << instances.size() << "\n";
+        if (has_discovery_roots) {
+            std::cout << "Discovery candidates: " << discovery.size() << "\n";
+        }
         if (warning) {
-            std::cout << "Warning: no install references registered yet\n";
-            std::cout << "Suggestion: run facman installs import <factorio-dir> --id <install-id>\n";
+            if (installs.empty()) {
+                std::cout << "Warning: no install references registered yet\n";
+            }
+            if (invalid_candidates) {
+                std::cout << "Warning: invalid Factorio install candidates found\n";
+            }
+            std::cout << "Suggestion: run facman installs scan --search-root <folder> --json or facman installs import <factorio-dir> --id <install-id>\n";
         }
     }
     return 0;
