@@ -1,0 +1,3 @@
+Authorization: Bearer [FACMAN_REDACTED]
+token=[FACMAN_REDACTED]
+normal log line

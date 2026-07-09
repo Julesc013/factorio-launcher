@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.diagnostic_report.v1",
+  "command": "doctor.run",
+  "status": "ok",
+  "redacted": true,
+  "redaction_policy": "facman.redaction_policy.v1"
+}

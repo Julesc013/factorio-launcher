@@ -1,0 +1,3 @@
+Authorization: Bearer bearer-token-value
+token=fixture-token-value
+normal log line

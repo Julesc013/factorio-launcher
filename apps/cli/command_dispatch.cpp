@@ -1619,6 +1619,9 @@ void collect_diagnostic_instance_files(
         }
 
         std::string text(bytes.begin(), bytes.end());
+        if (relative_text == "config/config-path.cfg") {
+            text = "read-data=$FACMAN_INSTALL_ROOT\nwrite-data=$FACMAN_INSTANCE_ROOT\n";
+        }
         std::string kind = relative_text.find("log") != std::string::npos ? "log" : "config";
         add_diagnostic_text_file(files, manifest_entries, events, entry_path, kind, text, true);
     }
@@ -1719,15 +1722,17 @@ bool write_diagnostic_bundle(
 
     std::string instance_id = instance ? instance->instance_id : "workspace";
     if (instance) {
-        fs::path install_ref = install_path(options.workspace, instance->install_ref);
-        if (fs::is_regular_file(install_ref)) {
+        InstallRef install;
+        if (load_install(options.workspace, instance->install_ref, install)) {
+            install.root = "$FACMAN_INSTALL_ROOT";
+            install.executable = "$FACMAN_INSTALL_ROOT/bin/factorio";
             add_diagnostic_text_file(
                 files,
                 manifest_entries,
                 events,
                 "installs/selected-install-ref.v1.json",
                 "install_ref",
-                read_text(install_ref),
+                install_json(install),
                 true
             );
         }
