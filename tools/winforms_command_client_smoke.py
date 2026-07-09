@@ -63,10 +63,18 @@ def write_project(tmp_path: Path) -> Path:
     project.write_text(
         f"""<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Exe</OutputType>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <RootNamespace>FacMan.WinForms.CommandClientSmoke</RootNamespace>
     <AssemblyName>WinFormsCommandClientSmoke</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\\Debug\\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\\Release\\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
