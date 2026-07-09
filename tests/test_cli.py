@@ -164,7 +164,7 @@ class CliTests(unittest.TestCase):
 
     def test_local_mod_import_lock_verify_and_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            mod_zip = Path(tmp) / "filename_only_0.0.1.zip"
+            mod_zip = Path(tmp) / "metadata-example_9.8.7.zip"
             mod_info = {
                 "name": "metadata-example",
                 "version": "9.8.7",
@@ -194,30 +194,36 @@ class CliTests(unittest.TestCase):
             self.assertEqual(imported["version"], "9.8.7")
             self.assertEqual(imported["factorio_version"], "2.0")
             self.assertEqual(imported["metadata_source"], "info_json")
-            self.assertEqual(imported["dependencies"], ["base >= 2.0"])
-            self.assertEqual(imported["optional_dependencies"], ["space-age >= 2.0"])
-            self.assertEqual(imported["incompatibilities"], ["conflict-mod"])
+            self.assertEqual(imported["dependencies"][0]["name"], "base")
+            self.assertEqual(imported["dependencies"][0]["operator"], ">=")
+            self.assertEqual(imported["optional_dependencies"][0]["name"], "space-age")
+            self.assertEqual(imported["incompatibilities"][0]["name"], "conflict-mod")
             self.assertEqual(len(imported["sha1"]), 40)
+            self.assertEqual(len(imported["sha256"]), 64)
 
             code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "lock", "modded", "--json"])
             self.assertEqual(code, 0, stderr)
             lock = json.loads(stdout)
             self.assertEqual(lock["factorio_version"], "2.0.77")
-            self.assertEqual(lock["mods"][0]["file_name"], "filename_only_0.0.1.zip")
+            self.assertEqual(lock["mods"][0]["file_name"], "metadata-example_9.8.7.zip")
             self.assertEqual(lock["mods"][0]["name"], "metadata-example")
-            self.assertEqual(lock["mods"][0]["optional_dependencies"], ["space-age >= 2.0"])
+            self.assertEqual(lock["mods"][0]["optional_dependencies"][0]["name"], "space-age")
+            self.assertEqual(len(lock["mods"][0]["sha256"]), 64)
             self.assertTrue((Path(tmp) / "modsets" / "modded.modset-lock.v1.json").is_file())
 
             code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "verify", "modded", "--json"])
             self.assertEqual(code, 0, stderr)
             self.assertEqual(json.loads(stdout)["status"], "ok")
 
-            copied_mod = Path(tmp) / "instances" / "modded" / "mods" / "filename_only_0.0.1.zip"
+            copied_mod = Path(tmp) / "instances" / "modded" / "mods" / "metadata-example_9.8.7.zip"
             copied_mod.write_bytes(b"tampered")
             code, stdout, _stderr = invoke(["--workspace", tmp, "modsets", "verify", "modded", "--json"])
             self.assertEqual(code, 1)
-            self.assertEqual(json.loads(stdout)["status"], "error")
+            verify = json.loads(stdout)
+            self.assertEqual(verify["status"], "error")
+            self.assertEqual(verify["refusal"]["code"], "mod_hash_mismatch")
 
+            copied_mod.write_bytes(mod_zip.read_bytes())
             code, _stdout, stderr = invoke(["--workspace", tmp, "modsets", "lock", "modded"])
             self.assertEqual(code, 0, stderr)
             pack = Path(tmp) / "pack.zip"

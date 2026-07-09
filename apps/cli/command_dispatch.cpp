@@ -42,6 +42,7 @@ struct CliOptions {
 
 using InstallRef = factorio_discovery::InstallRef;
 using ModRef = factorio_modsets::ModRef;
+using ModsetIssue = factorio_modsets::ModsetIssue;
 
 struct InstanceRef {
     std::string instance_id;
@@ -919,6 +920,20 @@ std::string mod_ref_to_json(const ModRef& mod)
     return factorio_modsets::mod_ref_json(mod);
 }
 
+void mark_mod_refused(ModRef& mod, const std::string& code, const std::string& reason, const std::string& detail)
+{
+    mod.valid = false;
+    mod.validation_status = "refused";
+    mod.refusal_code = code;
+    mod.refusal_reason = reason;
+    mod.refusal_detail = detail;
+}
+
+std::vector<ModsetIssue> validate_instance_modset(const InstanceRef& instance)
+{
+    return factorio_modsets::validate_modset(instance_mod_files(instance), instance.factorio_version);
+}
+
 std::string modset_lock_json(const InstanceRef& instance)
 {
     std::vector<ModRef> mods = instance_mod_files(instance);
@@ -946,6 +961,7 @@ std::string modset_lock_json(const InstanceRef& instance)
 struct LockEntry {
     std::string file_name;
     std::string sha1;
+    std::string sha256;
 };
 
 std::vector<LockEntry> lock_entries(const std::string& text)
@@ -961,9 +977,13 @@ std::vector<LockEntry> lock_entries(const std::string& text)
         if (sha_pos == std::string::npos) {
             break;
         }
+        std::size_t sha256_pos = text.find("\"sha256\"", file_pos);
         LockEntry entry;
         entry.file_name = json_string_value(text.substr(file_pos), "file_name");
         entry.sha1 = json_string_value(text.substr(sha_pos), "sha1");
+        if (sha256_pos != std::string::npos) {
+            entry.sha256 = json_string_value(text.substr(sha256_pos), "sha256");
+        }
         if (!entry.file_name.empty()) {
             entries.push_back(entry);
         }
@@ -990,6 +1010,12 @@ std::vector<std::string> verify_modset_lock(const InstanceRef& instance)
         std::string actual_sha1 = factorio_modsets::sha1_hex_file(mod_path);
         if (actual_sha1 != entry.sha1) {
             problems.push_back("sha1 mismatch: " + entry.file_name);
+        }
+        if (!entry.sha256.empty()) {
+            std::string actual_sha256 = factorio_modsets::sha256_hex_file(mod_path);
+            if (actual_sha256 != entry.sha256) {
+                problems.push_back("sha256 mismatch: " + entry.file_name);
+            }
         }
     }
     return problems;
@@ -2112,10 +2138,29 @@ int command_mods(const CliOptions& options)
             std::cerr << "Mod import requires a local .zip file\n";
             return 1;
         }
+        ModRef mod = mod_ref_from_path(source);
+        if (mod.valid && !factorio_modsets::factorio_versions_compatible(mod.factorio_version, instance.factorio_version)) {
+            mark_mod_refused(
+                mod,
+                "mod_factorio_version_incompatible",
+                "Mod factorio_version is not compatible with this instance",
+                mod.factorio_version + " != " + factorio_modsets::factorio_minor_version(instance.factorio_version)
+            );
+        }
+        if (!mod.valid) {
+            std::string result = factorio_modsets::mod_refusal_json("mods.import", instance.instance_id, source, mod);
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Refused: " << mod.refusal_reason << "\n";
+                std::cerr << "Code: " << mod.refusal_code << "\n";
+            }
+            return 1;
+        }
         fs::path destination = instance.local_data_root / "mods" / source.filename();
         fs::create_directories(destination.parent_path());
         fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
-        ModRef mod = mod_ref_from_path(destination);
+        mod.file_path = destination;
         if (has_flag(options.args, "--json")) {
             std::cout << mod_ref_to_json(mod) << "\n";
         } else {
@@ -2143,6 +2188,21 @@ int command_modsets(const CliOptions& options)
     }
 
     if (options.args[1] == "lock") {
+        std::vector<ModsetIssue> issues = validate_instance_modset(instance);
+        if (!issues.empty()) {
+            std::string result = factorio_modsets::modset_refusal_json(
+                "modsets.lock",
+                instance.instance_id,
+                issues[0]
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Refused: " << issues[0].reason << "\n";
+                std::cerr << "Code: " << issues[0].code << "\n";
+            }
+            return 1;
+        }
         std::string lock = modset_lock_json(instance);
         write_text(modset_lock_path(instance), lock);
         write_text(workspace_modset_lock_path(options.workspace, instance), lock);
@@ -2168,7 +2228,20 @@ int command_modsets(const CliOptions& options)
                 }
                 std::cout << quote(problems[index]);
             }
-            std::cout << "]\n";
+            std::cout << "]";
+            if (!problems.empty()) {
+                std::cout << ",\n";
+                std::cout << "  \"refusal\": {\n";
+                std::cout << "    \"schema\": \"common.refusal.v1\",\n";
+                std::cout << "    \"code\": \"mod_hash_mismatch\",\n";
+                std::cout << "    \"reason\": \"One or more locked mod hashes do not match local artifacts\",\n";
+                std::cout << "    \"recoverable\": true,\n";
+                std::cout << "    \"retryable\": true,\n";
+                std::cout << "    \"severity\": \"error\"\n";
+                std::cout << "  }\n";
+            } else {
+                std::cout << "\n";
+            }
             std::cout << "}\n";
         } else if (problems.empty()) {
             std::cout << "Modset verified for " << instance.instance_id << "\n";
@@ -2184,6 +2257,21 @@ int command_modsets(const CliOptions& options)
         if (options.args.size() < 4) {
             std::cerr << "modsets export requires <instance-id> <pack.zip>\n";
             return 2;
+        }
+        std::vector<ModsetIssue> issues = validate_instance_modset(instance);
+        if (!issues.empty()) {
+            std::string result = factorio_modsets::modset_refusal_json(
+                "modsets.export",
+                instance.instance_id,
+                issues[0]
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Refused: " << issues[0].reason << "\n";
+                std::cerr << "Code: " << issues[0].code << "\n";
+            }
+            return 1;
         }
         fs::path lock_path = modset_lock_path(instance);
         if (!fs::is_regular_file(lock_path)) {

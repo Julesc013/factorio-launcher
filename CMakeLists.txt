@@ -117,9 +117,14 @@ add_library(flb_factorio_discovery_static STATIC runtime/factorio/discovery/flb_
 target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_discovery_static PUBLIC runtime/factorio/discovery)
 
+add_library(flb_factorio_mods_static STATIC runtime/factorio/mods/flb_factorio_mods.cpp)
+target_compile_features(flb_factorio_mods_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_mods_static PUBLIC runtime/factorio/mods)
+
 add_library(flb_factorio_modsets_static STATIC runtime/factorio/modsets/flb_factorio_modsets.cpp)
 target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
-target_include_directories(flb_factorio_modsets_static PUBLIC runtime/factorio/modsets)
+target_include_directories(flb_factorio_modsets_static PUBLIC runtime/factorio/modsets runtime/factorio/mods)
+target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static)
 
 add_library(flb_factorio_shared SHARED runtime/factorio/binding/flb_api.c)
 target_include_directories(flb_factorio_shared PUBLIC include)

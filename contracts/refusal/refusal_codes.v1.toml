@@ -15,6 +15,17 @@ required_codes = [
   "unsupported_platform",
   "schema_version_unsupported",
   "package_profile_unsupported",
+  "mod_zip_missing_info_json",
+  "mod_zip_malformed_info_json",
+  "mod_zip_invalid_filename",
+  "mod_zip_name_mismatch",
+  "mod_zip_version_mismatch",
+  "mod_dependency_unsupported_syntax",
+  "mod_dependency_unsatisfied",
+  "mod_incompatibility_detected",
+  "mod_duplicate_versions",
+  "mod_factorio_version_incompatible",
+  "mod_hash_mismatch",
 ]
 
 [[code]]
@@ -212,3 +223,91 @@ severity = "blocked"
 effect = "none"
 retryable = false
 message = "The requested package profile is unsupported by this build."
+
+[[code]]
+id = "mod_zip_missing_info_json"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP does not contain info.json and cannot be imported safely."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_zip_malformed_info_json"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP info.json is malformed or unreadable."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_zip_invalid_filename"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP filename does not follow the expected <name>_<version>.zip shape."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_zip_name_mismatch"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP filename name does not match info.json."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_zip_version_mismatch"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod ZIP filename version does not match info.json."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_dependency_unsupported_syntax"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A local mod dependency declaration uses unsupported syntax."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_dependency_unsatisfied"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A required local mod dependency is not present or does not satisfy the requested version."
+suggested_next_command = "facman modsets lock <instance-id> --json"
+
+[[code]]
+id = "mod_incompatibility_detected"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The local modset contains mods that declare an incompatibility with each other."
+suggested_next_command = "facman modsets lock <instance-id> --json"
+
+[[code]]
+id = "mod_duplicate_versions"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local modset contains more than one version of the same mod."
+suggested_next_command = "facman modsets lock <instance-id> --json"
+
+[[code]]
+id = "mod_factorio_version_incompatible"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The local mod is not compatible with the instance Factorio version."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_hash_mismatch"
+severity = "error"
+effect = "workspace_read"
+retryable = true
+message = "A local mod ZIP hash no longer matches the modset lockfile."
+suggested_next_command = "facman modsets verify <instance-id> --json"
