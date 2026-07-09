@@ -1,0 +1,12 @@
+{
+  "schema": "factorio.instance_transfer_refusal.v1",
+  "command": "import.instance",
+  "status": "refused",
+  "instance_id": "target-world",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "instance_import_target_exists",
+    "reason": "Instance import target already exists",
+    "recoverable": true
+  }
+}

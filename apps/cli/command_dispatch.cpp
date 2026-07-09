@@ -7,12 +7,15 @@
 #include "usk/usk_api.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cctype>
 #include <cstdint>
+#include <ctime>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -1177,6 +1180,21 @@ const ZipEntry* find_zip_entry(const std::vector<ZipEntry>& entries, const std::
     return 0;
 }
 
+std::string utc_now_iso8601()
+{
+    auto now = std::chrono::system_clock::now();
+    std::time_t raw = std::chrono::system_clock::to_time_t(now);
+    std::tm tm {};
+#ifdef _WIN32
+    gmtime_s(&tm, &raw);
+#else
+    gmtime_r(&raw, &tm);
+#endif
+    std::ostringstream out;
+    out << std::put_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+    return out.str();
+}
+
 std::vector<unsigned char> bytes_from_text(const std::string& text)
 {
     return std::vector<unsigned char>(text.begin(), text.end());
@@ -1252,6 +1270,133 @@ bool resolve_instance_save(const InstanceRef& instance, const std::string& save_
     out.name = candidate.stem().string();
     out.size = fs::file_size(candidate);
     return true;
+}
+
+bool validate_save_zip(const SaveRef& save, std::string& detail)
+{
+    std::vector<ZipEntry> entries;
+    std::string error;
+    if (!read_stored_zip(save.file_path, entries, error)) {
+        detail = error.empty() ? "save archive has no readable entries" : error;
+        return false;
+    }
+    detail.clear();
+    return true;
+}
+
+bool instance_save_is_locked(const InstanceRef& instance)
+{
+    return fs::exists(instance.local_data_root / "locks" / "save.write.lock");
+}
+
+std::string save_refusal_json(
+    const std::string& command,
+    const std::string& instance_id,
+    const std::string& save_name,
+    const std::string& code,
+    const std::string& reason,
+    bool recoverable,
+    const std::string& detail,
+    const std::string& suggested_next_command
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.save_refusal.v1\",\n";
+    out << "  \"command\": " << quote(command) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"save\": " << quote(save_name) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
+    out << "    \"code\": " << quote(code) << ",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"recoverable\": " << (recoverable ? "true" : "false") << ",\n";
+    out << "    \"retryable\": " << (recoverable ? "true" : "false") << ",\n";
+    out << "    \"severity\": \"blocked\"\n";
+    out << "  },\n";
+    out << "  \"details\": {\"detail\": " << quote(detail) << "},\n";
+    out << "  \"suggested_next_command\": " << quote(suggested_next_command) << "\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string instance_transfer_refusal_json(
+    const std::string& command,
+    const std::string& instance_id,
+    const std::string& code,
+    const std::string& reason,
+    bool recoverable,
+    const std::string& detail
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.instance_transfer_refusal.v1\",\n";
+    out << "  \"command\": " << quote(command) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
+    out << "    \"code\": " << quote(code) << ",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"recoverable\": " << (recoverable ? "true" : "false") << ",\n";
+    out << "    \"retryable\": " << (recoverable ? "true" : "false") << ",\n";
+    out << "    \"severity\": \"blocked\"\n";
+    out << "  },\n";
+    out << "  \"details\": {\"detail\": " << quote(detail) << "}\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string save_backup_result_json(
+    const InstanceRef& instance,
+    const SaveRef& save,
+    const fs::path& backup_path,
+    const fs::path& manifest_path,
+    const std::string& created_at
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.save_backup.v1\",\n";
+    out << "  \"command\": \"saves.backup\",\n";
+    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+    out << "  \"save\": " << quote(save.file_name) << ",\n";
+    out << "  \"source_path\": " << quote(path_string(save.file_path)) << ",\n";
+    out << "  \"destination_path\": " << quote(path_string(backup_path)) << ",\n";
+    out << "  \"path\": " << quote(path_string(backup_path)) << ",\n";
+    out << "  \"manifest_path\": " << quote(path_string(manifest_path)) << ",\n";
+    out << "  \"created_at\": " << quote(created_at) << ",\n";
+    out << "  \"sha1\": " << quote(factorio_modsets::sha1_hex_file(save.file_path)) << ",\n";
+    out << "  \"sha256\": " << quote(factorio_modsets::sha256_hex_file(save.file_path)) << "\n";
+    out << "}\n";
+    return out.str();
+}
+
+std::string save_clone_result_json(
+    const InstanceRef& source,
+    const InstanceRef& target,
+    const SaveRef& save,
+    const fs::path& clone_path,
+    const std::string& created_at
+)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.save_clone.v1\",\n";
+    out << "  \"command\": \"saves.clone\",\n";
+    out << "  \"source_instance_id\": " << quote(source.instance_id) << ",\n";
+    out << "  \"target_instance_id\": " << quote(target.instance_id) << ",\n";
+    out << "  \"save\": " << quote(save.file_name) << ",\n";
+    out << "  \"source_path\": " << quote(path_string(save.file_path)) << ",\n";
+    out << "  \"destination_path\": " << quote(path_string(clone_path)) << ",\n";
+    out << "  \"path\": " << quote(path_string(clone_path)) << ",\n";
+    out << "  \"created_at\": " << quote(created_at) << ",\n";
+    out << "  \"sha1\": " << quote(factorio_modsets::sha1_hex_file(save.file_path)) << ",\n";
+    out << "  \"sha256\": " << quote(factorio_modsets::sha256_hex_file(save.file_path)) << "\n";
+    out << "}\n";
+    return out.str();
 }
 
 std::string redacted_instance_json(const InstanceRef& instance)
@@ -2351,26 +2496,100 @@ int command_saves(const CliOptions& options)
             std::cerr << "Unknown instance: " << instance_id << "\n";
             return 1;
         }
+        if (instance_save_is_locked(instance)) {
+            std::string result = save_refusal_json(
+                "saves.backup",
+                instance.instance_id,
+                options.args[2],
+                "save_locked",
+                "Save writes are locked for this instance",
+                true,
+                path_string(instance.local_data_root / "locks" / "save.write.lock"),
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Save is locked: " << options.args[2] << "\n";
+            }
+            return 1;
+        }
         SaveRef save;
         if (!resolve_instance_save(instance, options.args[2], save)) {
-            std::cerr << "Unknown save in instance: " << options.args[2] << "\n";
+            std::string result = save_refusal_json(
+                "saves.backup",
+                instance.instance_id,
+                options.args[2],
+                "save_not_found",
+                "Save is not present in the instance",
+                true,
+                "No matching .zip save exists under the instance saves directory.",
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Unknown save in instance: " << options.args[2] << "\n";
+            }
+            return 1;
+        }
+        std::string validation_detail;
+        if (!validate_save_zip(save, validation_detail)) {
+            std::string result = save_refusal_json(
+                "saves.backup",
+                instance.instance_id,
+                save.file_name,
+                "save_malformed",
+                "Save archive is malformed or unsupported",
+                true,
+                validation_detail,
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Malformed save archive: " << save.file_name << "\n";
+            }
             return 1;
         }
         std::string output = option_value(options.args, "--to");
         fs::path backup_path = output.empty()
             ? instance.local_data_root / "backups" / (save.name + ".backup.zip")
             : fs::path(output);
+        if (fs::exists(backup_path)) {
+            std::string result = save_refusal_json(
+                "saves.backup",
+                instance.instance_id,
+                save.file_name,
+                "save_backup_target_exists",
+                "Save backup target already exists",
+                true,
+                path_string(backup_path),
+                "facman saves backup <save> --instance <instance-id> --to <new-path> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Backup target already exists: " << path_string(backup_path) << "\n";
+            }
+            return 1;
+        }
         if (!backup_path.parent_path().empty()) {
             fs::create_directories(backup_path.parent_path());
         }
-        fs::copy_file(save.file_path, backup_path, fs::copy_options::overwrite_existing);
+        std::error_code copy_error;
+        bool copied = fs::copy_file(save.file_path, backup_path, fs::copy_options::none, copy_error);
+        if (!copied || copy_error) {
+            std::cerr << "Failed to copy save backup: " << path_string(backup_path) << "\n";
+            return 1;
+        }
+        fs::path manifest_path = backup_path;
+        manifest_path += ".manifest.json";
+        std::string created_at = utc_now_iso8601();
+        std::string result = save_backup_result_json(instance, save, backup_path, manifest_path, created_at);
+        write_text(manifest_path, result);
         if (has_flag(options.args, "--json")) {
-            std::cout << "{\n";
-            std::cout << "  \"schema\": \"factorio.save_backup.v1\",\n";
-            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-            std::cout << "  \"save\": " << quote(save.file_name) << ",\n";
-            std::cout << "  \"path\": " << quote(path_string(backup_path)) << "\n";
-            std::cout << "}\n";
+            std::cout << result;
         } else {
             std::cout << "Backed up " << save.file_name << " to " << path_string(backup_path) << "\n";
         }
@@ -2398,22 +2617,94 @@ int command_saves(const CliOptions& options)
             std::cerr << "Unknown target instance: " << target_id << "\n";
             return 1;
         }
+        if (instance_save_is_locked(source) || instance_save_is_locked(target)) {
+            std::string lock_path = instance_save_is_locked(source)
+                ? path_string(source.local_data_root / "locks" / "save.write.lock")
+                : path_string(target.local_data_root / "locks" / "save.write.lock");
+            std::string result = save_refusal_json(
+                "saves.clone",
+                source.instance_id,
+                options.args[2],
+                "save_locked",
+                "Save writes are locked for source or target instance",
+                true,
+                lock_path,
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Save is locked: " << options.args[2] << "\n";
+            }
+            return 1;
+        }
         SaveRef save;
         if (!resolve_instance_save(source, options.args[2], save)) {
-            std::cerr << "Unknown save in source instance: " << options.args[2] << "\n";
+            std::string result = save_refusal_json(
+                "saves.clone",
+                source.instance_id,
+                options.args[2],
+                "save_not_found",
+                "Save is not present in the source instance",
+                true,
+                "No matching .zip save exists under the source instance saves directory.",
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Unknown save in source instance: " << options.args[2] << "\n";
+            }
+            return 1;
+        }
+        std::string validation_detail;
+        if (!validate_save_zip(save, validation_detail)) {
+            std::string result = save_refusal_json(
+                "saves.clone",
+                source.instance_id,
+                save.file_name,
+                "save_malformed",
+                "Save archive is malformed or unsupported",
+                true,
+                validation_detail,
+                "facman saves list --instance <instance-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Malformed save archive: " << save.file_name << "\n";
+            }
             return 1;
         }
         fs::path clone_path = target.local_data_root / "saves" / save.file_name;
+        if (fs::exists(clone_path)) {
+            std::string result = save_refusal_json(
+                "saves.clone",
+                target.instance_id,
+                save.file_name,
+                "save_clone_target_exists",
+                "Save clone target already exists",
+                true,
+                path_string(clone_path),
+                "facman saves clone <save> --instance <source-id> --to-instance <new-target-id> --json"
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Clone target already exists: " << path_string(clone_path) << "\n";
+            }
+            return 1;
+        }
         fs::create_directories(clone_path.parent_path());
-        fs::copy_file(save.file_path, clone_path, fs::copy_options::overwrite_existing);
+        std::error_code copy_error;
+        bool copied = fs::copy_file(save.file_path, clone_path, fs::copy_options::none, copy_error);
+        if (!copied || copy_error) {
+            std::cerr << "Failed to copy save clone: " << path_string(clone_path) << "\n";
+            return 1;
+        }
+        std::string result = save_clone_result_json(source, target, save, clone_path, utc_now_iso8601());
         if (has_flag(options.args, "--json")) {
-            std::cout << "{\n";
-            std::cout << "  \"schema\": \"factorio.save_clone.v1\",\n";
-            std::cout << "  \"source_instance_id\": " << quote(source.instance_id) << ",\n";
-            std::cout << "  \"target_instance_id\": " << quote(target.instance_id) << ",\n";
-            std::cout << "  \"save\": " << quote(save.file_name) << ",\n";
-            std::cout << "  \"path\": " << quote(path_string(clone_path)) << "\n";
-            std::cout << "}\n";
+            std::cout << result;
         } else {
             std::cout << "Cloned " << save.file_name << " to " << target.instance_id << "\n";
         }
@@ -2436,8 +2727,43 @@ int command_export(const CliOptions& options)
         std::cerr << "Unknown instance: " << options.args[2] << "\n";
         return 1;
     }
-    std::vector<std::pair<std::string, std::vector<unsigned char>>> files = instance_export_files(instance);
     fs::path output_path = options.args[3];
+    if (fs::exists(output_path)) {
+        std::string result = instance_transfer_refusal_json(
+            "export.instance",
+            instance.instance_id,
+            "instance_export_target_exists",
+            "Instance export target already exists",
+            true,
+            path_string(output_path)
+        );
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cerr << "Instance export target already exists: " << path_string(output_path) << "\n";
+        }
+        return 1;
+    }
+    for (const SaveRef& save : instance_save_files(instance)) {
+        std::string validation_detail;
+        if (!validate_save_zip(save, validation_detail)) {
+            std::string result = instance_transfer_refusal_json(
+                "export.instance",
+                instance.instance_id,
+                "save_malformed",
+                "Save archive is malformed or unsupported",
+                true,
+                save.file_name + ": " + validation_detail
+            );
+            if (has_flag(options.args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Malformed save archive: " << save.file_name << "\n";
+            }
+            return 1;
+        }
+    }
+    std::vector<std::pair<std::string, std::vector<unsigned char>>> files = instance_export_files(instance);
     if (!write_stored_zip(output_path, files)) {
         std::cerr << "Failed to write instance export: " << path_string(output_path) << "\n";
         return 1;
@@ -2464,30 +2790,84 @@ int command_import(const CliOptions& options)
     }
     ensure_workspace(options.workspace);
     fs::path pack_path = options.args[2];
-    if (!fs::is_regular_file(pack_path)) {
-        std::cerr << "Instance pack does not exist: " << path_string(pack_path) << "\n";
+    auto refuse = [&](const std::string& instance_id,
+                      const std::string& code,
+                      const std::string& reason,
+                      bool recoverable,
+                      const std::string& detail) -> int {
+        std::string result = instance_transfer_refusal_json(
+            "import.instance",
+            instance_id,
+            code,
+            reason,
+            recoverable,
+            detail
+        );
+        if (has_flag(options.args, "--json")) {
+            std::cout << result;
+        } else {
+            std::cerr << reason << ": " << detail << "\n";
+        }
         return 1;
+    };
+
+    if (!fs::is_regular_file(pack_path)) {
+        return refuse(
+            "",
+            "instance_import_manifest_invalid",
+            "Instance pack does not exist",
+            true,
+            path_string(pack_path)
+        );
     }
 
     std::vector<ZipEntry> entries;
     std::string error;
     if (!read_stored_zip(pack_path, entries, error)) {
-        std::cerr << "Could not read instance pack: " << error << "\n";
-        return 1;
+        bool unsafe = error == "zip entry path is unsafe";
+        return refuse(
+            "",
+            unsafe ? "unsafe_archive_path" : "instance_import_manifest_invalid",
+            unsafe ? "Instance pack contains an unsafe archive entry" : "Could not read instance pack",
+            !unsafe,
+            error
+        );
+    }
+
+    for (const ZipEntry& entry : entries) {
+        if (!archive_entry_is_safe(entry.name)) {
+            return refuse(
+                "",
+                "unsafe_archive_path",
+                "Instance pack contains an unsafe archive entry",
+                false,
+                entry.name
+            );
+        }
     }
 
     const ZipEntry* manifest_entry = find_zip_entry(entries, "instance.v1.json");
     if (manifest_entry == 0) {
-        std::cerr << "Instance pack is missing instance.v1.json\n";
-        return 1;
+        return refuse(
+            "",
+            "instance_import_manifest_invalid",
+            "Instance pack is missing instance.v1.json",
+            true,
+            path_string(pack_path)
+        );
     }
     std::string manifest_text(manifest_entry->data.begin(), manifest_entry->data.end());
 
     InstanceRef instance;
     instance.instance_id = option_value(options.args, "--id", json_string_value(manifest_text, "instance_id"));
     if (instance.instance_id.empty()) {
-        std::cerr << "Instance pack has no instance id\n";
-        return 1;
+        return refuse(
+            "",
+            "instance_import_manifest_invalid",
+            "Instance pack has no instance id",
+            true,
+            path_string(pack_path)
+        );
     }
     instance.display_name = json_string_value(manifest_text, "display_name");
     instance.install_ref = json_string_value(manifest_text, "install_ref");
@@ -2497,8 +2877,13 @@ int command_import(const CliOptions& options)
     instance.local_data_root = options.workspace / "instances" / instance.instance_id;
 
     if (fs::exists(instance.local_data_root)) {
-        std::cerr << "Instance already exists: " << instance.instance_id << "\n";
-        return 1;
+        return refuse(
+            instance.instance_id,
+            "instance_import_target_exists",
+            "Instance import target already exists",
+            true,
+            path_string(instance.local_data_root)
+        );
     }
 
     for (const ZipEntry& entry : entries) {
@@ -2506,10 +2891,6 @@ int command_import(const CliOptions& options)
             continue;
         }
         fs::path output_path = instance.local_data_root / fs::path(entry.name);
-        if (!archive_entry_is_safe(entry.name)) {
-            std::cerr << "Instance pack contains unsafe path: " << entry.name << "\n";
-            return 1;
-        }
         fs::create_directories(output_path.parent_path());
         std::ofstream out(output_path, std::ios::binary);
         out.write(reinterpret_cast<const char*>(entry.data.data()), static_cast<std::streamsize>(entry.data.size()));

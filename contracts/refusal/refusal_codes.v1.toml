@@ -10,7 +10,14 @@ required_codes = [
   "credential_redacted",
   "setup_authority_required",
   "launch_preflight_failed",
+  "save_not_found",
   "save_locked",
+  "save_malformed",
+  "save_backup_target_exists",
+  "save_clone_target_exists",
+  "instance_export_target_exists",
+  "instance_import_target_exists",
+  "instance_import_manifest_invalid",
   "unsupported_frontend",
   "unsupported_platform",
   "schema_version_unsupported",
@@ -79,6 +86,14 @@ severity = "blocked"
 effect = "workspace_read"
 retryable = true
 message = "The requested save is not available in the selected instance."
+
+[[code]]
+id = "save_not_found"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested save is not available in the selected instance."
+suggested_next_command = "facman saves list --instance <instance-id> --json"
 
 [[code]]
 id = "unsafe_archive_path"
@@ -195,6 +210,49 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = true
 message = "The save is locked or in active use and cannot be mutated safely."
+
+[[code]]
+id = "save_malformed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested save archive is malformed or unsupported."
+suggested_next_command = "facman saves list --instance <instance-id> --json"
+
+[[code]]
+id = "save_backup_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested save backup target already exists."
+
+[[code]]
+id = "save_clone_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested save clone target already exists."
+
+[[code]]
+id = "instance_export_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested instance export target already exists."
+
+[[code]]
+id = "instance_import_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested instance import target already exists."
+
+[[code]]
+id = "instance_import_manifest_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The instance import pack manifest is missing, malformed, or unsupported."
 
 [[code]]
 id = "unsupported_frontend"

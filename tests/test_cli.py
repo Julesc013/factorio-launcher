@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
 import tempfile
 import unittest
@@ -11,10 +12,18 @@ from native_cli import facman_executable, invoke
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
+SAVE_FIXTURES = ROOT / "tests" / "fixtures" / "factorio_saves"
 
 
 def relative_files(root: Path) -> list[str]:
     return sorted(path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file())
+
+
+def tree_snapshot(root: Path) -> dict[str, str]:
+    return {
+        path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(item for item in root.rglob("*") if item.is_file())
+    }
 
 
 class CliTests(unittest.TestCase):
@@ -298,11 +307,15 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(code, 0, stderr)
 
+            fixture_root = SAVE_FIXTURES / "valid_simple_save"
+            fixture_before = tree_snapshot(fixture_root)
             source_save = Path(tmp) / "instances" / "source-world" / "saves" / "starter.zip"
-            source_save.write_bytes(b"fake save zip")
+            shutil.copyfile(fixture_root / "starter.zip", source_save)
+            source_sha1 = hashlib.sha1(source_save.read_bytes()).hexdigest()
+            source_sha256 = hashlib.sha256(source_save.read_bytes()).hexdigest()
             source_config = Path(tmp) / "instances" / "source-world" / "config" / "config.ini"
             source_config.write_text(
-                "[path]\ntoken=super-secret-token\nrcon_password=hunter2\n",
+                "[path]\ntoken=super-secret-token\nservice-token=service-secret\nrcon_password=hunter2\n",
                 encoding="utf-8",
             )
 
@@ -327,8 +340,16 @@ class CliTests(unittest.TestCase):
                 ]
             )
             self.assertEqual(code, 0, stderr)
-            self.assertEqual(Path(json.loads(stdout)["path"]), backup)
-            self.assertEqual(backup.read_bytes(), b"fake save zip")
+            backup_result = json.loads(stdout)
+            self.assertEqual(Path(backup_result["path"]), backup)
+            self.assertEqual(Path(backup_result["destination_path"]), backup)
+            self.assertEqual(backup_result["sha1"], source_sha1)
+            self.assertEqual(backup_result["sha256"], source_sha256)
+            self.assertTrue(backup_result["created_at"].endswith("Z"))
+            self.assertEqual(backup.read_bytes(), source_save.read_bytes())
+            backup_manifest = Path(backup_result["manifest_path"])
+            self.assertTrue(backup_manifest.is_file())
+            self.assertEqual(json.loads(backup_manifest.read_text(encoding="utf-8")), backup_result)
 
             code, stdout, stderr = invoke(
                 [
@@ -347,9 +368,11 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr)
             cloned = json.loads(stdout)
             self.assertEqual(cloned["target_instance_id"], "target-world")
+            self.assertEqual(cloned["sha1"], source_sha1)
+            self.assertEqual(cloned["sha256"], source_sha256)
             self.assertEqual(
                 (Path(tmp) / "instances" / "target-world" / "saves" / "starter.zip").read_bytes(),
-                b"fake save zip",
+                source_save.read_bytes(),
             )
 
             pack = Path(tmp) / "instance.zip"
@@ -365,7 +388,11 @@ class CliTests(unittest.TestCase):
             self.assertNotIn(str(Path(tmp)).encode("utf-8"), pack_bytes)
             self.assertIn(b"[REDACTED]", pack_bytes)
             self.assertNotIn(b"super-secret-token", pack_bytes)
+            self.assertNotIn(b"service-secret", pack_bytes)
             self.assertNotIn(b"hunter2", pack_bytes)
+            with zipfile.ZipFile(pack) as archive:
+                self.assertIn("manifest/export.v1.json", archive.namelist())
+                self.assertIn("saves/starter.zip", archive.namelist())
 
             code, stdout, stderr = invoke(
                 ["--workspace", tmp, "import", "instance", str(pack), "--id", "restored-world", "--json"]
@@ -375,10 +402,107 @@ class CliTests(unittest.TestCase):
             self.assertEqual(imported["schema"], "factorio.instance_import.v1")
             self.assertEqual(imported["instance_id"], "restored-world")
             restored_root = Path(tmp) / "instances" / "restored-world"
-            self.assertEqual((restored_root / "saves" / "starter.zip").read_bytes(), b"fake save zip")
+            self.assertEqual((restored_root / "saves" / "starter.zip").read_bytes(), source_save.read_bytes())
             self.assertIn("$FACMAN_INSTANCE_ROOT", (restored_root / "config" / "config-path.cfg").read_text())
             restored_manifest = json.loads((restored_root / "instance.v1.json").read_text(encoding="utf-8"))
             self.assertEqual(Path(restored_manifest["local_data_root"]), restored_root)
+            self.assertEqual(tree_snapshot(fixture_root), fixture_before)
+
+    def test_save_roundtrip_refusals_are_structured_and_non_mutating(self) -> None:
+        fixtures_before = tree_snapshot(SAVE_FIXTURES)
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Source World", "--install", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Target World", "--install", "fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            source_save = workspace / "instances" / "source-world" / "saves" / "starter.zip"
+            target_save = workspace / "instances" / "target-world" / "saves" / "starter.zip"
+            shutil.copyfile(SAVE_FIXTURES / "valid_simple_save" / "starter.zip", source_save)
+            shutil.copyfile(SAVE_FIXTURES / "existing_target" / "existing-target.zip", target_save)
+            target_before = target_save.read_bytes()
+
+            existing_backup = workspace / "starter.backup.zip"
+            existing_backup.write_bytes(b"existing backup")
+            code, stdout, _stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "saves",
+                    "backup",
+                    "starter",
+                    "--instance",
+                    "source-world",
+                    "--to",
+                    str(existing_backup),
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 1)
+            backup_refusal = json.loads(stdout)
+            self.assertEqual(backup_refusal["refusal"]["code"], "save_backup_target_exists")
+            self.assertEqual(existing_backup.read_bytes(), b"existing backup")
+
+            malformed = workspace / "instances" / "source-world" / "saves" / "broken.zip"
+            shutil.copyfile(SAVE_FIXTURES / "malformed_save" / "broken.zip", malformed)
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "saves", "backup", "broken", "--instance", "source-world", "--json"]
+            )
+            self.assertEqual(code, 1)
+            malformed_refusal = json.loads(stdout)
+            self.assertEqual(malformed_refusal["refusal"]["code"], "save_malformed")
+            self.assertFalse((workspace / "instances" / "source-world" / "backups" / "broken.backup.zip").exists())
+
+            malformed_pack = workspace / "malformed-export.zip"
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "export", "instance", "source-world", str(malformed_pack), "--json"]
+            )
+            self.assertEqual(code, 1)
+            export_refusal = json.loads(stdout)
+            self.assertEqual(export_refusal["refusal"]["code"], "save_malformed")
+            self.assertFalse(malformed_pack.exists())
+
+            code, stdout, _stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "saves",
+                    "clone",
+                    "starter",
+                    "--instance",
+                    "source-world",
+                    "--to-instance",
+                    "target-world",
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 1)
+            clone_refusal = json.loads(stdout)
+            self.assertEqual(clone_refusal["refusal"]["code"], "save_clone_target_exists")
+            self.assertEqual(target_save.read_bytes(), target_before)
+
+            malformed.unlink()
+            pack = workspace / "source-world.zip"
+            code, _stdout, stderr = invoke(["--workspace", tmp, "export", "instance", "source-world", str(pack), "--json"])
+            self.assertEqual(code, 0, stderr)
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "import", "instance", str(pack), "--id", "target-world", "--json"]
+            )
+            self.assertEqual(code, 1)
+            import_refusal = json.loads(stdout)
+            self.assertEqual(import_refusal["refusal"]["code"], "instance_import_target_exists")
+            self.assertEqual(target_save.read_bytes(), target_before)
+
+        self.assertEqual(tree_snapshot(SAVE_FIXTURES), fixtures_before)
 
     def test_mod_portal_commands_refuse_without_network_policy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

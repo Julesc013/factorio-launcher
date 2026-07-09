@@ -1,0 +1,13 @@
+{
+  "schema": "factorio.save_refusal.v1",
+  "command": "saves.backup",
+  "status": "refused",
+  "instance_id": "source-world",
+  "save": "broken.zip",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "save_malformed",
+    "reason": "Save archive is malformed or unsupported",
+    "recoverable": true
+  }
+}

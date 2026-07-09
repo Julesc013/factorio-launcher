@@ -1,0 +1,13 @@
+{
+  "schema": "factorio.save_refusal.v1",
+  "command": "saves.clone",
+  "status": "refused",
+  "instance_id": "target-world",
+  "save": "starter.zip",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "save_clone_target_exists",
+    "reason": "Save clone target already exists",
+    "recoverable": true
+  }
+}

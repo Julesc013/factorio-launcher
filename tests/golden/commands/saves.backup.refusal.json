@@ -4,7 +4,7 @@
   "status": "refused",
   "refusal": {
     "schema": "common.refusal.v1",
-    "code": "unknown_save",
+    "code": "save_not_found",
     "reason": "save is not present in the instance",
     "recoverable": true
   }
