@@ -22,3 +22,9 @@ Ownership gates:
 This keeps the permanent boundary intact: Universal Setup mutates installed
 software state; FacMan interprets Factorio-specific facts and presents setup
 decisions.
+
+The app installation mode is separate from the Factorio install origin. FacMan
+itself may run from a portable, user-installed, or system-installed package, but
+Factorio repair/uninstall authority still depends on whether Universal Setup
+owns the specific Factorio install. See
+[install_distribution_modes.md](install_distribution_modes.md).

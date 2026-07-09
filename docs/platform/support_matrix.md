@@ -9,6 +9,11 @@ Launcher support and Factorio runtime support are separate promises:
 - managed instance support: where FacMan can safely isolate instances
 - upstream support: what Wube currently documents for Factorio
 
+FacMan app mode is also separate from Factorio install origin. Portable,
+user-installed, and system-installed FacMan packages should expose the same
+command graph where platform authority allows it. See
+[../product/install_distribution_modes.md](../product/install_distribution_modes.md).
+
 ## Tiers
 
 | Platform | Support level | Artifact |

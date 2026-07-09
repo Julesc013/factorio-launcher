@@ -86,3 +86,7 @@ signature policy, extraction policy, runtime search path, and license notices.
 
 See [../release/distribution_layout.md](../release/distribution_layout.md) for
 the frontend/helper/library layout expected in each package family.
+
+See [../product/install_distribution_modes.md](../product/install_distribution_modes.md)
+for the portable, user-installed, and system-installed mode contract across
+Windows, macOS, and Linux.
