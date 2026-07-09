@@ -1,0 +1,54 @@
+schema = "facman.support_matrix.v1"
+support_tiers = [
+  "primary",
+  "primary_modern",
+  "legacy_supported",
+  "legacy_best_effort",
+  "compatibility_desktop",
+  "portable",
+]
+
+[[platform]]
+id = "windows_legacy_winforms_x64"
+minimum_os = "windows_7_sp1"
+runtime_floor = ".NET Framework 4.8"
+frontend_family = "winforms"
+compile_proof = "remote_ci"
+runtime_smoke = "command_client"
+package_smoke = "contract_only"
+
+[[platform]]
+id = "macos_legacy_appkit_x64"
+minimum_os = "macos_10_13"
+runtime_floor = "legacy_xcode_appkit"
+frontend_family = "appkit"
+compile_proof = "remote_ci"
+runtime_smoke = "deferred"
+package_smoke = "contract_only"
+
+[[platform]]
+id = "linux_x11_gtk_x64"
+minimum_os = "oldest_supported_x11_base"
+runtime_floor = "gtk3_compatible"
+frontend_family = "gtk"
+compile_proof = "deferred"
+runtime_smoke = "deferred"
+package_smoke = "contract_only"
+
+[[platform]]
+id = "portable_cli_x64"
+minimum_os = "portable_cli_baseline"
+runtime_floor = "native_c11_runtime"
+frontend_family = "cli"
+compile_proof = "native_cmake"
+runtime_smoke = "cli_contract"
+package_smoke = "contract_only"
+
+[[platform]]
+id = "portable_tui_x64"
+minimum_os = "portable_tui_baseline"
+runtime_floor = "native_c11_runtime"
+frontend_family = "tui"
+compile_proof = "native_cmake"
+runtime_smoke = "tui_contract"
+package_smoke = "contract_only"

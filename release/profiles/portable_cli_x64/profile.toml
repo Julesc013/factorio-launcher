@@ -1,0 +1,55 @@
+schema = "facman.release_profile.v1"
+id = "portable_cli_x64"
+lane = "portable_cli"
+target_os = "portable"
+target_arch = "x64"
+minimum_os = "portable_cli_baseline"
+runtime_floor = "native C runtime"
+support_tier = "portable"
+package_types = ["portable_zip", "tarball"]
+install_modes = ["portable", "user", "system"]
+package_manifest = "release/packaging/portable/portable_cli.v1.toml"
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+release_index = "release/index/release_index.v1.toml"
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+bundles_factorio_binaries = false
+credential_storage = false
+
+[frontends]
+cli = "apps/cli"
+
+[entrypoints]
+cli = "facman"
+
+[required_components]
+binaries = ["facman"]
+libraries = []
+contracts = "contracts/schema"
+content = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/portable/portable_cli.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+
+[capabilities]
+setup_mutation = false
+network_download = false
+mod_portal_download = false
+server_execution = false
+devtool_execution = false
+auto_update = false
+
+[unsupported]
+features = [
+  "gui_frontend",
+  "mod_portal_download",
+  "network_download",
+  "setup_mutation",
+  "server_execution",
+  "devtool_execution",
+  "auto_update",
+]
+commands = ["mod_portal.download", "server.execute", "devtools.execute", "setup.apply"]

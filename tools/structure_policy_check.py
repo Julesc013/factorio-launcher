@@ -125,16 +125,22 @@ ALLOWED_FACTORIO_CONTENT_ROOTS = {
 
 ALLOWED_CONTRACT_ROOTS = {"abi", "command", "policy", "result", "refusal", "diagnostic", "schema"}
 ALLOWED_SCHEMA_ROOTS = {"common", "factorio", "release", "ui"}
-ALLOWED_RELEASE_ROOTS = {"packaging", "profiles"}
-ALLOWED_PACKAGING_ROOTS = {"linux", "macos", "portable", "windows"}
+ALLOWED_RELEASE_ROOTS = {"index", "packaging", "profiles"}
+ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
 ALLOWED_RELEASE_PROFILE_ROOTS = {
     "dev",
+    "linux_x11_gtk_x64",
     "linux_wayland_qt",
     "linux_x11_gtk",
+    "macos_legacy_appkit_x64",
     "macos_legacy_appkit",
     "macos_modern_swiftui",
     "portable",
     "portable_cli",
+    "portable_cli_x64",
+    "portable_tui",
+    "portable_tui_x64",
+    "windows_legacy_winforms_x64",
     "windows_legacy_winforms",
     "windows_modern_winui",
 }
@@ -360,6 +366,10 @@ def check_command_graph_spine() -> list[str]:
         ROOT / "release" / "profiles" / "linux_x11_gtk",
         ROOT / "release" / "profiles" / "linux_wayland_qt",
         ROOT / "release" / "profiles" / "portable_cli",
+        ROOT / "release" / "profiles" / "portable_tui_x64",
+        ROOT / "release" / "profiles" / "windows_legacy_winforms_x64",
+        ROOT / "release" / "profiles" / "macos_legacy_appkit_x64",
+        ROOT / "release" / "profiles" / "linux_x11_gtk_x64",
     ]
     return [f"missing command graph spine path {path.relative_to(ROOT)}" for path in required if not path.exists()]
 

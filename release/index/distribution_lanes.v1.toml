@@ -1,0 +1,56 @@
+schema = "facman.distribution_lane.v1"
+
+[[lane]]
+id = "windows_legacy_winforms_x64"
+target_os = "windows"
+target_arch = "x64"
+frontend_family = "winforms"
+package_types = ["portable_zip", "installer", "self_extracting_bootstrapper"]
+install_modes = ["portable", "user", "system"]
+support_tier = "legacy_best_effort"
+setup_mutation = false
+network_download = false
+
+[[lane]]
+id = "macos_legacy_appkit_x64"
+target_os = "macos"
+target_arch = "x64"
+frontend_family = "appkit"
+package_types = ["app_bundle", "dmg"]
+install_modes = ["portable", "user", "system"]
+support_tier = "legacy_supported"
+setup_mutation = false
+network_download = false
+
+[[lane]]
+id = "linux_x11_gtk_x64"
+target_os = "linux"
+target_arch = "x64"
+frontend_family = "gtk"
+package_types = ["appimage", "tarball"]
+install_modes = ["portable", "user", "system"]
+support_tier = "compatibility_desktop"
+setup_mutation = false
+network_download = false
+
+[[lane]]
+id = "portable_cli_x64"
+target_os = "portable"
+target_arch = "x64"
+frontend_family = "cli"
+package_types = ["portable_zip", "tarball"]
+install_modes = ["portable", "user", "system"]
+support_tier = "portable"
+setup_mutation = false
+network_download = false
+
+[[lane]]
+id = "portable_tui_x64"
+target_os = "portable"
+target_arch = "x64"
+frontend_family = "tui"
+package_types = ["portable_zip", "tarball"]
+install_modes = ["portable", "user", "system"]
+support_tier = "portable"
+setup_mutation = false
+network_download = false

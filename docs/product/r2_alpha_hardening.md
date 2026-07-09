@@ -28,6 +28,11 @@ server execution, or GUI-only workflows.
 - Package layout smoke validation expands `base_manifest` inheritance and
   checks relative destinations, entrypoints, duplicate destinations, and
   required contracts/content placement.
+- Distribution contracts define first release profiles for Windows WinForms,
+  macOS AppKit, Linux X11 GTK, portable CLI, and portable TUI lanes.
+- Package manifest validation checks release profiles, support metadata,
+  frontend manifests, install modes, required package paths, license files,
+  forbidden payload markers, and CLI/TUI-only GUI toolkit isolation.
 
 ## Next R2 Work Units
 
@@ -51,8 +56,8 @@ server execution, or GUI-only workflows.
 
 5. `FACMAN-PACKAGE-SKELETON-02`
    - Materialize fixture package layouts without building real installers.
-   - Validate required binaries, libraries, contracts, content, licenses,
-     frontend manifest, package manifest, and support matrix placement.
+   - Turn the contract-backed release profiles into fixture package layouts.
+   - Keep real installers, signing, notarization, and publication deferred.
 
 ## Still Deferred
 

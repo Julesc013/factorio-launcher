@@ -1,0 +1,25 @@
+schema = "facman.package_manifest.v1"
+id = "facman_package_manifest_v1"
+release_profiles = [
+  "release/profiles/windows_legacy_winforms_x64/profile.toml",
+  "release/profiles/macos_legacy_appkit_x64/profile.toml",
+  "release/profiles/linux_x11_gtk_x64/profile.toml",
+  "release/profiles/portable_cli_x64/profile.toml",
+  "release/profiles/portable_tui_x64/profile.toml",
+]
+required_paths = [
+  "contracts/schema",
+  "content/factorio",
+  "LICENSE",
+  "THIRD_PARTY_NOTICES.md",
+  "contracts/command/frontend/frontend.required_commands.v1.toml",
+  "release/index/support_matrix.v1.toml",
+]
+forbidden_payloads = [
+  "factorio.exe",
+  "Factorio.app",
+  "steamapps",
+  "mod_portal_credentials",
+  "password",
+  "token",
+]

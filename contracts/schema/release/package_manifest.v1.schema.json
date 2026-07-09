@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.package_manifest.v1",
+  "title": "FacMan Package Manifest",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "release_profiles",
+    "required_paths",
+    "forbidden_payloads"
+  ],
+  "properties": {
+    "schema": { "const": "facman.package_manifest.v1" },
+    "id": { "type": "string" },
+    "release_profiles": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "required_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "forbidden_payloads": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

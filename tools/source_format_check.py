@@ -48,6 +48,7 @@ REVIEWABLE_REQUIRED_FILES = {
     "tools/frontend_parity_check.py",
     "tools/gui_surface_check.py",
     "tools/package_layout_check.py",
+    "tools/package_manifest_check.py",
     "tools/source_format_check.py",
     "tools/strict_check.py",
 }

@@ -114,7 +114,7 @@ unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execu
 
 [[profile]]
 id = "portable_cli"
-package_kind = "portable_tarball"
+package_kind = "tarball"
 minimum_os = "portable_cli_baseline"
 architecture = "configured_by_track"
 included_executables = ["facman"]
@@ -129,7 +129,7 @@ unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execu
 
 [[profile]]
 id = "portable_tui"
-package_kind = "portable_tarball"
+package_kind = "tarball"
 minimum_os = "portable_tui_baseline"
 architecture = "configured_by_track"
 included_executables = ["facman", "facman-tui"]

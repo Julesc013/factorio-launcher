@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.support_matrix.v1",
+  "title": "FacMan Release Support Matrix",
+  "type": "object",
+  "required": ["schema", "support_tiers", "platforms"],
+  "properties": {
+    "schema": { "const": "facman.support_matrix.v1" },
+    "support_tiers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "platforms": {
+      "type": "array",
+      "items": { "type": "object" },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release_index.v1",
+  "title": "FacMan Release Index",
+  "type": "object",
+  "required": ["schema", "profiles", "package_manifest", "support_matrix"],
+  "properties": {
+    "schema": { "const": "facman.release_index.v1" },
+    "profiles": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "package_manifest": { "type": "string" },
+    "support_matrix": { "type": "string" }
+  },
+  "additionalProperties": true
+}

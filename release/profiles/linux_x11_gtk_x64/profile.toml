@@ -1,0 +1,60 @@
+schema = "facman.release_profile.v1"
+id = "linux_x11_gtk_x64"
+lane = "linux_x11_gtk"
+target_os = "linux"
+target_arch = "x64"
+minimum_os = "oldest_supported_x11_base"
+runtime_floor = "GTK 3 compatible desktop runtime"
+support_tier = "compatibility_desktop"
+package_types = ["appimage", "tarball"]
+install_modes = ["portable", "user", "system"]
+package_manifest = "release/packaging/linux/appimage.v1.toml"
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+release_index = "release/index/release_index.v1.toml"
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+bundles_factorio_binaries = false
+credential_storage = false
+
+[frontends]
+gui = "apps/gui/linux/gtk"
+cli = "apps/cli"
+tui = "apps/tui"
+daemon = "apps/daemon"
+
+[entrypoints]
+gui = "usr/bin/facman-gui"
+cli = "usr/bin/facman"
+tui = "usr/bin/facman-tui"
+daemon = "usr/bin/facmand"
+
+[required_components]
+binaries = ["usr/bin/facman-gui", "usr/bin/facman", "usr/bin/facman-tui", "usr/bin/facmand"]
+libraries = ["usr/lib/libulk.so", "usr/lib/libusk.so", "usr/lib/libflb_factorio.so"]
+contracts = "usr/share/facman/contracts/schema"
+content = "usr/share/facman/content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/linux/appimage.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+
+[capabilities]
+setup_mutation = false
+network_download = false
+mod_portal_download = false
+server_execution = false
+devtool_execution = false
+auto_update = false
+
+[unsupported]
+features = [
+  "mod_portal_download",
+  "network_download",
+  "setup_mutation",
+  "server_execution",
+  "devtool_execution",
+  "auto_update",
+]
+commands = ["mod_portal.download", "server.execute", "devtools.execute", "setup.apply"]

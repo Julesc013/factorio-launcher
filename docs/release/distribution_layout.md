@@ -79,3 +79,9 @@ frontend command surface
 unsupported features
 minimum OS/runtime
 ```
+
+`release/profiles/*/profile.toml` is the lane-level source of truth for that
+accounting. `tools/package_manifest_check.py` cross-checks profile entrypoints
+and required components against the package bundle manifests while
+`tools/package_layout_check.py` rejects forbidden payload markers and GUI
+toolkit requirements in CLI/TUI-only layouts.

@@ -28,6 +28,17 @@ All modes may include the same entrypoint families:
 The package may feel like one product to the user, but each executable remains
 a separate thin frontend over the shared command graph.
 
+The first distribution profiles validate that promise with contract files:
+
+- `windows_legacy_winforms_x64`
+- `macos_legacy_appkit_x64`
+- `linux_x11_gtk_x64`
+- `portable_cli_x64`
+- `portable_tui_x64`
+
+Each profile declares `portable`, `user`, and `system` as supported app modes.
+That means app placement may change, but command graph semantics must not.
+
 ## Factorio Install Origins
 
 FacMan must distinguish the launcher app install from Factorio installs:
@@ -80,6 +91,19 @@ Later Universal Setup lanes may add download providers and package formats:
 
 Mod Portal download behavior remains a later FacMan product feature under the
 Factorio binding. It does not belong in Universal Launcher.
+
+Package contracts now cover these first-class package types:
+
+- `portable_zip`
+- `installer`
+- `app_bundle`
+- `dmg`
+- `appimage`
+- `tarball`
+- `source_archive`
+- `self_extracting_bootstrapper`
+
+The contracts do not claim that all package types are published today.
 
 ## Compatibility Rule
 
