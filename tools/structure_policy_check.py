@@ -10,6 +10,7 @@ ALLOWED_TOP_LEVEL = {
     ".aide.local.example",
     ".agents",
     ".codex",
+    ".gitattributes",
     ".github",
     ".gitignore",
     "AGENTS.md",

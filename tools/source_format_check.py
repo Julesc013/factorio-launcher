@@ -21,6 +21,8 @@ CHECKED_SUFFIXES = {
     ".swift",
     ".toml",
     ".vcxproj",
+    ".yaml",
+    ".yml",
 }
 
 LONG_LINE_LIMIT = 240
@@ -36,6 +38,20 @@ LONG_LINE_ALLOWLIST_FILES = {
     "runtime/factorio/binding/flb_api.c",
 }
 
+MINIFIED_ALLOWLIST_FILES: set[str] = set()
+
+REVIEWABLE_REQUIRED_FILES = {
+    ".github/workflows/ci.yml",
+    ".github/workflows/security.yml",
+    "contracts/command/frontend/frontend.required_commands.v1.toml",
+    "tools/frontend_contract_check.py",
+    "tools/frontend_parity_check.py",
+    "tools/gui_surface_check.py",
+    "tools/package_layout_check.py",
+    "tools/source_format_check.py",
+    "tools/strict_check.py",
+}
+
 
 def main() -> int:
     problems: list[str] = []
@@ -43,19 +59,7 @@ def main() -> int:
         if path.suffix.lower() not in CHECKED_SUFFIXES:
             continue
         rel = path.relative_to(ROOT).as_posix()
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        lines = text.splitlines()
-        size = path.stat().st_size
-        if size > MINIFIED_SIZE_LIMIT and len(lines) < MINIFIED_MIN_LINES:
-            problems.append(
-                f"{rel}: looks minified or collapsed: {size} bytes across {len(lines)} lines"
-            )
-        if not long_lines_allowed(rel):
-            for index, line in enumerate(lines, start=1):
-                if len(line) > LONG_LINE_LIMIT:
-                    problems.append(
-                        f"{rel}:{index}: line is {len(line)} chars; limit is {LONG_LINE_LIMIT}"
-                    )
+        problems.extend(validate_file(path, rel))
 
     if problems:
         for problem in problems:
@@ -79,6 +83,55 @@ def tracked_files() -> list[Path]:
         if path.is_file():
             paths.append(path)
     return paths
+
+
+def validate_file(path: Path, rel: str) -> list[str]:
+    problems: list[str] = []
+    raw = path.read_bytes()
+    text = raw.decode("utf-8", errors="ignore")
+    lines = normalized_lines(text)
+    physical_lines = physical_lf_line_count(text)
+    size = len(raw)
+    if cr_only_line_endings_present(text):
+        problems.append(f"{rel}: uses CR-only line endings; use LF line breaks")
+    if rel in REVIEWABLE_REQUIRED_FILES and physical_lines < MINIFIED_MIN_LINES:
+        problems.append(
+            f"{rel}: required reviewable file has only {physical_lines} physical LF lines"
+        )
+    if (
+        size > MINIFIED_SIZE_LIMIT
+        and physical_lines < MINIFIED_MIN_LINES
+        and not minified_allowed(rel)
+    ):
+        problems.append(
+            f"{rel}: looks minified or collapsed: {size} bytes across {physical_lines} physical LF lines"
+        )
+    if not long_lines_allowed(rel):
+        for index, line in enumerate(lines, start=1):
+            if len(line) > LONG_LINE_LIMIT:
+                problems.append(
+                    f"{rel}:{index}: line is {len(line)} chars; limit is {LONG_LINE_LIMIT}"
+                )
+    return problems
+
+
+def normalized_lines(text: str) -> list[str]:
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return normalized.splitlines()
+
+
+def physical_lf_line_count(text: str) -> int:
+    if not text:
+        return 0
+    return text.count("\n") if text.endswith("\n") else text.count("\n") + 1
+
+
+def cr_only_line_endings_present(text: str) -> bool:
+    return "\r" in text.replace("\r\n", "")
+
+
+def minified_allowed(rel: str) -> bool:
+    return rel in MINIFIED_ALLOWLIST_FILES
 
 
 def long_lines_allowed(rel: str) -> bool:

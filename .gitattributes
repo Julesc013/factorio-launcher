@@ -1,0 +1,16 @@
+*.c text eol=lf
+*.cpp text eol=lf
+*.cs text eol=lf
+*.csproj text eol=lf
+*.h text eol=lf
+*.hpp text eol=lf
+*.m text eol=lf
+*.md text eol=lf
+*.mm text eol=lf
+*.py text eol=lf
+*.sln text eol=lf
+*.swift text eol=lf
+*.toml text eol=lf
+*.vcxproj text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
