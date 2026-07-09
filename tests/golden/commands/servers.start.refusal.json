@@ -1,0 +1,14 @@
+{
+  "schema": "factorio.server_refusal.v1",
+  "command": "servers.start",
+  "operation": "servers.start",
+  "status": "refused",
+  "server_id": "main-server",
+  "instance_id": "server-base",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "execution_not_enabled",
+    "reason": "server process execution is not enabled in this slice",
+    "recoverable": true
+  }
+}

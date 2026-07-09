@@ -12,3 +12,12 @@ May contain:
 - black-box native CLI tests
 
 Must not contain real Factorio binaries, credentials, or user state.
+
+Alpha command-surface goldens are checked with:
+
+```powershell
+py -3 tools/alpha_vertical_slice_check.py
+```
+
+Those goldens are stable contract-shaped examples for the current vertical slice;
+they do not replace end-to-end CLI behavior tests.

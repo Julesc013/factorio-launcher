@@ -1,0 +1,9 @@
+{
+  "schema": "factorio.managed_install_plan.v1",
+  "command": "installs.install-version",
+  "operation": "install-version",
+  "status": "planned",
+  "setup_authority": "universal-setup",
+  "setup_command": "install_local.plan",
+  "mutates_install": false
+}

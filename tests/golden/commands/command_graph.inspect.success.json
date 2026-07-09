@@ -1,0 +1,12 @@
+{
+  "schema": "ulk.command_graph.v1",
+  "command": "command_graph.inspect",
+  "status": "ok",
+  "route": "cli->flb->ulk",
+  "commands": [
+    { "command": "command_graph.inspect" },
+    { "command": "install_refs.list" },
+    { "command": "launch_plan.build" },
+    { "command": "diagnostics.report" }
+  ]
+}

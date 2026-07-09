@@ -1,0 +1,17 @@
+{
+  "schema": "factorio.managed_install_refusal.v1",
+  "command": "installs.repair",
+  "operation": "repair",
+  "status": "refused",
+  "setup_authority": "universal-setup",
+  "setup_command": "policy.inspect",
+  "mutates_install": false,
+  "ownership": "imported",
+  "refusal": {
+    "schema": "usk.refusal.v1",
+    "operation": "repair",
+    "code": "ownership_denied",
+    "reason": "setup may not repair imported installs",
+    "recoverable": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "ulk.diagnostic_report.v1",
+  "command": "diagnostics.report",
+  "status": "ok",
+  "route": "cli->flb->ulk",
+  "report_id": "ulk.diagnostic.minimal",
+  "checks": [
+    { "id": "command_graph", "status": "ok" }
+  ]
+}

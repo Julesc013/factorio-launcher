@@ -14,3 +14,5 @@ Workspace proof tools:
   arguments.
 - `repro_workspace_smoke.py` validates a reproducible three-repo checkout and
   can optionally run the full build/test matrix with `--build`.
+- `alpha_vertical_slice_check.py` validates golden JSON examples for the current
+  FacMan alpha command surface.

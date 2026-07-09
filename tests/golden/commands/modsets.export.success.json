@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.modset_export.v1",
+  "command": "modsets.export",
+  "instance_id": "modded",
+  "status": "ok",
+  "files": 2
+}

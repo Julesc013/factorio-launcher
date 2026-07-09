@@ -1,0 +1,9 @@
+{
+  "schema": "factorio.install_ref.v1",
+  "command": "installs.inspect",
+  "install_id": "fixture",
+  "ownership": "imported",
+  "verification": {
+    "status": "structural"
+  }
+}
