@@ -19,7 +19,7 @@ claiming later product or package readiness.
 | CLI | yes | yes | yes | no | Native CMake and CLI tests cover current behavior. |
 | TUI | scaffolded | yes | no | no | TUI parity is a later frontend milestone. |
 | Daemon | scaffolded | yes | no | no | Daemon transport maturity is later runtime/client work. |
-| WinForms | yes | local Windows yes | command-client smoke pending | no | `FACMAN-WINFORMS-SHELL-01` proves a thin GUI over CLI JSON locally. |
+| WinForms | yes | local Windows yes, remote pending | command-client yes | no | `FACMAN-WINFORMS-SHELL-01` proves a thin GUI over CLI JSON locally. |
 | AppKit | yes | no | no | no | `FACMAN-APPKIT-SHELL-01` is source/static proof until macOS compile CI passes. |
 | WinUI | placeholder | no | no | no | Reserved for a later modern Windows lane. |
 | SwiftUI | placeholder | no | no | no | Reserved for a later modern macOS lane. |
