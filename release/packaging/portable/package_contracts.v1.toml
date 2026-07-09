@@ -1,0 +1,143 @@
+schema = "facman.packaging.contract_catalog.v1"
+
+required_profiles = [
+  "windows_legacy_winforms",
+  "windows_modern_winui",
+  "macos_legacy_appkit",
+  "macos_modern_swiftui",
+  "linux_x11_gtk",
+  "linux_wayland_qt",
+  "portable_cli",
+  "portable_tui",
+]
+
+required_content = [
+  "required_binaries",
+  "required_libraries",
+  "contracts_path",
+  "content_path",
+  "licenses",
+  "frontend_manifest",
+  "package_manifest",
+  "support_matrix",
+]
+
+[[profile]]
+id = "windows_legacy_winforms"
+package_kind = "portable_zip"
+minimum_os = "windows_7_sp1"
+architecture = "x64"
+included_executables = ["FacMan.exe", "facman.exe", "facman-tui.exe", "facmand.exe"]
+included_libraries = ["ulk.dll", "usk.dll", "flb_factorio.dll"]
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/windows/facman_portable.v1.toml"
+support_matrix = "docs/platform/support_matrix.md"
+unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execute"]
+
+[[profile]]
+id = "windows_modern_winui"
+package_kind = "installer_or_portable_zip"
+minimum_os = "windows_10"
+architecture = "x64"
+included_executables = ["FacMan.exe", "facman.exe", "facman-tui.exe", "facmand.exe"]
+included_libraries = ["ulk.dll", "usk.dll", "flb_factorio.dll"]
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/windows/facman_installer.v1.toml"
+support_matrix = "docs/platform/support_matrix.md"
+unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execute"]
+
+[[profile]]
+id = "macos_legacy_appkit"
+package_kind = "app_bundle"
+minimum_os = "macos_10_13"
+architecture = "x86_64"
+included_executables = ["FacMan", "facman", "facman-tui", "facmand"]
+included_libraries = ["libulk.dylib", "libusk.dylib", "libflb_factorio.dylib"]
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/macos/legacy_x86_64.v1.toml"
+support_matrix = "docs/platform/support_matrix.md"
+unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execute"]
+
+[[profile]]
+id = "macos_modern_swiftui"
+package_kind = "app_bundle"
+minimum_os = "macos_11"
+architecture = "universal2"
+included_executables = ["FacMan", "facman", "facman-tui", "facmand"]
+included_libraries = ["libulk.dylib", "libusk.dylib", "libflb_factorio.dylib"]
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/macos/modern_universal.v1.toml"
+support_matrix = "docs/platform/support_matrix.md"
+unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execute"]
+
+[[profile]]
+id = "linux_x11_gtk"
+package_kind = "appimage_or_tarball"
+minimum_os = "oldest_supported_x11_base"
+architecture = "x86_64"
+included_executables = ["FacMan", "facman", "facman-tui", "facmand"]
+included_libraries = ["libulk.so", "libusk.so", "libflb_factorio.so"]
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/linux/gtk.v1.toml"
+support_matrix = "docs/platform/support_matrix.md"
+unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execute"]
+
+[[profile]]
+id = "linux_wayland_qt"
+package_kind = "appimage_or_tarball"
+minimum_os = "modern_wayland_base"
+architecture = "x86_64"
+included_executables = ["FacMan", "facman", "facman-tui", "facmand"]
+included_libraries = ["libulk.so", "libusk.so", "libflb_factorio.so"]
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/linux/qt.v1.toml"
+support_matrix = "docs/platform/support_matrix.md"
+unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execute"]
+
+[[profile]]
+id = "portable_cli"
+package_kind = "portable_tarball"
+minimum_os = "portable_cli_baseline"
+architecture = "configured_by_track"
+included_executables = ["facman"]
+included_libraries = []
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/portable/portable_cli.v1.toml"
+support_matrix = "docs/platform/support_matrix.md"
+unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execute"]
+
+[[profile]]
+id = "portable_tui"
+package_kind = "portable_tarball"
+minimum_os = "portable_tui_baseline"
+architecture = "configured_by_track"
+included_executables = ["facman", "facman-tui"]
+included_libraries = []
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/portable/portable_tui.v1.toml"
+support_matrix = "docs/platform/support_matrix.md"
+unsupported_commands = ["mod_portal.download", "server.execute", "devtools.execute"]

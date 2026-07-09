@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_instance_root.v1.schema.json",
+  "title": "FacMan Factorio Instance Root",
+  "type": "object",
+  "required": ["schema", "instance_id", "install_ref", "required_dirs"],
+  "properties": {
+    "schema": { "const": "facman.factorio.instance_root.v1" },
+    "instance_id": { "type": "string", "minLength": 1 },
+    "install_ref": { "type": "string", "minLength": 1 },
+    "required_dirs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "portable": { "type": "boolean" },
+    "managed_by_setup": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

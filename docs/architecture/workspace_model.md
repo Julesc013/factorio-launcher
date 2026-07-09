@@ -1,14 +1,14 @@
 # Workspace Model
 
-Recommended workspace layout:
+Canonical workspace layout:
 
 ```text
-factorio_workspace/
+workspace/
   workspace.v1.json
 
-  state/
-    install_refs/
-      <install_id>.install-ref.v1.json
+  installs/
+    refs/
+    setup_state_refs/
 
   instances/
     <instance_id>/
@@ -21,33 +21,19 @@ factorio_workspace/
       logs/
       crash/
       locks/
-      exports/
       cache/
 
   profiles/
-    <profile_id>.profile.v1.json
-
   modsets/
-    <modset_id>.modset-lock.v1.json
-
   accounts/
-    account_refs.v1.json
-
   cache/
-    downloads/
-    mods/
-    mod_portal/
-    versions/
-    checksums/
-
   audit/
-    events.log
-    launch_history.log
-    setup_handoff.log
-
   diagnostics/
-    reports/
+  exports/
 ```
 
 No account secrets live in this workspace. Secrets are stored by OS credential
 storage and referenced by ID.
+
+See [../product/workspace_model.md](../product/workspace_model.md) for the
+product-facing backup, export, and portability interpretation of this layout.

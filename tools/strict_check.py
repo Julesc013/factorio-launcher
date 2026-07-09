@@ -23,12 +23,14 @@ from tools import (
     security_policy_check,
     source_format_check,
     structure_policy_check,
+    workspace_contract_check,
 )
 
 
 def main() -> int:
     checks: list[tuple[str, Callable[[], int]]] = [
         ("structure", structure_policy_check.main),
+        ("workspace-contract", workspace_contract_check.main),
         ("schema", schema_validate.main),
         ("security", security_policy_check.main),
         ("source-format", source_format_check.main),

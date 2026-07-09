@@ -61,6 +61,8 @@ def validate_manifest(path: Path) -> list[str]:
 
     if schema == "facman.packaging.bundle_manifest.v1":
         problems.extend(validate_bundle_manifest(path, manifest))
+    if schema == "facman.packaging.contract_catalog.v1":
+        problems.extend(validate_contract_catalog(path, manifest))
     return problems
 
 
@@ -118,6 +120,54 @@ def validate_windows_single_exe_policy() -> list[str]:
         problems.append(f"{path}: extract_root must not use TEMP")
     if "%LOCALAPPDATA%" not in extract_root.upper():
         problems.append(f"{path}: extract_root must use LOCALAPPDATA")
+    return problems
+
+
+def validate_contract_catalog(path: Path, manifest: dict[str, Any]) -> list[str]:
+    problems: list[str] = []
+    required_profiles = manifest.get("required_profiles", [])
+    profiles = manifest.get("profile", [])
+    if not isinstance(required_profiles, list) or not required_profiles:
+        problems.append(f"{path}: required_profiles must be a non-empty array")
+    if not isinstance(profiles, list) or not profiles:
+        problems.append(f"{path}: profile entries must be non-empty")
+        return problems
+
+    seen = {str(profile.get("id", "")) for profile in profiles}
+    for profile_id in sorted(str(item) for item in required_profiles):
+        if profile_id not in seen:
+            problems.append(f"{path}: missing package profile {profile_id}")
+
+    required_fields = {
+        "id",
+        "package_kind",
+        "minimum_os",
+        "architecture",
+        "included_executables",
+        "included_libraries",
+        "contracts_path",
+        "content_path",
+        "licenses",
+        "frontend_manifest",
+        "package_manifest",
+        "support_matrix",
+        "unsupported_commands",
+    }
+    for profile in profiles:
+        profile_id = profile.get("id", "<unnamed>")
+        missing = required_fields - set(profile)
+        if missing:
+            problems.append(f"{path}: profile {profile_id} missing {sorted(missing)}")
+            continue
+        for path_key in ["contracts_path", "content_path", "frontend_manifest", "package_manifest", "support_matrix"]:
+            referenced = ROOT / str(profile[path_key])
+            if not referenced.exists():
+                problems.append(f"{path}: profile {profile_id} missing {path_key}: {profile[path_key]}")
+        for license_path in profile["licenses"]:
+            if not (ROOT / str(license_path)).is_file():
+                problems.append(f"{path}: profile {profile_id} missing license {license_path}")
+        if not isinstance(profile["unsupported_commands"], list):
+            problems.append(f"{path}: profile {profile_id} unsupported_commands must be an array")
     return problems
 
 

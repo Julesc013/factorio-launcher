@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_workspace.v1.schema.json",
+  "title": "FacMan Factorio Workspace",
+  "type": "object",
+  "required": ["schema", "workspace_id", "layout_version", "roots"],
+  "properties": {
+    "schema": { "const": "facman.factorio.workspace.v1" },
+    "workspace_id": { "type": "string", "minLength": 1 },
+    "layout_version": { "const": 1 },
+    "created_by": { "type": "string" },
+    "roots": {
+      "type": "object",
+      "required": [
+        "installs",
+        "instances",
+        "profiles",
+        "modsets",
+        "accounts",
+        "cache",
+        "audit",
+        "diagnostics",
+        "exports"
+      ],
+      "properties": {
+        "installs": { "type": "string" },
+        "instances": { "type": "string" },
+        "profiles": { "type": "string" },
+        "modsets": { "type": "string" },
+        "accounts": { "type": "string" },
+        "cache": { "type": "string" },
+        "audit": { "type": "string" },
+        "diagnostics": { "type": "string" },
+        "exports": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

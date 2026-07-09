@@ -1,0 +1,57 @@
+schema = "facman.packaging.bundle_manifest.v1"
+artifact_id = "FacMan-<version>-portable-tui"
+platform = "portable"
+support_level = "portable"
+package_type = "portable_tarball"
+architecture = "configured_by_track"
+python_runtime = false
+bundles_factorio_binaries = false
+entrypoint = "facman-tui"
+
+[[components]]
+name = "console_cli"
+source_target = "facman_cli"
+destination = "facman"
+required_platform = "all"
+architecture = "configured_by_track"
+hash = "BUILD_TIME"
+signature_policy = "manifest_hash"
+extraction_policy = "none"
+runtime_search_path = "."
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "console_tui"
+source_target = "facman_tui"
+destination = "facman-tui"
+required_platform = "all"
+architecture = "configured_by_track"
+hash = "BUILD_TIME"
+signature_policy = "manifest_hash"
+extraction_policy = "none"
+runtime_search_path = "."
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "contracts_schema"
+source_target = "contracts/schema"
+destination = "contracts/schema/"
+required_platform = "all"
+architecture = "any"
+hash = "BUILD_TIME"
+signature_policy = "manifest_hash"
+extraction_policy = "none"
+runtime_search_path = "contracts/schema"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "factorio_content"
+source_target = "content/factorio"
+destination = "content/factorio/"
+required_platform = "all"
+architecture = "any"
+hash = "BUILD_TIME"
+signature_policy = "manifest_hash"
+extraction_policy = "none"
+runtime_search_path = "content/factorio"
+license_notice = "THIRD_PARTY_NOTICES.md"
