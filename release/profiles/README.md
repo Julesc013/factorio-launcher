@@ -14,6 +14,10 @@ The first contract-backed package lanes are:
 - `portable_cli_x64`
 - `portable_tui_x64`
 
+The full release-profile catalog lives in `profile_catalog.v1.toml`. Planned
+profiles may be cataloged before they become contract-backed package profiles;
+only contract-backed profiles appear in `release/index/release_index.v1.toml`.
+
 ## Release Readiness Ladder
 
 ```text
