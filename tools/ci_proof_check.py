@@ -63,6 +63,9 @@ def validate() -> list[str]:
         problems.append("release workflow must remain an unpublished policy gate")
     if not (ROOT / "tools" / "required_package_proof.py").is_file():
         problems.append("required Windows package proof runner is missing")
+    cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+    if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
+        problems.append("native static libraries must remain position-independent for shared ELF links")
     return problems
 
 
