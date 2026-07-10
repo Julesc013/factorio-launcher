@@ -61,5 +61,27 @@ All discovered refs report `safe_actions.repair = false` and
 - imported/adoptable
 - invalid
 
-The fixture proof does not parse real Steam `libraryfolders.vdf`, Windows
-registry keys, macOS Spotlight records, or Linux package-manager databases.
+## Windows Read-Only Providers
+
+`FACMAN-WINDOWS-DISCOVERY-01` adds real read-only Windows providers without
+registration or setup authority:
+
+- Steam roots from conservative defaults and Valve's user/machine registry
+  values.
+- Steam libraries from bounded `steamapps/libraryfolders.vdf` parsing,
+  including current `path` records and the legacy numeric-key form.
+- Default and explicitly injected standalone installation roots.
+- Stable, case-insensitive path de-duplication and deterministic output order.
+- Refusal to cross a symlink, junction, or reparse point in any discovered
+  candidate path.
+
+`FACMAN_STEAM_ROOTS` and `FACMAN_STANDALONE_ROOTS` are semicolon-separated
+provider overrides used for deterministic tests and unusual local layouts.
+`FACMAN_DISCOVERY_DISABLE_DEFAULTS=1` disables registry and standard-path
+probing while retaining explicit provider overrides. These are discovery
+inputs only; they never authorize writes.
+
+The provider proof covers malformed VDF metadata, duplicate libraries,
+Unicode paths, missing executables, foreign ownership, zero workspace writes,
+stable ordering, and junction refusal. It does not yet parse macOS Spotlight
+records or Linux package-manager databases.

@@ -120,6 +120,9 @@ target_include_directories(flb_factorio_launch_static PUBLIC runtime/factorio/la
 add_library(flb_factorio_discovery_static STATIC runtime/factorio/discovery/flb_factorio_discovery.cpp)
 target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_discovery_static PUBLIC runtime/factorio/discovery)
+if(WIN32)
+  target_link_libraries(flb_factorio_discovery_static PUBLIC Advapi32)
+endif()
 
 add_library(flb_factorio_diagnostics_static STATIC runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp)
 target_compile_features(flb_factorio_diagnostics_static PUBLIC cxx_std_17)
