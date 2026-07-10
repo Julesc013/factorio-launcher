@@ -38,9 +38,9 @@ fs::path normalized_absolute(const fs::path& path)
     return error ? path.lexically_normal() : absolute.lexically_normal();
 }
 
-std::wstring comparison_path(const fs::path& path)
+fs::path::string_type comparison_path(const fs::path& path)
 {
-    std::wstring value = normalized_absolute(path).native();
+    fs::path::string_type value = normalized_absolute(path).native();
 #if defined(_WIN32)
     std::transform(value.begin(), value.end(), value.begin(), [](wchar_t ch) {
         return static_cast<wchar_t>(std::towlower(ch));
