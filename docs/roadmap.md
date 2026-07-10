@@ -154,8 +154,8 @@ R2 - Local power-user alpha
   save roundtrip and diagnostic redaction proofs
 
 R3 - Safe beta
-  built package artifacts
-  package runtime smoke
+  unsigned built package artifacts for portable CLI/TUI and Windows legacy WinForms
+  package runtime smoke from package roots with external workspaces
   diagnostic UX polish
 
 R4 - Managed install alpha

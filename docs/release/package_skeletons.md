@@ -49,11 +49,11 @@ Current package status:
 
 | Package lane | contract-only | skeleton-layout | built-artifact | runtime-smoke | signed-published |
 | --- | --- | --- | --- | --- | --- |
-| Windows WinForms | yes | yes | no | no | no |
+| Windows WinForms | yes | yes | local Windows proof | local Windows proof | no |
 | macOS AppKit | yes | yes | no | no | no |
 | Linux GTK | yes | yes | no | no | no |
-| Portable CLI | yes | yes | no | no | no |
-| Portable TUI | yes | yes | no | no | no |
+| Portable CLI | yes | yes | yes | yes | no |
+| Portable TUI | yes | yes | yes | yes | no |
 
 ## Non-Goals
 
