@@ -69,6 +69,38 @@ static int run_command(
     return 0;
 }
 
+static int run_invalid_payload(
+    flb_context* context,
+    const char* command_name,
+    const char* payload,
+    const char* required_detail
+)
+{
+    ulk_command_request_v1 request;
+    ulk_command_response_v1 response;
+    int status;
+
+    memset(&request, 0, sizeof(request));
+    memset(&response, 0, sizeof(response));
+    response.struct_size = sizeof(response);
+    request.struct_size = sizeof(request);
+    request.command_name = view_from_cstr(command_name);
+    request.json_payload = view_from_cstr(payload);
+    request.dry_run = 1;
+
+    status = fl_command_client_execute_cabi_v1(context, &request, &response);
+    if (status == ULK_STATUS_OK || response.status == ULK_STATUS_OK) {
+        return 1;
+    }
+    if (!contains(response.json_payload, "\"code\":\"invalid_request\"")) {
+        return 2;
+    }
+    if (!contains(response.json_payload, required_detail)) {
+        return 3;
+    }
+    return 0;
+}
+
 int main(void)
 {
     flb_context* context = 0;
@@ -104,6 +136,34 @@ int main(void)
     }
     if (run_command(context, "diagnostics.report", 1, "\"report_id\":\"ulk.diagnostic.minimal\"") != 0) {
         return 25;
+    }
+    if (run_invalid_payload(
+            context,
+            "install_refs.import",
+            "{\"path\":\"first\",\"path\":\"second\",\"install_id\":\"fixture\"}",
+            "duplicate field") != 0) {
+        return 26;
+    }
+    if (run_invalid_payload(
+            context,
+            "install_refs.import",
+            "{\"path\":[],\"install_id\":\"fixture\"}",
+            "field must be a string") != 0) {
+        return 27;
+    }
+    if (run_invalid_payload(
+            context,
+            "instance.create",
+            "{\"display_name\":\"Missing IDs\"}",
+            "missing non-empty string field") != 0) {
+        return 28;
+    }
+    if (run_invalid_payload(
+            context,
+            "launch_plan.build",
+            "{\"instance_id\":\"fixture\"} trailing",
+            "trailing data") != 0) {
+        return 29;
     }
 
     memset(&request, 0, sizeof(request));
