@@ -12,7 +12,7 @@ to the pinned repository layout before any public branch sync.
 | --- | --- | --- |
 | `universal-launcher` | `main` | `eeac9ee2e6b90c393b8a18a562526c27889a1510` |
 | `universal-setup` | `main` | `a777af1f930bded3e00ec27c769b841d3bf344b5` |
-| `factorio-launcher` | `task/facman-r3-public-sync-closeout` | `2c2cce644b674d12227a194a77bce5a667fed721` (baseline before this closeout commit) |
+| `factorio-launcher` | `dev` | `cb6a0e3f197910fee5549020b6a5107ba354478d` |
 
 ## Structural Gates Added
 
