@@ -40,9 +40,9 @@ R3.2 authoritative registry and instance-isolation foundation.
 
 ## Current Goal
 
-Confirm the revision-pinned R3.2 task-branch CI matrix. Only after it is green,
-begin read-only Universal Setup package verification and audit. Keep
-`run.execute` quarantined and do not schedule Windows discovery again.
+Confirm the USK package-verifier integration CI matrix. Only after it is green,
+begin bounded diagnostic traversal and redaction. Keep `run.execute` and general
+diagnostic export quarantined, and do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 

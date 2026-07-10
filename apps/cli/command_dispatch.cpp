@@ -374,7 +374,9 @@ std::string setup_view_to_string(usk_string_view view)
     return std::string(view.data, view.data + view.size);
 }
 
-std::string setup_command_response_json(const char* command_name)
+std::string setup_command_response_json(
+    const char* command_name,
+    const std::string& json_payload = "{}")
 {
     usk_context* context = 0;
     usk_command_request_v1 request;
@@ -390,7 +392,8 @@ std::string setup_command_response_json(const char* command_name)
 
     request.struct_size = sizeof(request);
     request.command_name = setup_view_from_cstr(command_name);
-    request.json_payload = setup_view_from_cstr("{}");
+    request.json_payload.data = json_payload.data();
+    request.json_payload.size = static_cast<usk_size>(json_payload.size());
     request.dry_run = 1;
     (void)usk_command_execute_v1(context, &request, &response);
     std::string payload = setup_view_to_string(response.json_payload);
@@ -400,6 +403,33 @@ std::string setup_command_response_json(const char* command_name)
         return "{\"schema\":\"usk.command_response.v1\",\"status\":\"error\",\"payload\":null,\"error\":{\"code\":\"empty_response\",\"message\":\"universal setup returned an empty response\"}}";
     }
     return payload;
+}
+
+std::size_t json_size_value(const std::string& text, const std::string& key)
+{
+    const std::string marker = "\"" + key + "\"";
+    std::size_t position = text.find(marker);
+    if (position == std::string::npos) return 0;
+    position = text.find(':', position + marker.size());
+    if (position == std::string::npos) return 0;
+    ++position;
+    while (position < text.size() && std::isspace(static_cast<unsigned char>(text[position]))) ++position;
+    std::size_t value = 0;
+    while (position < text.size() && std::isdigit(static_cast<unsigned char>(text[position]))) {
+        value = value * 10u + static_cast<std::size_t>(text[position] - '0');
+        ++position;
+    }
+    return value;
+}
+
+std::string toml_string_value(const std::string& text, const std::string& key)
+{
+    const std::string marker = key + " = \"";
+    const std::size_t position = text.find(marker);
+    if (position == std::string::npos) return "";
+    const std::size_t first = position + marker.size();
+    const std::size_t last = text.find('"', first);
+    return last == std::string::npos ? "" : text.substr(first, last - first);
 }
 
 bool has_flag(const std::vector<std::string>& args, const std::string& flag)
@@ -2162,15 +2192,57 @@ int command_package(const std::vector<std::string>& args)
         std::cerr << "Usage: facman package verify [--json]\n";
         return 2;
     }
-    char detail[512] = {};
-    size_t files_verified = 0;
-    const bool verified = fl_runtime_verify_package(detail, sizeof(detail), &files_verified) != 0;
+    const fs::path package_root(fl_runtime_package_root());
+    const fs::path manifest_path = package_root / "manifest" / "package.v1.toml";
+    const std::string manifest = read_text(manifest_path);
+    const std::string profile_id = toml_string_value(manifest, "profile_id");
+    struct ExpectedPackage {
+        const char* id;
+        const char* target_os;
+        const char* target_arch;
+        const char* linkage;
+    };
+    static const ExpectedPackage expected_packages[] = {
+        {"windows_portable_cli_x64", "windows", "x64", "static_first"},
+        {"windows_legacy_winforms_x64", "windows", "x64", "compatibility_bundle"},
+        {"portable_cli_x64", "portable", "x64", "static_first_with_reference_components"},
+        {"portable_tui_x64", "portable", "x64", "static_first_with_reference_components"},
+    };
+    const ExpectedPackage* expected = nullptr;
+    for (const ExpectedPackage& candidate : expected_packages) {
+        if (profile_id == candidate.id) expected = &candidate;
+    }
+    std::string setup_response;
+    if (expected != nullptr) {
+        std::ostringstream request;
+        request << "{\"schema\":\"usk.package_verify_request.v1\",";
+        request << "\"package_root\":" << quote(path_string(package_root)) << ",";
+        request << "\"expected_target_os\":" << quote(expected->target_os) << ",";
+        request << "\"expected_target_arch\":" << quote(expected->target_arch) << ",";
+        request << "\"expected_linkage_model\":" << quote(expected->linkage) << "}";
+        setup_response = setup_command_response_json("package.verify", request.str());
+    } else {
+        setup_response = "unknown built package profile";
+    }
+    const std::string setup_payload = json_object_field(setup_response, "payload");
+    const std::string integrity = json_string_value(setup_payload, "integrity");
+    const std::string compatibility = json_string_value(setup_payload, "compatibility");
+    const std::string completeness = json_string_value(setup_payload, "completeness");
+    const std::string target_match = json_string_value(setup_payload, "target_match");
+    const std::string authenticity = json_string_value(setup_payload, "authenticity");
+    const size_t files_verified = json_size_value(setup_payload, "files_verified");
+    const bool verified = integrity == "pass" && compatibility == "pass" &&
+        completeness == "pass" && target_match == "pass";
+    const std::string detail = verified
+        ? "verified by Universal Setup; publisher authenticity is not proven"
+        : setup_response;
     if (has_flag(args, "--json")) {
         std::cout << "{\n";
         std::cout << "  \"schema\": \"facman.package_verify.v1\",\n";
         std::cout << "  \"status\": \"" << (verified ? "pass" : "error") << "\",\n";
         std::cout << "  \"integrity\": \"" << (verified ? "sha256_consistent" : "failed") << "\",\n";
-        std::cout << "  \"authenticity\": \"not_proven_unsigned\",\n";
+        std::cout << "  \"authenticity\": "
+                  << quote(authenticity.empty() ? "not_proven_unsigned" : authenticity) << ",\n";
         std::cout << "  \"files_verified\": " << files_verified << ",\n";
         std::cout << "  \"detail\": " << quote(detail) << "\n";
         std::cout << "}\n";
