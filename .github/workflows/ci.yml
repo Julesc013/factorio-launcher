@@ -88,7 +88,7 @@ jobs:
           python tools/package_runtime_smoke.py --root build/packages/windows_legacy_winforms_x64
 
   appkit-compile:
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v6
       - name: Compile AppKit shell sources

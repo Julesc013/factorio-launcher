@@ -7,7 +7,7 @@ CI mirrors the bounded proof rather than implying release readiness.
 - `windows-native-package` builds the native core on Windows, runs CTest and
   the Python suite, compiles WinForms, and runs the selected
   `windows_portable_cli_x64` package proof through a zero-skip wrapper.
-- `appkit-compile` remains an explicit `macos-13` legacy shell compile lane. It
+- `appkit-compile` remains an explicit `macos-15-intel` legacy shell compile lane. It
   is not a macOS native-core or package claim.
 - `security-policy` describes the current policy-only security check honestly.
 - `release-policy` validates unpublished release contracts and does not invoke
