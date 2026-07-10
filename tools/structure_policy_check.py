@@ -23,6 +23,7 @@ ALLOWED_TOP_LEVEL = {
     "SECURITY.md",
     "THIRD_PARTY_NOTICES.md",
     "apps",
+    "archive",
     "cmake",
     "content",
     "contracts",
@@ -34,6 +35,27 @@ ALLOWED_TOP_LEVEL = {
     "runtime",
     "tests",
     "tools",
+}
+
+# This is the executable source of truth for the AIDE target root-authority
+# policy.  Roots omitted from this table are repository metadata, not product
+# ownership roots.  A false value means the root is deliberately
+# non-authoritative (for example explanatory docs or quarantined history).
+AIDE_ROOT_AUTHORITY = {
+    ".aide": False,
+    "apps": True,
+    "archive": False,
+    "cmake": True,
+    "content": True,
+    "contracts": True,
+    "docs": False,
+    "examples": False,
+    "external": True,
+    "include": True,
+    "release": True,
+    "runtime": True,
+    "tests": True,
+    "tools": True,
 }
 
 IGNORED_TOP_LEVEL = {
