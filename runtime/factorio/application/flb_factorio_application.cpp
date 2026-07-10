@@ -24,7 +24,9 @@ enum class CommandId {
     install_import,
     install_inspect,
     instance_create,
-    launch_plan_preview,
+    launch_plan_build,
+    launch_plan_preflight,
+    run_preview,
     unsupported,
 };
 
@@ -66,9 +68,15 @@ struct ApplicationRequest {
     bool dry_run = true;
 };
 
+using ApplicationOutput = std::variant<
+    std::monostate,
+    std::string,
+    launch::LaunchPlanResult,
+    launch::LaunchPreflightResult>;
+
 struct ApplicationResult {
     int status = ULK_STATUS_OK;
-    std::string payload;
+    ApplicationOutput output;
     std::string error_code;
     std::string error_message;
 };
@@ -484,7 +492,9 @@ bool decode_request(
         request.payload = std::move(typed);
         return true;
     }
-    case CommandId::launch_plan_preview: {
+    case CommandId::launch_plan_build:
+    case CommandId::launch_plan_preflight:
+    case CommandId::run_preview: {
         if (!validate_fields(payload, {"instance_id"}, {}, detail)) return false;
         BuildLaunchPlanRequest typed;
         if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
@@ -504,7 +514,9 @@ CommandId command_id(ulk_string_view command)
     if (value == "install_refs.import") return CommandId::install_import;
     if (value == "install_refs.inspect") return CommandId::install_inspect;
     if (value == "instance.create") return CommandId::instance_create;
-    if (value == "launch_plan.build") return CommandId::launch_plan_preview;
+    if (value == "launch_plan.build") return CommandId::launch_plan_build;
+    if (value == "launch_plan.preflight") return CommandId::launch_plan_preflight;
+    if (value == "run.preview") return CommandId::run_preview;
     return CommandId::unsupported;
 }
 
@@ -529,7 +541,7 @@ ApplicationResult refused(const std::string& payload, const std::string& code, c
 {
     ApplicationResult result;
     result.status = ULK_STATUS_ERROR;
-    result.payload = payload;
+    result.output = payload;
     result.error_code = code;
     result.error_message = message;
     return result;
@@ -611,7 +623,17 @@ private:
         case CommandId::install_import: return import_install(std::get<ImportInstallRefRequest>(request.payload));
         case CommandId::install_inspect: return inspect_install(std::get<InspectInstallRefRequest>(request.payload));
         case CommandId::instance_create: return create_instance(std::get<CreateInstanceRequest>(request.payload));
-        case CommandId::launch_plan_preview: return preview_launch(std::get<BuildLaunchPlanRequest>(request.payload));
+        case CommandId::launch_plan_build:
+            return preview_launch(
+                std::get<BuildLaunchPlanRequest>(request.payload),
+                "launch_plan.build");
+        case CommandId::run_preview:
+            return preview_launch(
+                std::get<BuildLaunchPlanRequest>(request.payload),
+                "run.preview");
+        case CommandId::launch_plan_preflight:
+            return preflight_launch_plan(
+                std::get<BuildLaunchPlanRequest>(request.payload));
         default:
             return refused(
                 safety_refusal("command.execute", "invalid_request", "Unsupported application command", "", false),
@@ -627,7 +649,7 @@ private:
             roots.push_back(value);
         }
         ApplicationResult result;
-        result.payload = discovery::discovery_report_json(discovery::scan_install_candidates(roots));
+        result.output = discovery::discovery_report_json(discovery::scan_install_candidates(roots));
         return result;
     }
 
@@ -666,7 +688,7 @@ private:
                 error);
         }
         ApplicationResult result;
-        result.payload = text;
+        result.output = text;
         return result;
     }
 
@@ -707,7 +729,7 @@ private:
                 "Install reference is not registered");
         }
         ApplicationResult result;
-        result.payload = discovery::install_ref_json(install);
+        result.output = discovery::install_ref_json(install);
         return result;
     }
 
@@ -788,11 +810,13 @@ private:
         std::error_code marker_error;
         fs::remove(target.path / ".facman-staging.v1", marker_error);
         ApplicationResult result;
-        result.payload = instance_json(instance);
+        result.output = instance_json(instance);
         return result;
     }
 
-    ApplicationResult preview_launch(const BuildLaunchPlanRequest& request)
+    ApplicationResult preview_launch(
+        const BuildLaunchPlanRequest& request,
+        const std::string& command)
     {
         const std::string& id = request.instance_id;
         InstanceRecord instance;
@@ -818,7 +842,40 @@ private:
         install_ref.executable = install.executable;
         install_ref.ownership = install.ownership;
         ApplicationResult result;
-        result.payload = launch::build_launch_plan_json(instance_ref, install_ref);
+        result.output = launch::build_launch_plan(instance_ref, install_ref, command);
+        return result;
+    }
+
+    ApplicationResult preflight_launch_plan(const BuildLaunchPlanRequest& request)
+    {
+        const std::string& id = request.instance_id;
+        InstanceRecord instance;
+        if (!load_instance(id, instance)) {
+            return refused(
+                safety_refusal("launch_plan.preflight", "unknown_instance", "Instance is not registered", id, true),
+                "unknown_instance",
+                "Instance is not registered");
+        }
+        discovery::InstallRef install;
+        if (!load_install(instance.install_ref, install)) {
+            return refused(
+                safety_refusal("launch_plan.preflight", "unknown_install", "Install reference is not registered", instance.install_ref, true),
+                "unknown_install",
+                "Install reference is not registered");
+        }
+        launch::InstanceLaunchRef instance_ref;
+        instance_ref.instance_id = instance.instance_id;
+        instance_ref.profile_id = instance.profile;
+        instance_ref.local_data_root = instance.local_data_root;
+        launch::InstallLaunchRef install_ref;
+        install_ref.root = install.root;
+        install_ref.executable = install.executable;
+        install_ref.ownership = install.ownership;
+        ApplicationResult result;
+        result.output = launch::preflight_launch(
+            instance_ref,
+            install_ref,
+            "launch_plan.preflight");
         return result;
     }
 
@@ -851,12 +908,27 @@ private:
         }
     }
 
+    std::string output_json(const ApplicationOutput& output)
+    {
+        if (std::holds_alternative<std::string>(output)) {
+            return std::get<std::string>(output);
+        }
+        if (std::holds_alternative<launch::LaunchPlanResult>(output)) {
+            return launch::launch_plan_json(std::get<launch::LaunchPlanResult>(output));
+        }
+        if (std::holds_alternative<launch::LaunchPreflightResult>(output)) {
+            return launch::launch_preflight_json(std::get<launch::LaunchPreflightResult>(output));
+        }
+        return "";
+    }
+
     std::string envelope(const ApplicationResult& result)
     {
+        std::string payload = output_json(result.output);
         std::ostringstream out;
         out << "{\"schema\":\"ulk.command_response.v1\",\"status\":";
         out << quote(result.status == ULK_STATUS_OK ? "ok" : "refused");
-        out << ",\"payload\":" << (result.payload.empty() ? "null" : result.payload) << ",\"error\":";
+        out << ",\"payload\":" << (payload.empty() ? "null" : payload) << ",\"error\":";
         if (result.error_code.empty()) {
             out << "null";
         } else {

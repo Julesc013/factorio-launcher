@@ -28,13 +28,15 @@ R3.2 authoritative registry and instance-isolation foundation.
   Unicode and long paths, malformed metadata, and junction refusal.
 - The public C ABI is experimental. Its current proof is a correctness floor,
   not a stable third-party compatibility promise.
+- Universal Launcher introspection is generated from retained runtime
+  descriptors, and canonical `run.preview` plus `launch_plan.preflight` route
+  through the registered Factorio application handler into typed results.
 
 ## Current Goal
 
-Make `command_graph.inspect` a projection of the registry that actually
-dispatches commands, migrate run preview through that route, and prove the
-effective per-instance Factorio configuration and run-lock behavior with a
-controlled process-boundary probe. Do not schedule Windows discovery again.
+Prove the effective per-instance Factorio configuration and run-lock behavior
+with a controlled process-boundary probe. Keep `run.execute` quarantined and do
+not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 

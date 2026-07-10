@@ -91,7 +91,7 @@ namespace FacMan.WinForms
                 "instances.list",
                 "Instances",
                 "List Instances",
-                "instances.list",
+                "instance.list",
                 "List isolated instances from the backend workspace.",
                 NoInputs(),
                 delegate { return Args("instances", "list", "--json"); }));
@@ -112,12 +112,23 @@ namespace FacMan.WinForms
                 "launch_plan.build",
                 "Launch Plan",
                 "Build Launch Plan",
-                "launch.plan",
+                "launch_plan.build",
                 "Build a dry-run launch plan through the backend.",
                 Inputs(Required("instanceId", "Instance id")),
                 delegate(IDictionary<string, string> inputs)
                 {
                     return Args("launch-plan", Require(inputs, "instanceId"), "--json");
+                }));
+            commands.Add(Implemented(
+                "launch_plan.preflight",
+                "Launch Plan",
+                "Preflight Launch",
+                "launch_plan.preflight",
+                "Validate the routed launch plan without starting a process.",
+                Inputs(Required("instanceId", "Instance id")),
+                delegate(IDictionary<string, string> inputs)
+                {
+                    return Args("launch-plan", Require(inputs, "instanceId"), "--preflight", "--json");
                 }));
             commands.Add(Implemented(
                 "run.preview",
@@ -134,7 +145,7 @@ namespace FacMan.WinForms
                 "diagnostics.export",
                 "Diagnostics",
                 "Export Diagnostics",
-                "diagnostics.report",
+                "diagnostics.run",
                 "Export a diagnostics report from the shared backend.",
                 NoInputs(),
                 delegate { return Args("diagnostics", "report", "--json"); }));

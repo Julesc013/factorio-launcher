@@ -82,7 +82,7 @@ def validate_profile_text(text: str) -> list[str]:
     required = [
         "phase: r3.2-registry-and-isolation-foundation",
         "Windows read-only discovery is",
-        "implemented and must not be scheduled again",
+        "must not\n    be scheduled again",
         "C-compatible experimental ABI correctness floor",
         "authoritative_command_slice:",
         "install_refs.scan",
@@ -126,7 +126,7 @@ def validate_project_state_text(text: str) -> list[str]:
         "Windows x64 static-first package proof",
         "Windows read-only discovery is implemented",
         "public C ABI is experimental",
-        "Do not schedule Windows discovery again",
+        "not schedule Windows discovery again",
         "release/index/workspace_lock.v1.toml",
     ]
     for anchor in required:
@@ -163,7 +163,8 @@ def validate_roadmap_text(text: str) -> list[str]:
 def validate_claim_ledger_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "`command_graph.inspect` is still a duplicated static projection",
+        "Command registry introspection matches dispatch",
+        "Run preview uses the authoritative route",
         "Experimental public C ABI has a correctness floor",
         "stable third-party compatibility",
         "Windows install discovery is read-only",
@@ -173,6 +174,8 @@ def validate_claim_ledger_text(text: str) -> list[str]:
             problems.append(f"claim ledger is missing current-truth anchor {anchor!r}")
     if "| Public C ABI is stable |" in text:
         problems.append("claim ledger promotes the experimental ABI to stable")
+    if "command_graph.inspect` is still a duplicated static projection" in text:
+        problems.append("claim ledger still reports corrected registry introspection drift")
     return problems
 
 

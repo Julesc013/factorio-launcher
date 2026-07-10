@@ -116,11 +116,12 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
         FacManImplemented(@"installs.scan", @"installs.scan", @"Installs", @"Scan Installs", @"Ask the backend to scan for local install candidates."),
         FacManImplemented(@"installs.import", @"installs.import", @"Installs", @"Import Install", @"Register an existing local install reference through the backend."),
         FacManImplemented(@"installs.inspect", @"installs.inspect", @"Installs", @"Inspect Install", @"Inspect a registered install reference."),
-        FacManImplemented(@"instances.list", @"instances.list", @"Instances", @"List Instances", @"List isolated instances from the backend workspace."),
+        FacManImplemented(@"instances.list", @"instance.list", @"Instances", @"List Instances", @"List isolated instances from the backend workspace."),
         FacManImplemented(@"instances.create", @"instances.create", @"Instances", @"Create Instance", @"Create an isolated instance through the backend."),
-        FacManImplemented(@"launch_plan.build", @"launch.plan", @"Launch Plan", @"Build Launch Plan", @"Build a dry-run launch plan through the backend."),
+        FacManImplemented(@"launch_plan.build", @"launch_plan.build", @"Launch Plan", @"Build Launch Plan", @"Build a dry-run launch plan through the backend."),
+        FacManImplemented(@"launch_plan.preflight", @"launch_plan.preflight", @"Launch Plan", @"Preflight Launch", @"Validate the routed launch plan without starting a process."),
         FacManImplemented(@"run.preview", @"run.preview", @"Launch Plan", @"Run Preview", @"Preview run arguments without launching Factorio."),
-        FacManImplemented(@"diagnostics.export", @"diagnostics.report", @"Diagnostics", @"Export Diagnostics", @"Export a diagnostics report from the shared backend."),
+        FacManImplemented(@"diagnostics.export", @"diagnostics.run", @"Diagnostics", @"Export Diagnostics", @"Export a diagnostics report from the shared backend."),
         FacManDeferred(@"run.execute", @"run.execute", @"Launch Plan", @"Execute Run"),
         FacManDeferred(@"modsets.lock", @"modsets.lock", @"Diagnostics", @"Lock Modset"),
         FacManDeferred(@"saves.backup", @"saves.backup", @"Diagnostics", @"Backup Save"),
@@ -249,6 +250,10 @@ static NSArray<NSString *> *FacManArgumentsForCommand(NSString *commandId, NSDic
     if ([commandId isEqualToString:@"launch_plan.build"]) {
         NSString *instanceId = FacManRequired(inputs, @"instanceId", error);
         return instanceId == nil ? nil : @[ @"launch-plan", instanceId, @"--json" ];
+    }
+    if ([commandId isEqualToString:@"launch_plan.preflight"]) {
+        NSString *instanceId = FacManRequired(inputs, @"instanceId", error);
+        return instanceId == nil ? nil : @[ @"launch-plan", instanceId, @"--preflight", @"--json" ];
     }
     if ([commandId isEqualToString:@"run.preview"]) {
         NSString *instanceId = FacManRequired(inputs, @"instanceId", error);

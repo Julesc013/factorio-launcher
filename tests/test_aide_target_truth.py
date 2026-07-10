@@ -43,6 +43,15 @@ roots:
         problems = aide_target_truth_check.validate_claim_ledger_text("| Public C ABI is stable |")
         self.assertIn("claim ledger promotes the experimental ABI to stable", problems)
 
+    def test_claim_ledger_rejects_corrected_registry_drift(self) -> None:
+        problems = aide_target_truth_check.validate_claim_ledger_text(
+            "command_graph.inspect` is still a duplicated static projection"
+        )
+        self.assertIn(
+            "claim ledger still reports corrected registry introspection drift",
+            problems,
+        )
+
     def test_discovery_docs_require_completed_windows_provider_evidence(self) -> None:
         problems = aide_target_truth_check.validate_discovery_text("Windows discovery")
         self.assertTrue(any("Steam registry roots" in problem for problem in problems), problems)

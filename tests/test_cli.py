@@ -9,6 +9,7 @@ import zipfile
 from pathlib import Path
 
 from native_cli import facman_executable, invoke
+from tools import json_contract
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
@@ -49,6 +50,16 @@ class CliTests(unittest.TestCase):
         self.assertIn("launch_plan.build", commands)
         self.assertIn("install_refs.scan", commands)
         self.assertIn("install_refs.import", commands)
+        self.assertIn("run.preview", commands)
+        self.assertIn("launch_plan.preflight", commands)
+        self.assertNotIn("diagnostics.report", commands)
+        self.assertNotIn("instances.list", commands)
+        run_descriptor = next(command for command in graph["commands"] if command["command"] == "run.preview")
+        self.assertEqual(run_descriptor["owner"], "factorio-launcher")
+        self.assertEqual(run_descriptor["binding"], "flb.factorio")
+        self.assertEqual(run_descriptor["handler_status"], "registered")
+        self.assertEqual(run_descriptor["effects"], ["workspace_read"])
+        self.assertTrue(run_descriptor["response_schema"].endswith("factorio_launch_plan.v1.schema.json"))
 
         code, stdout, stderr = invoke(["diagnostics", "report", "--json"])
         self.assertEqual(code, 0, stderr)
@@ -109,15 +120,51 @@ class CliTests(unittest.TestCase):
             self.assertIn("--config", plan["args"])
             self.assertIn("--mod-directory", plan["args"])
             self.assertTrue(plan["dry_run_default"])
+            self.assertEqual(plan["command"], "launch_plan.build")
+            self.assertEqual(plan["execution"], "not_started")
+            self.assertIn(str(instance_root / "config" / "config.ini"), plan["command_line"])
+            launch_schema = json.loads(
+                (ROOT / "contracts/schema/factorio/factorio_launch_plan.v1.schema.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(json_contract.validate(plan, launch_schema), [])
 
             code, stdout, stderr = invoke(["--workspace", tmp, "launch", "plan", "space-age-main", "--json"])
             self.assertEqual(code, 0, stderr)
             alias_plan = json.loads(stdout)
             self.assertEqual(alias_plan["instance_id"], "space-age-main")
 
+            code, stdout, stderr = invoke(
+                ["--workspace", tmp, "launch-plan", "space-age-main", "--preflight", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            preflight = json.loads(stdout)
+            self.assertEqual(preflight["schema"], "factorio.launch_preflight.v1")
+            self.assertEqual(preflight["command"], "launch_plan.preflight")
+            self.assertEqual(preflight["status"], "pass")
+            self.assertEqual(preflight["problems"], [])
+            self.assertFalse(preflight["started"])
+            preflight_schema = json.loads(
+                (ROOT / "contracts/schema/factorio/factorio_launch_preflight.v1.schema.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(json_contract.validate(preflight, preflight_schema), [])
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "run", "space-age-main", "--json"])
+            self.assertEqual(code, 0, stderr)
+            run_preview = json.loads(stdout)
+            self.assertEqual(run_preview["command"], "run.preview")
+            self.assertEqual(run_preview["args"], plan["args"])
+            self.assertEqual(run_preview["command_line"], plan["command_line"])
+            self.assertEqual(run_preview["execution"], "not_started")
+            self.assertEqual(json_contract.validate(run_preview, launch_schema), [])
+
             code, stdout, stderr = invoke(["--workspace", tmp, "run", "space-age-main"])
             self.assertEqual(code, 0, stderr)
             self.assertIn("Dry-run only", stdout)
+            self.assertIn(run_preview["command_line"], stdout)
 
     def test_run_execute_is_quarantined_until_real_factorio_isolation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

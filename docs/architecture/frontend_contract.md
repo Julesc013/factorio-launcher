@@ -42,9 +42,15 @@ installs.inspect
 instances.list
 instances.create
 launch_plan.build
+launch_plan.preflight
 run.preview
 diagnostics.export
 ```
+
+Frontend IDs need not be registry IDs. The contract's `backend_id` is the
+canonical value passed to Universal Launcher after parser normalization; for
+example `instances.list` maps to `instance.list` and diagnostics report UI maps
+to `diagnostics.run`.
 
 ## Deferred Commands
 

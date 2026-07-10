@@ -20,6 +20,7 @@ EXPECTED_REQUIRED = {
     "instances.list",
     "instances.create",
     "launch_plan.build",
+    "launch_plan.preflight",
     "run.preview",
     "diagnostics.export",
 }

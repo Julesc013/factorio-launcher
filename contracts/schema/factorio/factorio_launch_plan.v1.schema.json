@@ -3,13 +3,17 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
   "title": "Factorio Launch Plan",
   "type": "object",
-  "required": ["instance_id", "executable", "args", "preflight", "dry_run_default"],
+  "required": ["schema", "command", "instance_id", "executable", "args", "preflight", "command_line", "dry_run_default", "execution"],
   "properties": {
+    "schema": { "const": "factorio.launch_plan.v1" },
+    "command": { "enum": ["launch_plan.build", "run.preview"] },
     "instance_id": { "type": "string" },
     "executable": { "type": "string" },
     "args": { "type": "array", "items": { "type": "string" } },
     "preflight": { "type": "array", "items": { "type": "string" } },
-    "dry_run_default": { "type": "boolean" }
+    "command_line": { "type": "string" },
+    "dry_run_default": { "const": true },
+    "execution": { "const": "not_started" }
   },
   "additionalProperties": true
 }

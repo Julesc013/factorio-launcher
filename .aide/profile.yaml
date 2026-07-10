@@ -14,15 +14,18 @@ current_focus:
     then route run preview through that registry and prove the effective
     per-instance Factorio configuration at a controlled process boundary.
   next_task: >
-    ULAUNCH-REGISTRY-INTROSPECTION-02, followed by the authoritative run-preview
-    slice and FACMAN-INSTANCE-ISOLATION-PROBE-02. Windows read-only discovery is
-    implemented and must not be scheduled again.
+    FACMAN-INSTANCE-ISOLATION-PROBE-02: correct and preflight the effective
+    Factorio configuration, add an exclusive instance lock, and prove the
+    process boundary. Windows read-only discovery is implemented and must not
+    be scheduled again.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import
     - install_refs.inspect
     - instance.create
     - launch_plan.build
+    - launch_plan.preflight
+    - run.preview
   quarantined_capabilities:
     - run.execute
     - diagnostics.export

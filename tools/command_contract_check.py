@@ -18,6 +18,7 @@ EXPECTED_COMMANDS = {
     "installs.import",
     "instances.create",
     "launch.plan",
+    "launch_plan.preflight",
     "run.preview",
     "run.execute",
     "modsets.lock",
@@ -26,7 +27,7 @@ EXPECTED_COMMANDS = {
     "import.instance",
 }
 
-COMMAND_PATTERN = re.compile(r"^[a-z0-9]+(\.[a-z0-9-]+)+$")
+COMMAND_PATTERN = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_-]+)+$")
 
 
 def main() -> int:

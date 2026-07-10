@@ -7,6 +7,8 @@
     { "command": "command_graph.inspect" },
     { "command": "install_refs.list" },
     { "command": "launch_plan.build" },
-    { "command": "diagnostics.report" }
+    { "command": "launch_plan.preflight" },
+    { "command": "run.preview" },
+    { "command": "diagnostics.run" }
   ]
 }

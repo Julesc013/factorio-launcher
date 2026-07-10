@@ -15,7 +15,8 @@ reported as stronger runtime evidence.
 | Process boundary passes intended arguments | fixture-tested | controlled executable smoke | does not prove Factorio configuration semantics |
 | Diagnostic redaction covers known corpus | fixture-tested plus multiline JSON | redaction fixtures and malformed-JSON refusal | general export remains unavailable pending safe traversal and budgets |
 | JSON contracts describe runtime output | proven for the truth-floor slice | live response, refusal, persisted-instance, and package-verification schema tests | remaining legacy commands and goldens are not implicitly promoted |
-| Command dispatch is authoritative for the first workflow | workflow-proven | registered workflow handlers | `command_graph.inspect` is still a duplicated static projection and must be derived from retained descriptors |
+| Command registry introspection matches dispatch | registry-proven | runtime descriptor projection, register/unregister parity, metadata lifetime and allocator tests | new descriptor versions and handlers require the same parity proof |
+| Run preview uses the authoritative route | live-contract tested | normalized CLI, registered FLB handler, typed request/result, shared argument builder | no process starts; real Factorio remains unproven |
 | Windows install discovery is read-only | provider-tested | Steam VDF, registry/default roots, standalone roots, zero-write tests | registry proof is host-dependent; macOS and Linux provider databases remain future work |
 | Windows x64 static CLI package runs after relocation | host-tested built artifact | strict profile/component/lock verification and relocation matrix | local Windows x64 only; unsigned and unpublished |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |

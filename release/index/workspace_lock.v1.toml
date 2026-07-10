@@ -12,7 +12,7 @@ path = "."
 [[component]]
 id = "universal_launcher"
 source = "universal-launcher"
-pin = "eeac9ee2e6b90c393b8a18a562526c27889a1510"
+pin = "c9f0e679592f4317aca63d243d1a323fa2b002bd"
 path = "../universal-launcher"
 
 [[component]]

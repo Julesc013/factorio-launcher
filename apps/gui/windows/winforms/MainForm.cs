@@ -252,6 +252,10 @@ namespace FacMan.WinForms
             {
                 return Inputs("instanceId", instanceId.Text);
             });
+            AddCommandRow(form, "launch_plan.preflight", "Preflight", delegate
+            {
+                return Inputs("instanceId", instanceId.Text);
+            });
             AddCommandRow(form, "run.preview", "Preview Run", delegate
             {
                 return Inputs("instanceId", instanceId.Text);

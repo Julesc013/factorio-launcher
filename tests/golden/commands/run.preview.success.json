@@ -2,6 +2,10 @@
   "schema": "factorio.launch_plan.v1",
   "command": "run.preview",
   "instance_id": "space-age-main",
+  "executable": "fixture/factorio",
+  "args": ["--config", "fixture/config.ini", "--mod-directory", "fixture/mods"],
+  "preflight": ["install-structural-check", "isolated-write-data-check"],
+  "command_line": "fixture/factorio --config fixture/config.ini --mod-directory fixture/mods",
   "dry_run_default": true,
   "execution": "not_started"
 }

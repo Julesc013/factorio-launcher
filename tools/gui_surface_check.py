@@ -38,6 +38,7 @@ WINFORMS_REQUIRED_COMMANDS = {
     "instances.list",
     "instances.create",
     "launch_plan.build",
+    "launch_plan.preflight",
     "run.preview",
     "diagnostics.export",
 }

@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "launch_plan.preflight",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unknown_instance",
+    "reason": "launch preflight instance is not registered",
+    "recoverable": true
+  }
+}

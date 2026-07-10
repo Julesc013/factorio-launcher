@@ -1,0 +1,10 @@
+{
+  "schema": "factorio.launch_preflight.v1",
+  "command": "launch_plan.preflight",
+  "instance_id": "space-age-main",
+  "status": "pass",
+  "executable": "fixture/factorio",
+  "args": ["--config", "fixture/config.ini"],
+  "problems": [],
+  "started": false
+}

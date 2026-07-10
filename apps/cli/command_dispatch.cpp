@@ -259,6 +259,20 @@ std::string json_object_field(const std::string& text, const std::string& key)
     return "";
 }
 
+const char* canonical_frontend_command_id(const char* command_name)
+{
+    if (std::strcmp(command_name, "instances.list") == 0) {
+        return "instance.list";
+    }
+    if (std::strcmp(command_name, "diagnostics.report") == 0) {
+        return "diagnostics.run";
+    }
+    if (std::strcmp(command_name, "launch.plan") == 0) {
+        return "launch_plan.build";
+    }
+    return command_name;
+}
+
 std::string flb_command_response_json(const char* command_name, bool dry_run)
 {
     flb_context* context = 0;
@@ -277,7 +291,7 @@ std::string flb_command_response_json(const char* command_name, bool dry_run)
     }
 
     request.struct_size = sizeof(request);
-    request.command_name = ulk_view_from_cstr(command_name);
+    request.command_name = ulk_view_from_cstr(canonical_frontend_command_id(command_name));
     request.json_payload = ulk_view_from_cstr("{}");
     request.dry_run = dry_run ? 1 : 0;
     (void)fl_command_client_execute_cabi_v1(context, &request, &response);
@@ -321,7 +335,7 @@ RoutedCommandResult route_factorio_command(
         return result;
     }
     request.struct_size = sizeof(request);
-    request.command_name = ulk_view_from_cstr(command_name);
+    request.command_name = ulk_view_from_cstr(canonical_frontend_command_id(command_name));
     request.json_payload.data = json_payload.data();
     request.json_payload.size = static_cast<ulk_size>(json_payload.size());
     request.dry_run = dry_run ? 1 : 0;
@@ -1007,24 +1021,6 @@ bool load_instance(const fs::path& workspace, const std::string& instance_id, In
         facman::base::validate_identifier(out.install_ref, identifier_error);
 }
 
-facman::factorio::launch::InstanceLaunchRef launch_instance_ref(const InstanceRef& instance)
-{
-    facman::factorio::launch::InstanceLaunchRef ref;
-    ref.instance_id = instance.instance_id;
-    ref.profile_id = instance.profile;
-    ref.local_data_root = instance.local_data_root;
-    return ref;
-}
-
-facman::factorio::launch::InstallLaunchRef launch_install_ref(const InstallRef& install)
-{
-    facman::factorio::launch::InstallLaunchRef ref;
-    ref.root = install.root;
-    ref.executable = install.executable;
-    ref.ownership = install.ownership;
-    return ref;
-}
-
 std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
 {
     std::vector<fs::path> manifests;
@@ -1047,14 +1043,6 @@ std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
         }
     }
     return manifests;
-}
-
-std::string launch_plan_json(const InstanceRef& instance, const InstallRef& install)
-{
-    return facman::factorio::launch::build_launch_plan_json(
-        launch_instance_ref(instance),
-        launch_install_ref(install)
-    );
 }
 
 fs::path modset_lock_path(const InstanceRef& instance)
@@ -1934,11 +1922,6 @@ bool write_diagnostic_bundle(
     return write_stored_zip(output_path, files);
 }
 
-std::vector<std::string> launch_args(const InstanceRef& instance)
-{
-    return facman::factorio::launch::build_launch_args(launch_instance_ref(instance));
-}
-
 std::string command_line_for_display(const fs::path& executable, const std::vector<std::string>& args)
 {
     return facman::factorio::launch::command_line_for_display(executable, args);
@@ -2151,8 +2134,8 @@ int print_help()
     std::cout << "  installs repair <install-id> [--json]\n";
     std::cout << "  installs uninstall <install-id> [--json]\n";
     std::cout << "  instances create <name> --install <install-id> [--template <id>] [--json]\n";
-    std::cout << "  launch-plan <instance-id> [--json]\n";
-    std::cout << "  launch plan <instance-id> [--json]\n";
+    std::cout << "  launch-plan <instance-id> [--preflight] [--json]\n";
+    std::cout << "  launch plan <instance-id> [--preflight] [--json]\n";
     std::cout << "  run <instance-id> [--execute]\n";
     std::cout << "  mods import <mod.zip> --instance <instance-id> [--json]\n";
     std::cout << "  mods search <query> [--json]\n";
@@ -2226,7 +2209,7 @@ int command_command_graph(const std::vector<std::string>& args)
         } else {
             std::cout << "FacMan command graph\n";
             std::cout << "Route: CLI -> FLB -> ULK\n";
-            std::cout << "Includes: product.inspect, install_refs.list, launch_plan.build, diagnostics.report\n";
+            std::cout << "Includes: product.inspect, install_refs.list, launch_plan.build, run.preview, launch_plan.preflight, diagnostics.run\n";
         }
         return 0;
     }
@@ -3798,14 +3781,25 @@ int command_launch_plan(const CliOptions& options)
         return 2;
     }
     std::string request = "{\"instance_id\":" + quote(options.args[1]) + "}";
+    const bool preflight = has_flag(options.args, "--preflight");
     RoutedCommandResult routed = route_factorio_command(
-        options.workspace, "launch_plan.build", request, true);
+        options.workspace,
+        preflight ? "launch_plan.preflight" : "launch_plan.build",
+        request,
+        true);
     if (has_flag(options.args, "--json")) {
         std::cout << routed.payload;
     } else if (routed.status == ULK_STATUS_OK) {
-        std::cout << "FacMan launch plan for " << json_string_value(routed.payload, "instance_id") << "\n";
-        std::cout << "Executable: " << json_string_value(routed.payload, "executable") << "\n";
-        std::cout << "Dry-run only. Use --json for the complete plan.\n";
+        if (preflight) {
+            std::cout << "FacMan launch preflight for " << json_string_value(routed.payload, "instance_id") << "\n";
+            std::cout << "Status: " << json_string_value(routed.payload, "status") << "\n";
+            std::cout << "Executable: " << json_string_value(routed.payload, "executable") << "\n";
+            std::cout << "No process was started. Use --json for the complete report.\n";
+        } else {
+            std::cout << "FacMan launch plan for " << json_string_value(routed.payload, "instance_id") << "\n";
+            std::cout << "Executable: " << json_string_value(routed.payload, "executable") << "\n";
+            std::cout << "Dry-run only. Use --json for the complete plan.\n";
+        }
     } else {
         std::cerr << "Launch plan was refused; use --json for details.\n";
     }
@@ -3818,16 +3812,6 @@ int command_run(const CliOptions& options)
         std::cerr << "Missing instance id\n";
         return 2;
     }
-    InstanceRef instance;
-    if (!load_instance(options.workspace, options.args[1], instance)) {
-        std::cerr << "Unknown instance: " << options.args[1] << "\n";
-        return 1;
-    }
-    InstallRef install;
-    if (!load_install(options.workspace, instance.install_ref, install)) {
-        std::cerr << "Unknown install reference: " << instance.install_ref << "\n";
-        return 1;
-    }
     if (has_flag(options.args, "--execute")) {
         return emit_safety_refusal(
             options,
@@ -3836,16 +3820,20 @@ int command_run(const CliOptions& options)
             "Factorio execution is unavailable until real write-data isolation is proven",
             "Use facman launch-plan <instance-id> --json to inspect the dry-run plan");
     }
+    std::string request = "{\"instance_id\":" + quote(options.args[1]) + "}";
+    RoutedCommandResult routed = route_factorio_command(
+        options.workspace, "run.preview", request, true);
     if (has_flag(options.args, "--json")) {
-        std::cout << launch_plan_json(instance, install);
-    } else {
-        std::cout << "FacMan launch plan for " << instance.instance_id << "\n";
-        std::cout << "Executable: " << path_string(install.executable) << "\n";
-        std::cout << "Args: --config " << path_string(instance.local_data_root / "config" / "config.ini")
-                  << " --mod-directory " << path_string(instance.local_data_root / "mods") << "\n";
+        std::cout << routed.payload;
+    } else if (routed.status == ULK_STATUS_OK) {
+        std::cout << "FacMan launch plan for " << json_string_value(routed.payload, "instance_id") << "\n";
+        std::cout << "Executable: " << json_string_value(routed.payload, "executable") << "\n";
+        std::cout << "Command: " << json_string_value(routed.payload, "command_line") << "\n";
         std::cout << "Dry-run only. Re-run with --execute to run this plan.\n";
+    } else {
+        std::cerr << "Run preview was refused; use --json for details.\n";
     }
-    return 0;
+    return routed.status == ULK_STATUS_OK ? 0 : 1;
 }
 
 } // namespace
