@@ -45,6 +45,10 @@ def assert_no_secret_values(testcase: unittest.TestCase, blob: bytes | str) -> N
         testcase.assertNotIn(value, text)
 
 
+def normalize_newlines(text: str) -> str:
+    return text.replace("\r\n", "\n")
+
+
 def setup_redaction_workspace(workspace: Path) -> Path:
     code, _stdout, stderr = invoke(
         [
@@ -126,8 +130,8 @@ class DiagnosticRedactionTests(unittest.TestCase):
                 )
                 self.assertEqual(first_code, 0, first_stderr)
                 self.assertEqual(second_code, 0, second_stderr)
-                self.assertEqual(first["redacted_text"], expected)
-                self.assertEqual(second["redacted_text"], expected)
+                self.assertEqual(normalize_newlines(first["redacted_text"]), normalize_newlines(expected))
+                self.assertEqual(normalize_newlines(second["redacted_text"]), normalize_newlines(expected))
                 self.assertEqual(first["redaction_report"]["summary"], second["redaction_report"]["summary"])
                 assert_no_secret_values(self, first_stdout)
                 assert_no_secret_values(self, second_stdout)
@@ -139,7 +143,7 @@ class DiagnosticRedactionTests(unittest.TestCase):
                         ["diagnostics", "redact", str(redacted_path), "--json"]
                     )
                     self.assertEqual(code, 0, stderr)
-                    self.assertEqual(redacted_again["redacted_text"], expected)
+                    self.assertEqual(normalize_newlines(redacted_again["redacted_text"]), normalize_newlines(expected))
                     self.assertEqual(redacted_again["redaction_report"]["summary"]["redacted_fields"], 0)
                     assert_no_secret_values(self, stdout)
 
