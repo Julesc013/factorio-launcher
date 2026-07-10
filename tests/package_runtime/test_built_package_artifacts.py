@@ -6,6 +6,7 @@ import shutil
 import stat
 import subprocess
 import tempfile
+import time
 import tomllib
 import unittest
 import zipfile
@@ -154,14 +155,21 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        package_root = getattr(cls, "package_root", None)
-        if package_root is not None:
-            for path in package_root.rglob("*"):
+        temp_root = getattr(cls, "temp_root", None)
+        if temp_root is not None:
+            for path in temp_root.rglob("*"):
                 if path.is_file():
                     os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
         tmp = getattr(cls, "_tmp", None)
         if tmp is not None:
-            tmp.cleanup()
+            for attempt in range(10):
+                try:
+                    tmp.cleanup()
+                    break
+                except PermissionError:
+                    if attempt == 9:
+                        raise
+                    time.sleep(0.05)
 
     def test_static_first_layout_contains_only_the_functional_cli(self) -> None:
         self.assertTrue((self.package_root / "bin" / "facman.exe").is_file())
