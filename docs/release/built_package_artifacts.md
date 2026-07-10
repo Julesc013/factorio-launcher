@@ -85,6 +85,13 @@ It verifies:
 components such as contracts and content are expanded to file-level component
 entries.
 
+Component roles are mandatory rather than inferred. The selected static-first
+Windows package declares `bin/facman.exe` as `runtime_required`; contracts and
+Factorio content are `compatibility_reference` material checked by the package
+verifier without pretending the launcher dynamically loads them.
+`documentation_only` records remain hash-covered but do not satisfy profile
+runtime requirements.
+
 `manifest/hashes.sha256` covers every package file except itself and future
 signature sidecars. This includes `manifest/components.v1.json`, which keeps the
 component manifest inside the unsigned integrity envelope.
@@ -94,9 +101,22 @@ Both the build tooling and `facman package verify` consume this manifest.
 reparse points, files resolving outside the package root, digest mismatches,
 and incomplete manifest closure.
 
-The build metadata records exact commits for `factorio-launcher`,
+Runtime verification also rejects unknown profile IDs, extra or missing
+package-manifest fields, duplicate component names or destinations, invalid
+roles, component size or digest disagreement, shared-library claims in the
+static-first lane, and source revision disagreement with the packaged
+workspace lock.
+
+The build metadata records the actual source commit for `factorio-launcher`,
 `universal-launcher`, and `universal-setup`, plus target OS, target
 architecture, package type, and canonical version.
+
+The workspace lock's FacMan pin is a historical proof baseline because a Git
+commit cannot contain its own final object ID. `source_revision` records the
+actual checked-out FacMan commit used for the build; sibling revisions and the
+proof baseline must match the packaged lock exactly. `source_dirty` records
+whether uncommitted source was present. A promotable CI package must record
+`source_dirty = false`.
 
 ## Proof Boundary
 

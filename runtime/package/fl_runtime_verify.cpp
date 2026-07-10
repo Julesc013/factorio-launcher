@@ -1,5 +1,6 @@
 #include "fl_runtime_verify.h"
 
+#include "fl_runtime_component.h"
 #include "fl_runtime_locator.h"
 #include "fl_sha256.h"
 
@@ -8,6 +9,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
@@ -34,11 +36,21 @@ void set_detail(char* detail, size_t capacity, const std::string& value)
     detail[count] = '\0';
 }
 
-bool is_hex_digest(const std::string& value)
+bool is_hex_value(const std::string& value, std::size_t size)
 {
-    return value.size() == 64 && std::all_of(value.begin(), value.end(), [](unsigned char ch) {
+    return value.size() == size && std::all_of(value.begin(), value.end(), [](unsigned char ch) {
         return std::isxdigit(ch) != 0;
     });
+}
+
+bool is_hex_digest(const std::string& value)
+{
+    return is_hex_value(value, 64);
+}
+
+bool is_hex_revision(const std::string& value)
+{
+    return is_hex_value(value, 40);
 }
 
 bool is_safe_relative(const std::string& value)
@@ -119,41 +131,270 @@ bool collect_package_files(
     return true;
 }
 
-std::string manifest_string(const fs::path& path, const std::string& key)
+std::string trim(std::string value)
 {
-    std::ifstream input(path, std::ios::binary);
-    std::string line;
-    const std::string prefix = key + " = \"";
-    while (std::getline(input, line)) {
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-        if (line.rfind(prefix, 0) == 0 && line.size() > prefix.size() && line.back() == '"') {
-            return line.substr(prefix.size(), line.size() - prefix.size() - 1);
-        }
-    }
-    return {};
+    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.front()))) value.erase(value.begin());
+    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back()))) value.pop_back();
+    return value;
 }
 
-bool target_identity_matches(const fs::path& manifest, std::string& error)
+bool parse_flat_manifest(
+    const fs::path& path,
+    const std::set<std::string>& allowed,
+    std::map<std::string, std::string>& values,
+    std::string& error)
 {
-    const std::string profile = manifest_string(manifest, "profile_id");
-    const std::string target_os = manifest_string(manifest, "target_os");
-    const std::string target_arch = manifest_string(manifest, "target_arch");
-    const std::string linkage = manifest_string(manifest, "linkage_model");
-    if (profile == "windows_portable_cli_x64") {
-        if (target_os != "windows" || target_arch != "x64" || linkage != "static_first") {
-            error = "package target or linkage identity does not match windows_portable_cli_x64";
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        error = "cannot open " + path.filename().string();
+        return false;
+    }
+    std::string line;
+    std::size_t line_number = 0;
+    while (std::getline(input, line)) {
+        ++line_number;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        line = trim(line);
+        if (line.empty()) continue;
+        std::size_t equals = line.find('=');
+        if (equals == std::string::npos) {
+            error = "invalid flat package manifest line " + std::to_string(line_number);
             return false;
         }
+        std::string key = trim(line.substr(0, equals));
+        std::string encoded = trim(line.substr(equals + 1));
+        if (allowed.count(key) == 0) {
+            error = "unsupported package manifest field: " + key;
+            return false;
+        }
+        if (values.count(key) != 0) {
+            error = "duplicate package manifest field: " + key;
+            return false;
+        }
+        std::string value;
+        if (encoded == "true" || encoded == "false") {
+            value = encoded;
+        } else if (encoded.size() >= 2 && encoded.front() == '"' && encoded.back() == '"') {
+            value = encoded.substr(1, encoded.size() - 2);
+            if (value.find('"') != std::string::npos || value.find('\\') != std::string::npos) {
+                error = "package manifest string contains unsupported escaping: " + key;
+                return false;
+            }
+        } else {
+            error = "package manifest value is not a supported scalar: " + key;
+            return false;
+        }
+        values.emplace(std::move(key), std::move(value));
+    }
+    return true;
+}
+
+struct PackageIdentity {
+    std::string profile;
+    std::string target_os;
+    std::string target_arch;
+    std::string linkage;
+    std::string entrypoint;
+    std::string source_revision;
+};
+
+bool load_package_identity(
+    const fs::path& manifest,
+    PackageIdentity& identity,
+    std::map<std::string, std::string>& values,
+    std::string& error)
+{
+    const std::set<std::string> required = {
+        "schema", "profile_id", "lane", "target_os", "target_arch", "package_type",
+        "entrypoint", "linkage_model", "release_profile", "package_manifest", "workspace_lock",
+        "source_revision", "proof_baseline_revision", "universal_launcher_revision",
+        "universal_setup_revision", "artifact_level", "signed", "published", "source_dirty",
+        "python_runtime", "bundles_factorio_binaries"};
+    if (!parse_flat_manifest(manifest, required, values, error)) return false;
+    for (const std::string& key : required) {
+        if (values.count(key) == 0) {
+            error = "package manifest is missing required field: " + key;
+            return false;
+        }
+    }
+    if (values["schema"] != "facman.built_package.v1" ||
+        values["artifact_level"] != "built-artifact" ||
+        values["signed"] != "false" || values["published"] != "false" ||
+        values["python_runtime"] != "false" || values["bundles_factorio_binaries"] != "false" ||
+        (values["source_dirty"] != "true" && values["source_dirty"] != "false") ||
+        values["workspace_lock"] != "release/index/workspace_lock.v1.toml" ||
+        values["package_type"] != "portable_zip") {
+        error = "package manifest fixed policy fields are invalid";
+        return false;
+    }
+    for (const std::string& key : {
+             "source_revision", "proof_baseline_revision", "universal_launcher_revision",
+             "universal_setup_revision"}) {
+        if (!is_hex_revision(values[key])) {
+            error = "package manifest revision is not a 40-character hex SHA: " + key;
+            return false;
+        }
+    }
+
+    identity.profile = values["profile_id"];
+    identity.target_os = values["target_os"];
+    identity.target_arch = values["target_arch"];
+    identity.linkage = values["linkage_model"];
+    identity.entrypoint = values["entrypoint"];
+    identity.source_revision = values["source_revision"];
+
+    struct Expected {
+        const char* profile;
+        const char* target_os;
+        const char* linkage;
+        const char* entrypoint;
+    };
+    const Expected profiles[] = {
+        {"windows_portable_cli_x64", "windows", "static_first", "bin/facman.exe"},
+        {"portable_cli_x64", "portable", "static_first_with_reference_components", "bin/facman"},
+        {"portable_tui_x64", "portable", "static_first_with_reference_components", "bin/facman-tui"},
+        {"windows_legacy_winforms_x64", "windows", "compatibility_bundle", "bin/FacMan.WinForms.exe"},
+    };
+    const Expected* expected = nullptr;
+    for (const Expected& candidate : profiles) {
+        if (identity.profile == candidate.profile) expected = &candidate;
+    }
+    if (expected == nullptr) {
+        error = "unknown built package profile: " + identity.profile;
+        return false;
+    }
+    if (identity.target_os != expected->target_os || identity.target_arch != "x64" ||
+        identity.linkage != expected->linkage || identity.entrypoint != expected->entrypoint) {
+        error = "package target, linkage, or entrypoint identity does not match profile " + identity.profile;
+        return false;
+    }
+    if (identity.target_os == "windows") {
 #ifndef _WIN32
         error = "Windows package cannot run on this operating system";
         return false;
 #endif
+    }
 #if !defined(_M_X64) && !defined(__x86_64__)
-        error = "x64 package cannot run on this architecture";
-        return false;
+    error = "x64 package cannot run on this architecture";
+    return false;
 #endif
+    return true;
+}
+
+bool load_workspace_pins(
+    const fs::path& path,
+    std::map<std::string, std::string>& pins,
+    std::string& error)
+{
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        error = "cannot open release/index/workspace_lock.v1.toml";
+        return false;
+    }
+    std::string current_id;
+    std::string current_pin;
+    auto commit = [&]() -> bool {
+        if (current_id.empty() && current_pin.empty()) return true;
+        if (current_id.empty() || !is_hex_revision(current_pin) || pins.count(current_id) != 0) {
+            error = "workspace lock contains an invalid or duplicate component record";
+            return false;
+        }
+        pins.emplace(current_id, current_pin);
+        current_id.clear();
+        current_pin.clear();
+        return true;
+    };
+    bool inside_component = false;
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        line = trim(line);
+        if (line == "[[component]]") {
+            if (inside_component && !commit()) return false;
+            inside_component = true;
+            continue;
+        }
+        if (!inside_component) continue;
+        auto read_string = [&](const std::string& key, std::string& output) {
+            const std::string prefix = key + " = \"";
+            if (line.rfind(prefix, 0) == 0 && line.size() > prefix.size() && line.back() == '"') {
+                output = line.substr(prefix.size(), line.size() - prefix.size() - 1);
+                return true;
+            }
+            return false;
+        };
+        (void)(read_string("id", current_id) || read_string("pin", current_pin));
+    }
+    if (!inside_component || !commit()) return false;
+    const std::set<std::string> expected = {"factorio_binding", "universal_launcher", "universal_setup"};
+    std::set<std::string> actual;
+    for (const auto& entry : pins) actual.insert(entry.first);
+    if (actual != expected) {
+        error = "workspace lock component set is incomplete or unexpected";
+        return false;
+    }
+    return true;
+}
+
+bool component_semantics_match(
+    const fs::path& root,
+    const PackageIdentity& identity,
+    const std::map<std::string, std::string>& declared,
+    std::string& error)
+{
+    std::vector<facman::package::ComponentRecord> components;
+    if (!facman::package::load_component_manifest(root / "manifest" / "components.v1.json", components, error)) {
+        return false;
+    }
+    std::set<std::string> names;
+    std::set<std::string> destinations;
+    std::size_t runtime_required = 0;
+    bool selected_cli = false;
+    bool selected_contracts = false;
+    bool selected_content = false;
+    for (const facman::package::ComponentRecord& component : components) {
+        if (!names.insert(component.name).second || !destinations.insert(component.destination).second) {
+            error = "component manifest contains duplicate names or destinations";
+            return false;
+        }
+        if (!is_safe_relative(component.destination)) {
+            error = "component manifest contains an unsafe destination: " + component.destination;
+            return false;
+        }
+        auto hash = declared.find(component.destination);
+        if (hash == declared.end() || hash->second != component.sha256) {
+            error = "component digest disagrees with hash manifest: " + component.destination;
+            return false;
+        }
+        std::error_code size_error;
+        std::uintmax_t actual_size = fs::file_size(root / fs::u8path(component.destination), size_error);
+        if (size_error || actual_size != component.size) {
+            error = "component size disagrees with package file: " + component.destination;
+            return false;
+        }
+        if (component.runtime_role == "runtime_required") ++runtime_required;
+        if (identity.profile == "windows_portable_cli_x64") {
+            if (component.kind == "runtime_library") {
+                error = "static-first Windows CLI package declares a shared runtime library";
+                return false;
+            }
+            if (component.destination == "bin/facman.exe" && component.runtime_role == "runtime_required") {
+                selected_cli = true;
+            }
+            if (component.destination.rfind("contracts/schema/", 0) == 0 &&
+                component.runtime_role == "compatibility_reference") selected_contracts = true;
+            if (component.destination.rfind("content/factorio/", 0) == 0 &&
+                component.runtime_role == "compatibility_reference") selected_content = true;
+        }
+    }
+    if (runtime_required == 0) {
+        error = "component manifest has no runtime_required component";
+        return false;
+    }
+    if (identity.profile == "windows_portable_cli_x64" &&
+        (!selected_cli || !selected_contracts || !selected_content)) {
+        error = "static-first Windows CLI package component roles are incomplete";
+        return false;
     }
     return true;
 }
@@ -211,10 +452,10 @@ extern "C" int fl_runtime_verify_package(
 
     const fs::path required[] = {
         g_package_root / "manifest" / "package.v1.toml",
+        g_package_root / "manifest" / "build_info.v1.json",
         g_package_root / "manifest" / "components.v1.json",
         g_package_root / "manifest" / "hashes.sha256",
-        g_package_root / "contracts" / "schema",
-        g_package_root / "content" / "factorio",
+        g_package_root / "release" / "index" / "workspace_lock.v1.toml",
     };
     for (const fs::path& path : required) {
         if (!fs::exists(path)) {
@@ -222,9 +463,22 @@ extern "C" int fl_runtime_verify_package(
             return 0;
         }
     }
+    PackageIdentity identity;
+    std::map<std::string, std::string> manifest_values;
     std::string identity_error;
-    if (!target_identity_matches(required[0], identity_error)) {
+    if (!load_package_identity(required[0], identity, manifest_values, identity_error)) {
         set_detail(detail, detail_capacity, identity_error);
+        return 0;
+    }
+    std::map<std::string, std::string> workspace_pins;
+    if (!load_workspace_pins(required[4], workspace_pins, identity_error)) {
+        set_detail(detail, detail_capacity, identity_error);
+        return 0;
+    }
+    if (manifest_values["proof_baseline_revision"] != workspace_pins["factorio_binding"] ||
+        manifest_values["universal_launcher_revision"] != workspace_pins["universal_launcher"] ||
+        manifest_values["universal_setup_revision"] != workspace_pins["universal_setup"]) {
+        set_detail(detail, detail_capacity, "package source revisions disagree with workspace lock");
         return 0;
     }
 
@@ -241,7 +495,7 @@ extern "C" int fl_runtime_verify_package(
         return 0;
     }
 
-    std::set<std::string> declared;
+    std::map<std::string, std::string> declared;
     std::string line;
     size_t line_number = 0;
     while (std::getline(input, line)) {
@@ -259,7 +513,10 @@ extern "C" int fl_runtime_verify_package(
             set_detail(detail, detail_capacity, "unsafe or invalid hash manifest line " + std::to_string(line_number));
             return 0;
         }
-        if (!declared.insert(relative).second) {
+        std::transform(expected.begin(), expected.end(), expected.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        if (!declared.emplace(relative, expected).second) {
             set_detail(detail, detail_capacity, "duplicate hash manifest path: " + relative);
             return 0;
         }
@@ -275,9 +532,6 @@ extern "C" int fl_runtime_verify_package(
             return 0;
         }
         std::string actual = facman::base::sha256_hex_file(candidate);
-        std::transform(expected.begin(), expected.end(), expected.begin(), [](unsigned char ch) {
-            return static_cast<char>(std::tolower(ch));
-        });
         if (actual != expected) {
             set_detail(detail, detail_capacity, "SHA-256 mismatch: " + relative);
             return 0;
@@ -290,8 +544,15 @@ extern "C" int fl_runtime_verify_package(
         set_detail(detail, detail_capacity, collect_error);
         return 0;
     }
-    if (actual_files != declared) {
+    std::set<std::string> declared_files;
+    for (const auto& entry : declared) declared_files.insert(entry.first);
+    if (actual_files != declared_files) {
         set_detail(detail, detail_capacity, "hash manifest does not close over the package file set");
+        return 0;
+    }
+    std::string component_error;
+    if (!component_semantics_match(g_package_root, identity, declared, component_error)) {
+        set_detail(detail, detail_capacity, component_error);
         return 0;
     }
     if (files_verified != nullptr) {

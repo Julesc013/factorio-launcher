@@ -80,7 +80,7 @@ if(NOT TARGET ulk_static)
 endif()
 
 set(FLAUNCH_RUNTIME_SOURCES
-  runtime/package/fl_runtime_component.c
+  runtime/package/fl_runtime_component.cpp
   runtime/package/fl_runtime_extract.c
   runtime/package/fl_runtime_locator.c
   runtime/package/fl_runtime_manifest.c

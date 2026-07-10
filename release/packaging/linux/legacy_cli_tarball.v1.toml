@@ -4,6 +4,7 @@ platform = "linux"
 support_level = "legacy_best_effort"
 package_type = "tarball"
 architecture = "x86_64"
+linkage_model = "static_first_with_reference_components"
 python_runtime = false
 bundles_factorio_binaries = false
 entrypoint = "usr/bin/facman"
@@ -20,6 +21,7 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "usr/bin"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "tui"
@@ -32,6 +34,7 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "usr/bin"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "daemon"
@@ -44,6 +47,7 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "usr/bin"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "ulk_shared"
@@ -56,6 +60,7 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "usr/lib"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "usk_shared"
@@ -68,6 +73,7 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "usr/lib"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "flb_factorio_shared"
@@ -80,6 +86,7 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "usr/lib"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "contracts_schema"
@@ -92,6 +99,7 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "usr/share/facman/contracts/schema"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "factorio_content"
@@ -104,3 +112,4 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "usr/share/facman/content/factorio"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"

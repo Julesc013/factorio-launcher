@@ -4,6 +4,7 @@ platform = "macos"
 support_level = "base"
 package_type = "app_bundle"
 architecture = "configured_by_track"
+linkage_model = "compatibility_bundle"
 python_runtime = false
 bundles_factorio_binaries = false
 entrypoint = "FacMan.app/Contents/MacOS/FacMan"
@@ -19,6 +20,7 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "@executable_path"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "cli"
@@ -31,6 +33,7 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "@executable_path"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "tui"
@@ -43,6 +46,7 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "@executable_path"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "daemon"
@@ -55,6 +59,7 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "@executable_path"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "ulk_shared"
@@ -67,6 +72,7 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "@executable_path/../Frameworks"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "usk_shared"
@@ -79,6 +85,7 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "@executable_path/../Frameworks"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "flb_factorio_shared"
@@ -91,6 +98,7 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "@executable_path/../Frameworks"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "contracts_schema"
@@ -103,6 +111,7 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "Contents/Resources/contracts/schema"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "factorio_content"
@@ -115,3 +124,4 @@ signature_policy = "codesign_required"
 extraction_policy = "none"
 runtime_search_path = "Contents/Resources/content/factorio"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"

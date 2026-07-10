@@ -32,7 +32,11 @@ path = "contracts/schema/factorio/factorio_diagnostic_report.v1.schema.json"
 consumer = "doctor truth tests"
 
 [[live_schema]]
-path = "contracts/schema/release/component.v1.schema.json"
+path = "contracts/schema/release/built_package.v1.schema.json"
+consumer = "built package manifest"
+
+[[live_schema]]
+path = "contracts/schema/release/package_components.v1.schema.json"
 consumer = "built package component metadata"
 
 [[live_schema]]

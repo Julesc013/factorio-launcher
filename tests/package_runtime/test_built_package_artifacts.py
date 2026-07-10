@@ -212,7 +212,11 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             self.assertNotEqual(completed.returncode, 0)
             report = json.loads(completed.stdout)
             self.assertEqual(report["status"], "error")
-            self.assertIn("missing required package path", report["detail"])
+            self.assertTrue(
+                "missing required package path" in report["detail"]
+                or "missing or unsafe hashed file" in report["detail"],
+                report["detail"],
+            )
 
     def test_hash_verifiers_detect_payload_drift_and_unhashed_files(self) -> None:
         drifted = self.temp_root / "drifted package"
@@ -234,11 +238,11 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
         manifest = wrong / "manifest" / "package.v1.toml"
         text = manifest.read_text(encoding="utf-8").replace('target_os = "windows"', 'target_os = "linux"')
         manifest.write_text(text, encoding="utf-8")
-        package_hash_manifest.write_manifests(wrong, package_hash_manifest.component_records_from_files(wrong))
+        package_hash_manifest.write_hash_manifest(wrong)
         self.assertEqual(package_hash_manifest.verify_manifest(wrong), [])
         completed = run_package_verify(wrong)
         self.assertNotEqual(completed.returncode, 0)
-        self.assertIn("target or linkage identity", completed.stdout)
+        self.assertIn("target, linkage, or entrypoint identity", completed.stdout)
 
     def test_manifest_records_target_linkage_and_all_source_revisions(self) -> None:
         with (self.package_root / "manifest" / "package.v1.toml").open("rb") as handle:
@@ -248,9 +252,82 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
         self.assertEqual(manifest["target_os"], "windows")
         self.assertEqual(manifest["target_arch"], "x64")
         self.assertEqual(manifest["linkage_model"], "static_first")
+        self.assertEqual(manifest["workspace_lock"], "release/index/workspace_lock.v1.toml")
         revisions = build_info["source_revisions"]
         self.assertEqual(set(revisions), {"factorio_launcher", "universal_launcher", "universal_setup"})
         self.assertTrue(all(value != "unknown" and len(value) == 40 for value in revisions.values()))
+        self.assertEqual(manifest["source_revision"], build_info["source_commit"])
+        self.assertEqual(manifest["source_revision"], revisions["factorio_launcher"])
+
+        with (self.package_root / "release" / "index" / "workspace_lock.v1.toml").open("rb") as handle:
+            workspace_lock = tomllib.load(handle)
+        pins = {component["id"]: component["pin"] for component in workspace_lock["component"]}
+        self.assertEqual(manifest["proof_baseline_revision"], pins["factorio_binding"])
+        self.assertEqual(manifest["universal_launcher_revision"], pins["universal_launcher"])
+        self.assertEqual(manifest["universal_setup_revision"], pins["universal_setup"])
+
+    def test_component_roles_are_explicit_and_runtime_enforced(self) -> None:
+        path = self.package_root / "manifest" / "components.v1.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        roles = {component["runtime_role"] for component in data["components"]}
+        self.assertEqual(roles, {"runtime_required", "compatibility_reference"})
+        by_destination = {component["destination"]: component for component in data["components"]}
+        self.assertEqual(by_destination["bin/facman.exe"]["runtime_role"], "runtime_required")
+        self.assertTrue(
+            all(
+                component["runtime_role"] == "compatibility_reference"
+                for destination, component in by_destination.items()
+                if destination.startswith("contracts/schema/") or destination.startswith("content/factorio/")
+            )
+        )
+
+        invalid = self.temp_root / "invalid component role"
+        shutil.copytree(self.package_root, invalid)
+        invalid_path = invalid / "manifest" / "components.v1.json"
+        invalid_data = json.loads(invalid_path.read_text(encoding="utf-8"))
+        invalid_data["components"][0]["runtime_role"] = "untrusted_magic"
+        invalid_path.write_text(json.dumps(invalid_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        package_hash_manifest.write_hash_manifest(invalid)
+        self.assertTrue(package_hash_manifest.verify_manifest(invalid))
+        completed = run_package_verify(invalid)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("runtime_role is invalid", completed.stdout)
+
+    def test_unknown_profile_and_manifest_fields_are_refused_after_rehash(self) -> None:
+        unknown = self.temp_root / "unknown profile"
+        shutil.copytree(self.package_root, unknown)
+        manifest = unknown / "manifest" / "package.v1.toml"
+        text = manifest.read_text(encoding="utf-8").replace(
+            'profile_id = "windows_portable_cli_x64"',
+            'profile_id = "future_unreviewed_profile"',
+        )
+        manifest.write_text(text, encoding="utf-8")
+        package_hash_manifest.write_hash_manifest(unknown)
+        completed = run_package_verify(unknown)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("unknown built package profile", completed.stdout)
+
+        extra = self.temp_root / "extra manifest field"
+        shutil.copytree(self.package_root, extra)
+        manifest = extra / "manifest" / "package.v1.toml"
+        manifest.write_text(manifest.read_text(encoding="utf-8") + 'unreviewed = "true"\n', encoding="utf-8")
+        package_hash_manifest.write_hash_manifest(extra)
+        completed = run_package_verify(extra)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("unsupported package manifest field", completed.stdout)
+
+    def test_workspace_lock_revision_mismatch_is_refused_after_rehash(self) -> None:
+        mismatched = self.temp_root / "mismatched workspace lock"
+        shutil.copytree(self.package_root, mismatched)
+        manifest = mismatched / "manifest" / "package.v1.toml"
+        text = manifest.read_text(encoding="utf-8")
+        current = tomllib.loads(text)["universal_launcher_revision"]
+        text = text.replace(current, "0" * 40, 1)
+        manifest.write_text(text, encoding="utf-8")
+        package_hash_manifest.write_hash_manifest(mismatched)
+        completed = run_package_verify(mismatched)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("source revisions disagree with workspace lock", completed.stdout)
 
     def test_archive_name_uses_version_once_and_extracted_archive_smokes(self) -> None:
         build_info = json.loads((self.package_root / "manifest" / "build_info.v1.json").read_text(encoding="utf-8"))
