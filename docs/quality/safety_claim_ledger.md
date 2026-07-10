@@ -1,7 +1,7 @@
 # Safety Claim Ledger
 
 Baseline audit revision: `df2dd9487d51c30cf1bf404a9c7246288ee330b9`.
-Bounded proof revision: `91db3baca3bdd741da9ffeb1f205bea16fe16379`.
+Bounded proof implementation revision: `4e6d8a191a8b17723cdd210fef2083d6814fc9b8`.
 
 This ledger prevents a fixture, declaration, or generated file from being
 reported as stronger runtime evidence.

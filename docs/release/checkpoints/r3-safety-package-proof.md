@@ -10,7 +10,7 @@ by this checkpoint.
 
 | Repository | Branch | Proof implementation revision | Scope |
 | --- | --- | --- | --- |
-| `factorio-launcher` | `task/facman-safety-proof-gates` | `91db3baca3bdd741da9ffeb1f205bea16fe16379` | evidence, confinement, truth floor, command slice, package proof |
+| `factorio-launcher` | `task/facman-safety-proof-gates` | `4e6d8a191a8b17723cdd210fef2083d6814fc9b8` | evidence, confinement, truth floor, command slice, corrected package proof |
 | `universal-launcher` | `task/command-registry-abi-truth` | `09e5977efd0627388da51038977ef0f5edeedfda` | registered handler path and first workflow contracts |
 | `universal-setup` | `task/setup-abi-truth` | `ad129da9ac4ca86a060f5fe6c9fd31318dc44678` | ABI correctness floor and truthful unavailable verification |
 
@@ -25,7 +25,7 @@ bounded registration and ABI guards.
 | `FACMAN-TRUST-BOUNDARY-HARDEN-01` | `a42f128` | validated identifiers, contained paths, no-clobber staging, atomic writes, and owned outputs pass regressions |
 | `FACMAN-TRUTH-FLOOR-01` | `35a87e4` | read-only no-write behavior, live schema conformance, truthful refusals, and capability quarantine pass |
 | `FACMAN-COMMAND-VERTICAL-SLICE-01` | `0f4a49d` | first install-to-launch-preview workflow executes through registered application handlers |
-| `FACMAN-PACKAGE-PROOF-02` | `91db3ba` | Windows x64 static CLI package verifies and passes relocation/adversarial package tests |
+| `FACMAN-PACKAGE-PROOF-02` | `91db3ba`, `4e6d8a1` | Windows x64 static CLI package verifies, passes adversarial tests, and uses the exact non-duplicated archive name |
 
 ## Selected Package
 
