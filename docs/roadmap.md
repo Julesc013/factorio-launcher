@@ -3,6 +3,20 @@
 FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
+## Immediate Safety And Truth Gates
+
+Feature expansion and R3 promotion are paused while the bounded gates in
+[`docs/quality/safety_proof_gates.md`](quality/safety_proof_gates.md) run:
+
+1. `FACMAN-EVIDENCE-LOCK-01`
+2. `FACMAN-TRUST-BOUNDARY-HARDEN-01`
+3. `FACMAN-TRUTH-FLOOR-01`
+4. `FACMAN-COMMAND-VERTICAL-SLICE-01`
+5. `FACMAN-PACKAGE-PROOF-02`
+
+Repository ownership and root grammar are frozen. Current implementation,
+contracts, package linkage, and experimental ABI details are not.
+
 ## FACMAN-INTEGRATION-HARDEN-01
 
 - Cross-repo boundary proof for `factorio-launcher`, `universal-launcher`, and
@@ -147,16 +161,20 @@ R1 - Developer preview
 R2 - Local power-user alpha
   real install import
   fixture-backed discovery classification
-  isolated instances
-  dry-run and execute
+  instance layout and launch-plan scaffolding
+  controlled process-spawn fixture proof
+  real Factorio write isolation not proven
+  execute quarantined until isolation proof
   local modsets
   workspace invariants and package layout skeletons
   save roundtrip and diagnostic redaction proofs
 
-R3 - Safe beta
-  unsigned built package artifacts for portable CLI/TUI and Windows legacy WinForms
-  package runtime smoke from package roots with external workspaces
-  diagnostic UX polish
+R3 - Portable package and safety hardening
+  shared trust-boundary regressions pass
+  unsafe capabilities are proven or explicitly unavailable
+  one authoritative install-to-launch-preview command slice
+  one target-specific static CLI package
+  package integrity and relocation smoke
 
 R4 - Managed install alpha
   Universal Setup local archive install
