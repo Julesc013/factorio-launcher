@@ -5,11 +5,13 @@ on:
   pull_request:
 
 jobs:
-  native-and-python:
-    runs-on: ubuntu-latest
+  linux-native:
+    runs-on: ubuntu-24.04
+    env:
+      FACMAN_CLI_EXE: ${{ github.workspace }}/build/native-smoke/facman
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: Clone universal repositories
@@ -18,15 +20,13 @@ jobs:
           git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
-      - name: Configure native smoke
+      - name: Configure native core
         run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_APPS=ON
-      - name: Build native smoke
+      - name: Build native core
         run: cmake --build build/native-smoke
-      - name: Run native smoke tests
+      - name: Run native tests
         run: ctest --test-dir build/native-smoke --output-on-failure
       - name: Run Python unit tests
-        env:
-          FACMAN_CLI_EXE: ${{ github.workspace }}/build/native-smoke/facman
         run: python -m unittest discover -s tests -v
       - name: Run strict policy checks
         run: python tools/strict_check.py
@@ -35,39 +35,54 @@ jobs:
           ./build/native-smoke/facman --version
           ./build/native-smoke/facman product inspect
           ./build/native-smoke/facman doctor
-      - name: Build enabled portable package profiles
+      - name: Build enabled portable compatibility profiles
         run: |
           python tools/package_build.py --profile portable_cli_x64 --out build/packages --build-root build/native-smoke
           python tools/package_build.py --profile portable_tui_x64 --out build/packages --build-root build/native-smoke
-      - name: Smoke portable package profiles
+      - name: Smoke portable compatibility profiles
         run: |
           python tools/package_runtime_smoke.py --root build/packages/portable_cli_x64
           python tools/package_runtime_smoke.py --root build/packages/portable_tui_x64
 
-  winforms-compile:
-    runs-on: windows-latest
+  windows-native-package:
+    runs-on: windows-2022
+    env:
+      FACMAN_CLI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman.exe
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v3
       - name: Clone universal repositories
         run: |
           git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
           git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
-      - name: Validate frontend contracts
-        run: |
-          python tools/frontend_contract_check.py
-          python tools/gui_surface_check.py
-          python tools/language_runtime_policy_check.py
+      - name: Configure Windows native core
+        run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_APPS=ON
+      - name: Build Windows native core
+        run: cmake --build build/native-smoke --config Debug
+      - name: Run Windows native tests
+        run: ctest --test-dir build/native-smoke -C Debug --output-on-failure
       - name: Build WinForms shell
         run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Debug
       - name: Smoke WinForms command client
         run: python tools/winforms_command_client_smoke.py
-      - name: Build and smoke Windows package profile
+      - name: Run Windows Python unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Run required Windows package proof with zero skips
+        run: python tools/required_package_proof.py
+      - name: Run strict policy checks
+        run: python tools/strict_check.py
+      - name: Build selected Windows static package
+        run: python tools/package_build.py --profile windows_portable_cli_x64 --out build/packages --build-root build/native-smoke
+      - name: Verify and smoke selected Windows static package
+        run: |
+          python tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify
+          python tools/package_runtime_smoke.py --root build/packages/windows_portable_cli_x64
+      - name: Build and smoke legacy WinForms compatibility package
         run: |
           python tools/package_build.py --profile windows_legacy_winforms_x64 --out build/packages --build-root build/native-smoke
           python tools/package_runtime_smoke.py --root build/packages/windows_legacy_winforms_x64
@@ -75,7 +90,7 @@ jobs:
   appkit-compile:
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Compile AppKit shell sources
         run: |
           mkdir -p build/appkit-smoke
