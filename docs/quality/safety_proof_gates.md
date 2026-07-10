@@ -93,3 +93,11 @@ dynamic plugin, network provider, archive format, or setup mutation.
 Safe-beta promotion is a separate decision requiring real Factorio isolation,
 production archive handling, crash recovery, broader native CI, and the other
 release-level proofs in the roadmap.
+
+## Current Result
+
+Gates 0 through 4 passed locally on the selected Windows x64 host on July 10,
+2026. The bounded implementation pause is therefore complete; the Safe-beta
+promotion pause remains in force. See the
+[`R3 safety and package checkpoint`](../release/checkpoints/r3-safety-package-proof.md)
+for exact commits, validation commands, and limitations.

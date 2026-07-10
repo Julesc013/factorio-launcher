@@ -78,6 +78,7 @@ Release:
 - [Package Layout](release/PACKAGE_LAYOUT.md)
 - [Offline Bundles](release/OFFLINE_BUNDLES.md)
 - [Support Policy](release/SUPPORT_POLICY.md)
+- [R3 Safety And Package Proof Checkpoint](release/checkpoints/r3-safety-package-proof.md)
 
 Planning:
 
