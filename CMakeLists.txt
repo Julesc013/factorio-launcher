@@ -98,6 +98,10 @@ set(FLAUNCH_CLIENT_SOURCES
 add_library(flaunch_runtime_static STATIC ${FLAUNCH_RUNTIME_SOURCES})
 target_include_directories(flaunch_runtime_static PUBLIC runtime/package)
 
+add_library(facman_base_static STATIC runtime/base/fl_path_safety.cpp)
+target_include_directories(facman_base_static PUBLIC runtime/base)
+target_compile_features(facman_base_static PUBLIC cxx_std_17)
+
 add_library(flaunch_client_static STATIC ${FLAUNCH_CLIENT_SOURCES})
 target_include_directories(flaunch_client_static PUBLIC
   runtime/client
@@ -144,7 +148,7 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     apps/cli/command_dispatch.cpp
   )
   target_compile_features(facman_cli PRIVATE cxx_std_17)
-  target_link_libraries(facman_cli PRIVATE flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_modsets_static)
+  target_link_libraries(facman_cli PRIVATE facman_base_static flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_modsets_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 
   add_executable(facman_tui

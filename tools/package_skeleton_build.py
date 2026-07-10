@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
 import tomllib
 from pathlib import Path
@@ -12,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import package_layout_check
+from tools import owned_output, package_layout_check
 
 DEFAULT_OUT = ROOT / "build" / "package-skeletons"
 RELEASE_INDEX = ROOT / "release" / "index" / "release_index.v1.toml"
@@ -37,10 +36,11 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def materialize_all(out_root: Path, clean: bool = True) -> list[Path]:
-    if clean and out_root.exists():
-        assert_safe_output_root(out_root)
-        shutil.rmtree(out_root)
-    out_root.mkdir(parents=True, exist_ok=True)
+    assert_safe_output_root(out_root)
+    if clean:
+        owned_output.reset_owned_output_root(out_root, "package-skeletons")
+    else:
+        owned_output.ensure_owned_output_root(out_root, "package-skeletons")
     profiles = load_profiles()
     built: list[Path] = []
     for profile_path, profile in profiles:

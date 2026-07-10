@@ -5,6 +5,7 @@
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modsets.h"
 #include "fl_command_client_cabi.h"
+#include "fl_path_safety.h"
 #include "usk/usk_api.h"
 
 #include <algorithm>
@@ -49,6 +50,7 @@ using InstallRef = factorio_discovery::InstallRef;
 using RedactionEvent = factorio_diagnostics::RedactionEvent;
 using ModRef = factorio_modsets::ModRef;
 using ModsetIssue = factorio_modsets::ModsetIssue;
+using ManagedPathResult = facman::base::ManagedPathResult;
 
 struct InstanceRef {
     std::string instance_id;
@@ -89,6 +91,8 @@ struct DiagnosticBundleEntry {
     std::string kind;
     bool redacted;
 };
+
+bool has_flag(const std::vector<std::string>& args, const std::string& flag);
 
 std::string path_string(const fs::path& path)
 {
@@ -143,6 +147,50 @@ std::string json_escape(const std::string& value)
 std::string quote(const std::string& value)
 {
     return "\"" + json_escape(value) + "\"";
+}
+
+std::string safety_refusal_json(
+    const std::string& operation,
+    const std::string& code,
+    const std::string& reason,
+    const std::string& detail,
+    bool retryable)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"facman.safety_refusal.v1\",\n";
+    out << "  \"operation\": " << quote(operation) << ",\n";
+    out << "  \"status\": \"refused\",\n";
+    out << "  \"refusal\": {\n";
+    out << "    \"schema\": \"common.refusal.v1\",\n";
+    out << "    \"code\": " << quote(code) << ",\n";
+    out << "    \"reason\": " << quote(reason) << ",\n";
+    out << "    \"detail\": " << quote(detail) << ",\n";
+    out << "    \"recoverable\": " << (retryable ? "true" : "false") << ",\n";
+    out << "    \"retryable\": " << (retryable ? "true" : "false") << ",\n";
+    out << "    \"severity\": \"blocked\"\n";
+    out << "  }\n";
+    out << "}\n";
+    return out.str();
+}
+
+int emit_safety_refusal(
+    const CliOptions& options,
+    const std::string& operation,
+    const std::string& code,
+    const std::string& reason,
+    const std::string& detail,
+    bool retryable = false)
+{
+    if (has_flag(options.args, "--json")) {
+        std::cout << safety_refusal_json(operation, code, reason, detail, retryable);
+    } else {
+        std::cerr << "Refused: " << reason << "\n";
+        if (!detail.empty()) {
+            std::cerr << "Detail: " << detail << "\n";
+        }
+    }
+    return 1;
 }
 
 ulk_string_view ulk_view_from_cstr(const char* text)
@@ -559,9 +607,14 @@ std::string slugify(const std::string& text)
     return out.empty() ? "instance" : out;
 }
 
+ManagedPathResult server_path_result(const fs::path& workspace, const std::string& server_id)
+{
+    return facman::base::managed_file(workspace, "servers", server_id, ".server.v1.json");
+}
+
 fs::path server_path(const fs::path& workspace, const std::string& server_id)
 {
-    return workspace / "servers" / (server_id + ".server.v1.json");
+    return server_path_result(workspace, server_id).path;
 }
 
 std::string server_json(const ServerRef& server)
@@ -581,7 +634,11 @@ std::string server_json(const ServerRef& server)
 
 bool load_server(const fs::path& workspace, const std::string& server_id, ServerRef& out)
 {
-    fs::path path = server_path(workspace, server_id);
+    ManagedPathResult managed = server_path_result(workspace, server_id);
+    if (!managed.ok()) {
+        return false;
+    }
+    fs::path path = managed.path;
     if (!fs::is_regular_file(path)) {
         return false;
     }
@@ -589,7 +646,7 @@ bool load_server(const fs::path& workspace, const std::string& server_id, Server
     out.server_id = json_string_value(text, "server_id");
     out.display_name = json_string_value(text, "display_name");
     out.instance_id = json_string_value(text, "instance_id");
-    return true;
+    return out.server_id == server_id;
 }
 
 std::string server_refusal_json(const std::string& operation, const ServerRef& server, const std::string& reason)
@@ -717,14 +774,24 @@ std::string diagnostic_refusal_json(
     return out.str();
 }
 
+ManagedPathResult install_path_result(const fs::path& workspace, const std::string& install_id)
+{
+    return facman::base::managed_file(workspace, fs::path("installs") / "refs", install_id, ".json");
+}
+
 fs::path install_path(const fs::path& workspace, const std::string& install_id)
 {
-    return workspace / "installs" / "refs" / (install_id + ".json");
+    return install_path_result(workspace, install_id).path;
+}
+
+ManagedPathResult legacy_install_path_result(const fs::path& workspace, const std::string& install_id)
+{
+    return facman::base::managed_file(workspace, fs::path("installs") / "installed_state", install_id, ".json");
 }
 
 fs::path legacy_install_path(const fs::path& workspace, const std::string& install_id)
 {
-    return workspace / "installs" / "installed_state" / (install_id + ".json");
+    return legacy_install_path_result(workspace, install_id).path;
 }
 
 bool contains_install_ref(const std::vector<fs::path>& files, const fs::path& candidate)
@@ -793,9 +860,17 @@ std::string installs_report_json(const std::vector<InstallRef>& installs)
 
 bool load_install(const fs::path& workspace, const std::string& install_id, InstallRef& out)
 {
-    fs::path path = install_path(workspace, install_id);
+    ManagedPathResult managed = install_path_result(workspace, install_id);
+    if (!managed.ok()) {
+        return false;
+    }
+    fs::path path = managed.path;
     if (!fs::is_regular_file(path)) {
-        path = legacy_install_path(workspace, install_id);
+        managed = legacy_install_path_result(workspace, install_id);
+        if (!managed.ok()) {
+            return false;
+        }
+        path = managed.path;
     }
     if (!fs::is_regular_file(path)) {
         return false;
@@ -809,17 +884,24 @@ bool load_install(const fs::path& workspace, const std::string& install_id, Inst
     out.source = json_string_value(text, "source");
     out.platform = json_string_value(text, "platform");
     out.verification_status = json_string_value(text, "status");
-    return true;
+    return out.install_id == install_id;
+}
+
+ManagedPathResult instance_root_result(const fs::path& workspace, const std::string& instance_id)
+{
+    return facman::base::managed_directory(workspace, "instances", instance_id);
 }
 
 fs::path instance_manifest_path(const fs::path& workspace, const std::string& instance_id)
 {
-    return workspace / "instances" / instance_id / "instance.v1.json";
+    ManagedPathResult root = instance_root_result(workspace, instance_id);
+    return root.ok() ? root.path / "instance.v1.json" : fs::path();
 }
 
 fs::path legacy_instance_manifest_path(const fs::path& workspace, const std::string& instance_id)
 {
-    return workspace / "instances" / instance_id / "instance.manifest.json";
+    ManagedPathResult root = instance_root_result(workspace, instance_id);
+    return root.ok() ? root.path / "instance.manifest.json" : fs::path();
 }
 
 std::string instance_json(const InstanceRef& instance)
@@ -845,6 +927,10 @@ std::string instance_json(const InstanceRef& instance)
 
 bool load_instance(const fs::path& workspace, const std::string& instance_id, InstanceRef& out)
 {
+    ManagedPathResult root = instance_root_result(workspace, instance_id);
+    if (!root.ok()) {
+        return false;
+    }
     fs::path path = instance_manifest_path(workspace, instance_id);
     if (!fs::is_regular_file(path)) {
         path = legacy_instance_manifest_path(workspace, instance_id);
@@ -857,10 +943,12 @@ bool load_instance(const fs::path& workspace, const std::string& instance_id, In
     out.display_name = json_string_value(text, "display_name");
     out.install_ref = json_string_value(text, "install_ref");
     out.factorio_version = json_string_value(text, "factorio_version");
-    out.local_data_root = json_string_value(text, "local_data_root");
+    out.local_data_root = root.path;
     out.profile = json_string_value(text, "profile");
     out.template_id = json_string_value(text, "template");
-    return true;
+    std::string identifier_error;
+    return out.instance_id == instance_id &&
+        facman::base::validate_identifier(out.install_ref, identifier_error);
 }
 
 facman::factorio::launch::InstanceLaunchRef launch_instance_ref(const InstanceRef& instance)
@@ -889,7 +977,8 @@ std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
         return manifests;
     }
     for (const fs::directory_entry& entry : fs::directory_iterator(instances)) {
-        if (entry.is_directory()) {
+        ManagedPathResult managed = instance_root_result(workspace, entry.path().filename().string());
+        if (entry.is_directory() && managed.ok() && managed.path == fs::absolute(entry.path()).lexically_normal()) {
             fs::path manifest = entry.path() / "instance.manifest.json";
             fs::path v1_manifest = entry.path() / "instance.v1.json";
             if (fs::is_regular_file(v1_manifest)) {
@@ -919,7 +1008,12 @@ fs::path modset_lock_path(const InstanceRef& instance)
 
 fs::path workspace_modset_lock_path(const fs::path& workspace, const InstanceRef& instance)
 {
-    return workspace / "modsets" / (instance.instance_id + ".modset-lock.v1.json");
+    ManagedPathResult path = facman::base::managed_file(
+        workspace,
+        "modsets",
+        instance.instance_id,
+        ".modset-lock.v1.json");
+    return path.path;
 }
 
 ModRef mod_ref_from_path(const fs::path& path)
@@ -1298,6 +1392,10 @@ std::string saves_json(const InstanceRef& instance)
 
 bool resolve_instance_save(const InstanceRef& instance, const std::string& save_name, SaveRef& out)
 {
+    std::string identifier_error;
+    if (!facman::base::validate_identifier(save_name, identifier_error)) {
+        return false;
+    }
     fs::path save_root = instance.local_data_root / "saves";
     fs::path candidate = save_root / save_name;
     if (!fs::is_regular_file(candidate) && candidate.extension() != ".zip") {
@@ -2493,12 +2591,39 @@ int command_installs(const CliOptions& options)
             return 2;
         }
         std::string id = option_value(options.args, "--id", slugify(fs::path(options.args[2]).filename().string()));
+        ManagedPathResult target = install_path_result(options.workspace, id);
+        if (!target.ok()) {
+            return emit_safety_refusal(
+                options,
+                "installs.import",
+                target.code,
+                "Install id cannot be used as a managed path",
+                target.detail);
+        }
+        if (fs::exists(target.path)) {
+            return emit_safety_refusal(
+                options,
+                "installs.import",
+                "persistent_target_exists",
+                "Install reference already exists",
+                path_string(target.path),
+                true);
+        }
         InstallRef install = inspect_install(options.args[2], id);
         if (install.verification_status == "invalid") {
             std::cerr << "Install does not look like a Factorio directory: " << options.args[2] << "\n";
             return 1;
         }
-        write_text(install_path(options.workspace, install.install_id), install_json(install));
+        std::string write_error;
+        if (!facman::base::write_text_new_atomic(target.path, install_json(install), write_error)) {
+            return emit_safety_refusal(
+                options,
+                "installs.import",
+                "persistent_write_refused",
+                "Install reference could not be committed without overwrite",
+                write_error,
+                true);
+        }
         if (has_flag(options.args, "--json")) {
             std::cout << install_json(install);
         } else {
@@ -2598,11 +2723,55 @@ int command_instances(const CliOptions& options)
         InstanceRef instance;
         instance.display_name = options.args[2];
         instance.instance_id = option_value(options.args, "--id", slugify(instance.display_name));
+        ManagedPathResult target = instance_root_result(options.workspace, instance.instance_id);
+        if (!target.ok()) {
+            return emit_safety_refusal(
+                options,
+                "instances.create",
+                target.code,
+                "Instance id cannot be used as a managed path",
+                target.detail);
+        }
+        if (fs::exists(target.path)) {
+            return emit_safety_refusal(
+                options,
+                "instances.create",
+                "persistent_target_exists",
+                "Instance target already exists",
+                path_string(target.path),
+                true);
+        }
         instance.install_ref = install_id;
         instance.factorio_version = install.version;
-        instance.local_data_root = options.workspace / "instances" / instance.instance_id;
+        instance.local_data_root = target.path;
         instance.profile = "gui";
         instance.template_id = option_value(options.args, "--template", "vanilla");
+
+        fs::path staging = target.path;
+        staging += ".facman-staging";
+        if (fs::exists(staging)) {
+            return emit_safety_refusal(
+                options,
+                "instances.create",
+                "staging_target_exists",
+                "Instance staging target already exists",
+                path_string(staging),
+                true);
+        }
+        fs::create_directories(staging);
+        std::string write_error;
+        if (!facman::base::write_text_new_atomic(
+                staging / ".facman-staging.v1",
+                "facman-instance-staging-v1\n",
+                write_error)) {
+            return emit_safety_refusal(
+                options,
+                "instances.create",
+                "persistent_write_refused",
+                "Instance staging ownership marker could not be written",
+                write_error,
+                true);
+        }
 
         const char* dirs[] = {
             "config",
@@ -2617,12 +2786,27 @@ int command_instances(const CliOptions& options)
             "locks",
         };
         for (const char* dir : dirs) {
-            fs::create_directories(instance.local_data_root / dir);
+            fs::create_directories(staging / dir);
         }
-        write_text(instance.local_data_root / "config" / "config.ini", "[path]\n");
-        write_text(instance.local_data_root / "config" / "config-path.cfg",
-                   "read-data=" + path_string(install.root) + "\nwrite-data=" + path_string(instance.local_data_root) + "\n");
-        write_text(instance_manifest_path(options.workspace, instance.instance_id), instance_json(instance));
+        bool staged = facman::base::write_text_new_atomic(staging / "config" / "config.ini", "[path]\n", write_error) &&
+            facman::base::write_text_new_atomic(
+                staging / "config" / "config-path.cfg",
+                "read-data=" + path_string(install.root) + "\nwrite-data=" + path_string(instance.local_data_root) + "\n",
+                write_error) &&
+            facman::base::write_text_new_atomic(staging / "instance.v1.json", instance_json(instance), write_error);
+        if (!staged || !facman::base::commit_directory_no_clobber(staging, target.path, write_error)) {
+            std::string cleanup_error;
+            (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
+            return emit_safety_refusal(
+                options,
+                "instances.create",
+                "persistent_write_refused",
+                "Instance could not be committed without overwrite",
+                write_error,
+                true);
+        }
+        std::error_code marker_error;
+        fs::remove(target.path / ".facman-staging.v1", marker_error);
 
         if (has_flag(options.args, "--json")) {
             std::cout << instance_json(instance);
@@ -2765,8 +2949,17 @@ int command_mods(const CliOptions& options)
             return 1;
         }
         fs::path destination = instance.local_data_root / "mods" / source.filename();
+        if (fs::exists(destination)) {
+            return emit_safety_refusal(
+                options,
+                "mods.import",
+                "persistent_target_exists",
+                "Mod target already exists",
+                path_string(destination),
+                true);
+        }
         fs::create_directories(destination.parent_path());
-        fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
+        fs::copy_file(source, destination, fs::copy_options::none);
         mod.file_path = destination;
         if (has_flag(options.args, "--json")) {
             std::cout << mod_ref_to_json(mod) << "\n";
@@ -3336,7 +3529,16 @@ int command_import(const CliOptions& options)
     instance.factorio_version = json_string_value(manifest_text, "factorio_version");
     instance.profile = json_string_value(manifest_text, "profile");
     instance.template_id = json_string_value(manifest_text, "template");
-    instance.local_data_root = options.workspace / "instances" / instance.instance_id;
+    ManagedPathResult target = instance_root_result(options.workspace, instance.instance_id);
+    if (!target.ok()) {
+        return refuse(
+            instance.instance_id,
+            target.code,
+            "Instance import id cannot be used as a managed path",
+            false,
+            target.detail);
+    }
+    instance.local_data_root = target.path;
 
     if (fs::exists(instance.local_data_root)) {
         return refuse(
@@ -3348,20 +3550,84 @@ int command_import(const CliOptions& options)
         );
     }
 
+    fs::path staging = target.path;
+    staging += ".facman-staging";
+    if (fs::exists(staging)) {
+        return refuse(
+            instance.instance_id,
+            "staging_target_exists",
+            "Instance import staging target already exists",
+            true,
+            path_string(staging));
+    }
+    fs::create_directories(staging);
+    std::string staging_error;
+    if (!facman::base::write_text_new_atomic(
+            staging / ".facman-staging.v1",
+            "facman-instance-import-staging-v1\n",
+            staging_error)) {
+        return refuse(
+            instance.instance_id,
+            "persistent_write_refused",
+            "Instance import staging marker could not be written",
+            true,
+            staging_error);
+    }
+
     for (const ZipEntry& entry : entries) {
         if (entry.name.rfind("manifest/", 0) == 0) {
             continue;
         }
-        fs::path output_path = instance.local_data_root / fs::path(entry.name);
+        fs::path output_path = staging / fs::path(entry.name);
         fs::create_directories(output_path.parent_path());
         std::ofstream out(output_path, std::ios::binary);
         out.write(reinterpret_cast<const char*>(entry.data.data()), static_cast<std::streamsize>(entry.data.size()));
+        if (!out) {
+            out.close();
+            std::string cleanup_error;
+            (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
+            return refuse(
+                instance.instance_id,
+                "persistent_write_refused",
+                "Instance import entry could not be staged",
+                true,
+                entry.name);
+        }
     }
 
-    write_text(instance_manifest_path(options.workspace, instance.instance_id), instance_json(instance));
+    std::error_code manifest_error;
+    fs::remove(staging / "instance.v1.json", manifest_error);
+    if (!facman::base::write_text_new_atomic(
+            staging / "instance.v1.json",
+            instance_json(instance),
+            staging_error)) {
+        std::string cleanup_error;
+        (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
+        return refuse(
+            instance.instance_id,
+            "persistent_write_refused",
+            "Instance import manifest could not be staged",
+            true,
+            staging_error);
+    }
+    if (!facman::base::commit_directory_no_clobber(staging, target.path, staging_error)) {
+        std::string cleanup_error;
+        (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
+        return refuse(
+            instance.instance_id,
+            "persistent_write_refused",
+            "Instance import could not be committed without overwrite",
+            true,
+            staging_error);
+    }
+    std::error_code marker_error;
+    fs::remove(target.path / ".facman-staging.v1", marker_error);
+
     fs::path lock_path = modset_lock_path(instance);
-    if (fs::is_regular_file(lock_path)) {
-        write_text(workspace_modset_lock_path(options.workspace, instance), read_text(lock_path));
+    fs::path workspace_lock_path = workspace_modset_lock_path(options.workspace, instance);
+    if (fs::is_regular_file(lock_path) && !workspace_lock_path.empty() && !fs::exists(workspace_lock_path)) {
+        std::string lock_error;
+        (void)facman::base::write_text_new_atomic(workspace_lock_path, read_text(lock_path), lock_error);
     }
 
     if (has_flag(options.args, "--json")) {
@@ -3404,7 +3670,34 @@ int command_servers(const CliOptions& options)
         server.display_name = options.args[2];
         server.server_id = option_value(options.args, "--id", slugify(server.display_name));
         server.instance_id = instance.instance_id;
-        write_text(server_path(options.workspace, server.server_id), server_json(server));
+        ManagedPathResult target = server_path_result(options.workspace, server.server_id);
+        if (!target.ok()) {
+            return emit_safety_refusal(
+                options,
+                "servers.create",
+                target.code,
+                "Server id cannot be used as a managed path",
+                target.detail);
+        }
+        if (fs::exists(target.path)) {
+            return emit_safety_refusal(
+                options,
+                "servers.create",
+                "persistent_target_exists",
+                "Server profile already exists",
+                path_string(target.path),
+                true);
+        }
+        std::string write_error;
+        if (!facman::base::write_text_new_atomic(target.path, server_json(server), write_error)) {
+            return emit_safety_refusal(
+                options,
+                "servers.create",
+                "persistent_write_refused",
+                "Server profile could not be committed without overwrite",
+                write_error,
+                true);
+        }
         if (has_flag(options.args, "--json")) {
             std::cout << server_json(server);
         } else {

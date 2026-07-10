@@ -1,6 +1,11 @@
 schema = "facman.refusal_codes.v1"
 
 required_codes = [
+  "invalid_identifier",
+  "unsafe_managed_path",
+  "persistent_target_exists",
+  "persistent_write_refused",
+  "staging_target_exists",
   "foreign_owned_install_repair_refused",
   "foreign_owned_install_uninstall_refused",
   "default_data_dir_write_refused",
@@ -45,6 +50,41 @@ required_codes = [
   "redaction_policy_missing",
   "redaction_policy_invalid",
 ]
+
+[[code]]
+id = "invalid_identifier"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The identifier is not valid for persistent FacMan state."
+
+[[code]]
+id = "unsafe_managed_path"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The requested managed path does not remain inside its trusted root."
+
+[[code]]
+id = "persistent_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Persistent state already exists and replacement was not explicitly authorized."
+
+[[code]]
+id = "persistent_write_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Persistent state could not be staged and committed safely."
+
+[[code]]
+id = "staging_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A staging target already exists and requires recovery before retrying."
 
 [[code]]
 id = "invalid_request"

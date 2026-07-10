@@ -111,6 +111,23 @@ class BuiltPackageArtifactTests(unittest.TestCase):
                 self.assertNotIn(forbidden, path.read_text(encoding="utf-8"))
 
 
+class BuiltPackageOutputOwnershipTests(unittest.TestCase):
+    def test_builder_refuses_unowned_output_root_before_build(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "unowned"
+            root.mkdir()
+            valuable = root / "operator-data.txt"
+            valuable.write_text("preserve\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "unowned output root"):
+                package_build.build_profile(
+                    profile_id="portable_cli_x64",
+                    out_root=root,
+                    build_root=Path(tmp) / "missing-build",
+                    dist_root=None,
+                )
+            self.assertEqual(valuable.read_text(encoding="utf-8"), "preserve\n")
+
+
 @unittest.skipIf(os.name != "nt", "WinForms package layout proof is Windows-only")
 class BuiltWindowsPackageArtifactTests(unittest.TestCase):
     @classmethod

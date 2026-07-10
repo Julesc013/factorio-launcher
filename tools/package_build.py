@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import package_hash_manifest, package_layout_check
+from tools import owned_output, package_hash_manifest, package_layout_check
 
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -74,6 +74,8 @@ def build_profile(
     dist_root: Path | None = DEFAULT_DIST,
     clean: bool = True,
 ) -> Path:
+    assert_safe_output_root(out_root)
+    owned_output.ensure_owned_output_root(out_root, "built-packages")
     profile_path, profile = load_profile(profile_id)
     if profile_id not in SUPPORTED_BUILT_PROFILES:
         raise ValueError(f"{profile_id}: built artifact proof is not enabled for this profile")
@@ -81,7 +83,7 @@ def build_profile(
     bundle = package_layout_check.expand_bundle_manifest(bundle_path, load_toml(bundle_path), [])
     package_root = out_root / profile_id
     if clean and package_root.exists():
-        assert_safe_output_root(package_root)
+        owned_output.assert_owned_output_root(out_root, "built-packages")
         shutil.rmtree(package_root)
     package_root.mkdir(parents=True, exist_ok=True)
 
