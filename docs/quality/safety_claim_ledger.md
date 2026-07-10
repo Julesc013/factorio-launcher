@@ -4,6 +4,7 @@ Baseline audit revision: `df2dd9487d51c30cf1bf404a9c7246288ee330b9`.
 Bounded proof implementation revision: `4e6d8a191a8b17723cdd210fef2083d6814fc9b8`.
 R3.2 registry and routed-preview revision: `d898d4e702043b186cf0669ba98fb1c69afbca70`.
 R3.2 controlled-isolation revision: `17b11224db897bc11c8d4a024e2f1409cba4dd3f`.
+R3.2 final bounded-foundation revision: `0c64d56c6d1efee6ef7faf17f2781c6a1c1db8cc`.
 
 This ledger prevents a fixture, declaration, or generated file from being
 reported as stronger runtime evidence.
