@@ -61,11 +61,12 @@ class InstanceIsolationProbeTests(unittest.TestCase):
             root
             / "workspace with spaces"
             / "unicode-\N{SNOWMAN}"
-            / long_component
-            / long_component
-            / long_component
-            / "workspace"
         )
+        projected_instance = workspace / "instances" / "isolation-probe"
+        while len(str(projected_instance)) <= 300:
+            workspace /= long_component
+            projected_instance = workspace / "instances" / "isolation-probe"
+        workspace /= "workspace"
         install_root = root / "protected foreign install"
         shutil.copytree(FIXTURE_INSTALL, install_root)
         code, _stdout, stderr = invoke(
