@@ -1,0 +1,22 @@
+schema = "flaunch.workspace_lock.v1"
+id = "facman_workspace_lock_v1"
+lock_kind = "public_repository_revisions"
+lock_root = "factorio-launcher"
+
+[[component]]
+id = "factorio_binding"
+source = "factorio-launcher/runtime/factorio"
+pin = "2c2cce644b674d12227a194a77bce5a667fed721"
+path = "."
+
+[[component]]
+id = "universal_launcher"
+source = "universal-launcher"
+pin = "eeac9ee2e6b90c393b8a18a562526c27889a1510"
+path = "../universal-launcher"
+
+[[component]]
+id = "universal_setup"
+source = "universal-setup"
+pin = "a777af1f930bded3e00ec27c769b841d3bf344b5"
+path = "../universal-setup"
