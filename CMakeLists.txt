@@ -189,7 +189,14 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
 endif()
 
 if(FLAUNCH_BUILD_TESTS)
+  find_package(Threads REQUIRED)
+
   add_executable(flb_command_bridge_smoke tests/native/flb_command_bridge_smoke.c)
   target_link_libraries(flb_command_bridge_smoke PRIVATE flaunch_client_static flb_factorio_static)
   add_test(NAME flb_command_bridge_smoke COMMAND flb_command_bridge_smoke)
+
+  add_executable(fl_path_safety_smoke tests/native/fl_path_safety_smoke.cpp)
+  target_compile_features(fl_path_safety_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_path_safety_smoke PRIVATE facman_base_static Threads::Threads)
+  add_test(NAME fl_path_safety_smoke COMMAND fl_path_safety_smoke)
 endif()

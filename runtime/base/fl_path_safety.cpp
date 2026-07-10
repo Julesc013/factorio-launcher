@@ -1,15 +1,26 @@
 #include "fl_path_safety.h"
 
+#include <algorithm>
 #include <atomic>
+#include <cerrno>
 #include <chrono>
 #include <cctype>
-#include <fstream>
+#include <cstring>
 #include <sstream>
 #include <system_error>
 
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#ifdef __linux__
+#include <sys/syscall.h>
+#endif
+#ifdef __APPLE__
+#include <stdio.h>
+#endif
 #endif
 
 namespace fs = std::filesystem;
@@ -169,6 +180,154 @@ std::string temporary_leaf(const fs::path& path)
     return out.str();
 }
 
+std::string platform_error_message(unsigned long value)
+{
+#ifdef _WIN32
+    return std::system_category().message(static_cast<int>(value));
+#else
+    return std::generic_category().message(static_cast<int>(value));
+#endif
+}
+
+bool write_file_exclusive(
+    const fs::path& path,
+    const std::string& text,
+    std::string& detail)
+{
+#ifdef _WIN32
+    HANDLE handle = CreateFileW(
+        path.c_str(),
+        GENERIC_WRITE,
+        0,
+        nullptr,
+        CREATE_NEW,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (handle == INVALID_HANDLE_VALUE) {
+        detail = "could not exclusively create temporary file: " +
+            platform_error_message(GetLastError());
+        return false;
+    }
+    std::size_t offset = 0;
+    bool ok = true;
+    while (offset < text.size()) {
+        DWORD chunk = static_cast<DWORD>(std::min<std::size_t>(text.size() - offset, 0x7fffffff));
+        DWORD written = 0;
+        if (!WriteFile(handle, text.data() + offset, chunk, &written, nullptr) || written == 0) {
+            detail = "could not write temporary file: " + platform_error_message(GetLastError());
+            ok = false;
+            break;
+        }
+        offset += written;
+    }
+    if (ok && !FlushFileBuffers(handle)) {
+        detail = "could not flush temporary file: " + platform_error_message(GetLastError());
+        ok = false;
+    }
+    if (!CloseHandle(handle) && ok) {
+        detail = "could not close temporary file: " + platform_error_message(GetLastError());
+        ok = false;
+    }
+    if (!ok) {
+        DeleteFileW(path.c_str());
+    }
+    return ok;
+#else
+    int descriptor = ::open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
+    if (descriptor < 0) {
+        detail = "could not exclusively create temporary file: " +
+            platform_error_message(static_cast<unsigned long>(errno));
+        return false;
+    }
+    std::size_t offset = 0;
+    bool ok = true;
+    while (offset < text.size()) {
+        ssize_t written = ::write(descriptor, text.data() + offset, text.size() - offset);
+        if (written < 0 && errno == EINTR) continue;
+        if (written <= 0) {
+            detail = "could not write temporary file: " +
+                platform_error_message(static_cast<unsigned long>(errno));
+            ok = false;
+            break;
+        }
+        offset += static_cast<std::size_t>(written);
+    }
+    if (ok && ::fsync(descriptor) != 0) {
+        detail = "could not flush temporary file: " +
+            platform_error_message(static_cast<unsigned long>(errno));
+        ok = false;
+    }
+    if (::close(descriptor) != 0 && ok) {
+        detail = "could not close temporary file: " +
+            platform_error_message(static_cast<unsigned long>(errno));
+        ok = false;
+    }
+    if (!ok) {
+        ::unlink(path.c_str());
+    }
+    return ok;
+#endif
+}
+
+bool rename_no_replace(
+    const fs::path& source,
+    const fs::path& destination,
+    std::string& detail)
+{
+#ifdef _WIN32
+    if (MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_WRITE_THROUGH)) {
+        return true;
+    }
+    detail = "no-replace rename failed: " + platform_error_message(GetLastError());
+    return false;
+#elif defined(__APPLE__)
+    if (::renamex_np(source.c_str(), destination.c_str(), RENAME_EXCL) == 0) {
+        return true;
+    }
+    detail = "no-replace rename failed: " +
+        platform_error_message(static_cast<unsigned long>(errno));
+    return false;
+#elif defined(__linux__) && defined(SYS_renameat2)
+    constexpr unsigned int rename_no_replace_flag = 1;
+    if (::syscall(
+            SYS_renameat2,
+            AT_FDCWD,
+            source.c_str(),
+            AT_FDCWD,
+            destination.c_str(),
+            rename_no_replace_flag) == 0) {
+        return true;
+    }
+    int rename_error = errno;
+    if (rename_error != ENOSYS && rename_error != EINVAL) {
+        detail = "no-replace rename failed: " +
+            platform_error_message(static_cast<unsigned long>(rename_error));
+        return false;
+    }
+#endif
+
+#ifndef _WIN32
+    std::error_code status_error;
+    if (fs::is_regular_file(source, status_error) && !status_error) {
+        if (::link(source.c_str(), destination.c_str()) == 0) {
+            if (::unlink(source.c_str()) == 0) {
+                return true;
+            }
+            int unlink_error = errno;
+            ::unlink(destination.c_str());
+            detail = "could not remove temporary file after no-replace link: " +
+                platform_error_message(static_cast<unsigned long>(unlink_error));
+            return false;
+        }
+        detail = "no-replace link commit failed: " +
+            platform_error_message(static_cast<unsigned long>(errno));
+        return false;
+    }
+    detail = "atomic no-replace directory rename is unavailable on this platform/filesystem";
+    return false;
+#endif
+}
+
 } // namespace
 
 bool validate_identifier(const std::string& value, std::string& detail)
@@ -229,31 +388,11 @@ bool write_text_new_atomic(const fs::path& path, const std::string& text, std::s
     }
 
     fs::path temporary = path.parent_path() / temporary_leaf(path);
-    {
-        std::ofstream output(temporary, std::ios::binary | std::ios::trunc);
-        if (!output) {
-            detail = "could not create temporary file: " + temporary.string();
-            return false;
-        }
-        output << text;
-        output.flush();
-        if (!output) {
-            detail = "could not flush temporary file: " + temporary.string();
-            output.close();
-            fs::remove(temporary, error);
-            return false;
-        }
-    }
-
-    if (fs::exists(path, error)) {
-        fs::remove(temporary, error);
-        detail = "target appeared before commit: " + path.string();
+    if (!write_file_exclusive(temporary, text, detail)) {
         return false;
     }
-    fs::rename(temporary, path, error);
-    if (error) {
+    if (!rename_no_replace(temporary, path, detail)) {
         fs::remove(temporary, error);
-        detail = "could not commit new file without overwrite: " + path.string();
         return false;
     }
     detail.clear();
@@ -270,9 +409,7 @@ bool commit_directory_no_clobber(
         detail = "target already exists: " + destination.string();
         return false;
     }
-    fs::rename(staging, destination, error);
-    if (error) {
-        detail = "could not commit staged directory without overwrite: " + error.message();
+    if (!rename_no_replace(staging, destination, detail)) {
         return false;
     }
     detail.clear();

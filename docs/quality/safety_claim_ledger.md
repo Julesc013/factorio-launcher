@@ -9,7 +9,7 @@ reported as stronger runtime evidence.
 | Claim | Current level after bounded gates | Evidence | Limitation / required promotion evidence |
 | --- | --- | --- | --- |
 | Managed paths remain inside the workspace | regression-proven for enabled paths | validation, containment, link refusal, escape corpus | new filesystem features must reuse these primitives |
-| Persistent creation is no-clobber | regression-proven for current writers | staging and existing-target tests | future writers need an explicit create/replace/merge policy |
+| Persistent creation is no-clobber | regression-proven for current writers and same-host commit races | platform no-replace commits and concurrent tests | ancestor substitution and power-loss durability remain unproven |
 | Package tools clean only owned output | regression-proven | owned-output markers for skeleton, built package, and archive roots plus preservation tests | other future destructive tools need their own ownership kind |
 | Instance layout is structurally isolated | fixture-tested | instance layout and launch-plan tests | real Factorio write semantics unproven |
 | Process boundary passes intended arguments | fixture-tested | controlled executable smoke | does not prove Factorio configuration semantics |
@@ -23,6 +23,11 @@ reported as stronger runtime evidence.
 Each promotion record must identify the repository revision, sibling
 revisions, target platform/toolchain, proof command or operator procedure,
 known limitations, and the change that requires revalidation.
+
+The no-clobber proof covers the current writers. Future writers still need an
+explicit create, replace, merge, or resume policy. Handle-relative parent
+traversal, hostile cross-process substitution, and full power-loss durability
+remain separate promotion evidence.
 
 The exact gate and sibling revisions, platform, commands, and residual claims
 are recorded in
