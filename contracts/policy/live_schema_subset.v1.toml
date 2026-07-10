@@ -1,0 +1,40 @@
+schema = "facman.live_schema_subset.v1"
+validator = "tools/json_contract.py"
+claim = "supported_subset_only"
+stability = "experimental"
+
+[[live_schema]]
+path = "contracts/schema/common/command_request.v1.schema.json"
+consumer = "authoritative command boundary"
+
+[[live_schema]]
+path = "contracts/schema/common/refusal.v1.schema.json"
+consumer = "runtime refusal truth tests"
+
+[[live_schema]]
+path = "contracts/schema/factorio/factorio_discovery_report.v1.schema.json"
+consumer = "install_refs.scan"
+
+[[live_schema]]
+path = "contracts/schema/factorio/factorio_install_ref.v1.schema.json"
+consumer = "install_refs.import and install_refs.inspect"
+
+[[live_schema]]
+path = "contracts/schema/factorio/factorio_instance.v1.schema.json"
+consumer = "instance.create"
+
+[[live_schema]]
+path = "contracts/schema/factorio/factorio_launch_plan.v1.schema.json"
+consumer = "launch_plan.build"
+
+[[live_schema]]
+path = "contracts/schema/factorio/factorio_diagnostic_report.v1.schema.json"
+consumer = "doctor truth tests"
+
+[[live_schema]]
+path = "contracts/schema/release/component.v1.schema.json"
+consumer = "built package component metadata"
+
+[[live_schema]]
+path = "contracts/schema/release/package_verify_report.v1.schema.json"
+consumer = "package verify JSON report"
