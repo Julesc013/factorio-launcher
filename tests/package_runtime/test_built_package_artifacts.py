@@ -258,6 +258,8 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
         archives = list(self.dist_root.glob("*.zip"))
         self.assertEqual(len(archives), 1)
         self.assertEqual(archives[0].name.count(version), 1)
+        self.assertEqual(archives[0].name, f"{version}-windows-cli-x64-portable.zip")
+        self.assertNotIn("facman-facman-", archives[0].name.lower())
         extracted = self.temp_root / "extracted archive Ω"
         with zipfile.ZipFile(archives[0]) as archive:
             archive.extractall(extracted)

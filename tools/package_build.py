@@ -304,7 +304,12 @@ def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -
     owned_output.ensure_owned_output_root(dist_root, "package-archives")
     build_index = load_toml(ROOT / "release" / "index" / "build_manifest.v1.toml")
     version = str(build_index.get("filename_version", "facman-0.1.0-dev"))
-    artifact_id = str(bundle.get("artifact_id", package_root.name)).replace("<version>", version)
+    artifact_template = str(bundle.get("artifact_id", package_root.name))
+    version_prefix = artifact_template.split("<version>", 1)[0]
+    replacement = version
+    if version_prefix and version.lower().startswith(version_prefix.lower()):
+        replacement = version[len(version_prefix):]
+    artifact_id = artifact_template.replace("<version>", replacement)
     archive_base = dist_root / artifact_id
     if archive_base.with_suffix(".zip").exists():
         archive_base.with_suffix(".zip").unlink()
