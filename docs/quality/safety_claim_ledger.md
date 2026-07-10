@@ -2,6 +2,8 @@
 
 Baseline audit revision: `df2dd9487d51c30cf1bf404a9c7246288ee330b9`.
 Bounded proof implementation revision: `4e6d8a191a8b17723cdd210fef2083d6814fc9b8`.
+R3.2 registry and routed-preview revision: `d898d4e702043b186cf0669ba98fb1c69afbca70`.
+R3.2 controlled-isolation revision: `17b11224db897bc11c8d4a024e2f1409cba4dd3f`.
 
 This ledger prevents a fixture, declaration, or generated file from being
 reported as stronger runtime evidence.
@@ -35,6 +37,9 @@ remain separate promotion evidence.
 The exact gate and sibling revisions, platform, commands, and residual claims
 are recorded in
 [`r3-safety-package-proof.md`](../release/checkpoints/r3-safety-package-proof.md).
+
+The R3.2 revision-pinned matrix and package evidence are recorded in
+[`r3.2-isolation-foundation-proof.md`](../release/checkpoints/r3.2-isolation-foundation-proof.md).
 
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and deliberately pending human-verdict template are in

@@ -14,9 +14,9 @@ current_focus:
     then route run preview through that registry and prove the effective
     per-instance Factorio configuration at a controlled process boundary.
   next_task: >
-    FACMAN-R3.2-ISOLATION-FOUNDATION-PROOF-01: reconcile contracts, refusal
-    codes, schemas, workspace locks, claims, and revision-pinned evidence; run
-    the full three-repository matrix. Windows read-only discovery is
+    USETUP-PACKAGE-VERIFY-AUDIT-01, only after the R3.2 task-branch CI matrix is
+    green: add read-only integrity, authenticity, compatibility, completeness,
+    and target-match reporting without setup mutation. Windows read-only discovery is
     implemented and must not
     be scheduled again.
   authoritative_command_slice:

@@ -40,8 +40,9 @@ R3.2 authoritative registry and instance-isolation foundation.
 
 ## Current Goal
 
-Run the revision-pinned R3.2 integration checkpoint across all three
-repositories. Keep `run.execute` quarantined and do not schedule Windows discovery again.
+Confirm the revision-pinned R3.2 task-branch CI matrix. Only after it is green,
+begin read-only Universal Setup package verification and audit. Keep
+`run.execute` quarantined and do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 
