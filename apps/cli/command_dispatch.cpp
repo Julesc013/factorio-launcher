@@ -1697,7 +1697,7 @@ RedactionEvent redaction_event(
     return event;
 }
 
-void add_diagnostic_text_file(
+bool add_diagnostic_text_file(
     std::vector<std::pair<std::string, std::vector<unsigned char>>>& files,
     std::vector<DiagnosticBundleEntry>& manifest_entries,
     std::vector<RedactionEvent>& events,
@@ -1711,12 +1711,23 @@ void add_diagnostic_text_file(
     bool redacted = false;
     if (redact) {
         factorio_diagnostics::RedactionResult result = factorio_diagnostics::redact_text(text, entry_path);
+        if (!result.safe) {
+            events.push_back(redaction_event(
+                "diagnostic_structured_input_invalid",
+                "blocked",
+                entry_path,
+                "format-parse",
+                result.error
+            ));
+            return false;
+        }
         payload = result.text;
         redacted = !result.events.empty();
         append_redaction_events(events, result.events);
     }
     files.push_back({entry_path, bytes_from_text(payload)});
     manifest_entries.push_back({entry_path, kind, redacted});
+    return true;
 }
 
 bool diagnostic_path_allowed(
@@ -1739,7 +1750,7 @@ bool diagnostic_path_allowed(
     return false;
 }
 
-void collect_diagnostic_instance_files(
+bool collect_diagnostic_instance_files(
     const InstanceRef& instance,
     std::vector<std::pair<std::string, std::vector<unsigned char>>>& files,
     std::vector<DiagnosticBundleEntry>& manifest_entries,
@@ -1747,17 +1758,32 @@ void collect_diagnostic_instance_files(
 )
 {
     if (!fs::exists(instance.local_data_root)) {
-        return;
+        return true;
     }
-    std::vector<fs::path> paths;
-    for (const fs::directory_entry& entry : fs::recursive_directory_iterator(instance.local_data_root)) {
-        if (entry.is_regular_file()) {
-            paths.push_back(entry.path());
-        }
+    factorio_diagnostics::TraversalPolicy traversal_policy;
+    traversal_policy.allowlisted_roots = {"config", "logs", "crash", "script-output"};
+    factorio_diagnostics::TraversalResult traversal =
+        factorio_diagnostics::collect_bounded_files(instance.local_data_root, traversal_policy);
+    for (const factorio_diagnostics::TraversalOmission& omission : traversal.omissions) {
+        events.push_back(redaction_event(
+            "diagnostic_path_excluded",
+            traversal.safe ? "warning" : "blocked",
+            "instance/" + omission.path,
+            "bounded-traversal:" + omission.reason,
+            "path was omitted by the bounded no-follow traversal policy"
+        ));
     }
-    std::sort(paths.begin(), paths.end());
+    const std::string traversal_report = factorio_diagnostics::traversal_report_json(
+        traversal,
+        fs::path("$FACMAN_INSTANCE_ROOT"),
+        traversal_policy);
+    files.push_back({"traversal/report.v1.json", bytes_from_text(traversal_report)});
+    manifest_entries.push_back({"traversal/report.v1.json", "traversal_report", false});
+    if (!traversal.safe) {
+        return false;
+    }
 
-    for (const fs::path& path : paths) {
+    for (const fs::path& path : traversal.files) {
         std::string relative_text = relative_to_root(instance.local_data_root, path);
         if (relative_text == "instance.v1.json") {
             continue;
@@ -1794,8 +1820,11 @@ void collect_diagnostic_instance_files(
             text = portable_effective_config_ini();
         }
         std::string kind = relative_text.find("log") != std::string::npos ? "log" : "config";
-        add_diagnostic_text_file(files, manifest_entries, events, entry_path, kind, text, true);
+        if (!add_diagnostic_text_file(files, manifest_entries, events, entry_path, kind, text, true)) {
+            return false;
+        }
     }
+    return true;
 }
 
 std::string diagnostic_doctor_report_json(const CliOptions& options)
@@ -1881,7 +1910,7 @@ bool write_diagnostic_bundle(
     std::vector<DiagnosticBundleEntry> manifest_entries;
     std::vector<RedactionEvent> events;
 
-    add_diagnostic_text_file(
+    if (!add_diagnostic_text_file(
         files,
         manifest_entries,
         events,
@@ -1889,7 +1918,7 @@ bool write_diagnostic_bundle(
         "workspace",
         read_text(options.workspace / "workspace.v1.json"),
         true
-    );
+    )) return false;
 
     std::string instance_id = instance ? instance->instance_id : "workspace";
     if (instance) {
@@ -1897,7 +1926,7 @@ bool write_diagnostic_bundle(
         if (load_install(options.workspace, instance->install_ref, install)) {
             install.root = "$FACMAN_INSTALL_ROOT";
             install.executable = "$FACMAN_INSTALL_ROOT/bin/factorio";
-            add_diagnostic_text_file(
+            if (!add_diagnostic_text_file(
                 files,
                 manifest_entries,
                 events,
@@ -1905,9 +1934,9 @@ bool write_diagnostic_bundle(
                 "install_ref",
                 install_json(install),
                 true
-            );
+            )) return false;
         }
-        add_diagnostic_text_file(
+        if (!add_diagnostic_text_file(
             files,
             manifest_entries,
             events,
@@ -1915,10 +1944,10 @@ bool write_diagnostic_bundle(
             "instance_manifest",
             redacted_instance_json(*instance),
             true
-        );
+        )) return false;
         fs::path lock_path = modset_lock_path(*instance);
         if (fs::is_regular_file(lock_path)) {
-            add_diagnostic_text_file(
+            if (!add_diagnostic_text_file(
                 files,
                 manifest_entries,
                 events,
@@ -1926,12 +1955,14 @@ bool write_diagnostic_bundle(
                 "modset_lock",
                 read_text(lock_path),
                 true
-            );
+            )) return false;
         }
-        collect_diagnostic_instance_files(*instance, files, manifest_entries, events);
+        if (!collect_diagnostic_instance_files(*instance, files, manifest_entries, events)) {
+            return false;
+        }
     }
 
-    add_diagnostic_text_file(
+    if (!add_diagnostic_text_file(
         files,
         manifest_entries,
         events,
@@ -1939,7 +1970,7 @@ bool write_diagnostic_bundle(
         "doctor_report",
         diagnostic_doctor_report_json(options),
         true
-    );
+    )) return false;
 
     report_json = factorio_diagnostics::redaction_report_json(events);
     files.push_back({"redaction/report.v1.json", bytes_from_text(report_json)});

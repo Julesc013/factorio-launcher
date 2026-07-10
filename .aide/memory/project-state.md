@@ -37,19 +37,27 @@ R3.2 authoritative registry and instance-isolation foundation.
 - A purpose-built process probe proves argument transfer, intended writes,
   protected-root invariance, and exclusive run-lock behavior. This evidence is
   not a substitute for a real Factorio operator verdict.
+- Universal Setup owns read-only package verification, and FacMan routes its
+  package-verification command through that pinned provider.
+- The diagnostic foundation now provides allowlisted, no-follow traversal with
+  depth, file-count, per-file, total-size, and time budgets, explicit omission
+  reports, and fail-closed JSON and INI redaction. General bundle export remains
+  unavailable.
 
 ## Current Goal
 
-Confirm the USK package-verifier integration CI matrix. Only after it is green,
-begin bounded diagnostic traversal and redaction. Keep `run.execute` and general
-diagnostic export quarantined, and do not schedule Windows discovery again.
+Prepare `FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01` for an operator-supplied
+Factorio binary and preserve the human verdict as the next authority boundary.
+Keep `run.execute` and general diagnostic export quarantined; do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 
 - Real `run.execute` remains unavailable until the prepared operator-supplied
   Factorio isolation smoke receives a reviewed human pass.
-- General diagnostic export remains unavailable until traversal budgets,
-  no-follow behavior, and format-aware fail-closed redaction are proven.
+- General diagnostic export remains unavailable. Traversal budgets, no-follow
+  behavior, omission reporting, and JSON/INI fail-closed redaction are proven
+  as a foundation, not as complete adversarial proof of the dormant bundle
+  writer.
 - Setup mutation, networking, credentials, dynamic plugins, and release
   publication remain deferred.
 

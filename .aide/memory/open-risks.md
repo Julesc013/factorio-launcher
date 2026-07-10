@@ -23,7 +23,7 @@
     handlers into typed application operations.
 
 - Risk: Static command-graph metadata can drift from registered dispatch.
-  - Status: open
+  - Status: mitigated for the current registry descriptor versions
   - Mitigation: Derive introspection from retained runtime descriptors and
     prove graph-to-dispatch parity before adding more authoritative routes.
 
@@ -33,3 +33,10 @@
   - Mitigation: Parse and preflight the same effective configuration passed by
     `--config`, refuse unsafe roots, add an exclusive instance lock, and keep
     `run.execute` unavailable until the operator Factorio smoke passes.
+
+- Risk: A diagnostic bundle could cross a link, exceed resource budgets, or
+  expose malformed structured input.
+  - Status: foundation proven; general export remains quarantined
+  - Mitigation: Use only allowlisted bounded no-follow traversal, emit explicit
+    omissions, fail closed on malformed JSON/INI, and require a separate full
+    bundle adversarial promotion before enabling export.

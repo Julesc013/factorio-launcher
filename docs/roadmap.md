@@ -30,6 +30,9 @@ isolation foundation. The public ABI remains an experimental correctness floor.
    test probe. Completed for the controlled process boundary; real Factorio is
    still unproven.
 5. Keep real Factorio execution unpromoted until the operator smoke passes.
+6. Completed the read-only Universal Setup package-verification stretch and
+   the bounded diagnostic traversal foundation without enabling mutation or
+   diagnostic export.
 
 ## FACMAN-INTEGRATION-HARDEN-01
 
@@ -157,10 +160,16 @@ isolation foundation. The public ABI remains an experimental correctness floor.
 - `facman diagnostics redact <file> --json` proves deterministic and
   idempotent text redaction.
 - `facman diagnostics redact <file> --json` handles known line-oriented inputs
-  and sensitive multiline JSON string fields; malformed JSON fails closed.
+  and sensitive multiline JSON string fields; malformed JSON and INI fail
+  closed.
+- The dormant bundle collector uses allowlisted, deterministic, no-follow
+  traversal with maximum depth, file count, per-file size, total size, and time
+  budgets. It emits a structured omission report and covers spaces, Unicode,
+  long paths, overlapping roots, and link/reparse refusal through shared path
+  safety primitives.
 - `facman diagnostics export` and doctor-bundle output return
-  `diagnostic_export_not_safe` until bounded no-follow traversal and all-format
-  sanitization are proven.
+  `diagnostic_export_not_safe`. The traversal foundation does not promote the
+  complete dormant bundle writer or general sanitization.
 - Historical secret-corpus bundle tests remain evidence of their fixture scope,
   not proof of general diagnostic sanitization.
 - Factorio account login, credential-store implementation, diagnostic upload,

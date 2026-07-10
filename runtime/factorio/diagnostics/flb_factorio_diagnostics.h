@@ -2,6 +2,7 @@
 #define FLB_FACTORIO_DIAGNOSTICS_H
 
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -40,6 +41,27 @@ struct RedactionResult {
     std::string error;
 };
 
+struct TraversalPolicy {
+    std::vector<std::filesystem::path> allowlisted_roots;
+    std::size_t maximum_depth = 4;
+    std::size_t maximum_file_count = 256;
+    std::uintmax_t maximum_file_size = 2u * 1024u * 1024u;
+    std::uintmax_t maximum_total_size = 16u * 1024u * 1024u;
+    std::uint64_t time_budget_milliseconds = 2000;
+};
+
+struct TraversalOmission {
+    std::string path;
+    std::string reason;
+};
+
+struct TraversalResult {
+    bool safe = true;
+    std::vector<std::filesystem::path> files;
+    std::vector<TraversalOmission> omissions;
+    std::uintmax_t total_size = 0;
+};
+
 RedactionPolicy default_redaction_policy();
 
 RedactionResult redact_text(const std::string& text, const std::string& logical_path);
@@ -60,9 +82,20 @@ RedactionSummary summarize_events(const std::vector<RedactionEvent>& events);
 
 std::string redaction_report_json(const std::vector<RedactionEvent>& events);
 
+std::string traversal_report_json(
+    const TraversalResult& result,
+    const std::filesystem::path& root,
+    const TraversalPolicy& policy
+);
+
 std::string redaction_events_json(const std::vector<RedactionEvent>& events);
 
 std::string redaction_marker();
+
+TraversalResult collect_bounded_files(
+    const std::filesystem::path& root,
+    const TraversalPolicy& policy
+);
 
 } // namespace facman::factorio::diagnostics
 

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/diagnostic_traversal_report.v1.schema.json",
+  "title": "Factorio Diagnostic Traversal Report",
+  "type": "object",
+  "required": ["schema", "root", "safe", "policy", "selected_files", "selected_bytes", "omissions"],
+  "properties": {
+    "schema": { "const": "factorio.diagnostic_traversal_report.v1" },
+    "root": { "type": "string" },
+    "safe": { "type": "boolean" },
+    "policy": {
+      "type": "object",
+      "required": [
+        "allowlisted_roots",
+        "maximum_depth",
+        "maximum_file_count",
+        "maximum_file_size",
+        "maximum_total_size",
+        "time_budget_milliseconds"
+      ],
+      "properties": {
+        "allowlisted_roots": { "type": "array", "items": { "type": "string" } },
+        "maximum_depth": { "type": "integer", "minimum": 0 },
+        "maximum_file_count": { "type": "integer", "minimum": 0 },
+        "maximum_file_size": { "type": "integer", "minimum": 0 },
+        "maximum_total_size": { "type": "integer", "minimum": 0 },
+        "time_budget_milliseconds": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "selected_files": { "type": "integer", "minimum": 0 },
+    "selected_bytes": { "type": "integer", "minimum": 0 },
+    "omissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "reason"],
+        "properties": {
+          "path": { "type": "string" },
+          "reason": {
+            "enum": [
+              "allowlist_root_escapes",
+              "allowlist_root_invalid",
+              "file_count_limit_exceeded",
+              "file_size_limit_exceeded",
+              "link_or_reparse_refused",
+              "maximum_depth_exceeded",
+              "root_missing_or_unsafe",
+              "time_budget_exhausted",
+              "total_size_limit_exceeded",
+              "traversal_error"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
