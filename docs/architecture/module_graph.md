@@ -3,6 +3,7 @@
 ```text
 include/flb
   -> runtime/factorio/binding
+  -> runtime/factorio/application
   -> runtime/factorio/discovery
   -> runtime/factorio/launch
   -> runtime/factorio/mods
@@ -15,6 +16,7 @@ apps/{cli,tui,daemon,gui}
   -> runtime/client
   -> ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}
   -> runtime/factorio/binding
+  -> registered runtime/factorio/application handlers
 
 release/packaging
   -> runtime/package

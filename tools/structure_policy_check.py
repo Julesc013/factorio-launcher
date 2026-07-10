@@ -153,6 +153,7 @@ ALLOWED_RUNTIME_ROOTS = {
 }
 ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "accounts",
+    "application",
     "binding",
     "compat",
     "diagnostics",

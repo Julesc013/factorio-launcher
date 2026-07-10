@@ -45,7 +45,10 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0, stderr)
         graph = json.loads(stdout)
         self.assertEqual(graph["schema"], "ulk.command_graph.v1")
-        self.assertIn("launch_plan.build", {command["command"] for command in graph["commands"]})
+        commands = {command["command"] for command in graph["commands"]}
+        self.assertIn("launch_plan.build", commands)
+        self.assertIn("install_refs.scan", commands)
+        self.assertIn("install_refs.import", commands)
 
         code, stdout, stderr = invoke(["diagnostics", "report", "--json"])
         self.assertEqual(code, 0, stderr)

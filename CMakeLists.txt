@@ -109,10 +109,6 @@ target_include_directories(flaunch_client_static PUBLIC
   "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include"
 )
 
-add_library(flb_factorio_static STATIC runtime/factorio/binding/flb_api.c)
-target_include_directories(flb_factorio_static PUBLIC include)
-target_link_libraries(flb_factorio_static PUBLIC ulk_static)
-
 add_library(flb_factorio_launch_static STATIC runtime/factorio/launch/flb_factorio_launch_plan.cpp)
 target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_static PUBLIC runtime/factorio/launch)
@@ -134,9 +130,24 @@ target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_modsets_static PUBLIC runtime/factorio/modsets runtime/factorio/mods)
 target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static)
 
+add_library(flb_factorio_application_static STATIC runtime/factorio/application/flb_factorio_application.cpp)
+target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_application_static PUBLIC runtime/factorio/application)
+target_link_libraries(flb_factorio_application_static PUBLIC
+  facman_base_static
+  flb_factorio_discovery_static
+  flb_factorio_launch_static
+  ulk_static
+)
+
+add_library(flb_factorio_static STATIC runtime/factorio/binding/flb_api.c)
+target_include_directories(flb_factorio_static PUBLIC include)
+target_link_libraries(flb_factorio_static PUBLIC ulk_static flb_factorio_application_static)
+
 add_library(flb_factorio_shared SHARED runtime/factorio/binding/flb_api.c)
 target_include_directories(flb_factorio_shared PUBLIC include)
-target_link_libraries(flb_factorio_shared PUBLIC ulk_shared)
+target_compile_definitions(flb_factorio_shared PRIVATE FLB_BUILD_SHARED)
+target_link_libraries(flb_factorio_shared PUBLIC ulk_shared flb_factorio_application_static)
 set_target_properties(flb_factorio_shared PROPERTIES OUTPUT_NAME flb_factorio WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 add_library(flb_factorio ALIAS flb_factorio_static)

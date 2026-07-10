@@ -46,6 +46,7 @@ static int run_command(
 
     memset(&request, 0, sizeof(request));
     memset(&response, 0, sizeof(response));
+    response.struct_size = sizeof(response);
     request.struct_size = sizeof(request);
     request.command_name = view_from_cstr(command_name);
     request.json_payload = view_from_cstr("{}");
@@ -78,8 +79,12 @@ int main(void)
 
     memset(&config, 0, sizeof(config));
     config.struct_size = sizeof(config);
+    config.workspace_root = view_from_cstr("flb-smoke-workspace");
     if (flb_context_create_v1(&config, &context) != ULK_STATUS_OK || context == 0) {
         return 10;
+    }
+    if (flb_abi_version_v1() != ((ULK_API_VERSION_MAJOR << 16) | ULK_API_VERSION_MINOR)) {
+        return 11;
     }
 
     if (run_command(context, "product.inspect", 1, "\"product_id\":\"factorio\"") != 0) {
@@ -94,14 +99,8 @@ int main(void)
     if (run_command(context, "install_refs.list", 1, "\"install_refs\":[]") != 0) {
         return 23;
     }
-    if (run_command(context, "launch_plan.build", 1, "\"dry_run\":true") != 0) {
+    if (run_command(context, "install_refs.scan", 1, "\"schema\": \"factorio.discovery_report.v1\"") != 0) {
         return 24;
-    }
-    if (run_command(context, "launch_plan.build", 1, "\"argv\":[]") != 0) {
-        return 26;
-    }
-    if (run_command(context, "launch_plan.build", 1, "\"preflight\":[]") != 0) {
-        return 27;
     }
     if (run_command(context, "diagnostics.report", 1, "\"report_id\":\"ulk.diagnostic.minimal\"") != 0) {
         return 25;
@@ -109,6 +108,7 @@ int main(void)
 
     memset(&request, 0, sizeof(request));
     memset(&response, 0, sizeof(response));
+    response.struct_size = sizeof(response);
     request.struct_size = sizeof(request);
     request.command_name = view_from_cstr("missing.command");
     request.json_payload = view_from_cstr("{}");
@@ -123,6 +123,7 @@ int main(void)
     }
 
     memset(&response, 0, sizeof(response));
+    response.struct_size = sizeof(response);
     status = fl_command_client_execute_cabi_v1(context, 0, &response);
     if (status != ULK_STATUS_INVALID_ARGUMENT ||
         response.status != ULK_STATUS_INVALID_ARGUMENT ||
@@ -132,6 +133,20 @@ int main(void)
         return 31;
     }
 
+    memset(&response, 0, sizeof(response));
+    response.struct_size = sizeof(response) - 1;
+    status = fl_command_client_execute_cabi_v1(context, &request, &response);
+    if (status != ULK_STATUS_INVALID_ARGUMENT) {
+        return 32;
+    }
+
     flb_context_destroy_v1(context);
+
+    memset(&config, 0, sizeof(config));
+    config.struct_size = sizeof(config) - 1;
+    context = 0;
+    if (flb_context_create_v1(&config, &context) != ULK_STATUS_INVALID_ARGUMENT || context != 0) {
+        return 33;
+    }
     return 0;
 }
