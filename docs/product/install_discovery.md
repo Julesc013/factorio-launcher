@@ -82,6 +82,6 @@ probing while retaining explicit provider overrides. These are discovery
 inputs only; they never authorize writes.
 
 The provider proof covers malformed VDF metadata, duplicate libraries,
-Unicode paths, missing executables, foreign ownership, zero workspace writes,
-stable ordering, and junction refusal. It does not yet parse macOS Spotlight
-records or Linux package-manager databases.
+Unicode and long paths, missing executables, foreign ownership, zero workspace
+writes, stable ordering, and junction refusal. It does not yet parse macOS
+Spotlight records or Linux package-manager databases.

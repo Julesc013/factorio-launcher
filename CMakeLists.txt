@@ -167,6 +167,9 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     apps/cli/json_mode.c
     apps/cli/command_dispatch.cpp
   )
+  if(WIN32)
+    target_sources(facman_cli PRIVATE apps/cli/facman.manifest)
+  endif()
   target_compile_features(facman_cli PRIVATE cxx_std_17)
   target_link_libraries(facman_cli PRIVATE facman_base_static flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_modsets_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)

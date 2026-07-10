@@ -38,7 +38,7 @@ def invoke(args: list[str]) -> tuple[int, str, str]:
         [str(facman_executable()), *args],
         cwd=ROOT,
         check=False,
-        text=True,
+        encoding="utf-8",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )

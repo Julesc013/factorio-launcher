@@ -112,6 +112,26 @@ class WindowsDiscoveryProviderTests(unittest.TestCase):
             self.assertEqual(install["ownership"], "foreign_owned")
             self.assertFalse(install["setup_mutation_allowed"])
 
+    def test_steam_provider_preserves_long_unicode_paths(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman long path ") as tmp:
+            root = Path(tmp)
+            steam = root / "Steam"
+            library = root / ("Library-Ω-" + "a" * 110) / ("nested-" + "b" * 110)
+            install = library / "steamapps" / "common" / "Factorio"
+            shutil.copytree(FIXTURE_INSTALL, install)
+            (steam / "steamapps").mkdir(parents=True)
+            (steam / "steamapps" / "libraryfolders.vdf").write_text(
+                f'"libraryfolders" {{ "1" {{ "path" "{vdf_path(library)}" }} }}\n',
+                encoding="utf-8",
+            )
+
+            report = scan_with_providers(root / "workspace", FACMAN_STEAM_ROOTS=str(steam))
+
+            self.assertGreater(len(str(install)), 260)
+            self.assertEqual(report["candidate_count"], 1)
+            self.assertEqual(report["installs"][0]["root"], str(install))
+            self.assertEqual(report["installs"][0]["verification"]["status"], "structural")
+
     def test_steam_provider_does_not_cross_a_junction(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
