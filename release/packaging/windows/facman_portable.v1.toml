@@ -4,6 +4,7 @@ platform = "windows"
 support_level = "primary"
 package_type = "portable_zip"
 architecture = "x64"
+linkage_model = "compatibility_bundle"
 python_runtime = false
 bundles_factorio_binaries = false
 entrypoint = "bin/FacMan.WinForms.exe"
@@ -19,6 +20,7 @@ signature_policy = "authenticode_optional"
 extraction_policy = "none"
 runtime_search_path = "."
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "console_cli"
@@ -31,6 +33,7 @@ signature_policy = "authenticode_optional"
 extraction_policy = "none"
 runtime_search_path = "."
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "console_tui"
@@ -43,6 +46,7 @@ signature_policy = "authenticode_optional"
 extraction_policy = "none"
 runtime_search_path = "."
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "daemon"
@@ -55,6 +59,7 @@ signature_policy = "authenticode_optional"
 extraction_policy = "none"
 runtime_search_path = "."
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "runtime_required"
 
 [[components]]
 name = "ulk_shared"
@@ -67,6 +72,7 @@ signature_policy = "authenticode_optional"
 extraction_policy = "none"
 runtime_search_path = "bin"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "usk_shared"
@@ -79,6 +85,7 @@ signature_policy = "authenticode_optional"
 extraction_policy = "none"
 runtime_search_path = "bin"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "flb_factorio_shared"
@@ -91,6 +98,7 @@ signature_policy = "authenticode_optional"
 extraction_policy = "none"
 runtime_search_path = "bin"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "contracts_schema"
@@ -103,6 +111,7 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "contracts/schema"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"
 
 [[components]]
 name = "factorio_content"
@@ -115,3 +124,4 @@ signature_policy = "manifest_hash"
 extraction_policy = "none"
 runtime_search_path = "content/factorio"
 license_notice = "THIRD_PARTY_NOTICES.md"
+runtime_role = "compatibility_reference"

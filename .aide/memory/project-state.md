@@ -1,48 +1,56 @@
-# FLaunch Project State
+# FacMan Project State
 
 ## Summary
 
-FLaunch is an unofficial Factorio launcher and isolated instance manager. It
-discovers existing installs, creates per-instance data roots, generates dry-run
-launch plans, and keeps destructive install mutation behind Universal Setup.
-AIDE Lite is imported as repo-local development tooling only.
+FacMan is an unofficial Factorio launcher and isolated instance manager. The
+three-repository ownership split and durable root grammar are frozen. Universal
+Setup owns installed-state mutation, Universal Launcher owns product-neutral
+runnable-state orchestration, and this repository owns Factorio semantics and
+Factorio-facing applications.
 
 ## Current Phase
 
-pre-code structure governance and native command graph planning
+R3 post-Gate-4 truth hardening.
 
-## Primary Goal
+## Current Proof
 
-Make the repository self-governing before writing substantial native product
-code: roots, ownership boundaries, safety invariants, command graph claims,
-prototype boundaries, schemas, package manifests, and validation evidence should
-be queryable and checkable.
+- The five migrated commands `install_refs.scan`, `install_refs.import`,
+  `install_refs.inspect`, `instance.create`, and `launch_plan.build` execute
+  through the authoritative Universal Launcher route.
+- Path traversal, unmanaged cleanup, and silent persistent overwrite have
+  committed adversarial regression coverage.
+- A Windows x64 static-first package proof exists for the CLI-only lane.
+- Public sibling revisions are pinned by
+  `release/index/workspace_lock.v1.toml` and checked before three-repository
+  builds.
 
-## Next Task
+## Current Goal
 
-Finish the three-repo ownership split, keep the new root grammar enforced, and
-start native command graph parity work only after the universal repos are
-structurally clean.
+Make the selected live contracts, typed application requests, filesystem
+commit behavior, package component roles, and CI jobs describe and enforce the
+same bounded proof. Then extend real Windows read-only discovery through the
+existing command route.
 
-## Deferred Surfaces
+## Quarantined Capabilities
 
-- Gateway forwarding, provider/model calls, UI, runtime, and autonomous loops.
-- GUI implementation beyond app shells.
-- Universal Setup and Universal Launcher repo structure finalization.
-- Direct production package dependency on Python or AIDE.
+- Real `run.execute` remains unavailable until both a controlled write-probe
+  and an operator-supplied Factorio isolation smoke pass.
+- General diagnostic export remains unavailable until traversal budgets,
+  no-follow behavior, and format-aware fail-closed redaction are proven.
+- Setup mutation, networking, credentials, dynamic plugins, and release
+  publication remain deferred.
 
-## Notes
+## Root Truth
 
+- `include/` is public ABI only.
+- `runtime/` is private compiled implementation.
+- `apps/` contains frontend entrypoints and presentation shells.
+- `content/` contains declarative Factorio content and policy.
+- `contracts/` contains compatibility law, including but not limited to schema.
+- `release/` contains packaging and release definitions.
+- `docs/`, `tests/`, `tools/`, `cmake/`, and `external/` retain their named
+  responsibilities.
 - `source/`, `src/`, `data/`, `schemas/`, and `packaging/` are retired roots.
-- `include/` contains only the Factorio binding public ABI in this repo.
-- `runtime/` contains reusable private implementation.
-- `apps/` contains frontend entrypoints and presentation code.
-- `content/` contains Factorio product content and policy.
-- `contracts/` contains schema, ABI, command, result, diagnostic, refusal, and
-  policy contracts.
-- `release/` contains package manifests and release profiles.
-- `apps/python_cli/` is the current runnable prototype and
-  golden behavior harness until native parity.
-- Native command graph implementation is still the major gap.
-- Production packages must not bundle Factorio binaries, credentials, AIDE, or
-  a Python runtime.
+
+Production packages must not bundle Factorio binaries, credentials, AIDE, or a
+Python runtime.

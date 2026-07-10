@@ -104,7 +104,8 @@ class SourceFormatCheckTests(unittest.TestCase):
         text = path.read_text(encoding="utf-8")
 
         self.assertIn("\njobs:\n", text)
-        self.assertIn("\n  native-and-python:\n", text)
+        self.assertIn("\n  linux-native:\n", text)
+        self.assertIn("\n  windows-native-package:\n", text)
         self.assertFalse(source_format_check.validate_file(path, rel))
 
 

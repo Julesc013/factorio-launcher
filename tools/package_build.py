@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import owned_output, package_hash_manifest, package_layout_check
+from tools import json_contract, owned_output, package_hash_manifest, package_layout_check
 
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -43,6 +43,12 @@ PYTHON_RUNTIME_MARKERS = {
     "python.exe",
     "python3",
 }
+ALLOWED_RUNTIME_ROLES = {
+    "runtime_required",
+    "compatibility_reference",
+    "documentation_only",
+}
+BUILT_PACKAGE_SCHEMA = ROOT / "contracts" / "schema" / "release" / "built_package.v1.schema.json"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -117,6 +123,12 @@ def copy_bundle_components(
         destination = normalize_destination(str(component.get("destination", "")))
         if not source_target or not destination:
             raise ValueError(f"component missing source_target or destination: {component}")
+        runtime_role = str(component.get("runtime_role", ""))
+        if runtime_role not in ALLOWED_RUNTIME_ROLES:
+            raise ValueError(
+                f"component {source_target} must declare runtime_role as one of "
+                f"{', '.join(sorted(ALLOWED_RUNTIME_ROLES))}"
+            )
         destination_path = package_root / destination
         if source_target in {"contracts/schema", "content/factorio"}:
             copy_tree(ROOT / source_target, destination_path)
@@ -130,7 +142,7 @@ def copy_bundle_components(
                 "source_target": source_target,
                 "destination": destination,
                 "kind": component_kind(source_target),
-                "runtime_role": str(component.get("runtime_role", "runtime_required")),
+                "runtime_role": runtime_role,
             }
         )
     return records
@@ -164,25 +176,36 @@ def write_package_manifest(
 ) -> None:
     manifest = package_root / "manifest"
     manifest.mkdir(parents=True, exist_ok=True)
-    lines = [
-        'schema = "facman.built_package.v1"',
-        f'profile_id = "{profile["id"]}"',
-        f'lane = "{profile["lane"]}"',
-        f'target_os = "{profile["target_os"]}"',
-        f'target_arch = "{profile["target_arch"]}"',
-        f'package_type = "{bundle.get("package_type", "")}"',
-        f'entrypoint = "{bundle.get("entrypoint", "")}"',
-        f'linkage_model = "{bundle.get("linkage_model", "unspecified")}"',
-        f'release_profile = "{profile_path.relative_to(ROOT).as_posix()}"',
-        f'package_manifest = "{bundle_path.relative_to(ROOT).as_posix()}"',
-        'artifact_level = "built-artifact"',
-        "signed = false",
-        "published = false",
-        "python_runtime = false",
-        "bundles_factorio_binaries = false",
-        "",
-    ]
-    (manifest / "package.v1.toml").write_text("\n".join(lines), encoding="utf-8")
+    revisions = pinned_source_revisions()
+    data = {
+        "schema": "facman.built_package.v1",
+        "profile_id": profile["id"],
+        "lane": profile["lane"],
+        "target_os": profile["target_os"],
+        "target_arch": profile["target_arch"],
+        "package_type": bundle.get("package_type", ""),
+        "entrypoint": bundle.get("entrypoint", ""),
+        "linkage_model": bundle.get("linkage_model", ""),
+        "release_profile": profile_path.relative_to(ROOT).as_posix(),
+        "package_manifest": bundle_path.relative_to(ROOT).as_posix(),
+        "workspace_lock": WORKSPACE_LOCK_PATH.relative_to(ROOT).as_posix(),
+        "source_revision": revisions["factorio_launcher"],
+        "proof_baseline_revision": revisions["factorio_binding"],
+        "universal_launcher_revision": revisions["universal_launcher"],
+        "universal_setup_revision": revisions["universal_setup"],
+        "artifact_level": "built-artifact",
+        "signed": False,
+        "published": False,
+        "source_dirty": git_dirty(),
+        "python_runtime": False,
+        "bundles_factorio_binaries": False,
+    }
+    schema = json_contract.load_schema(BUILT_PACKAGE_SCHEMA)
+    problems = json_contract.validate(data, schema)
+    if problems:
+        raise ValueError(f"built package manifest violates its contract: {'; '.join(problems)}")
+    lines = [f"{key} = {toml_scalar(value)}" for key, value in data.items()]
+    (manifest / "package.v1.toml").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def write_build_info(
@@ -199,9 +222,9 @@ def write_build_info(
         "artifact_level": "built-artifact",
         "canonical_version": build_index.get("canonical_version", "facman-0.1.0+dev"),
         "filename_version": build_index.get("filename_version", "facman-0.1.0-dev"),
-        "source_commit": git_commit(),
+        "source_commit": source_revisions["factorio_launcher"],
         "source_revisions": {
-            "factorio_launcher": source_revisions["factorio_binding"],
+            "factorio_launcher": source_revisions["factorio_launcher"],
             "universal_launcher": source_revisions["universal_launcher"],
             "universal_setup": source_revisions["universal_setup"],
         },
@@ -276,7 +299,8 @@ def resolve_source_target(source_target: str, build_root: Path) -> Path:
 
 def pinned_source_revisions() -> dict[str, str]:
     values = {
-        "factorio_binding": git_commit(ROOT),
+        "factorio_launcher": git_commit(ROOT),
+        "factorio_binding": "unknown",
         "universal_launcher": "unknown",
         "universal_setup": "unknown",
     }
@@ -443,6 +467,26 @@ def string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item) for item in value]
+
+
+def git_dirty(repo: Path = ROOT) -> bool:
+    completed = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=normal"],
+        cwd=repo,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    return completed.returncode != 0 or bool(completed.stdout.strip())
+
+
+def toml_scalar(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, str):
+        return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+    raise ValueError(f"built package manifest value is not a supported scalar: {value!r}")
 
 
 if __name__ == "__main__":

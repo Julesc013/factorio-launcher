@@ -6,6 +6,12 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import json_contract
+
+LIVE_SCHEMA_POLICY = ROOT / "contracts" / "policy" / "live_schema_subset.v1.toml"
 
 
 def main() -> int:
@@ -15,6 +21,7 @@ def main() -> int:
         problems.append("no schema files found")
     for path in schemas:
         problems.extend(validate_schema_file(path))
+    problems.extend(validate_live_schema_subset(LIVE_SCHEMA_POLICY))
     problems.extend(validate_product_manifest(ROOT / "content" / "factorio" / "product" / "factorio.product.toml"))
     if problems:
         for problem in problems:
@@ -55,6 +62,47 @@ def validate_product_manifest(path: Path) -> list[str]:
         problems.append(f"{path}: must not bundle Factorio binaries")
     if boundaries.get("repairs_foreign_installs") is not False:
         problems.append(f"{path}: must not repair foreign installs")
+    return problems
+
+
+def validate_live_schema_subset(path: Path) -> list[str]:
+    try:
+        with path.open("rb") as handle:
+            policy = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        return [f"{path}: {exc}"]
+    problems: list[str] = []
+    if policy.get("schema") != "facman.live_schema_subset.v1":
+        problems.append(f"{path}: unexpected schema id")
+    if policy.get("claim") != "supported_subset_only":
+        problems.append(f"{path}: claim must remain supported_subset_only")
+    entries = policy.get("live_schema")
+    if not isinstance(entries, list) or not entries:
+        return problems + [f"{path}: live_schema entries are required"]
+    seen: set[str] = set()
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            problems.append(f"{path}: live_schema[{index}] must be a table")
+            continue
+        relative = entry.get("path")
+        if not isinstance(relative, str) or not relative:
+            problems.append(f"{path}: live_schema[{index}] has no path")
+            continue
+        if relative in seen:
+            problems.append(f"{path}: duplicate live schema {relative}")
+            continue
+        seen.add(relative)
+        schema_path = ROOT / relative
+        if not schema_path.is_file() or ROOT not in schema_path.resolve().parents:
+            problems.append(f"{path}: live schema is missing or escapes the repository: {relative}")
+            continue
+        try:
+            schema = json_contract.load_schema(schema_path)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            problems.append(f"{schema_path}: {exc}")
+            continue
+        for problem in json_contract.supported_schema_problems(schema):
+            problems.append(f"{schema_path}: {problem}")
     return problems
 
 

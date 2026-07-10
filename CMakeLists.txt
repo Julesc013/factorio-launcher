@@ -80,7 +80,7 @@ if(NOT TARGET ulk_static)
 endif()
 
 set(FLAUNCH_RUNTIME_SOURCES
-  runtime/package/fl_runtime_component.c
+  runtime/package/fl_runtime_component.cpp
   runtime/package/fl_runtime_extract.c
   runtime/package/fl_runtime_locator.c
   runtime/package/fl_runtime_manifest.c
@@ -120,6 +120,9 @@ target_include_directories(flb_factorio_launch_static PUBLIC runtime/factorio/la
 add_library(flb_factorio_discovery_static STATIC runtime/factorio/discovery/flb_factorio_discovery.cpp)
 target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_discovery_static PUBLIC runtime/factorio/discovery)
+if(WIN32)
+  target_link_libraries(flb_factorio_discovery_static PUBLIC Advapi32)
+endif()
 
 add_library(flb_factorio_diagnostics_static STATIC runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp)
 target_compile_features(flb_factorio_diagnostics_static PUBLIC cxx_std_17)
@@ -164,6 +167,9 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     apps/cli/json_mode.c
     apps/cli/command_dispatch.cpp
   )
+  if(WIN32)
+    target_sources(facman_cli PRIVATE apps/cli/facman.manifest)
+  endif()
   target_compile_features(facman_cli PRIVATE cxx_std_17)
   target_link_libraries(facman_cli PRIVATE facman_base_static flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_modsets_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
@@ -189,7 +195,14 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
 endif()
 
 if(FLAUNCH_BUILD_TESTS)
+  find_package(Threads REQUIRED)
+
   add_executable(flb_command_bridge_smoke tests/native/flb_command_bridge_smoke.c)
   target_link_libraries(flb_command_bridge_smoke PRIVATE flaunch_client_static flb_factorio_static)
   add_test(NAME flb_command_bridge_smoke COMMAND flb_command_bridge_smoke)
+
+  add_executable(fl_path_safety_smoke tests/native/fl_path_safety_smoke.cpp)
+  target_compile_features(fl_path_safety_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_path_safety_smoke PRIVATE facman_base_static Threads::Threads)
+  add_test(NAME fl_path_safety_smoke COMMAND fl_path_safety_smoke)
 endif()

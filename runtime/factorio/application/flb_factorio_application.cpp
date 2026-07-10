@@ -6,8 +6,11 @@
 
 #include <filesystem>
 #include <fstream>
+#include <map>
+#include <set>
 #include <sstream>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -25,9 +28,41 @@ enum class CommandId {
     unsupported,
 };
 
+struct ScanInstallRefsRequest {
+    std::vector<std::string> roots;
+};
+
+struct ImportInstallRefRequest {
+    std::string path;
+    std::string install_id;
+};
+
+struct InspectInstallRefRequest {
+    std::string install_id;
+};
+
+struct CreateInstanceRequest {
+    std::string display_name;
+    std::string instance_id;
+    std::string install_id;
+    std::string template_id = "vanilla";
+};
+
+struct BuildLaunchPlanRequest {
+    std::string instance_id;
+};
+
+using ApplicationPayload = std::variant<
+    std::monostate,
+    ScanInstallRefsRequest,
+    ImportInstallRefRequest,
+    InspectInstallRefRequest,
+    CreateInstanceRequest,
+    BuildLaunchPlanRequest>;
+
 struct ApplicationRequest {
     CommandId command = CommandId::unsupported;
-    std::string payload;
+    ApplicationPayload payload;
     bool dry_run = true;
 };
 
@@ -121,39 +156,345 @@ std::string json_string_value(const std::string& text, const std::string& key)
     return value.str();
 }
 
-std::vector<std::string> json_string_array(const std::string& text, const std::string& key)
-{
-    std::vector<std::string> values;
-    std::string marker = "\"" + key + "\"";
-    std::size_t position = text.find(marker);
-    if (position == std::string::npos || (position = text.find('[', position + marker.size())) == std::string::npos) {
-        return values;
-    }
-    std::size_t end = text.find(']', position + 1);
-    if (end == std::string::npos) {
-        return values;
-    }
-    while (position < end) {
-        std::size_t start = text.find('"', position + 1);
-        if (start == std::string::npos || start >= end) {
-            break;
+struct ParsedPayload {
+    std::map<std::string, std::string> strings;
+    std::map<std::string, std::vector<std::string>> arrays;
+    std::set<std::string> keys;
+};
+
+class PayloadReader {
+public:
+    explicit PayloadReader(const std::string& text) : text_(text) {}
+
+    bool parse(ParsedPayload& result, std::string& detail)
+    {
+        if (text_.size() > 65536) {
+            detail = "request payload exceeds the 64 KiB command boundary";
+            return false;
         }
-        std::size_t finish = start + 1;
-        bool escaped = false;
-        for (; finish < end; ++finish) {
-            char ch = text[finish];
-            if (escaped) {
-                escaped = false;
-            } else if (ch == '\\') {
-                escaped = true;
-            } else if (ch == '"') {
-                break;
+        skip_whitespace();
+        if (!consume('{')) {
+            detail = "request payload must be a JSON object";
+            return false;
+        }
+        skip_whitespace();
+        if (consume('}')) {
+            return finish(detail);
+        }
+        while (true) {
+            std::string key;
+            if (!parse_string(key, detail)) return false;
+            if (!result.keys.insert(key).second) {
+                detail = "request payload contains duplicate field: " + key;
+                return false;
+            }
+            skip_whitespace();
+            if (!consume(':')) {
+                detail = "request payload field is missing ':' after: " + key;
+                return false;
+            }
+            skip_whitespace();
+            if (peek() == '"') {
+                std::string value;
+                if (!parse_string(value, detail)) return false;
+                result.strings.emplace(key, std::move(value));
+            } else if (peek() == '[') {
+                std::vector<std::string> values;
+                if (!parse_string_array(values, detail)) return false;
+                result.arrays.emplace(key, std::move(values));
+            } else {
+                detail = "request payload field must be a string or string array: " + key;
+                return false;
+            }
+            skip_whitespace();
+            if (consume('}')) return finish(detail);
+            if (!consume(',')) {
+                detail = "request payload object is missing ',' between fields";
+                return false;
+            }
+            skip_whitespace();
+        }
+    }
+
+private:
+    char peek() const
+    {
+        return position_ < text_.size() ? text_[position_] : '\0';
+    }
+
+    bool consume(char expected)
+    {
+        if (peek() != expected) return false;
+        ++position_;
+        return true;
+    }
+
+    void skip_whitespace()
+    {
+        while (position_ < text_.size()) {
+            char ch = text_[position_];
+            if (ch != ' ' && ch != '\t' && ch != '\r' && ch != '\n') break;
+            ++position_;
+        }
+    }
+
+    bool finish(std::string& detail)
+    {
+        skip_whitespace();
+        if (position_ != text_.size()) {
+            detail = "request payload contains trailing data";
+            return false;
+        }
+        detail.clear();
+        return true;
+    }
+
+    static bool hex_value(char ch, unsigned int& value)
+    {
+        if (ch >= '0' && ch <= '9') value = static_cast<unsigned int>(ch - '0');
+        else if (ch >= 'a' && ch <= 'f') value = static_cast<unsigned int>(ch - 'a' + 10);
+        else if (ch >= 'A' && ch <= 'F') value = static_cast<unsigned int>(ch - 'A' + 10);
+        else return false;
+        return true;
+    }
+
+    bool parse_hex_quad(unsigned int& codepoint, std::string& detail)
+    {
+        if (position_ + 4 > text_.size()) {
+            detail = "request payload contains a truncated Unicode escape";
+            return false;
+        }
+        codepoint = 0;
+        for (int index = 0; index < 4; ++index) {
+            unsigned int value = 0;
+            if (!hex_value(text_[position_++], value)) {
+                detail = "request payload contains an invalid Unicode escape";
+                return false;
+            }
+            codepoint = codepoint * 16 + value;
+        }
+        return true;
+    }
+
+    static void append_utf8(std::string& output, unsigned int codepoint)
+    {
+        if (codepoint <= 0x7f) {
+            output.push_back(static_cast<char>(codepoint));
+        } else if (codepoint <= 0x7ff) {
+            output.push_back(static_cast<char>(0xc0 | (codepoint >> 6)));
+            output.push_back(static_cast<char>(0x80 | (codepoint & 0x3f)));
+        } else if (codepoint <= 0xffff) {
+            output.push_back(static_cast<char>(0xe0 | (codepoint >> 12)));
+            output.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f)));
+            output.push_back(static_cast<char>(0x80 | (codepoint & 0x3f)));
+        } else {
+            output.push_back(static_cast<char>(0xf0 | (codepoint >> 18)));
+            output.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3f)));
+            output.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f)));
+            output.push_back(static_cast<char>(0x80 | (codepoint & 0x3f)));
+        }
+    }
+
+    bool parse_unicode_escape(std::string& output, std::string& detail)
+    {
+        unsigned int codepoint = 0;
+        if (!parse_hex_quad(codepoint, detail)) return false;
+        if (codepoint >= 0xd800 && codepoint <= 0xdbff) {
+            if (position_ + 2 > text_.size() || text_[position_] != '\\' || text_[position_ + 1] != 'u') {
+                detail = "request payload contains an unpaired high surrogate";
+                return false;
+            }
+            position_ += 2;
+            unsigned int low = 0;
+            if (!parse_hex_quad(low, detail) || low < 0xdc00 || low > 0xdfff) {
+                detail = "request payload contains an invalid surrogate pair";
+                return false;
+            }
+            codepoint = 0x10000 + ((codepoint - 0xd800) << 10) + (low - 0xdc00);
+        } else if (codepoint >= 0xdc00 && codepoint <= 0xdfff) {
+            detail = "request payload contains an unpaired low surrogate";
+            return false;
+        }
+        append_utf8(output, codepoint);
+        return true;
+    }
+
+    bool parse_string(std::string& output, std::string& detail)
+    {
+        if (!consume('"')) {
+            detail = "request payload expected a JSON string";
+            return false;
+        }
+        output.clear();
+        while (position_ < text_.size()) {
+            unsigned char ch = static_cast<unsigned char>(text_[position_++]);
+            if (ch == '"') {
+                if (output.size() > 32768) {
+                    detail = "request payload string exceeds 32 KiB";
+                    return false;
+                }
+                return true;
+            }
+            if (ch < 0x20) {
+                detail = "request payload string contains an unescaped control character";
+                return false;
+            }
+            if (ch != '\\') {
+                output.push_back(static_cast<char>(ch));
+                continue;
+            }
+            if (position_ >= text_.size()) {
+                detail = "request payload contains a truncated string escape";
+                return false;
+            }
+            char escaped = text_[position_++];
+            switch (escaped) {
+            case '"': output.push_back('"'); break;
+            case '\\': output.push_back('\\'); break;
+            case '/': output.push_back('/'); break;
+            case 'b': output.push_back('\b'); break;
+            case 'f': output.push_back('\f'); break;
+            case 'n': output.push_back('\n'); break;
+            case 'r': output.push_back('\r'); break;
+            case 't': output.push_back('\t'); break;
+            case 'u': if (!parse_unicode_escape(output, detail)) return false; break;
+            default:
+                detail = "request payload contains an invalid string escape";
+                return false;
             }
         }
-        values.push_back(json_string_value("{\"value\":" + text.substr(start, finish - start + 1) + "}", "value"));
-        position = finish + 1;
+        detail = "request payload contains an unterminated string";
+        return false;
     }
-    return values;
+
+    bool parse_string_array(std::vector<std::string>& values, std::string& detail)
+    {
+        if (!consume('[')) return false;
+        skip_whitespace();
+        if (consume(']')) return true;
+        while (true) {
+            if (values.size() >= 256) {
+                detail = "request payload string array exceeds 256 items";
+                return false;
+            }
+            std::string value;
+            if (!parse_string(value, detail)) return false;
+            values.push_back(std::move(value));
+            skip_whitespace();
+            if (consume(']')) return true;
+            if (!consume(',')) {
+                detail = "request payload array is missing ',' between items";
+                return false;
+            }
+            skip_whitespace();
+        }
+    }
+
+    const std::string& text_;
+    std::size_t position_ = 0;
+};
+
+bool validate_fields(
+    const ParsedPayload& payload,
+    const std::set<std::string>& string_fields,
+    const std::set<std::string>& array_fields,
+    std::string& detail)
+{
+    for (const std::string& key : payload.keys) {
+        if (string_fields.count(key) == 0 && array_fields.count(key) == 0) {
+            detail = "request payload contains an unsupported field: " + key;
+            return false;
+        }
+        if (string_fields.count(key) != 0 && payload.strings.count(key) == 0) {
+            detail = "request payload field must be a string: " + key;
+            return false;
+        }
+        if (array_fields.count(key) != 0 && payload.arrays.count(key) == 0) {
+            detail = "request payload field must be a string array: " + key;
+            return false;
+        }
+    }
+    return true;
+}
+
+bool required_string(
+    const ParsedPayload& payload,
+    const std::string& key,
+    std::string& value,
+    std::string& detail)
+{
+    auto found = payload.strings.find(key);
+    if (found == payload.strings.end() || found->second.empty()) {
+        detail = "request payload is missing non-empty string field: " + key;
+        return false;
+    }
+    value = found->second;
+    return true;
+}
+
+bool decode_request(
+    CommandId command,
+    const std::string& text,
+    bool dry_run,
+    ApplicationRequest& request,
+    std::string& detail)
+{
+    request.command = command;
+    request.dry_run = dry_run;
+    if (command == CommandId::unsupported) {
+        request.payload = std::monostate {};
+        return true;
+    }
+    ParsedPayload payload;
+    const std::string empty_object = "{}";
+    PayloadReader reader(text.empty() ? empty_object : text);
+    if (!reader.parse(payload, detail)) return false;
+    switch (command) {
+    case CommandId::install_scan: {
+        if (!validate_fields(payload, {}, {"roots"}, detail)) return false;
+        ScanInstallRefsRequest typed;
+        auto roots = payload.arrays.find("roots");
+        if (roots != payload.arrays.end()) typed.roots = roots->second;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::install_import: {
+        if (!validate_fields(payload, {"path", "install_id"}, {}, detail)) return false;
+        ImportInstallRefRequest typed;
+        if (!required_string(payload, "path", typed.path, detail) ||
+            !required_string(payload, "install_id", typed.install_id, detail)) return false;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::install_inspect: {
+        if (!validate_fields(payload, {"install_id"}, {}, detail)) return false;
+        InspectInstallRefRequest typed;
+        if (!required_string(payload, "install_id", typed.install_id, detail)) return false;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::instance_create: {
+        if (!validate_fields(payload, {"display_name", "instance_id", "install_id", "template_id"}, {}, detail)) return false;
+        CreateInstanceRequest typed;
+        if (!required_string(payload, "display_name", typed.display_name, detail) ||
+            !required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "install_id", typed.install_id, detail)) return false;
+        auto template_id = payload.strings.find("template_id");
+        if (template_id != payload.strings.end() && !template_id->second.empty()) typed.template_id = template_id->second;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::launch_plan_preview: {
+        if (!validate_fields(payload, {"instance_id"}, {}, detail)) return false;
+        BuildLaunchPlanRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        request.payload = std::move(typed);
+        return true;
+    }
+    default:
+        detail = "unsupported command";
+        return false;
+    }
 }
 
 CommandId command_id(ulk_string_view command)
@@ -225,12 +566,25 @@ public:
     int handle(const ulk_command_request_v1* request, ulk_command_response_v1* response)
     {
         ApplicationRequest typed;
-        typed.command = command_id(request->command_name);
+        std::string payload;
         if (request->json_payload.data != nullptr) {
-            typed.payload.assign(request->json_payload.data, request->json_payload.data + request->json_payload.size);
+            payload.assign(request->json_payload.data, request->json_payload.data + request->json_payload.size);
         }
-        typed.dry_run = request->dry_run != 0;
+        std::string decode_error;
+        if (!decode_request(command_id(request->command_name), payload, request->dry_run != 0, typed, decode_error)) {
+            ApplicationResult invalid = refused(
+                safety_refusal("command.execute", "invalid_request", "Command request payload is invalid", decode_error, false),
+                "invalid_request",
+                decode_error);
+            return write_response(invalid, response);
+        }
         ApplicationResult result = execute(typed);
+        return write_response(result, response);
+    }
+
+private:
+    int write_response(const ApplicationResult& result, ulk_command_response_v1* response)
+    {
         response_json_ = envelope(result);
         response->status = result.status;
         response->json_payload.data = response_json_.data();
@@ -244,8 +598,6 @@ public:
         response->error.detail.size = 0;
         return result.status;
     }
-
-private:
     ApplicationResult execute(const ApplicationRequest& request)
     {
         if (workspace_.empty()) {
@@ -255,11 +607,11 @@ private:
                 "Workspace root is required");
         }
         switch (request.command) {
-        case CommandId::install_scan: return scan(request);
-        case CommandId::install_import: return import_install(request);
-        case CommandId::install_inspect: return inspect_install(request);
-        case CommandId::instance_create: return create_instance(request);
-        case CommandId::launch_plan_preview: return preview_launch(request);
+        case CommandId::install_scan: return scan(std::get<ScanInstallRefsRequest>(request.payload));
+        case CommandId::install_import: return import_install(std::get<ImportInstallRefRequest>(request.payload));
+        case CommandId::install_inspect: return inspect_install(std::get<InspectInstallRefRequest>(request.payload));
+        case CommandId::instance_create: return create_instance(std::get<CreateInstanceRequest>(request.payload));
+        case CommandId::launch_plan_preview: return preview_launch(std::get<BuildLaunchPlanRequest>(request.payload));
         default:
             return refused(
                 safety_refusal("command.execute", "invalid_request", "Unsupported application command", "", false),
@@ -268,10 +620,10 @@ private:
         }
     }
 
-    ApplicationResult scan(const ApplicationRequest& request)
+    ApplicationResult scan(const ScanInstallRefsRequest& request)
     {
         std::vector<fs::path> roots;
-        for (const std::string& value : json_string_array(request.payload, "roots")) {
+        for (const std::string& value : request.roots) {
             roots.push_back(value);
         }
         ApplicationResult result;
@@ -279,10 +631,10 @@ private:
         return result;
     }
 
-    ApplicationResult import_install(const ApplicationRequest& request)
+    ApplicationResult import_install(const ImportInstallRefRequest& request)
     {
-        std::string root = json_string_value(request.payload, "path");
-        std::string id = json_string_value(request.payload, "install_id");
+        const std::string& root = request.path;
+        const std::string& id = request.install_id;
         facman::base::ManagedPathResult target = facman::base::managed_file(
             workspace_, fs::path("installs") / "refs", id, ".json");
         if (!target.ok()) {
@@ -344,9 +696,9 @@ private:
         return install.install_id == id;
     }
 
-    ApplicationResult inspect_install(const ApplicationRequest& request)
+    ApplicationResult inspect_install(const InspectInstallRefRequest& request)
     {
-        std::string id = json_string_value(request.payload, "install_id");
+        const std::string& id = request.install_id;
         discovery::InstallRef install;
         if (!load_install(id, install)) {
             return refused(
@@ -376,14 +728,13 @@ private:
         return instance.instance_id == id;
     }
 
-    ApplicationResult create_instance(const ApplicationRequest& request)
+    ApplicationResult create_instance(const CreateInstanceRequest& request)
     {
         InstanceRecord instance;
-        instance.display_name = json_string_value(request.payload, "display_name");
-        instance.instance_id = json_string_value(request.payload, "instance_id");
-        instance.install_ref = json_string_value(request.payload, "install_id");
-        instance.template_id = json_string_value(request.payload, "template_id");
-        if (instance.template_id.empty()) instance.template_id = "vanilla";
+        instance.display_name = request.display_name;
+        instance.instance_id = request.instance_id;
+        instance.install_ref = request.install_id;
+        instance.template_id = request.template_id;
         discovery::InstallRef install;
         if (!load_install(instance.install_ref, install)) {
             return refused(
@@ -441,9 +792,9 @@ private:
         return result;
     }
 
-    ApplicationResult preview_launch(const ApplicationRequest& request)
+    ApplicationResult preview_launch(const BuildLaunchPlanRequest& request)
     {
-        std::string id = json_string_value(request.payload, "instance_id");
+        const std::string& id = request.instance_id;
         InstanceRecord instance;
         if (!load_instance(id, instance)) {
             return refused(

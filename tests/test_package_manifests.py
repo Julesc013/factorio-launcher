@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -43,6 +44,26 @@ class PackageManifestTests(unittest.TestCase):
             (ROOT / "contracts" / "schema" / "release" / "packaging" / "bundle_manifest.v1.schema.json").is_file()
         )
         self.assertTrue((ROOT / "contracts" / "schema" / "release" / "package_manifest.v1.schema.json").is_file())
+        self.assertTrue((ROOT / "contracts" / "schema" / "release" / "built_package.v1.schema.json").is_file())
+        self.assertTrue(
+            (ROOT / "contracts" / "schema" / "release" / "package_components.v1.schema.json").is_file()
+        )
+
+    def test_bundle_components_require_explicit_known_runtime_roles(self) -> None:
+        source = ROOT / "release" / "packaging" / "windows" / "windows_portable_cli.v1.toml"
+        text = source.read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = Path(tmp) / "missing-role.toml"
+            missing.write_text(text.replace('runtime_role = "runtime_required"\n', "", 1), encoding="utf-8")
+            self.assertTrue(
+                any("runtime_role must be one of" in problem for problem in package_layout_check.validate_bundle_layout(missing))
+            )
+
+            unknown = Path(tmp) / "unknown-role.toml"
+            unknown.write_text(text.replace("runtime_required", "magical_runtime", 1), encoding="utf-8")
+            self.assertTrue(
+                any("runtime_role must be one of" in problem for problem in package_layout_check.validate_bundle_layout(unknown))
+            )
 
 
 if __name__ == "__main__":

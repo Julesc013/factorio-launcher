@@ -8,17 +8,37 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: production-truth-lock-in
+  phase: r3-post-gate4-truth-hardening
   primary_goal: >
-    Preserve repository ownership and command authority while landing public
-    dependency pins, workspace lock verification, and CI evidence.
+    Keep the completed public three-repository lock reproducible while making
+    the first authoritative command slice, live contracts, filesystem writes,
+    and Windows static package describe and enforce the same truth.
   next_task: >
-    Keep command migration incremental: command authority in one slice, package
-    proof in one lane, then next slice only after public evidence lands.
+    Harden the existing install-to-launch-preview slice, then add real Windows
+    read-only discovery through that same route without broadening unsafe
+    capabilities.
+  authoritative_command_slice:
+    - install_refs.scan
+    - install_refs.import
+    - install_refs.inspect
+    - instance.create
+    - launch_plan.build
+  quarantined_capabilities:
+    - run.execute
+    - diagnostics.export
+    - setup.mutation
+    - network.access
+  evidence_authorities:
+    workspace_lock: release/index/workspace_lock.v1.toml
+    threat_model: docs/architecture/threat_model.md
+    claim_ledger: docs/quality/safety_claim_ledger.md
+    proof_gates: docs/quality/safety_proof_gates.md
 deferred_surfaces:
   - Gateway forwarding, provider/model calls, UI, runtime, and autonomous loops remain deferred.
   - Native GUI implementation remains deferred until command graph stability.
   - Universal setup and universal launcher are sibling repos, not Factorio subtrees.
+  - Real Factorio execution remains unavailable until operator-supplied isolation proof.
+  - General diagnostic export remains unavailable until bounded traversal and structured redaction proof.
 runtime:
   gateway_forwarding: deferred
   provider_calls: forbidden_until_reviewed_phase

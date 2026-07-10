@@ -4,118 +4,70 @@ roots:
   include:
     authority: public_c_abi
     canonical: true
-    allowed:
-      - public_c_headers
-    forbidden:
-      - private_headers
-      - implementation
-      - generated_reports
-      - product_templates
-  source:
-    authority: private_implementation_and_app_source
+    allowed: [public_c_headers]
+    forbidden: [private_headers, implementation, generated_reports]
+  runtime:
+    authority: private_compiled_implementation
     canonical: true
-    allowed:
-      - private_c
-      - private_cpp
-      - app_implementation
-      - product_binding_implementation
-      - prototype_harness
-    forbidden:
-      - public_abi_headers
-      - platform_package_shells
-      - generated_reports
-      - user_workspace_state
-    notes:
-      - only implementation source root
-      - no nested src or source roots
+    allowed: [base_runtime, clients, factorio_binding, package_runtime, platform_runtime]
+    forbidden: [public_abi_headers, frontend_shells, setup_mutation]
   apps:
-    authority: frontend_package_shells
+    authority: frontend_shells
     canonical: true
-    allowed:
-      - project_files
-      - frontend_shell_metadata
-      - build_integration_files
-    forbidden:
-      - core_product_logic
-      - install_mutation_logic
-      - mod_resolution
-      - launch_plan_generation
-  data:
-    authority: factorio_product_templates_policy_and_rules
+    allowed: [cli, tui, daemon, gui_shells]
+    forbidden: [core_product_logic, install_mutation_logic, launch_plan_generation]
+  content:
+    authority: declarative_factorio_product_content
     canonical: true
-    allowed:
-      - product_manifest
-      - discovery_rules
-      - launch_templates
-      - instance_templates
-      - policy
-    forbidden:
-      - executable_code
-      - credentials
-      - factorio_binaries
-  schemas:
-    authority: versioned_compatibility_contracts
+    allowed: [templates, product_data, policy, strings, themes]
+    forbidden: [executable_code, credentials, factorio_binaries]
+  contracts:
+    authority: versioned_compatibility_law
     canonical: true
-    allowed:
-      - json_schema
-    forbidden:
-      - implementation_logic
-      - unversioned_contracts
-  packaging:
-    authority: platform_package_manifests
+    allowed: [abi, command, result, refusal, diagnostic, policy, schema]
+    forbidden: [implementation_logic, unversioned_contracts]
+  release:
+    authority: packaging_and_release_definitions
     canonical: true
-    allowed:
-      - package_manifests
-      - extraction_policies
-      - component_lists
-    forbidden:
-      - build_outputs
-      - installed_state
-      - bundled_factorio_binaries
+    allowed: [indexes, packaging_recipes, release_profiles]
+    forbidden: [build_outputs, installed_state, bundled_factorio_binaries]
   docs:
     authority: explanatory_documentation
     canonical: false
-    allowed:
-      - architecture_docs
-      - product_docs
-      - platform_docs
-      - roadmap
-      - reference_docs
-    forbidden:
-      - executable_truth
-      - credentials
+    allowed: [architecture_docs, product_docs, platform_docs, roadmap, release_docs]
+    forbidden: [executable_truth, credentials]
   tests:
     authority: verification
     canonical: true
-    allowed:
-      - unit_tests
-      - integration_tests
-      - fixtures
-      - golden_behavior_tests
-    forbidden:
-      - production_runtime_logic
+    allowed: [unit_tests, integration_tests, fixtures, goldens, adversarial_tests]
+    forbidden: [production_runtime_logic]
   tools:
-    authority: repo_automation
+    authority: repository_automation
     canonical: true
-    allowed:
-      - validators
-      - package_checks
-      - security_checks
-    forbidden:
-      - product_runtime_logic
-      - frontend_business_logic
-  .aide:
-    authority: repo_local_development_governance
+    allowed: [validators, package_tools, security_checks, release_tools]
+    forbidden: [product_runtime_logic, frontend_business_logic]
+  cmake:
+    authority: build_policy
+    canonical: true
+    allowed: [compiler_policy, platform_policy, toolchain_rules]
+    forbidden: [product_semantics]
+  external:
+    authority: pinned_third_party_dependencies
+    canonical: true
+    allowed: [vendored_dependencies, dependency_notices]
+    forbidden: [unreviewed_binaries, credentials]
+  examples:
+    authority: non_authoritative_examples
     canonical: false
-    allowed:
-      - portable_aide_lite_framework
-      - target_profile
-      - target_memory
-      - target_policies
-      - report_only_context_tools
-    forbidden:
-      - product_runtime_dependency
-      - credentials
-      - raw_prompts
-      - raw_responses
-      - provider_state
+    allowed: [profiles, server_examples]
+    forbidden: [runtime_defaults, compatibility_law]
+  archive:
+    authority: quarantined_history
+    canonical: false
+    allowed: [retained_history]
+    forbidden: [active_runtime, active_contracts, release_inputs]
+  .aide:
+    authority: repository_local_development_governance
+    canonical: false
+    allowed: [portable_aide_lite, target_profile, target_memory, target_policies]
+    forbidden: [product_runtime_dependency, credentials, raw_prompts, raw_responses]

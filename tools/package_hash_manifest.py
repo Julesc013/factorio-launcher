@@ -4,9 +4,17 @@ import argparse
 import hashlib
 import json
 import sys
+import tomllib
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import json_contract
+
+COMPONENT_SCHEMA = ROOT / "contracts" / "schema" / "release" / "package_components.v1.schema.json"
 
 EXCLUDED_HASH_OUTPUTS = {
     "manifest/hashes.sha256",
@@ -33,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print("package-hash-manifest: verify ok")
         return 0
-    records = component_records_from_files(root)
+    records = existing_component_records(root)
     write_manifests(root, records)
     print(f"package-hash-manifest: write ok ({len(records)} files)")
     return 0
@@ -50,7 +58,8 @@ def component_records_from_files(root: Path) -> list[dict[str, Any]]:
                 "name": component_name_for(relative),
                 "source_target": "package_file",
                 "destination": relative,
-                "kind": "package_file",
+                "kind": "support_metadata",
+                "runtime_role": "documentation_only",
             }
         )
     return records
@@ -79,12 +88,39 @@ def write_manifests(root: Path, records: list[dict[str, Any]]) -> None:
         json.dumps(components, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    component_problems = validate_component_manifest(root, components)
+    if component_problems:
+        raise ValueError("invalid component manifest: " + "; ".join(component_problems))
+    write_hash_manifest(root)
+
+
+def write_hash_manifest(root: Path) -> None:
+    manifest = root / "manifest"
+    manifest.mkdir(parents=True, exist_ok=True)
     hash_records = component_records_from_files(root)
     hash_lines = [
         f"{sha256(root / record['destination'])}  {record['destination']}"
         for record in hash_records
     ]
     (manifest / "hashes.sha256").write_text("\n".join(hash_lines) + "\n", encoding="utf-8")
+
+
+def existing_component_records(root: Path) -> list[dict[str, Any]]:
+    path = root / "manifest" / "components.v1.json"
+    if not path.is_file():
+        return component_records_from_files(root)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"cannot reuse existing component manifest: {exc}") from exc
+    records = data.get("components") if isinstance(data, dict) else None
+    if not isinstance(records, list):
+        raise ValueError("cannot reuse existing component manifest: components array is missing")
+    return [
+        {key: value for key, value in record.items() if key not in {"sha256", "size"}}
+        for record in records
+        if isinstance(record, dict)
+    ]
 
 
 def expanded_component_records(root: Path, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -169,6 +205,105 @@ def verify_manifest(root: Path) -> list[str]:
         problems.append(f"unhashed package file: {relative}")
     for relative in sorted(declared_files - actual_files):
         problems.append(f"manifest references missing file: {relative}")
+    problems.extend(verify_component_manifest(root, declared))
+    return problems
+
+
+def verify_component_manifest(root: Path, declared_hashes: dict[str, str]) -> list[str]:
+    path = root / "manifest" / "components.v1.json"
+    if not path.is_file():
+        return ["missing manifest/components.v1.json"]
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"invalid manifest/components.v1.json: {exc}"]
+    return validate_component_manifest(root, data, declared_hashes)
+
+
+def validate_component_manifest(
+    root: Path,
+    data: Any,
+    declared_hashes: dict[str, str] | None = None,
+) -> list[str]:
+    if not isinstance(data, dict):
+        return ["component manifest must be an object"]
+    schema = json_contract.load_schema(COMPONENT_SCHEMA)
+    problems = json_contract.validate(data, schema)
+    records = data.get("components")
+    if not isinstance(records, list):
+        return problems
+
+    names: set[str] = set()
+    destinations: set[str] = set()
+    runtime_required = 0
+    for index, record in enumerate(records):
+        if not isinstance(record, dict):
+            continue
+        prefix = f"component[{index}]"
+        name = str(record.get("name", ""))
+        destination = str(record.get("destination", ""))
+        role = str(record.get("runtime_role", ""))
+        if name in names:
+            problems.append(f"{prefix}: duplicate component name {name}")
+        names.add(name)
+        if destination in destinations:
+            problems.append(f"{prefix}: duplicate component destination {destination}")
+        destinations.add(destination)
+        if not safe_manifest_path(destination):
+            problems.append(f"{prefix}: unsafe component destination {destination}")
+            continue
+        container = record.get("container_destination")
+        if container is not None and not safe_manifest_path(str(container)):
+            problems.append(f"{prefix}: unsafe container destination {container}")
+        if role == "runtime_required":
+            runtime_required += 1
+        candidate = root / PurePosixPath(destination)
+        if not candidate.is_file() or candidate.is_symlink():
+            problems.append(f"{prefix}: component file is missing or linked: {destination}")
+            continue
+        expected_digest = str(record.get("sha256", ""))
+        if sha256(candidate) != expected_digest:
+            problems.append(f"{prefix}: component SHA-256 mismatch: {destination}")
+        if candidate.stat().st_size != record.get("size"):
+            problems.append(f"{prefix}: component size mismatch: {destination}")
+        if declared_hashes is not None and declared_hashes.get(destination) != expected_digest:
+            problems.append(f"{prefix}: component digest disagrees with hash manifest: {destination}")
+
+    if (root / "manifest" / "package.v1.toml").is_file() and runtime_required == 0:
+        problems.append("built package must declare at least one runtime_required component")
+    problems.extend(validate_profile_component_roles(root, records))
+    return problems
+
+
+def validate_profile_component_roles(root: Path, records: list[Any]) -> list[str]:
+    package_path = root / "manifest" / "package.v1.toml"
+    if not package_path.is_file():
+        return []
+    try:
+        with package_path.open("rb") as handle:
+            package = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        return [f"cannot read package manifest for component policy: {exc}"]
+    if package.get("profile_id") != "windows_portable_cli_x64":
+        return []
+    by_destination = {
+        str(record.get("destination")): record
+        for record in records
+        if isinstance(record, dict)
+    }
+    problems: list[str] = []
+    cli = by_destination.get("bin/facman.exe")
+    if not isinstance(cli, dict) or cli.get("runtime_role") != "runtime_required":
+        problems.append("windows_portable_cli_x64 requires bin/facman.exe as runtime_required")
+    if any(record.get("kind") == "runtime_library" for record in by_destination.values()):
+        problems.append("windows_portable_cli_x64 must not declare shared runtime libraries")
+    for prefix in ["contracts/schema/", "content/factorio/"]:
+        matching = [
+            record for destination, record in by_destination.items()
+            if destination.startswith(prefix)
+        ]
+        if not matching or any(record.get("runtime_role") != "compatibility_reference" for record in matching):
+            problems.append(f"windows_portable_cli_x64 requires {prefix} as compatibility_reference")
     return problems
 
 

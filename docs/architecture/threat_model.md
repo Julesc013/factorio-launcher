@@ -53,3 +53,11 @@ deliberately hostile workspace content.
 Handle-relative operations should be preferred for security-sensitive writes
 where the platform permits them. Lexical checks alone are not sufficient for
 an existing tree containing links or reparse points.
+
+Current managed-file commits use exclusively created, no-follow temporary
+files, flush their contents, and use platform no-replace rename semantics.
+Managed-directory commits use the same no-replace rule. This closes the simple
+existence-check/rename overwrite race, but it does not yet prove resistance to
+a hostile process replacing an ancestor between containment validation and
+open, nor full recovery after power loss. Those stronger claims require
+handle-relative traversal and fault-injection evidence before Safe beta.

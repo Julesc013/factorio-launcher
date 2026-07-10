@@ -14,6 +14,8 @@ required_paths = [
   "contracts/schema/release/build_manifest.v1.schema.json",
   "contracts/schema/release/dependency_lock.v1.schema.json",
   "contracts/schema/release/workspace_lock.v1.schema.json",
+  "contracts/schema/release/built_package.v1.schema.json",
+  "contracts/schema/release/package_components.v1.schema.json",
   "contracts/schema/release/install_receipt.v1.schema.json",
   "contracts/schema/release/update_report.v1.schema.json",
   "content/factorio",

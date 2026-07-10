@@ -45,6 +45,11 @@ GUI_TOOLKIT_MARKERS = {
     "FacMan.app",
     "facman-gui",
 }
+ALLOWED_RUNTIME_ROLES = {
+    "runtime_required",
+    "compatibility_reference",
+    "documentation_only",
+}
 
 
 def main() -> int:
@@ -101,6 +106,7 @@ def validate_bundle_layout(path: Path) -> list[str]:
         source_target = str(component.get("source_target", ""))
         destination = str(component.get("destination", ""))
         license_notice = str(component.get("license_notice", ""))
+        runtime_role = str(component.get("runtime_role", ""))
         component_names.add(name)
         for label, value in [
             (f"component {name} source_target", source_target),
@@ -120,6 +126,11 @@ def validate_bundle_layout(path: Path) -> list[str]:
             problems.append(f"{path}: component {name} missing license_notice")
         elif not (ROOT / license_notice).is_file():
             problems.append(f"{path}: component {name} license_notice does not exist: {license_notice}")
+        if runtime_role not in ALLOWED_RUNTIME_ROLES:
+            problems.append(
+                f"{path}: component {name} runtime_role must be one of "
+                f"{', '.join(sorted(ALLOWED_RUNTIME_ROLES))}"
+            )
         normalized = normalize_layout_path(destination)
         if normalized in normalized_destinations:
             first = normalized_destinations[normalized]
