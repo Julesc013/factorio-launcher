@@ -29,6 +29,7 @@ def validate() -> list[str]:
         "actions/checkout@v4",
         "actions/setup-python@v5",
         "microsoft/setup-msbuild@v2",
+        "runs-on: macos-13",
         "python -m build",
     ]
     for anchor in forbidden:
@@ -51,7 +52,7 @@ def validate() -> list[str]:
         "--profile windows_portable_cli_x64",
         "tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify",
         "tools/package_runtime_smoke.py --root build/packages/windows_portable_cli_x64",
-        "runs-on: macos-13",
+        "runs-on: macos-15-intel",
     ]
     for anchor in required_ci:
         if anchor not in ci:

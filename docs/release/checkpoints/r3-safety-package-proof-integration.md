@@ -42,7 +42,8 @@ landing, and remote clean-clone evidence.
 - Added portable package build+smoke for `portable_cli_x64` and `portable_tui_x64`
   in the Linux-native lane.
 - Added Windows legacy WinForms package build+runtime smoke in the WinForms lane.
-- Pinned AppKit compile lane runner to `macos-13`.
+- Pin the AppKit compile lane to the current x64 `macos-15-intel` runner so its
+  macOS 10.13 deployment-target compile remains architecture-honest.
 
 ## Evidence Notes
 
@@ -100,6 +101,12 @@ tests. Its one failure compared the same temporary directory in Windows 8.3 and
 long-name forms. The workspace configuration regression now compares the
 canonical CMake path emitted by the implementation, retaining path-resolution
 coverage without assuming one textual spelling for a Windows directory.
+
+AppKit jobs in runs `29122796099`, `29123212167`, and `29123429975` remained
+queued because GitHub retired the `macos-13` hosted image on December 4, 2025.
+The compile-only legacy shell lane now uses the supported x64
+`macos-15-intel` label; the CI-proof validator rejects reintroduction of the
+retired label.
 
 ## Remaining Claims Blocked
 
