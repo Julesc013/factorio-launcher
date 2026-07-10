@@ -25,6 +25,21 @@ contracts, package linkage, and experimental ABI details are not.
 - Stale-doc and package-layout readiness checks.
 - Product-only and full sibling-workspace validation modes.
 
+## FACMAN-PACKAGE-PROOF-02
+
+- One explicit `windows_portable_cli_x64` target, not an OS-neutral portable
+  ABI claim.
+- Static-first CLI payload with no unused shared kernels or unproved
+  entrypoints.
+- Executable-relative package discovery and runtime SHA-256 manifest
+  verification.
+- Target/linkage identity, manifest closure, sibling source revisions, and
+  required-resource enforcement.
+- Spaces, Unicode, relocation, arbitrary working directory, read-only files,
+  external workspace, archive extraction, missing-resource, and payload-drift
+  tests.
+- Local, unsigned, and unpublished; publisher authenticity remains deferred.
+
 ## FacMan-CANON-01
 
 - Repo structure uses `runtime/content/contracts/release`.

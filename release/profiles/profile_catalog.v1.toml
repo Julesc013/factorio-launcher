@@ -1,6 +1,23 @@
 schema = "facman.release_profile_catalog.v1"
 
 [[profile]]
+id = "windows_portable_cli_x64"
+status = "built_artifact_proof"
+target_os = "windows"
+target_arch = "x64"
+frontend_stack = "cli"
+minimum_os = "windows_10_22h2"
+toolchain = "native_cxx17_static_first"
+package_formats = ["portable_zip"]
+included_binaries = ["facman.exe"]
+included_libraries = []
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_verify", "package_runtime_smoke", "package_relocation_smoke"]
+unsupported_features = ["setup_mutation", "auto_update", "dynamic_component_loading"]
+contract_backed = true
+
+[[profile]]
 id = "portable_cli"
 status = "planned_family"
 target_os = "portable"

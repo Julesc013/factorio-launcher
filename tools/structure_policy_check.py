@@ -141,6 +141,7 @@ ALLOWED_RELEASE_PROFILE_ROOTS = {
     "portable_tui",
     "portable_tui_x64",
     "windows_legacy_winforms_x64",
+    "windows_portable_cli_x64",
     "windows_legacy_winforms",
     "windows_modern_winui",
 }

@@ -6,6 +6,7 @@
 #include "flb_factorio_modsets.h"
 #include "fl_command_client_cabi.h"
 #include "fl_path_safety.h"
+#include "fl_runtime_verify.h"
 #include "usk/usk_api.h"
 
 #include <algorithm>
@@ -2136,6 +2137,7 @@ int print_help()
     std::cout << "Usage: facman [--workspace PATH] <command> [options]\n\n";
     std::cout << "Commands:\n";
     std::cout << "  product inspect [--json]\n";
+    std::cout << "  package verify [--json]\n";
     std::cout << "  command-graph inspect [--json]\n";
     std::cout << "  diagnostics report [--json]\n";
     std::cout << "  diagnostics redact <file> [--json]\n";
@@ -2170,6 +2172,33 @@ int print_help()
     std::cout << "  dev bug-report [--json]\n";
     std::cout << "  dev dump-data|dump-icons|benchmark|instrument-mod [--json]\n";
     return 0;
+}
+
+int command_package(const std::vector<std::string>& args)
+{
+    if (args.size() < 2 || args[1] != "verify") {
+        std::cerr << "Usage: facman package verify [--json]\n";
+        return 2;
+    }
+    char detail[512] = {};
+    size_t files_verified = 0;
+    const bool verified = fl_runtime_verify_package(detail, sizeof(detail), &files_verified) != 0;
+    if (has_flag(args, "--json")) {
+        std::cout << "{\n";
+        std::cout << "  \"schema\": \"facman.package_verify.v1\",\n";
+        std::cout << "  \"status\": \"" << (verified ? "pass" : "error") << "\",\n";
+        std::cout << "  \"integrity\": \"" << (verified ? "sha256_consistent" : "failed") << "\",\n";
+        std::cout << "  \"authenticity\": \"not_proven_unsigned\",\n";
+        std::cout << "  \"files_verified\": " << files_verified << ",\n";
+        std::cout << "  \"detail\": " << quote(detail) << "\n";
+        std::cout << "}\n";
+    } else if (verified) {
+        std::cout << "Package integrity: pass (" << files_verified << " files)\n";
+        std::cout << "Authenticity: not proven (unsigned package)\n";
+    } else {
+        std::cerr << "Package integrity: failed: " << detail << "\n";
+    }
+    return verified ? 0 : 1;
 }
 
 int command_product(const std::vector<std::string>& args)
@@ -3823,6 +3852,7 @@ int command_run(const CliOptions& options)
 
 extern "C" int flaunch_dispatch_command(int argc, char** argv)
 {
+    fl_runtime_set_executable_path(argc > 0 ? argv[0] : nullptr);
     CliOptions options = parse_options(argc, argv);
     if (options.args.empty() || has_flag(options.args, "--help") || has_flag(options.args, "-h")) {
         return print_help();
@@ -3835,6 +3865,9 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     const std::string command = options.args[0];
     if (command == "product") {
         return command_product(options.args);
+    }
+    if (command == "package") {
+        return command_package(options.args);
     }
     if (command == "command-graph") {
         return command_command_graph(options.args);

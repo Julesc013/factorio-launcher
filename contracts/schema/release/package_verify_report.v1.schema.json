@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.package_verify.v1",
+  "title": "FacMan Package Verification Report",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "integrity",
+    "authenticity",
+    "files_verified",
+    "detail"
+  ],
+  "properties": {
+    "schema": { "const": "facman.package_verify.v1" },
+    "status": { "enum": ["pass", "error"] },
+    "integrity": { "enum": ["sha256_consistent", "failed"] },
+    "authenticity": { "const": "not_proven_unsigned" },
+    "files_verified": { "type": "integer", "minimum": 0 },
+    "detail": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

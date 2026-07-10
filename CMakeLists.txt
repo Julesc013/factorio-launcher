@@ -84,7 +84,7 @@ set(FLAUNCH_RUNTIME_SOURCES
   runtime/package/fl_runtime_extract.c
   runtime/package/fl_runtime_locator.c
   runtime/package/fl_runtime_manifest.c
-  runtime/package/fl_runtime_verify.c
+  runtime/package/fl_runtime_verify.cpp
 )
 
 set(FLAUNCH_CLIENT_SOURCES
@@ -97,8 +97,12 @@ set(FLAUNCH_CLIENT_SOURCES
 
 add_library(flaunch_runtime_static STATIC ${FLAUNCH_RUNTIME_SOURCES})
 target_include_directories(flaunch_runtime_static PUBLIC runtime/package)
+target_compile_features(flaunch_runtime_static PUBLIC cxx_std_17)
 
-add_library(facman_base_static STATIC runtime/base/fl_path_safety.cpp)
+add_library(facman_base_static STATIC
+  runtime/base/fl_path_safety.cpp
+  runtime/base/fl_sha256.cpp
+)
 target_include_directories(facman_base_static PUBLIC runtime/base)
 target_compile_features(facman_base_static PUBLIC cxx_std_17)
 
@@ -129,6 +133,8 @@ add_library(flb_factorio_modsets_static STATIC runtime/factorio/modsets/flb_fact
 target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_modsets_static PUBLIC runtime/factorio/modsets runtime/factorio/mods)
 target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static)
+target_include_directories(flaunch_runtime_static PRIVATE runtime/base)
+target_link_libraries(flaunch_runtime_static PRIVATE facman_base_static)
 
 add_library(flb_factorio_application_static STATIC runtime/factorio/application/flb_factorio_application.cpp)
 target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)

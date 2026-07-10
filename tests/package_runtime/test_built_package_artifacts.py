@@ -2,11 +2,17 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import stat
+import subprocess
 import tempfile
+import tomllib
 import unittest
+import zipfile
 from pathlib import Path
 
 from tools import package_build, package_runtime_smoke
+from tools import package_hash_manifest
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -128,6 +134,137 @@ class BuiltPackageOutputOwnershipTests(unittest.TestCase):
             self.assertEqual(valuable.read_text(encoding="utf-8"), "preserve\n")
 
 
+@unittest.skipUnless(os.name == "nt", "target-specific Windows package proof")
+class WindowsPortableCliPackageProofTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        facman = BUILD_ROOT / "Debug" / "facman.exe"
+        if not facman.is_file():
+            raise AssertionError(f"required Windows package proof binary is missing: {facman}")
+        cls._tmp = tempfile.TemporaryDirectory(prefix="facman-windows-package-proof-")
+        cls.temp_root = Path(cls._tmp.name)
+        cls.out_root = cls.temp_root / "FacMan Ω package output"
+        cls.dist_root = cls.temp_root / "FacMan Ω archives"
+        cls.package_root = package_build.build_profile(
+            profile_id="windows_portable_cli_x64",
+            out_root=cls.out_root,
+            build_root=BUILD_ROOT,
+            dist_root=cls.dist_root,
+        )
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        package_root = getattr(cls, "package_root", None)
+        if package_root is not None:
+            for path in package_root.rglob("*"):
+                if path.is_file():
+                    os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+        tmp = getattr(cls, "_tmp", None)
+        if tmp is not None:
+            tmp.cleanup()
+
+    def test_static_first_layout_contains_only_the_functional_cli(self) -> None:
+        self.assertTrue((self.package_root / "bin" / "facman.exe").is_file())
+        self.assertFalse((self.package_root / "lib").exists())
+        self.assertFalse((self.package_root / "bin" / "facman-tui.exe").exists())
+        self.assertFalse((self.package_root / "bin" / "facmand.exe").exists())
+        self.assertEqual(package_hash_manifest.verify_manifest(self.package_root), [])
+
+    def test_runtime_smoke_is_relocated_unicode_pathless_and_arbitrary_cwd(self) -> None:
+        report = package_runtime_smoke.smoke_package(self.package_root)
+        self.assertEqual(report["integrity"], "sha256_consistent")
+        self.assertEqual(report["authenticity"], "not_proven_unsigned")
+        self.assertGreater(report["files_verified"], 0)
+        self.assertTrue(report["pathless_runtime"])
+        self.assertTrue(report["arbitrary_cwd"])
+
+    def test_renamed_extracted_directory_smokes(self) -> None:
+        renamed = self.temp_root / "Renamed FacMan Ω"
+        shutil.copytree(self.package_root, renamed)
+        report = package_runtime_smoke.smoke_package(renamed)
+        self.assertEqual(report["integrity"], "sha256_consistent")
+
+    def test_read_only_package_files_smoke(self) -> None:
+        copied = self.temp_root / "read only package"
+        shutil.copytree(self.package_root, copied)
+        files = [path for path in copied.rglob("*") if path.is_file()]
+        try:
+            for path in files:
+                os.chmod(path, stat.S_IREAD)
+            report = package_runtime_smoke.smoke_package(copied)
+            self.assertEqual(report["integrity"], "sha256_consistent")
+        finally:
+            for path in files:
+                os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+
+    def test_external_workspace_is_not_created_by_read_only_smoke(self) -> None:
+        workspace = self.temp_root / "separate workspace path"
+        report = package_runtime_smoke.smoke_package(self.package_root, workspace)
+        self.assertFalse(workspace.exists())
+        self.assertFalse(report["doctor_workspace_write"])
+
+    def test_missing_contracts_and_content_are_refused(self) -> None:
+        for relative in ["contracts", "content"]:
+            copied = self.temp_root / f"missing {relative}"
+            shutil.copytree(self.package_root, copied)
+            shutil.rmtree(copied / relative)
+            completed = run_package_verify(copied)
+            self.assertNotEqual(completed.returncode, 0)
+            report = json.loads(completed.stdout)
+            self.assertEqual(report["status"], "error")
+            self.assertIn("missing required package path", report["detail"])
+
+    def test_hash_verifiers_detect_payload_drift_and_unhashed_files(self) -> None:
+        drifted = self.temp_root / "drifted package"
+        shutil.copytree(self.package_root, drifted)
+        payload = drifted / "docs" / "README.md"
+        payload.write_bytes(payload.read_bytes() + b"\nchanged\n")
+        self.assertTrue(any("SHA-256 mismatch" in problem for problem in package_hash_manifest.verify_manifest(drifted)))
+        self.assertNotEqual(run_package_verify(drifted).returncode, 0)
+
+        extra = self.temp_root / "extra file package"
+        shutil.copytree(self.package_root, extra)
+        (extra / "unexpected.bin").write_bytes(b"unexpected")
+        self.assertTrue(any("unhashed package file" in problem for problem in package_hash_manifest.verify_manifest(extra)))
+        self.assertNotEqual(run_package_verify(extra).returncode, 0)
+
+    def test_target_identity_is_runtime_enforced_even_after_rehash(self) -> None:
+        wrong = self.temp_root / "wrong target package"
+        shutil.copytree(self.package_root, wrong)
+        manifest = wrong / "manifest" / "package.v1.toml"
+        text = manifest.read_text(encoding="utf-8").replace('target_os = "windows"', 'target_os = "linux"')
+        manifest.write_text(text, encoding="utf-8")
+        package_hash_manifest.write_manifests(wrong, package_hash_manifest.component_records_from_files(wrong))
+        self.assertEqual(package_hash_manifest.verify_manifest(wrong), [])
+        completed = run_package_verify(wrong)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("target or linkage identity", completed.stdout)
+
+    def test_manifest_records_target_linkage_and_all_source_revisions(self) -> None:
+        with (self.package_root / "manifest" / "package.v1.toml").open("rb") as handle:
+            manifest = tomllib.load(handle)
+        build_info = json.loads((self.package_root / "manifest" / "build_info.v1.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["profile_id"], "windows_portable_cli_x64")
+        self.assertEqual(manifest["target_os"], "windows")
+        self.assertEqual(manifest["target_arch"], "x64")
+        self.assertEqual(manifest["linkage_model"], "static_first")
+        revisions = build_info["source_revisions"]
+        self.assertEqual(set(revisions), {"factorio_launcher", "universal_launcher", "universal_setup"})
+        self.assertTrue(all(value != "unknown" and len(value) == 40 for value in revisions.values()))
+
+    def test_archive_name_uses_version_once_and_extracted_archive_smokes(self) -> None:
+        build_info = json.loads((self.package_root / "manifest" / "build_info.v1.json").read_text(encoding="utf-8"))
+        version = build_info["filename_version"]
+        archives = list(self.dist_root.glob("*.zip"))
+        self.assertEqual(len(archives), 1)
+        self.assertEqual(archives[0].name.count(version), 1)
+        extracted = self.temp_root / "extracted archive Ω"
+        with zipfile.ZipFile(archives[0]) as archive:
+            archive.extractall(extracted)
+        report = package_runtime_smoke.smoke_package(extracted)
+        self.assertEqual(report["integrity"], "sha256_consistent")
+
+
 @unittest.skipIf(os.name != "nt", "WinForms package layout proof is Windows-only")
 class BuiltWindowsPackageArtifactTests(unittest.TestCase):
     @classmethod
@@ -175,7 +312,22 @@ def build_or_skip(test_case: unittest.TestCase, profile_id: str) -> Path:
             dist_root=None,
         )
     except ValueError as exc:
-        test_case.skipTest(str(exc))
+        raise unittest.SkipTest(str(exc)) from exc
+
+
+def run_package_verify(root: Path) -> subprocess.CompletedProcess[str]:
+    executable = root / "bin" / "facman.exe"
+    env = os.environ.copy()
+    env["PATH"] = ""
+    return subprocess.run(
+        [str(executable), "package", "verify", "--json"],
+        cwd=root.parent,
+        env=env,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
 
 def hash_manifest_destinations(root: Path) -> set[str]:

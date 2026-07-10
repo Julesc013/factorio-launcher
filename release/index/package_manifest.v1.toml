@@ -1,6 +1,7 @@
 schema = "facman.package_manifest.v1"
 id = "facman_package_manifest_v1"
 release_profiles = [
+  "release/profiles/windows_portable_cli_x64/profile.toml",
   "release/profiles/windows_legacy_winforms_x64/profile.toml",
   "release/profiles/macos_legacy_appkit_x64/profile.toml",
   "release/profiles/linux_x11_gtk_x64/profile.toml",

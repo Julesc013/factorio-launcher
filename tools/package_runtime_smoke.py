@@ -9,6 +9,11 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import json_contract, package_hash_manifest
+
 SECRET_CORPUS = ROOT / "tests" / "fixtures" / "redaction" / "secrets_corpus.v1.json"
 
 
@@ -36,16 +41,29 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         raise ValueError(f"missing package root: {root}")
     facman = facman_executable(root)
     assert_required_layout(root)
+    hash_problems = package_hash_manifest.verify_manifest(root)
+    if hash_problems:
+        raise ValueError("package hash verification failed: " + "; ".join(hash_problems))
     assert_no_python_runtime(root)
     assert_no_forbidden_payloads(root)
     with tempfile.TemporaryDirectory(prefix="facman-package-workspace-") as tmp:
         workspace_root = workspace or Path(tmp) / "workspace"
-        version = run_command(root, [str(facman), "--version"])
-        doctor = run_command(root, [str(facman), "--workspace", str(workspace_root), "doctor", "--json"])
-        product = run_command(root, [str(facman), "product", "inspect", "--json"])
+        external_cwd = Path(tmp) / "arbitrary current directory"
+        external_cwd.mkdir()
+        package_verify = run_command(external_cwd, [str(facman), "package", "verify", "--json"], pathless=True)
+        version = run_command(external_cwd, [str(facman), "--version"], pathless=True)
+        doctor = run_command(external_cwd, [str(facman), "--workspace", str(workspace_root), "doctor", "--json"], pathless=True)
+        product = run_command(external_cwd, [str(facman), "product", "inspect", "--json"], pathless=True)
+        package_verify_json = json.loads(package_verify.stdout)
+        verify_schema = json_contract.load_schema(
+            root / "contracts" / "schema" / "release" / "package_verify_report.v1.schema.json"
+        )
+        schema_problems = json_contract.validate(package_verify_json, verify_schema)
+        if schema_problems:
+            raise ValueError("package verify response failed its contract: " + "; ".join(schema_problems))
         doctor_json = json.loads(doctor.stdout)
         product_json = json.loads(product.stdout)
-        combined_output = "\n".join([version.stdout, doctor.stdout, product.stdout])
+        combined_output = "\n".join([package_verify.stdout, version.stdout, doctor.stdout, product.stdout])
         normalized_output = combined_output.replace("\\\\", "\\")
         assert_workspace_reported(doctor_json, workspace_root)
         assert_no_source_paths(root, normalized_output)
@@ -54,6 +72,8 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
             raise ValueError("read-only doctor unexpectedly initialized external workspace")
         if root in workspace_root.parents or workspace_root == root:
             raise ValueError("workspace must be outside package root")
+        if package_verify_json.get("status") != "pass":
+            raise ValueError("packaged CLI did not verify its package")
     return {
         "schema": "facman.package_runtime_smoke.v1",
         "package_root": str(root),
@@ -65,6 +85,11 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         "content_found": True,
         "python_runtime": False,
         "doctor_workspace_write": False,
+        "integrity": package_verify_json.get("integrity"),
+        "authenticity": package_verify_json.get("authenticity"),
+        "files_verified": package_verify_json.get("files_verified"),
+        "pathless_runtime": True,
+        "arbitrary_cwd": True,
     }
 
 
@@ -138,8 +163,10 @@ def assert_no_secret_corpus(text: str) -> None:
             raise ValueError(f"package command output leaked secret corpus value: {value}")
 
 
-def run_command(cwd: Path, command: list[str]) -> subprocess.CompletedProcess[str]:
+def run_command(cwd: Path, command: list[str], pathless: bool = False) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
+    if pathless:
+        env["PATH"] = ""
     completed = subprocess.run(
         command,
         cwd=cwd,

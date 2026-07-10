@@ -15,6 +15,7 @@ INDEX = ROOT / "release" / "index"
 PROFILES = ROOT / "release" / "profiles"
 
 REQUIRED_PROFILE_IDS = {
+    "windows_portable_cli_x64",
     "windows_legacy_winforms_x64",
     "macos_legacy_appkit_x64",
     "linux_x11_gtk_x64",
@@ -51,7 +52,6 @@ GUI_MARKERS = {
     "swiftui",
     "gtk",
     "qt",
-    "FacMan.exe",
     "FacMan.app",
     "facman-gui",
 }

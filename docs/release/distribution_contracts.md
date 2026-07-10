@@ -19,6 +19,7 @@ macOS, and Linux.
 
 The first profile set is:
 
+- `windows_portable_cli_x64`
 - `windows_legacy_winforms_x64`
 - `macos_legacy_appkit_x64`
 - `linux_x11_gtk_x64`
