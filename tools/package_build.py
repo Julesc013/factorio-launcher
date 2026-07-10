@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -14,12 +15,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import package_hash_manifest, package_layout_check
+from tools import owned_output, package_hash_manifest, package_layout_check
 
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
 DEFAULT_DIST = ROOT / "dist"
 SUPPORTED_BUILT_PROFILES = {
+    "windows_portable_cli_x64",
     "portable_cli_x64",
     "portable_tui_x64",
     "windows_legacy_winforms_x64",
@@ -45,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     parser = argparse.ArgumentParser(description="Build unsigned local FacMan package roots.")
-    parser.add_argument("--profile", required=True, help="release profile id, for example portable_cli_x64")
+    parser.add_argument("--profile", required=True, help="release profile id, for example windows_portable_cli_x64")
     parser.add_argument("--out", default=str(DEFAULT_OUT), help="output root containing per-profile package roots")
     parser.add_argument("--build-root", default=str(DEFAULT_BUILD_ROOT), help="native CMake build root")
     parser.add_argument("--dist", default=str(DEFAULT_DIST), help="zip archive output root; use '' to disable")
@@ -74,14 +76,17 @@ def build_profile(
     dist_root: Path | None = DEFAULT_DIST,
     clean: bool = True,
 ) -> Path:
+    assert_safe_output_root(out_root)
+    owned_output.ensure_owned_output_root(out_root, "built-packages")
     profile_path, profile = load_profile(profile_id)
     if profile_id not in SUPPORTED_BUILT_PROFILES:
         raise ValueError(f"{profile_id}: built artifact proof is not enabled for this profile")
+    assert_host_matches_profile(profile_id, profile)
     bundle_path = ROOT / str(profile.get("package_manifest", ""))
     bundle = package_layout_check.expand_bundle_manifest(bundle_path, load_toml(bundle_path), [])
     package_root = out_root / profile_id
     if clean and package_root.exists():
-        assert_safe_output_root(package_root)
+        owned_output.assert_owned_output_root(out_root, "built-packages")
         shutil.rmtree(package_root)
     package_root.mkdir(parents=True, exist_ok=True)
 
@@ -123,6 +128,7 @@ def copy_bundle_components(
                 "source_target": source_target,
                 "destination": destination,
                 "kind": component_kind(source_target),
+                "runtime_role": str(component.get("runtime_role", "runtime_required")),
             }
         )
     return records
@@ -164,6 +170,7 @@ def write_package_manifest(
         f'target_arch = "{profile["target_arch"]}"',
         f'package_type = "{bundle.get("package_type", "")}"',
         f'entrypoint = "{bundle.get("entrypoint", "")}"',
+        f'linkage_model = "{bundle.get("linkage_model", "unspecified")}"',
         f'release_profile = "{profile_path.relative_to(ROOT).as_posix()}"',
         f'package_manifest = "{bundle_path.relative_to(ROOT).as_posix()}"',
         'artifact_level = "built-artifact"',
@@ -190,6 +197,11 @@ def write_build_info(
         "canonical_version": build_index.get("canonical_version", "facman-0.1.0+dev"),
         "filename_version": build_index.get("filename_version", "facman-0.1.0-dev"),
         "source_commit": git_commit(),
+        "source_revisions": {
+            "factorio_launcher": git_commit(ROOT),
+            "universal_launcher": git_commit(find_dependency_repo("universal-launcher")),
+            "universal_setup": git_commit(find_dependency_repo("universal-setup")),
+        },
         "target_os": profile.get("target_os"),
         "target_arch": profile.get("target_arch"),
         "package_type": bundle.get("package_type"),
@@ -289,10 +301,15 @@ def maybe_copy_windows_alias(source: Path, destination: Path) -> None:
 
 
 def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -> None:
-    dist_root.mkdir(parents=True, exist_ok=True)
+    owned_output.ensure_owned_output_root(dist_root, "package-archives")
     build_index = load_toml(ROOT / "release" / "index" / "build_manifest.v1.toml")
     version = str(build_index.get("filename_version", "facman-0.1.0-dev"))
-    artifact_id = str(bundle.get("artifact_id", package_root.name)).replace("<version>", version)
+    artifact_template = str(bundle.get("artifact_id", package_root.name))
+    version_prefix = artifact_template.split("<version>", 1)[0]
+    replacement = version
+    if version_prefix and version.lower().startswith(version_prefix.lower()):
+        replacement = version[len(version_prefix):]
+    artifact_id = artifact_template.replace("<version>", replacement)
     archive_base = dist_root / artifact_id
     if archive_base.with_suffix(".zip").exists():
         archive_base.with_suffix(".zip").unlink()
@@ -343,11 +360,35 @@ def assert_safe_output_root(path: Path) -> None:
         raise ValueError(f"refusing to clean non-build repository path: {resolved}")
 
 
-def git_commit() -> str:
+def assert_host_matches_profile(profile_id: str, profile: dict[str, Any]) -> None:
+    target_os = str(profile.get("target_os", ""))
+    target_arch = str(profile.get("target_arch", ""))
+    if target_os == "windows" and os.name != "nt":
+        raise ValueError(f"{profile_id}: Windows built-artifact proof must run on Windows")
+    if profile_id == "windows_portable_cli_x64":
+        machine = platform.machine().lower()
+        if machine not in {"amd64", "x86_64"}:
+            raise ValueError(f"{profile_id}: x64 proof cannot run on host architecture {machine}")
+
+
+def find_dependency_repo(name: str) -> Path:
+    candidates = [
+        ROOT / "external" / name,
+        ROOT.parent / name,
+        ROOT.parents[1] / "Universal" / name,
+        ROOT.parents[1] / name,
+    ]
+    for candidate in candidates:
+        if (candidate / ".git").exists():
+            return candidate
+    return candidates[0]
+
+
+def git_commit(repo: Path = ROOT) -> str:
     try:
         completed = subprocess.run(
             ["git", "rev-parse", "HEAD"],
-            cwd=ROOT,
+            cwd=repo,
             check=True,
             text=True,
             stdout=subprocess.PIPE,

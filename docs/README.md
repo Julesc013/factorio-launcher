@@ -3,6 +3,8 @@
 Architecture:
 
 - [Overview](architecture/overview.md)
+- [Architecture Freeze](architecture/architecture_freeze.md)
+- [Threat Model](architecture/threat_model.md)
 - [Ecosystem Vision](architecture/ecosystem_vision.md)
 - [Boundary](architecture/boundary.md)
 - [Naming](architecture/naming.md)
@@ -76,7 +78,10 @@ Release:
 - [Package Layout](release/PACKAGE_LAYOUT.md)
 - [Offline Bundles](release/OFFLINE_BUNDLES.md)
 - [Support Policy](release/SUPPORT_POLICY.md)
+- [R3 Safety And Package Proof Checkpoint](release/checkpoints/r3-safety-package-proof.md)
 
 Planning:
 
 - [Roadmap](roadmap.md)
+- [Safety Proof Gates](quality/safety_proof_gates.md)
+- [Safety Claim Ledger](quality/safety_claim_ledger.md)

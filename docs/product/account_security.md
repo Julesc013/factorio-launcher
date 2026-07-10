@@ -28,8 +28,8 @@ Diagnostics must preserve useful troubleshooting context while replacing
 credential-like values with `[FACMAN_REDACTED]`.
 
 The first runtime proof lives under `runtime/factorio/diagnostics/`. It handles
-text redaction, denied path exclusion, binary-file skips, archive-file
-exclusions, and deterministic redaction reports for diagnostic bundles and
-portable exports. Current tests use only fake corpus values and prove those
-values do not appear in diagnostic bundle output, doctor-created bundles, or
-instance exports.
+known-corpus text redaction and sensitive string values in structured JSON.
+Malformed structured input fails closed. Diagnostic bundle and doctor-bundle
+export are unavailable until no-follow traversal, resource budgets, and
+format-aware sanitization are proven together. Enabled portable instance
+exports continue to use only fake corpus values in tests.

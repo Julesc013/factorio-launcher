@@ -1,6 +1,15 @@
 schema = "facman.refusal_codes.v1"
 
 required_codes = [
+  "invalid_identifier",
+  "unsafe_managed_path",
+  "persistent_target_exists",
+  "persistent_write_refused",
+  "staging_target_exists",
+  "isolation_not_proven",
+  "diagnostic_export_not_safe",
+  "setup_verification_not_implemented",
+  "diagnostic_structured_input_invalid",
   "foreign_owned_install_repair_refused",
   "foreign_owned_install_uninstall_refused",
   "default_data_dir_write_refused",
@@ -45,6 +54,69 @@ required_codes = [
   "redaction_policy_missing",
   "redaction_policy_invalid",
 ]
+
+[[code]]
+id = "invalid_identifier"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The identifier is not valid for persistent FacMan state."
+
+[[code]]
+id = "unsafe_managed_path"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The requested managed path does not remain inside its trusted root."
+
+[[code]]
+id = "persistent_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Persistent state already exists and replacement was not explicitly authorized."
+
+[[code]]
+id = "persistent_write_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Persistent state could not be staged and committed safely."
+
+[[code]]
+id = "staging_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A staging target already exists and requires recovery before retrying."
+
+[[code]]
+id = "isolation_not_proven"
+severity = "blocked"
+effect = "process_execute"
+retryable = false
+message = "Process execution is unavailable until real product write isolation is proven."
+
+[[code]]
+id = "diagnostic_export_not_safe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Diagnostic bundle export is unavailable until structured redaction and bounded traversal are proven."
+
+[[code]]
+id = "setup_verification_not_implemented"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup package verification is not implemented and must not report a pass result."
+
+[[code]]
+id = "diagnostic_structured_input_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Structured diagnostic input is malformed or cannot be redacted safely."
 
 [[code]]
 id = "invalid_request"

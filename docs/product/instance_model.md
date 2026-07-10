@@ -34,6 +34,10 @@ for existing workspaces.
 
 `launch-plan <instance>` and `launch plan <instance>` produce the same dry-run
 launch plan. `run <instance>` remains a dry-run preview by default.
-`run <instance> --execute` invokes the selected executable with the isolated
-`--config` and `--mod-directory` arguments and appends
-`logs/launch_history.log`.
+
+`run <instance> --execute` is currently quarantined with
+`isolation_not_proven`. The controlled executable fixture proved argument and
+process plumbing but did not prove Factorio's interpretation of
+`config-path.cfg` or its effective write-data root. Execution remains
+unavailable until an operator-supplied real Factorio smoke proves no writes to
+the default or foreign-owned data directories.

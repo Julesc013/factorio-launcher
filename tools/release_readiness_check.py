@@ -25,6 +25,7 @@ REQUIRED_RELEASE_PROFILES = (
     "portable",
     "portable_cli",
     "portable_cli_x64",
+    "windows_portable_cli_x64",
     "portable_tui_x64",
     "windows_legacy_winforms",
     "windows_legacy_winforms_x64",
@@ -43,6 +44,7 @@ REQUIRED_PACKAGING_PATHS = (
     "release/index/support_matrix.v1.toml",
     "release/packaging/windows/facman_portable.v1.toml",
     "release/packaging/windows/facman_single_exe.v1.toml",
+    "release/packaging/windows/windows_portable_cli.v1.toml",
     "release/packaging/macos/facman_app.v1.toml",
     "release/packaging/linux/appimage.v1.toml",
     "release/packaging/linux/legacy_cli_tarball.v1.toml",
@@ -114,6 +116,7 @@ def check_release_profiles() -> list[str]:
         if not path.is_file():
             problems.append(f"missing release profile {path.relative_to(ROOT)}")
     for profile in [
+        "windows_portable_cli_x64",
         "windows_legacy_winforms_x64",
         "macos_legacy_appkit_x64",
         "linux_x11_gtk_x64",

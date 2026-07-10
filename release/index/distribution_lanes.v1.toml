@@ -1,6 +1,17 @@
 schema = "facman.distribution_lane.v1"
 
 [[lane]]
+id = "windows_portable_cli_x64"
+target_os = "windows"
+target_arch = "x64"
+frontend_family = "cli"
+package_types = ["portable_zip"]
+install_modes = ["portable", "user", "system"]
+support_tier = "package_preview"
+setup_mutation = false
+network_download = false
+
+[[lane]]
 id = "windows_legacy_winforms_x64"
 target_os = "windows"
 target_arch = "x64"

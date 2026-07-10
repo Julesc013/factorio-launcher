@@ -4,6 +4,12 @@ This checkpoint records the promoted R2 local power-user alpha proof. It is a
 reproducible comparison point, not a signed release, installer publication, or
 v1.0 readiness claim.
 
+> Superseded safety note: the later `FACMAN-TRUTH-FLOOR-01` audit found that the
+> controlled executable did not prove real Factorio write isolation and that
+> known-corpus bundle tests did not prove general diagnostic sanitization.
+> Execute and diagnostic bundle export are quarantined in current builds. This
+> checkpoint remains historical evidence, not current capability authority.
+
 ## Identity
 
 - Checkpoint tag: `facman-r2-local-alpha-proof-0`
@@ -108,9 +114,10 @@ The checkpoint pass requires the sibling checkout layout to contain:
   mutation; FacMan does not install, repair, or uninstall Factorio through this
   checkpoint.
 
-## Next Phase
+## Historical Next Phase
 
-R3 Safe Beta starts with unsigned local package artifacts:
+The checkpoint originally described R3 Safe Beta as starting with unsigned
+local package artifacts:
 
 ```text
 FACMAN-BUILT-PACKAGE-ARTIFACT-01

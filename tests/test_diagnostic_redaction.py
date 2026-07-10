@@ -5,7 +5,6 @@ import json
 import shutil
 import tempfile
 import unittest
-import zipfile
 from pathlib import Path
 
 from native_cli import invoke
@@ -147,7 +146,28 @@ class DiagnosticRedactionTests(unittest.TestCase):
                     self.assertEqual(redacted_again["redaction_report"]["summary"]["redacted_fields"], 0)
                     assert_no_secret_values(self, stdout)
 
-    def test_diagnostic_bundle_and_doctor_do_not_leak_secret_corpus(self) -> None:
+    def test_multiline_json_values_are_redacted_and_malformed_json_fails_closed(self) -> None:
+        fixture = FIXTURES / "multiline_json_secret.json"
+        code, report, stdout, stderr = run_json(["diagnostics", "redact", str(fixture), "--json"])
+        self.assertEqual(code, 0, stderr)
+        redacted = report["redacted_text"]
+        self.assertNotIn("fixture-multiline-token-value", redacted)
+        self.assertNotIn("fixture-multiline-password-value", redacted)
+        self.assertEqual(redacted.count("[FACMAN_REDACTED]"), 2)
+        self.assertEqual(report["redaction_report"]["summary"]["redacted_fields"], 2)
+        self.assertNotIn("fixture-multiline-token-value", stdout)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            malformed = Path(tmp) / "malformed.json"
+            malformed.write_text('{"token": "secret-value-no-close\n', encoding="utf-8")
+            code, refusal, stdout, _stderr = run_json(
+                ["diagnostics", "redact", str(malformed), "--json"]
+            )
+            self.assertEqual(code, 1)
+            self.assertEqual(refusal["refusal"]["code"], "diagnostic_structured_input_invalid")
+            self.assertNotIn("secret-value-no-close", stdout)
+
+    def test_diagnostic_bundle_and_doctor_bundle_are_quarantined(self) -> None:
         fixtures_before = tree_snapshot(FIXTURES)
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
@@ -167,44 +187,10 @@ class DiagnosticRedactionTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 0, stderr)
-            self.assertEqual(report["schema"], "factorio.diagnostic_bundle_export.v1")
+            self.assertEqual(code, 1, stderr)
+            self.assertEqual(report["refusal"]["code"], "diagnostic_export_not_safe")
+            self.assertFalse(bundle.exists())
             assert_no_secret_values(self, stdout)
-
-            with zipfile.ZipFile(bundle) as archive:
-                names = sorted(archive.namelist())
-                combined = b"".join(archive.read(name) for name in names)
-                manifest = json.loads(archive.read("manifest/diagnostic-bundle.v1.json"))
-                redaction_report = json.loads(archive.read("redaction/report.v1.json"))
-
-            assert_no_secret_values(self, combined)
-            self.assertIn(b"[FACMAN_REDACTED]", combined)
-            self.assertNotIn(str(workspace).encode("utf-8"), combined)
-            self.assertNotIn("instance/account_refs/account_refs.json", names)
-            self.assertNotIn("instance/steam/userdata/login.json", names)
-            self.assertNotIn("instance/logs/mixed_binary_file.bin", names)
-            self.assertNotIn("instance/logs/unsafe_archive.zip", names)
-
-            expected_manifest = json.loads(
-                (GOLDENS / "diagnostic_bundle.valid.redacted_manifest.v1.json").read_text(encoding="utf-8")
-            )
-            self.assertEqual(manifest["schema"], expected_manifest["schema"])
-            self.assertEqual(manifest["bundle_version"], expected_manifest["bundle_version"])
-            self.assertEqual(manifest["instance_id"], expected_manifest["instance_id"])
-            self.assertEqual(manifest["redaction"], expected_manifest["redaction"])
-
-            expected_report = json.loads(
-                (GOLDENS / "diagnostic_bundle.redaction_report.v1.json").read_text(encoding="utf-8")
-            )
-            self.assertEqual(redaction_report["schema"], expected_report["schema"])
-            self.assertEqual(redaction_report["policy_schema"], expected_report["policy_schema"])
-            self.assertEqual(redaction_report["marker"], expected_report["marker"])
-            self.assertEqual(redaction_report["summary"], expected_report["summary"])
-            event_codes = {event["code"] for event in redaction_report["events"]}
-            self.assertIn("diagnostic_secret_redacted", event_codes)
-            self.assertIn("diagnostic_path_excluded", event_codes)
-            self.assertIn("diagnostic_binary_skipped", event_codes)
-            self.assertIn("diagnostic_archive_unsafe", event_codes)
 
             doctor_bundle = workspace / "doctor-diagnostics.zip"
             code, doctor, doctor_stdout, stderr = run_json(
@@ -219,15 +205,10 @@ class DiagnosticRedactionTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 0, stderr)
-            self.assertEqual(doctor["schema"], "factorio.diagnostic_report.v1")
-            self.assertIn("diagnostic_bundle", doctor)
+            self.assertEqual(code, 1, stderr)
+            self.assertEqual(doctor["refusal"]["code"], "diagnostic_export_not_safe")
+            self.assertFalse(doctor_bundle.exists())
             assert_no_secret_values(self, doctor_stdout)
-
-            with zipfile.ZipFile(doctor_bundle) as archive:
-                doctor_combined = b"".join(archive.read(name) for name in archive.namelist())
-            assert_no_secret_values(self, doctor_combined)
-            self.assertNotIn(str(workspace).encode("utf-8"), doctor_combined)
 
         self.assertEqual(tree_snapshot(FIXTURES), fixtures_before)
 

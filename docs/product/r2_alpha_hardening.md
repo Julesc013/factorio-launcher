@@ -78,12 +78,11 @@ server execution, or GUI-only workflows.
   key-value, pattern, binary-file, archive-file, and allowed-metadata behavior.
 - Runtime diagnostics redaction replaces credential-like values with
   `[FACMAN_REDACTED]` and emits structured redaction events.
-- Diagnostic bundle export writes redacted workspace, install-ref, instance,
-  config, log, doctor, manifest, and redaction-report entries while excluding
-  denied account/token/Steam-userdata-like paths.
-- Diagnostic bundle tests prove raw secret corpus values do not appear in
-  diagnostics export output, doctor-created bundles, instance exports, or
-  generated bundle contents.
+- The R2 fixture suite assembled diagnostic bundles and excluded the known
+  secret corpus, denied paths, binary files, and archive-like inputs.
+- A later adversarial review showed that this did not prove multiline
+  structured redaction or bounded no-follow traversal. Diagnostic and
+  doctor-bundle export are now quarantined pending that stronger proof.
 - Diagnostic tests prove redaction is deterministic and idempotent, binary
   files are skipped, archive-like files are excluded, and source fixtures are
   not mutated.
@@ -112,10 +111,12 @@ server execution, or GUI-only workflows.
      preview, benchmark save execution, or save-associated modset inference.
 
 4. `FACMAN-DIAGNOSTIC-REDACTION-02`
-   - Done for redaction policy contracts, runtime redaction, diagnostic bundle
-     assembly, doctor bundle output, redaction reports, secret corpus fixtures,
-     no-leak invariants, deterministic/idempotent redaction, binary skips, and
-     archive exclusions.
+   - Done for redaction policy contracts, known-corpus runtime redaction,
+     deterministic/idempotent text handling, and multiline JSON string-field
+     redaction.
+   - Diagnostic bundle and doctor-bundle assembly are quarantined after the
+     adversarial safety review; their former fixture proof is retained as
+     historical evidence only.
    - Still not Factorio account login, credential-store implementation,
      Mod Portal token handling, diagnostic upload, or GUI diagnostic UX.
 

@@ -3,6 +3,20 @@
 FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
+## Immediate Safety And Truth Gates
+
+Feature expansion and R3 promotion are paused while the bounded gates in
+[`docs/quality/safety_proof_gates.md`](quality/safety_proof_gates.md) run:
+
+1. `FACMAN-EVIDENCE-LOCK-01`
+2. `FACMAN-TRUST-BOUNDARY-HARDEN-01`
+3. `FACMAN-TRUTH-FLOOR-01`
+4. `FACMAN-COMMAND-VERTICAL-SLICE-01`
+5. `FACMAN-PACKAGE-PROOF-02`
+
+Repository ownership and root grammar are frozen. Current implementation,
+contracts, package linkage, and experimental ABI details are not.
+
 ## FACMAN-INTEGRATION-HARDEN-01
 
 - Cross-repo boundary proof for `factorio-launcher`, `universal-launcher`, and
@@ -10,6 +24,21 @@ leaving setup mutation to Universal Setup.
 - Command, result, refusal, diagnostic, and golden-output contracts.
 - Stale-doc and package-layout readiness checks.
 - Product-only and full sibling-workspace validation modes.
+
+## FACMAN-PACKAGE-PROOF-02
+
+- One explicit `windows_portable_cli_x64` target, not an OS-neutral portable
+  ABI claim.
+- Static-first CLI payload with no unused shared kernels or unproved
+  entrypoints.
+- Executable-relative package discovery and runtime SHA-256 manifest
+  verification.
+- Target/linkage identity, manifest closure, sibling source revisions, and
+  required-resource enforcement.
+- Spaces, Unicode, relocation, arbitrary working directory, read-only files,
+  external workspace, archive extraction, missing-resource, and payload-drift
+  tests.
+- Local, unsigned, and unpublished; publisher authenticity remains deferred.
 
 ## FacMan-CANON-01
 
@@ -57,7 +86,8 @@ leaving setup mutation to Universal Setup.
 - `facman instances create <name> --install <install-id>`
 - `facman instances list`
 - `facman launch-plan <instance>`
-- `facman run <instance> --execute`
+- `facman run <instance> --execute` returns `isolation_not_proven` until the
+  real Factorio operator smoke passes
 - Default run mode remains dry-run.
 - No silent writes to global Factorio data.
 
@@ -109,12 +139,13 @@ leaving setup mutation to Universal Setup.
   path exclusion, binary/archive skips, and redaction report JSON.
 - `facman diagnostics redact <file> --json` proves deterministic and
   idempotent text redaction.
-- `facman diagnostics export --instance <id> --out <bundle.zip> --json` writes
-  redacted diagnostic bundles with manifest and redaction report entries.
-- `facman doctor --diagnostic-bundle <bundle.zip> --json` uses the same bundle
-  assembly path.
-- Secret corpus tests prove diagnostics, doctor-created bundles, logs/config
-  collection, and instance exports do not contain raw fake secret values.
+- `facman diagnostics redact <file> --json` handles known line-oriented inputs
+  and sensitive multiline JSON string fields; malformed JSON fails closed.
+- `facman diagnostics export` and doctor-bundle output return
+  `diagnostic_export_not_safe` until bounded no-follow traversal and all-format
+  sanitization are proven.
+- Historical secret-corpus bundle tests remain evidence of their fixture scope,
+  not proof of general diagnostic sanitization.
 - Factorio account login, credential-store implementation, diagnostic upload,
   Mod Portal token behavior, and GUI diagnostic UX remain deferred.
 
@@ -147,16 +178,20 @@ R1 - Developer preview
 R2 - Local power-user alpha
   real install import
   fixture-backed discovery classification
-  isolated instances
-  dry-run and execute
+  instance layout and launch-plan scaffolding
+  controlled process-spawn fixture proof
+  real Factorio write isolation not proven
+  execute quarantined until isolation proof
   local modsets
   workspace invariants and package layout skeletons
   save roundtrip and diagnostic redaction proofs
 
-R3 - Safe beta
-  unsigned built package artifacts for portable CLI/TUI and Windows legacy WinForms
-  package runtime smoke from package roots with external workspaces
-  diagnostic UX polish
+R3 - Portable package and safety hardening
+  shared trust-boundary regressions pass
+  unsafe capabilities are proven or explicitly unavailable
+  one authoritative install-to-launch-preview command slice
+  one target-specific static CLI package
+  package integrity and relocation smoke
 
 R4 - Managed install alpha
   Universal Setup local archive install

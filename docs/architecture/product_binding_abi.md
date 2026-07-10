@@ -17,8 +17,16 @@ contracts. The Mod Portal adapter remains Factorio-specific.
 
 ## Implemented ABI Slice
 
-`flb_command_execute_v1` now owns FacMan product identity for
-`product.inspect` / `factorio.product.inspect` and delegates product-neutral
-launcher commands to `ulk_command_execute_v1`. This keeps Factorio facts in
-the binding while letting Universal Launcher own the command graph, launch-plan
-model, diagnostics shape, and empty/default universal model lists.
+`flb_command_execute_v1` owns FacMan product identity and delegates orchestration
+to `ulk_command_execute_v1`. Context creation statically registers the first
+Factorio application handlers with Universal Launcher.
+
+The ABI is experimental but has a correctness floor:
+
+- fixed-width public size types
+- input and output `struct_size` validation
+- explicit calling-convention and visibility macros
+- borrowed response strings valid until the next context call
+- explicit ABI version queries
+
+There is no dynamic plugin loading or stable third-party compatibility promise.

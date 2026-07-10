@@ -14,8 +14,18 @@ class PackageSkeletonTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "package-skeletons"
             built = package_skeleton_build.materialize_all(root)
-            self.assertEqual(len(built), 5)
+            self.assertEqual(len(built), 6)
             self.assertEqual(package_skeleton_check.validate_root(root), [])
+
+    def test_builder_refuses_unowned_output_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "unowned"
+            root.mkdir()
+            valuable = root / "operator-data.txt"
+            valuable.write_text("preserve\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "unowned output root"):
+                package_skeleton_build.materialize_all(root)
+            self.assertEqual(valuable.read_text(encoding="utf-8"), "preserve\n")
 
     def test_missing_contracts_fails(self) -> None:
         with built_skeletons() as root:

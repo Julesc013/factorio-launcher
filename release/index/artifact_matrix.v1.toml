@@ -1,6 +1,12 @@
 schema = "facman.artifact_matrix.v1"
 
 [[artifact]]
+phase = 0
+profile_id = "windows_portable_cli_x64"
+release_class = "unsigned_local_portable_archive"
+pattern = "facman-<version>-windows-cli-x64-portable.zip"
+
+[[artifact]]
 phase = 1
 profile_id = "windows_legacy_winforms_x64"
 release_class = "portable_archive"

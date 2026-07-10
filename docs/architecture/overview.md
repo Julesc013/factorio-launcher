@@ -15,8 +15,20 @@ CLI / TUI / WinForms / WinUI / AppKit / SwiftUI / GTK / Qt frontends
 ```
 
 The CLI is the first frontend and may expose JSON for early GUI integration,
-but it is not the foundation of the GUI. Every frontend calls the same command
-graph/native service/C ABI.
+but it is not the foundation of the GUI. The intended command direction is:
+
+```text
+frontend -> Universal Launcher router -> registered Factorio binding
+         -> FacMan application operation -> typed result -> frontend renderer
+```
+
+JSON is a compatibility and process boundary. Native application operations
+use typed requests and results. Every frontend ultimately calls the same
+authoritative command handlers.
 
 The universal launcher should understand artifact sets, launch plans,
 instances, profiles, and diagnostics. It should not understand Factorio mods.
+
+The frozen macro-decisions and bounded correction programme are defined in
+[architecture_freeze.md](architecture_freeze.md) and
+[../quality/safety_proof_gates.md](../quality/safety_proof_gates.md).

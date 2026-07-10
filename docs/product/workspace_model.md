@@ -69,11 +69,12 @@ Runtime invariant tests now cover:
   overwriting existing workspace files
 - no source save fixture mutation during backup, clone, export, import, and
   malformed-save refusal tests
-- diagnostic bundle export through the shared redaction policy
-- no raw secret corpus values in diagnostic bundles, doctor-created bundles,
-  or instance exports
+- known-corpus text and structured JSON redaction through the shared policy
+- diagnostic bundle and doctor-bundle export quarantined until bounded
+  no-follow traversal and fail-closed format handling are proven
+- no raw secret corpus values in enabled instance exports
 - diagnostic exclusion of account-ref, token, and Steam-userdata-like paths
 - diagnostic skipping of binary files and archive-like files instead of copying
   them raw
-- normalization of diagnostic bundle install/config paths to portable
-  placeholders
+- prior diagnostic bundle fixtures remain historical evidence, not an enabled
+  general-sanitization claim

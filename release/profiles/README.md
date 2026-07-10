@@ -8,6 +8,7 @@ generic `legacy` or `modern`.
 
 The first contract-backed package lanes are:
 
+- `windows_portable_cli_x64` (the first target-specific static built proof)
 - `windows_legacy_winforms_x64`
 - `macos_legacy_appkit_x64`
 - `linux_x11_gtk_x64`
@@ -24,7 +25,7 @@ only contract-backed profiles appear in `release/index/release_index.v1.toml`.
 R0 - Architecture baseline
 R1 - Developer preview
 R2 - Local power-user alpha
-R3 - Safe beta
+R3 - Portable package and safety hardening
 R4 - Managed install alpha
 R5 - Native GUI preview
 R6 - v1.0

@@ -113,8 +113,11 @@ instances, profiles, install references, and launch plans belong to
 - No repair or uninstall for Steam or otherwise foreign-owned installs.
 - No silent writes to the default Factorio data directory.
 - No global mod folder swapping.
-- Launch execution is opt-in through `run --execute`; the default is a dry-run
-  launch plan.
+- Launch planning is dry-run only. `run --execute` returns
+  `isolation_not_proven` until an operator-supplied real Factorio smoke proves
+  effective write-data isolation.
+- Diagnostic bundle export returns `diagnostic_export_not_safe` until
+  structured redaction and bounded no-follow traversal are proven.
 
 ## Development
 

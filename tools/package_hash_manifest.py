@@ -4,7 +4,7 @@ import argparse
 import hashlib
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -18,15 +18,24 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv[1:]
     parser = argparse.ArgumentParser(description="Write built package component and hash manifests.")
     parser.add_argument("--root", required=True, help="package root to scan")
+    parser.add_argument("--verify", action="store_true", help="verify the existing hash manifest instead of writing it")
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
     if not root.is_dir():
         print(f"package-hash-manifest: missing package root: {root}", file=sys.stderr)
         return 1
+    if args.verify:
+        problems = verify_manifest(root)
+        if problems:
+            for problem in problems:
+                print(f"package-hash-manifest: {problem}", file=sys.stderr)
+            return 1
+        print("package-hash-manifest: verify ok")
+        return 0
     records = component_records_from_files(root)
     write_manifests(root, records)
-    print(f"package-hash-manifest: ok ({len(records)} files)")
+    print(f"package-hash-manifest: write ok ({len(records)} files)")
     return 0
 
 
@@ -110,6 +119,64 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def verify_manifest(root: Path) -> list[str]:
+    manifest = root / "manifest" / "hashes.sha256"
+    if not manifest.is_file():
+        return ["missing manifest/hashes.sha256"]
+    problems: list[str] = []
+    declared: dict[str, str] = {}
+    for line_number, line in enumerate(manifest.read_text(encoding="utf-8").splitlines(), start=1):
+        if len(line) < 67 or line[64:66] != "  ":
+            problems.append(f"invalid hash line {line_number}")
+            continue
+        expected, relative = line[:64].lower(), line[66:]
+        if len(expected) != 64 or any(ch not in "0123456789abcdef" for ch in expected):
+            problems.append(f"invalid SHA-256 on line {line_number}")
+            continue
+        if not safe_manifest_path(relative):
+            problems.append(f"unsafe manifest path on line {line_number}: {relative}")
+            continue
+        if relative in declared:
+            problems.append(f"duplicate manifest path: {relative}")
+            continue
+        declared[relative] = expected
+
+    resolved_root = root.resolve()
+    for relative, expected in declared.items():
+        candidate = root / PurePosixPath(relative)
+        if candidate.is_symlink() or not candidate.is_file():
+            problems.append(f"missing or linked package file: {relative}")
+            continue
+        resolved = candidate.resolve()
+        if resolved_root not in resolved.parents:
+            problems.append(f"package file escapes root: {relative}")
+            continue
+        actual = sha256(candidate)
+        if actual != expected:
+            problems.append(f"SHA-256 mismatch: {relative}")
+
+    actual_files = {
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file()
+        and path.relative_to(root).as_posix() not in EXCLUDED_HASH_OUTPUTS
+        and not path.name.endswith(".sig")
+    }
+    declared_files = set(declared)
+    for relative in sorted(actual_files - declared_files):
+        problems.append(f"unhashed package file: {relative}")
+    for relative in sorted(declared_files - actual_files):
+        problems.append(f"manifest references missing file: {relative}")
+    return problems
+
+
+def safe_manifest_path(value: str) -> bool:
+    if not value or "\\" in value or ":" in value:
+        return False
+    path = PurePosixPath(value)
+    return not path.is_absolute() and all(part not in {"", ".", ".."} for part in path.parts)
 
 
 def component_name_for(relative: str) -> str:

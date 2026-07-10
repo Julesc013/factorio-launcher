@@ -36,6 +36,8 @@ struct RedactionSummary {
 struct RedactionResult {
     std::string text;
     std::vector<RedactionEvent> events;
+    bool safe = true;
+    std::string error;
 };
 
 RedactionPolicy default_redaction_policy();

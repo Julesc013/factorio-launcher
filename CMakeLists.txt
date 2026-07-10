@@ -84,7 +84,7 @@ set(FLAUNCH_RUNTIME_SOURCES
   runtime/package/fl_runtime_extract.c
   runtime/package/fl_runtime_locator.c
   runtime/package/fl_runtime_manifest.c
-  runtime/package/fl_runtime_verify.c
+  runtime/package/fl_runtime_verify.cpp
 )
 
 set(FLAUNCH_CLIENT_SOURCES
@@ -97,6 +97,14 @@ set(FLAUNCH_CLIENT_SOURCES
 
 add_library(flaunch_runtime_static STATIC ${FLAUNCH_RUNTIME_SOURCES})
 target_include_directories(flaunch_runtime_static PUBLIC runtime/package)
+target_compile_features(flaunch_runtime_static PUBLIC cxx_std_17)
+
+add_library(facman_base_static STATIC
+  runtime/base/fl_path_safety.cpp
+  runtime/base/fl_sha256.cpp
+)
+target_include_directories(facman_base_static PUBLIC runtime/base)
+target_compile_features(facman_base_static PUBLIC cxx_std_17)
 
 add_library(flaunch_client_static STATIC ${FLAUNCH_CLIENT_SOURCES})
 target_include_directories(flaunch_client_static PUBLIC
@@ -104,10 +112,6 @@ target_include_directories(flaunch_client_static PUBLIC
   include
   "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include"
 )
-
-add_library(flb_factorio_static STATIC runtime/factorio/binding/flb_api.c)
-target_include_directories(flb_factorio_static PUBLIC include)
-target_link_libraries(flb_factorio_static PUBLIC ulk_static)
 
 add_library(flb_factorio_launch_static STATIC runtime/factorio/launch/flb_factorio_launch_plan.cpp)
 target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
@@ -129,10 +133,27 @@ add_library(flb_factorio_modsets_static STATIC runtime/factorio/modsets/flb_fact
 target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_modsets_static PUBLIC runtime/factorio/modsets runtime/factorio/mods)
 target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static)
+target_include_directories(flaunch_runtime_static PRIVATE runtime/base)
+target_link_libraries(flaunch_runtime_static PRIVATE facman_base_static)
+
+add_library(flb_factorio_application_static STATIC runtime/factorio/application/flb_factorio_application.cpp)
+target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_application_static PUBLIC runtime/factorio/application)
+target_link_libraries(flb_factorio_application_static PUBLIC
+  facman_base_static
+  flb_factorio_discovery_static
+  flb_factorio_launch_static
+  ulk_static
+)
+
+add_library(flb_factorio_static STATIC runtime/factorio/binding/flb_api.c)
+target_include_directories(flb_factorio_static PUBLIC include)
+target_link_libraries(flb_factorio_static PUBLIC ulk_static flb_factorio_application_static)
 
 add_library(flb_factorio_shared SHARED runtime/factorio/binding/flb_api.c)
 target_include_directories(flb_factorio_shared PUBLIC include)
-target_link_libraries(flb_factorio_shared PUBLIC ulk_shared)
+target_compile_definitions(flb_factorio_shared PRIVATE FLB_BUILD_SHARED)
+target_link_libraries(flb_factorio_shared PUBLIC ulk_shared flb_factorio_application_static)
 set_target_properties(flb_factorio_shared PROPERTIES OUTPUT_NAME flb_factorio WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 add_library(flb_factorio ALIAS flb_factorio_static)
@@ -144,7 +165,7 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     apps/cli/command_dispatch.cpp
   )
   target_compile_features(facman_cli PRIVATE cxx_std_17)
-  target_link_libraries(facman_cli PRIVATE flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_modsets_static)
+  target_link_libraries(facman_cli PRIVATE facman_base_static flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_modsets_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 
   add_executable(facman_tui
