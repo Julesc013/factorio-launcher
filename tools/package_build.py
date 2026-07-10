@@ -26,6 +26,8 @@ SUPPORTED_BUILT_PROFILES = {
     "portable_tui_x64",
     "windows_legacy_winforms_x64",
 }
+WORKSPACE_LOCK_PATH = ROOT / "release" / "index" / "workspace_lock.v1.toml"
+DEPENDENCY_LOCK_PATH = ROOT / "release" / "index" / "dependency_lock.v1.toml"
 FORBIDDEN_FILE_MARKERS = {
     "factorio.exe",
     "Factorio.app",
@@ -190,6 +192,7 @@ def write_build_info(
     bundle: dict[str, Any],
 ) -> None:
     build_index = load_toml(ROOT / "release" / "index" / "build_manifest.v1.toml")
+    source_revisions = pinned_source_revisions()
     info = {
         "schema": "facman.package_build_info.v1",
         "profile_id": profile_id,
@@ -198,9 +201,9 @@ def write_build_info(
         "filename_version": build_index.get("filename_version", "facman-0.1.0-dev"),
         "source_commit": git_commit(),
         "source_revisions": {
-            "factorio_launcher": git_commit(ROOT),
-            "universal_launcher": git_commit(find_dependency_repo("universal-launcher")),
-            "universal_setup": git_commit(find_dependency_repo("universal-setup")),
+            "factorio_launcher": source_revisions["factorio_binding"],
+            "universal_launcher": source_revisions["universal_launcher"],
+            "universal_setup": source_revisions["universal_setup"],
         },
         "target_os": profile.get("target_os"),
         "target_arch": profile.get("target_arch"),
@@ -269,6 +272,34 @@ def resolve_source_target(source_target: str, build_root: Path) -> Path:
         if matches:
             return matches[0]
     raise ValueError(f"missing built artifact for {source_target}; tried {', '.join(names)} under {build_root}")
+
+
+def pinned_source_revisions() -> dict[str, str]:
+    values = {
+        "factorio_binding": git_commit(ROOT),
+        "universal_launcher": "unknown",
+        "universal_setup": "unknown",
+    }
+    locked = _load_workspace_lock()
+    for component in locked:
+        component_id = component.get("id")
+        pin = component.get("pin", "")
+        if component_id in values and pin:
+            values[component_id] = pin
+    missing = [component_id for component_id, pin in values.items() if not pin or pin == "unknown"]
+    if missing:
+        raise ValueError(f"missing pinned source revisions for {', '.join(sorted(missing))}")
+    return values
+
+
+def _load_workspace_lock() -> list[dict[str, Any]]:
+    if not WORKSPACE_LOCK_PATH.is_file():
+        raise ValueError(f"package build requires a workspace lock: {WORKSPACE_LOCK_PATH}")
+    data = load_toml(WORKSPACE_LOCK_PATH)
+    components = data.get("component")
+    if not isinstance(components, list):
+        raise ValueError("workspace lock component list is missing")
+    return components
 
 
 def source_target_candidates(source_target: str) -> list[str]:

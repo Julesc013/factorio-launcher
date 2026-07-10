@@ -16,6 +16,8 @@ jobs:
         run: |
           git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
           git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+      - name: Align dependency revisions to workspace lock
+        run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
       - name: Configure native smoke
         run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_APPS=ON
       - name: Build native smoke
@@ -33,6 +35,14 @@ jobs:
           ./build/native-smoke/facman --version
           ./build/native-smoke/facman product inspect
           ./build/native-smoke/facman doctor
+      - name: Build enabled portable package profiles
+        run: |
+          python tools/package_build.py --profile portable_cli_x64 --out build/packages --build-root build/native-smoke
+          python tools/package_build.py --profile portable_tui_x64 --out build/packages --build-root build/native-smoke
+      - name: Smoke portable package profiles
+        run: |
+          python tools/package_runtime_smoke.py --root build/packages/portable_cli_x64
+          python tools/package_runtime_smoke.py --root build/packages/portable_tui_x64
 
   winforms-compile:
     runs-on: windows-latest
@@ -42,6 +52,12 @@ jobs:
         with:
           python-version: "3.11"
       - uses: microsoft/setup-msbuild@v2
+      - name: Clone universal repositories
+        run: |
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+      - name: Align dependency revisions to workspace lock
+        run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
       - name: Validate frontend contracts
         run: |
           python tools/frontend_contract_check.py
@@ -51,9 +67,13 @@ jobs:
         run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Debug
       - name: Smoke WinForms command client
         run: python tools/winforms_command_client_smoke.py
+      - name: Build and smoke Windows package profile
+        run: |
+          python tools/package_build.py --profile windows_legacy_winforms_x64 --out build/packages --build-root build/native-smoke
+          python tools/package_runtime_smoke.py --root build/packages/windows_legacy_winforms_x64
 
   appkit-compile:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
       - name: Compile AppKit shell sources

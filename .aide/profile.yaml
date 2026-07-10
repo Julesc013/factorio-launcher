@@ -8,13 +8,13 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: pre-code-structure-governance
+  phase: production-truth-lock-in
   primary_goal: >
-    Preserve the ownership-root layout and the three-repo split before native
-    command graph implementation begins.
+    Preserve repository ownership and command authority while landing public
+    dependency pins, workspace lock verification, and CI evidence.
   next_task: >
-    Harden cross-repo validators and then port prototype command behavior into
-    the native universal command graph.
+    Keep command migration incremental: command authority in one slice, package
+    proof in one lane, then next slice only after public evidence lands.
 deferred_surfaces:
   - Gateway forwarding, provider/model calls, UI, runtime, and autonomous loops remain deferred.
   - Native GUI implementation remains deferred until command graph stability.
@@ -25,7 +25,7 @@ runtime:
   model_calls: forbidden_until_reviewed_phase
 product_runtime:
   depends_on_aide: false
-  python_prototype_runtime: apps/python_cli
+  python_prototype_runtime: none
   production_runtime_python_dependency: false
 native_direction:
   public_abi: C-compatible stable ABI

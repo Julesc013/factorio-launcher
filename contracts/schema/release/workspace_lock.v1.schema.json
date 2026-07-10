@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flaunch.workspace_lock.v1",
+  "title": "FacMan Workspace Lock",
+  "type": "object",
+  "required": ["schema", "id", "lock_kind", "lock_root", "component"],
+  "properties": {
+    "schema": { "const": "flaunch.workspace_lock.v1" },
+    "id": { "type": "string" },
+    "lock_kind": { "type": "string" },
+    "lock_root": { "type": "string" },
+    "component": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "pin", "path"],
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "pin": { "type": "string" },
+          "path": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

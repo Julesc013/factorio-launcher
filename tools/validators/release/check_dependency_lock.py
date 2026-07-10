@@ -25,6 +25,7 @@ FORBIDDEN_FLOATING_PINS = {
     "master",
     "dev",
     "head",
+    "BUILD_TIME",
 }
 
 REQUIRED_ABI_KEYS = {"flb", "ulk", "ulu", "usk", "usu"}
@@ -85,8 +86,11 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
         problems.append(f"{prefix}: bundled must be true")
     if not isinstance(component.get("abi_version"), int) or component["abi_version"] < 1:
         problems.append(f"{prefix}: abi_version must be a positive integer")
-    if not str(component.get("version", "")):
+    version = str(component.get("version", "")).strip()
+    if not version:
         problems.append(f"{prefix}: version is required")
+    elif version in FORBIDDEN_FLOATING_PINS:
+        problems.append(f"{prefix}: version must not be floating")
     return problems
 
 
