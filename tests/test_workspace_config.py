@@ -26,10 +26,10 @@ class WorkspaceConfigTests(unittest.TestCase):
         self.assertEqual(repos["universal-launcher"], launcher.resolve(strict=False))
         command = workspace_config.cmake_command(repos)
         self.assertIn("-DFLAUNCH_UNIVERSAL_SETUP_ROOT=", command)
-        self.assertIn(setup.as_posix(), command)
+        self.assertIn(workspace_config.cmake_path(setup), command)
         presets = workspace_config.cmake_user_presets(repos)
         cache = presets["configurePresets"][0]["cacheVariables"]  # type: ignore[index]
-        self.assertEqual(cache["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"], launcher.as_posix())
+        self.assertEqual(cache["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"], workspace_config.cmake_path(launcher))
 
 
 if __name__ == "__main__":

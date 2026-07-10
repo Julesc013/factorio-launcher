@@ -86,6 +86,21 @@ became reachable from their public default branches. Its triggered CI run is the
 authoritative clean-clone closeout; promotion remains blocked until that run is
 terminal and green.
 
+The next clean-clone run, `29123212167`, passed dependency alignment on Linux
+and Windows. Its Linux job then exposed a separate native portability defect:
+static C++ application objects linked into `libflb_factorio.so` had not been
+compiled as position-independent code. GNU `ld` refused the shared link before
+CTest, Python, or package steps. The repository now requires PIC for the common
+native object model and the strict CI-proof validator prevents that setting from
+silently disappearing.
+
+The same run's Windows job passed dependency alignment, native configuration and
+build, four CTests, WinForms build and command-client smoke, and 164 Python
+tests. Its one failure compared the same temporary directory in Windows 8.3 and
+long-name forms. The workspace configuration regression now compares the
+canonical CMake path emitted by the implementation, retaining path-resolution
+coverage without assuming one textual spelling for a Windows directory.
+
 ## Remaining Claims Blocked
 
 - This is an integration checkpoint, not Safe-beta promotion.

@@ -4,6 +4,11 @@ project(facman LANGUAGES C CXX)
 option(FLAUNCH_BUILD_NATIVE_APPS "Build native CLI/TUI/daemon scaffolds" ON)
 option(FLAUNCH_BUILD_TESTS "Build FacMan native tests" ON)
 
+# Product/application static libraries are also linked into the public shared
+# binding. Keep one cross-platform object model so ELF shared links do not
+# depend on a platform-specific target ordering accident.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 function(flaunch_append_env_candidate out_var env_name suffix)
   if(DEFINED ENV{${env_name}} AND NOT "$ENV{${env_name}}" STREQUAL "")
     file(TO_CMAKE_PATH "$ENV{${env_name}}" env_path)
