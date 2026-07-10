@@ -47,7 +47,8 @@ It verifies:
 
 - `contracts/schema` exists in the package root.
 - `content/factorio` exists in the package root.
-- the workspace is initialized outside the package root.
+- read-only doctor reports an external workspace without initializing or
+  mutating it.
 - command output does not leak source-tree, package-root, or build-output paths.
 - command output does not contain the fake secret corpus.
 - package payloads do not include Python runtime files.

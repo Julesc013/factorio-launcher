@@ -6,6 +6,10 @@ required_codes = [
   "persistent_target_exists",
   "persistent_write_refused",
   "staging_target_exists",
+  "isolation_not_proven",
+  "diagnostic_export_not_safe",
+  "setup_verification_not_implemented",
+  "diagnostic_structured_input_invalid",
   "foreign_owned_install_repair_refused",
   "foreign_owned_install_uninstall_refused",
   "default_data_dir_write_refused",
@@ -85,6 +89,34 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = true
 message = "A staging target already exists and requires recovery before retrying."
+
+[[code]]
+id = "isolation_not_proven"
+severity = "blocked"
+effect = "process_execute"
+retryable = false
+message = "Process execution is unavailable until real product write isolation is proven."
+
+[[code]]
+id = "diagnostic_export_not_safe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Diagnostic bundle export is unavailable until structured redaction and bounded traversal are proven."
+
+[[code]]
+id = "setup_verification_not_implemented"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup package verification is not implemented and must not report a pass result."
+
+[[code]]
+id = "diagnostic_structured_input_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Structured diagnostic input is malformed or cannot be redacted safely."
 
 [[code]]
 id = "invalid_request"

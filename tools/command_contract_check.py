@@ -96,7 +96,6 @@ def validate_contract(path: Path, contract: dict, allowed_effects: set[str]) -> 
         "dry_run_default",
         "executes_process",
         "mutates_workspace",
-        "golden_success",
         "golden_refusal",
     ]
     for key in required:
@@ -116,7 +115,16 @@ def validate_contract(path: Path, contract: dict, allowed_effects: set[str]) -> 
         if not referenced.is_file():
             problems.append(f"{path.relative_to(ROOT)}: {key} does not exist: {contract[key]}")
 
-    for key in ["golden_success", "golden_refusal"]:
+    availability = contract.get("availability", "implemented")
+    if availability not in {"implemented", "unavailable_until_isolation_proof"}:
+        problems.append(f"{path.relative_to(ROOT)}: unsupported availability {availability!r}")
+    if availability == "implemented" and "golden_success" not in contract:
+        problems.append(f"{path.relative_to(ROOT)}: implemented command missing golden_success")
+
+    golden_keys = ["golden_refusal"]
+    if "golden_success" in contract:
+        golden_keys.insert(0, "golden_success")
+    for key in golden_keys:
         referenced = ROOT / contract[key]
         if not referenced.is_file():
             problems.append(f"{path.relative_to(ROOT)}: {key} does not exist: {contract[key]}")

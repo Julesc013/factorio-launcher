@@ -50,8 +50,8 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         assert_workspace_reported(doctor_json, workspace_root)
         assert_no_source_paths(root, normalized_output)
         assert_no_secret_corpus(combined_output)
-        if not (workspace_root / "workspace.v1.json").is_file():
-            raise ValueError("doctor did not initialize external workspace")
+        if workspace_root.exists():
+            raise ValueError("read-only doctor unexpectedly initialized external workspace")
         if root in workspace_root.parents or workspace_root == root:
             raise ValueError("workspace must be outside package root")
     return {
@@ -64,6 +64,7 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         "contracts_found": True,
         "content_found": True,
         "python_runtime": False,
+        "doctor_workspace_write": False,
     }
 
 

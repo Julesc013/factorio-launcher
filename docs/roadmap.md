@@ -71,7 +71,8 @@ contracts, package linkage, and experimental ABI details are not.
 - `facman instances create <name> --install <install-id>`
 - `facman instances list`
 - `facman launch-plan <instance>`
-- `facman run <instance> --execute`
+- `facman run <instance> --execute` returns `isolation_not_proven` until the
+  real Factorio operator smoke passes
 - Default run mode remains dry-run.
 - No silent writes to global Factorio data.
 
@@ -123,12 +124,13 @@ contracts, package linkage, and experimental ABI details are not.
   path exclusion, binary/archive skips, and redaction report JSON.
 - `facman diagnostics redact <file> --json` proves deterministic and
   idempotent text redaction.
-- `facman diagnostics export --instance <id> --out <bundle.zip> --json` writes
-  redacted diagnostic bundles with manifest and redaction report entries.
-- `facman doctor --diagnostic-bundle <bundle.zip> --json` uses the same bundle
-  assembly path.
-- Secret corpus tests prove diagnostics, doctor-created bundles, logs/config
-  collection, and instance exports do not contain raw fake secret values.
+- `facman diagnostics redact <file> --json` handles known line-oriented inputs
+  and sensitive multiline JSON string fields; malformed JSON fails closed.
+- `facman diagnostics export` and doctor-bundle output return
+  `diagnostic_export_not_safe` until bounded no-follow traversal and all-format
+  sanitization are proven.
+- Historical secret-corpus bundle tests remain evidence of their fixture scope,
+  not proof of general diagnostic sanitization.
 - Factorio account login, credential-store implementation, diagnostic upload,
   Mod Portal token behavior, and GUI diagnostic UX remain deferred.
 

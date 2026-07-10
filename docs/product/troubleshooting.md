@@ -16,6 +16,6 @@ facman launch plan <instance>
 facman run <instance>
 ```
 
-`run` defaults to dry-run mode. Use `--execute` only after reviewing the launch
-plan. Execution uses the instance-local config and mod directory and records a
-launch history entry under the instance logs directory.
+`run` is dry-run only. `--execute` currently returns
+`isolation_not_proven`; it is not an override. Review `launch-plan` output while
+the real Factorio write-isolation proof remains outstanding.

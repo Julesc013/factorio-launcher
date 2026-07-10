@@ -173,6 +173,148 @@ std::string redact_line(
     return redacted;
 }
 
+bool json_string_end(const std::string& text, std::size_t start, std::size_t& end)
+{
+    bool escaped = false;
+    for (std::size_t index = start + 1; index < text.size(); ++index) {
+        char ch = text[index];
+        if (escaped) {
+            escaped = false;
+        } else if (ch == '\\') {
+            escaped = true;
+        } else if (ch == '"') {
+            end = index + 1;
+            return true;
+        } else if (ch == '\n' || ch == '\r') {
+            return false;
+        }
+    }
+    return false;
+}
+
+bool sensitive_json_key(const std::string& raw_key, const RedactionPolicy& policy, std::string& matched)
+{
+    std::string lower_key = lowercase_ascii(raw_key);
+    for (const std::string& field : policy.field_names) {
+        if (lower_key == lowercase_ascii(field)) {
+            matched = field;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool json_structure_balanced(const std::string& text)
+{
+    std::vector<char> stack;
+    bool in_string = false;
+    bool escaped = false;
+    for (char ch : text) {
+        if (in_string) {
+            if (escaped) {
+                escaped = false;
+            } else if (ch == '\\') {
+                escaped = true;
+            } else if (ch == '"') {
+                in_string = false;
+            } else if (ch == '\n' || ch == '\r') {
+                return false;
+            }
+            continue;
+        }
+        if (ch == '"') {
+            in_string = true;
+        } else if (ch == '{' || ch == '[') {
+            stack.push_back(ch);
+        } else if (ch == '}' || ch == ']') {
+            if (stack.empty()) {
+                return false;
+            }
+            char expected = ch == '}' ? '{' : '[';
+            if (stack.back() != expected) {
+                return false;
+            }
+            stack.pop_back();
+        }
+    }
+    return !in_string && stack.empty();
+}
+
+bool looks_like_json_document(const std::string& text, const std::string& logical_path)
+{
+    std::string lower_path = lowercase_ascii(logical_path);
+    if (lower_path.size() >= 5 && lower_path.substr(lower_path.size() - 5) == ".json") {
+        return true;
+    }
+    std::size_t first = text.find_first_not_of(" \t\r\n");
+    return first != std::string::npos && text[first] == '{';
+}
+
+RedactionResult redact_json_fields(
+    const std::string& text,
+    const RedactionPolicy& policy,
+    const std::string& logical_path)
+{
+    RedactionResult result;
+    result.text = text;
+    if (!json_structure_balanced(text)) {
+        result.safe = false;
+        result.error = "JSON structure is malformed or contains an unterminated string";
+        result.text.clear();
+        return result;
+    }
+
+    std::size_t index = 0;
+    while (index < result.text.size()) {
+        if (result.text[index] != '"') {
+            ++index;
+            continue;
+        }
+        std::size_t key_end = 0;
+        if (!json_string_end(result.text, index, key_end)) {
+            result.safe = false;
+            result.error = "JSON key string is malformed";
+            result.text.clear();
+            return result;
+        }
+        std::size_t separator = result.text.find_first_not_of(" \t\r\n", key_end);
+        if (separator == std::string::npos || result.text[separator] != ':') {
+            index = key_end;
+            continue;
+        }
+        std::string matched;
+        std::string raw_key = result.text.substr(index + 1, key_end - index - 2);
+        if (!sensitive_json_key(raw_key, policy, matched)) {
+            index = key_end;
+            continue;
+        }
+        std::size_t value_start = result.text.find_first_not_of(" \t\r\n", separator + 1);
+        if (value_start == std::string::npos || result.text[value_start] != '"') {
+            result.safe = false;
+            result.error = "sensitive JSON field does not contain a string value";
+            result.text.clear();
+            return result;
+        }
+        std::size_t value_end = 0;
+        if (!json_string_end(result.text, value_start, value_end)) {
+            result.safe = false;
+            result.error = "sensitive JSON string is malformed";
+            result.text.clear();
+            return result;
+        }
+        std::string replacement = quote(policy.marker);
+        result.text.replace(value_start, value_end - value_start, replacement);
+        result.events.push_back(event_for(
+            "diagnostic_secret_redacted",
+            "warning",
+            logical_path,
+            "json-field:" + matched,
+            "structured JSON value was replaced by the redaction marker"));
+        index = value_start + replacement.size();
+    }
+    return result;
+}
+
 } // namespace
 
 RedactionPolicy default_redaction_policy()
@@ -211,7 +353,15 @@ RedactionResult redact_text(
 )
 {
     RedactionResult result;
-    std::istringstream in(text);
+    std::string input = text;
+    if (looks_like_json_document(text, logical_path)) {
+        RedactionResult structured = redact_json_fields(text, policy, logical_path);
+        if (!structured.safe) {
+            return structured;
+        }
+        return structured;
+    }
+    std::istringstream in(input);
     std::ostringstream out;
     std::string line;
     bool first = true;
@@ -222,7 +372,7 @@ RedactionResult redact_text(
         first = false;
         out << redact_line(line, policy, logical_path, result.events);
     }
-    if (!text.empty() && text.back() == '\n') {
+    if (!input.empty() && input.back() == '\n') {
         out << "\n";
     }
     result.text = out.str();

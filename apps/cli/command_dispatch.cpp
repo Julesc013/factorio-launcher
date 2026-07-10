@@ -917,7 +917,7 @@ std::string instance_json(const InstanceRef& instance)
     out << "  \"profile\": " << quote(instance.profile) << ",\n";
     out << "  \"modset\": null,\n";
     out << "  \"template\": " << quote(instance.template_id) << ",\n";
-    out << "  \"save_policy\": \"instance-local\",\n";
+    out << "  \"save_policy\": {\"mode\": \"instance-local\"},\n";
     out << "  \"account_ref\": null,\n";
     out << "  \"concurrency\": {\"single_writer\": true},\n";
     out << "  \"export_policy\": {\"portable\": true, \"redact_secrets\": true}\n";
@@ -2200,6 +2200,21 @@ int command_diagnostics(const CliOptions& options)
         }
         factorio_diagnostics::RedactionResult redacted =
             factorio_diagnostics::redact_text(std::string(bytes.begin(), bytes.end()), generic_path_string(input_path.filename()));
+        if (!redacted.safe) {
+            std::string result = diagnostic_refusal_json(
+                "diagnostics.redact",
+                "",
+                "diagnostic_structured_input_invalid",
+                "Structured diagnostic input could not be parsed safely",
+                false,
+                redacted.error);
+            if (has_flag(args, "--json")) {
+                std::cout << result;
+            } else {
+                std::cerr << "Structured diagnostic input was refused: " << redacted.error << "\n";
+            }
+            return 1;
+        }
         if (has_flag(args, "--json")) {
             std::cout << "{\n";
             std::cout << "  \"schema\": \"factorio.diagnostic_redact.v1\",\n";
@@ -2214,13 +2229,19 @@ int command_diagnostics(const CliOptions& options)
         return 0;
     }
     if (args.size() >= 2 && args[1] == "export") {
-        ensure_workspace(options.workspace);
         std::string instance_id = option_value(args, "--instance");
         std::string output = option_value(args, "--out");
         if (instance_id.empty() || output.empty()) {
             std::cerr << "diagnostics export requires --instance <instance-id> --out <bundle.zip>\n";
             return 2;
         }
+        return emit_safety_refusal(
+            options,
+            "diagnostics.export",
+            "diagnostic_export_not_safe",
+            "Diagnostic bundle export is unavailable until structured redaction and bounded traversal are proven",
+            "Use facman diagnostics report or redact a specific reviewed file instead");
+#if 0
         InstanceRef instance;
         if (!load_instance(options.workspace, instance_id, instance)) {
             std::cerr << "Unknown instance: " << instance_id << "\n";
@@ -2275,6 +2296,7 @@ int command_diagnostics(const CliOptions& options)
             std::cout << "Exported diagnostic bundle to " << path_string(output_path) << "\n";
         }
         return 0;
+#endif
     }
     std::cerr << "Unknown diagnostics command\n";
     return 2;
@@ -2282,7 +2304,6 @@ int command_diagnostics(const CliOptions& options)
 
 int command_doctor(const CliOptions& options)
 {
-    ensure_workspace(options.workspace);
     std::vector<fs::path> installs = install_ref_files(options.workspace);
     std::vector<fs::path> instances = instance_manifest_files(options.workspace);
     bool has_discovery_roots = has_explicit_scan_roots(options.args);
@@ -2299,6 +2320,13 @@ int command_doctor(const CliOptions& options)
     std::size_t diagnostic_bundle_file_count = 0;
     std::string diagnostic_bundle_report_json;
     if (!diagnostic_bundle_output.empty()) {
+        return emit_safety_refusal(
+            options,
+            "doctor.run",
+            "diagnostic_export_not_safe",
+            "Doctor diagnostic bundle export is unavailable until structured redaction and bounded traversal are proven",
+            "Run facman doctor --json without --diagnostic-bundle");
+#if 0
         fs::path output_path = diagnostic_bundle_output;
         if (fs::exists(output_path)) {
             std::string result = diagnostic_refusal_json(
@@ -2353,6 +2381,7 @@ int command_doctor(const CliOptions& options)
             return 1;
         }
         diagnostic_bundle_written = true;
+#endif
     }
     if (has_flag(options.args, "--json")) {
         std::cout << "{\n";
@@ -2461,8 +2490,6 @@ int command_installs(const CliOptions& options)
         std::cerr << "Missing installs subcommand\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
-
     if (options.args[1] == "install-version") {
         if (options.args.size() < 3) {
             std::cerr << "Missing Factorio version\n";
@@ -2513,27 +2540,12 @@ int command_installs(const CliOptions& options)
             std::cerr << "Unknown install reference: " << options.args[2] << "\n";
             return 1;
         }
-        std::string setup_response = setup_command_response_json("verify.report");
-        std::vector<std::pair<std::string, std::string>> fields = {
-            {"install_id", install.install_id},
-            {"ownership", install.ownership},
-            {"root", path_string(install.root)},
-        };
-        std::string result = setup_backed_operation_json(
-            "factorio.install_verify_report.v1",
-            "verify",
-            "reported",
-            "verify.report",
-            setup_response,
-            fields);
-        if (has_flag(options.args, "--json")) {
-            std::cout << result;
-        } else {
-            std::cout << "Install verify report requested through universal-setup.\n";
-            std::cout << "Install: " << install.install_id << "\n";
-            std::cout << "Ownership: " << install.ownership << "\n";
-        }
-        return 0;
+        return emit_safety_refusal(
+            options,
+            "installs.verify",
+            "setup_verification_not_implemented",
+            "Universal Setup package verification is not implemented",
+            "No verification request was sent and no pass result was reported");
     }
 
     if (options.args[1] == "repair" || options.args[1] == "uninstall") {
@@ -2614,6 +2626,7 @@ int command_installs(const CliOptions& options)
             std::cerr << "Install does not look like a Factorio directory: " << options.args[2] << "\n";
             return 1;
         }
+        ensure_workspace(options.workspace);
         std::string write_error;
         if (!facman::base::write_text_new_atomic(target.path, install_json(install), write_error)) {
             return emit_safety_refusal(
@@ -2702,8 +2715,6 @@ int command_instances(const CliOptions& options)
         std::cerr << "Missing instances subcommand\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
-
     if (options.args[1] == "create") {
         if (options.args.size() < 3) {
             std::cerr << "Missing instance name\n";
@@ -2741,6 +2752,7 @@ int command_instances(const CliOptions& options)
                 path_string(target.path),
                 true);
         }
+        ensure_workspace(options.workspace);
         instance.install_ref = install_id;
         instance.factorio_version = install.version;
         instance.local_data_root = target.path;
@@ -2845,8 +2857,6 @@ int command_mods(const CliOptions& options)
         std::cerr << "Missing mods subcommand\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
-
     if (options.args[1] == "search") {
         if (options.args.size() < 3) {
             std::cerr << "mods search requires <query>\n";
@@ -2979,8 +2989,6 @@ int command_modsets(const CliOptions& options)
         std::cerr << "Missing modsets subcommand or instance id\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
-
     InstanceRef instance;
     if (!load_instance(options.workspace, options.args[2], instance)) {
         std::cerr << "Unknown instance: " << options.args[2] << "\n";
@@ -3113,8 +3121,6 @@ int command_saves(const CliOptions& options)
         std::cerr << "Missing saves subcommand\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
-
     if (options.args[1] == "list") {
         std::string instance_id = option_value(options.args, "--instance");
         if (instance_id.empty()) {
@@ -3376,7 +3382,6 @@ int command_export(const CliOptions& options)
         std::cerr << "export instance requires <instance-id> <pack.zip>\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
     InstanceRef instance;
     if (!load_instance(options.workspace, options.args[2], instance)) {
         std::cerr << "Unknown instance: " << options.args[2] << "\n";
@@ -3443,7 +3448,6 @@ int command_import(const CliOptions& options)
         std::cerr << "import instance requires <pack.zip>\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
     fs::path pack_path = options.args[2];
     auto refuse = [&](const std::string& instance_id,
                       const std::string& code,
@@ -3549,6 +3553,7 @@ int command_import(const CliOptions& options)
             path_string(instance.local_data_root)
         );
     }
+    ensure_workspace(options.workspace);
 
     fs::path staging = target.path;
     staging += ".facman-staging";
@@ -3649,8 +3654,6 @@ int command_servers(const CliOptions& options)
         std::cerr << "Missing servers subcommand\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
-
     if (options.args[1] == "create") {
         if (options.args.size() < 3) {
             std::cerr << "servers create requires <name>\n";
@@ -3773,8 +3776,6 @@ int command_dev(const CliOptions& options)
         std::cerr << "Missing dev subcommand\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
-
     if (options.args[1] == "bug-report") {
         std::size_t install_count = install_ref_files(options.workspace).size();
         std::size_t instance_count = instance_manifest_files(options.workspace).size();
@@ -3822,7 +3823,6 @@ int command_launch_plan(const CliOptions& options)
         std::cerr << "Missing instance id\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
     InstanceRef instance;
     if (!load_instance(options.workspace, options.args[1], instance)) {
         std::cerr << "Unknown instance: " << options.args[1] << "\n";
@@ -3843,7 +3843,6 @@ int command_run(const CliOptions& options)
         std::cerr << "Missing instance id\n";
         return 2;
     }
-    ensure_workspace(options.workspace);
     InstanceRef instance;
     if (!load_instance(options.workspace, options.args[1], instance)) {
         std::cerr << "Unknown instance: " << options.args[1] << "\n";
@@ -3854,40 +3853,13 @@ int command_run(const CliOptions& options)
         std::cerr << "Unknown install reference: " << instance.install_ref << "\n";
         return 1;
     }
-    std::vector<std::string> args = launch_args(instance);
     if (has_flag(options.args, "--execute")) {
-        facman::factorio::launch::LaunchPreflightResult preflight =
-            facman::factorio::launch::preflight_launch(launch_instance_ref(instance), launch_install_ref(install));
-        if (!preflight.ok) {
-            if (has_flag(options.args, "--json")) {
-                std::cout << launch_preflight_refusal_json(instance, preflight.problems);
-            } else {
-                std::cout << "Refused: launch execution preflight failed\n";
-                for (const std::string& problem : preflight.problems) {
-                    std::cout << "- " << problem << "\n";
-                }
-            }
-            return 1;
-        }
-        ProcessResult result = run_process(install.executable, args);
-        append_launch_history(instance, install, args, result);
-        append_launch_audit(options.workspace, instance, install, args, result);
-        if (has_flag(options.args, "--json")) {
-            std::cout << "{\n";
-            std::cout << "  \"schema\": \"factorio.launch_result.v1\",\n";
-            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-            std::cout << "  \"preflight\": {\"status\": \"ok\", \"problems\": []},\n";
-            std::cout << "  \"started\": " << (result.started ? "true" : "false") << ",\n";
-            std::cout << "  \"exit_code\": " << result.exit_code << ",\n";
-            std::cout << "  \"error\": " << quote(result.error) << "\n";
-            std::cout << "}\n";
-        } else if (result.started) {
-            std::cout << "Executed launch plan for " << instance.instance_id << "\n";
-            std::cout << "Process exited with code " << result.exit_code << "\n";
-        } else {
-            std::cerr << "Launch failed: " << result.error << "\n";
-        }
-        return result.started ? result.exit_code : 1;
+        return emit_safety_refusal(
+            options,
+            "run.execute",
+            "isolation_not_proven",
+            "Factorio execution is unavailable until real write-data isolation is proven",
+            "Use facman launch-plan <instance-id> --json to inspect the dry-run plan");
     }
     if (has_flag(options.args, "--json")) {
         std::cout << launch_plan_json(instance, install);

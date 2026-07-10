@@ -57,9 +57,10 @@ class CliTests(unittest.TestCase):
     def test_doctor_warns_without_installs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             code, stdout, stderr = invoke(["--workspace", tmp, "doctor"])
-        self.assertEqual(code, 0, stderr)
-        self.assertIn("Status: warning", stdout)
-        self.assertIn("no install references registered yet", stdout)
+            self.assertEqual(code, 0, stderr)
+            self.assertIn("Status: warning", stdout)
+            self.assertIn("no install references registered yet", stdout)
+            self.assertEqual(list(Path(tmp).iterdir()), [])
 
     def test_import_instance_and_launch_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -115,7 +116,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr)
             self.assertIn("Dry-run only", stdout)
 
-    def test_run_execute_invokes_isolated_plan(self) -> None:
+    def test_run_execute_is_quarantined_until_real_factorio_isolation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             install_root = Path(tmp) / "fake_exec_install"
             exe_dir = install_root / "bin" / "x64"
@@ -136,40 +137,15 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr)
 
             code, stdout, _stderr = invoke(["--workspace", tmp, "run", "exec-fixture", "--execute", "--json"])
-            result = json.loads(stdout)
-
-            self.assertEqual(code, 2)
-            self.assertEqual(result["preflight"]["status"], "ok")
-            self.assertTrue(result["started"])
-            self.assertEqual(result["exit_code"], 2)
-            history = Path(tmp) / "instances" / "exec-fixture" / "logs" / "launch_history.log"
-            self.assertIn("--mod-directory", history.read_text(encoding="utf-8"))
-            audit = Path(tmp) / "audit" / "launch_events.log"
-            self.assertIn("event=run.execute", audit.read_text(encoding="utf-8"))
-
-    def test_run_execute_refuses_failed_preflight(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            code, _stdout, stderr = invoke(
-                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
-            )
-            self.assertEqual(code, 0, stderr)
-            code, _stdout, stderr = invoke(
-                ["--workspace", tmp, "instances", "create", "Locked World", "--install", "fixture"]
-            )
-            self.assertEqual(code, 0, stderr)
-
-            lock = Path(tmp) / "instances" / "locked-world" / "locks" / "save.write.lock"
-            lock.write_text("held by another writer\n", encoding="utf-8")
-
-            code, stdout, _stderr = invoke(["--workspace", tmp, "run", "locked-world", "--execute", "--json"])
             refusal = json.loads(stdout)
 
             self.assertEqual(code, 1)
-            self.assertEqual(refusal["schema"], "factorio.launch_refusal.v1")
-            self.assertEqual(refusal["refusal"]["code"], "preflight_failed")
-            self.assertFalse(refusal["started"])
-            self.assertTrue(any("lock blocks launch" in problem for problem in refusal["preflight"]["problems"]))
-            self.assertFalse((Path(tmp) / "audit" / "launch_events.log").exists())
+            self.assertEqual(refusal["status"], "refused")
+            self.assertEqual(refusal["refusal"]["code"], "isolation_not_proven")
+            history = Path(tmp) / "instances" / "exec-fixture" / "logs" / "launch_history.log"
+            self.assertFalse(history.exists())
+            audit = Path(tmp) / "audit" / "launch_events.log"
+            self.assertFalse(audit.exists())
 
     def test_local_mod_import_lock_verify_and_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -272,10 +248,9 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr)
 
             code, stdout, stderr = invoke(["--workspace", tmp, "installs", "verify", "fixture", "--json"])
-            self.assertEqual(code, 0, stderr)
+            self.assertEqual(code, 1, stderr)
             verify = json.loads(stdout)
-            self.assertEqual(verify["setup_command"], "verify.report")
-            self.assertEqual(verify["setup_response"]["payload"]["schema"], "usk.verify_report.v1")
+            self.assertEqual(verify["refusal"]["code"], "setup_verification_not_implemented")
 
             code, stdout, _stderr = invoke(["--workspace", tmp, "installs", "repair", "fixture", "--json"])
             self.assertEqual(code, 1)
