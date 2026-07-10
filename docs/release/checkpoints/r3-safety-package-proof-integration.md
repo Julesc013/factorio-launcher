@@ -108,6 +108,58 @@ The compile-only legacy shell lane now uses the supported x64
 `macos-15-intel` label; the CI-proof validator rejects reintroduction of the
 retired label.
 
+## Final Remote Clean-Clone Evidence
+
+FacMan `dev` source revision
+`c8357b237d3a7a12d42b5ac3c72b63e36848f1d9` completed its target matrix in
+GitHub Actions run
+[`29123649440`](https://github.com/Julesc013/factorio-launcher/actions/runs/29123649440):
+
+- [`linux-native`](https://github.com/Julesc013/factorio-launcher/actions/runs/29123649440/job/86464253017):
+  passed pinned dependency alignment, native build/CTest, Python/strict checks,
+  and portable compatibility package smoke.
+- [`windows-native-package`](https://github.com/Julesc013/factorio-launcher/actions/runs/29123649440/job/86464253095):
+  passed pinned dependency alignment, native build/CTest, the 165-test suite,
+  WinForms smoke, the zero-skip required package proof, and selected/legacy
+  package smoke.
+- [`appkit-compile`](https://github.com/Julesc013/factorio-launcher/actions/runs/29123649440/job/86464253142):
+  passed the AppKit and command-client source compile on the supported Intel
+  runner; the claim remains compile-only.
+
+Security-policy run
+[`29123649397`](https://github.com/Julesc013/factorio-launcher/actions/runs/29123649397)
+also passed for the exact source revision.
+The path-filtered schema workflow did not run for the final CI-only change;
+schema validation remained part of the successful strict checks in the Linux
+and Windows jobs.
+
+## Selected Package Artifact
+
+The clean synchronized source revision above produced:
+
+```text
+profile: windows_portable_cli_x64
+archive: facman-0.1.0-dev.contract-windows-cli-x64-portable.zip
+archive bytes: 590278
+archive SHA-256: 8a60f66c5ff95663d1b604dd621ec70de104011e031849b63cb60f4be71fb9c3
+files verified: 143
+integrity: sha256_consistent
+authenticity: not_proven_unsigned
+published: false
+```
+
+The package build metadata records the same FacMan source revision plus
+Universal Launcher `eeac9ee2e6b90c393b8a18a562526c27889a1510` and Universal
+Setup `a777af1f930bded3e00ec27c769b841d3bf344b5`.
+
+## Promotion Decision
+
+- R3 public dependency integration and the selected-package reproducibility
+  closeout pass on `dev`.
+- `dev -> main` was not performed by this task. `main` remains the R2 comparison
+  checkpoint pending a separate operator promotion decision.
+- No tag, release, signature, publication, or Safe-beta status is created.
+
 ## Remaining Claims Blocked
 
 - This is an integration checkpoint, not Safe-beta promotion.
