@@ -31,8 +31,8 @@ current_focus:
   evidence_authorities:
     workspace_lock: release/index/workspace_lock.v1.toml
     threat_model: docs/architecture/threat_model.md
-    claim_ledger: docs/architecture/safety_claim_ledger.md
-    proof_gates: docs/architecture/five_gate_proof_plan.md
+    claim_ledger: docs/quality/safety_claim_ledger.md
+    proof_gates: docs/quality/safety_proof_gates.md
 deferred_surfaces:
   - Gateway forwarding, provider/model calls, UI, runtime, and autonomous loops remain deferred.
   - Native GUI implementation remains deferred until command graph stability.

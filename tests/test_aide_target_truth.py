@@ -25,6 +25,10 @@ roots:
         )
         self.assertTrue(any("stale claim" in problem for problem in problems), problems)
 
+    def test_profile_evidence_authorities_exist(self) -> None:
+        text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
+        self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
+
 
 if __name__ == "__main__":
     unittest.main()

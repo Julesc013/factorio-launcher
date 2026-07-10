@@ -83,8 +83,8 @@ def validate_profile_text(text: str) -> list[str]:
         "diagnostics.export",
         "workspace_lock: release/index/workspace_lock.v1.toml",
         "threat_model: docs/architecture/threat_model.md",
-        "claim_ledger: docs/architecture/safety_claim_ledger.md",
-        "proof_gates: docs/architecture/five_gate_proof_plan.md",
+        "claim_ledger: docs/quality/safety_claim_ledger.md",
+        "proof_gates: docs/quality/safety_proof_gates.md",
     ]
     for anchor in required:
         if anchor not in text:
@@ -92,6 +92,15 @@ def validate_profile_text(text: str) -> list[str]:
     for stale in ["pre-code-structure-governance", "apps/python_cli"]:
         if stale in text:
             problems.append(f"profile retains stale target state {stale!r}")
+    evidence_paths = [
+        "release/index/workspace_lock.v1.toml",
+        "docs/architecture/threat_model.md",
+        "docs/quality/safety_claim_ledger.md",
+        "docs/quality/safety_proof_gates.md",
+    ]
+    for relative in evidence_paths:
+        if not (ROOT / relative).is_file():
+            problems.append(f"profile evidence authority does not exist: {relative}")
     return problems
 
 

@@ -14,8 +14,8 @@ places, so a future task packet cannot legitimately recreate `source/`,
 The AIDE profile records four evidence authorities:
 
 - `docs/architecture/threat_model.md` for trust zones and protected assets.
-- `docs/architecture/safety_claim_ledger.md` for bounded claim levels.
-- `docs/architecture/five_gate_proof_plan.md` for completed gates and stop rules.
+- `docs/quality/safety_claim_ledger.md` for bounded claim levels.
+- `docs/quality/safety_proof_gates.md` for completed gates and stop rules.
 - `release/index/workspace_lock.v1.toml` for reproducible sibling revisions.
 
 If these authorities disagree, checks fail. Documentation alone does not
