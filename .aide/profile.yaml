@@ -8,15 +8,15 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3-post-gate4-truth-hardening
+  phase: r3.2-registry-and-isolation-foundation
   primary_goal: >
-    Keep the completed public three-repository lock reproducible while making
-    the first authoritative command slice, live contracts, filesystem writes,
-    and Windows static package describe and enforce the same truth.
+    Make Universal Launcher introspection project the real runtime registry,
+    then route run preview through that registry and prove the effective
+    per-instance Factorio configuration at a controlled process boundary.
   next_task: >
-    Harden the existing install-to-launch-preview slice, then add real Windows
-    read-only discovery through that same route without broadening unsafe
-    capabilities.
+    ULAUNCH-REGISTRY-INTROSPECTION-02, followed by the authoritative run-preview
+    slice and FACMAN-INSTANCE-ISOLATION-PROBE-02. Windows read-only discovery is
+    implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import
@@ -48,7 +48,7 @@ product_runtime:
   python_prototype_runtime: none
   production_runtime_python_dependency: false
 native_direction:
-  public_abi: C-compatible stable ABI
+  public_abi: C-compatible experimental ABI correctness floor
   internals: C/C++ native kernels with Factorio-specific complexity behind FLB
   frontends:
     - CLI

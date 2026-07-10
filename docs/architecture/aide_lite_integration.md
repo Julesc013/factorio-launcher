@@ -46,8 +46,8 @@ Current target facts:
 - Runtime boundary: production packages must not depend on AIDE.
 - Python boundary: Python is allowed for repo tooling, validators, fixtures,
   and tests, but not for FacMan product runtime entrypoints.
-- Native direction: stable C-compatible ABI, native kernels, CLI/TUI/daemon,
-  and platform GUI shells over the command graph.
+- Native direction: C-compatible experimental ABI correctness floor, native
+  kernels, CLI/TUI/daemon, and platform GUI shells over the command graph.
 - Safety invariants: no bundled Factorio binaries, no ownership bypass, no
   credentials in manifests, no silent default data-dir writes, dry-run launch
   plans by default.
@@ -83,7 +83,7 @@ py -3 .aide/scripts/aide_lite.py git plan
 For substantial tasks:
 
 ```powershell
-py -3 .aide/scripts/aide_lite.py pack --task "Implement read-only install discovery parity in native command graph"
+py -3 .aide/scripts/aide_lite.py pack --task "Derive command introspection from the authoritative runtime registry"
 python tools/strict_check.py
 py -3 .aide/scripts/aide_lite.py verify --changed-files
 py -3 .aide/scripts/aide_lite.py review-pack
@@ -101,7 +101,7 @@ AIDE self-tests green.
 Use this before large code work:
 
 ```text
-Establish Factorio Launcher AIDE baseline: document architecture, safety
-invariants, native CLI checks, native command graph gap, and first WorkUnits
-for read-only install discovery plus isolated instance creation.
+Continue the R3.2 foundation: preserve completed Windows read-only discovery,
+derive introspection from authoritative descriptors, then route run preview and
+prove process-boundary instance isolation without enabling real execution.
 ```

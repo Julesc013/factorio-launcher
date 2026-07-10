@@ -15,11 +15,11 @@ reported as stronger runtime evidence.
 | Process boundary passes intended arguments | fixture-tested | controlled executable smoke | does not prove Factorio configuration semantics |
 | Diagnostic redaction covers known corpus | fixture-tested plus multiline JSON | redaction fixtures and malformed-JSON refusal | general export remains unavailable pending safe traversal and budgets |
 | JSON contracts describe runtime output | proven for the truth-floor slice | live response, refusal, persisted-instance, and package-verification schema tests | remaining legacy commands and goldens are not implicitly promoted |
-| Command graph is authoritative | proven for first workflow | registered handlers for install scan/import/inspect, instance create, and launch-plan build | remaining CLI families still require strangler migration |
+| Command dispatch is authoritative for the first workflow | workflow-proven | registered workflow handlers | `command_graph.inspect` is still a duplicated static projection and must be derived from retained descriptors |
 | Windows install discovery is read-only | provider-tested | Steam VDF, registry/default roots, standalone roots, zero-write tests | registry proof is host-dependent; macOS and Linux provider databases remain future work |
 | Windows x64 static CLI package runs after relocation | host-tested built artifact | strict profile/component/lock verification and relocation matrix | local Windows x64 only; unsigned and unpublished |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
-| Public C ABI is stable | not claimed; correctness floor only | size validation, ownership rules, ABI query, native smoke | concurrency, cancellation, compatibility, and independent consumers remain unproven |
+| Experimental public C ABI has a correctness floor | bounded correctness proof | size, ownership, ABI-query, and native-smoke tests | stable third-party compatibility and independent consumers remain unproven |
 
 Each promotion record must identify the repository revision, sibling
 revisions, target platform/toolchain, proof command or operator procedure,

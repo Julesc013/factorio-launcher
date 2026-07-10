@@ -10,7 +10,7 @@ Factorio-facing applications.
 
 ## Current Phase
 
-R3 post-Gate-4 truth hardening.
+R3.2 authoritative registry and instance-isolation foundation.
 
 ## Current Proof
 
@@ -23,13 +23,18 @@ R3 post-Gate-4 truth hardening.
 - Public sibling revisions are pinned by
   `release/index/workspace_lock.v1.toml` and checked before three-repository
   builds.
+- Windows read-only discovery is implemented for Steam registry roots, bounded
+  `libraryfolders.vdf` parsing, standalone roots, deterministic de-duplication,
+  Unicode and long paths, malformed metadata, and junction refusal.
+- The public C ABI is experimental. Its current proof is a correctness floor,
+  not a stable third-party compatibility promise.
 
 ## Current Goal
 
-Make the selected live contracts, typed application requests, filesystem
-commit behavior, package component roles, and CI jobs describe and enforce the
-same bounded proof. Then extend real Windows read-only discovery through the
-existing command route.
+Make `command_graph.inspect` a projection of the registry that actually
+dispatches commands, migrate run preview through that route, and prove the
+effective per-instance Factorio configuration and run-lock behavior with a
+controlled process-boundary probe. Do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 
