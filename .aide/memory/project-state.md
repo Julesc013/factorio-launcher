@@ -31,17 +31,22 @@ R3.2 authoritative registry and instance-isolation foundation.
 - Universal Launcher introspection is generated from retained runtime
   descriptors, and canonical `run.preview` plus `launch_plan.preflight` route
   through the registered Factorio application handler into typed results.
+- Instance creation and import generate the effective Factorio `config.ini`;
+  preflight parses that same file and refuses mismatched, sensitive, or linked
+  roots.
+- A purpose-built process probe proves argument transfer, intended writes,
+  protected-root invariance, and exclusive run-lock behavior. This evidence is
+  not a substitute for a real Factorio operator verdict.
 
 ## Current Goal
 
-Prove the effective per-instance Factorio configuration and run-lock behavior
-with a controlled process-boundary probe. Keep `run.execute` quarantined and do
-not schedule Windows discovery again.
+Run the revision-pinned R3.2 integration checkpoint across all three
+repositories. Keep `run.execute` quarantined and do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 
-- Real `run.execute` remains unavailable until both a controlled write-probe
-  and an operator-supplied Factorio isolation smoke pass.
+- Real `run.execute` remains unavailable until the prepared operator-supplied
+  Factorio isolation smoke receives a reviewed human pass.
 - General diagnostic export remains unavailable until traversal budgets,
   no-follow behavior, and format-aware fail-closed redaction are proven.
 - Setup mutation, networking, credentials, dynamic plugins, and release

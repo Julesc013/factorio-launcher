@@ -121,6 +121,7 @@ target_include_directories(flaunch_client_static PUBLIC
 add_library(flb_factorio_launch_static STATIC runtime/factorio/launch/flb_factorio_launch_plan.cpp)
 target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_static PUBLIC runtime/factorio/launch)
+target_link_libraries(flb_factorio_launch_static PUBLIC facman_base_static)
 
 add_library(flb_factorio_discovery_static STATIC runtime/factorio/discovery/flb_factorio_discovery.cpp)
 target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
@@ -210,4 +211,22 @@ if(FLAUNCH_BUILD_TESTS)
   target_compile_features(fl_path_safety_smoke PRIVATE cxx_std_17)
   target_link_libraries(fl_path_safety_smoke PRIVATE facman_base_static Threads::Threads)
   add_test(NAME fl_path_safety_smoke COMMAND fl_path_safety_smoke)
+
+  add_executable(facman_isolation_lock_smoke tests/native/facman_isolation_lock_smoke.cpp)
+  target_compile_features(facman_isolation_lock_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_isolation_lock_smoke PRIVATE flb_factorio_launch_static facman_base_static)
+  add_test(NAME facman_isolation_lock_smoke COMMAND facman_isolation_lock_smoke)
+
+  add_executable(facman_isolation_probe tests/native/facman_isolation_probe.cpp)
+  if(WIN32)
+    target_sources(facman_isolation_probe PRIVATE apps/cli/facman.manifest)
+  endif()
+  target_compile_features(facman_isolation_probe PRIVATE cxx_std_17)
+  target_link_libraries(
+    facman_isolation_probe
+    PRIVATE
+      flb_factorio_launch_static
+      facman_base_static
+      Threads::Threads
+  )
 endif()

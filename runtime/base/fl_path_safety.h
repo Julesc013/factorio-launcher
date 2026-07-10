@@ -42,6 +42,10 @@ bool remove_owned_staging_tree(
     const std::string& marker_name,
     std::string& detail);
 
+bool path_crosses_link_or_reparse_point(
+    const std::filesystem::path& path,
+    std::string& detail);
+
 } // namespace facman::base
 
 #endif

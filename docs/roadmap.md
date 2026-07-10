@@ -27,7 +27,8 @@ isolation foundation. The public ABI remains an experimental correctness floor.
    registered Factorio handler into typed application operations.
 4. Correct and preflight the effective Factorio configuration, add an exclusive
    per-instance lock, and prove process-boundary isolation with a purpose-built
-   test probe.
+   test probe. Completed for the controlled process boundary; real Factorio is
+   still unproven.
 5. Keep real Factorio execution unpromoted until the operator smoke passes.
 
 ## FACMAN-INTEGRATION-HARDEN-01

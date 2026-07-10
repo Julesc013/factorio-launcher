@@ -796,10 +796,17 @@ private:
         }
         const char* dirs[] = {"config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "exports", "cache", "locks"};
         for (const char* dir : dirs) fs::create_directories(staging / dir);
-        bool staged = facman::base::write_text_new_atomic(staging / "config" / "config.ini", "[path]\n", error) &&
-            facman::base::write_text_new_atomic(
-                staging / "config" / "config-path.cfg",
-                "read-data=" + install.root.string() + "\nwrite-data=" + target.path.string() + "\n",
+        launch::InstanceLaunchRef launch_instance;
+        launch_instance.instance_id = instance.instance_id;
+        launch_instance.profile_id = instance.profile;
+        launch_instance.local_data_root = target.path;
+        launch::InstallLaunchRef launch_install;
+        launch_install.root = install.root;
+        launch_install.executable = install.executable;
+        launch_install.ownership = install.ownership;
+        bool staged = facman::base::write_text_new_atomic(
+                staging / "config" / "config.ini",
+                launch::effective_config_ini(launch_instance, launch_install),
                 error) &&
             facman::base::write_text_new_atomic(staging / "instance.v1.json", instance_json(instance), error);
         if (!staged || !facman::base::commit_directory_no_clobber(staging, target.path, error)) {

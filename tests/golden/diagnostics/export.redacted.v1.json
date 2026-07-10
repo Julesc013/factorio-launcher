@@ -2,5 +2,5 @@
   "schema": "factorio.instance_export.v1",
   "redaction_policy": "facman.redaction_policy.v1",
   "redaction_marker": "[FACMAN_REDACTED]",
-  "redactions": ["local_data_root", "config-path.cfg", "config.ini secrets"]
+  "redactions": ["local_data_root", "config.ini paths and secrets"]
 }

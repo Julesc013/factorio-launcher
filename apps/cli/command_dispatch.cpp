@@ -1594,9 +1594,12 @@ void append_redaction_events(std::vector<RedactionEvent>& target, const std::vec
     target.insert(target.end(), source.begin(), source.end());
 }
 
-std::string redact_secret_text(const std::string& text)
+std::string portable_effective_config_ini()
 {
-    return factorio_diagnostics::redact_text(text, "export").text;
+    return
+        "[path]\n"
+        "read-data=$FACMAN_INSTALL_ROOT/data\n"
+        "write-data=$FACMAN_INSTANCE_ROOT\n";
 }
 
 std::string export_manifest_json(const InstanceRef& instance, std::size_t file_count)
@@ -1608,7 +1611,7 @@ std::string export_manifest_json(const InstanceRef& instance, std::size_t file_c
     out << "  \"portable\": true,\n";
     out << "  \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
     out << "  \"redaction_marker\": " << quote(factorio_diagnostics::redaction_marker()) << ",\n";
-    out << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\", \"config.ini secrets\"],\n";
+    out << "  \"redactions\": [\"local_data_root\", \"config.ini paths and secrets\"],\n";
     out << "  \"files\": " << file_count << "\n";
     out << "}\n";
     return out.str();
@@ -1619,11 +1622,7 @@ std::vector<std::pair<std::string, std::vector<unsigned char>>> instance_export_
     std::vector<std::pair<std::string, std::vector<unsigned char>>> files;
     files.push_back({"instance.v1.json", bytes_from_text(redacted_instance_json(instance))});
 
-    fs::path config_ini = instance.local_data_root / "config" / "config.ini";
-    if (fs::is_regular_file(config_ini)) {
-        files.push_back({"config/config.ini", bytes_from_text(redact_secret_text(read_text(config_ini)))});
-    }
-    files.push_back({"config/config-path.cfg", bytes_from_text("read-data=$FACMAN_INSTALL_ROOT\nwrite-data=$FACMAN_INSTANCE_ROOT\n")});
+    files.push_back({"config/config.ini", bytes_from_text(portable_effective_config_ini())});
 
     fs::path modset_lock = modset_lock_path(instance);
     if (fs::is_regular_file(modset_lock)) {
@@ -1761,8 +1760,8 @@ void collect_diagnostic_instance_files(
         }
 
         std::string text(bytes.begin(), bytes.end());
-        if (relative_text == "config/config-path.cfg") {
-            text = "read-data=$FACMAN_INSTALL_ROOT\nwrite-data=$FACMAN_INSTANCE_ROOT\n";
+        if (relative_text == "config/config.ini") {
+            text = portable_effective_config_ini();
         }
         std::string kind = relative_text.find("log") != std::string::npos ? "log" : "config";
         add_diagnostic_text_file(files, manifest_entries, events, entry_path, kind, text, true);
@@ -3391,7 +3390,7 @@ int command_export(const CliOptions& options)
         std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
         std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
         std::cout << "  \"files\": " << files.size() << ",\n";
-        std::cout << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\", \"config.ini secrets\"]\n";
+        std::cout << "  \"redactions\": [\"local_data_root\", \"config.ini paths and secrets\"]\n";
         std::cout << "}\n";
     } else {
         std::cout << "Exported instance pack to " << path_string(output_path) << "\n";
@@ -3490,6 +3489,15 @@ int command_import(const CliOptions& options)
     instance.factorio_version = json_string_value(manifest_text, "factorio_version");
     instance.profile = json_string_value(manifest_text, "profile");
     instance.template_id = json_string_value(manifest_text, "template");
+    InstallRef selected_install;
+    if (!load_install(options.workspace, instance.install_ref, selected_install)) {
+        return refuse(
+            instance.instance_id,
+            "unknown_install",
+            "Instance pack references an install that is not registered",
+            true,
+            instance.install_ref);
+    }
     ManagedPathResult target = instance_root_result(options.workspace, instance.instance_id);
     if (!target.ok()) {
         return refuse(
@@ -3559,6 +3567,30 @@ int command_import(const CliOptions& options)
 
     std::error_code manifest_error;
     fs::remove(staging / "instance.v1.json", manifest_error);
+    std::error_code legacy_config_error;
+    fs::remove(staging / "config" / "config-path.cfg", legacy_config_error);
+    fs::remove(staging / "config" / "config.ini", legacy_config_error);
+    facman::factorio::launch::InstanceLaunchRef launch_instance;
+    launch_instance.instance_id = instance.instance_id;
+    launch_instance.profile_id = instance.profile;
+    launch_instance.local_data_root = target.path;
+    facman::factorio::launch::InstallLaunchRef launch_install;
+    launch_install.root = selected_install.root;
+    launch_install.executable = selected_install.executable;
+    launch_install.ownership = selected_install.ownership;
+    if (!facman::base::write_text_new_atomic(
+            staging / "config" / "config.ini",
+            facman::factorio::launch::effective_config_ini(launch_instance, launch_install),
+            staging_error)) {
+        std::string cleanup_error;
+        (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
+        return refuse(
+            instance.instance_id,
+            "persistent_write_refused",
+            "Instance effective config could not be staged",
+            true,
+            staging_error);
+    }
     if (!facman::base::write_text_new_atomic(
             staging / "instance.v1.json",
             instance_json(instance),

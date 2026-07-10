@@ -3,7 +3,7 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_launch_preflight.v1.schema.json",
   "title": "Factorio Launch Preflight",
   "type": "object",
-  "required": ["schema", "command", "instance_id", "status", "executable", "args", "problems", "started"],
+  "required": ["schema", "command", "instance_id", "status", "executable", "args", "effective_config", "problems", "started"],
   "properties": {
     "schema": { "const": "factorio.launch_preflight.v1" },
     "command": { "const": "launch_plan.preflight" },
@@ -11,6 +11,20 @@
     "status": { "enum": ["pass", "refused"] },
     "executable": { "type": "string" },
     "args": { "type": "array", "items": { "type": "string" } },
+    "effective_config": {
+      "type": "object",
+      "required": ["config_file", "read_data", "write_data", "mod_root", "save_root", "script_output_root", "log_root"],
+      "properties": {
+        "config_file": { "type": "string" },
+        "read_data": { "type": "string" },
+        "write_data": { "type": "string" },
+        "mod_root": { "type": "string" },
+        "save_root": { "type": "string" },
+        "script_output_root": { "type": "string" },
+        "log_root": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "problems": { "type": "array", "items": { "type": "string" } },
     "started": { "const": false }
   },
