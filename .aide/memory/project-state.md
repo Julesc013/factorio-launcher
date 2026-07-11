@@ -12,6 +12,12 @@ Factorio-facing applications.
 
 R3.2 authoritative registry and instance-isolation foundation.
 
+R3.2 is integrated on `dev` at
+`b739d271083c2883c94921a1441574cda55912ad`, with Universal Launcher `main` at
+`80a848375227dc858865874ef594c4b466877241` and Universal Setup `main` at
+`4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`. The checkpoint is frozen; the
+next claim is human-gated.
+
 ## Current Proof
 
 - The five migrated commands `install_refs.scan`, `install_refs.import`,

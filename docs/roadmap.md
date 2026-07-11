@@ -19,6 +19,11 @@ Repository ownership and root grammar are frozen. R3.2 now concentrates on
 authoritative registry introspection, run-preview routing, and the instance
 isolation foundation. The public ABI remains an experimental correctness floor.
 
+R3.2 is integrated and frozen at the
+[`public integration checkpoint`](release/checkpoints/r3.2-public-integration-proof.md).
+Further execution work belongs to the human-gated real Factorio isolation
+WorkUnit rather than an extension of R3.2.
+
 ## R3.2 - Authoritative Registry And Instance Isolation Foundation
 
 1. Reconcile project and AIDE truth without runtime changes.

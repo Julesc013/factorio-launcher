@@ -5,6 +5,7 @@ Bounded proof implementation revision: `4e6d8a191a8b17723cdd210fef2083d6814fc9b8
 R3.2 registry and routed-preview revision: `d898d4e702043b186cf0669ba98fb1c69afbca70`.
 R3.2 controlled-isolation revision: `17b11224db897bc11c8d4a024e2f1409cba4dd3f`.
 R3.2 final bounded-foundation revision: `0c64d56c6d1efee6ef7faf17f2781c6a1c1db8cc`.
+R3.2 public integration revision: `b739d271083c2883c94921a1441574cda55912ad`.
 
 This ledger prevents a fixture, declaration, or generated file from being
 reported as stronger runtime evidence.
@@ -42,6 +43,9 @@ are recorded in
 
 The R3.2 revision-pinned matrix and package evidence are recorded in
 [`r3.2-isolation-foundation-proof.md`](../release/checkpoints/r3.2-isolation-foundation-proof.md).
+
+The integrated universal main and FacMan dev identities are frozen in
+[`r3.2-public-integration-proof.md`](../release/checkpoints/r3.2-public-integration-proof.md).
 
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and deliberately pending human-verdict template are in
