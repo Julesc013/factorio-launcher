@@ -14,11 +14,11 @@ current_focus:
     production archive layer, typed authoritative routes, recoverable writes,
     safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-ARCHIVE-CORE-03: build the single production archive layer over the
-    admitted source-pinned Miniz dependency, including metadata agreement,
-    path and entry policy, resource budgets, streaming, verified staged writes,
-    malicious-corpus tests, property tests, and fuzz harnesses. Windows
-    read-only discovery is implemented and must not be scheduled again.
+    FACMAN-MODSET-ARCHIVE-ROUTE-03: migrate mods.import, modsets.lock,
+    modsets.verify, and modsets.export through canonical ULK descriptors,
+    registered FLB typed handlers, and the production archive core. Remove the
+    migrated CLI backend and stored-only mod parser after parity is green.
+    Windows read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import

@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v0
+task_id: FACMAN-MODSET-ARCHIVE-ROUTE-03
+status: active
+planning_state: implementation
+owner: Codex
+created_at: 2026-07-11
+started_at: 2026-07-11
+result: pending
+review_gate:
+  required: true
+  status: implementation_in_progress
+evidence_path: .aide/queue/FACMAN-MODSET-ARCHIVE-ROUTE-03/evidence/
+recommended_next: FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03

@@ -1,8 +1,8 @@
 schema_version: aide.queue-task.v0
 id: FACMAN-ARCHIVE-CORE-03
 title: Build the production archive core
-status: active
-planning_state: implementation_completed_local_ci_pending
+status: needs_review
+planning_state: implementation_completed
 created_at: 2026-07-11
 owner: Codex
 objective: >

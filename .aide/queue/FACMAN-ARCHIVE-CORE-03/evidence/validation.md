@@ -1,6 +1,6 @@
 # Validation
 
-Result: LOCAL PASS; exact-SHA sanitizer and cross-platform CI pending.
+Result: PASS, including exact-SHA sanitizer and cross-platform CI.
 
 ## Production behavior proven locally
 
@@ -40,13 +40,15 @@ Result: LOCAL PASS; exact-SHA sanitizer and cross-platform CI pending.
   macOS temporary-root alias rejected by the core's no-link source policy. The
   harness now uses the checkout-owned current directory without relaxing
   runtime policy, and emits its internal stage code as a workflow annotation if
-  another failure occurs. Replacement exact-SHA CI is required.
-- Linux ASan/UBSan archive smoke, adversarial corpus, and both fuzz harnesses:
-  PENDING exact-SHA workflow. The installed WSL environment has Python but no
-  C/C++ compiler or CMake, so this proof is not represented as local.
-- macOS archive-core compile and native smoke: PENDING exact-SHA workflow.
-- Windows/package, Linux native/package compatibility, AppKit compile, schema,
-  and security regression lanes: PENDING exact-SHA workflow.
+  another failure occurs. The required replacement passed below.
+- Replacement FacMan revision:
+  `0ad07fd0b798e80bbc50cea36201de75ef7e4c60`.
+- CI run `29151598336`: PASS.
+  - Linux native, ASan/UBSan archive corpus, and both fuzz harnesses: PASS.
+  - Windows native/package and required zero-skip package proof: PASS.
+  - macOS archive-core compile and native long-path smoke: PASS.
+  - AppKit compile-only: PASS.
+- Security-policy run `29151598327`: PASS.
 
 ## Authority boundary
 

@@ -18,9 +18,16 @@ items:
     evidence: .aide/queue/FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01/evidence
     description: Review, pin, vendor, and compile one permissively licensed source-only archive dependency.
   - id: FACMAN-ARCHIVE-CORE-03
-    status: active
-    planning_state: implementation_completed_local_ci_pending
+    status: needs_review
+    planning_state: implementation_completed
     title: Build the production archive core
     task: .aide/queue/FACMAN-ARCHIVE-CORE-03/task.yaml
     evidence: .aide/queue/FACMAN-ARCHIVE-CORE-03/evidence
     description: Provide one policy-bounded, streaming, verified ZIP read/write layer for later FacMan consumers.
+  - id: FACMAN-MODSET-ARCHIVE-ROUTE-03
+    status: active
+    planning_state: implementation
+    title: Route local mod and modset archives authoritatively
+    task: .aide/queue/FACMAN-MODSET-ARCHIVE-ROUTE-03/task.yaml
+    evidence: .aide/queue/FACMAN-MODSET-ARCHIVE-ROUTE-03/evidence
+    description: Migrate four canonical local mod commands through ULK and the production archive core.
