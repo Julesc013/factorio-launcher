@@ -27,9 +27,10 @@ Clones are also fail-closed. A target save that already exists returns
 Export redactions:
 
 - `local_data_root` is rewritten to `$FACMAN_INSTANCE_ROOT`.
-- `config-path.cfg` is rewritten to `$FACMAN_INSTALL_ROOT` and
-  `$FACMAN_INSTANCE_ROOT`.
-- obvious `config.ini` secret-bearing keys are replaced with `[REDACTED]`.
+- `config.ini` paths are replaced with a portable non-authoritative template;
+  imports regenerate the effective paths from the selected install and target
+  instance root.
+- obvious `config.ini` secret-bearing keys are never copied through.
 
 The exporter does not include credentials, global Factorio data directories,
 Steam session data, logs, crash dumps, cache, or lock files.

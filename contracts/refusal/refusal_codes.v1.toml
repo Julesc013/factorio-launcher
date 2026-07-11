@@ -19,6 +19,12 @@ required_codes = [
   "credential_redacted",
   "setup_authority_required",
   "launch_preflight_failed",
+  "run_lock_contended",
+  "run_lock_malformed",
+  "run_lock_unsafe",
+  "run_lock_stale_recovery_failed",
+  "run_lock_unavailable",
+  "run_lock_release_failed",
   "save_not_found",
   "save_locked",
   "save_malformed",
@@ -207,6 +213,49 @@ effect = "process_execute"
 retryable = true
 message = "The launch preflight failed and execution was blocked."
 suggested_next_command = "facman launch plan <instance-id> --json"
+
+[[code]]
+id = "run_lock_contended"
+severity = "blocked"
+effect = "process_execute"
+retryable = true
+message = "Another operation owns the instance run lock."
+suggested_next_command = "facman launch plan <instance-id> --preflight --json"
+
+[[code]]
+id = "run_lock_malformed"
+severity = "blocked"
+effect = "process_execute"
+retryable = false
+message = "The existing instance run lock has invalid ownership metadata."
+
+[[code]]
+id = "run_lock_unsafe"
+severity = "blocked"
+effect = "process_execute"
+retryable = false
+message = "The instance run lock path is missing, linked, or otherwise unsafe."
+
+[[code]]
+id = "run_lock_stale_recovery_failed"
+severity = "blocked"
+effect = "process_execute"
+retryable = true
+message = "A stale instance run lock could not be recovered safely."
+
+[[code]]
+id = "run_lock_unavailable"
+severity = "blocked"
+effect = "process_execute"
+retryable = true
+message = "The instance run lock could not be created."
+
+[[code]]
+id = "run_lock_release_failed"
+severity = "error"
+effect = "process_execute"
+retryable = false
+message = "The owned instance run lock could not be released safely."
 
 [[code]]
 id = "execution_not_enabled"

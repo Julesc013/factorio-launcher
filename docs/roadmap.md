@@ -5,8 +5,9 @@ leaving setup mutation to Universal Setup.
 
 ## Immediate Safety And Truth Gates
 
-Feature expansion and R3 promotion are paused while the bounded gates in
-[`docs/quality/safety_proof_gates.md`](quality/safety_proof_gates.md) run:
+The bounded R3 gates in
+[`docs/quality/safety_proof_gates.md`](quality/safety_proof_gates.md) passed for
+the selected Windows CLI package lane:
 
 1. `FACMAN-EVIDENCE-LOCK-01`
 2. `FACMAN-TRUST-BOUNDARY-HARDEN-01`
@@ -14,8 +15,24 @@ Feature expansion and R3 promotion are paused while the bounded gates in
 4. `FACMAN-COMMAND-VERTICAL-SLICE-01`
 5. `FACMAN-PACKAGE-PROOF-02`
 
-Repository ownership and root grammar are frozen. Current implementation,
-contracts, package linkage, and experimental ABI details are not.
+Repository ownership and root grammar are frozen. R3.2 now concentrates on
+authoritative registry introspection, run-preview routing, and the instance
+isolation foundation. The public ABI remains an experimental correctness floor.
+
+## R3.2 - Authoritative Registry And Instance Isolation Foundation
+
+1. Reconcile project and AIDE truth without runtime changes.
+2. Derive Universal Launcher command introspection from runtime descriptors.
+3. Route canonical `run.preview` and `launch_plan.preflight` through the
+   registered Factorio handler into typed application operations.
+4. Correct and preflight the effective Factorio configuration, add an exclusive
+   per-instance lock, and prove process-boundary isolation with a purpose-built
+   test probe. Completed for the controlled process boundary; real Factorio is
+   still unproven.
+5. Keep real Factorio execution unpromoted until the operator smoke passes.
+6. Completed the read-only Universal Setup package-verification stretch and
+   the bounded diagnostic traversal foundation without enabling mutation or
+   diagnostic export.
 
 ## FACMAN-INTEGRATION-HARDEN-01
 
@@ -78,8 +95,11 @@ contracts, package linkage, and experimental ABI details are not.
   candidates without mutating fixture trees.
 - Golden reports under `tests/golden/discovery/` pin read-only discovery
   summaries.
-- Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager
-  scanning remain deferred.
+- Real Windows discovery is implemented with read-only Steam registry roots,
+  bounded `libraryfolders.vdf` parsing, standalone roots, deterministic
+  de-duplication, Unicode and long paths, malformed-metadata handling, and
+  junction refusal.
+- macOS Spotlight and Linux package-manager provider databases remain deferred.
 
 ## FacMan-INSTANCE-01
 
@@ -140,10 +160,16 @@ contracts, package linkage, and experimental ABI details are not.
 - `facman diagnostics redact <file> --json` proves deterministic and
   idempotent text redaction.
 - `facman diagnostics redact <file> --json` handles known line-oriented inputs
-  and sensitive multiline JSON string fields; malformed JSON fails closed.
+  and sensitive multiline JSON string fields; malformed JSON and INI fail
+  closed.
+- The dormant bundle collector uses allowlisted, deterministic, no-follow
+  traversal with maximum depth, file count, per-file size, total size, and time
+  budgets. It emits a structured omission report and covers spaces, Unicode,
+  long paths, overlapping roots, and link/reparse refusal through shared path
+  safety primitives.
 - `facman diagnostics export` and doctor-bundle output return
-  `diagnostic_export_not_safe` until bounded no-follow traversal and all-format
-  sanitization are proven.
+  `diagnostic_export_not_safe`. The traversal foundation does not promote the
+  complete dormant bundle writer or general sanitization.
 - Historical secret-corpus bundle tests remain evidence of their fixture scope,
   not proof of general diagnostic sanitization.
 - Factorio account login, credential-store implementation, diagnostic upload,

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_isolation_probe.v1.schema.json",
+  "title": "Factorio Isolation Probe Result",
+  "type": "object",
+  "required": ["schema", "status", "attempted_writes", "exit_status"],
+  "properties": {
+    "schema": { "const": "facman.isolation_probe.v1" },
+    "status": { "enum": ["pass", "refused"] },
+    "code": { "type": "string" },
+    "detail": { "type": "string" },
+    "arguments": { "type": "array", "items": { "type": "string" } },
+    "current_directory": { "type": "string" },
+    "environment": { "type": "object" },
+    "resolved_config": { "type": "object" },
+    "intended_write_root": { "type": "string" },
+    "intended_mod_root": { "type": "string" },
+    "attempted_writes": { "type": "array", "items": { "type": "string" } },
+    "lock": { "type": "object" },
+    "exit_status": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

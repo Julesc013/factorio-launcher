@@ -147,7 +147,8 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [self addTextFieldToView:view key:@"launch.instanceId" frame:NSMakeRect(150, 320, 260, 24) placeholder:@"space-age-main"];
     [self addButton:@"Build Plan" commandId:@"launch_plan.build" toView:view frame:NSMakeRect(430, 318, 132, 30)];
     [self addButton:@"Preview Run" commandId:@"run.preview" toView:view frame:NSMakeRect(572, 318, 132, 30)];
-    [self addDeferredButton:@"run.execute" toView:view frame:NSMakeRect(16, 268, 160, 30)];
+    [self addButton:@"Preflight" commandId:@"launch_plan.preflight" toView:view frame:NSMakeRect(430, 270, 132, 30)];
+    [self addDeferredButton:@"run.execute" toView:view frame:NSMakeRect(16, 220, 160, 30)];
 }
 
 - (void)addDiagnosticsTab:(NSTabView *)tabs
@@ -257,7 +258,9 @@ static NSString *FacManStatusText(FacManCommandStatus status);
         [self copyInput:@"instances.create.instanceName" toKey:@"instanceName" into:inputs];
         [self copyInput:@"instances.create.installId" toKey:@"installId" into:inputs];
         [self copyInput:@"instances.create.templateId" toKey:@"templateId" into:inputs];
-    } else if ([commandId isEqualToString:@"launch_plan.build"] || [commandId isEqualToString:@"run.preview"]) {
+    } else if ([commandId isEqualToString:@"launch_plan.build"] ||
+               [commandId isEqualToString:@"launch_plan.preflight"] ||
+               [commandId isEqualToString:@"run.preview"]) {
         [self copyInput:@"launch.instanceId" toKey:@"instanceId" into:inputs];
     }
     return inputs;

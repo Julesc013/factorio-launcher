@@ -8,21 +8,25 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3-post-gate4-truth-hardening
+  phase: r3.2-registry-and-isolation-foundation
   primary_goal: >
-    Keep the completed public three-repository lock reproducible while making
-    the first authoritative command slice, live contracts, filesystem writes,
-    and Windows static package describe and enforce the same truth.
+    Make Universal Launcher introspection project the real runtime registry,
+    then route run preview through that registry and prove the effective
+    per-instance Factorio configuration at a controlled process boundary.
   next_task: >
-    Harden the existing install-to-launch-preview slice, then add real Windows
-    read-only discovery through that same route without broadening unsafe
-    capabilities.
+    FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01: run the prepare-first harness with
+    an operator-supplied Factorio binary and record a human verdict. Do not
+    enable run.execute from automated surrogate evidence. Windows read-only discovery is
+    implemented and must not
+    be scheduled again.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import
     - install_refs.inspect
     - instance.create
     - launch_plan.build
+    - launch_plan.preflight
+    - run.preview
   quarantined_capabilities:
     - run.execute
     - diagnostics.export
@@ -38,7 +42,7 @@ deferred_surfaces:
   - Native GUI implementation remains deferred until command graph stability.
   - Universal setup and universal launcher are sibling repos, not Factorio subtrees.
   - Real Factorio execution remains unavailable until operator-supplied isolation proof.
-  - General diagnostic export remains unavailable until bounded traversal and structured redaction proof.
+  - General diagnostic export remains unavailable; the bounded traversal foundation does not prove the complete bundle writer.
 runtime:
   gateway_forwarding: deferred
   provider_calls: forbidden_until_reviewed_phase
@@ -48,7 +52,7 @@ product_runtime:
   python_prototype_runtime: none
   production_runtime_python_dependency: false
 native_direction:
-  public_abi: C-compatible stable ABI
+  public_abi: C-compatible experimental ABI correctness floor
   internals: C/C++ native kernels with Factorio-specific complexity behind FLB
   frontends:
     - CLI

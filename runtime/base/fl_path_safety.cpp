@@ -435,4 +435,31 @@ bool remove_owned_staging_tree(
     return true;
 }
 
+bool path_crosses_link_or_reparse_point(const fs::path& path, std::string& detail)
+{
+    std::error_code error;
+    fs::path absolute = fs::absolute(path, error).lexically_normal();
+    if (error || absolute.empty()) {
+        detail = "path could not be resolved for link inspection: " + path.string();
+        return true;
+    }
+    fs::path current = absolute.root_path();
+    for (const fs::path& part : absolute.relative_path()) {
+        current /= part;
+        if (!fs::exists(current, error)) {
+            if (error) {
+                detail = "path metadata could not be inspected: " + current.string();
+                return true;
+            }
+            continue;
+        }
+        if (is_link_or_reparse_point(current)) {
+            detail = "path crosses a link or reparse point: " + current.string();
+            return true;
+        }
+    }
+    detail.clear();
+    return false;
+}
+
 } // namespace facman::base

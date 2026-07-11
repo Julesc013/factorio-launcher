@@ -36,8 +36,13 @@ for existing workspaces.
 launch plan. `run <instance>` remains a dry-run preview by default.
 
 `run <instance> --execute` is currently quarantined with
-`isolation_not_proven`. The controlled executable fixture proved argument and
-process plumbing but did not prove Factorio's interpretation of
-`config-path.cfg` or its effective write-data root. Execution remains
-unavailable until an operator-supplied real Factorio smoke proves no writes to
-the default or foreign-owned data directories.
+`isolation_not_proven`. Instance creation writes one effective `config.ini`
+whose `[path]` section binds `read-data` to the selected install and
+`write-data` to the instance root. Preflight parses that same file and rejects
+missing, malformed, linked, default/global, foreign, or mismatched roots.
+
+The controlled process probe proves the argument boundary, intended writes,
+protected-root invariance, and exclusive instance lock behavior. It does not
+prove Factorio's internal interpretation of those settings. Execution remains
+unavailable until an operator-supplied real Factorio smoke receives a reviewed
+human verdict.

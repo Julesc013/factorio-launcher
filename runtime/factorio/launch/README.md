@@ -5,11 +5,17 @@ indexing.
 
 Current implementation:
 
-- `flb_factorio_launch_plan.*` builds the isolated launch arguments and
-  `factorio.launch_plan.v1` JSON used by the native CLI vertical slice.
-- `apps/cli/` loads install and instance refs, then delegates launch-plan
-  construction here instead of owning the product launch schema directly.
-- `preflight_launch` checks executable/config/mod-directory presence and local
-  lock files before `run --execute` can spawn a process.
-- Process spawning and post-run audit writing are still hosted by the native CLI
-  slice, with runtime/platform migration remaining a later hardening target.
+- `flb_factorio_launch_plan.*` owns the one canonical launch-argument builder,
+  typed launch-plan and preflight results, and their boundary JSON encoders.
+- `runtime/factorio/application/` loads install and instance refs, builds typed
+  results here, and returns them through registered `launch_plan.build`,
+  `launch_plan.preflight`, and `run.preview` handlers.
+- `apps/cli/` parses aliases and renders the routed result. It does not load
+  backend state or construct launch arguments for the migrated preview path.
+- `preflight_launch` parses the exact `config.ini` passed through `--config`,
+  verifies the selected install and instance roots, rejects sensitive or linked
+  roots, and checks local lock files without starting a process.
+- The run-lock helper provides exclusive per-instance ownership, structured
+  contention, conservative malformed-lock refusal, and bounded stale recovery.
+- The purpose-built test probe owns process-boundary proof. Real Factorio
+  spawning remains unavailable pending the operator smoke and human verdict.

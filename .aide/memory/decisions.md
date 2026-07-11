@@ -23,3 +23,17 @@
   - Status: accepted
   - Rationale: Setup mutation and launcher orchestration have their own public
     ABI, runtime, contract, content, release, docs, tests, and tool surfaces.
+
+- Decision: Treat the public C ABI as an experimental correctness floor.
+  - Status: accepted
+  - Rationale: Size checks, ownership rules, ABI queries, and native smoke prove
+    a bounded layout discipline; they do not yet prove stable third-party
+    compatibility.
+
+- Decision: Windows read-only discovery is implemented and is no longer the
+  next product task.
+  - Status: accepted
+  - Rationale: Provider tests cover registry and Steam roots, bounded VDF
+    parsing, standalone roots, de-duplication, malformed metadata, long and
+    Unicode paths, read-only behavior, and junction refusal. Registry truth and
+    instance isolation are the next gaps.

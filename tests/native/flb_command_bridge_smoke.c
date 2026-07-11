@@ -128,14 +128,32 @@ int main(void)
     if (run_command(context, "command_graph.inspect", 1, "\"command\":\"launch_plan.build\"") != 0) {
         return 22;
     }
+    if (run_command(context, "command_graph.inspect", 1, "\"command\":\"run.preview\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"launch_plan.preflight\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"owner\":\"factorio-launcher\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "factorio_launch_preflight.v1.schema.json") != 0) {
+        return 34;
+    }
     if (run_command(context, "install_refs.list", 1, "\"install_refs\":[]") != 0) {
         return 23;
     }
     if (run_command(context, "install_refs.scan", 1, "\"schema\": \"factorio.discovery_report.v1\"") != 0) {
         return 24;
     }
-    if (run_command(context, "diagnostics.report", 1, "\"report_id\":\"ulk.diagnostic.minimal\"") != 0) {
+    if (run_command(context, "diagnostics.run", 1, "\"report_id\":\"ulk.diagnostic.minimal\"") != 0) {
         return 25;
+    }
+    memset(&request, 0, sizeof(request));
+    memset(&response, 0, sizeof(response));
+    response.struct_size = sizeof(response);
+    request.struct_size = sizeof(request);
+    request.command_name = view_from_cstr("diagnostics.report");
+    request.json_payload = view_from_cstr("{}");
+    request.dry_run = 1;
+    status = fl_command_client_execute_cabi_v1(context, &request, &response);
+    if (status != ULK_STATUS_UNSUPPORTED_VERSION ||
+        !contains(response.json_payload, "\"code\":\"unsupported_command\"")) {
+        return 35;
     }
     if (run_invalid_payload(
             context,
@@ -164,6 +182,18 @@ int main(void)
             "{\"instance_id\":\"fixture\"} trailing",
             "trailing data") != 0) {
         return 29;
+    }
+    if (run_invalid_payload(
+            context,
+            "run.preview",
+            "{}",
+            "missing non-empty string field") != 0 ||
+        run_invalid_payload(
+            context,
+            "launch_plan.preflight",
+            "{}",
+            "missing non-empty string field") != 0) {
+        return 36;
     }
 
     memset(&request, 0, sizeof(request));

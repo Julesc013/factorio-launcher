@@ -96,16 +96,23 @@ runtime requirements.
 signature sidecars. This includes `manifest/components.v1.json`, which keeps the
 component manifest inside the unsigned integrity envelope.
 
-Both the build tooling and `facman package verify` consume this manifest.
-`facman package verify` rejects unsafe relative paths, duplicates, links or
+Both the build tooling and Universal Setup's read-only verifier consume this
+manifest. `facman package verify` now routes through canonical USK
+`package.verify`, then renders the existing FacMan report contract.
+`package.verify` rejects unsafe relative paths, duplicates, links or
 reparse points, files resolving outside the package root, digest mismatches,
 and incomplete manifest closure.
 
-Runtime verification also rejects unknown profile IDs, extra or missing
+Universal Setup runtime verification also rejects unknown profile IDs, extra or missing
 package-manifest fields, duplicate component names or destinations, invalid
 roles, component size or digest disagreement, shared-library claims in the
 static-first lane, and source revision disagreement with the packaged
 workspace lock.
+
+`package.audit` uses the same verifier authority and returns the separated
+integrity, authenticity, compatibility, completeness, and target-match fields.
+Neither command installs, repairs, uninstalls, rolls back, elevates, mutates the
+registry, invokes a package manager, or writes to the inspected package.
 
 The build metadata records the actual source commit for `factorio-launcher`,
 `universal-launcher`, and `universal-setup`, plus target OS, target

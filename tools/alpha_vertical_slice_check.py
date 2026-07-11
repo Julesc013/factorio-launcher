@@ -16,6 +16,7 @@ REQUIRED_GOLDENS = {
     "instances.create.success.json": {"command": "instances.create"},
     "launch.plan.success.json": {"command": "launch.plan"},
     "run.preview.success.json": {"command": "run.preview"},
+    "launch_plan.preflight.success.json": {"command": "launch_plan.preflight"},
     "run.execute.refusal.json": {"command": "run.execute", "refusal_code": "isolation_not_proven"},
     "modsets.lock.success.json": {"command": "modsets.lock"},
     "modsets.export.success.json": {"command": "modsets.export"},
@@ -35,6 +36,7 @@ def main() -> int:
     for name, expected in REQUIRED_GOLDENS.items():
         path = GOLDEN_ROOT / name
         problems.extend(validate_golden(path, expected))
+    problems.extend(validate_authoritative_preview_route())
 
     if problems:
         for problem in problems:
@@ -67,6 +69,30 @@ def validate_golden(path: Path, expected: dict[str, str]) -> list[str]:
     else:
         if data.get("status") == "refused":
             problems.append(f"{path.relative_to(ROOT)}: success golden must not have refused status")
+    return problems
+
+
+def validate_authoritative_preview_route() -> list[str]:
+    cli_path = ROOT / "apps" / "cli" / "command_dispatch.cpp"
+    binding_path = ROOT / "runtime" / "factorio" / "binding" / "flb_api.c"
+    cli_text = cli_path.read_text(encoding="utf-8")
+    start = cli_text.find("int command_run(const CliOptions& options)")
+    end = cli_text.find("\n}\n\n} // namespace", start)
+    if start < 0 or end < 0:
+        return [f"{cli_path.relative_to(ROOT)}: cannot locate command_run body"]
+    run_body = cli_text[start:end]
+    problems: list[str] = []
+    for anchor in ['route_factorio_command(', '"run.preview"']:
+        if anchor not in run_body:
+            problems.append(f"{cli_path.relative_to(ROOT)}: run preview is missing route anchor {anchor}")
+    for forbidden in ["load_instance(", "load_install(", "build_launch_args(", "build_launch_plan_json("]:
+        if forbidden in run_body:
+            problems.append(f"{cli_path.relative_to(ROOT)}: run preview retains frontend backend behavior {forbidden}")
+
+    binding_text = binding_path.read_text(encoding="utf-8")
+    for anchor in ["ulk_command_descriptor_v2", '"run.preview"', '"launch_plan.preflight"']:
+        if anchor not in binding_text:
+            problems.append(f"{binding_path.relative_to(ROOT)}: missing authoritative descriptor anchor {anchor}")
     return problems
 
 

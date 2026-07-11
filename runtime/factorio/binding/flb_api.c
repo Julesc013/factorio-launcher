@@ -76,18 +76,45 @@ static char* flb_copy_string(ulk_string_view value)
     return copy;
 }
 
-static int flb_register_application_command(flb_context* context, const char* command_name, const char* effects)
+static int flb_register_application_command(
+    flb_context* context,
+    const char* command_name,
+    const char* effects,
+    const char* response_schema,
+    const char* dry_run_behavior)
 {
-    ulk_command_descriptor_v1 descriptor;
+    static const char request_schema[] = "contracts/schema/common/command_request.v1.schema.json";
+    static const char result_schema[] = "contracts/result/result.v1.schema.json";
+    static const char refusal_schema[] = "contracts/refusal/refusal.v1.schema.json";
+    static const char availability[] = "available";
+    static const char owner[] = "factorio-launcher";
+    static const char binding[] = "flb.factorio";
+    ulk_command_descriptor_v2 descriptor;
     memset(&descriptor, 0, sizeof(descriptor));
     descriptor.struct_size = sizeof(descriptor);
     descriptor.command_name.data = command_name;
     descriptor.command_name.size = (ulk_size)strlen(command_name);
     descriptor.effects_json.data = effects;
     descriptor.effects_json.size = (ulk_size)strlen(effects);
+    descriptor.request_schema.data = request_schema;
+    descriptor.request_schema.size = (ulk_size)strlen(request_schema);
+    descriptor.response_schema.data = response_schema;
+    descriptor.response_schema.size = (ulk_size)strlen(response_schema);
+    descriptor.result_schema.data = result_schema;
+    descriptor.result_schema.size = (ulk_size)strlen(result_schema);
+    descriptor.refusal_schema.data = refusal_schema;
+    descriptor.refusal_schema.size = (ulk_size)strlen(refusal_schema);
+    descriptor.dry_run_behavior.data = dry_run_behavior;
+    descriptor.dry_run_behavior.size = (ulk_size)strlen(dry_run_behavior);
+    descriptor.availability.data = availability;
+    descriptor.availability.size = (ulk_size)strlen(availability);
+    descriptor.owner.data = owner;
+    descriptor.owner.size = (ulk_size)strlen(owner);
+    descriptor.binding.data = binding;
+    descriptor.binding.size = (ulk_size)strlen(binding);
     descriptor.user = context->application;
     descriptor.handler = flb_factorio_application_handle_v1;
-    return ulk_command_register_v1(context->launcher_context, &descriptor);
+    return ulk_command_register_v2(context->launcher_context, &descriptor);
 }
 
 int flb_context_create_v1(
@@ -123,11 +150,48 @@ int flb_context_create_v1(
         free(workspace_root);
     }
     if (context->application == 0 ||
-        flb_register_application_command(context, "install_refs.scan", "[\"workspace_read\"]") != ULK_STATUS_OK ||
-        flb_register_application_command(context, "install_refs.import", "[\"workspace_write\"]") != ULK_STATUS_OK ||
-        flb_register_application_command(context, "install_refs.inspect", "[\"workspace_read\"]") != ULK_STATUS_OK ||
-        flb_register_application_command(context, "instance.create", "[\"workspace_write\"]") != ULK_STATUS_OK ||
-        flb_register_application_command(context, "launch_plan.build", "[\"workspace_read\"]") != ULK_STATUS_OK) {
+        flb_register_application_command(
+            context,
+            "install_refs.scan",
+            "[\"workspace_read\"]",
+            "contracts/schema/factorio/factorio_discovery_report.v1.schema.json",
+            "read_only") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "install_refs.import",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_install_ref.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "install_refs.inspect",
+            "[\"workspace_read\"]",
+            "contracts/schema/factorio/factorio_install_ref.v1.schema.json",
+            "read_only") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "instance.create",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_instance.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "launch_plan.build",
+            "[\"workspace_read\"]",
+            "contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
+            "preview_only") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "launch_plan.preflight",
+            "[\"workspace_read\"]",
+            "contracts/schema/factorio/factorio_launch_preflight.v1.schema.json",
+            "read_only_no_process") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "run.preview",
+            "[\"workspace_read\"]",
+            "contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
+            "preview_only_no_process") != ULK_STATUS_OK) {
         flb_factorio_application_destroy(context->application);
         ulk_context_destroy_v1(context->launcher_context);
         free(context);

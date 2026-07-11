@@ -29,6 +29,33 @@ roots:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
 
+    def test_profile_rejects_stable_abi_and_rescheduled_windows_discovery(self) -> None:
+        text = "C-compatible stable ABI\nadd real Windows read-only discovery"
+        problems = aide_target_truth_check.validate_profile_text(text)
+        self.assertTrue(any("stale target state" in problem for problem in problems), problems)
+
+    def test_roadmap_rejects_deferred_windows_discovery(self) -> None:
+        text = "Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager"
+        problems = aide_target_truth_check.validate_roadmap_text(text)
+        self.assertIn("roadmap still defers implemented Windows discovery", problems)
+
+    def test_claim_ledger_rejects_stable_abi_promotion(self) -> None:
+        problems = aide_target_truth_check.validate_claim_ledger_text("| Public C ABI is stable |")
+        self.assertIn("claim ledger promotes the experimental ABI to stable", problems)
+
+    def test_claim_ledger_rejects_corrected_registry_drift(self) -> None:
+        problems = aide_target_truth_check.validate_claim_ledger_text(
+            "command_graph.inspect` is still a duplicated static projection"
+        )
+        self.assertIn(
+            "claim ledger still reports corrected registry introspection drift",
+            problems,
+        )
+
+    def test_discovery_docs_require_completed_windows_provider_evidence(self) -> None:
+        problems = aide_target_truth_check.validate_discovery_text("Windows discovery")
+        self.assertTrue(any("Steam registry roots" in problem for problem in problems), problems)
+
 
 if __name__ == "__main__":
     unittest.main()

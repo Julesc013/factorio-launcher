@@ -18,5 +18,25 @@
 
 - Risk: Universal setup or launcher semantics may leak into the Factorio binding.
   - Status: open
-  - Mitigation: Track boundary findings and defer universal repo finalization
-    until the split design is discussed separately.
+  - Mitigation: Keep Universal Launcher product-neutral, keep setup mutation in
+    Universal Setup, and route Factorio semantics through registered FLB
+    handlers into typed application operations.
+
+- Risk: Static command-graph metadata can drift from registered dispatch.
+  - Status: mitigated for the current registry descriptor versions
+  - Mitigation: Derive introspection from retained runtime descriptors and
+    prove graph-to-dispatch parity before adding more authoritative routes.
+
+- Risk: The generated instance configuration may not isolate real Factorio
+  writes.
+  - Status: open
+  - Mitigation: Parse and preflight the same effective configuration passed by
+    `--config`, refuse unsafe roots, add an exclusive instance lock, and keep
+    `run.execute` unavailable until the operator Factorio smoke passes.
+
+- Risk: A diagnostic bundle could cross a link, exceed resource budgets, or
+  expose malformed structured input.
+  - Status: foundation proven; general export remains quarantined
+  - Mitigation: Use only allowlisted bounded no-follow traversal, emit explicit
+    omissions, fail closed on malformed JSON/INI, and require a separate full
+    bundle adversarial promotion before enabling export.

@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
-from native_cli import invoke
+from native_cli import facman_executable, invoke
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
@@ -166,6 +168,54 @@ class DiagnosticRedactionTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertEqual(refusal["refusal"]["code"], "diagnostic_structured_input_invalid")
             self.assertNotIn("secret-value-no-close", stdout)
+
+    def test_malformed_sensitive_ini_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            malformed = Path(tmp) / "server-settings.ini"
+            malformed.write_text("[server\npassword=must-not-escape\n", encoding="utf-8")
+            code, refusal, stdout, _stderr = run_json(
+                ["diagnostics", "redact", str(malformed), "--json"]
+            )
+            self.assertEqual(code, 1)
+            self.assertEqual(refusal["refusal"]["code"], "diagnostic_structured_input_invalid")
+            self.assertNotIn("must-not-escape", stdout)
+
+    def test_export_quarantine_has_no_unbounded_instance_walk(self) -> None:
+        dispatch = (ROOT / "apps" / "cli" / "command_dispatch.cpp").read_text(encoding="utf-8")
+        collector_start = dispatch.index("bool collect_diagnostic_instance_files(")
+        collector_end = dispatch.index("std::string diagnostic_doctor_report_json", collector_start)
+        collector = dispatch[collector_start:collector_end]
+        self.assertNotIn("recursive_directory_iterator", collector)
+        self.assertIn("collect_bounded_files", collector)
+        self.assertGreaterEqual(dispatch.count('"diagnostic_export_not_safe"'), 2)
+
+    @unittest.skipUnless(os.name == "nt", "Windows junction proof")
+    def test_bounded_collector_refuses_a_real_windows_junction(self) -> None:
+        smoke = facman_executable().with_name("facman_diagnostic_traversal_smoke.exe")
+        self.assertTrue(smoke.is_file(), smoke)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "instance"
+            external = Path(tmp) / "external"
+            (root / "logs").mkdir(parents=True)
+            external.mkdir()
+            (external / "secret.log").write_text("must not be selected\n", encoding="utf-8")
+            linked = root / "logs" / "linked"
+            created = subprocess.run(
+                ["cmd", "/c", "mklink", "/J", str(linked), str(external)],
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            self.assertEqual(created.returncode, 0, created.stderr or created.stdout)
+            checked = subprocess.run(
+                [str(smoke), "--check-link-root", str(root)],
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            self.assertEqual(checked.returncode, 0, checked.stderr or checked.stdout)
 
     def test_diagnostic_bundle_and_doctor_bundle_are_quarantined(self) -> None:
         fixtures_before = tree_snapshot(FIXTURES)

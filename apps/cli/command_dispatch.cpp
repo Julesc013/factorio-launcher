@@ -259,6 +259,20 @@ std::string json_object_field(const std::string& text, const std::string& key)
     return "";
 }
 
+const char* canonical_frontend_command_id(const char* command_name)
+{
+    if (std::strcmp(command_name, "instances.list") == 0) {
+        return "instance.list";
+    }
+    if (std::strcmp(command_name, "diagnostics.report") == 0) {
+        return "diagnostics.run";
+    }
+    if (std::strcmp(command_name, "launch.plan") == 0) {
+        return "launch_plan.build";
+    }
+    return command_name;
+}
+
 std::string flb_command_response_json(const char* command_name, bool dry_run)
 {
     flb_context* context = 0;
@@ -277,7 +291,7 @@ std::string flb_command_response_json(const char* command_name, bool dry_run)
     }
 
     request.struct_size = sizeof(request);
-    request.command_name = ulk_view_from_cstr(command_name);
+    request.command_name = ulk_view_from_cstr(canonical_frontend_command_id(command_name));
     request.json_payload = ulk_view_from_cstr("{}");
     request.dry_run = dry_run ? 1 : 0;
     (void)fl_command_client_execute_cabi_v1(context, &request, &response);
@@ -321,7 +335,7 @@ RoutedCommandResult route_factorio_command(
         return result;
     }
     request.struct_size = sizeof(request);
-    request.command_name = ulk_view_from_cstr(command_name);
+    request.command_name = ulk_view_from_cstr(canonical_frontend_command_id(command_name));
     request.json_payload.data = json_payload.data();
     request.json_payload.size = static_cast<ulk_size>(json_payload.size());
     request.dry_run = dry_run ? 1 : 0;
@@ -360,7 +374,9 @@ std::string setup_view_to_string(usk_string_view view)
     return std::string(view.data, view.data + view.size);
 }
 
-std::string setup_command_response_json(const char* command_name)
+std::string setup_command_response_json(
+    const char* command_name,
+    const std::string& json_payload = "{}")
 {
     usk_context* context = 0;
     usk_command_request_v1 request;
@@ -376,7 +392,8 @@ std::string setup_command_response_json(const char* command_name)
 
     request.struct_size = sizeof(request);
     request.command_name = setup_view_from_cstr(command_name);
-    request.json_payload = setup_view_from_cstr("{}");
+    request.json_payload.data = json_payload.data();
+    request.json_payload.size = static_cast<usk_size>(json_payload.size());
     request.dry_run = 1;
     (void)usk_command_execute_v1(context, &request, &response);
     std::string payload = setup_view_to_string(response.json_payload);
@@ -386,6 +403,33 @@ std::string setup_command_response_json(const char* command_name)
         return "{\"schema\":\"usk.command_response.v1\",\"status\":\"error\",\"payload\":null,\"error\":{\"code\":\"empty_response\",\"message\":\"universal setup returned an empty response\"}}";
     }
     return payload;
+}
+
+std::size_t json_size_value(const std::string& text, const std::string& key)
+{
+    const std::string marker = "\"" + key + "\"";
+    std::size_t position = text.find(marker);
+    if (position == std::string::npos) return 0;
+    position = text.find(':', position + marker.size());
+    if (position == std::string::npos) return 0;
+    ++position;
+    while (position < text.size() && std::isspace(static_cast<unsigned char>(text[position]))) ++position;
+    std::size_t value = 0;
+    while (position < text.size() && std::isdigit(static_cast<unsigned char>(text[position]))) {
+        value = value * 10u + static_cast<std::size_t>(text[position] - '0');
+        ++position;
+    }
+    return value;
+}
+
+std::string toml_string_value(const std::string& text, const std::string& key)
+{
+    const std::string marker = key + " = \"";
+    const std::size_t position = text.find(marker);
+    if (position == std::string::npos) return "";
+    const std::size_t first = position + marker.size();
+    const std::size_t last = text.find('"', first);
+    return last == std::string::npos ? "" : text.substr(first, last - first);
 }
 
 bool has_flag(const std::vector<std::string>& args, const std::string& flag)
@@ -1007,24 +1051,6 @@ bool load_instance(const fs::path& workspace, const std::string& instance_id, In
         facman::base::validate_identifier(out.install_ref, identifier_error);
 }
 
-facman::factorio::launch::InstanceLaunchRef launch_instance_ref(const InstanceRef& instance)
-{
-    facman::factorio::launch::InstanceLaunchRef ref;
-    ref.instance_id = instance.instance_id;
-    ref.profile_id = instance.profile;
-    ref.local_data_root = instance.local_data_root;
-    return ref;
-}
-
-facman::factorio::launch::InstallLaunchRef launch_install_ref(const InstallRef& install)
-{
-    facman::factorio::launch::InstallLaunchRef ref;
-    ref.root = install.root;
-    ref.executable = install.executable;
-    ref.ownership = install.ownership;
-    return ref;
-}
-
 std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
 {
     std::vector<fs::path> manifests;
@@ -1047,14 +1073,6 @@ std::vector<fs::path> instance_manifest_files(const fs::path& workspace)
         }
     }
     return manifests;
-}
-
-std::string launch_plan_json(const InstanceRef& instance, const InstallRef& install)
-{
-    return facman::factorio::launch::build_launch_plan_json(
-        launch_instance_ref(instance),
-        launch_install_ref(install)
-    );
 }
 
 fs::path modset_lock_path(const InstanceRef& instance)
@@ -1606,9 +1624,12 @@ void append_redaction_events(std::vector<RedactionEvent>& target, const std::vec
     target.insert(target.end(), source.begin(), source.end());
 }
 
-std::string redact_secret_text(const std::string& text)
+std::string portable_effective_config_ini()
 {
-    return factorio_diagnostics::redact_text(text, "export").text;
+    return
+        "[path]\n"
+        "read-data=$FACMAN_INSTALL_ROOT/data\n"
+        "write-data=$FACMAN_INSTANCE_ROOT\n";
 }
 
 std::string export_manifest_json(const InstanceRef& instance, std::size_t file_count)
@@ -1620,7 +1641,7 @@ std::string export_manifest_json(const InstanceRef& instance, std::size_t file_c
     out << "  \"portable\": true,\n";
     out << "  \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
     out << "  \"redaction_marker\": " << quote(factorio_diagnostics::redaction_marker()) << ",\n";
-    out << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\", \"config.ini secrets\"],\n";
+    out << "  \"redactions\": [\"local_data_root\", \"config.ini paths and secrets\"],\n";
     out << "  \"files\": " << file_count << "\n";
     out << "}\n";
     return out.str();
@@ -1631,11 +1652,7 @@ std::vector<std::pair<std::string, std::vector<unsigned char>>> instance_export_
     std::vector<std::pair<std::string, std::vector<unsigned char>>> files;
     files.push_back({"instance.v1.json", bytes_from_text(redacted_instance_json(instance))});
 
-    fs::path config_ini = instance.local_data_root / "config" / "config.ini";
-    if (fs::is_regular_file(config_ini)) {
-        files.push_back({"config/config.ini", bytes_from_text(redact_secret_text(read_text(config_ini)))});
-    }
-    files.push_back({"config/config-path.cfg", bytes_from_text("read-data=$FACMAN_INSTALL_ROOT\nwrite-data=$FACMAN_INSTANCE_ROOT\n")});
+    files.push_back({"config/config.ini", bytes_from_text(portable_effective_config_ini())});
 
     fs::path modset_lock = modset_lock_path(instance);
     if (fs::is_regular_file(modset_lock)) {
@@ -1680,7 +1697,7 @@ RedactionEvent redaction_event(
     return event;
 }
 
-void add_diagnostic_text_file(
+bool add_diagnostic_text_file(
     std::vector<std::pair<std::string, std::vector<unsigned char>>>& files,
     std::vector<DiagnosticBundleEntry>& manifest_entries,
     std::vector<RedactionEvent>& events,
@@ -1694,12 +1711,23 @@ void add_diagnostic_text_file(
     bool redacted = false;
     if (redact) {
         factorio_diagnostics::RedactionResult result = factorio_diagnostics::redact_text(text, entry_path);
+        if (!result.safe) {
+            events.push_back(redaction_event(
+                "diagnostic_structured_input_invalid",
+                "blocked",
+                entry_path,
+                "format-parse",
+                result.error
+            ));
+            return false;
+        }
         payload = result.text;
         redacted = !result.events.empty();
         append_redaction_events(events, result.events);
     }
     files.push_back({entry_path, bytes_from_text(payload)});
     manifest_entries.push_back({entry_path, kind, redacted});
+    return true;
 }
 
 bool diagnostic_path_allowed(
@@ -1722,7 +1750,7 @@ bool diagnostic_path_allowed(
     return false;
 }
 
-void collect_diagnostic_instance_files(
+bool collect_diagnostic_instance_files(
     const InstanceRef& instance,
     std::vector<std::pair<std::string, std::vector<unsigned char>>>& files,
     std::vector<DiagnosticBundleEntry>& manifest_entries,
@@ -1730,17 +1758,32 @@ void collect_diagnostic_instance_files(
 )
 {
     if (!fs::exists(instance.local_data_root)) {
-        return;
+        return true;
     }
-    std::vector<fs::path> paths;
-    for (const fs::directory_entry& entry : fs::recursive_directory_iterator(instance.local_data_root)) {
-        if (entry.is_regular_file()) {
-            paths.push_back(entry.path());
-        }
+    factorio_diagnostics::TraversalPolicy traversal_policy;
+    traversal_policy.allowlisted_roots = {"config", "logs", "crash", "script-output"};
+    factorio_diagnostics::TraversalResult traversal =
+        factorio_diagnostics::collect_bounded_files(instance.local_data_root, traversal_policy);
+    for (const factorio_diagnostics::TraversalOmission& omission : traversal.omissions) {
+        events.push_back(redaction_event(
+            "diagnostic_path_excluded",
+            traversal.safe ? "warning" : "blocked",
+            "instance/" + omission.path,
+            "bounded-traversal:" + omission.reason,
+            "path was omitted by the bounded no-follow traversal policy"
+        ));
     }
-    std::sort(paths.begin(), paths.end());
+    const std::string traversal_report = factorio_diagnostics::traversal_report_json(
+        traversal,
+        fs::path("$FACMAN_INSTANCE_ROOT"),
+        traversal_policy);
+    files.push_back({"traversal/report.v1.json", bytes_from_text(traversal_report)});
+    manifest_entries.push_back({"traversal/report.v1.json", "traversal_report", false});
+    if (!traversal.safe) {
+        return false;
+    }
 
-    for (const fs::path& path : paths) {
+    for (const fs::path& path : traversal.files) {
         std::string relative_text = relative_to_root(instance.local_data_root, path);
         if (relative_text == "instance.v1.json") {
             continue;
@@ -1773,12 +1816,15 @@ void collect_diagnostic_instance_files(
         }
 
         std::string text(bytes.begin(), bytes.end());
-        if (relative_text == "config/config-path.cfg") {
-            text = "read-data=$FACMAN_INSTALL_ROOT\nwrite-data=$FACMAN_INSTANCE_ROOT\n";
+        if (relative_text == "config/config.ini") {
+            text = portable_effective_config_ini();
         }
         std::string kind = relative_text.find("log") != std::string::npos ? "log" : "config";
-        add_diagnostic_text_file(files, manifest_entries, events, entry_path, kind, text, true);
+        if (!add_diagnostic_text_file(files, manifest_entries, events, entry_path, kind, text, true)) {
+            return false;
+        }
     }
+    return true;
 }
 
 std::string diagnostic_doctor_report_json(const CliOptions& options)
@@ -1864,7 +1910,7 @@ bool write_diagnostic_bundle(
     std::vector<DiagnosticBundleEntry> manifest_entries;
     std::vector<RedactionEvent> events;
 
-    add_diagnostic_text_file(
+    if (!add_diagnostic_text_file(
         files,
         manifest_entries,
         events,
@@ -1872,7 +1918,7 @@ bool write_diagnostic_bundle(
         "workspace",
         read_text(options.workspace / "workspace.v1.json"),
         true
-    );
+    )) return false;
 
     std::string instance_id = instance ? instance->instance_id : "workspace";
     if (instance) {
@@ -1880,7 +1926,7 @@ bool write_diagnostic_bundle(
         if (load_install(options.workspace, instance->install_ref, install)) {
             install.root = "$FACMAN_INSTALL_ROOT";
             install.executable = "$FACMAN_INSTALL_ROOT/bin/factorio";
-            add_diagnostic_text_file(
+            if (!add_diagnostic_text_file(
                 files,
                 manifest_entries,
                 events,
@@ -1888,9 +1934,9 @@ bool write_diagnostic_bundle(
                 "install_ref",
                 install_json(install),
                 true
-            );
+            )) return false;
         }
-        add_diagnostic_text_file(
+        if (!add_diagnostic_text_file(
             files,
             manifest_entries,
             events,
@@ -1898,10 +1944,10 @@ bool write_diagnostic_bundle(
             "instance_manifest",
             redacted_instance_json(*instance),
             true
-        );
+        )) return false;
         fs::path lock_path = modset_lock_path(*instance);
         if (fs::is_regular_file(lock_path)) {
-            add_diagnostic_text_file(
+            if (!add_diagnostic_text_file(
                 files,
                 manifest_entries,
                 events,
@@ -1909,12 +1955,14 @@ bool write_diagnostic_bundle(
                 "modset_lock",
                 read_text(lock_path),
                 true
-            );
+            )) return false;
         }
-        collect_diagnostic_instance_files(*instance, files, manifest_entries, events);
+        if (!collect_diagnostic_instance_files(*instance, files, manifest_entries, events)) {
+            return false;
+        }
     }
 
-    add_diagnostic_text_file(
+    if (!add_diagnostic_text_file(
         files,
         manifest_entries,
         events,
@@ -1922,7 +1970,7 @@ bool write_diagnostic_bundle(
         "doctor_report",
         diagnostic_doctor_report_json(options),
         true
-    );
+    )) return false;
 
     report_json = factorio_diagnostics::redaction_report_json(events);
     files.push_back({"redaction/report.v1.json", bytes_from_text(report_json)});
@@ -1932,11 +1980,6 @@ bool write_diagnostic_bundle(
     files.insert(files.begin(), {"manifest/diagnostic-bundle.v1.json", bytes_from_text(manifest)});
     file_count = files.size();
     return write_stored_zip(output_path, files);
-}
-
-std::vector<std::string> launch_args(const InstanceRef& instance)
-{
-    return facman::factorio::launch::build_launch_args(launch_instance_ref(instance));
 }
 
 std::string command_line_for_display(const fs::path& executable, const std::vector<std::string>& args)
@@ -2151,8 +2194,8 @@ int print_help()
     std::cout << "  installs repair <install-id> [--json]\n";
     std::cout << "  installs uninstall <install-id> [--json]\n";
     std::cout << "  instances create <name> --install <install-id> [--template <id>] [--json]\n";
-    std::cout << "  launch-plan <instance-id> [--json]\n";
-    std::cout << "  launch plan <instance-id> [--json]\n";
+    std::cout << "  launch-plan <instance-id> [--preflight] [--json]\n";
+    std::cout << "  launch plan <instance-id> [--preflight] [--json]\n";
     std::cout << "  run <instance-id> [--execute]\n";
     std::cout << "  mods import <mod.zip> --instance <instance-id> [--json]\n";
     std::cout << "  mods search <query> [--json]\n";
@@ -2180,15 +2223,57 @@ int command_package(const std::vector<std::string>& args)
         std::cerr << "Usage: facman package verify [--json]\n";
         return 2;
     }
-    char detail[512] = {};
-    size_t files_verified = 0;
-    const bool verified = fl_runtime_verify_package(detail, sizeof(detail), &files_verified) != 0;
+    const fs::path package_root(fl_runtime_package_root());
+    const fs::path manifest_path = package_root / "manifest" / "package.v1.toml";
+    const std::string manifest = read_text(manifest_path);
+    const std::string profile_id = toml_string_value(manifest, "profile_id");
+    struct ExpectedPackage {
+        const char* id;
+        const char* target_os;
+        const char* target_arch;
+        const char* linkage;
+    };
+    static const ExpectedPackage expected_packages[] = {
+        {"windows_portable_cli_x64", "windows", "x64", "static_first"},
+        {"windows_legacy_winforms_x64", "windows", "x64", "compatibility_bundle"},
+        {"portable_cli_x64", "portable", "x64", "static_first_with_reference_components"},
+        {"portable_tui_x64", "portable", "x64", "static_first_with_reference_components"},
+    };
+    const ExpectedPackage* expected = nullptr;
+    for (const ExpectedPackage& candidate : expected_packages) {
+        if (profile_id == candidate.id) expected = &candidate;
+    }
+    std::string setup_response;
+    if (expected != nullptr) {
+        std::ostringstream request;
+        request << "{\"schema\":\"usk.package_verify_request.v1\",";
+        request << "\"package_root\":" << quote(path_string(package_root)) << ",";
+        request << "\"expected_target_os\":" << quote(expected->target_os) << ",";
+        request << "\"expected_target_arch\":" << quote(expected->target_arch) << ",";
+        request << "\"expected_linkage_model\":" << quote(expected->linkage) << "}";
+        setup_response = setup_command_response_json("package.verify", request.str());
+    } else {
+        setup_response = "unknown built package profile";
+    }
+    const std::string setup_payload = json_object_field(setup_response, "payload");
+    const std::string integrity = json_string_value(setup_payload, "integrity");
+    const std::string compatibility = json_string_value(setup_payload, "compatibility");
+    const std::string completeness = json_string_value(setup_payload, "completeness");
+    const std::string target_match = json_string_value(setup_payload, "target_match");
+    const std::string authenticity = json_string_value(setup_payload, "authenticity");
+    const size_t files_verified = json_size_value(setup_payload, "files_verified");
+    const bool verified = integrity == "pass" && compatibility == "pass" &&
+        completeness == "pass" && target_match == "pass";
+    const std::string detail = verified
+        ? "verified by Universal Setup; publisher authenticity is not proven"
+        : setup_response;
     if (has_flag(args, "--json")) {
         std::cout << "{\n";
         std::cout << "  \"schema\": \"facman.package_verify.v1\",\n";
         std::cout << "  \"status\": \"" << (verified ? "pass" : "error") << "\",\n";
         std::cout << "  \"integrity\": \"" << (verified ? "sha256_consistent" : "failed") << "\",\n";
-        std::cout << "  \"authenticity\": \"not_proven_unsigned\",\n";
+        std::cout << "  \"authenticity\": "
+                  << quote(authenticity.empty() ? "not_proven_unsigned" : authenticity) << ",\n";
         std::cout << "  \"files_verified\": " << files_verified << ",\n";
         std::cout << "  \"detail\": " << quote(detail) << "\n";
         std::cout << "}\n";
@@ -2226,7 +2311,7 @@ int command_command_graph(const std::vector<std::string>& args)
         } else {
             std::cout << "FacMan command graph\n";
             std::cout << "Route: CLI -> FLB -> ULK\n";
-            std::cout << "Includes: product.inspect, install_refs.list, launch_plan.build, diagnostics.report\n";
+            std::cout << "Includes: product.inspect, install_refs.list, launch_plan.build, run.preview, launch_plan.preflight, diagnostics.run\n";
         }
         return 0;
     }
@@ -3408,7 +3493,7 @@ int command_export(const CliOptions& options)
         std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
         std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
         std::cout << "  \"files\": " << files.size() << ",\n";
-        std::cout << "  \"redactions\": [\"local_data_root\", \"config-path.cfg\", \"config.ini secrets\"]\n";
+        std::cout << "  \"redactions\": [\"local_data_root\", \"config.ini paths and secrets\"]\n";
         std::cout << "}\n";
     } else {
         std::cout << "Exported instance pack to " << path_string(output_path) << "\n";
@@ -3507,6 +3592,15 @@ int command_import(const CliOptions& options)
     instance.factorio_version = json_string_value(manifest_text, "factorio_version");
     instance.profile = json_string_value(manifest_text, "profile");
     instance.template_id = json_string_value(manifest_text, "template");
+    InstallRef selected_install;
+    if (!load_install(options.workspace, instance.install_ref, selected_install)) {
+        return refuse(
+            instance.instance_id,
+            "unknown_install",
+            "Instance pack references an install that is not registered",
+            true,
+            instance.install_ref);
+    }
     ManagedPathResult target = instance_root_result(options.workspace, instance.instance_id);
     if (!target.ok()) {
         return refuse(
@@ -3576,6 +3670,30 @@ int command_import(const CliOptions& options)
 
     std::error_code manifest_error;
     fs::remove(staging / "instance.v1.json", manifest_error);
+    std::error_code legacy_config_error;
+    fs::remove(staging / "config" / "config-path.cfg", legacy_config_error);
+    fs::remove(staging / "config" / "config.ini", legacy_config_error);
+    facman::factorio::launch::InstanceLaunchRef launch_instance;
+    launch_instance.instance_id = instance.instance_id;
+    launch_instance.profile_id = instance.profile;
+    launch_instance.local_data_root = target.path;
+    facman::factorio::launch::InstallLaunchRef launch_install;
+    launch_install.root = selected_install.root;
+    launch_install.executable = selected_install.executable;
+    launch_install.ownership = selected_install.ownership;
+    if (!facman::base::write_text_new_atomic(
+            staging / "config" / "config.ini",
+            facman::factorio::launch::effective_config_ini(launch_instance, launch_install),
+            staging_error)) {
+        std::string cleanup_error;
+        (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
+        return refuse(
+            instance.instance_id,
+            "persistent_write_refused",
+            "Instance effective config could not be staged",
+            true,
+            staging_error);
+    }
     if (!facman::base::write_text_new_atomic(
             staging / "instance.v1.json",
             instance_json(instance),
@@ -3798,14 +3916,25 @@ int command_launch_plan(const CliOptions& options)
         return 2;
     }
     std::string request = "{\"instance_id\":" + quote(options.args[1]) + "}";
+    const bool preflight = has_flag(options.args, "--preflight");
     RoutedCommandResult routed = route_factorio_command(
-        options.workspace, "launch_plan.build", request, true);
+        options.workspace,
+        preflight ? "launch_plan.preflight" : "launch_plan.build",
+        request,
+        true);
     if (has_flag(options.args, "--json")) {
         std::cout << routed.payload;
     } else if (routed.status == ULK_STATUS_OK) {
-        std::cout << "FacMan launch plan for " << json_string_value(routed.payload, "instance_id") << "\n";
-        std::cout << "Executable: " << json_string_value(routed.payload, "executable") << "\n";
-        std::cout << "Dry-run only. Use --json for the complete plan.\n";
+        if (preflight) {
+            std::cout << "FacMan launch preflight for " << json_string_value(routed.payload, "instance_id") << "\n";
+            std::cout << "Status: " << json_string_value(routed.payload, "status") << "\n";
+            std::cout << "Executable: " << json_string_value(routed.payload, "executable") << "\n";
+            std::cout << "No process was started. Use --json for the complete report.\n";
+        } else {
+            std::cout << "FacMan launch plan for " << json_string_value(routed.payload, "instance_id") << "\n";
+            std::cout << "Executable: " << json_string_value(routed.payload, "executable") << "\n";
+            std::cout << "Dry-run only. Use --json for the complete plan.\n";
+        }
     } else {
         std::cerr << "Launch plan was refused; use --json for details.\n";
     }
@@ -3818,16 +3947,6 @@ int command_run(const CliOptions& options)
         std::cerr << "Missing instance id\n";
         return 2;
     }
-    InstanceRef instance;
-    if (!load_instance(options.workspace, options.args[1], instance)) {
-        std::cerr << "Unknown instance: " << options.args[1] << "\n";
-        return 1;
-    }
-    InstallRef install;
-    if (!load_install(options.workspace, instance.install_ref, install)) {
-        std::cerr << "Unknown install reference: " << instance.install_ref << "\n";
-        return 1;
-    }
     if (has_flag(options.args, "--execute")) {
         return emit_safety_refusal(
             options,
@@ -3836,16 +3955,20 @@ int command_run(const CliOptions& options)
             "Factorio execution is unavailable until real write-data isolation is proven",
             "Use facman launch-plan <instance-id> --json to inspect the dry-run plan");
     }
+    std::string request = "{\"instance_id\":" + quote(options.args[1]) + "}";
+    RoutedCommandResult routed = route_factorio_command(
+        options.workspace, "run.preview", request, true);
     if (has_flag(options.args, "--json")) {
-        std::cout << launch_plan_json(instance, install);
-    } else {
-        std::cout << "FacMan launch plan for " << instance.instance_id << "\n";
-        std::cout << "Executable: " << path_string(install.executable) << "\n";
-        std::cout << "Args: --config " << path_string(instance.local_data_root / "config" / "config.ini")
-                  << " --mod-directory " << path_string(instance.local_data_root / "mods") << "\n";
+        std::cout << routed.payload;
+    } else if (routed.status == ULK_STATUS_OK) {
+        std::cout << "FacMan launch plan for " << json_string_value(routed.payload, "instance_id") << "\n";
+        std::cout << "Executable: " << json_string_value(routed.payload, "executable") << "\n";
+        std::cout << "Command: " << json_string_value(routed.payload, "command_line") << "\n";
         std::cout << "Dry-run only. Re-run with --execute to run this plan.\n";
+    } else {
+        std::cerr << "Run preview was refused; use --json for details.\n";
     }
-    return 0;
+    return routed.status == ULK_STATUS_OK ? 0 : 1;
 }
 
 } // namespace

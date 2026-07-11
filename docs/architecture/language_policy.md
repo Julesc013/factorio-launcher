@@ -30,11 +30,12 @@ The legacy portable lane keeps C89/C++98-compatible ABI discipline for handles,
 result systems, portable strings, filesystem/process abstractions, audit events,
 command graph records, and manifest streams.
 
-Mainline private implementation may use newer C/C++ dialects only when the
-supported toolchain floor permits it and the public ABI remains stable. C++98
-remains acceptable for universal cleanup wrappers, state machines, small
-containers, builders, and tests. Any C++ implementation must stay behind
-`extern "C"` wrappers.
+Mainline private implementation may use newer C/C++ dialects when the supported
+toolchain floor permits it and public ABI changes preserve the current
+experimental correctness floor through compatible extension or explicit
+versioning. C++98 remains acceptable for universal cleanup wrappers, state
+machines, small containers, builders, and tests. Any C++ implementation must
+stay behind `extern "C"` wrappers.
 
 ## Tier 2: Factorio Binding
 

@@ -10,7 +10,7 @@ Factorio-facing applications.
 
 ## Current Phase
 
-R3 post-Gate-4 truth hardening.
+R3.2 authoritative registry and instance-isolation foundation.
 
 ## Current Proof
 
@@ -23,20 +23,41 @@ R3 post-Gate-4 truth hardening.
 - Public sibling revisions are pinned by
   `release/index/workspace_lock.v1.toml` and checked before three-repository
   builds.
+- Windows read-only discovery is implemented for Steam registry roots, bounded
+  `libraryfolders.vdf` parsing, standalone roots, deterministic de-duplication,
+  Unicode and long paths, malformed metadata, and junction refusal.
+- The public C ABI is experimental. Its current proof is a correctness floor,
+  not a stable third-party compatibility promise.
+- Universal Launcher introspection is generated from retained runtime
+  descriptors, and canonical `run.preview` plus `launch_plan.preflight` route
+  through the registered Factorio application handler into typed results.
+- Instance creation and import generate the effective Factorio `config.ini`;
+  preflight parses that same file and refuses mismatched, sensitive, or linked
+  roots.
+- A purpose-built process probe proves argument transfer, intended writes,
+  protected-root invariance, and exclusive run-lock behavior. This evidence is
+  not a substitute for a real Factorio operator verdict.
+- Universal Setup owns read-only package verification, and FacMan routes its
+  package-verification command through that pinned provider.
+- The diagnostic foundation now provides allowlisted, no-follow traversal with
+  depth, file-count, per-file, total-size, and time budgets, explicit omission
+  reports, and fail-closed JSON and INI redaction. General bundle export remains
+  unavailable.
 
 ## Current Goal
 
-Make the selected live contracts, typed application requests, filesystem
-commit behavior, package component roles, and CI jobs describe and enforce the
-same bounded proof. Then extend real Windows read-only discovery through the
-existing command route.
+Prepare `FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01` for an operator-supplied
+Factorio binary and preserve the human verdict as the next authority boundary.
+Keep `run.execute` and general diagnostic export quarantined; do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 
-- Real `run.execute` remains unavailable until both a controlled write-probe
-  and an operator-supplied Factorio isolation smoke pass.
-- General diagnostic export remains unavailable until traversal budgets,
-  no-follow behavior, and format-aware fail-closed redaction are proven.
+- Real `run.execute` remains unavailable until the prepared operator-supplied
+  Factorio isolation smoke receives a reviewed human pass.
+- General diagnostic export remains unavailable. Traversal budgets, no-follow
+  behavior, omission reporting, and JSON/INI fail-closed redaction are proven
+  as a foundation, not as complete adversarial proof of the dormant bundle
+  writer.
 - Setup mutation, networking, credentials, dynamic plugins, and release
   publication remain deferred.
 

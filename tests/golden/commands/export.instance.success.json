@@ -4,5 +4,5 @@
   "instance_id": "source-world",
   "path": "source-world.zip",
   "files": 5,
-  "redactions": ["local_data_root", "config-path.cfg", "config.ini secrets"]
+  "redactions": ["local_data_root", "config.ini paths and secrets"]
 }

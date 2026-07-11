@@ -1,6 +1,9 @@
 #include "flb_factorio_diagnostics.h"
 
+#include "fl_path_safety.h"
+
 #include <algorithm>
+#include <chrono>
 #include <cctype>
 #include <sstream>
 
@@ -250,6 +253,41 @@ bool looks_like_json_document(const std::string& text, const std::string& logica
     return first != std::string::npos && text[first] == '{';
 }
 
+bool looks_like_ini_document(const std::string& logical_path)
+{
+    std::string lower_path = lowercase_ascii(logical_path);
+    return lower_path.size() >= 4 && lower_path.substr(lower_path.size() - 4) == ".ini";
+}
+
+bool ini_structure_valid(const std::string& text)
+{
+    if (text.find('\0') != std::string::npos) {
+        return false;
+    }
+    std::istringstream input(text);
+    std::string line;
+    while (std::getline(input, line)) {
+        const std::size_t first = line.find_first_not_of(" \t\r");
+        if (first == std::string::npos || line[first] == ';' || line[first] == '#') {
+            continue;
+        }
+        if (line[first] == '[') {
+            const std::size_t close = line.find(']', first + 1);
+            if (close == std::string::npos || close == first + 1 ||
+                line.find_first_not_of(" \t\r", close + 1) != std::string::npos) {
+                return false;
+            }
+            continue;
+        }
+        const std::size_t separator = line.find('=', first);
+        if (separator == std::string::npos ||
+            line.find_first_not_of(" \t", first) >= separator) {
+            return false;
+        }
+    }
+    return true;
+}
+
 RedactionResult redact_json_fields(
     const std::string& text,
     const RedactionPolicy& policy,
@@ -360,6 +398,11 @@ RedactionResult redact_text(
             return structured;
         }
         return structured;
+    }
+    if (looks_like_ini_document(logical_path) && !ini_structure_valid(text)) {
+        result.safe = false;
+        result.error = "INI structure is malformed";
+        return result;
     }
     std::istringstream in(input);
     std::ostringstream out;
@@ -480,9 +523,155 @@ std::string redaction_report_json(const std::vector<RedactionEvent>& events)
     return out.str();
 }
 
+std::string traversal_report_json(
+    const TraversalResult& result,
+    const std::filesystem::path& root,
+    const TraversalPolicy& policy)
+{
+    std::ostringstream out;
+    out << "{\n";
+    out << "  \"schema\": \"factorio.diagnostic_traversal_report.v1\",\n";
+    out << "  \"root\": " << quote(generic_path(root)) << ",\n";
+    out << "  \"safe\": " << (result.safe ? "true" : "false") << ",\n";
+    out << "  \"policy\": {\n";
+    out << "    \"allowlisted_roots\": [";
+    for (std::size_t index = 0; index < policy.allowlisted_roots.size(); ++index) {
+        if (index) out << ", ";
+        out << quote(generic_path(policy.allowlisted_roots[index]));
+    }
+    out << "],\n";
+    out << "    \"maximum_depth\": " << policy.maximum_depth << ",\n";
+    out << "    \"maximum_file_count\": " << policy.maximum_file_count << ",\n";
+    out << "    \"maximum_file_size\": " << policy.maximum_file_size << ",\n";
+    out << "    \"maximum_total_size\": " << policy.maximum_total_size << ",\n";
+    out << "    \"time_budget_milliseconds\": " << policy.time_budget_milliseconds << "\n";
+    out << "  },\n";
+    out << "  \"selected_files\": " << result.files.size() << ",\n";
+    out << "  \"selected_bytes\": " << result.total_size << ",\n";
+    out << "  \"omissions\": [";
+    for (std::size_t index = 0; index < result.omissions.size(); ++index) {
+        if (index) out << ",";
+        out << "\n    {\"path\": " << quote(result.omissions[index].path)
+            << ", \"reason\": " << quote(result.omissions[index].reason) << "}";
+    }
+    if (!result.omissions.empty()) out << "\n  ";
+    out << "]\n";
+    out << "}\n";
+    return out.str();
+}
+
 std::string redaction_marker()
 {
     return default_redaction_policy().marker;
+}
+
+TraversalResult collect_bounded_files(
+    const std::filesystem::path& root,
+    const TraversalPolicy& policy)
+{
+    namespace fs = std::filesystem;
+    TraversalResult result;
+    if (policy.time_budget_milliseconds == 0) {
+        result.safe = false;
+        result.omissions.push_back({"", "time_budget_exhausted"});
+        return result;
+    }
+    const auto deadline = std::chrono::steady_clock::now() +
+        std::chrono::milliseconds(policy.time_budget_milliseconds);
+    std::error_code error;
+    const fs::path absolute_root = fs::absolute(root, error).lexically_normal();
+    std::string link_detail;
+    if (error || !fs::is_directory(absolute_root, error) || error ||
+        facman::base::path_crosses_link_or_reparse_point(absolute_root, link_detail)) {
+        result.safe = false;
+        result.omissions.push_back({root.generic_string(), "root_missing_or_unsafe"});
+        return result;
+    }
+    for (const fs::path& allowed : policy.allowlisted_roots) {
+        if (allowed.empty() || allowed.is_absolute()) {
+            result.safe = false;
+            result.omissions.push_back({allowed.generic_string(), "allowlist_root_invalid"});
+            continue;
+        }
+        bool escapes = false;
+        for (const fs::path& component : allowed) {
+            if (component == ".." || component == ".") escapes = true;
+        }
+        if (escapes) {
+            result.safe = false;
+            result.omissions.push_back({allowed.generic_string(), "allowlist_root_escapes"});
+            continue;
+        }
+        const fs::path allowed_root = absolute_root / allowed;
+        if (!fs::exists(allowed_root, error)) {
+            if (error) {
+                result.safe = false;
+                result.omissions.push_back({allowed.generic_string(), "traversal_error"});
+                error.clear();
+            }
+            continue;
+        }
+        if (!fs::is_directory(allowed_root, error) || error ||
+            facman::base::path_crosses_link_or_reparse_point(allowed_root, link_detail)) {
+            result.omissions.push_back({allowed.generic_string(), "link_or_reparse_refused"});
+            continue;
+        }
+        fs::recursive_directory_iterator iterator(
+            allowed_root,
+            fs::directory_options::none,
+            error);
+        const fs::recursive_directory_iterator end;
+        while (!error && iterator != end) {
+            const fs::path relative = iterator->path().lexically_relative(absolute_root);
+            if (relative.empty()) {
+                result.safe = false;
+                result.omissions.push_back({iterator->path().generic_string(), "traversal_error"});
+                break;
+            }
+            if (std::chrono::steady_clock::now() > deadline) {
+                result.safe = false;
+                result.omissions.push_back({relative.generic_string(), "time_budget_exhausted"});
+                break;
+            }
+            if (facman::base::path_crosses_link_or_reparse_point(iterator->path(), link_detail)) {
+                if (iterator->is_directory(error)) iterator.disable_recursion_pending();
+                result.omissions.push_back({relative.generic_string(), "link_or_reparse_refused"});
+            } else if (iterator.depth() >= static_cast<int>(policy.maximum_depth) &&
+                iterator->is_directory(error)) {
+                iterator.disable_recursion_pending();
+                result.omissions.push_back({relative.generic_string(), "maximum_depth_exceeded"});
+            } else if (iterator->is_regular_file(error)) {
+                const std::uintmax_t size = iterator->file_size(error);
+                if (error || size > policy.maximum_file_size) {
+                    result.omissions.push_back({relative.generic_string(), "file_size_limit_exceeded"});
+                } else if (size > policy.maximum_total_size ||
+                    result.total_size > policy.maximum_total_size - size) {
+                    result.safe = false;
+                    result.omissions.push_back({relative.generic_string(), "total_size_limit_exceeded"});
+                    break;
+                } else if (std::find(result.files.begin(), result.files.end(), iterator->path()) !=
+                    result.files.end()) {
+                    // Overlapping allowlist roots must not double-count the same file.
+                } else if (result.files.size() >= policy.maximum_file_count) {
+                    result.safe = false;
+                    result.omissions.push_back({relative.generic_string(), "file_count_limit_exceeded"});
+                    break;
+                } else {
+                    result.files.push_back(iterator->path());
+                    result.total_size += size;
+                }
+            }
+            iterator.increment(error);
+        }
+        if (error) {
+            result.safe = false;
+            result.omissions.push_back({allowed.generic_string(), "traversal_error"});
+            error.clear();
+        }
+        if (!result.safe) break;
+    }
+    std::sort(result.files.begin(), result.files.end());
+    return result;
 }
 
 } // namespace facman::factorio::diagnostics

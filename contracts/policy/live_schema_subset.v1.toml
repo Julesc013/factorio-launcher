@@ -25,7 +25,15 @@ consumer = "instance.create"
 
 [[live_schema]]
 path = "contracts/schema/factorio/factorio_launch_plan.v1.schema.json"
-consumer = "launch_plan.build"
+consumer = "launch_plan.build and run.preview"
+
+[[live_schema]]
+path = "contracts/schema/factorio/factorio_launch_preflight.v1.schema.json"
+consumer = "launch_plan.preflight"
+
+[[live_schema]]
+path = "contracts/schema/factorio/factorio_isolation_probe.v1.schema.json"
+consumer = "native process-boundary isolation probe"
 
 [[live_schema]]
 path = "contracts/schema/factorio/factorio_diagnostic_report.v1.schema.json"
