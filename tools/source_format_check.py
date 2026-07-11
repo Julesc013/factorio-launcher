@@ -38,6 +38,12 @@ LONG_LINE_ALLOWLIST_FILES = {
     "runtime/factorio/binding/flb_api.c",
 }
 
+# Source-pinned third-party files retain upstream formatting. Their integrity
+# is governed by the dependency lock and admission tests, not FacMan style.
+VENDORED_SOURCE_PREFIXES = {
+    "external/miniz/",
+}
+
 MINIFIED_ALLOWLIST_FILES: set[str] = set()
 
 PHYSICAL_LINE_GUARD_SCOPES = {
@@ -76,6 +82,8 @@ def main() -> int:
         if path.suffix.lower() not in CHECKED_SUFFIXES:
             continue
         rel = path.relative_to(ROOT).as_posix()
+        if vendored_source(rel):
+            continue
         problems.extend(validate_file(path, rel))
 
     if problems:
@@ -172,6 +180,10 @@ def long_lines_allowed(rel: str) -> bool:
     if rel in LONG_LINE_ALLOWLIST_FILES:
         return True
     return any(rel.startswith(prefix) for prefix in LONG_LINE_ALLOWLIST_PREFIXES)
+
+
+def vendored_source(rel: str) -> bool:
+    return any(rel.startswith(prefix) for prefix in VENDORED_SOURCE_PREFIXES)
 
 
 if __name__ == "__main__":

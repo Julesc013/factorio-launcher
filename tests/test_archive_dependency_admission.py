@@ -48,6 +48,8 @@ class ArchiveDependencyAdmissionTests(unittest.TestCase):
             {path.name for path in (ROOT / "external").iterdir()},
             {"README.md", "miniz"},
         )
+        attributes = ROOT.joinpath(".gitattributes").read_text(encoding="utf-8")
+        self.assertIn("external/miniz/LICENSE binary", attributes)
 
     def test_upstream_api_exposes_required_archive_capability_floor(self) -> None:
         header = MINIZ.joinpath("miniz.h").read_text(encoding="utf-8")

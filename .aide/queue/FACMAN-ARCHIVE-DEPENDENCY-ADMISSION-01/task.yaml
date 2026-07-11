@@ -12,6 +12,7 @@ objective: >
 depends_on:
   - FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01
 allowed_paths:
+  - .gitattributes
   - .aide/queue/**
   - .aide/context/**
   - .aide/profile.yaml
@@ -23,7 +24,9 @@ allowed_paths:
   - release/index/sbom.components.v1.json
   - tests/native/miniz_dependency_smoke.c
   - tests/test_archive_dependency_admission.py
+  - tests/test_source_format_check.py
   - tools/aide_target_truth_check.py
+  - tools/source_format_check.py
   - tools/validators/release/check_dependency_lock.py
 forbidden_paths:
   - runtime/archive/**

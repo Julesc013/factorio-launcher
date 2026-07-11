@@ -57,6 +57,11 @@ class SourceFormatCheckTests(unittest.TestCase):
             )
         )
 
+    def test_only_admitted_miniz_tree_is_classified_as_vendored_source(self) -> None:
+        self.assertTrue(source_format_check.vendored_source("external/miniz/miniz.c"))
+        self.assertFalse(source_format_check.vendored_source("external/other/vendor.c"))
+        self.assertFalse(source_format_check.vendored_source("runtime/archive/miniz.c"))
+
     def test_cr_only_line_endings_fail(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "cr_only.py"
