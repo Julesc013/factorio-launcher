@@ -54,6 +54,8 @@ class MacosPackageProofContractTests(unittest.TestCase):
             "macos-native-cli:",
             "runs-on: macos-15-intel",
             "CMAKE_OSX_DEPLOYMENT_TARGET=13.0",
+            "TMPDIR: ${{ runner.temp }}/facman-native-tmp",
+            "Prepare no-link temporary root",
             "ctest --test-dir build/macos-native --output-on-failure",
             "python -m unittest discover -s tests -v",
             "python tools/macos_package_proof.py",

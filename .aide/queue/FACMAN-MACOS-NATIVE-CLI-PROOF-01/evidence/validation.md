@@ -19,3 +19,12 @@ skips, and upload the tarball, adjacent provenance, and evidence report.
 The independent AppKit lane remains compile-only. Local checks do not promote
 Apple Silicon, universal binaries, broader macOS compatibility, app-bundle
 runtime, signing, notarization, authenticity, release, or publication.
+
+Exact-SHA attempt `ad51cc3f13bea002f6a8433f3faa9c05728a3510`, CI
+`29158844890`, built the complete macOS native core but CTest exposed that the
+runner's default `/var/folders/...` temporary root crosses the `/var` symlink.
+The lock, diagnostics, and Universal Setup package-verification tests correctly
+refused that linked root; downstream proof steps were skipped. The repair does
+not weaken traversal policy: it gives the macOS job an explicit resolved
+runner-owned `TMPDIR` and verifies that its real path is identical before any
+native test runs.
