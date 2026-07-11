@@ -1,0 +1,64 @@
+schema_version: aide.queue-task.v0
+id: FACMAN-LINUX-CLI-PACKAGE-PROOF-03
+title: Prove the target-specific Linux x64 CLI package
+status: active
+planning_state: implementation
+created_at: 2026-07-12
+owner: Codex
+objective: >
+  Add one explicit linux_portable_cli_x64 package profile containing only the
+  functional CLI and required runtime/contract/license payload. Prove target,
+  linkage, dependency allowlist, integrity closure, extraction, relocation,
+  read-only-root, external-workspace, arbitrary-cwd, Unicode/space, and
+  empty-PATH behavior on the declared Linux runner with zero required skips.
+depends_on:
+  - FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04
+allowed_paths:
+  - .aide/profile.yaml
+  - .aide/memory/project-state.md
+  - .aide/queue/**
+  - .aide/context/**
+  - .github/workflows/**
+  - CMakeLists.txt
+  - README.md
+  - cmake/**
+  - contracts/schema/release/**
+  - docs/architecture/**
+  - docs/quality/**
+  - docs/roadmap.md
+  - release/**
+  - tests/test_package_*.py
+  - tests/test_release_*.py
+  - tests/test_schema_tools.py
+  - tools/ci_proof_check.py
+  - tools/language_runtime_policy_check.py
+  - tools/package_*.py
+  - tools/release_*.py
+  - tools/required_package_proof.py
+  - tools/strict_check.py
+  - tools/structure_policy_check.py
+  - tools/validators/release/**
+  - tools/verify_dependency_revisions.py
+forbidden_paths:
+  - apps/gui/**
+  - runtime/factorio/launch/**
+  - include/**
+  - external/**
+  - .git/**
+  - .env
+  - secrets/**
+acceptance:
+  - The profile identity is linux_portable_cli_x64 and claims only Linux x64 CLI portability on the declared runner/toolchain.
+  - Payload contains facman, required runtime content, compatibility contracts, manifests, licenses, and minimal documentation only.
+  - Compiler, linker, libc baseline, architecture, sibling SHAs, target, and project linkage are recorded.
+  - Dynamic dependencies and RPATH/RUNPATH are inspected and enforced by allowlist.
+  - Runtime proof covers spaces, Unicode, renamed extraction root, arbitrary cwd, read-only package root, external workspace, and empty PATH.
+  - Integrity proof rejects missing, modified, extra, wrong-target, wrong-architecture, linked, and incomplete payloads.
+  - Archive extraction and post-extraction smoke pass with zero required skips.
+  - ASan/UBSan native/archive tests remain separate from the release-shaped package.
+non_goals:
+  - no universal Unix or all-distributions claim
+  - no completely static binary claim without system-library proof
+  - no TUI, daemon, GTK, Qt, or shared project libraries
+  - no run.execute or real Factorio execution
+  - no signing, tag, release, publication, or setup mutation

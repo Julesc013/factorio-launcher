@@ -54,15 +54,16 @@ foundations that do not require a Factorio binary.
 - Diagnostic export now combines bounded traversal with stable no-follow
   handle reads, a reviewed-format allowlist, fail-closed structured redaction,
   pseudonymous source identity, production archive output, transaction
-  recovery, and post-commit self-verification. Cross-platform exact-SHA CI for
-  this WorkUnit remains pending.
+  recovery, and post-commit self-verification. The exact-SHA Linux,
+  Windows/package, macOS archive, AppKit, schema, and security matrix is green.
 
 ## Current Goal
 
 Continue the ordered R3.3 WorkUnits in `.aide/memory/r3.3-workunits.md` from
-diagnostic export safety. The baseline, archive dependency, production core,
-local mod/modset routes, save/portable-transfer routes, and bounded workspace
-transaction recovery are frozen at green exact-SHA checkpoints. Keep
+the target-specific Linux CLI package proof. The baseline, archive dependency,
+production core, local mod/modset routes, save/portable-transfer routes,
+bounded workspace transaction recovery, and reviewed diagnostic export are
+frozen at green exact-SHA checkpoints. Keep
 `run.execute` and real Factorio isolation human-gated; do not schedule Windows discovery again.
 
 ## Quarantined Capabilities

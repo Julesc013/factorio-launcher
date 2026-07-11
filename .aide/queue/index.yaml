@@ -46,9 +46,16 @@ items:
     evidence: .aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/evidence
     description: Journal and recover only currently enabled multi-file workspace writers.
   - id: FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04
-    status: active
-    planning_state: implementation
+    status: needs_review
+    planning_state: implementation_completed
     title: Complete safe diagnostic bundle export
     task: .aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/task.yaml
     evidence: .aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/evidence
     description: Close diagnostic read races and enable only a fully verified known-format bundle path.
+  - id: FACMAN-LINUX-CLI-PACKAGE-PROOF-03
+    status: active
+    planning_state: implementation
+    title: Prove the target-specific Linux x64 CLI package
+    task: .aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/task.yaml
+    evidence: .aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/evidence
+    description: Build and prove one explicit Linux x64 portable CLI package with zero required skips.

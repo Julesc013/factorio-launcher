@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v0
+task_id: FACMAN-LINUX-CLI-PACKAGE-PROOF-03
+status: active
+planning_state: implementation
+owner: Codex
+created_at: 2026-07-12
+started_at: 2026-07-12
+result: pending
+review_gate:
+  required: true
+  status: implementation_in_progress
+evidence_path: .aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/evidence/
+recommended_next: FACMAN-R3.3-PROOF-CLOSEOUT-01

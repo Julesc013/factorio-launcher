@@ -14,10 +14,10 @@ current_focus:
     production archive layer, typed authoritative routes, recoverable writes,
     safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04: close diagnostic file-read races with
-    stable no-follow handles, allow only reviewed formats, create a typed and
-    self-verifying production archive through the transaction journal, and
-    enable export only if the complete adversarial gate passes.
+    FACMAN-LINUX-CLI-PACKAGE-PROOF-03: add one explicit Linux x64 portable CLI
+    profile with target/linkage metadata, dynamic-dependency allowlisting,
+    integrity closure, extraction/relocation/runtime proof, and zero required
+    skips. Do not claim a universal Unix or fully static binary.
     Windows read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan

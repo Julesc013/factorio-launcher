@@ -1,7 +1,6 @@
 # Validation
 
-Result: PASS locally; exact-SHA cross-platform CI is pending the WorkUnit
-commit and push.
+Result: PASS, including exact-SHA cross-platform CI.
 
 ## Behavior proven locally
 
@@ -36,6 +35,25 @@ commit and push.
 - Diagnostic export and transaction recovery checkers: PASS.
 - AIDE Lite test: PASS.
 - `git diff --check`: PASS.
+
+## Exact-SHA CI
+
+- FacMan revision: `069cf22c14fa903357411ede32f23b88676b6214`.
+- CI run `29155497880`: PASS.
+  - Linux native and ASan/UBSan archive corpus/fuzz: PASS.
+  - Windows native, complete Python suite, WinForms build/client smoke,
+    zero-skip package proof, selected package integrity/relocation, and legacy
+    compatibility package: PASS.
+  - macOS archive native smoke: PASS.
+  - AppKit compile-only: PASS.
+- Schema run `29155497897`: PASS.
+- Security-policy run `29155497871`: PASS.
+
+The preceding governance-only activation run `29154499018` failed Linux and
+Windows Python truth checks because the required Windows-discovery sentence was
+line-wrapped across the exact checker anchor. The implementation revision
+restored that literal truth statement and passed the complete replacement
+matrix; the failed activation run is not cited as product evidence.
 
 ## Authority boundary
 
