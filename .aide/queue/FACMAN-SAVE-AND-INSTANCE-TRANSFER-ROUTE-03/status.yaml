@@ -1,7 +1,7 @@
 schema_version: aide.queue-status.v0
 task_id: FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03
-status: needs_review
-planning_state: implementation_completed
+status: passed
+planning_state: closed
 owner: Codex
 created_at: 2026-07-11
 started_at: 2026-07-11

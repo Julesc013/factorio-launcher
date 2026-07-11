@@ -24,9 +24,8 @@ EXPECTED_REQUIRED = {
     "run.preview",
 }
 
-EXPECTED_DEFERRED = {
+EXPECTED_OPTIONAL = {
     "diagnostics.export",
-    "run.execute",
     "mods.import",
     "modsets.lock",
     "modsets.verify",
@@ -39,8 +38,9 @@ EXPECTED_DEFERRED = {
     "workspace.recovery.inspect",
     "workspace.recovery.plan",
     "workspace.recovery.apply",
-    "setup.preview",
 }
+
+EXPECTED_UNAVAILABLE = {"run.execute", "setup.preview"}
 
 EXPECTED_FRONTENDS = {
     "cli": "apps/cli",
@@ -87,16 +87,20 @@ def validate_contract(data: dict[str, Any]) -> list[str]:
 
     sets = data.get("sets", {})
     required = set(sets.get("required", []))
-    deferred = set(sets.get("deferred", []))
+    optional = set(sets.get("optional", []))
+    unavailable = set(sets.get("unavailable", []))
     if required != EXPECTED_REQUIRED:
         problems.append(f"required frontend commands mismatch: missing={sorted(EXPECTED_REQUIRED - required)} extra={sorted(required - EXPECTED_REQUIRED)}")
-    if deferred != EXPECTED_DEFERRED:
-        problems.append(f"deferred frontend commands mismatch: missing={sorted(EXPECTED_DEFERRED - deferred)} extra={sorted(deferred - EXPECTED_DEFERRED)}")
-    if required & deferred:
-        problems.append(f"frontend commands cannot be both required and deferred: {sorted(required & deferred)}")
+    if optional != EXPECTED_OPTIONAL:
+        problems.append(f"optional frontend commands mismatch: missing={sorted(EXPECTED_OPTIONAL - optional)} extra={sorted(optional - EXPECTED_OPTIONAL)}")
+    if unavailable != EXPECTED_UNAVAILABLE:
+        problems.append(f"unavailable frontend commands mismatch: missing={sorted(EXPECTED_UNAVAILABLE - unavailable)} extra={sorted(unavailable - EXPECTED_UNAVAILABLE)}")
+    overlaps = (required & optional) | (required & unavailable) | (optional & unavailable)
+    if overlaps:
+        problems.append(f"frontend command lifecycle sets must be disjoint: {sorted(overlaps)}")
 
-    all_commands = required | deferred
-    problems.extend(validate_command_descriptors(data.get("commands", []), required, deferred))
+    all_commands = required | optional | unavailable
+    problems.extend(validate_command_descriptors(data.get("commands", []), required, optional, unavailable))
     problems.extend(validate_frontends(data.get("frontends", []), all_commands))
     for schema in [
         "contracts/schema/ui/frontend_capabilities.v1.schema.json",
@@ -109,7 +113,12 @@ def validate_contract(data: dict[str, Any]) -> list[str]:
     return problems
 
 
-def validate_command_descriptors(commands: Any, required: set[str], deferred: set[str]) -> list[str]:
+def validate_command_descriptors(
+    commands: Any,
+    required: set[str],
+    optional: set[str],
+    unavailable: set[str],
+) -> list[str]:
     problems: list[str] = []
     if not isinstance(commands, list):
         return ["commands must be an array of tables"]
@@ -123,12 +132,14 @@ def validate_command_descriptors(commands: Any, required: set[str], deferred: se
         phase = command.get("phase")
         if command_id in required and phase != "required":
             problems.append(f"{command_id}: required command must have phase=required")
-        if command_id in deferred and phase != "deferred":
-            problems.append(f"{command_id}: deferred command must have phase=deferred")
+        if command_id in optional and phase != "optional":
+            problems.append(f"{command_id}: optional command must have phase=optional")
+        if command_id in unavailable and phase != "unavailable":
+            problems.append(f"{command_id}: unavailable command must have phase=unavailable")
         for key in ["backend_id", "cli"]:
             if not command.get(key):
                 problems.append(f"{command_id}: missing {key}")
-    expected = required | deferred
+    expected = required | optional | unavailable
     for command_id in sorted(expected - seen):
         problems.append(f"missing command descriptor {command_id}")
     for command_id in sorted(seen - expected):

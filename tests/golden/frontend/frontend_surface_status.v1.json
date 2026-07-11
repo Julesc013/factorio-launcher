@@ -4,7 +4,8 @@
   "native_shell_proof": {
     "frontends": ["windows.winforms", "macos.appkit"],
     "required_status": "implemented",
-    "deferred_status": "not_supported_with_reason"
+    "optional_status": "not_supported_with_reason",
+    "unavailable_status": "not_supported_with_reason"
   },
   "parity": ["command_graph", "result_shape", "refusal_shape", "effect_risk"]
 }

@@ -47,7 +47,8 @@ def validate_surface(required_contract: dict[str, Any], surface_contract: dict[s
         if isinstance(frontend, dict)
     }
     required_commands = set(required_contract.get("sets", {}).get("required", []))
-    deferred_commands = set(required_contract.get("sets", {}).get("deferred", []))
+    optional_commands = set(required_contract.get("sets", {}).get("optional", []))
+    unavailable_commands = set(required_contract.get("sets", {}).get("unavailable", []))
 
     for group in surface_contract.get("parity_group", []):
         if not isinstance(group, dict):
@@ -59,7 +60,15 @@ def validate_surface(required_contract: dict[str, Any], surface_contract: dict[s
             if frontend_id not in frontends:
                 problems.append(f"{SURFACE_CONTRACT.relative_to(ROOT)}: group {group_id} unknown frontend {frontend_id}")
         if group_id == "native_shell_proof":
-            problems.extend(validate_native_shell_group(group, frontends, required_commands, deferred_commands))
+            problems.extend(
+                validate_native_shell_group(
+                    group,
+                    frontends,
+                    required_commands,
+                    optional_commands,
+                    unavailable_commands,
+                )
+            )
 
     proof_requirements = set(surface_contract.get("proof_requirements", []))
     for requirement in ["command_graph", "result_shape", "refusal_shape", "effect_risk"]:
@@ -72,7 +81,8 @@ def validate_native_shell_group(
     group: dict[str, Any],
     frontends: dict[str, dict[str, Any]],
     required_commands: set[str],
-    deferred_commands: set[str],
+    optional_commands: set[str],
+    unavailable_commands: set[str],
 ) -> list[str]:
     problems: list[str] = []
     group_frontends = [str(frontend_id) for frontend_id in group.get("frontends", [])]
@@ -81,7 +91,8 @@ def validate_native_shell_group(
         return problems
 
     expected_required = group.get("required_status")
-    expected_deferred = group.get("deferred_status")
+    expected_optional = group.get("optional_status")
+    expected_unavailable = group.get("unavailable_status")
     baseline: dict[str, str] | None = None
     for frontend_id in group_frontends:
         commands = frontends[frontend_id].get("commands", {})
@@ -91,9 +102,12 @@ def validate_native_shell_group(
         for command_id in sorted(required_commands):
             if commands.get(command_id) != expected_required:
                 problems.append(f"{frontend_id}: {command_id} must be {expected_required}")
-        for command_id in sorted(deferred_commands):
-            if commands.get(command_id) != expected_deferred:
-                problems.append(f"{frontend_id}: {command_id} must be {expected_deferred}")
+        for command_id in sorted(optional_commands):
+            if commands.get(command_id) != expected_optional:
+                problems.append(f"{frontend_id}: {command_id} must be {expected_optional}")
+        for command_id in sorted(unavailable_commands):
+            if commands.get(command_id) != expected_unavailable:
+                problems.append(f"{frontend_id}: {command_id} must be {expected_unavailable}")
         comparable = {command_id: str(status) for command_id, status in commands.items()}
         if baseline is None:
             baseline = comparable
@@ -115,8 +129,10 @@ def validate_golden() -> list[str]:
         problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell proof frontends changed")
     if shell.get("required_status") != "implemented":
         problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell required status must be implemented")
-    if shell.get("deferred_status") != "not_supported_with_reason":
-        problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell deferred status must be not_supported_with_reason")
+    if shell.get("optional_status") != "not_supported_with_reason":
+        problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell optional status must be not_supported_with_reason")
+    if shell.get("unavailable_status") != "not_supported_with_reason":
+        problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell unavailable status must be not_supported_with_reason")
     return problems
 
 

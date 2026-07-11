@@ -3,7 +3,7 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/ui/frontend_command_surface.v1.schema.json",
   "title": "FacMan Frontend Command Surface",
   "type": "object",
-  "required": ["schema", "required_commands", "deferred_commands", "frontends"],
+  "required": ["schema", "required_commands", "optional_commands", "unavailable_commands", "frontends"],
   "properties": {
     "schema": { "const": "facman.frontend_command_surface.v1" },
     "required_commands": {
@@ -11,7 +11,12 @@
       "items": { "type": "string", "minLength": 1 },
       "uniqueItems": true
     },
-    "deferred_commands": {
+    "optional_commands": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "unavailable_commands": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 },
       "uniqueItems": true

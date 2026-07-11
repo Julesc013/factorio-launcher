@@ -4,7 +4,6 @@ filename_version = "facman-0.1.0-dev.contract"
 channel = "pinned"
 build_kind = "dev"
 package_revision = "0"
-source_commit = "2c2cce644b674d12227a194a77bce5a667fed721"
 dependency_lock = "release/index/dependency_lock.v1.toml"
 
 [[component]]

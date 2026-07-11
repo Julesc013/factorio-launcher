@@ -19,9 +19,8 @@ required = [
   "launch_plan.preflight",
   "run.preview",
 ]
-deferred = [
+optional = [
   "diagnostics.export",
-  "run.execute",
   "mods.import",
   "modsets.lock",
   "modsets.verify",
@@ -34,6 +33,9 @@ deferred = [
   "workspace.recovery.inspect",
   "workspace.recovery.plan",
   "workspace.recovery.apply",
+]
+unavailable = [
+  "run.execute",
   "setup.preview",
 ]
 
@@ -117,91 +119,91 @@ cli = "facman run <instance-id> --json"
 
 [[commands]]
 id = "diagnostics.export"
-phase = "deferred"
+phase = "optional"
 backend_id = "diagnostics.export"
 cli = "facman diagnostics export --instance <instance-id> --out <bundle.zip> --json"
 
 [[commands]]
 id = "run.execute"
-phase = "deferred"
+phase = "unavailable"
 backend_id = "run.execute"
 cli = "facman run <instance-id> --execute --json"
 
 [[commands]]
 id = "modsets.lock"
-phase = "deferred"
+phase = "optional"
 backend_id = "modsets.lock"
 cli = "facman modsets lock <instance-id> --json"
 
 [[commands]]
 id = "mods.import"
-phase = "deferred"
+phase = "optional"
 backend_id = "mods.import"
 cli = "facman mods import <mod.zip> --instance <instance-id> --json"
 
 [[commands]]
 id = "modsets.verify"
-phase = "deferred"
+phase = "optional"
 backend_id = "modsets.verify"
 cli = "facman modsets verify <instance-id> --json"
 
 [[commands]]
 id = "modsets.export"
-phase = "deferred"
+phase = "optional"
 backend_id = "modsets.export"
 cli = "facman modsets export <instance-id> <pack.zip> --json"
 
 [[commands]]
 id = "saves.list"
-phase = "deferred"
+phase = "optional"
 backend_id = "saves.list"
 cli = "facman saves list --instance <instance-id> --json"
 
 [[commands]]
 id = "saves.backup"
-phase = "deferred"
+phase = "optional"
 backend_id = "saves.backup"
 cli = "facman saves backup <instance-id> --json"
 
 [[commands]]
 id = "saves.clone"
-phase = "deferred"
+phase = "optional"
 backend_id = "saves.clone"
 cli = "facman saves clone <save> --instance <source-id> --to-instance <target-id> --json"
 
 [[commands]]
 id = "instance.export"
-phase = "deferred"
+phase = "optional"
 backend_id = "instance.export"
 cli = "facman export instance <instance-id> --output <path> --json"
 
 [[commands]]
 id = "instance.import"
-phase = "deferred"
+phase = "optional"
 backend_id = "instance.import"
 cli = "facman import instance <path> --json"
 
 [[commands]]
 id = "workspace.recovery.inspect"
-phase = "deferred"
+phase = "optional"
 backend_id = "workspace.recovery.inspect"
 cli = "facman workspace recovery inspect --json"
 
 [[commands]]
 id = "workspace.recovery.plan"
-phase = "deferred"
+phase = "optional"
 backend_id = "workspace.recovery.plan"
 cli = "facman workspace recovery plan <transaction-id> --json"
 
 [[commands]]
 id = "workspace.recovery.apply"
-phase = "deferred"
+phase = "optional"
 backend_id = "workspace.recovery.apply"
 cli = "facman workspace recovery apply <transaction-id> --json"
 
 [[commands]]
 id = "setup.preview"
-phase = "deferred"
+phase = "unavailable"
 backend_id = "install_local.plan"
 cli = "facman installs install-version <version> --archive <path> --json"
 

@@ -2,6 +2,7 @@ schema = "facman.dependency_lock.v1"
 id = "facman_dependency_lock_v1"
 lock_kind = "release_time_pinned"
 global_runtime_required = false
+first_party_source_identity = "resolved_from_build_head"
 
 [[component]]
 id = "factorio_binding"
@@ -11,6 +12,7 @@ abi_version = 1
 pin = "2c2cce644b674d12227a194a77bce5a667fed721"
 bundled = true
 source = "factorio-launcher/runtime/factorio"
+pin_kind = "historical_compatibility_baseline"
 license = "MIT"
 install_mutation_authority = false
 

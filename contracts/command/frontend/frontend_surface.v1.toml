@@ -19,19 +19,22 @@ status_values = [
 id = "native_shell_proof"
 frontends = ["windows.winforms", "macos.appkit"]
 required_status = "implemented"
-deferred_status = "not_supported_with_reason"
+optional_status = "not_supported_with_reason"
+unavailable_status = "not_supported_with_reason"
 claim = "First native GUI shells must match command/result/refusal coverage, not visual design."
 
 [[parity_group]]
 id = "terminal_surfaces"
 frontends = ["cli", "tui"]
 required_status = "declared"
-deferred_status = "declared"
+optional_status = "declared"
+unavailable_status = "declared"
 claim = "Terminal frontends must account for the same command graph."
 
 [[parity_group]]
 id = "future_native_shells"
 frontends = ["windows.winui", "macos.swiftui", "linux.gtk", "linux.qt"]
 required_status = "declared"
-deferred_status = "declared"
+optional_status = "declared"
+unavailable_status = "declared"
 claim = "Future GUI lanes may be stubbed, but they must not disappear from the surface contract."

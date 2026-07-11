@@ -1,13 +1,15 @@
 schema = "flaunch.workspace_lock.v1"
 id = "facman_workspace_lock_v1"
-lock_kind = "public_repository_revisions"
+lock_kind = "build_source_and_provider_revisions"
 lock_root = "factorio-launcher"
+source_identity_policy = "build_head_plus_provider_pins"
 
 [[component]]
 id = "factorio_binding"
 source = "factorio-launcher/runtime/factorio"
 pin = "2c2cce644b674d12227a194a77bce5a667fed721"
 path = "."
+pin_kind = "historical_proof_baseline"
 
 [[component]]
 id = "universal_launcher"

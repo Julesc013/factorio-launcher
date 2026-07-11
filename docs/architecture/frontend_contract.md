@@ -10,8 +10,10 @@ The contract lives at:
 contracts/command/frontend/frontend.required_commands.v1.toml
 ```
 
-It separates command parity from implementation readiness. Each frontend must
-declare one status for every required and deferred command:
+It separates command parity from implementation readiness. Commands are
+classified as required frontend parity, optional frontend exposure, or
+authoritatively unavailable. Each frontend declares one status for every
+command:
 
 ```text
 implemented
@@ -44,7 +46,6 @@ instances.create
 launch_plan.build
 launch_plan.preflight
 run.preview
-diagnostics.export
 ```
 
 Frontend IDs need not be registry IDs. The contract's `backend_id` is the
@@ -52,21 +53,37 @@ canonical value passed to Universal Launcher after parser normalization; for
 example `instances.list` maps to `instance.list` and diagnostics report UI maps
 to `diagnostics.run`.
 
-## Deferred Commands
+## Optional Commands
+
+```text
+diagnostics.export
+mods.import
+modsets.lock
+modsets.verify
+modsets.export
+saves.list
+saves.backup
+saves.clone
+instance.export
+instance.import
+workspace.recovery.inspect
+workspace.recovery.plan
+workspace.recovery.apply
+```
+
+Optional commands are implemented by the CLI but are not required in the first
+GUI shell milestone. This is a frontend scope distinction, not a backend
+availability claim.
+
+## Unavailable Commands
 
 ```text
 run.execute
-modsets.lock
-saves.backup
-export.instance
-import.instance
 setup.preview
 ```
 
-Deferred commands may already exist in the CLI, but GUI parity does not require
-them in the first shell milestone. The next safe GUI work is WinForms and
-AppKit showing required commands as implemented or structured refusals over the
-same command client.
+Unavailable commands stay on authoritative refusal routes. Their presence in
+the catalog must never be read as implementation or promotion.
 
 ## WinForms Shell Milestone
 
