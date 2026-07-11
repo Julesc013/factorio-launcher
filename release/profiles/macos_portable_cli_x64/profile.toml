@@ -18,6 +18,14 @@ licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 bundles_factorio_binaries = false
 credential_storage = false
 
+[proof]
+runner = "macos-15-intel"
+architecture = "x86_64"
+deployment_target = "13.0"
+libc_baseline = "macos_13_system_runtime"
+allowed_system_dependency_prefixes = ["/System/Library/Frameworks/", "/usr/lib/"]
+package_format = "tarball"
+
 [frontends]
 cli = "apps/cli"
 

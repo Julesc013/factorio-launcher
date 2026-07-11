@@ -18,6 +18,17 @@ licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 bundles_factorio_binaries = false
 credential_storage = false
 
+[proof]
+runner = "ubuntu-24.04"
+architecture = "x86_64"
+deployment_target = "glibc_2.39"
+libc_baseline = "glibc_2.39"
+allowed_system_dependencies = [
+  "ld-linux-x86-64.so.2", "libc.so.6", "libdl.so.2", "libgcc_s.so.1",
+  "libm.so.6", "libpthread.so.0", "librt.so.1", "libstdc++.so.6",
+]
+package_format = "tarball"
+
 [frontends]
 cli = "apps/cli"
 

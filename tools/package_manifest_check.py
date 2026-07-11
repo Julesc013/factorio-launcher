@@ -294,6 +294,8 @@ def validate_path_values(path: Path, profile: dict[str, Any]) -> list[str]:
     for label, value in iter_string_values(profile):
         if label.endswith(".schema"):
             continue
+        if label.startswith("proof.allowed_system_dependency"):
+            continue
         if looks_like_path(value):
             path_problem = validate_relative_path(path, label, value)
             if path_problem:

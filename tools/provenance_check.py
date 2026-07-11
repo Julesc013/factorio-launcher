@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def validate() -> list[str]:
     problems: list[str] = []
     builder = (ROOT / "tools/provenance_build.py").read_text(encoding="utf-8")
-    package_builder = (ROOT / "tools/package_build.py").read_text(encoding="utf-8")
+    package_builder = (ROOT / "tools/package/pipeline.py").read_text(encoding="utf-8")
     workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     with (ROOT / "release/index/dependency_lock.v1.toml").open("rb") as handle:
         lock = tomllib.load(handle)

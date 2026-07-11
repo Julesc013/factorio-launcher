@@ -8,6 +8,7 @@ facman_apply_policies(flaunch_client_static)
 add_library(facman_client_static STATIC facman_client.cpp)
 target_compile_features(facman_client_static PUBLIC cxx_std_17)
 target_include_directories(facman_client_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(facman_client_static PUBLIC facman_core_static flaunch_client_static flb_factorio_static)
+target_link_libraries(facman_client_static PUBLIC
+  facman_core_static flaunch_client_static flaunch_runtime_static flb_factorio_static)
 add_library(facman::client ALIAS facman_client_static)
 facman_apply_policies(facman_client_static)

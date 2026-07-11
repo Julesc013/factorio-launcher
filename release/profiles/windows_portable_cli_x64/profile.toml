@@ -18,6 +18,14 @@ licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 bundles_factorio_binaries = false
 credential_storage = false
 
+[proof]
+runner = "windows-2025"
+architecture = "x86_64"
+deployment_target = "windows_10_22h2"
+libc_baseline = "msvc_static_runtime"
+allowed_system_dependencies = ["KERNEL32.dll", "bcrypt.dll"]
+package_format = "portable_zip"
+
 [frontends]
 cli = "apps/cli"
 

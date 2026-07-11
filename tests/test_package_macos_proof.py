@@ -55,7 +55,7 @@ class MacosPackageProofContractTests(unittest.TestCase):
         self.assertFalse(proof_schema["additionalProperties"])
         self.assertFalse(linkage_schema["additionalProperties"])
 
-        builder = (ROOT / "tools/package_build.py").read_text(encoding="utf-8")
+        builder = (ROOT / "tools/package/pipeline.py").read_text(encoding="utf-8")
         self.assertIn('raw_file_identity.partition(":")', builder)
         self.assertNotIn('"file_identity": raw_file_identity', builder)
 

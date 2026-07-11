@@ -2,6 +2,7 @@
 
 #include "fl_command_client_cabi.h"
 #include "fl_json.h"
+#include "fl_runtime_verify.h"
 #include "flb/flb_api.h"
 
 #include <cstring>
@@ -143,3 +144,8 @@ const char* FacManClient::transport_name() const noexcept
 }
 
 } // namespace facman::client
+
+extern "C" void facman_client_initialize_process(const char* executable_path)
+{
+    fl_runtime_set_executable_path(executable_path);
+}

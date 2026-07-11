@@ -60,7 +60,7 @@ def validate() -> list[str]:
     for name in sorted(required - names):
         problems.append(f"configure preset missing: {name}")
 
-    package = (ROOT / "tools/package_build.py").read_text(encoding="utf-8")
+    package = (ROOT / "tools/package/pipeline.py").read_text(encoding="utf-8")
     resolve = package.split("def resolve_source_target", 1)[1].split("def pinned_source_revisions", 1)[0]
     if ".rglob(" in resolve:
         problems.append("package builder recursively searches build trees")

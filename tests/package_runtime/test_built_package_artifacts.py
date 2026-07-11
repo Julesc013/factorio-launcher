@@ -67,6 +67,7 @@ class BuiltPackageArtifactTests(unittest.TestCase):
                 out_root=self.out_root,
                 build_root=BUILD_ROOT,
                 dist_root=None,
+                allow_dirty=True,
             )
 
     def test_hash_manifest_covers_all_package_files_except_itself(self) -> None:
@@ -154,6 +155,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             out_root=cls.out_root,
             build_root=BUILD_ROOT,
             dist_root=cls.dist_root,
+            allow_dirty=True,
         )
 
     @classmethod
@@ -352,6 +354,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             workspace_lock = tomllib.load(handle)
         pins = {component["id"]: component["pin"] for component in workspace_lock["component"]}
         self.assertEqual(manifest["proof_baseline_revision"], pins["factorio_binding"])
+        self.assertRegex(manifest["source_revision"], r"^[0-9a-f]{40}$")
         self.assertEqual(manifest["universal_launcher_revision"], pins["universal_launcher"])
         self.assertEqual(manifest["universal_setup_revision"], pins["universal_setup"])
 
@@ -394,7 +397,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
         package_hash_manifest.write_hash_manifest(unknown)
         completed = run_package_verify(unknown)
         self.assertNotEqual(completed.returncode, 0)
-        self.assertIn("unknown built package profile", completed.stdout)
+        self.assertIn("unknown built package profile", completed.stdout.lower())
 
         extra = self.temp_root / "extra manifest field"
         shutil.copytree(self.package_root, extra)
@@ -478,6 +481,7 @@ def build_or_skip(test_case: unittest.TestCase, profile_id: str) -> Path:
             out_root=test_case.out_root,
             build_root=BUILD_ROOT,
             dist_root=None,
+            allow_dirty=True,
         )
     except ValueError as exc:
         raise unittest.SkipTest(str(exc)) from exc
