@@ -27,19 +27,8 @@ Status RandomAccessFile::open(const std::filesystem::path& path)
     if (facman::base::path_crosses_link_or_reparse_point(path, link_detail)) {
         return Status::failure("archive_source_link_refused", link_detail);
     }
-    std::error_code error;
-    const auto status = std::filesystem::symlink_status(path, error);
-    if (error || !std::filesystem::is_regular_file(status)) {
-        return Status::failure("archive_source_not_regular", path.u8string());
-    }
-    size_ = std::filesystem::file_size(path, error);
-    if (error) {
-        return Status::failure("archive_source_size_failed", error.message());
-    }
-    stream_.open(path, std::ios::binary);
-    if (!stream_) {
-        return Status::failure("archive_source_open_failed", path.u8string());
-    }
+    const auto opened = file_.open_no_follow(path);
+    if (!opened.ok()) return Status::failure("archive_source_open_failed", opened.detail);
     return Status::success();
 }
 
@@ -48,35 +37,21 @@ std::size_t RandomAccessFile::read(
     void* buffer,
     std::size_t size)
 {
-    std::lock_guard<std::mutex> guard(mutex_);
-    if (offset >= size_) {
-        return 0;
-    }
-    size = static_cast<std::size_t>(std::min<std::uint64_t>(size, size_ - offset));
-    stream_.clear();
-    stream_.seekg(static_cast<std::streamoff>(offset), std::ios::beg);
-    if (!stream_) {
-        return 0;
-    }
-    stream_.read(static_cast<char*>(buffer), static_cast<std::streamsize>(size));
-    return static_cast<std::size_t>(stream_.gcount());
+    return file_.read_at(offset, buffer, size);
+}
+
+Status RandomAccessFile::revalidate() const
+{
+    const auto status = file_.revalidate();
+    return status.ok() ? Status::success() : Status::failure("archive_source_changed", status.detail);
 }
 
 Status SequentialOutputFile::create(
     const std::filesystem::path& path,
     std::uint64_t maximum_size)
 {
-    std::error_code error;
-    if (std::filesystem::exists(path, error)) {
-        return Status::failure("archive_staging_output_exists", path.u8string());
-    }
-    stream_.open(path, std::ios::binary | std::ios::out);
-    if (!stream_) {
-        return Status::failure("archive_staging_output_create_failed", path.u8string());
-    }
-    next_offset_ = 0;
-    maximum_size_ = maximum_size;
-    return Status::success();
+    const auto status = file_.create_exclusive(path, maximum_size);
+    return status.ok() ? Status::success() : Status::failure("archive_staging_output_create_failed", status.detail);
 }
 
 std::size_t SequentialOutputFile::write(
@@ -84,33 +59,14 @@ std::size_t SequentialOutputFile::write(
     const void* buffer,
     std::size_t size)
 {
-    if (offset != next_offset_ || next_offset_ > maximum_size_ ||
-        size > maximum_size_ - next_offset_) {
-        return 0;
-    }
-    stream_.write(static_cast<const char*>(buffer), static_cast<std::streamsize>(size));
-    if (!stream_) {
-        return 0;
-    }
-    next_offset_ += size;
-    return size;
+    return file_.write_at(offset, buffer, size);
 }
 
 bool SequentialOutputFile::flush_and_close(std::string& detail)
 {
-    stream_.flush();
-    if (!stream_) {
-        detail = "archive staging output flush failed";
-        stream_.close();
-        return false;
-    }
-    stream_.close();
-    if (stream_.fail()) {
-        detail = "archive staging output close failed";
-        return false;
-    }
-    detail.clear();
-    return true;
+    const auto status = file_.flush_file_and_parent();
+    detail = status.detail;
+    return status.ok();
 }
 
 Status create_owned_staging_root(const std::filesystem::path& staging_root)
@@ -171,30 +127,8 @@ Status commit_owned_staged_file_no_clobber(
     if (facman::base::path_crosses_link_or_reparse_point(destination.parent_path(), link_detail)) {
         return Status::failure("archive_commit_parent_link_refused", link_detail);
     }
-#ifdef _WIN32
-    if (!MoveFileW(staged_file.c_str(), destination.c_str())) {
-        return Status::failure(
-            "archive_commit_no_clobber_failed",
-            "MoveFileW failed with error " + std::to_string(GetLastError()));
-    }
-#else
-    if (::link(staged_file.c_str(), destination.c_str()) != 0) {
-        return Status::failure("archive_commit_no_clobber_failed", std::strerror(errno));
-    }
-    if (::unlink(staged_file.c_str()) != 0) {
-        const int unlink_error = errno;
-        if (::unlink(destination.c_str()) == 0) {
-            return Status::failure(
-                "archive_commit_staging_unlink_failed",
-                std::string(std::strerror(unlink_error)) + "; destination rollback succeeded");
-        }
-        return Status::failure(
-            "archive_commit_state_uncertain",
-            std::string("staging unlink failed: ") + std::strerror(unlink_error) +
-                "; destination rollback failed: " + std::strerror(errno));
-    }
-#endif
-    return Status::success();
+    const auto committed = facman::platform::commit_no_replace(staged_file, destination);
+    return committed.ok() ? Status::success() : Status::failure("archive_commit_no_clobber_failed", committed.detail);
 }
 
 } // namespace facman::archive

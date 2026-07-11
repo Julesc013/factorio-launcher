@@ -89,6 +89,16 @@ target_include_directories(facman_core_static PUBLIC runtime/core runtime/core/j
 target_compile_features(facman_core_static PUBLIC cxx_std_17)
 target_link_libraries(facman_core_static PRIVATE picojson_headers)
 
+add_library(facman_platform_static STATIC
+  runtime/platform/fl_file_io.cpp
+  runtime/platform/fl_system_services.cpp
+)
+target_include_directories(facman_platform_static PUBLIC runtime/platform runtime/core)
+target_compile_features(facman_platform_static PUBLIC cxx_std_17)
+if(WIN32)
+  target_link_libraries(facman_platform_static PUBLIC Bcrypt)
+endif()
+
 if(NOT TARGET usk_static)
   if(EXISTS "${FLAUNCH_UNIVERSAL_SETUP_ROOT}/CMakeLists.txt")
     add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
@@ -141,7 +151,7 @@ add_library(facman_archive_static STATIC
 )
 target_include_directories(facman_archive_static PUBLIC runtime/archive)
 target_compile_features(facman_archive_static PUBLIC cxx_std_17)
-target_link_libraries(facman_archive_static PUBLIC facman_base_static miniz_static)
+target_link_libraries(facman_archive_static PUBLIC facman_base_static facman_platform_static miniz_static)
 
 add_library(facman_transaction_static STATIC runtime/transaction/fl_transaction.cpp)
 target_include_directories(facman_transaction_static PUBLIC runtime/transaction runtime/archive runtime/base)
@@ -273,6 +283,11 @@ if(FLAUNCH_BUILD_TESTS)
   target_compile_features(fl_json_core_smoke PRIVATE cxx_std_17)
   target_link_libraries(fl_json_core_smoke PRIVATE facman_core_static)
   add_test(NAME fl_json_core_smoke COMMAND fl_json_core_smoke)
+
+  add_executable(fl_platform_io_smoke tests/native/fl_platform_io_smoke.cpp)
+  target_compile_features(fl_platform_io_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_platform_io_smoke PRIVATE facman_platform_static)
+  add_test(NAME fl_platform_io_smoke COMMAND fl_platform_io_smoke)
 
   add_executable(fl_archive_core_smoke tests/native/fl_archive_core_smoke.cpp)
   if(WIN32)

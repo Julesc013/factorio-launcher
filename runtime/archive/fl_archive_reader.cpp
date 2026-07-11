@@ -8,7 +8,6 @@
 #include <array>
 #include <chrono>
 #include <cstring>
-#include <fstream>
 #include <limits>
 #include <set>
 #include <vector>
@@ -630,21 +629,23 @@ Status extract_to_new_owned_staging(
         if (error || std::filesystem::exists(destination, error)) {
             return fail(Status::failure("archive_extract_target_collision", destination.u8string()));
         }
-        std::ofstream output(destination, std::ios::binary | std::ios::out);
-        if (!output) {
+        facman::platform::DurableOutputFile output;
+        const auto created = output.create_exclusive(destination, entry.expanded_size);
+        if (!created.ok()) {
             return fail(Status::failure("archive_extract_output_create_failed", destination.u8string()));
         }
+        std::uint64_t output_offset = 0;
         status = stream_entry(plan, entry.index, limits, [&](const unsigned char* data, std::size_t size) {
-            output.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(size));
-            return static_cast<bool>(output) && (!checkpoint || checkpoint(entry.index, "after_chunk"));
+            const std::size_t written = output.write_at(output_offset, data, size);
+            output_offset += written;
+            return written == size && (!checkpoint || checkpoint(entry.index, "after_chunk"));
         });
-        output.flush();
-        const bool output_ok = static_cast<bool>(output);
-        output.close();
-        if (!status.ok()) return fail(status);
-        if (!output_ok || output.fail()) {
-            return fail(Status::failure("archive_extract_output_flush_failed", destination.u8string()));
+        if (!status.ok()) {
+            output.close_without_flush();
+            return fail(status);
         }
+        const auto flushed = output.flush_file_and_parent();
+        if (!flushed.ok()) return fail(Status::failure("archive_extract_output_flush_failed", flushed.detail));
         if (checkpoint && !checkpoint(entry.index, "after_entry")) {
             return fail(Status::failure("archive_extract_fault_injected", entry.path));
         }
