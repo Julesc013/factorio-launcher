@@ -1,5 +1,6 @@
 #include "flb_factorio_launch_plan.h"
 
+#include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
 
 #include <algorithm>
@@ -598,14 +599,25 @@ InstanceRunLockResult acquire_instance_run_lock(
         return result;
     }
     fs::path lock_path = lock_directory / "run.lock";
-    if (fs::exists(lock_path)) {
-        if (facman::base::path_crosses_link_or_reparse_point(lock_path, link_detail) ||
-            !fs::is_regular_file(lock_path)) {
-            result.code = "run_lock_unsafe";
-            result.detail = link_detail.empty() ? "run lock is not a regular file" : link_detail;
+    auto held = std::make_shared<facman::base::StableLocalLock>();
+    facman::base::StableLockResult create_result = held->create(lock_path);
+    if (create_result.code == facman::base::StableLockCode::exists) {
+        std::string existing;
+        facman::base::StableLockResult open_result =
+            held->open_existing(lock_path, 4096, existing);
+        if (open_result.code == facman::base::StableLockCode::contended) {
+            result.code = "run_lock_contended";
+            result.detail = open_result.detail;
             return result;
         }
-        std::string existing = read_small_file(lock_path, 4096);
+        if (!open_result.acquired()) {
+            result.code = open_result.code == facman::base::StableLockCode::unsafe ||
+                    open_result.code == facman::base::StableLockCode::unsupported_filesystem
+                ? "run_lock_unsafe"
+                : "run_lock_unavailable";
+            result.detail = open_result.detail;
+            return result;
+        }
         std::string schema = json_string_value(existing, "schema");
         std::string token = json_string_value(existing, "token");
         std::uint64_t process_id = json_integer_value(existing, "process_id");
@@ -626,13 +638,23 @@ InstanceRunLockResult acquire_instance_run_lock(
                 : "existing run lock is not old enough for stale recovery";
             return result;
         }
-        std::error_code remove_error;
-        if (!fs::remove(lock_path, remove_error) || remove_error) {
+        std::string remove_detail;
+        if (!held->remove_exact(remove_detail)) {
             result.code = "run_lock_stale_recovery_failed";
-            result.detail = remove_error.message();
+            result.detail = remove_detail;
             return result;
         }
         result.recovered_stale = true;
+        held = std::make_shared<facman::base::StableLocalLock>();
+        create_result = held->create(lock_path);
+    }
+    if (!create_result.acquired()) {
+        result.code = create_result.code == facman::base::StableLockCode::unsupported_filesystem ||
+                create_result.code == facman::base::StableLockCode::unsafe
+            ? "run_lock_unsafe"
+            : "run_lock_contended";
+        result.detail = create_result.detail;
+        return result;
     }
 
     std::uint64_t process_id = current_process_id();
@@ -645,15 +667,20 @@ InstanceRunLockResult acquire_instance_run_lock(
     content << "{\"schema\":\"facman.instance_run_lock.v1\",";
     content << "\"process_id\":" << process_id << ",";
     content << "\"created_unix\":" << created << ",";
-    content << "\"token\":" << quote(token) << "}\n";
+    content << "\"token\":" << quote(token) << ",";
+    content << "\"identity\":" << quote(held->identity_text()) << "}\n";
     std::string write_detail;
-    if (!facman::base::write_text_new_atomic(lock_path, content.str(), write_detail)) {
-        result.code = "run_lock_contended";
+    if (!held->write_text(content.str(), write_detail)) {
+        std::string ignored;
+        (void)held->remove_exact(ignored);
+        result.code = "run_lock_unavailable";
         result.detail = write_detail;
         return result;
     }
     lock.path = lock_path;
     lock.token = token;
+    lock.identity = held->identity_text();
+    lock.stable_handle = held;
     lock.owns_lock = true;
     result.acquired = true;
     return result;
@@ -661,23 +688,24 @@ InstanceRunLockResult acquire_instance_run_lock(
 
 bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail)
 {
-    if (!lock.owns_lock || lock.path.empty() || lock.token.empty()) {
+    if (!lock.owns_lock || lock.path.empty() || lock.token.empty() ||
+        lock.identity.empty() || !lock.stable_handle) {
         detail = "run lock is not owned by this operation";
         return false;
     }
-    std::string link_detail;
-    if (facman::base::path_crosses_link_or_reparse_point(lock.path, link_detail)) {
-        detail = link_detail;
+    std::string existing;
+    if (!lock.stable_handle->read_text(4096, existing, detail)) {
         return false;
     }
-    std::string existing = read_small_file(lock.path, 4096);
     if (json_string_value(existing, "token") != lock.token) {
         detail = "run lock ownership token changed";
         return false;
     }
-    std::error_code error;
-    if (!fs::remove(lock.path, error) || error) {
-        detail = error.message();
+    if (json_string_value(existing, "identity") != lock.identity) {
+        detail = "run lock recorded identity changed";
+        return false;
+    }
+    if (!lock.stable_handle->remove_exact(detail)) {
         return false;
     }
     lock = InstanceRunLock {};

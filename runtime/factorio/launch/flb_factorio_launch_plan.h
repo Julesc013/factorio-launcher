@@ -3,8 +3,13 @@
 
 #include <filesystem>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
+
+namespace facman::base {
+class StableLocalLock;
+}
 
 namespace facman::factorio::launch {
 
@@ -61,6 +66,8 @@ struct LaunchPreflightResult {
 struct InstanceRunLock {
     std::filesystem::path path;
     std::string token;
+    std::string identity;
+    std::shared_ptr<facman::base::StableLocalLock> stable_handle;
     bool owns_lock = false;
 };
 

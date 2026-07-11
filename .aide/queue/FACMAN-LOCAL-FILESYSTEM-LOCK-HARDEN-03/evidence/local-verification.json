@@ -1,0 +1,53 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 16
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 16
+
+## CHANGED_FILES
+
+- allowed: `.aide/memory/project-state.md` (M; matches active task allowed path)
+- allowed: `CMakeLists.txt` (M; matches active task allowed path)
+- allowed: `docs/quality/safety_claim_ledger.md` (M; matches active task allowed path)
+- allowed: `docs/roadmap.md` (M; matches active task allowed path)
+- allowed: `runtime/factorio/launch/flb_factorio_launch_plan.cpp` (M; matches active task allowed path)
+- allowed: `runtime/factorio/launch/flb_factorio_launch_plan.h` (M; matches active task allowed path)
+- allowed: `runtime/transaction/fl_transaction.cpp` (M; matches active task allowed path)
+- allowed: `tests/native/facman_isolation_lock_smoke.cpp` (M; matches active task allowed path)
+- allowed: `tests/test_recovery.py` (M; matches active task allowed path)
+- allowed: `tools/strict_check.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `docs/architecture/local-filesystem-lock-hardening.v1.md` (??; matches active task allowed path)
+- allowed: `runtime/base/fl_local_operation_lock.cpp` (??; matches active task allowed path)
+- allowed: `runtime/base/fl_local_operation_lock.h` (??; matches active task allowed path)
+- allowed: `tools/local_lock_check.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.

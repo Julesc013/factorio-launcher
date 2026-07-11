@@ -61,6 +61,10 @@ foundations that do not require a Factorio binary.
   `93edfdc59865e4a07f261bdabb61c6e2db6d0f99`. ELF, glibc, dependency,
   extraction, relocation, read-only-root, and pathless runtime evidence is
   schema-valid and the unsigned artifact digest is revision-pinned.
+- Run and recovery locks now retain a platform handle, record stable file
+  identity, revalidate the path before exact-object deletion, reject links and
+  substitutions, and conservatively refuse unreviewed shared filesystems. This
+  is a supported local-filesystem claim only.
 
 ## Current Goal
 

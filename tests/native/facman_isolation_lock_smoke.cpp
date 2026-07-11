@@ -97,6 +97,9 @@ int main()
     if (!first_result.acquired || first_result.recovered_stale) {
         return 20;
     }
+    if (first.identity.empty()) {
+        return 26;
+    }
     launch::InstanceRunLockResult second_result =
         launch::acquire_instance_run_lock(instance_root, 300, second);
     if (second_result.acquired || second_result.code != "run_lock_contended") {
@@ -130,6 +133,71 @@ int main()
         malformed_result.code != "run_lock_malformed" ||
         !fs::is_regular_file(lock_path)) {
         return 25;
+    }
+    fs::remove(lock_path);
+
+    write_text(lock_path, "linked\n");
+    fs::path hardlink_path = instance_root / "locks" / "run-lock-alias";
+    std::error_code hardlink_error;
+    fs::create_hard_link(lock_path, hardlink_path, hardlink_error);
+    if (hardlink_error) {
+        return 36;
+    }
+    launch::InstanceRunLock linked;
+    launch::InstanceRunLockResult linked_result =
+        launch::acquire_instance_run_lock(instance_root, 1, linked);
+    if (linked_result.acquired || linked_result.code != "run_lock_unsafe") {
+        return 27;
+    }
+    fs::remove(hardlink_path);
+    fs::remove(lock_path);
+
+    launch::InstanceRunLock substituted;
+    launch::InstanceRunLockResult substituted_result =
+        launch::acquire_instance_run_lock(instance_root, 300, substituted);
+    if (!substituted_result.acquired) {
+        return 28;
+    }
+    std::error_code substitute_remove_error;
+    const bool removed_while_held = fs::remove(lock_path, substitute_remove_error);
+    if (removed_while_held) {
+        write_text(lock_path, "attacker-owned\n");
+        if (launch::release_instance_run_lock(substituted, release_detail) ||
+            !fs::is_regular_file(lock_path)) {
+            return 29;
+        }
+        substituted = launch::InstanceRunLock {};
+        if (fs::file_size(lock_path) == 0) {
+            return 31;
+        }
+        fs::remove(lock_path);
+    } else if (!launch::release_instance_run_lock(substituted, release_detail)) {
+        return 32;
+    }
+
+    launch::InstanceRunLock renamed_parent;
+    launch::InstanceRunLockResult renamed_result =
+        launch::acquire_instance_run_lock(instance_root, 300, renamed_parent);
+    if (!renamed_result.acquired) {
+        return 33;
+    }
+    fs::path original_locks = instance_root / "locks";
+    fs::path moved_locks = instance_root / "locks-renamed";
+    std::error_code rename_error;
+    fs::rename(original_locks, moved_locks, rename_error);
+    if (!rename_error) {
+        fs::create_directories(original_locks);
+        write_text(lock_path, "replacement-after-parent-rename\n");
+        if (launch::release_instance_run_lock(renamed_parent, release_detail) ||
+            !fs::is_regular_file(lock_path)) {
+            return 34;
+        }
+        renamed_parent = launch::InstanceRunLock {};
+        fs::remove(lock_path);
+        fs::remove_all(original_locks);
+        fs::rename(moved_locks, original_locks);
+    } else if (!launch::release_instance_run_lock(renamed_parent, release_detail)) {
+        return 35;
     }
 
     std::error_code cleanup_error;

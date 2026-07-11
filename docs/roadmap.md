@@ -201,6 +201,17 @@ WorkUnit rather than an extension of R3.2.
 - The claim is package-preview evidence for that runner and dependency set,
   not universal Unix support or a completely static binary.
 
+## FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03
+
+- Run and recovery locks retain an exclusive platform handle for the complete
+  operation and record Windows volume/file ID or POSIX device/inode identity.
+- Release revalidates the held handle and current path before deleting only the
+  exact owned lock object.
+- Links, reparse points, hostile substitution, renamed parents, stale metadata,
+  and concurrent ownership fail closed without deleting a replacement path.
+- Remote, unclassified, or unreviewed filesystem types refuse. SMB, NFS,
+  cloud-sync, and multi-host safety remain explicitly unpromoted.
+
 ## FacMan-SETUP-HANDOFF-01
 
 - Managed install commands call Universal Setup.

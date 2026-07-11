@@ -1,6 +1,7 @@
 #include "fl_transaction.h"
 
 #include "fl_archive.h"
+#include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
 
 #include <algorithm>
@@ -352,14 +353,56 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     std::string detail;
     if (!load_record(workspace, id, record, detail)) return Refusal {"recovery_journal_invalid", "Recovery journal is invalid", detail, false};
     if (terminal(record.state)) return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
-    const fs::path lock = fs::path(path_text(journal_path(workspace, id)) + ".recovery.lock");
-    if (!facman::base::write_text_new_atomic(lock, "facman-recovery-lock-v1\n", detail)) {
-        if (!fs::exists(lock)) {
-            return Refusal {"recovery_write_refused", "Recovery lock could not be created", detail, true};
+    const fs::path lock_path = fs::path(path_text(journal_path(workspace, id)) + ".recovery.lock");
+    facman::base::StableLocalLock recovery_lock;
+    facman::base::StableLockResult lock_result = recovery_lock.create(lock_path);
+    if (lock_result.code == facman::base::StableLockCode::exists) {
+        facman::base::StableLocalLock existing;
+        std::string existing_content;
+        facman::base::StableLockResult existing_result =
+            existing.open_existing(lock_path, 4096, existing_content);
+        if (existing_result.code == facman::base::StableLockCode::contended ||
+            existing_result.acquired()) {
+            return Refusal {
+                "recovery_lock_contended",
+                "Another recovery attempt owns this transaction",
+                existing_result.detail,
+                true,
+            };
         }
-        return Refusal {"recovery_lock_contended", "Another recovery attempt owns this transaction", detail, true};
+        return Refusal {
+            "recovery_write_refused",
+            "Recovery lock is unsafe or unsupported",
+            existing_result.detail,
+            false,
+        };
     }
-    auto unlock = [&]() { std::error_code ignored; fs::remove(lock, ignored); };
+    if (!lock_result.acquired()) {
+        return Refusal {
+            "recovery_write_refused",
+            "Recovery lock could not be created",
+            lock_result.detail,
+            true,
+        };
+    }
+    const std::string lock_content =
+        "{\"schema\":\"facman.recovery_lock.v1\",\"identity\":" +
+        quote(recovery_lock.identity_text()) + "}\n";
+    if (!recovery_lock.write_text(lock_content, detail)) {
+        std::string ignored;
+        (void)recovery_lock.remove_exact(ignored);
+        return Refusal {
+            "recovery_write_refused",
+            "Recovery lock metadata could not be written",
+            detail,
+            true,
+        };
+    }
+    auto unlock = [&]() {
+        std::string ignored;
+        (void)recovery_lock.remove_exact(ignored);
+    };
+    auto unlock_checked = [&]() { return recovery_lock.remove_exact(detail); };
     if (fs::exists(record.target)) {
         record.recovery_actions = {"preserved_committed_target"};
         const bool commit_recorded = record.state == "committed" ||
@@ -426,7 +469,14 @@ Outcome apply(const fs::path& workspace, const std::string& id)
             record.recovery_actions.push_back("manual_target_audit_required");
             if (!advance(workspace, record, "recovery_required", "committed_target_preserved", detail)) { unlock(); return Refusal {"recovery_write_refused", "Recovery journal audit state failed", detail, true}; }
         }
-        unlock();
+        if (!unlock_checked()) {
+            return Refusal {
+                "recovery_write_refused",
+                "Recovery lock identity changed before release",
+                detail,
+                false,
+            };
+        }
         return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
     }
     if (!advance(workspace, record, "rollback_required", "recovery_apply_started", detail)) {
@@ -464,7 +514,14 @@ Outcome apply(const fs::path& workspace, const std::string& id)
     if (removed_staging) record.recovery_actions.push_back("removed_owned_staging");
     if (record.recovery_actions.empty()) record.recovery_actions.push_back("no_owned_staging_present");
     if (!advance(workspace, record, "rolled_back", "owned_staging_removed", detail)) { unlock(); return Refusal {"recovery_write_refused", "Recovery journal update failed", detail, true}; }
-    unlock();
+    if (!unlock_checked()) {
+        return Refusal {
+            "recovery_write_refused",
+            "Recovery lock identity changed before release",
+            detail,
+            false,
+        };
+    }
     return RecoveryResult {recovery_json("workspace.recovery.apply", {record})};
 }
 

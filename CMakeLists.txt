@@ -118,6 +118,7 @@ target_include_directories(flaunch_runtime_static PUBLIC runtime/package)
 target_compile_features(flaunch_runtime_static PUBLIC cxx_std_17)
 
 add_library(facman_base_static STATIC
+  runtime/base/fl_local_operation_lock.cpp
   runtime/base/fl_path_safety.cpp
   runtime/base/fl_sha256.cpp
 )

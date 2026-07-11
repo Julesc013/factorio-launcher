@@ -113,6 +113,23 @@ class RecoveryTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "recovery_lock_contended")
 
+            linked_path = journal(
+                workspace,
+                "tx-linked-lock",
+                workspace / "linked-target",
+                owned,
+            )
+            outside_lock = workspace / "outside-recovery-lock"
+            outside_lock.write_text("foreign lock")
+            linked_lock = Path(str(linked_path) + ".recovery.lock")
+            os.link(outside_lock, linked_lock)
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "workspace", "recovery", "apply", "tx-linked-lock", "--json"]
+            )
+            self.assertEqual(code, 1)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "recovery_write_refused")
+            self.assertEqual(outside_lock.read_text(), "foreign lock")
+
     def test_missing_and_substituted_staging_and_doctor_are_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
