@@ -17,25 +17,21 @@ content_path = "content/factorio"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 bundles_factorio_binaries = false
 credential_storage = false
+runtime_claim = "compile_only_no_bundle_runtime_proof"
+publication = false
 
 [frontends]
 gui = "apps/gui/macos/appkit"
 cli = "apps/cli"
-tui = "apps/tui"
-daemon = "apps/daemon"
 
 [entrypoints]
 gui = "FacMan.app/Contents/MacOS/FacMan"
 cli = "FacMan.app/Contents/MacOS/facman"
-tui = "FacMan.app/Contents/MacOS/facman-tui"
-daemon = "FacMan.app/Contents/MacOS/facmand"
 
 [required_components]
 binaries = [
   "FacMan.app/Contents/MacOS/FacMan",
   "FacMan.app/Contents/MacOS/facman",
-  "FacMan.app/Contents/MacOS/facman-tui",
-  "FacMan.app/Contents/MacOS/facmand",
 ]
 libraries = [
   "FacMan.app/Contents/Frameworks/libulk.dylib",

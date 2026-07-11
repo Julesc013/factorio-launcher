@@ -1,5 +1,5 @@
 #import "CommandClient.h"
-#import "JsonRpcClient.h"
+#import "CliProcessClient.h"
 
 static NSString *const FacManDeferredReason =
     @"Deferred in FACMAN-APPKIT-SHELL-01. The AppKit shell must render the command state without implementing backend behavior.";
@@ -141,39 +141,44 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
     return nil;
 }
 
-- (FacManCommandResult *)executeCommandId:(NSString *)commandId
+- (void)executeCommandId:(NSString *)commandId
                                    inputs:(NSDictionary<NSString *, NSString *> *)inputs
                                 workspace:(NSString *)workspace
                                   cliPath:(NSString *)cliPath
+                               completion:(void (^)(FacManCommandResult *result))completion
 {
     FacManCommandDefinition *command = [[self class] definitionForCommandId:commandId];
     if (command == nil) {
-        return [FacManCommandResult refusalWithCommandId:commandId
+        completion([FacManCommandResult refusalWithCommandId:commandId
                                                backendId:@"unknown"
                                             refusalCode:@"appkit_unknown_command"
-                                          refusalReason:@"The AppKit shell has no command definition for this command id."];
+                                          refusalReason:@"The AppKit shell has no command definition for this command id."]);
+        return;
     }
     if (command.status != FacManCommandStatusImplemented) {
-        return [FacManCommandResult refusalWithCommandId:command.commandId
+        completion([FacManCommandResult refusalWithCommandId:command.commandId
                                                backendId:command.backendId
                                             refusalCode:@"appkit_command_deferred"
-                                          refusalReason:command.deferredReason];
+                                          refusalReason:command.deferredReason]);
+        return;
     }
 
     NSString *error = nil;
     NSArray<NSString *> *arguments = FacManArgumentsForCommand(command.commandId, inputs ?: @{}, &error);
     if (arguments == nil) {
-        return [FacManCommandResult refusalWithCommandId:command.commandId
+        completion([FacManCommandResult refusalWithCommandId:command.commandId
                                                backendId:command.backendId
                                             refusalCode:@"appkit_input_required"
-                                          refusalReason:error ?: @"Missing required command input."];
+                                          refusalReason:error ?: @"Missing required command input."]);
+        return;
     }
 
-    FacManJsonRpcClient *transport = [[FacManJsonRpcClient alloc] init];
-    return [transport invokeCommand:command
-                          arguments:arguments
-                          workspace:workspace
-                            cliPath:cliPath];
+    FacManCliProcessClient *transport = [[FacManCliProcessClient alloc] init];
+    [transport invokeCommand:command
+                   arguments:arguments
+                   workspace:workspace
+                     cliPath:cliPath
+                  completion:completion];
 }
 
 @end

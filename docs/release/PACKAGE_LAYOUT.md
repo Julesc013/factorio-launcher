@@ -68,5 +68,7 @@ Per-user state lives under `~/Library/Application Support/FacMan/`.
 └─ licenses/
 ```
 
-Package-manager shims can expose `facman`, `facman-tui`, `facmand`, and the GUI
+Package-manager shims expose `facman` and a proven GUI when present. Experimental
+`facman-tui` and `facmand` shims require an explicit experimental build and are
+not part of default product packages.
 entrypoint under `/usr/bin` or `/usr/local/bin`.

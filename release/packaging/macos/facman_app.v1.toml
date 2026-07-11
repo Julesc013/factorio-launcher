@@ -36,32 +36,6 @@ license_notice = "THIRD_PARTY_NOTICES.md"
 runtime_role = "runtime_required"
 
 [[components]]
-name = "tui"
-source_target = "facman_tui"
-destination = "FacMan.app/Contents/MacOS/facman-tui"
-required_platform = "macos"
-architecture = "configured_by_track"
-hash = "BUILD_TIME"
-signature_policy = "codesign_required"
-extraction_policy = "none"
-runtime_search_path = "@executable_path"
-license_notice = "THIRD_PARTY_NOTICES.md"
-runtime_role = "runtime_required"
-
-[[components]]
-name = "daemon"
-source_target = "facman_daemon"
-destination = "FacMan.app/Contents/MacOS/facmand"
-required_platform = "macos"
-architecture = "configured_by_track"
-hash = "BUILD_TIME"
-signature_policy = "codesign_required"
-extraction_policy = "none"
-runtime_search_path = "@executable_path"
-license_notice = "THIRD_PARTY_NOTICES.md"
-runtime_role = "runtime_required"
-
-[[components]]
 name = "ulk_shared"
 source_target = "ulk_shared"
 destination = "FacMan.app/Contents/Frameworks/libulk.dylib"

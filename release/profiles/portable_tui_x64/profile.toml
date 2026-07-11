@@ -17,6 +17,9 @@ content_path = "content/factorio"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 bundles_factorio_binaries = false
 credential_storage = false
+runtime_claim = "experimental_scaffold_not_product"
+publication = false
+required_cmake_option = "FACMAN_BUILD_EXPERIMENTAL_FRONTENDS=ON"
 
 [frontends]
 cli = "apps/cli"

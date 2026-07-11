@@ -21,21 +21,15 @@ credential_storage = false
 [frontends]
 gui = "apps/gui/windows/winforms"
 cli = "apps/cli"
-tui = "apps/tui"
-daemon = "apps/daemon"
 
 [entrypoints]
 gui = "bin/FacMan.WinForms.exe"
 cli = "bin/facman.exe"
-tui = "bin/facman-tui.exe"
-daemon = "bin/facmand.exe"
 
 [required_components]
 binaries = [
   "bin/FacMan.WinForms.exe",
   "bin/facman.exe",
-  "bin/facman-tui.exe",
-  "bin/facmand.exe",
 ]
 libraries = ["bin/ulk.dll", "bin/usk.dll", "bin/flb_factorio.dll"]
 contracts = "contracts/schema"

@@ -151,7 +151,17 @@ ApplicationResult diagnostics_redact(const ServiceOperationRequest& request)
     auto text = read_bounded(input);
     if (!text) return refused(safety_refusal("diagnostics.redact", text.error().code, "Diagnostic input could not be read", text.error().message, true), text.error().code, text.error().message);
     const std::vector<unsigned char> bytes(text.value().begin(), text.value().end());
-    if (diagnostics::looks_binary(bytes)) return refused(safety_refusal("diagnostics.redact", "diagnostic_structured_input_invalid", "Binary source cannot be redacted as text", input.filename().string(), false), "diagnostic_structured_input_invalid", "Binary source cannot be redacted as text");
+    if (diagnostics::looks_binary(bytes)) {
+        return refused(
+            safety_refusal(
+                "diagnostics.redact",
+                "diagnostic_structured_input_invalid",
+                "Binary source cannot be redacted as text",
+                input.filename().string(),
+                false),
+            "diagnostic_structured_input_invalid",
+            "Binary source cannot be redacted as text");
+    }
     diagnostics::RedactionResult redacted = diagnostics::redact_text(text.value(), input.filename().generic_string());
     if (!redacted.safe) return refused(safety_refusal("diagnostics.redact", "diagnostic_structured_input_invalid", "Structured diagnostic input is invalid", redacted.error, false), "diagnostic_structured_input_invalid", redacted.error);
     ApplicationResult result;

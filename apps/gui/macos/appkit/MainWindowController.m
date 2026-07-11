@@ -237,11 +237,16 @@ static NSString *FacManStatusText(FacManCommandStatus status);
 {
     NSString *commandId = [sender identifier];
     NSDictionary<NSString *, NSString *> *inputs = [self inputsForCommandId:commandId];
-    FacManCommandResult *result = [self.commandClient executeCommandId:commandId
-                                                                inputs:inputs
-                                                             workspace:[self.workspaceField stringValue]
-                                                               cliPath:[self.cliPathField stringValue]];
-    [self renderText:[result displayText]];
+    [self renderText:[NSString stringWithFormat:@"Running %@...", commandId]];
+    [sender setEnabled:NO];
+    [self.commandClient executeCommandId:commandId
+                                  inputs:inputs
+                               workspace:[self.workspaceField stringValue]
+                                 cliPath:[self.cliPathField stringValue]
+                              completion:^(FacManCommandResult *result) {
+                                  [self renderText:[result displayText]];
+                                  [sender setEnabled:YES];
+                              }];
 }
 
 - (NSDictionary<NSString *, NSString *> *)inputsForCommandId:(NSString *)commandId

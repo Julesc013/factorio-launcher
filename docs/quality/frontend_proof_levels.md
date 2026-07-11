@@ -29,8 +29,8 @@ Package readiness is tracked separately from frontend source readiness:
 | Frontend | source-static | compile | runtime-smoke | package-smoke | Notes |
 | --- | --- | --- | --- | --- | --- |
 | CLI | yes | yes | yes | no | Native CMake and CLI tests cover current behavior. |
-| TUI | scaffolded | yes | no | no | TUI parity is a later frontend milestone. |
-| Daemon | scaffolded | yes | no | no | Daemon transport maturity is later runtime/client work. |
+| TUI | experimental scaffold | opt-in only | no | no | Excluded from default builds and product packages. |
+| Daemon | experimental scaffold | opt-in only | no | no | Excluded from default builds and product packages. |
 | WinForms | yes | Windows CI yes | command-client yes | skeleton-layout | `FACMAN-WINFORMS-SHELL-01` proves a thin GUI over CLI JSON and is built by the Windows CI lane. |
 | AppKit | yes | macOS CI yes | no | skeleton-layout | `FACMAN-APPKIT-SHELL-01` has source/static proof and a macOS compile lane; runtime smoke remains future work. |
 | WinUI | placeholder | no | no | no | Reserved for a later modern Windows lane. |

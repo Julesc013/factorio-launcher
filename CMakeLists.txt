@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(facman LANGUAGES C CXX)
 
-option(FLAUNCH_BUILD_NATIVE_APPS "Build native CLI/TUI/daemon scaffolds" ON)
+option(FLAUNCH_BUILD_NATIVE_APPS "Build the native FacMan CLI" ON)
 option(FLAUNCH_BUILD_TESTS "Build FacMan native tests" ON)
 option(FLAUNCH_ENABLE_SANITIZERS "Enable ASan and UBSan for native proof builds" OFF)
 option(FACMAN_WITH_SETUP "Enable Universal Setup-backed preview and verification" ON)
+option(FACMAN_BUILD_EXPERIMENTAL_FRONTENDS "Build non-product TUI and daemon experiments" OFF)
 
 if(FLAUNCH_ENABLE_SANITIZERS)
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -297,24 +298,26 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
   target_link_libraries(facman_cli PRIVATE facman_client_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 
-  add_executable(facman_tui
-    apps/tui/tui_main.c
-    apps/tui/tui_command_client.c
-    apps/tui/tui_views.c
-  )
-  target_link_libraries(facman_tui PRIVATE flaunch_client_static flaunch_runtime_static ulk_static)
-  set_target_properties(facman_tui PROPERTIES OUTPUT_NAME facman-tui)
+  if(FACMAN_BUILD_EXPERIMENTAL_FRONTENDS)
+    add_executable(facman_tui
+      apps/tui/tui_main.c
+      apps/tui/tui_command_client.c
+      apps/tui/tui_views.c
+    )
+    target_link_libraries(facman_tui PRIVATE flaunch_client_static flaunch_runtime_static ulk_static)
+    set_target_properties(facman_tui PROPERTIES OUTPUT_NAME facman-tui)
 
-  add_executable(facman_daemon
-    apps/daemon/main.c
-    apps/daemon/cancellation.c
-    apps/daemon/platform_named_pipe_windows.c
-    apps/daemon/platform_unix_socket.c
-    apps/daemon/progress_events.c
-    apps/daemon/rpc_json.c
-  )
-  target_link_libraries(facman_daemon PRIVATE flaunch_runtime_static ulk_static flb_factorio_static)
-  set_target_properties(facman_daemon PROPERTIES OUTPUT_NAME facmand)
+    add_executable(facman_daemon
+      apps/daemon/main.c
+      apps/daemon/cancellation.c
+      apps/daemon/platform_named_pipe_windows.c
+      apps/daemon/platform_unix_socket.c
+      apps/daemon/progress_events.c
+      apps/daemon/rpc_json.c
+    )
+    target_link_libraries(facman_daemon PRIVATE flaunch_runtime_static ulk_static flb_factorio_static)
+    set_target_properties(facman_daemon PROPERTIES OUTPUT_NAME facmand)
+  endif()
 endif()
 
 if(FLAUNCH_BUILD_TESTS)

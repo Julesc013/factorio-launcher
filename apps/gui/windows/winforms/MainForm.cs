@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace FacMan.WinForms
@@ -10,6 +11,7 @@ namespace FacMan.WinForms
         private readonly CommandClient commandClient;
         private readonly IList<CommandDefinition> commandCatalog;
         private readonly ToolTip toolTip;
+        private CancellationTokenSource commandCancellation;
         private TextBox resultBox;
         private TextBox cliPathBox;
         private TextBox workspaceBox;
@@ -30,6 +32,10 @@ namespace FacMan.WinForms
             BuildLayout();
             LoadDefaults();
             RenderMessage("Ready. Configure a facman executable if it is not colocated with this GUI.");
+            FormClosed += delegate
+            {
+                if (commandCancellation != null) commandCancellation.Cancel();
+            };
         }
 
         private void BuildLayout()
@@ -393,14 +399,21 @@ namespace FacMan.WinForms
             return button;
         }
 
-        private void RunCommand(string commandId, Dictionary<string, string> inputs)
+        private async void RunCommand(string commandId, Dictionary<string, string> inputs)
         {
             CommandDefinition command = CommandCatalog.Find(commandId);
+            if (commandCancellation != null) commandCancellation.Cancel();
+            commandCancellation = new CancellationTokenSource();
             statusLabel.Text = "Running " + command.Id;
             UseWaitCursor = true;
             try
             {
-                CommandResult result = commandClient.Execute(command, inputs, workspaceBox.Text, cliPathBox.Text);
+                CommandResult result = await commandClient.ExecuteAsync(
+                    command,
+                    inputs,
+                    workspaceBox.Text,
+                    cliPathBox.Text,
+                    commandCancellation.Token);
                 RenderMessage(result.ToDisplayText());
                 statusLabel.Text = result.Success ? "Completed " + command.Id : "Completed with refusal or error: " + command.Id;
             }

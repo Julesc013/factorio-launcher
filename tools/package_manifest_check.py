@@ -238,12 +238,7 @@ def validate_frontends(path: Path, frontends: dict[str, Any], entrypoints: dict[
         problems.append(f"{path}: frontends table is required")
     if not entrypoints:
         problems.append(f"{path}: entrypoints table is required")
-    if "gui" in frontends:
-        required = {"gui", "cli", "tui", "daemon"}
-    elif "tui" in frontends:
-        required = {"cli", "tui"}
-    else:
-        required = {"cli"}
+    required = set(frontends)
     missing = required - set(entrypoints)
     if missing:
         problems.append(f"{path}: entrypoints missing {sorted(missing)}")

@@ -108,7 +108,7 @@ def check_winforms_shell() -> list[str]:
     form = root / "MainForm.cs"
     models = root / "CommandModels.cs"
     client = root / "CommandClient.cs"
-    transport = root / "JsonRpcClient.cs"
+    transport = root / "CliProcessClient.cs"
     for path in [project, catalog, form, models, client, transport]:
         if not path.is_file():
             problems.append(f"WinForms shell missing {path.relative_to(ROOT)}")
@@ -117,7 +117,7 @@ def check_winforms_shell() -> list[str]:
     project_text = project.read_text(encoding="utf-8", errors="ignore")
     if "<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>" not in project_text:
         problems.append("WinForms shell must stay on .NET Framework 4.8")
-    for source_name in ["CommandCatalog.cs", "CommandModels.cs", "CommandClient.cs", "JsonRpcClient.cs", "MainForm.cs"]:
+    for source_name in ["CommandCatalog.cs", "CommandModels.cs", "CommandClient.cs", "CliProcessClient.cs", "MainForm.cs"]:
         if f'<Compile Include="{source_name}" />' not in project_text:
             problems.append(f"WinForms project does not compile {source_name}")
 
@@ -156,8 +156,8 @@ def check_appkit_shell() -> list[str]:
         root / "AppDelegate.m",
         root / "CommandClient.h",
         root / "CommandClient.mm",
-        root / "JsonRpcClient.h",
-        root / "JsonRpcClient.mm",
+        root / "CliProcessClient.h",
+        root / "CliProcessClient.mm",
         root / "MainWindowController.h",
         root / "MainWindowController.m",
     ]

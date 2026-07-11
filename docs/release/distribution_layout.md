@@ -10,8 +10,7 @@ frontend mode.
 bin/
   FacMan.WinForms.exe or FacMan.WinUI.exe
   facman.exe
-  facman-tui.exe
-  facmand.exe
+  # facman-tui.exe and facmand.exe are experimental opt-in artifacts only
   flb_factorio.dll
   ulk.dll
   usk.dll
@@ -28,8 +27,7 @@ FacMan.app/
   Contents/MacOS/
     FacMan
     facman
-    facman-tui
-    facmand
+    # facman-tui and facmand are experimental opt-in artifacts only
   Contents/Frameworks/
     libflb_factorio.dylib
     libulk.dylib
@@ -46,9 +44,9 @@ FacMan.app/
 ```text
 bin/
   facman
-  facman-tui
+  # facman-tui is experimental opt-in only
   facman-gui-gtk or facman-gui-qt
-  facmand
+  # facmand is experimental opt-in only
 lib/
 share/facman/
   contracts/

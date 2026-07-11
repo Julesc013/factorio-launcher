@@ -84,6 +84,6 @@ target_arch = "x64"
 frontend_family = "tui"
 package_types = ["portable_zip", "tarball"]
 install_modes = ["portable", "user", "system"]
-support_tier = "portable"
+support_tier = "experimental"
 setup_mutation = false
 network_download = false

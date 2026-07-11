@@ -7,6 +7,7 @@ support_tiers = [
   "compatibility_desktop",
   "portable",
   "package_preview",
+  "experimental",
 ]
 
 [[platform]]
@@ -51,7 +52,7 @@ minimum_os = "macos_10_13"
 runtime_floor = "legacy_xcode_appkit"
 frontend_family = "appkit"
 compile_proof = "remote_ci"
-runtime_smoke = "deferred"
+runtime_smoke = "not_claimed_compile_only"
 package_smoke = "contract_only"
 
 [[platform]]
@@ -77,6 +78,6 @@ id = "portable_tui_x64"
 minimum_os = "portable_tui_baseline"
 runtime_floor = "native_c11_runtime"
 frontend_family = "tui"
-compile_proof = "native_cmake"
-runtime_smoke = "tui_contract"
-package_smoke = "contract_only"
+compile_proof = "opt_in_only"
+runtime_smoke = "not_product_scaffold"
+package_smoke = "not_published"

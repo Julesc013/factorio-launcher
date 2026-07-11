@@ -36,32 +36,6 @@ license_notice = "THIRD_PARTY_NOTICES.md"
 runtime_role = "runtime_required"
 
 [[components]]
-name = "console_tui"
-source_target = "facman_tui"
-destination = "bin/facman-tui.exe"
-required_platform = "windows"
-architecture = "x64"
-hash = "BUILD_TIME"
-signature_policy = "authenticode_optional"
-extraction_policy = "none"
-runtime_search_path = "."
-license_notice = "THIRD_PARTY_NOTICES.md"
-runtime_role = "runtime_required"
-
-[[components]]
-name = "daemon"
-source_target = "facman_daemon"
-destination = "bin/facmand.exe"
-required_platform = "windows"
-architecture = "x64"
-hash = "BUILD_TIME"
-signature_policy = "authenticode_optional"
-extraction_policy = "none"
-runtime_search_path = "."
-license_notice = "THIRD_PARTY_NOTICES.md"
-runtime_role = "runtime_required"
-
-[[components]]
 name = "ulk_shared"
 source_target = "ulk_shared"
 destination = "bin/ulk.dll"

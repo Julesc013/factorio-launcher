@@ -28,7 +28,6 @@ class BuiltPackageArtifactTests(unittest.TestCase):
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"
         cls.portable_cli = build_or_skip(cls, "portable_cli_x64")
-        cls.portable_tui = build_or_skip(cls, "portable_tui_x64")
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -61,10 +60,14 @@ class BuiltPackageArtifactTests(unittest.TestCase):
         for relative in required:
             self.assertTrue((self.portable_cli / relative).exists(), relative)
 
-    def test_portable_tui_contains_tui_entrypoint_and_smokes_cli(self) -> None:
-        self.assertTrue((self.portable_tui / "bin" / "facman-tui").exists())
-        report = package_runtime_smoke.smoke_package(self.portable_tui)
-        self.assertEqual(report["product_id"], "factorio")
+    def test_portable_tui_is_not_a_default_built_artifact(self) -> None:
+        with self.assertRaisesRegex(ValueError, "built artifact proof is not enabled"):
+            package_build.build_profile(
+                profile_id="portable_tui_x64",
+                out_root=self.out_root,
+                build_root=BUILD_ROOT,
+                dist_root=None,
+            )
 
     def test_hash_manifest_covers_all_package_files_except_itself(self) -> None:
         hashed = hash_manifest_destinations(self.portable_cli)
@@ -89,7 +92,7 @@ class BuiltPackageArtifactTests(unittest.TestCase):
         self.assertTrue(any(destination.startswith("content/factorio/") for destination in destinations))
 
     def test_package_excludes_python_runtime_files(self) -> None:
-        for root in [self.portable_cli, self.portable_tui]:
+        for root in [self.portable_cli]:
             leaked = [
                 path.relative_to(root).as_posix()
                 for path in root.rglob("*")
@@ -100,7 +103,7 @@ class BuiltPackageArtifactTests(unittest.TestCase):
 
     def test_package_excludes_forbidden_factorio_payloads_and_secret_markers(self) -> None:
         forbidden_names = ["factorio.exe", "Factorio.app", "steamapps", "mod_portal_credentials"]
-        for root in [self.portable_cli, self.portable_tui]:
+        for root in [self.portable_cli]:
             relative_paths = [path.relative_to(root).as_posix() for path in root.rglob("*")]
             for marker in forbidden_names:
                 self.assertFalse(
@@ -113,7 +116,7 @@ class BuiltPackageArtifactTests(unittest.TestCase):
 
     def test_text_manifests_do_not_leak_source_tree_absolute_paths(self) -> None:
         forbidden = str(ROOT.resolve())
-        for root in [self.portable_cli, self.portable_tui]:
+        for root in [self.portable_cli]:
             for path in text_payloads(root):
                 self.assertNotIn(forbidden, path.read_text(encoding="utf-8"))
 
@@ -448,12 +451,10 @@ class BuiltWindowsPackageArtifactTests(unittest.TestCase):
         if tmp is not None:
             tmp.cleanup()
 
-    def test_windows_package_contains_legacy_frontends_and_dlls(self) -> None:
+    def test_windows_package_contains_functional_frontends_and_dlls(self) -> None:
         required = [
             "bin/FacMan.WinForms.exe",
             "bin/facman.exe",
-            "bin/facman-tui.exe",
-            "bin/facmand.exe",
             "bin/ulk.dll",
             "bin/usk.dll",
             "bin/flb_factorio.dll",
@@ -462,6 +463,8 @@ class BuiltWindowsPackageArtifactTests(unittest.TestCase):
         ]
         for relative in required:
             self.assertTrue((self.package_root / relative).exists(), relative)
+        self.assertFalse((self.package_root / "bin/facman-tui.exe").exists())
+        self.assertFalse((self.package_root / "bin/facmand.exe").exists())
 
     def test_windows_package_cli_smokes_from_package_root(self) -> None:
         report = package_runtime_smoke.smoke_package(self.package_root)

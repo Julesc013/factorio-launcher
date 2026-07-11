@@ -171,10 +171,6 @@ def validate_entrypoints(profile_id: str, skeleton_root: Path, profile: dict[str
         placeholder = placeholder_path_for(skeleton_root, str(relative))
         if not placeholder.is_file():
             problems.append(f"{profile_id}: missing {role} entrypoint placeholder {relative}.placeholder")
-    if "gui" in package_skeleton_build.table(profile.get("frontends")):
-        for role in ["cli", "tui", "daemon"]:
-            if role not in entrypoints:
-                problems.append(f"{profile_id}: GUI package missing {role} entrypoint")
     return problems
 
 

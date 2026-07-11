@@ -60,9 +60,10 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
 + (NSArray<FacManCommandDefinition *> *)catalog;
 + (FacManCommandDefinition *)definitionForCommandId:(NSString *)commandId;
 
-- (FacManCommandResult *)executeCommandId:(NSString *)commandId
-                                   inputs:(NSDictionary<NSString *, NSString *> *)inputs
-                                workspace:(NSString *)workspace
-                                  cliPath:(NSString *)cliPath;
+- (void)executeCommandId:(NSString *)commandId
+                  inputs:(NSDictionary<NSString *, NSString *> *)inputs
+               workspace:(NSString *)workspace
+                 cliPath:(NSString *)cliPath
+              completion:(void (^)(FacManCommandResult *result))completion;
 
 @end

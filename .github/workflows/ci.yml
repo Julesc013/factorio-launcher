@@ -215,23 +215,23 @@ jobs:
       - name: Compile AppKit shell sources
         run: |
           mkdir -p build/appkit-smoke
-          clang -fobjc-arc -fmodules -mmacosx-version-min=10.13 \
+          clang -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
             -Iapps/gui/macos/appkit \
             -framework Cocoa \
             -c apps/gui/macos/appkit/AppDelegate.m \
             -o build/appkit-smoke/AppDelegate.o
-          clang -fobjc-arc -fmodules -mmacosx-version-min=10.13 \
+          clang -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
             -Iapps/gui/macos/appkit \
             -framework Cocoa \
             -c apps/gui/macos/appkit/MainWindowController.m \
             -o build/appkit-smoke/MainWindowController.o
-          clang++ -std=c++17 -fobjc-arc -fmodules -mmacosx-version-min=10.13 \
+          clang++ -std=c++17 -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
             -Iapps/gui/macos/appkit \
             -framework Cocoa \
             -c apps/gui/macos/appkit/CommandClient.mm \
             -o build/appkit-smoke/CommandClient.o
-          clang++ -std=c++17 -fobjc-arc -fmodules -mmacosx-version-min=10.13 \
+          clang++ -std=c++17 -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
             -Iapps/gui/macos/appkit \
             -framework Cocoa \
-            -c apps/gui/macos/appkit/JsonRpcClient.mm \
-            -o build/appkit-smoke/JsonRpcClient.o
+            -c apps/gui/macos/appkit/CliProcessClient.mm \
+            -o build/appkit-smoke/CliProcessClient.o

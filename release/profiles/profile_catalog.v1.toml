@@ -104,7 +104,7 @@ contract_backed = false
 
 [[profile]]
 id = "portable_tui_x64"
-status = "contract_backed"
+status = "experimental_scaffold"
 target_os = "portable"
 target_arch = "x64"
 frontend_stack = "tui"
@@ -117,7 +117,7 @@ install_modes = ["portable", "user", "system"]
 update_support = "check_only_until_universal_setup_apply"
 test_requirements = ["package_layout_check", "package_skeleton_check"]
 unsupported_features = ["setup_mutation", "auto_update"]
-contract_backed = true
+contract_backed = false
 
 [[profile]]
 id = "windows_legacy_winforms_x86"
@@ -145,7 +145,7 @@ frontend_stack = "winforms"
 minimum_os = "windows_7_sp1"
 toolchain = ".NET Framework 4.8"
 package_formats = ["portable_zip", "setup.exe", "msi"]
-included_binaries = ["facman.exe", "facman-tui.exe", "facmand.exe", "FacMan.WinForms.exe"]
+included_binaries = ["facman.exe", "FacMan.WinForms.exe"]
 included_libraries = ["flb_factorio.dll", "ulk.dll", "usk.dll"]
 install_modes = ["portable", "user", "system"]
 update_support = "check_only_until_universal_setup_apply"
@@ -189,14 +189,14 @@ contract_backed = false
 
 [[profile]]
 id = "macos_legacy_appkit_x64"
-status = "contract_backed"
+status = "compile_only"
 target_os = "macos"
 target_arch = "x64"
 frontend_stack = "appkit"
 minimum_os = "macos_10_13"
 toolchain = "legacy_xcode_appkit"
 package_formats = ["app_bundle", "dmg", "pkg"]
-included_binaries = ["FacMan", "facman", "facman-tui", "facmand"]
+included_binaries = ["FacMan", "facman"]
 included_libraries = ["libflb_factorio.dylib", "libulk.dylib", "libusk.dylib"]
 install_modes = ["portable", "user", "system"]
 update_support = "check_only_until_universal_setup_apply"

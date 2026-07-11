@@ -45,12 +45,17 @@ class PortableLayoutTests(unittest.TestCase):
         ]:
             self.assertIn(expected, destinations)
 
-    def test_portable_tui_keeps_cli_and_tui_separate(self) -> None:
+    def test_portable_tui_is_explicitly_experimental_and_unpublished(self) -> None:
         profile = load_toml(ROOT / "release/profiles/portable_tui_x64/profile.toml")
         entrypoints = profile["entrypoints"]
         self.assertEqual(entrypoints["cli"], "bin/facman")
         self.assertEqual(entrypoints["tui"], "bin/facman-tui")
         self.assertNotEqual(entrypoints["cli"], entrypoints["tui"])
+        self.assertFalse(profile["publication"])
+        self.assertEqual(
+            profile["required_cmake_option"],
+            "FACMAN_BUILD_EXPERIMENTAL_FRONTENDS=ON",
+        )
 
 
 def expanded_bundle(profile: dict[str, object]) -> dict[str, object]:

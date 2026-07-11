@@ -49,20 +49,11 @@ def validate_profile(path: Path, profile: dict[str, Any]) -> list[str]:
     if len(non_empty) != len(set(non_empty)):
         problems.append(f"{relative(path)}: frontend entrypoints must be separate executables")
 
-    if "gui" in frontends:
-        expected = {"gui", "cli", "tui", "daemon"}
-        missing = expected - set(entrypoints)
-        if missing:
-            problems.append(f"{relative(path)}: GUI lane missing entrypoints {sorted(missing)}")
     return problems
 
 
 def required_frontend_roles(frontends: dict[str, Any]) -> set[str]:
-    if "gui" in frontends:
-        return {"gui", "cli", "tui", "daemon"}
-    if "tui" in frontends:
-        return {"cli", "tui"}
-    return {"cli"}
+    return set(frontends)
 
 
 def relative(path: Path) -> str:

@@ -1,18 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FacMan.WinForms
 {
     public sealed class CommandClient
     {
-        private readonly JsonRpcClient transport;
+        private readonly CliProcessClient transport;
 
         public CommandClient()
-            : this(new JsonRpcClient())
+            : this(new CliProcessClient())
         {
         }
 
-        public CommandClient(JsonRpcClient transport)
+        public CommandClient(CliProcessClient transport)
         {
             if (transport == null)
             {
@@ -21,11 +23,12 @@ namespace FacMan.WinForms
             this.transport = transport;
         }
 
-        public CommandResult Execute(
+        public Task<CommandResult> ExecuteAsync(
             CommandDefinition command,
             IDictionary<string, string> inputs,
             string workspace,
-            string configuredCliPath)
+            string configuredCliPath,
+            CancellationToken cancellationToken)
         {
             if (command == null)
             {
@@ -38,25 +41,25 @@ namespace FacMan.WinForms
 
             if (command.Status != CommandStatus.Implemented)
             {
-                return CommandResult.Refusal(
+                return Task.FromResult(CommandResult.Refusal(
                     command.Id,
                     command.BackendId,
                     "winforms_command_deferred",
-                    command.DeferredReason);
+                    command.DeferredReason));
             }
 
             try
             {
                 IList<string> arguments = command.ArgumentBuilder(inputs);
-                return transport.Invoke(command, arguments, workspace, configuredCliPath);
+                return transport.InvokeAsync(command, arguments, workspace, configuredCliPath, cancellationToken);
             }
             catch (CommandValidationException ex)
             {
-                return CommandResult.Refusal(
+                return Task.FromResult(CommandResult.Refusal(
                     command.Id,
                     command.BackendId,
                     "winforms_input_required",
-                    ex.Message);
+                    ex.Message));
             }
         }
     }

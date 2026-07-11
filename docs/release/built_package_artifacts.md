@@ -31,8 +31,8 @@ The original built-artifact lanes remain available as compatibility evidence:
 | Profile | Artifact level | Runtime smoke | Notes |
 | --- | --- | --- | --- |
 | `portable_cli_x64` | `built-artifact` | yes | Runs packaged `bin/facman`. |
-| `portable_tui_x64` | `built-artifact` | yes | Includes packaged `bin/facman-tui`; smoke uses `bin/facman`. |
-| `windows_legacy_winforms_x64` | `built-artifact` | yes on Windows when the shell is built | Includes WinForms, CLI, TUI, daemon, and DLL layout. |
+| `portable_tui_x64` | `experimental-scaffold` | no | Opt-in compile/package fixture only; not a product artifact. |
+| `windows_legacy_winforms_x64` | `built-artifact` | yes on Windows when the shell is built | Includes the functional WinForms CLI-process frontend, CLI, and compatibility DLL layout. |
 
 The promoted bounded proof is:
 

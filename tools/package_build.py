@@ -33,7 +33,6 @@ SUPPORTED_BUILT_PROFILES = {
     "macos_portable_cli_x64",
     "windows_portable_cli_x64",
     "portable_cli_x64",
-    "portable_tui_x64",
     "windows_legacy_winforms_x64",
 }
 WORKSPACE_LOCK_PATH = ROOT / "release" / "index" / "workspace_lock.v1.toml"
@@ -100,6 +99,8 @@ def build_profile(
     profile_path, profile = load_profile(profile_id)
     if profile_id not in SUPPORTED_BUILT_PROFILES:
         raise ValueError(f"{profile_id}: built artifact proof is not enabled for this profile")
+    if profile.get("publication") is False:
+        raise ValueError(f"{profile_id}: profile is explicitly unpublished")
     assert_host_matches_profile(profile_id, profile)
     bundle_path = ROOT / str(profile.get("package_manifest", ""))
     bundle = package_layout_check.expand_bundle_manifest(bundle_path, load_toml(bundle_path), [])

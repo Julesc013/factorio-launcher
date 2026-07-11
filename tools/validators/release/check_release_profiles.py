@@ -89,8 +89,15 @@ def validate() -> list[str]:
     contract_backed_ids = {
         profile_id for profile_id, profile in catalog.items() if profile.get("contract_backed") is True
     }
-    for profile_id in sorted(indexed_ids - contract_backed_ids):
-        problems.append(f"release/index/release_index.v1.toml: indexed profile not contract-backed: {profile_id}")
+    non_product_indexed_ids = {
+        profile_id
+        for profile_id, profile in catalog.items()
+        if profile.get("status") in {"experimental_scaffold", "compile_only"}
+    }
+    for profile_id in sorted(indexed_ids - contract_backed_ids - non_product_indexed_ids):
+        problems.append(
+            f"release/index/release_index.v1.toml: indexed profile has no truthful proof state: {profile_id}"
+        )
     for profile_id in sorted(contract_backed_ids - indexed_ids):
         problems.append(f"{relative(catalog_path)}: contract-backed profile not indexed: {profile_id}")
     return problems

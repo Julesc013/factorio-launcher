@@ -54,7 +54,7 @@ def write_project(tmp_path: Path) -> Path:
         WINFORMS_ROOT / "CommandModels.cs",
         WINFORMS_ROOT / "CommandCatalog.cs",
         WINFORMS_ROOT / "CommandClient.cs",
-        WINFORMS_ROOT / "JsonRpcClient.cs",
+        WINFORMS_ROOT / "CliProcessClient.cs",
     ]
     compile_items = "\n".join(
         f'    <Compile Include="{source}" Link="{source.name}" />'
@@ -78,6 +78,7 @@ def write_project(tmp_path: Path) -> Path:
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
 {compile_items}
@@ -123,6 +124,7 @@ def write_program(tmp_path: Path) -> Path:
         r"""using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using FacMan.WinForms;
 
 namespace FacMan.WinForms.CommandClientSmoke
@@ -140,28 +142,31 @@ namespace FacMan.WinForms.CommandClientSmoke
                 "exit /b 0\r\n");
 
             CommandClient client = new CommandClient();
-            CommandResult success = client.Execute(
+            CommandResult success = client.ExecuteAsync(
                 CommandCatalog.Find("product.inspect"),
                 new Dictionary<string, string>(),
                 root,
-                fakeCli);
+                fakeCli,
+                CancellationToken.None).GetAwaiter().GetResult();
             Require(success.ExitCode == 0, "product.inspect should exit successfully");
             Require(success.Stdout.Contains("fake.facman.v1"), "product.inspect should render fake backend stdout");
             Require(!success.Refused, "product.inspect should not be a frontend refusal");
 
-            CommandResult missingInput = client.Execute(
+            CommandResult missingInput = client.ExecuteAsync(
                 CommandCatalog.Find("installs.import"),
                 new Dictionary<string, string>(),
                 root,
-                fakeCli);
+                fakeCli,
+                CancellationToken.None).GetAwaiter().GetResult();
             Require(missingInput.Refused, "missing installs.import input should refuse");
             Require(missingInput.RefusalCode == "winforms_input_required", "missing input refusal code should match");
 
-            CommandResult deferred = client.Execute(
+            CommandResult deferred = client.ExecuteAsync(
                 CommandCatalog.Find("run.execute"),
                 new Dictionary<string, string>(),
                 root,
-                fakeCli);
+                fakeCli,
+                CancellationToken.None).GetAwaiter().GetResult();
             Require(deferred.Refused, "deferred command should refuse");
             Require(deferred.RefusalCode == "winforms_command_deferred", "deferred refusal code should match");
             Require(deferred.Stdout.Contains("common.refusal.v1"), "deferred command should render structured refusal");
