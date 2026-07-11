@@ -81,11 +81,11 @@ proof are frozen at green exact-SHA checkpoints. Continue with
 That local lock proof is now exact-SHA cross-platform green. Continue with
 `FACMAN-SBOM-AND-PROVENANCE-01`, keeping provenance distinct from publisher
 authenticity. That unsigned provenance proof is now exact-SHA target-CI green.
-Continue with `FACMAN-MACOS-NATIVE-CLI-PROOF-01`, keeping AppKit compile-only.
-The macOS Intel CLI package lane is locally implemented and awaits its clean
-exact-SHA `macos-15-intel` native/package proof before claim promotion.
-Keep
-`run.execute` and real Factorio isolation human-gated; do not schedule Windows discovery again.
+The macOS Intel CLI package lane is exact-SHA target-CI green with path-free
+Mach-O, deployment, integrity, relocation, SPDX, and provenance evidence.
+R3.3 core and Stretches A-C are frozen in the stretch closeout checkpoint.
+The next authority gate is the operator-only real Factorio isolation smoke.
+Keep `run.execute` and real Factorio isolation human-gated; do not schedule Windows discovery again.
 The ordered authority remains `.aide/memory/r3.3-workunits.md`.
 
 ## Quarantined Capabilities

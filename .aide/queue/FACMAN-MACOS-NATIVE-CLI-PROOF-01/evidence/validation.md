@@ -1,6 +1,6 @@
 # Validation
 
-Result: LOCAL IMPLEMENTATION GATES PASS; EXACT-SHA MACOS TARGET CI PENDING.
+Result: PASS, including exact-SHA macOS target CI and artifact inspection.
 
 - Fresh Windows native configure/build: PASS.
 - Native CTest: PASS (9/9).
@@ -10,11 +10,9 @@ Result: LOCAL IMPLEMENTATION GATES PASS; EXACT-SHA MACOS TARGET CI PENDING.
   manifests, 8 release profiles, and 8 package skeletons.
 - Source format and `git diff --check`: PASS.
 
-The implementation is intentionally not runnable as a macOS package proof on
-this Windows host. Promotion requires a clean exact revision on
-`macos-15-intel` to build the complete native core, pass all CTests and the
-portable Python/strict suites, execute the package matrix with zero required
-skips, and upload the tarball, adjacent provenance, and evidence report.
+The local Windows host did not promote the macOS claim. Clean exact revision
+`6dcdf74f69decde44a5883e961081dd15f9977cc` supplied the target proof on
+`macos-15-intel` in CI `29159257155`.
 
 The independent AppKit lane remains compile-only. Local checks do not promote
 Apple Silicon, universal binaries, broader macOS compatibility, app-bundle
@@ -51,3 +49,13 @@ the `file` tool's identity string retained an absolute ephemeral runner path in
 the packaged linkage metadata. The pre-freeze repair strips the executable
 prefix and makes the schema require exactly `Mach-O 64-bit executable x86_64`;
 the artifact must be regenerated and re-proven before checkpoint promotion.
+
+Final run `29159257155` passed all five jobs, including macOS CTest 9/9,
+portable Python 226/226, strict, 15 required package checks with zero skips,
+and artifact upload. The regenerated tarball SHA-256 is
+`c930045e460aabcbd121e992ef79f37b2739e937a2bff1c58499263cecaa849d`;
+provenance SHA-256 is
+`f85152c8c5d66db0e7e4527670ba66f503bbff4255ad2579adb00f9ee9627ce1`.
+Downloaded extraction re-verification passed for all 127 files, provenance,
+path-free Mach-O identity, exact deployment target, dependencies, and absence
+of the runner workspace path.

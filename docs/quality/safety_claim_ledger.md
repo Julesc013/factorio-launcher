@@ -25,7 +25,7 @@ reported as stronger runtime evidence.
 | Windows install discovery is read-only | provider-tested | Steam VDF, registry/default roots, standalone roots, zero-write tests | registry proof is host-dependent; macOS and Linux provider databases remain future work |
 | Windows x64 static CLI package runs after relocation | host-tested built artifact | strict profile/component/lock verification and relocation matrix | local Windows x64 only; unsigned and unpublished |
 | Linux x64 CLI tarball runs after relocation | target CI proven | ELF allowlist, archive, read-only and relocation matrix | Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished |
-| macOS x64 CLI tarball runs after relocation | awaiting target CI | Mach-O, deployment, integrity, relocation | Intel runner and target 13.0 only; no Apple Silicon, AppKit runtime, signing, or publication claim |
+| macOS x64 CLI tarball runs after relocation | target CI proven | Mach-O, deployment, integrity, relocation | Intel runner and target 13.0 only; no Apple Silicon, AppKit runtime, signing, or publication claim |
 | Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and setup mutation remain unproven |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and artifact provenance are recorded | target CI proven | SPDX, source/toolchain/CI identities, manifest and artifact digests | unsigned adjacent evidence does not authenticate publisher |
@@ -53,8 +53,8 @@ The integrated universal main and FacMan dev identities are frozen in
 The R3.3 production-data, recovery, diagnostics, and Linux package core is
 frozen in
 [`r3.3-production-data-recovery-proof.md`](../release/checkpoints/r3.3-production-data-recovery-proof.md).
-The later local-lock, provenance, and macOS CLI stretches require their own
-exact-SHA closeout before any target claim is promoted.
+The local-lock, provenance, and macOS CLI stretches are frozen in
+[`r3.3-stretch-proofs.md`](../release/checkpoints/r3.3-stretch-proofs.md).
 
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and deliberately pending human-verdict template are in
