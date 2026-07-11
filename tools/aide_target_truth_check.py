@@ -80,8 +80,8 @@ def validate_root_authority_text(text: str) -> list[str]:
 def validate_profile_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "phase: r3.3-production-data-paths-recovery-and-cross-platform-proof",
-        "production archive layer",
+        "phase: r3.4-architecture-consolidation",
+        "reproducible install-tree packaging",
         "read-only discovery is implemented",
         "must not be scheduled again",
         "C-compatible experimental ABI correctness floor",
@@ -122,14 +122,13 @@ def validate_profile_text(text: str) -> list[str]:
 def validate_project_state_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "R3.3 production data paths, recovery, and cross-platform proof",
-        "human-gated real Factorio claim remains pending",
-        ".aide/memory/r3.3-workunits.md",
+        "R3.4 consolidates the native architecture",
+        "Real Factorio isolation remains operator-only and has no human verdict",
         "authoritative Universal Launcher route",
         "Windows x64 static-first package proof",
         "Windows read-only discovery is implemented",
-        "public C ABI is experimental",
-        "not schedule Windows discovery again",
+        "public C ABI remains experimental",
+        "must not be scheduled again",
         "release/index/workspace_lock.v1.toml",
     ]
     for anchor in required:

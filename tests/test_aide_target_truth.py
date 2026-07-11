@@ -34,19 +34,19 @@ roots:
         problems = aide_target_truth_check.validate_profile_text(text)
         self.assertTrue(any("stale target state" in problem for problem in problems), problems)
 
-    def test_profile_and_project_state_require_r33_without_promoting_factorio(self) -> None:
+    def test_profile_and_project_state_require_r34_without_promoting_factorio(self) -> None:
         profile_problems = aide_target_truth_check.validate_profile_text(
             "phase: r3.2-registry-and-isolation-foundation"
         )
         self.assertTrue(
-            any("r3.3-production-data-paths" in problem for problem in profile_problems),
+            any("r3.4-architecture-consolidation" in problem for problem in profile_problems),
             profile_problems,
         )
         state_problems = aide_target_truth_check.validate_project_state_text(
-            "R3.3 production data paths, recovery, and cross-platform proof"
+            "R3.4 consolidates the native architecture"
         )
         self.assertTrue(
-            any("human-gated real Factorio claim remains pending" in problem for problem in state_problems),
+            any("Real Factorio isolation remains operator-only" in problem for problem in state_problems),
             state_problems,
         )
 

@@ -1,0 +1,59 @@
+schema_version: aide.queue-task.v0
+id: FACMAN-MACOS-NATIVE-CLI-PROOF-01
+title: Prove the native macOS x64 CLI package lane
+status: active
+planning_state: implementation
+created_at: 2026-07-12
+owner: Codex
+objective: >
+  Build the complete native FacMan core on the explicit macOS Intel runner,
+  run all native CTests and portable Python/strict checks, and prove one
+  target-specific x64 CLI tarball with deployment target, linkage, integrity,
+  relocation, SPDX/provenance, and zero required package skips.
+depends_on:
+  - FACMAN-SBOM-AND-PROVENANCE-01
+allowed_paths:
+  - .aide/profile.yaml
+  - .aide/memory/project-state.md
+  - .aide/queue/**
+  - .aide/context/**
+  - .github/workflows/ci.yml
+  - apps/cli/command_dispatch.cpp
+  - contracts/schema/release/**
+  - docs/architecture/**
+  - docs/quality/**
+  - docs/roadmap.md
+  - release/**
+  - runtime/package/**
+  - tests/package_layout/**
+  - tests/release/**
+  - tests/test_package_*.py
+  - tools/ci_proof_check.py
+  - tools/macos_package_proof.py
+  - tools/package_*.py
+  - tools/provenance_*.py
+  - tools/release_*.py
+  - tools/strict_check.py
+  - tools/structure_policy_check.py
+  - tools/validators/release/**
+forbidden_paths:
+  - apps/gui/**
+  - runtime/factorio/launch/**
+  - include/**
+  - external/**
+  - .github/workflows/release.yml
+  - .git/**
+acceptance:
+  - The macos-15-intel lane builds the complete native core and all CTests pass.
+  - The complete portable Python suite and strict checks run on macOS.
+  - One macos_portable_cli_x64 tarball contains only the functional CLI and required package payload.
+  - Architecture, deployment target, Mach-O dependencies, and RPATH state are recorded and enforced.
+  - Relocation, Unicode/spaces, arbitrary cwd, empty PATH, read-only root, external workspace, extraction, integrity, SPDX, and provenance pass with zero required package skips.
+  - AppKit remains compile-only and no app-bundle runtime claim is promoted.
+non_goals:
+  - no universal macOS binary or Apple Silicon claim
+  - no AppKit runtime or product package claim
+  - no notarization, signing, tag, release, or publication
+  - no run.execute or real Factorio execution
+lifecycle_state: archived
+archived_at: 2026-07-11T22:46:39Z

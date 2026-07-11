@@ -38,6 +38,13 @@
   },
   "modules": [
     {
+      "paths": [".aide/", "tools/aide_", "tools/project_state.py"],
+      "native_targets": [],
+      "python_tests": ["tests.test_aide_compaction", "tests.test_aide_target_truth", "tests.test_architecture_fitness"],
+      "strict_validators": ["tools/aide_compaction_check.py", "tools/aide_queue_state_check.py", "tools/aide_target_truth_check.py"],
+      "package_profiles": []
+    },
+    {
       "paths": ["runtime/core/", "include/flb/"],
       "native_targets": ["fl_json_core_smoke", "facman_abi_layout_smoke", "facman_abi_symbol_smoke"],
       "python_tests": ["tests.test_command_contracts", "tests.test_contract_truth", "tests.test_generated_metadata"],

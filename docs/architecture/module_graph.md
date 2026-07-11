@@ -1,4 +1,9 @@
-# Module Graph
+# Module Graph (legacy path)
+
+The current module graph is [`module-graph.md`](module-graph.md). This legacy
+underscore path remains only as a documentation compatibility redirect.
+
+## Historical sketch
 
 ```text
 include/flb

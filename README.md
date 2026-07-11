@@ -128,23 +128,23 @@ instances, profiles, install references, and launch plans belong to
 
 ```bash
 py -3 tools/workspace_config.py doctor
-cmake -S . -B build/native-smoke
-cmake --build build/native-smoke
-$env:FACMAN_CLI_EXE = "$PWD\build\native-smoke\Debug\facman.exe"
-python -m unittest discover -s tests -v
-python tools/structure_policy_check.py
-python tools/schema_validate.py
-python tools/security_policy_check.py
-python tools/package_check.py
-python tools/strict_check.py
-.\build\native-smoke\Debug\facman.exe doctor
+py -3 tools/dev.py test --affected
+py -3 tools/dev.py test --fast
+py -3 tools/dev.py test --full
+py -3 tools/dev.py verify-all
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[development getting-started guide](docs/development/getting-started.md).
 
 ## AIDE Lite
 
 This repo includes AIDE Lite as development governance tooling only. It is not
 part of the launcher runtime and must not be bundled in production packages.
 See [docs/architecture/aide_lite_integration.md](docs/architecture/aide_lite_integration.md).
+Current machine-readable truth is `.aide/memory/project-state.v1.json`; the
+human summary is generated from it. Closed task evidence is hash-indexed under
+`.aide/history/` and excluded from ordinary context packets.
 
 Before large native implementation work, review
 [docs/architecture/pre_code_structure_review.md](docs/architecture/pre_code_structure_review.md).

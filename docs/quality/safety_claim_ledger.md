@@ -30,6 +30,9 @@ reported as stronger runtime evidence.
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and artifact provenance are recorded | target CI proven | SPDX, source/toolchain/CI identities, manifest and artifact digests | unsigned adjacent evidence does not authenticate publisher |
 | Experimental public C ABI has a correctness floor | bounded correctness proof | size, ownership, ABI-query, and native-smoke tests | stable third-party compatibility and independent consumers remain unproven |
+| CLI uses only the client boundary | regression-proven | include/link checker, direct transport smoke, parity tests | process and daemon transports remain unavailable |
+| Install-tree archives reproduce | Windows digest-proven | independent roots, normalized metadata, dirty refusal | other targets need per-revision CI; output is unsigned |
+| Normal AIDE context excludes history bulk | locally regression-proven | active/next queue, history hashes, compact state | development governance only; no product or human proof |
 
 Each promotion record must identify the repository revision, sibling
 revisions, target platform/toolchain, proof command or operator procedure,

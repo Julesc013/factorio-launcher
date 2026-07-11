@@ -1,29 +1,34 @@
-# Contributing
+# Contributing to FacMan
 
-This project is CLI-first. Add behavior to the command graph and Factorio
-binding before adding TUI or GUI views.
+FacMan is a native Factorio product binding and frontend set. Universal Setup
+owns installed-state mutation; Universal Launcher owns product-neutral command
+orchestration. Do not move either responsibility into this repository.
 
-## Boundaries
+Start with `docs/development/getting-started.md` and the relevant extension
+guide. Keep public ABI in `include/flb/`, private implementation in `runtime/`,
+frontend presentation in `apps/`, compatibility law in `contracts/`, and
+release definitions in `release/`.
 
-- Public ABI work belongs under `include/`.
-- Native reusable implementation belongs under `runtime/`.
-- Frontend executable/package shell work belongs under `apps/`.
-- Product content and policy belongs under `content/`.
-- Schemas and compatibility contracts belong under `contracts/`.
-- Package manifests and release profiles belong under `release/`.
-- Python may be used for `tools/`, tests, fixtures, and repo automation, but
-  not for FacMan product runtime entrypoints.
-- Setup mutation must remain behind the universal setup adapter.
-- The universal launcher adapter must not learn Factorio-specific mod semantics.
+Use the canonical developer commands:
 
-## Checks
-
-```bash
-cmake -S . -B build/native-smoke
-cmake --build build/native-smoke
-$env:FACMAN_CLI_EXE = "$PWD\build\native-smoke\Debug\facman.exe"
-python -m unittest discover -s tests -v
-python tools/structure_policy_check.py
-python tools/schema_validate.py
-python tools/package_check.py
+```powershell
+py -3 tools/dev.py test --affected
+py -3 tools/dev.py test --fast
+py -3 tools/dev.py test --full
+py -3 tools/dev.py verify-all
 ```
+
+Focused tests are iteration evidence, not promotion. Before a production claim
+or closeout, run the full matrix and record any platform proof that remains
+CI-owned or operator-owned. Automated checks never pass human acceptance.
+
+Commits use the repository AIDE template and check:
+
+```powershell
+py -3 .aide/scripts/aide_lite.py commit template
+py -3 .aide/scripts/aide_lite.py commit check --message "..."
+```
+
+Do not commit Factorio binaries, credentials, `.aide.local/`, build output, raw
+prompts, raw model responses, or provider secrets. Do not claim publisher
+authenticity from unsigned hashes or provenance.

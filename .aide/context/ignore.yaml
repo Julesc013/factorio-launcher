@@ -5,6 +5,7 @@ purpose: Exclude local state, secrets, caches, generated binaries, and large art
 allowlist_note: Generated context packets may reference ignored paths by path name if needed, but must not inline their contents.
 exclude:
   - .git/**
+  - .aide/history/**
   - .env
   - secrets/**
   - .aide.local/**

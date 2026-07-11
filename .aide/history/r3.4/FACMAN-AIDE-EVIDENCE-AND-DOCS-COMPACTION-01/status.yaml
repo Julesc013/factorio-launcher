@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-AIDE-EVIDENCE-AND-DOCS-COMPACTION-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-11T22:45:53Z
+result: PASS
+evidence_path: .aide/queue/next/FACMAN-AIDE-EVIDENCE-AND-DOCS-COMPACTION-01/evidence/
+active_at: 2026-07-11T22:45:53Z
+verified_at: 2026-07-11T22:56:38Z
+implementation_state: implemented
+reviewed_at: 2026-07-11T22:56:38Z
+closed_at: 2026-07-11T22:56:39Z
+archived_at: 2026-07-11T22:56:54Z

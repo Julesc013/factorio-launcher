@@ -1,0 +1,17 @@
+{
+  "checkpoint": "r3.4",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "8c637ccf90f93a65254bca46feabc4543662c50d864eca9f866a8678e2a11ec4",
+        "evidence/remaining-risks.md": "d59a9ed86948e8a05cbd724552b0ce68547ee66bf420eb78293a89eaa2c67c37",
+        "evidence/validation.md": "d08c8668607035a70cc6d84a9c1f1273a918733b1c4cda4c7df398251f6f769d",
+        "status.yaml": "c100cfe101195010d538b13b5a042bb61a2e1a8582d25d72fd2546f139cb9218",
+        "task.yaml": "ba0e94db942fe981fd8b53d271bf8f17cf993df2a79cd845b0520b3991a0af2e"
+      },
+      "task_id": "FACMAN-AIDE-EVIDENCE-AND-DOCS-COMPACTION-01"
+    }
+  ]
+}

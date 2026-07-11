@@ -8,18 +8,16 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3.3-production-data-paths-recovery-and-cross-platform-proof
+  phase: r3.4-architecture-consolidation
   primary_goal: >
-    Replace prototype archive and multi-file data paths with one admitted
-    production archive layer, typed authoritative routes, recoverable writes,
-    safe diagnostics, target-specific Linux and macOS Intel CLI packages,
-    local-filesystem lock hardening, and unsigned SBOM/provenance evidence.
+    Consolidate the native module graph, generated contracts, repositories,
+    typed transactions, application handlers, client-only frontends,
+    reproducible install-tree packaging, test proof, compact AIDE state, and
+    supply-chain policy without promoting human-gated or release claims.
   next_task: >
-    FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 is the next authority gate and is
-    operator-only. Prepare and review evidence without executing Factorio;
-    execution requires the licensed operator-supplied binary, exact
-    acknowledgement, external write observation, and a human Pass, Fail, or
-    Inconclusive verdict. Never promote the claim autonomously.
+    Complete the active R3.4 WorkUnit from .aide/queue/active. The later
+    FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 authority gate remains
+    operator-only; automation must never convert its pending verdict into pass.
     Windows read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan

@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 from tools import (
     aide_target_truth_check,
     aide_queue_state_check,
+    aide_compaction_check,
     alpha_vertical_slice_check,
     application_handler_check,
     apps_boundary_check,
@@ -60,6 +61,7 @@ def main() -> int:
     checks: list[tuple[str, Callable[[], int]]] = [
         ("aide-target-truth", aide_target_truth_check.main),
         ("aide-queue-state", aide_queue_state_check.main),
+        ("aide-compaction", aide_compaction_check.main),
         ("apps-boundary", apps_boundary_check.main),
         ("manual-json", manual_json_check.main),
         ("critical-io", critical_io_check.main),

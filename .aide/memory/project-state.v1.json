@@ -1,0 +1,180 @@
+{
+  "active_workunit": null,
+  "claim_levels": [
+    {
+      "claim": "Managed paths remain inside the workspace",
+      "level": "regression-proven for enabled paths",
+      "limitation": "new filesystem features must reuse these primitives"
+    },
+    {
+      "claim": "Persistent creation is no-clobber",
+      "level": "regression-proven for current writers and same-host commit races",
+      "limitation": "ancestor substitution and power-loss durability remain unproven"
+    },
+    {
+      "claim": "Package tools clean only owned output",
+      "level": "regression-proven",
+      "limitation": "other future destructive tools need their own ownership kind"
+    },
+    {
+      "claim": "Instance layout is structurally isolated",
+      "level": "regression-proven for generated state",
+      "limitation": "real Factorio write semantics unproven"
+    },
+    {
+      "claim": "Process boundary preserves intended isolation",
+      "level": "surrogate process proven",
+      "limitation": "proves FacMan and probe behavior, not Factorio internals"
+    },
+    {
+      "claim": "Per-instance run ownership is exclusive",
+      "level": "local-filesystem native proof",
+      "limitation": "shared/network and multi-host filesystems remain unproven"
+    },
+    {
+      "claim": "Reviewed local diagnostic export is bounded",
+      "level": "cross-platform CI proven",
+      "limitation": "no arbitrary formats, GUI UX, shared filesystems, or authenticity"
+    },
+    {
+      "claim": "JSON contracts describe runtime output",
+      "level": "proven for the truth-floor slice",
+      "limitation": "remaining legacy commands and goldens are not implicitly promoted"
+    },
+    {
+      "claim": "Command registry introspection matches dispatch",
+      "level": "registry-proven",
+      "limitation": "new descriptor versions and handlers require the same parity proof"
+    },
+    {
+      "claim": "Run preview uses the authoritative route",
+      "level": "live-contract tested",
+      "limitation": "no process starts; real Factorio remains unproven"
+    },
+    {
+      "claim": "Windows install discovery is read-only",
+      "level": "provider-tested",
+      "limitation": "registry proof is host-dependent; macOS and Linux provider databases remain future work"
+    },
+    {
+      "claim": "Windows x64 static CLI package runs after relocation",
+      "level": "host-tested built artifact",
+      "limitation": "local Windows x64 only; unsigned and unpublished"
+    },
+    {
+      "claim": "Linux x64 CLI tarball runs after relocation",
+      "level": "target CI proven",
+      "limitation": "Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished"
+    },
+    {
+      "claim": "macOS x64 CLI tarball runs after relocation",
+      "level": "target CI proven",
+      "limitation": "Intel runner and target 13.0 only; no Apple Silicon, AppKit runtime, signing, or publication claim"
+    },
+    {
+      "claim": "Package verification is setup-authoritative",
+      "level": "cross-repo tested",
+      "limitation": "authenticity and setup mutation remain unproven"
+    },
+    {
+      "claim": "Package hashes authenticate publisher",
+      "level": "not claimed",
+      "limitation": "signatures or trusted external metadata required"
+    },
+    {
+      "claim": "Package inputs and artifact provenance are recorded",
+      "level": "target CI proven",
+      "limitation": "unsigned adjacent evidence does not authenticate publisher"
+    },
+    {
+      "claim": "Experimental public C ABI has a correctness floor",
+      "level": "bounded correctness proof",
+      "limitation": "stable third-party compatibility and independent consumers remain unproven"
+    },
+    {
+      "claim": "CLI uses only the client boundary",
+      "level": "regression-proven",
+      "limitation": "process and daemon transports remain unavailable"
+    },
+    {
+      "claim": "Install-tree archives reproduce",
+      "level": "Windows digest-proven",
+      "limitation": "other targets need per-revision CI; output is unsigned"
+    },
+    {
+      "claim": "Normal AIDE context excludes history bulk",
+      "level": "locally regression-proven",
+      "limitation": "development governance only; no product or human proof"
+    }
+  ],
+  "current_artifacts": [
+    "build/Release/facman.exe (local unsigned build, when present)",
+    "release/profiles/windows_portable_cli_x64/profile.toml",
+    "release/profiles/linux_portable_cli_x64/profile.toml",
+    "release/profiles/macos_portable_cli_x64/profile.toml",
+    "docs/quality/benchmarks/baseline.v1.json",
+    ".aide/history/r3.3/index.json"
+  ],
+  "current_phase": "r3.4-architecture-consolidation",
+  "current_revisions": {
+    "factorio_launcher": "HEAD",
+    "universal_launcher": "80a848375227dc858865874ef594c4b466877241",
+    "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+  },
+  "known_blockers": [
+    "Real Factorio isolation remains operator-only and has no human verdict.",
+    "Linux sanitizer, libFuzzer, clang-tidy, coverage, and target package results are CI-owned per revision.",
+    "macOS target package proof is CI-owned per revision; AppKit remains compile-only.",
+    "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
+  ],
+  "provider_pins": {
+    "factorio_binding": {
+      "pin_kind": "historical_proof_baseline",
+      "revision": "2c2cce644b674d12227a194a77bce5a667fed721",
+      "source": "factorio-launcher/runtime/factorio"
+    },
+    "universal_launcher": {
+      "pin_kind": "provider_revision",
+      "revision": "80a848375227dc858865874ef594c4b466877241",
+      "source": "universal-launcher"
+    },
+    "universal_setup": {
+      "pin_kind": "provider_revision",
+      "revision": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2",
+      "source": "universal-setup"
+    }
+  },
+  "quarantined_capabilities": [
+    "run.execute pending operator-supplied real Factorio verdict",
+    "setup mutation",
+    "network and credential operations",
+    "release signing, notarization, publication, and publisher authenticity",
+    "experimental TUI and daemon publication"
+  ],
+  "schema": "facman.project_state.v1",
+  "target_proof_platforms": [
+    {
+      "architecture": "x86_64",
+      "package_format": "portable_zip",
+      "profile": "windows_portable_cli_x64",
+      "runner": "windows-2025"
+    },
+    {
+      "architecture": "x86_64",
+      "package_format": "tarball",
+      "profile": "linux_portable_cli_x64",
+      "runner": "ubuntu-24.04"
+    },
+    {
+      "architecture": "x86_64",
+      "package_format": "tarball",
+      "profile": "macos_portable_cli_x64",
+      "runner": "macos-15-intel"
+    }
+  ],
+  "truth_boundaries": [
+    "AIDE is development governance only and never a product dependency.",
+    "Focused affected tests do not replace the full promotion matrix.",
+    "Human acceptance is never inferred from automated checks."
+  ]
+}

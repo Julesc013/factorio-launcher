@@ -1,106 +1,32 @@
-# Future Layers Plan
+# Future layers plan
 
-The durable structure is stable enough that the next work should add contract
-depth and product capability rather than another root redesign.
+This document no longer describes completed R2/R3 work as future work. Current
+truth is generated in `.aide/memory/project-state.v1.json`; completed proof is
+indexed under `.aide/history/` and `docs/release/checkpoints/`.
 
-Permanent boundary:
+## Current consolidation
 
-```text
-Universal Setup mutates installed software state.
-Universal Launcher orchestrates runnable product state.
-FacMan interprets Factorio-specific facts.
-Frontends present commands and reports.
-Contracts preserve compatibility.
-Validators prevent regression.
-```
+R3.4 establishes reusable core types, platform services, repositories,
+transactions, application handlers, a client-only CLI, truthful frontend
+transports, module-local CMake, reproducible install-tree packaging,
+impact-based tests, compact AIDE state, and supply-chain verification.
 
-## Implemented In This Spine
+## Ordered future authority gates
 
-- command effects and risk tiers
-- refusal code registry
-- workspace schemas and workspace invariant check
-- package contract catalog and portable CLI/TUI manifests
-- UI strings, themes, and accessibility check
-- credential/redaction policy contract
-- frontend parity surface check
+1. Obtain the operator-supplied real Factorio isolation verdict before any
+   `run.execute` promotion. Automated checks cannot provide that verdict.
+2. Complete per-revision Linux/macOS/Windows package and native-quality CI for
+   the exact release candidate.
+3. Advance workspace v2 only through dry-run migration, backup, journal,
+   rollback, and compatibility proof.
+4. Add network, credentials, Mod Portal access, or setup mutation only in
+   separate reviewed tasks with explicit ownership and threat-model changes.
+5. Promote TUI, daemon, or GUI packages only after their actual transports,
+   runtime behavior, accessibility, and operator usability are proven.
+6. Add signing/notarization/publication only after integrity, provenance, and
+   publisher-authenticity gates are explicitly separated and approved.
 
-## Next Work Units
-
-### R2.2 Capability And Refusal Depth
-
-- emit registered refusal codes from runtime paths
-- attach effect/risk metadata to command graph inspection
-- display effect/risk tiers in CLI/TUI/GUI reports
-
-### R2.3 Workspace And Package Proof
-
-- materialize package-smoke layouts from package manifests
-- add instance-root fixture tests
-- add export/import redaction and portability roundtrips
-
-### R2.4 Runtime Client Ownership
-
-- extract generic JSON, daemon, C ABI, result, refusal, and progress clients
-  into Universal Launcher
-- keep FacMan-specific wrappers in `factorio-launcher/runtime/client/`
-- keep Factorio result shaping in the Factorio binding
-
-### R2.5 Local Modset Correctness
-
-- parse local mod ZIP `info.json`
-- parse dependencies and incompatibilities
-- verify hashes
-- score reproducibility deterministically
-
-### R2.6 Diagnostic Intelligence
-
-- `facman doctor --explain`
-- `facman launch plan <instance> --why`
-- `facman modsets verify --explain`
-- export portability report
-- Steam and foreign-owned safety report
-
-### R3 Safe Beta
-
-- diagnostic bundles
-- save backup/export/import hardening
-- package layout tests
-- redaction tests
-- frontend runtime smokes over fake backend JSON
-
-### R4 Universal Setup MVP
-
-- install-local
-- verify
-- uninstall managed-only
-- audit
-- transaction journal
-- rollback proof
-
-### R5 Managed Factorio Setup
-
-- local archive install through Universal Setup
-- managed install verification
-- foreign-owned read-only registration
-- Steam mutation refusal
-- portable install adoption flow
-
-### R6 Deferred Network And Execution
-
-- Mod Portal read-only search
-- authenticated download through credential store
-- server preview and execute
-- developer tool preview and execute
-
-### R7 Modern GUI Lanes
-
-- GTK shell
-- WinUI shell
-- SwiftUI shell
-- Qt shell
-- localization, theme, accessibility consumption in each frontend
-
-## Strict Rule
+## Permanent order
 
 ```text
 contracts first
@@ -110,5 +36,6 @@ automation fourth
 intelligence last
 ```
 
-No future layer may bypass the command graph or turn a frontend into backend
-behavior.
+No future layer may bypass the command graph, make a frontend a backend,
+duplicate an established authority, or convert a fixture or green CI run into
+a stronger product claim.

@@ -1,0 +1,38 @@
+schema_version: aide.queue-task.v0
+id: FACMAN-R3.3-STRETCH-PROOF-CLOSEOUT-01
+title: Freeze the revision-pinned R3.3 stretch checkpoint
+status: passed
+planning_state: closed
+created_at: 2026-07-12
+owner: Codex
+objective: >
+  Reconcile exact revisions, target runs, artifact identities, claim levels,
+  failed attempts, and remaining authority boundaries for R3.3 Stretches A-C.
+depends_on:
+  - FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03
+  - FACMAN-SBOM-AND-PROVENANCE-01
+  - FACMAN-MACOS-NATIVE-CLI-PROOF-01
+allowed_paths:
+  - .aide/profile.yaml
+  - .aide/memory/project-state.md
+  - .aide/queue/**
+  - docs/quality/**
+  - docs/release/checkpoints/**
+forbidden_paths:
+  - apps/**
+  - runtime/**
+  - include/**
+  - external/**
+  - .github/workflows/**
+  - .git/**
+acceptance:
+  - Exact FacMan and provider revisions are recorded.
+  - Local-lock, provenance, Linux, Windows, and macOS evidence is scoped honestly.
+  - Failed and superseded target attempts are retained.
+  - Human-gated and release capabilities remain blocked.
+non_goals:
+  - no runtime behavior change
+  - no real Factorio execution or operator verdict
+  - no setup mutation, signing, notarization, tag, release, or publication
+lifecycle_state: archived
+archived_at: 2026-07-11T22:46:41Z

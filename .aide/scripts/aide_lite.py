@@ -30,6 +30,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+import aide_lifecycle
+
 try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - Python 3.10 fallback.
@@ -5245,6 +5247,8 @@ def resolve_task_id(repo_root: Path, task_id: str) -> str:
     requested = task_id.strip()
     if not requested:
         return ""
+    if any((repo_root / ".aide/queue" / lane / requested).exists() for lane in ("active", "next")):
+        return requested
     if (repo_root / ".aide/queue" / requested).exists():
         return requested
     tasks = queue_task_blocks(repo_root)
@@ -5260,9 +5264,21 @@ def resolve_task_id(repo_root: Path, task_id: str) -> str:
     return requested
 
 
+def queue_task_dir(repo_root: Path, task_id: str) -> Path:
+    for task in queue_task_blocks(repo_root):
+        if task.get("id") != task_id or not task.get("task"):
+            continue
+        return (repo_root / str(task["task"])).parent
+    for lane in ("active", "next"):
+        candidate = repo_root / ".aide/queue" / lane / task_id
+        if candidate.exists():
+            return candidate
+    return repo_root / ".aide/queue" / task_id
+
+
 def task_status_value(repo_root: Path, task_id: str) -> str:
     resolved = resolve_task_id(repo_root, task_id)
-    status_path = repo_root / ".aide/queue" / resolved / "status.yaml"
+    status_path = queue_task_dir(repo_root, resolved) / "status.yaml"
     if not status_path.exists():
         return "missing"
     match = re.search(r"^status:\s*(.+)$", read_text(status_path), re.MULTILINE)
@@ -5270,6 +5286,14 @@ def task_status_value(repo_root: Path, task_id: str) -> str:
 
 
 def current_task_id(repo_root: Path) -> str | None:
+    tasks = queue_task_blocks(repo_root)
+    for status in ["active", "running", "partial", "ready", "verified", "reviewed", "needs_review", "planned"]:
+        for task in reversed(tasks):
+            if task.get("status") == status:
+                return task.get("id")
+    queue_index = repo_root / ".aide/queue/index.yaml"
+    if queue_index.exists() and "canonical_source: .aide/queue/{active,next}" in read_text(queue_index):
+        return None
     packet = repo_root / LATEST_PACKET_PATH
     if packet.exists():
         text = read_text(packet)
@@ -5279,18 +5303,13 @@ def current_task_id(repo_root: Path) -> str | None:
         match = re.search(r"Q\d+[A-Za-z0-9._-]*[^\s`]*", text)
         if match:
             return match.group(0).strip()
-    tasks = queue_task_blocks(repo_root)
-    for status in ["running", "partial", "ready", "needs_review"]:
-        for task in reversed(tasks):
-            if task.get("status") == status:
-                return task.get("id")
     return tasks[-1]["id"] if tasks else None
 
 
 def inspect_task(repo_root: Path, task_id: str | None = None) -> dict[str, object]:
     requested = task_id or current_task_id(repo_root) or ""
     selected = resolve_task_id(repo_root, requested)
-    task_dir = repo_root / ".aide/queue" / selected if selected else repo_root / ".aide/queue/__missing__"
+    task_dir = queue_task_dir(repo_root, selected) if selected else repo_root / ".aide/queue/__missing__"
     task_yaml = task_dir / "task.yaml"
     status_yaml = task_dir / "status.yaml"
     evidence_dir = task_dir / "evidence"
@@ -5298,12 +5317,12 @@ def inspect_task(repo_root: Path, task_id: str | None = None) -> dict[str, objec
     status = task_status_value(repo_root, selected) if selected else "missing"
     required_evidence = ["changed-files.md", "validation.md", "remaining-risks.md"]
     missing_evidence = [name for name in required_evidence if not (evidence_dir / name).exists()]
-    complete_states = {"needs_review", "passed", "passed_with_notes", "noop_already_complete"}
+    complete_states = {"closed", "archived", "passed", "passed_with_notes", "noop_already_complete"}
     if not selected or not task_yaml.exists():
         classification = "missing"
     elif status in complete_states and not missing_evidence:
         classification = "complete"
-    elif evidence_files or status in {"running", "partial", "blocked", "superseded"}:
+    elif evidence_files or status in {"active", "implemented", "verified", "reviewed", "running", "partial", "blocked", "superseded"}:
         classification = "partial"
     else:
         classification = "planned"
@@ -5375,6 +5394,9 @@ def safe_git_head_commit(repo_root: Path) -> str:
 
 
 def task_os_latest_task_ref(repo_root: Path) -> tuple[str, str]:
+    current = current_task_id(repo_root)
+    if current and any(task.get("id") == current for task in queue_task_blocks(repo_root)):
+        return current, current
     packet = repo_root / LATEST_PACKET_PATH
     if not packet.exists():
         return "", ""
@@ -27764,6 +27786,16 @@ def render_context_packet(repo_root: Path, repo_map: dict[str, object], test_map
             role_lines.append(f"- {role}: {role_counts[role]}")
     if not role_lines:
         role_lines.append("- none")
+    active = current_task_id(repo_root) or ""
+    active_task = queue_task_dir(repo_root, active) / "task.yaml" if active else repo_root / ".aide/queue/__missing__"
+    active_text = read_text(active_task) if active_task.exists() else ""
+    affected = (
+        parse_simple_list(active_text, "affected_native_targets")
+        + parse_simple_list(active_text, "affected_python_tests")
+        + parse_simple_list(active_text, "affected_strict_validators")
+        + parse_simple_list(active_text, "affected_package_profiles")
+    )
+    affected_lines = "\n".join(f"- `{value}`" for value in dict.fromkeys(affected)) or "- none"
     return f"""# AIDE Latest Context Packet
 
 ## CONTEXT_COMPILER
@@ -27772,7 +27804,7 @@ def render_context_packet(repo_root: Path, repo_map: dict[str, object], test_map
 - generator: {GENERATOR_NAME}
 - generator_version: {GENERATOR_VERSION}
 - contents_inline: false
-- method: deterministic repo-local metadata, roles, priorities, and test heuristics
+- method: deterministic repo-local metadata plus contracts/policy/test_impact.v1.json
 
 ## SOURCE_REFS
 
@@ -27783,6 +27815,8 @@ def render_context_packet(repo_root: Path, repo_map: dict[str, object], test_map
 - `{SNAPSHOT_PATH}`
 - `{CONTEXT_INDEX_PATH}`
 - `.aide/memory/project-state.md`
+- `.aide/memory/project-state.v1.json`
+- `contracts/policy/test_impact.v1.json`
 - `.aide/memory/decisions.md`
 - `.aide/memory/open-risks.md`
 
@@ -27803,6 +27837,12 @@ def render_context_packet(repo_root: Path, repo_map: dict[str, object], test_map
 - mapping_count: {test_map.get('summary', {}).get('mapping_count', 0)}
 - mappings_with_existing_candidate: {test_map.get('summary', {}).get('with_existing_candidate', 0)}
 - complete_coverage_claimed: false
+
+## ACTIVE_AFFECTED_VALIDATION
+
+- active_workunit: `{active or 'none'}`
+{affected_lines}
+- full promotion matrix remains required
 
 ## CURRENT_QUEUE
 
@@ -31119,6 +31159,19 @@ def packet_budget_warnings(text: str, repo_root: Path) -> tuple[str, tuple[str, 
 
 def render_task_packet(repo_root: Path, task_text: str, chars: int = 0, tokens: int = 0, budget_status: str = "PENDING", warnings: Iterable[str] = ()) -> str:
     phase, title = infer_phase(task_text)
+    task_yaml_path = queue_task_dir(repo_root, phase) / "task.yaml"
+    task_yaml = read_text(task_yaml_path) if task_yaml_path.exists() else ""
+    allowed_paths = parse_simple_list(task_yaml, "allowed_paths")
+    forbidden_paths = parse_simple_list(task_yaml, "forbidden_paths")
+    affected_validation = (
+        parse_simple_list(task_yaml, "affected_native_targets")
+        + parse_simple_list(task_yaml, "affected_python_tests")
+        + parse_simple_list(task_yaml, "affected_strict_validators")
+        + parse_simple_list(task_yaml, "affected_package_profiles")
+    )
+    allowed_lines = "\n".join(f"- `{value}`" for value in allowed_paths) or "- `<no reviewed path scope>`"
+    forbidden_lines = "\n".join(f"- `{value}`" for value in forbidden_paths) or "- `.git/**`\n- `.aide.local/**`"
+    affected_lines = "\n".join(f"- `{value}`" for value in dict.fromkeys(affected_validation)) or "- `<no affected validation mapped>`"
     snapshot_state = "present" if (repo_root / SNAPSHOT_PATH).exists() else "missing; run snapshot"
     repo_map_state = "present" if (repo_root / REPO_MAP_JSON_PATH).exists() else "missing; run index"
     test_map_state = "present" if (repo_root / TEST_MAP_JSON_PATH).exists() else "missing; run index"
@@ -31148,6 +31201,7 @@ Continue AIDE token survival by using repo-local context refs, compact objective
 ## CONTEXT_REFS
 
 - `.aide/memory/project-state.md`
+- `.aide/memory/project-state.v1.json`
 - `.aide/memory/decisions.md`
 - `.aide/memory/open-risks.md`
 - `{SNAPSHOT_PATH}` ({snapshot_state})
@@ -31173,17 +31227,11 @@ Continue AIDE token survival by using repo-local context refs, compact objective
 
 ## ALLOWED_PATHS
 
-- `<fill from the next reviewed queue packet>`
-- `.aide/context/**`
-- `.aide/queue/{phase.lower()}-*` if this task becomes a queue item
-- root docs only when behavior or documentation links change
+{allowed_lines}
 
 ## FORBIDDEN_PATHS
 
-- `.git/**`
-- `.env`
-- `secrets/**`
-- `.aide.local/**`
+{forbidden_lines}
 - raw provider credentials, API keys, local caches, raw prompt logs
 - Gateway, provider, Runtime, Service, Commander, Mobile, MCP/A2A, host, or app-surface implementation paths unless the queue packet explicitly authorizes them
 
@@ -31197,6 +31245,12 @@ Continue AIDE token survival by using repo-local context refs, compact objective
 - Use exact refs such as `path#Lstart-Lend` when file details are load-bearing.
 
 ## VALIDATION
+
+Affected validation from `contracts/policy/test_impact.v1.json`:
+
+{affected_lines}
+
+The full promotion matrix remains required before a stronger claim.
 
 - `py -3 .aide/scripts/aide_lite.py doctor`
 - `py -3 .aide/scripts/aide_lite.py validate`
@@ -37946,6 +38000,46 @@ def command_task_current(args: argparse.Namespace) -> int:
     return 0 if task_id else 1
 
 
+def command_task_create(args: argparse.Namespace) -> int:
+    try:
+        path = aide_lifecycle.create(args.repo_root, args.task_id, args.title, args.objective, args.path)
+    except ValueError as error:
+        print(f"AIDE Lite task create: {error}", file=sys.stderr)
+        return 1
+    print("AIDE Lite task create")
+    print(f"task_id: {args.task_id}")
+    print(f"lifecycle_state: planned")
+    print(f"task_path: {path.relative_to(args.repo_root).as_posix()}")
+    return 0
+
+
+def command_task_transition(args: argparse.Namespace) -> int:
+    try:
+        state = aide_lifecycle.transition(
+            args.repo_root, args.task_id, args.task_command, result=getattr(args, "result", "")
+        )
+    except ValueError as error:
+        print(f"AIDE Lite task {args.task_command}: {error}", file=sys.stderr)
+        return 1
+    print(f"AIDE Lite task {args.task_command}")
+    print(f"task_id: {args.task_id}")
+    print(f"lifecycle_state: {state}")
+    return 0
+
+
+def command_task_archive(args: argparse.Namespace) -> int:
+    try:
+        path = aide_lifecycle.archive(args.repo_root, args.task_id, args.checkpoint)
+    except ValueError as error:
+        print(f"AIDE Lite task archive: {error}", file=sys.stderr)
+        return 1
+    print("AIDE Lite task archive")
+    print(f"task_id: {args.task_id}")
+    print("lifecycle_state: archived")
+    print(f"history_path: {path.relative_to(args.repo_root).as_posix()}")
+    return 0
+
+
 def command_blocker_status(args: argparse.Namespace) -> int:
     result, data = write_task_os_blocker_status(args.repo_root)
     print("AIDE Lite blocker status")
@@ -41006,6 +41100,22 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     task_evidence_parser.add_argument("--task-id", help="Queue task id. Defaults to current/latest task.")
     task_evidence_parser.set_defaults(handler=command_task_evidence)
     task_subparsers.add_parser("current").set_defaults(handler=command_task_current)
+    task_create_parser = task_subparsers.add_parser("create")
+    task_create_parser.add_argument("task_id")
+    task_create_parser.add_argument("--title", required=True)
+    task_create_parser.add_argument("--objective", required=True)
+    task_create_parser.add_argument("--path", action="append", required=True)
+    task_create_parser.set_defaults(handler=command_task_create)
+    for lifecycle_command in ("start", "verify", "review", "close", "block"):
+        lifecycle_parser = task_subparsers.add_parser(lifecycle_command)
+        lifecycle_parser.add_argument("--task-id", required=True)
+        if lifecycle_command == "verify":
+            lifecycle_parser.add_argument("--result", default="PASS")
+        lifecycle_parser.set_defaults(handler=command_task_transition)
+    task_archive_parser = task_subparsers.add_parser("archive")
+    task_archive_parser.add_argument("--task-id", required=True)
+    task_archive_parser.add_argument("--checkpoint", required=True)
+    task_archive_parser.set_defaults(handler=command_task_archive)
 
     blocker_parser = subparsers.add_parser("blocker")
     blocker_subparsers = blocker_parser.add_subparsers(dest="blocker_command", required=True)

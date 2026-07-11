@@ -3,6 +3,17 @@
 FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
+## Current R3.4 architecture consolidation
+
+The native architecture now uses generated metadata, shared core/platform
+primitives, repositories, typed transactions, decomposed application handlers,
+a client-only CLI, truthful frontend transports, module-local CMake, and a
+reproducible install-tree package pipeline. Test impact routing and compact
+AIDE state are implemented; supply-chain policy is the remaining mandatory
+R3.4 work unit. Historical R3.2/R3.3 sections below remain evidence context,
+not the active queue. Ordered future gates live in
+[`future_layers_plan.md`](architecture/future_layers_plan.md).
+
 ## Immediate Safety And Truth Gates
 
 The bounded R3 gates in

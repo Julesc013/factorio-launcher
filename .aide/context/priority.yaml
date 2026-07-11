@@ -30,7 +30,8 @@ families:
   - id: current-queue-item
     priority: 85
     patterns:
-      - .aide/queue/Q11-context-compiler-v0/**
+      - .aide/queue/active/**
+      - .aide/queue/next/**
   - id: root-agent-law
     priority: 84
     patterns:

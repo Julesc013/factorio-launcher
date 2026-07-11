@@ -11,7 +11,9 @@ source_inputs:
   - .aide/context/priority.yaml
   - .aide/context/excerpt-policy.yaml
   - .aide/memory/project-state.md
+  - .aide/memory/project-state.v1.json
   - .aide/queue/index.yaml
+  - contracts/policy/test_impact.v1.json
 generated_outputs:
   - .aide/context/repo-map.json
   - .aide/context/repo-map.md
@@ -26,7 +28,7 @@ file_role_detection:
   method: deterministic_path_and_extension_heuristics
   semantic_certainty_claimed: false
 test_map_policy:
-  method: deterministic_path_and_name_heuristics
+  method: contracts/policy/test_impact.v1.json
   complete_coverage_claimed: false
   include_confidence_and_reason: true
 context_packet_policy:
@@ -34,6 +36,7 @@ context_packet_policy:
   include_repo_map_ref: true
   include_test_map_ref: true
   include_current_queue_ref: true
+  exclude_archived_task_bulk: true
   include_token_estimate: true
 determinism_requirements:
   stable_ordering: true

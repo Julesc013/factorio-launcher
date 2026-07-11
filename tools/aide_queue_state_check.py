@@ -20,7 +20,7 @@ def field(text: str, name: str) -> str:
 def detect() -> set[str]:
     violations: set[str] = set()
     queue = architecture_fitness.ROOT / ".aide/queue"
-    for status_path in sorted(queue.glob("*/status.yaml")):
+    for status_path in sorted(queue.glob("active/*/status.yaml")) + sorted(queue.glob("next/*/status.yaml")):
         text = status_path.read_text(encoding="utf-8", errors="replace")
         status = field(text, "status")
         result = field(text, "result")
