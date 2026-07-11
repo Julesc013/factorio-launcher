@@ -38,6 +38,13 @@ construct the Universal Setup verification request did not yet recognize the
 new Linux profile. The repair adds that exact profile/target/linkage mapping;
 Universal Setup remains the verification authority.
 
+Revision `3f3e4264f3a2bdb515b4c79add85be6546ce7260` passed the same
+baseline and reached the relocated/external-workspace smoke in run
+`29156444395`. The test placed its declared external workspace under the
+package-parent path while separately requiring that path never appear in
+command output. The repair uses a distinct temporary root, preserving both
+the external-workspace assertion and the package/source path-leak refusal.
+
 ## Authority boundary
 
 The package remains unsigned and unpublished. This WorkUnit does not execute

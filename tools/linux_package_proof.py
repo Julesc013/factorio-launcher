@@ -74,10 +74,13 @@ def prove(build_root: Path, out_root: Path, dist_root: Path) -> dict[str, object
         package_runtime_smoke.smoke_package(relocated)
         checks.append("renamed_extraction_root")
 
-        external_workspace = root / "external workspace"
-        package_runtime_smoke.smoke_package(relocated, external_workspace)
-        if external_workspace.exists():
-            raise ValueError("read-only package smoke created the external workspace")
+        with tempfile.TemporaryDirectory(
+            prefix="facman-linux-external-workspace-"
+        ) as external_container:
+            external_workspace = Path(external_container) / "external workspace"
+            package_runtime_smoke.smoke_package(relocated, external_workspace)
+            if external_workspace.exists():
+                raise ValueError("read-only package smoke created the external workspace")
         checks.append("external_workspace")
 
         read_only = root / "read only package"
