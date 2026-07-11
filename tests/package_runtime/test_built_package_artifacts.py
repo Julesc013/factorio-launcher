@@ -203,7 +203,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
         self.assertEqual(sbom["spdxVersion"], "SPDX-2.3")
         self.assertEqual(
             {package["name"] for package in sbom["packages"]},
-            {"FacMan", "Universal Launcher", "Universal Setup", "Miniz"},
+            {"FacMan", "Universal Launcher", "Universal Setup", "Miniz", "PicoJSON"},
         )
         self.assertFalse(json.loads(provenance.read_text())["signed"])
         self.assertEqual(
