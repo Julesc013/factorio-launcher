@@ -5,7 +5,7 @@ lifecycle_state: archived
 planning_state: closed
 created_at: 2026-07-11T22:45:53Z
 result: PASS
-evidence_path: .aide/queue/next/FACMAN-AIDE-EVIDENCE-AND-DOCS-COMPACTION-01/evidence/
+evidence_path: .aide/history/r3.4/FACMAN-AIDE-EVIDENCE-AND-DOCS-COMPACTION-01/evidence/
 active_at: 2026-07-11T22:45:53Z
 verified_at: 2026-07-11T22:56:38Z
 implementation_state: implemented

@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-11T23:18:58Z
+result: WARN
+evidence_path: .aide/history/r3.4/FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01/evidence/
+active_at: 2026-07-11T23:18:58Z
+verified_at: 2026-07-11T23:46:17Z
+implementation_state: implemented
+reviewed_at: 2026-07-11T23:46:18Z
+closed_at: 2026-07-11T23:46:18Z
+archived_at: 2026-07-11T23:46:19Z

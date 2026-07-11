@@ -59,6 +59,12 @@ frozen in
 The local-lock, provenance, and macOS CLI stretches are frozen in
 [`r3.3-stretch-proofs.md`](../release/checkpoints/r3.3-stretch-proofs.md).
 
+The R3.4 architecture consolidation and exact local Windows artifact are
+recorded in
+[`r3.4-architecture-consolidation.md`](../release/checkpoints/r3.4-architecture-consolidation.md).
+That checkpoint is a target-promotion hold: it does not reuse R3.3 Linux or
+macOS evidence as fresh proof.
+
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and deliberately pending human-verdict template are in
 [`real_factorio_isolation_smoke.template.md`](evidence/real_factorio_isolation_smoke.template.md).

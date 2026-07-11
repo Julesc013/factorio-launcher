@@ -184,6 +184,12 @@ def transition(root: Path, task_id: str, action: str, *, result: str = "") -> st
         if action == "verify":
             text = set_field(text, "implementation_state", "implemented")
             text = set_field(text, "result", result or "PASS")
+        if action == "start" and filename == "status.yaml":
+            text = set_field(
+                text,
+                "evidence_path",
+                f".aide/queue/active/{task_id}/evidence/",
+            )
         target.write_text(text, encoding="utf-8")
     rebuild_queue_index(root)
     return new
@@ -219,6 +225,12 @@ def archive(root: Path, task_id: str, checkpoint: str) -> Path:
         text = target.read_text(encoding="utf-8")
         text = set_field(text, "lifecycle_state", "archived")
         text = set_field(text, "archived_at", now())
+        if filename == "status.yaml":
+            text = set_field(
+                text,
+                "evidence_path",
+                f".aide/history/{checkpoint}/{task_id}/evidence/",
+            )
         target.write_text(text, encoding="utf-8")
     destination = root / ".aide" / "history" / checkpoint / task_id
     destination.parent.mkdir(parents=True, exist_ok=True)

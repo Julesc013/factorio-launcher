@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01
 title: Close R3.4 architecture consolidation
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-11T23:18:58Z
 owner: unassigned
 objective: >
@@ -89,3 +89,9 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-11T23:18:58Z
+verified_at: 2026-07-11T23:46:17Z
+implementation_state: implemented
+result: WARN
+reviewed_at: 2026-07-11T23:46:18Z
+closed_at: 2026-07-11T23:46:18Z
+archived_at: 2026-07-11T23:46:19Z

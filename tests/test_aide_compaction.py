@@ -38,10 +38,20 @@ class AideCompactionTests(unittest.TestCase):
             policy.joinpath("test_impact.v1.json").write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
             path = aide_lifecycle.create(root, "TEST-LIFECYCLE-01", "Lifecycle proof", "Prove state transitions.", ["docs/"])
             self.assertEqual("planned", aide_lifecycle.state_for(path))
-            for action, expected in (("start", "active"), ("verify", "verified"), ("review", "reviewed"), ("close", "closed")):
+            self.assertEqual("active", aide_lifecycle.transition(root, "TEST-LIFECYCLE-01", "start"))
+            active = root / ".aide" / "queue" / "active" / "TEST-LIFECYCLE-01"
+            self.assertIn(
+                ".aide/queue/active/TEST-LIFECYCLE-01/evidence/",
+                active.joinpath("status.yaml").read_text(encoding="utf-8"),
+            )
+            for action, expected in (("verify", "verified"), ("review", "reviewed"), ("close", "closed")):
                 self.assertEqual(expected, aide_lifecycle.transition(root, "TEST-LIFECYCLE-01", action))
             archived = aide_lifecycle.archive(root, "TEST-LIFECYCLE-01", "test-checkpoint")
             self.assertTrue(archived.is_dir())
+            self.assertIn(
+                ".aide/history/test-checkpoint/TEST-LIFECYCLE-01/evidence/",
+                archived.joinpath("status.yaml").read_text(encoding="utf-8"),
+            )
             index = json.loads((archived.parent / "index.json").read_text(encoding="utf-8"))
             self.assertTrue(index["immutable_task_records"])
             self.assertIn("task.yaml", index["tasks"][0]["files"])
