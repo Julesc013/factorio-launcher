@@ -1,7 +1,6 @@
 # Validation
 
-Result: PASS locally; exact-SHA cross-platform CI is pending the WorkUnit
-commit and push.
+Result: PASS, including exact-SHA cross-platform CI.
 
 ## Behavior proven locally
 
@@ -36,6 +35,19 @@ commit and push.
 - Transaction recovery checker: PASS.
 - AIDE Lite test: PASS.
 - `git diff --check`: PASS.
+
+## Exact-SHA CI
+
+- FacMan revision: `0819ad76a329c1a915cd5756b6204c97ca0ca05d`.
+- CI run `29154294018`: PASS.
+  - Linux native and ASan/UBSan archive corpus/fuzz: PASS.
+  - Windows native, complete Python suite, WinForms build/client smoke,
+    zero-skip package proof, selected package integrity/relocation, and legacy
+    compatibility package: PASS.
+  - macOS archive native smoke: PASS.
+  - AppKit compile-only: PASS.
+- Schema run `29154293919`: PASS.
+- Security-policy run `29154293926`: PASS.
 
 ## Authority boundary
 

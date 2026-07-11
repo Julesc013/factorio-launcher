@@ -14,11 +14,10 @@ current_focus:
     production archive layer, typed authoritative routes, recoverable writes,
     safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03: add one bounded operation journal
-    and explicit inspect, plan, and apply recovery surfaces for currently
-    enabled multi-file writers. Recovery may remove only recognized owned
-    staging paths and must never infer that an incomplete journal makes a
-    committed target disposable.
+    FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04: close diagnostic file-read races with
+    stable no-follow handles, allow only reviewed formats, create a typed and
+    self-verifying production archive through the transaction journal, and
+    enable export only if the complete adversarial gate passes.
     Windows read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan

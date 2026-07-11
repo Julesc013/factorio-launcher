@@ -1,8 +1,8 @@
 schema_version: aide.queue-task.v0
 id: FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03
 title: Add bounded workspace transaction recovery
-status: active
-planning_state: implementation
+status: needs_review
+planning_state: implementation_completed
 created_at: 2026-07-11
 owner: Codex
 objective: >

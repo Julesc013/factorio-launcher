@@ -59,10 +59,11 @@ foundations that do not require a Factorio binary.
 ## Current Goal
 
 Continue the ordered R3.3 WorkUnits in `.aide/memory/r3.3-workunits.md` from
-bounded workspace transaction recovery. The baseline, archive dependency,
-production core, local mod/modset routes, and save/portable-transfer routes are
-frozen at green exact-SHA checkpoints. Keep `run.execute` and real Factorio
-isolation human-gated; do not schedule Windows discovery again.
+diagnostic export safety. The baseline, archive dependency, production core,
+local mod/modset routes, save/portable-transfer routes, and bounded workspace
+transaction recovery are frozen at green exact-SHA checkpoints. Keep
+`run.execute` and real Factorio isolation human-gated; do not schedule Windows
+discovery again.
 
 ## Quarantined Capabilities
 

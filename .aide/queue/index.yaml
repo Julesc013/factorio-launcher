@@ -39,9 +39,16 @@ items:
     evidence: .aide/queue/FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03/evidence
     description: Migrate save and portable instance-transfer commands through typed routes and verified staging.
   - id: FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03
-    status: active
-    planning_state: implementation
+    status: needs_review
+    planning_state: implementation_completed
     title: Add bounded workspace transaction recovery
     task: .aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/task.yaml
     evidence: .aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/evidence
     description: Journal and recover only currently enabled multi-file workspace writers.
+  - id: FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04
+    status: active
+    planning_state: implementation
+    title: Complete safe diagnostic bundle export
+    task: .aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/task.yaml
+    evidence: .aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/evidence
+    description: Close diagnostic read races and enable only a fully verified known-format bundle path.
