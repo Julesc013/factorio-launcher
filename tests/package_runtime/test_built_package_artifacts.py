@@ -12,7 +12,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from tools import package_build, package_runtime_smoke
+from tools import package_build, package_runtime_smoke, provenance_build
 from tools import package_hash_manifest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -185,6 +185,84 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
         self.assertGreater(report["files_verified"], 0)
         self.assertTrue(report["pathless_runtime"])
         self.assertTrue(report["arbitrary_cwd"])
+
+    def test_spdx_and_external_provenance_bind_artifact_and_manifests(self) -> None:
+        artifact = next(self.dist_root.glob("*.zip"))
+        provenance = artifact.with_name(artifact.name + ".provenance.v1.json")
+        self.assertEqual(
+            provenance_build.verify_artifact_provenance(
+                provenance,
+                artifact,
+                self.package_root,
+            ),
+            [],
+        )
+        sbom = json.loads(
+            (self.package_root / "manifest/sbom.spdx.v2.3.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(sbom["spdxVersion"], "SPDX-2.3")
+        self.assertEqual(
+            {package["name"] for package in sbom["packages"]},
+            {"FacMan", "Universal Launcher", "Universal Setup", "Miniz"},
+        )
+        self.assertFalse(json.loads(provenance.read_text())["signed"])
+        self.assertEqual(
+            json.loads(provenance.read_text())["authenticity"],
+            "publisher_authenticity_not_proven",
+        )
+
+        drifted_artifact_root = self.temp_root / "provenance artifact drift"
+        drifted_artifact_root.mkdir()
+        drifted_artifact = drifted_artifact_root / artifact.name
+        shutil.copy2(artifact, drifted_artifact)
+        drifted_artifact.write_bytes(drifted_artifact.read_bytes() + b"drift")
+        self.assertIn(
+            "artifact digest disagrees with provenance",
+            provenance_build.verify_artifact_provenance(
+                provenance,
+                drifted_artifact,
+                self.package_root,
+            ),
+        )
+
+        for relative, expected in [
+            ("manifest/components.v1.json", "manifest digest disagrees"),
+            ("manifest/hashes.sha256", "manifest digest disagrees"),
+            ("release/index/workspace_lock.v1.toml", "manifest digest disagrees"),
+        ]:
+            copied = self.temp_root / ("provenance " + relative.replace("/", "_"))
+            shutil.copytree(self.package_root, copied)
+            changed = copied / relative
+            changed.write_bytes(changed.read_bytes() + b"\ndrift\n")
+            self.assertTrue(
+                any(
+                    expected in problem
+                    for problem in provenance_build.verify_artifact_provenance(
+                        provenance,
+                        artifact,
+                        copied,
+                    )
+                )
+            )
+
+        for field in ("source_revisions", "ci"):
+            changed_provenance = self.temp_root / f"changed-{field}.json"
+            data = json.loads(provenance.read_text(encoding="utf-8"))
+            if field == "source_revisions":
+                data[field]["factorio_launcher"] = "0" * 40
+            else:
+                data[field]["provider"] = "github_actions"
+            changed_provenance.write_text(
+                json.dumps(data, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(
+                provenance_build.verify_artifact_provenance(
+                    changed_provenance,
+                    artifact,
+                    self.package_root,
+                )
+            )
 
     def test_renamed_extracted_directory_smokes(self) -> None:
         renamed = self.temp_root / "Renamed FacMan Ω"

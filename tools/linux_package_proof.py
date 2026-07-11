@@ -18,7 +18,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import json_contract, package_build, package_hash_manifest, package_runtime_smoke
+from tools import (
+    json_contract,
+    package_build,
+    package_hash_manifest,
+    package_runtime_smoke,
+    provenance_build,
+)
 
 PROFILE = "linux_portable_cli_x64"
 
@@ -117,6 +123,15 @@ def prove(build_root: Path, out_root: Path, dist_root: Path) -> dict[str, object
         )
         if archive.name != expected_name:
             raise ValueError(f"unexpected Linux artifact name: {archive.name}")
+        provenance = archive.with_name(archive.name + ".provenance.v1.json")
+        provenance_problems = provenance_build.verify_artifact_provenance(
+            provenance,
+            archive,
+            package_root,
+        )
+        if provenance_problems:
+            raise ValueError("Linux artifact provenance failed: " + "; ".join(provenance_problems))
+        checks.append("unsigned_provenance_verified")
         extracted = root / "archive extracted Ω"
         extracted.mkdir()
         with tarfile.open(archive, "r:gz") as bundle:
@@ -175,6 +190,7 @@ def verify_clean(root: Path) -> None:
         root / "licenses" / "LICENSE",
         root / "licenses" / "THIRD_PARTY_NOTICES.md",
         root / "manifest" / "linux_linkage.v1.json",
+        root / "manifest" / "sbom.spdx.v2.3.json",
     ]
     for path in required:
         if not path.exists():

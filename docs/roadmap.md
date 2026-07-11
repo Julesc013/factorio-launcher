@@ -212,6 +212,17 @@ WorkUnit rather than an extension of R3.2.
 - Remote, unclassified, or unreviewed filesystem types refuse. SMB, NFS,
   cloud-sync, and multi-host safety remain explicitly unpromoted.
 
+## FACMAN-SBOM-AND-PROVENANCE-01
+
+- Built packages contain a hash-closed SPDX 2.3 document covering FacMan,
+  Universal Launcher, Universal Setup, and Miniz dependency/license truth.
+- Adjacent provenance binds the final artifact digest to exact source and dirty
+  state, workspace lock, component/hash/SBOM manifests, toolchain, CI identity,
+  and a source-commit UTC timestamp policy.
+- Mutation tests reject drift in every recorded identity or digest.
+- The record is unsigned and unpublished: provenance is recorded, while
+  publisher authenticity remains explicitly unproven.
+
 ## FacMan-SETUP-HANDOFF-01
 
 - Managed install commands call Universal Setup.

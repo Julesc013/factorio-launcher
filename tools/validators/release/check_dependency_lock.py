@@ -93,6 +93,8 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
         problems.append(f"{prefix}: version is required")
     elif version in FORBIDDEN_FLOATING_PINS:
         problems.append(f"{prefix}: version must not be floating")
+    if component.get("license") not in {"MIT", "NOASSERTION"}:
+        problems.append(f"{prefix}: license must be MIT or NOASSERTION")
     return problems
 
 

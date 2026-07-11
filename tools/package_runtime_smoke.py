@@ -119,6 +119,7 @@ def assert_required_layout(root: Path) -> None:
         root / "manifest" / "package.v1.toml",
         root / "manifest" / "components.v1.json",
         root / "manifest" / "hashes.sha256",
+        root / "manifest" / "sbom.spdx.v2.3.json",
     ]
     for path in required:
         if not path.exists():

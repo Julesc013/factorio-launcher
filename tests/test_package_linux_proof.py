@@ -62,6 +62,7 @@ class LinuxPackageProofContractTests(unittest.TestCase):
             "python tools/linux_package_proof.py",
             "actions/upload-artifact@v4",
             "build/linux-package-proof/dist/*.tar.gz",
+            "build/linux-package-proof/dist/*.provenance.v1.json",
             "build/linux-package-proof/evidence.v1.json",
         ]:
             self.assertIn(anchor, workflow)
@@ -73,6 +74,7 @@ class LinuxPackageProofContractTests(unittest.TestCase):
             '"required_skips": 0',
             '"signed": False',
             '"published": False',
+            "unsigned_provenance_verified",
         ]:
             self.assertIn(anchor, proof)
 

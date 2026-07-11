@@ -26,6 +26,7 @@ allowed_paths:
   - tests/test_package_*.py
   - tests/package_runtime/**
   - tools/package_*.py
+  - tools/linux_package_proof.py
   - tools/provenance_*.py
   - tools/strict_check.py
   - tools/structure_policy_check.py

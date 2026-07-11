@@ -76,6 +76,7 @@ jobs:
           name: linux-portable-cli-x64-${{ github.sha }}
           path: |
             build/linux-package-proof/dist/*.tar.gz
+            build/linux-package-proof/dist/*.provenance.v1.json
             build/linux-package-proof/evidence.v1.json
           if-no-files-found: error
           retention-days: 14

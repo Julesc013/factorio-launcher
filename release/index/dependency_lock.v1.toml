@@ -11,6 +11,7 @@ abi_version = 1
 pin = "2c2cce644b674d12227a194a77bce5a667fed721"
 bundled = true
 source = "factorio-launcher/runtime/factorio"
+license = "MIT"
 install_mutation_authority = false
 
 [[component]]
@@ -21,6 +22,7 @@ abi_version = 1
 pin = "80a848375227dc858865874ef594c4b466877241"
 bundled = true
 source = "universal-launcher"
+license = "NOASSERTION"
 install_mutation_authority = false
 
 [[component]]
@@ -31,6 +33,7 @@ abi_version = 1
 pin = "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
 bundled = true
 source = "universal-setup"
+license = "NOASSERTION"
 install_mutation_authority = true
 
 [[component]]

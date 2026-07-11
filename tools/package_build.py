@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
@@ -16,7 +17,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import json_contract, owned_output, package_hash_manifest, package_layout_check
+from tools import (
+    json_contract,
+    owned_output,
+    package_hash_manifest,
+    package_layout_check,
+    provenance_build,
+)
 
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -103,12 +110,14 @@ def build_profile(
     component_records = copy_bundle_components(package_root, build_root, bundle)
     copy_support_payloads(package_root, profile, profile_path, bundle_path)
     write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
-    write_build_info(package_root, profile_id, profile, bundle)
+    build_info = write_build_info(package_root, profile_id, profile, bundle, build_root)
+    provenance_build.write_package_sbom(package_root, build_info)
     write_platform_metadata(package_root, profile)
     validate_package_root(package_root, profile, component_records)
     package_hash_manifest.write_manifests(package_root, component_records)
     if dist_root is not None:
-        write_archive(package_root, dist_root, bundle)
+        artifact = write_archive(package_root, dist_root, bundle)
+        provenance_build.write_artifact_provenance(package_root, artifact)
     return package_root
 
 
@@ -224,7 +233,8 @@ def write_build_info(
     profile_id: str,
     profile: dict[str, Any],
     bundle: dict[str, Any],
-) -> None:
+    build_root: Path,
+) -> dict[str, Any]:
     build_index = load_toml(ROOT / "release" / "index" / "build_manifest.v1.toml")
     source_revisions = pinned_source_revisions()
     info = {
@@ -234,6 +244,12 @@ def write_build_info(
         "canonical_version": build_index.get("canonical_version", "facman-0.1.0+dev"),
         "filename_version": build_index.get("filename_version", "facman-0.1.0-dev"),
         "source_commit": source_revisions["factorio_launcher"],
+        "source_timestamp_policy": "source_commit_utc",
+        "source_timestamp_utc": provenance_build.source_commit_timestamp(
+            source_revisions["factorio_launcher"]
+        ),
+        "source_dirty": git_dirty(),
+        "source_state_sha256": source_state_digest(),
         "source_revisions": {
             "factorio_launcher": source_revisions["factorio_launcher"],
             "universal_launcher": source_revisions["universal_launcher"],
@@ -244,13 +260,52 @@ def write_build_info(
         "package_type": bundle.get("package_type"),
         "signed": False,
         "published": False,
+        "toolchain": toolchain_identity(profile, build_root),
     }
-    if profile.get("target_os") == "linux":
-        info["toolchain"] = linux_toolchain_identity()
     (package_root / "manifest" / "build_info.v1.json").write_text(
         json.dumps(info, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    return info
+
+
+def toolchain_identity(profile: dict[str, Any], build_root: Path) -> dict[str, str]:
+    if profile.get("target_os") == "linux":
+        return linux_toolchain_identity()
+    cache = cmake_cache_values(build_root / "CMakeCache.txt")
+    generator = cache.get("CMAKE_GENERATOR", "unknown")
+    linker = cache.get("CMAKE_LINKER", "unknown")
+    return {
+        "runner": os.environ.get("ImageOS", f"{sys.platform}-local"),
+        "machine": platform.machine(),
+        "operating_system": platform.platform(),
+        "generator": generator,
+        "compiler": cache.get("CMAKE_CXX_COMPILER", f"C++ via {generator}"),
+        "linker": tool_path_identity(linker),
+    }
+
+
+def cmake_cache_values(path: Path) -> dict[str, str]:
+    if not path.is_file():
+        raise ValueError(f"toolchain cache is missing: {path}")
+    values: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if not line or line.startswith(("#", "//")) or "=" not in line or ":" not in line:
+            continue
+        key_and_type, value = line.split("=", 1)
+        key, _type = key_and_type.split(":", 1)
+        values[key] = value
+    return values
+
+
+def tool_path_identity(value: str) -> str:
+    if value == "unknown":
+        return value
+    normalized = value.replace("\\", "/")
+    parts = [part for part in normalized.split("/") if part]
+    name = parts[-1] if parts else value
+    versions = [part for part in parts if re.fullmatch(r"\d+(?:\.\d+){1,3}", part)]
+    return name + (f" {versions[-1]}" if versions else "")
 
 
 def linux_toolchain_identity() -> dict[str, str]:
@@ -458,7 +513,7 @@ def maybe_copy_windows_alias(source: Path, destination: Path) -> None:
         copy_file(source, alias)
 
 
-def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -> None:
+def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -> Path:
     owned_output.ensure_owned_output_root(dist_root, "package-archives")
     build_index = load_toml(ROOT / "release" / "index" / "build_manifest.v1.toml")
     version = str(build_index.get("filename_version", "facman-0.1.0-dev"))
@@ -476,6 +531,7 @@ def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -
     if archive_path.exists():
         archive_path.unlink()
     shutil.make_archive(str(archive_base), archive_format, root_dir=package_root)
+    return archive_path
 
 
 def load_profile(profile_id: str) -> tuple[Path, dict[str, Any]]:
@@ -588,6 +644,34 @@ def git_dirty(repo: Path = ROOT) -> bool:
         stderr=subprocess.PIPE,
     )
     return completed.returncode != 0 or bool(completed.stdout.strip())
+
+
+def source_state_digest(repo: Path = ROOT) -> str:
+    digest = hashlib.sha256()
+    diff = subprocess.run(
+        ["git", "diff", "--binary", "HEAD"],
+        cwd=repo,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if diff.returncode != 0:
+        raise ValueError("cannot hash the source diff for provenance")
+    digest.update(diff.stdout)
+    untracked = subprocess.run(
+        ["git", "ls-files", "--others", "--exclude-standard", "-z"],
+        cwd=repo,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if untracked.returncode != 0:
+        raise ValueError("cannot list untracked source files for provenance")
+    for encoded in sorted(item for item in untracked.stdout.split(b"\0") if item):
+        path = repo / encoded.decode("utf-8")
+        digest.update(b"\0path\0" + encoded + b"\0")
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
 
 
 def toml_scalar(value: Any) -> str:

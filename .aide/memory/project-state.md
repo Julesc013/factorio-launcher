@@ -65,6 +65,10 @@ foundations that do not require a Factorio binary.
   identity, revalidate the path before exact-object deletion, reject links and
   substitutions, and conservatively refuse unreviewed shared filesystems. This
   is a supported local-filesystem claim only.
+- Selected package builds now emit a hash-closed SPDX 2.3 SBOM and adjacent
+  artifact provenance binding source state, provider pins, workspace/component
+  manifests, toolchain, CI identity, timestamp policy, and final digest.
+  Publisher authenticity remains unproven because the evidence is unsigned.
 
 ## Current Goal
 

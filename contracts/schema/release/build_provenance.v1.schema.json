@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.build_provenance.v1",
+  "title": "FacMan Unsigned Artifact Build Provenance",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "claim",
+    "authenticity",
+    "profile_id",
+    "artifact",
+    "source_revisions",
+    "source_state",
+    "workspace_lock",
+    "manifests",
+    "toolchain",
+    "ci",
+    "timestamp",
+    "signed",
+    "published"
+  ],
+  "properties": {
+    "schema": { "const": "facman.build_provenance.v1" },
+    "status": { "const": "pass" },
+    "claim": { "const": "provenance_recorded" },
+    "authenticity": { "const": "publisher_authenticity_not_proven" },
+    "profile_id": { "type": "string", "minLength": 1 },
+    "artifact": {
+      "type": "object",
+      "required": ["name", "size", "sha256"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "source_revisions": {
+      "type": "object",
+      "required": ["factorio_launcher", "universal_launcher", "universal_setup"],
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+    },
+    "source_state": {
+      "type": "object",
+      "required": ["dirty", "sha256"],
+      "properties": {
+        "dirty": { "type": "boolean" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "workspace_lock": { "$ref": "#/$defs/digest_ref" },
+    "manifests": {
+      "type": "object",
+      "required": ["components", "hashes", "sbom"],
+      "properties": {
+        "components": { "$ref": "#/$defs/digest_ref" },
+        "hashes": { "$ref": "#/$defs/digest_ref" },
+        "sbom": { "$ref": "#/$defs/digest_ref" }
+      },
+      "additionalProperties": false
+    },
+    "toolchain": { "type": "object", "minProperties": 4 },
+    "ci": {
+      "type": "object",
+      "required": ["provider", "run_id", "run_attempt", "workflow", "repository", "source_sha"],
+      "properties": {
+        "provider": { "enum": ["github_actions", "local"] },
+        "run_id": { "type": "string", "minLength": 1 },
+        "run_attempt": { "type": "string", "minLength": 1 },
+        "workflow": { "type": "string", "minLength": 1 },
+        "repository": { "type": "string", "minLength": 1 },
+        "source_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      },
+      "additionalProperties": false
+    },
+    "timestamp": {
+      "type": "object",
+      "required": ["policy", "value"],
+      "properties": {
+        "policy": { "const": "source_commit_utc" },
+        "value": { "type": "string", "minLength": 20 }
+      },
+      "additionalProperties": false
+    },
+    "signed": { "const": false },
+    "published": { "const": false }
+  },
+  "$defs": {
+    "digest_ref": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

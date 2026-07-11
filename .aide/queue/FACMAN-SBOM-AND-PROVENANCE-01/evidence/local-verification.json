@@ -1,0 +1,59 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 22
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 22
+
+## CHANGED_FILES
+
+- allowed: `.aide/memory/project-state.md` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SBOM-AND-PROVENANCE-01/task.yaml` (M; matches active task allowed path)
+- allowed: `.github/workflows/ci.yml` (M; matches active task allowed path)
+- allowed: `docs/quality/safety_claim_ledger.md` (M; matches active task allowed path)
+- allowed: `docs/roadmap.md` (M; matches active task allowed path)
+- allowed: `release/index/dependency_lock.v1.toml` (M; matches active task allowed path)
+- allowed: `tests/package_runtime/test_built_package_artifacts.py` (M; matches active task allowed path)
+- allowed: `tests/test_package_linux_proof.py` (M; matches active task allowed path)
+- allowed: `tools/linux_package_proof.py` (M; matches active task allowed path)
+- allowed: `tools/package_build.py` (M; matches active task allowed path)
+- allowed: `tools/package_runtime_smoke.py` (M; matches active task allowed path)
+- allowed: `tools/strict_check.py` (M; matches active task allowed path)
+- allowed: `tools/validators/release/check_dependency_lock.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SBOM-AND-PROVENANCE-01/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SBOM-AND-PROVENANCE-01/evidence/local-review.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SBOM-AND-PROVENANCE-01/evidence/local-verification.json` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SBOM-AND-PROVENANCE-01/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `contracts/schema/release/build_provenance.v1.schema.json` (??; matches active task allowed path)
+- allowed: `contracts/schema/release/spdx_document.v2.3.schema.json` (??; matches active task allowed path)
+- allowed: `docs/architecture/sbom-and-provenance.v1.md` (??; matches active task allowed path)
+- allowed: `tools/provenance_build.py` (??; matches active task allowed path)
+- allowed: `tools/provenance_check.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.
