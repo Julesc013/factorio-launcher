@@ -31085,10 +31085,15 @@ def adapter_validation_checks(repo_root: Path, require_generated: bool = True) -
 def infer_phase(task_text: str) -> tuple[str, str]:
     cleaned = task_text.strip()
     match = re.search(r"\b(Q\d{2})\b\s*[-:—]?\s*(.*)", cleaned)
-    if not match:
-        return "UNSPECIFIED", cleaned or "Compact task"
-    phase = match.group(1)
-    title = match.group(2).strip()
+    if match:
+        phase = match.group(1)
+        title = match.group(2).strip()
+    else:
+        workunit = re.search(r"\b([A-Z][A-Z0-9.]*(?:-[A-Z0-9.]+){2,})\b\s*[:—]?\s*(.*)", cleaned)
+        if not workunit:
+            return "UNSPECIFIED", cleaned or "Compact task"
+        phase = workunit.group(1)
+        title = workunit.group(2).strip()
     title = re.sub(r"^(Implement|Review|Plan)\s+", "", title, flags=re.IGNORECASE).strip()
     return phase, title or "Compact task"
 
@@ -31125,6 +31130,8 @@ def render_task_packet(repo_root: Path, task_text: str, chars: int = 0, tokens: 
     route_decision_state = "present" if (repo_root / ROUTE_DECISION_JSON_PATH).exists() else "missing; run route explain after Q17"
     warning_lines = "\n".join(f"  - {warning}" for warning in warnings) or "  - none"
     return f"""# AIDE Latest Task Packet
+
+phase: {phase}
 
 ## PHASE
 

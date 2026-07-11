@@ -79,6 +79,18 @@ class AideLiteWorkflowTests(unittest.TestCase):
         self.assertNotIn("print('hello')", packet)
         self.assertEqual(rendered.budget_status, "PASS")
 
+    def test_pack_records_product_workunit_as_machine_readable_active_task(self) -> None:
+        root = self.make_repo()
+        task_id = "FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01"
+        result, rendered = aide_lite.write_task_packet(
+            root,
+            f"{task_id}: reconcile the target queue",
+        )
+        packet = aide_lite.read_text(result.path)
+        self.assertIn(f"phase: {task_id}", packet)
+        self.assertEqual(aide_lite.current_task_id(root), task_id)
+        self.assertEqual(rendered.budget_status, "PASS")
+
     def test_pack_warns_when_hard_budget_is_exceeded(self) -> None:
         root = self.make_repo()
         budget = root / ".aide/policies/token-budget.yaml"

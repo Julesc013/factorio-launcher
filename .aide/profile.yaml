@@ -8,17 +8,15 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3.2-registry-and-isolation-foundation
+  phase: r3.3-production-data-paths-recovery-and-cross-platform-proof
   primary_goal: >
-    Make Universal Launcher introspection project the real runtime registry,
-    then route run preview through that registry and prove the effective
-    per-instance Factorio configuration at a controlled process boundary.
+    Replace prototype archive and multi-file data paths with one admitted
+    production archive layer, typed authoritative routes, recoverable writes,
+    safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01: run the prepare-first harness with
-    an operator-supplied Factorio binary and record a human verdict. Do not
-    enable run.execute from automated surrogate evidence. Windows read-only discovery is
-    implemented and must not
-    be scheduled again.
+    FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01: reconcile the exact baseline
+    and repair target-local active-task projection before archive work. Windows
+    read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import

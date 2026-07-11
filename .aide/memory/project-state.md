@@ -10,13 +10,15 @@ Factorio-facing applications.
 
 ## Current Phase
 
-R3.2 authoritative registry and instance-isolation foundation.
+R3.3 production data paths, recovery, and cross-platform proof.
 
 R3.2 is integrated on `dev` at
 `b739d271083c2883c94921a1441574cda55912ad`, with Universal Launcher `main` at
 `80a848375227dc858865874ef594c4b466877241` and Universal Setup `main` at
-`4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`. The checkpoint is frozen; the
-next claim is human-gated.
+`4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`. The checkpoint is frozen. Its
+human-gated real Factorio claim remains pending independently while R3.3
+addresses archive, transfer, recovery, diagnostics, and Linux package
+foundations that do not require a Factorio binary.
 
 ## Current Proof
 
@@ -56,9 +58,10 @@ next claim is human-gated.
 
 ## Current Goal
 
-Prepare `FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01` for an operator-supplied
-Factorio binary and preserve the human verdict as the next authority boundary.
-Keep `run.execute` and general diagnostic export quarantined; do not schedule Windows discovery again.
+Execute the ordered R3.3 WorkUnits in `.aide/memory/r3.3-workunits.md`, starting
+with baseline and queue reconciliation and then admitting one production
+archive dependency. Keep `run.execute` and real Factorio isolation human-gated;
+do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 

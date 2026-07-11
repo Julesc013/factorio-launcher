@@ -80,9 +80,11 @@ def validate_root_authority_text(text: str) -> list[str]:
 def validate_profile_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "phase: r3.2-registry-and-isolation-foundation",
-        "Windows read-only discovery is",
-        "must not\n    be scheduled again",
+        "phase: r3.3-production-data-paths-recovery-and-cross-platform-proof",
+        "FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01",
+        "production archive layer",
+        "read-only discovery is implemented",
+        "must not be scheduled again",
         "C-compatible experimental ABI correctness floor",
         "authoritative_command_slice:",
         "install_refs.scan",
@@ -121,7 +123,9 @@ def validate_profile_text(text: str) -> list[str]:
 def validate_project_state_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "R3.2 authoritative registry and instance-isolation foundation",
+        "R3.3 production data paths, recovery, and cross-platform proof",
+        "human-gated real Factorio claim remains pending",
+        ".aide/memory/r3.3-workunits.md",
         "authoritative Universal Launcher route",
         "Windows x64 static-first package proof",
         "Windows read-only discovery is implemented",

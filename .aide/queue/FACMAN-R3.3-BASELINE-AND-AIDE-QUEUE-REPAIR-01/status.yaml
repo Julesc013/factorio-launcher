@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v0
+task_id: FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01
+status: needs_review
+planning_state: implementation_completed
+owner: Codex
+created_at: 2026-07-11
+started_at: 2026-07-11
+completed_at: 2026-07-11
+result: PASS
+review_gate:
+  required: true
+  status: independently_green_pending_commit
+evidence_path: .aide/queue/FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01/evidence/
+recommended_next: FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01

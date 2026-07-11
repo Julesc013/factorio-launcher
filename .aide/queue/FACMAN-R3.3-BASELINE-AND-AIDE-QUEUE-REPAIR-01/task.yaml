@@ -1,0 +1,39 @@
+schema_version: aide.queue-task.v0
+id: FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01
+title: R3.3 baseline and AIDE queue repair
+status: needs_review
+planning_state: implementation_completed
+created_at: 2026-07-11
+owner: Codex
+objective: >
+  Verify the exact three-repository R3.3 baseline, repair the malformed active
+  task projection, regenerate target-local context, and record the ordered
+  R3.3 WorkUnits without changing product behavior or runtime claims.
+depends_on: []
+allowed_paths:
+  - .aide/**
+  - docs/release/checkpoints/r3.3-baseline-and-governance.md
+  - tools/aide_target_truth_check.py
+  - tests/test_aide_target_truth.py
+forbidden_paths:
+  - runtime/**
+  - apps/**
+  - include/**
+  - external/**
+  - .git/**
+  - .env
+  - secrets/**
+  - .aide.local/**
+acceptance:
+  - Exact FacMan, Universal Launcher, and Universal Setup revisions match the execution packet.
+  - Workspace and dependency locks match the two universal main revisions.
+  - Generated task packets expose a machine-readable product WorkUnit phase.
+  - Task inspection and changed-file verification no longer select malformed Q17) state.
+  - The ordered R3.3 core and stretch WorkUnits are recorded in target-local memory.
+  - No product behavior or runtime claim changes.
+non_goals:
+  - no archive dependency admission
+  - no runtime implementation
+  - no product capability promotion
+  - no real Factorio execution
+  - no release publication
