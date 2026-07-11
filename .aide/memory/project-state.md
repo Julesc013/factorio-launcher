@@ -43,6 +43,10 @@ next claim is human-gated.
 - A purpose-built process probe proves argument transfer, intended writes,
   protected-root invariance, and exclusive run-lock behavior. This evidence is
   not a substitute for a real Factorio operator verdict.
+- The real-Factorio operator harness records executable, revision, OS, and
+  effective-config identity; uses bounded no-follow snapshots with detailed
+  diffs; supervises the process; and accepts externally classified write
+  observation. It always leaves the operator verdict pending.
 - Universal Setup owns read-only package verification, and FacMan routes its
   package-verification command through that pinned provider.
 - The diagnostic foundation now provides allowlisted, no-follow traversal with
