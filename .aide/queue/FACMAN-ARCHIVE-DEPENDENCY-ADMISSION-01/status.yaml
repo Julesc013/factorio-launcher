@@ -9,6 +9,6 @@ completed_at: 2026-07-11
 result: PASS_WITH_RECORDED_UPSTREAM_LIMITATION
 review_gate:
   required: true
-  status: independently_green_pending_commit
+  status: independently_green_exact_sha_ci_passed
 evidence_path: .aide/queue/FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01/evidence/
 recommended_next: FACMAN-ARCHIVE-CORE-03

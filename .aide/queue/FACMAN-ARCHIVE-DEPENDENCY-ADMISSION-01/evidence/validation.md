@@ -30,3 +30,14 @@ also applied FacMan line-length policy to exact upstream files; it now excludes
 only the admitted `external/miniz/` tree, with a regression proving the scope
 does not cover other external or first-party paths. These are provenance and
 policy repairs; dependency code and runtime behavior did not change.
+
+## Exact-SHA CI proof
+
+- FacMan revision: `00d29af605f785757ec8267178dcc5881c375d07`.
+- CI run `29150699241`: PASS.
+  - `linux-native`: PASS.
+  - `windows-native-package`: PASS.
+  - `appkit-compile`: PASS.
+- Security-policy run `29150699230`: PASS.
+- WorkUnit 2 did not begin until both exact-SHA workflows were terminal and
+  green.
