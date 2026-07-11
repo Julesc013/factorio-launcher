@@ -164,7 +164,7 @@ int main()
 {
     const int policy = prove_path_policy();
     if (policy != 0) return policy;
-    fs::path root = fs::temp_directory_path() / fs::u8path("facman archive unicode-\xE2\x98\x83") /
+    fs::path root = fs::current_path() / fs::u8path("facman archive unicode-\xE2\x98\x83") /
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
     while (root.u8string().size() < 320) {
         root /= "long-path-component-0123456789abcdef";
@@ -175,6 +175,7 @@ int main()
     int result = prove_writer_and_reader(root, CompressionMethod::stored, false);
     if (result == 0) result = prove_writer_and_reader(root, CompressionMethod::deflate, false);
     if (result == 0) result = prove_writer_and_reader(root, CompressionMethod::deflate, true);
+    if (result != 0) std::cerr << "archive-core-smoke-stage-code=" << result << "\n";
     fs::remove_all(root, error);
     return result;
 }

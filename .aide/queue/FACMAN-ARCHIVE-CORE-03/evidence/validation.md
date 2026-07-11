@@ -33,6 +33,14 @@ Result: LOCAL PASS; exact-SHA sanitizer and cross-platform CI pending.
 
 ## CI-only gates
 
+- First exact-SHA run `29151465751`: Linux sanitizer/native PASS, AppKit PASS,
+  Windows/package PASS, macOS archive build PASS, macOS archive smoke FAIL with
+  native CTest exit 8 and no public step log. The smoke previously placed its
+  long-path tree under the platform temporary directory; that can traverse the
+  macOS temporary-root alias rejected by the core's no-link source policy. The
+  harness now uses the checkout-owned current directory without relaxing
+  runtime policy, and emits its internal stage code as a workflow annotation if
+  another failure occurs. Replacement exact-SHA CI is required.
 - Linux ASan/UBSan archive smoke, adversarial corpus, and both fuzz harnesses:
   PENDING exact-SHA workflow. The installed WSL environment has Python but no
   C/C++ compiler or CMake, so this proof is not represented as local.

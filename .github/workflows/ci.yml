@@ -128,7 +128,15 @@ jobs:
           fl_archive_core_smoke fl_archive_probe
           fl_archive_metadata_fuzz fl_archive_plan_fuzz
       - name: Run macOS archive core smoke
-        run: ctest --test-dir build/macos-archive -R fl_archive_core_smoke --output-on-failure
+        run: |
+          set +e
+          ./build/macos-archive/fl_archive_core_smoke
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ]; then
+            echo "::error title=macOS archive smoke::native smoke exited with stage code $code"
+            exit "$code"
+          fi
 
   appkit-compile:
     runs-on: macos-15-intel
