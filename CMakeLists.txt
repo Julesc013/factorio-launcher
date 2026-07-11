@@ -311,6 +311,11 @@ if(FLAUNCH_BUILD_TESTS)
   target_link_libraries(fl_workspace_store_smoke PRIVATE facman_workspace_static)
   add_test(NAME fl_workspace_store_smoke COMMAND fl_workspace_store_smoke)
 
+  add_executable(fl_transaction_session_smoke tests/native/fl_transaction_session_smoke.cpp)
+  target_compile_features(fl_transaction_session_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_transaction_session_smoke PRIVATE facman_transaction_static)
+  add_test(NAME fl_transaction_session_smoke COMMAND fl_transaction_session_smoke)
+
   add_executable(fl_archive_core_smoke tests/native/fl_archive_core_smoke.cpp)
   if(WIN32)
     target_sources(fl_archive_core_smoke PRIVATE apps/cli/facman.manifest)

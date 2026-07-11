@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_transaction.v2.schema.json",
+  "title": "FacMan Transaction Journal v2",
+  "type": "object",
+  "required": ["schema", "transaction_id", "command_id", "workspace_id", "marker_nonce", "target", "source_identities", "created_utc", "updated_utc", "state", "completed_steps", "owned_staging_roots", "expected_files", "commit_strategy", "error", "recovery_actions"],
+  "properties": {
+    "schema": { "const": "facman.transaction.v2" },
+    "transaction_id": { "type": "string", "pattern": "^tx-[0-9a-f]{32}$" },
+    "command_id": { "type": "string", "minLength": 1 },
+    "workspace_id": { "type": "string", "minLength": 1 },
+    "marker_nonce": { "type": "string", "pattern": "^nonce-[0-9a-f]{32}$" },
+    "target": { "type": "string", "minLength": 1 },
+    "source_identities": { "type": "array", "items": { "type": "string" } },
+    "created_utc": { "type": "string", "minLength": 1 },
+    "updated_utc": { "type": "string", "minLength": 1 },
+    "state": { "enum": ["requested", "validated", "planned", "staging", "staged", "verified", "committing", "committed", "audited", "complete", "refused", "cancelled", "failed_before_commit", "commit_uncertain", "rollback_required", "rolled_back", "recovery_required"] },
+    "completed_steps": { "type": "array", "items": { "type": "string" } },
+    "owned_staging_roots": { "type": "array", "items": { "type": "string" } },
+    "expected_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256", "size"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "size": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "commit_strategy": { "type": "string" },
+    "error": { "type": "string" },
+    "recovery_actions": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

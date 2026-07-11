@@ -36,7 +36,7 @@ def validate() -> list[str]:
         "inspect_archive(",
         "stream_entry(",
         "write_to_new_owned_staging(",
-        "commit_owned_staged_file_no_clobber(",
+        "tx::StagedFileCommit::commit(",
     ):
         combined = operations + mods
         if anchor not in combined:

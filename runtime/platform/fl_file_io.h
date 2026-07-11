@@ -82,6 +82,9 @@ private:
 IoStatus commit_no_replace(
     const std::filesystem::path& source,
     const std::filesystem::path& destination);
+IoStatus replace_existing_durable(
+    const std::filesystem::path& source,
+    const std::filesystem::path& destination);
 IoStatus remove_exact_object(
     const std::filesystem::path& path,
     const FileIdentity& expected);

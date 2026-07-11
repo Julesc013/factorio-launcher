@@ -286,11 +286,9 @@ Result<InstanceRecord> InstanceRepository::load(const InstanceId& id) const
     record.profile = optional_string(document.value(), "profile", "gui");
     record.template_id = optional_string(document.value(), "template", "vanilla");
     record.root = root.value();
-    const std::string declared_root = optional_string(document.value(), "local_data_root");
-    if (!declared_root.empty() && fs::absolute(facman::platform::path_from_utf8(declared_root)).lexically_normal() !=
-            fs::absolute(record.root).lexically_normal()) {
-        return failure<InstanceRecord>("workspace_instance_root_mismatch", "declared local data root does not match managed root", path);
-    }
+    // local_data_root is descriptive legacy data, never path authority.  Derive the
+    // live root exclusively from the managed workspace layout so a modified
+    // manifest cannot redirect reads or writes outside the instance directory.
     record.schema = schema;
     record.legacy_path = legacy;
     record.source_path = path;

@@ -36,6 +36,7 @@ public:
     std::string serialize() const;
     std::size_t size() const;
     const Value* find(const std::string& key) const;
+    const Value* at(std::size_t index) const;
     Result<std::string> string_value() const;
     Result<bool> bool_value() const;
     Result<double> number_value() const;

@@ -25,12 +25,10 @@ manual_json = [
   "runtime/factorio/modsets/flb_factorio_modset_operations.cpp",
   "runtime/factorio/modsets/flb_factorio_modsets.cpp",
   "runtime/factorio/saves/flb_factorio_save_operations.cpp",
-  "runtime/transaction/fl_transaction.cpp",
 ]
 critical_io = [
   "runtime/factorio/modsets/flb_factorio_modset_operations.cpp",
   "runtime/factorio/saves/flb_factorio_save_operations.cpp",
-  "runtime/transaction/fl_transaction.cpp",
 ]
 generated_catalog = []
 version_truth = []

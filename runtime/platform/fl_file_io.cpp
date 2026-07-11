@@ -255,6 +255,24 @@ IoStatus commit_no_replace(const std::filesystem::path& source, const std::files
 #endif
 }
 
+IoStatus replace_existing_durable(const std::filesystem::path& source, const std::filesystem::path& destination)
+{
+#ifdef _WIN32
+    if (!MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        return IoStatus::failure("replace_existing_failed", windows_error("MoveFileExW"));
+    }
+    return IoStatus::success();
+#else
+    if (::rename(source.c_str(), destination.c_str()) != 0) {
+        return IoStatus::failure("replace_existing_failed", std::strerror(errno));
+    }
+    IoStatus source_flush = flush_directory(source.parent_path());
+    if (!source_flush.ok()) return source_flush;
+    if (destination.parent_path() != source.parent_path()) return flush_directory(destination.parent_path());
+    return IoStatus::success();
+#endif
+}
+
 IoStatus remove_exact_object(const std::filesystem::path& path, const FileIdentity& expected)
 {
     StableInputFile current;

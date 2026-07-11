@@ -1082,16 +1082,6 @@ bool write_payload_files(
     return true;
 }
 
-bool journal_step(
-    const fs::path& workspace,
-    tx::Record& record,
-    const std::string& state,
-    const std::string& step,
-    std::string& detail)
-{
-    return tx::advance(workspace, record, state, step, detail);
-}
-
 } // namespace
 
 StableReadResult stable_read_relative(
@@ -1450,22 +1440,23 @@ ExportOutcome export_bundle(
     };
     transaction.staging_roots = {payload_staging, archive_staging};
     transaction.commit_strategy = "destination_volume_stage_verify_atomic_no_replace";
-    std::string journal_detail;
-    if (!tx::begin(workspace, transaction, journal_detail)) {
+    auto started = tx::TransactionSession::begin(workspace, std::move(transaction));
+    if (!started) {
         return refuse(
             request,
             "recovery_write_refused",
             "Diagnostic transaction journal could not be started",
-            journal_detail,
+            started.error().message,
             true);
     }
-    if (!journal_step(workspace, transaction, "validated", "request_and_paths_validated", journal_detail) ||
-        !journal_step(workspace, transaction, "planned", "sources_and_target_planned", journal_detail)) {
+    tx::TransactionSession session = started.take_value();
+    if (!session.validated("request_and_paths_validated") ||
+        !session.planned("sources_and_target_planned")) {
         return refuse(
             request,
             "recovery_write_refused",
             "Diagnostic transaction planning could not be recorded",
-            journal_detail,
+            session.detail(),
             true);
     }
 
@@ -1506,8 +1497,7 @@ ExportOutcome export_bundle(
             files,
             events,
             detail)) {
-        std::string ignored;
-        (void)tx::fail(workspace, transaction, "failed_before_commit", detail, ignored);
+        session.failed(detail);
         return refuse(
             request,
             detail_code(detail, "diagnostic_source_changed"),
@@ -1521,7 +1511,7 @@ ExportOutcome export_bundle(
     const fs::path modset_path = modset_result ? modset_result.value() : fs::path();
     if (fs::is_regular_file(modset_path, error) && !error) {
         const fs::path relative = modset_path.lexically_relative(workspace);
-        transaction.sources.push_back(modset_path);
+        session.record().sources.push_back(modset_path);
         if (!collect_known_file(
                 workspace,
                 relative,
@@ -1533,8 +1523,7 @@ ExportOutcome export_bundle(
                 files,
                 events,
                 detail)) {
-            std::string ignored;
-            (void)tx::fail(workspace, transaction, "failed_before_commit", detail, ignored);
+            session.failed(detail);
             return refuse(
                 request,
                 "diagnostic_source_changed",
@@ -1551,13 +1540,7 @@ ExportOutcome export_bundle(
         omissions.push_back({"instance/" + omission.path, omission.reason});
     }
     if (!traversal.safe) {
-        std::string ignored;
-        (void)tx::fail(
-            workspace,
-            transaction,
-            "failed_before_commit",
-            "bounded diagnostic traversal was incomplete",
-            ignored);
+        session.failed("bounded diagnostic traversal was incomplete");
         return refuse(
             request,
             "diagnostic_bundle_policy_invalid",
@@ -1577,7 +1560,7 @@ ExportOutcome export_bundle(
             omissions.push_back({"instance/" + relative.generic_string(), "sensitive_path_omitted"});
             continue;
         }
-        transaction.sources.push_back(selected);
+        session.record().sources.push_back(selected);
         if (!collect_known_file(
                 managed_instance_root,
                 relative,
@@ -1589,8 +1572,7 @@ ExportOutcome export_bundle(
                 files,
                 events,
                 detail)) {
-            std::string ignored;
-            (void)tx::fail(workspace, transaction, "failed_before_commit", detail, ignored);
+            session.failed(detail);
             const std::string code = detail_code(detail, "diagnostic_source_changed");
             return refuse(
                 request,
@@ -1622,22 +1604,32 @@ ExportOutcome export_bundle(
     const std::string manifest_hash = identity_digest(manifest);
     add_generated(files, "manifest/diagnostic-bundle.v1.json", "manifest", manifest);
 
-    transaction.expected_hashes.clear();
+    session.record().expected_files.clear();
     for (const CollectedFile& file : files) {
-        transaction.expected_hashes.push_back(file.archive_path + "=" + file.redacted_sha256);
+        auto expected_path = tx::RelativePath::parse(file.archive_path);
+        auto expected_digest = facman::core::Sha256Digest::parse(file.redacted_sha256);
+        if (!expected_path || !expected_digest) {
+            return refuse(
+                request,
+                "diagnostic_bundle_policy_invalid",
+                "Diagnostic expected-file identity is invalid",
+                file.archive_path,
+                false);
+        }
+        session.record().expected_files.push_back(
+            {expected_path.take_value(), expected_digest.take_value(), static_cast<std::uint64_t>(file.bytes.size())});
     }
-    if (!journal_step(workspace, transaction, "staging", "owned_payload_staging_started", journal_detail)) {
+    if (!session.staging("owned_payload_staging_started")) {
         return refuse(
             request,
             "recovery_write_refused",
             "Diagnostic staging state could not be recorded",
-            journal_detail,
+            session.detail(),
             true);
     }
     std::vector<archive::WriteEntry> write_entries;
     if (!write_payload_files(payload_staging, files, write_entries, detail)) {
-        std::string ignored;
-        (void)tx::fail(workspace, transaction, "failed_before_commit", detail, ignored);
+        session.failed(detail);
         return refuse(
             request,
             "diagnostic_bundle_write_refused",
@@ -1658,13 +1650,7 @@ ExportOutcome export_bundle(
         options,
         written);
     if (!archive_status.ok()) {
-        std::string ignored;
-        (void)tx::fail(
-            workspace,
-            transaction,
-            "failed_before_commit",
-            archive_status.code + ": " + archive_status.detail,
-            ignored);
+        session.failed(archive_status.code + ": " + archive_status.detail);
         return refuse(
             request,
             "diagnostic_bundle_write_refused",
@@ -1672,49 +1658,33 @@ ExportOutcome export_bundle(
             archive_status.code + ": " + archive_status.detail,
             true);
     }
-    if (!journal_step(workspace, transaction, "staged", "archive_staged", journal_detail) ||
-        !journal_step(workspace, transaction, "verified", "archive_self_verified", journal_detail) ||
-        !journal_step(workspace, transaction, "committing", "no_clobber_commit_started", journal_detail)) {
+    if (!session.staged("archive_staged") ||
+        !session.verified("archive_self_verified") ||
+        !session.committing("no_clobber_commit_started")) {
         return refuse(
             request,
             "recovery_write_refused",
             "Diagnostic archive state could not be recorded",
-            journal_detail,
+            session.detail(),
             true);
     }
-    archive_status = archive::commit_owned_staged_file_no_clobber(
-        archive_staging,
-        written.archive_path,
-        request.output_path);
-    if (!archive_status.ok()) {
-        std::string ignored;
-        (void)tx::fail(
-            workspace,
-            transaction,
-            archive_status.code == "archive_commit_state_uncertain" ?
-                "commit_uncertain" : "failed_before_commit",
-            archive_status.code + ": " + archive_status.detail,
-            ignored);
+    std::string commit_detail;
+    if (!tx::StagedFileCommit::commit(archive_staging, written.archive_path, request.output_path, commit_detail)) {
+        session.failed(commit_detail);
         return refuse(
             request,
             "diagnostic_bundle_write_refused",
             "Diagnostic archive no-clobber commit failed",
-            archive_status.code + ": " + archive_status.detail,
+            commit_detail,
             true);
     }
-    if (!journal_step(workspace, transaction, "committed", "target_committed", journal_detail)) {
-        std::string uncertain_detail;
-        (void)tx::advance(
-            workspace,
-            transaction,
-            "commit_uncertain",
-            "verified_archive_committed",
-            uncertain_detail);
+    if (!session.committed("target_committed")) {
+        (void)session.commit_uncertain("verified_archive_committed");
         return refuse(
             request,
             "recovery_write_refused",
             "Diagnostic commit journal finalization was interrupted",
-            journal_detail,
+            session.detail(),
             true);
     }
 
@@ -1737,13 +1707,7 @@ ExportOutcome export_bundle(
     }
     if (!archive_status.ok() || manifest_content != manifest ||
         final_plan.entries.size() != files.size()) {
-        std::string ignored;
-        (void)tx::fail(
-            workspace,
-            transaction,
-            "recovery_required",
-            "committed diagnostic archive failed post-commit audit",
-            ignored);
+        session.failed("committed diagnostic archive failed post-commit audit");
         return refuse(
             request,
             "diagnostic_bundle_write_refused",
@@ -1758,15 +1722,9 @@ ExportOutcome export_bundle(
         cleanup_detail);
     const archive::Status archive_cleanup = archive::cleanup_owned_staging_root(archive_staging);
     if (!payload_cleaned || !archive_cleanup.ok()) {
-        std::string ignored;
         const std::string cleanup_error = payload_cleaned ?
             archive_cleanup.code + ": " + archive_cleanup.detail : cleanup_detail;
-        (void)tx::fail(
-            workspace,
-            transaction,
-            "recovery_required",
-            cleanup_error,
-            ignored);
+        session.failed(cleanup_error);
         return refuse(
             request,
             "diagnostic_bundle_write_refused",
@@ -1774,19 +1732,19 @@ ExportOutcome export_bundle(
             cleanup_error,
             true);
     }
-    if (!tx::complete(workspace, transaction, journal_detail)) {
+    if (!session.complete()) {
         return refuse(
             request,
             "recovery_write_refused",
             "Diagnostic transaction audit could not be finalized",
-            journal_detail,
+            session.detail(),
             true);
     }
 
     return ExportResult {
         request.instance_id,
         request.output_path,
-        transaction.transaction_id,
+        session.record().transaction_id,
         manifest_hash,
         files.size(),
         omissions.size(),

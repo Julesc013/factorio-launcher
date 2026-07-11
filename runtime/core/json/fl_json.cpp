@@ -176,6 +176,16 @@ const Value* Value::find(const std::string& key) const
     borrowed_ = std::unique_ptr<Value>(new Value(std::move(impl)));
     return borrowed_.get();
 }
+const Value* Value::at(std::size_t index) const
+{
+    if (!is_array()) return nullptr;
+    const auto& array = impl_->value.get<picojson::array>();
+    if (index >= array.size()) return nullptr;
+    auto impl = std::make_unique<Impl>();
+    impl->value = array[index];
+    borrowed_ = std::unique_ptr<Value>(new Value(std::move(impl)));
+    return borrowed_.get();
+}
 Result<std::string> Value::string_value() const
 {
     if (!is_string()) return Result<std::string>::failure({"json_type", "JSON value is not a string", ""});

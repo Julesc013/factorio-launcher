@@ -946,14 +946,44 @@ private:
                 workspace_ready.error().message);
         }
         std::string text = discovery::install_ref_json(install);
+        transactions::Record transaction;
+        transaction.command_id = "installs.import";
+        transaction.target = target.value();
+        transaction.sources = {fs::path(root)};
+        transaction.commit_strategy = "durable_exclusive_file_create";
+        auto started = transactions::TransactionSession::begin(workspace_, std::move(transaction));
+        if (!started) {
+            return refused(
+                safety_refusal("installs.import", "recovery_write_refused", "Install journal preparation failed", started.error().message, true),
+                "recovery_write_refused",
+                started.error().message);
+        }
+        transactions::TransactionSession session = started.take_value();
+        if (!session.validated("install_inspected") ||
+            !session.planned("managed_target_validated") ||
+            !session.staged("install_record_serialized") ||
+            !session.verified("install_record_validated") ||
+            !session.committing("durable_exclusive_create_started")) {
+            return refused(
+                safety_refusal("installs.import", "recovery_write_refused", "Install journal preparation failed", session.detail(), true),
+                "recovery_write_refused",
+                session.detail());
+        }
         workspace_store::InstallRecord record;
         record.id = facman::core::InstallId(id);
         auto created = workspace_store::InstallRepository(layout).create(record, text);
         if (!created) {
+            session.failed(created.error().message);
             return refused(
                 safety_refusal("installs.import", "persistent_write_refused", "Install reference could not be committed", created.error().message, true),
                 "persistent_write_refused",
                 created.error().message);
+        }
+        if (!session.committed("install_record_committed") || !session.complete()) {
+            return refused(
+                safety_refusal("installs.import", "transaction_recovery_required", "Install committed but journal finalization failed", session.detail(), false),
+                "transaction_recovery_required",
+                session.detail());
         }
         ApplicationResult result;
         result.output = text;
@@ -1051,20 +1081,22 @@ private:
         transaction.sources = {install.root};
         transaction.staging_roots = {staging};
         transaction.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
-        std::string journal_error;
-        if (!transactions::begin(workspace_, transaction, journal_error) ||
-            !transactions::advance(workspace_, transaction, "validated", "request_validated", journal_error) ||
-            !transactions::advance(workspace_, transaction, "planned", "target_and_install_validated", journal_error)) {
-            return refused(safety_refusal("instances.create", "recovery_write_refused", "Instance journal preparation failed", journal_error, true), "recovery_write_refused", journal_error);
+        auto started = transactions::TransactionSession::begin(workspace_, std::move(transaction));
+        if (!started) {
+            return refused(safety_refusal("instances.create", "recovery_write_refused", "Instance journal preparation failed", started.error().message, true), "recovery_write_refused", started.error().message);
+        }
+        transactions::TransactionSession session = started.take_value();
+        if (!session.validated("request_validated") || !session.planned("target_and_install_validated")) {
+            return refused(safety_refusal("instances.create", "recovery_write_refused", "Instance journal preparation failed", session.detail(), true), "recovery_write_refused", session.detail());
         }
         fs::create_directories(staging);
         std::string error;
         if (!facman::base::write_text_new_atomic(staging / ".facman-staging.v1", "facman-instance-staging-v1\n", error)) {
-            (void)transactions::fail(workspace_, transaction, "failed_before_commit", error, journal_error);
+            session.failed(error);
             return refused(safety_refusal("instances.create", "persistent_write_refused", "Staging marker failed", error, true), "persistent_write_refused", error);
         }
-        if (!transactions::advance(workspace_, transaction, "staging", "owned_staging_created", journal_error)) {
-            return refused(safety_refusal("instances.create", "recovery_write_refused", "Instance staging journal update failed", journal_error, true), "recovery_write_refused", journal_error);
+        if (!session.staging("owned_staging_created")) {
+            return refused(safety_refusal("instances.create", "recovery_write_refused", "Instance staging journal update failed", session.detail(), true), "recovery_write_refused", session.detail());
         }
         const char* dirs[] = {"config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "exports", "cache", "locks"};
         for (const char* dir : dirs) fs::create_directories(staging / dir);
@@ -1082,30 +1114,30 @@ private:
                 error) &&
             facman::base::write_text_new_atomic(staging / "instance.v1.json", instance_json(instance), error);
         if (!staged ||
-            !transactions::advance(workspace_, transaction, "staged", "instance_files_staged", journal_error) ||
-            !transactions::advance(workspace_, transaction, "verified", "instance_configuration_verified", journal_error) ||
-            !transactions::advance(workspace_, transaction, "committing", "no_clobber_commit_started", journal_error) ||
-            !facman::base::commit_directory_no_clobber(staging, target.path, error)) {
+            !session.staged("instance_files_staged") ||
+            !session.verified("instance_configuration_verified") ||
+            !session.committing("no_clobber_commit_started") ||
+            !transactions::StagedDirectoryCommit::commit(staging, target.path, error)) {
             std::string cleanup;
             (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup);
-            (void)transactions::fail(workspace_, transaction, "failed_before_commit", error.empty() ? journal_error : error, journal_error);
+            session.failed(error.empty() ? session.detail() : error);
             return refused(safety_refusal("instances.create", "persistent_write_refused", "Instance commit failed", error, true), "persistent_write_refused", error);
         }
-        if (!transactions::advance(workspace_, transaction, "committed", "instance_directory_committed", journal_error)) {
-            return refused(safety_refusal("instances.create", "transaction_recovery_required", "Instance committed but journal update failed", journal_error, false), "transaction_recovery_required", journal_error);
+        if (!session.committed("instance_directory_committed")) {
+            return refused(safety_refusal("instances.create", "transaction_recovery_required", "Instance committed but journal update failed", session.detail(), false), "transaction_recovery_required", session.detail());
         }
         std::error_code marker_error;
         fs::remove(target.path / ".facman-staging.v1", marker_error);
-        if (marker_error || !transactions::complete(workspace_, transaction, journal_error)) {
+        if (marker_error || !session.complete()) {
             return refused(
                 safety_refusal(
                     "instances.create",
                     "transaction_recovery_required",
                     "Instance committed but finalization requires recovery",
-                    marker_error ? marker_error.message() : journal_error,
+                    marker_error ? marker_error.message() : session.detail(),
                     false),
                 "transaction_recovery_required",
-                journal_error);
+                session.detail());
         }
         ApplicationResult result;
         result.output = instance_json(instance);
