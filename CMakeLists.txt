@@ -161,7 +161,7 @@ endif()
 add_library(flb_factorio_diagnostics_static STATIC runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp)
 target_compile_features(flb_factorio_diagnostics_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_diagnostics_static PUBLIC runtime/factorio/diagnostics)
-target_link_libraries(flb_factorio_diagnostics_static PUBLIC facman_base_static)
+target_link_libraries(flb_factorio_diagnostics_static PUBLIC facman_transaction_static)
 
 add_library(flb_factorio_mods_static STATIC runtime/factorio/mods/flb_factorio_mods.cpp)
 target_compile_features(flb_factorio_mods_static PUBLIC cxx_std_17)
@@ -200,6 +200,7 @@ target_include_directories(flb_factorio_application_static PUBLIC runtime/factor
 target_link_libraries(flb_factorio_application_static PUBLIC
   facman_base_static
   flb_factorio_discovery_static
+  flb_factorio_diagnostics_static
   flb_factorio_launch_static
   flb_factorio_modsets_static
   flb_factorio_saves_static

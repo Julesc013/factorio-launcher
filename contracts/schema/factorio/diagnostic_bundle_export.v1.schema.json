@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/diagnostic_bundle_export.v1.schema.json",
+  "title": "Factorio Diagnostic Bundle Export Result",
+  "type": "object",
+  "required": [
+    "schema",
+    "command",
+    "status",
+    "instance_id",
+    "path",
+    "transaction_id",
+    "manifest_sha256",
+    "files",
+    "omissions",
+    "self_verified"
+  ],
+  "properties": {
+    "schema": { "const": "factorio.diagnostic_bundle_export.v1" },
+    "command": { "const": "diagnostics.export" },
+    "status": { "const": "ok" },
+    "instance_id": { "type": "string", "minLength": 1 },
+    "path": { "type": "string", "minLength": 1 },
+    "transaction_id": { "type": "string", "minLength": 1 },
+    "manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "files": { "type": "integer", "minimum": 1 },
+    "omissions": { "type": "integer", "minimum": 0 },
+    "self_verified": { "const": true }
+  },
+  "additionalProperties": false
+}

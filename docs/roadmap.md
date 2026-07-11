@@ -167,16 +167,21 @@ WorkUnit rather than an extension of R3.2.
 - `facman diagnostics redact <file> --json` handles known line-oriented inputs
   and sensitive multiline JSON string fields; malformed JSON and INI fail
   closed.
-- The dormant bundle collector uses allowlisted, deterministic, no-follow
+- The bundle collector uses allowlisted, deterministic, no-follow
   traversal with maximum depth, file count, per-file size, total size, and time
   budgets. It emits a structured omission report and covers spaces, Unicode,
   long paths, overlapping roots, and link/reparse refusal through shared path
   safety primitives.
-- `facman diagnostics export` and doctor-bundle output return
-  `diagnostic_export_not_safe`. The traversal foundation does not promote the
-  complete dormant bundle writer or general sanitization.
-- Historical secret-corpus bundle tests remain evidence of their fixture scope,
-  not proof of general diagnostic sanitization.
+- `facman diagnostics export` and doctor-bundle output route through the
+  registered typed operation. Selected files are reopened from stable
+  no-follow handles, limited to reviewed formats, hashed before and after
+  redaction, staged through the production archive writer, journaled, and
+  self-verified after commit.
+- Unknown formats are omitted explicitly. Malformed reviewed structured files,
+  multiply linked sources, read races, unredacted private paths, or incomplete
+  traversal refuse the complete export.
+- The claim remains limited to reviewed local formats and local filesystems;
+  it is not general arbitrary-file sanitization or shared-filesystem proof.
 - Factorio account login, credential-store implementation, diagnostic upload,
   Mod Portal token behavior, and GUI diagnostic UX remain deferred.
 

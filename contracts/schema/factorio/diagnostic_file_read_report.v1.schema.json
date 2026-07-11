@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/diagnostic_file_read_report.v1.schema.json",
+  "title": "Factorio Diagnostic Stable File Read Report",
+  "type": "object",
+  "required": ["schema", "policy", "files"],
+  "properties": {
+    "schema": { "const": "factorio.diagnostic_file_read_report.v1" },
+    "policy": { "const": "facman.diagnostic_file_read.v1" },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "identity_sha256",
+          "original_sha256",
+          "redacted_sha256",
+          "consistent"
+        ],
+        "properties": {
+          "path": { "type": "string" },
+          "identity_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "original_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "redacted_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "consistent": { "const": true }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

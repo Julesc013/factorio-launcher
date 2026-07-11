@@ -181,14 +181,17 @@ class DiagnosticRedactionTests(unittest.TestCase):
             self.assertEqual(refusal["refusal"]["code"], "diagnostic_structured_input_invalid")
             self.assertNotIn("must-not-escape", stdout)
 
-    def test_export_quarantine_has_no_unbounded_instance_walk(self) -> None:
+    def test_export_route_has_no_cli_backend_or_legacy_zip_writer(self) -> None:
         dispatch = (ROOT / "apps" / "cli" / "command_dispatch.cpp").read_text(encoding="utf-8")
-        collector_start = dispatch.index("bool collect_diagnostic_instance_files(")
-        collector_end = dispatch.index("std::string diagnostic_doctor_report_json", collector_start)
-        collector = dispatch[collector_start:collector_end]
-        self.assertNotIn("recursive_directory_iterator", collector)
-        self.assertIn("collect_bounded_files", collector)
-        self.assertGreaterEqual(dispatch.count('"diagnostic_export_not_safe"'), 2)
+        diagnostics = (ROOT / "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("write_diagnostic_stored_zip_quarantined", dispatch)
+        self.assertNotIn("write_diagnostic_bundle(", dispatch)
+        self.assertIn('"diagnostics.export"', dispatch)
+        self.assertIn("route_factorio_command(", dispatch)
+        self.assertIn("stable_read_relative(", diagnostics)
+        self.assertIn("write_to_new_owned_staging(", diagnostics)
 
     @unittest.skipUnless(os.name == "nt", "Windows junction proof")
     def test_bounded_collector_refuses_a_real_windows_junction(self) -> None:
@@ -218,7 +221,7 @@ class DiagnosticRedactionTests(unittest.TestCase):
             )
             self.assertEqual(checked.returncode, 0, checked.stderr or checked.stdout)
 
-    def test_diagnostic_bundle_and_doctor_bundle_are_quarantined(self) -> None:
+    def test_diagnostic_bundle_and_doctor_alias_are_safe_and_self_verified(self) -> None:
         fixtures_before = tree_snapshot(FIXTURES)
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
@@ -238,10 +241,30 @@ class DiagnosticRedactionTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 1, stderr)
-            self.assertEqual(report["refusal"]["code"], "diagnostic_export_not_safe")
-            self.assertFalse(bundle.exists())
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(report["schema"], "factorio.diagnostic_bundle_export.v1")
+            self.assertTrue(report["self_verified"])
+            self.assertTrue(bundle.is_file())
             assert_no_secret_values(self, stdout)
+
+            with zipfile.ZipFile(bundle) as archive:
+                names = set(archive.namelist())
+                payload = b"".join(archive.read(name) for name in names)
+                manifest = json.loads(archive.read("manifest/diagnostic-bundle.v1.json"))
+                omissions = json.loads(archive.read("reports/omissions.v1.json"))
+                reads = json.loads(archive.read("reports/file-reads.v1.json"))
+            self.assertIn("reports/traversal.v1.json", names)
+            self.assertIn("reports/redaction.v1.json", names)
+            self.assertIn("reports/file-reads.v1.json", names)
+            self.assertIn("reports/omissions.v1.json", names)
+            self.assertEqual(manifest["policy_version"], "facman.diagnostic_export.v1")
+            self.assertEqual(manifest["source_identity_policy"], "sha256-pseudonymous")
+            self.assertTrue(all(item["consistent"] for item in reads["files"]))
+            omission_reasons = {item["reason"] for item in omissions["omissions"]}
+            self.assertIn("unknown_format", omission_reasons)
+            self.assertIn("archive_format_omitted", omission_reasons)
+            self.assertNotIn(str(workspace).encode("utf-8"), payload)
+            assert_no_secret_values(self, payload)
 
             doctor_bundle = workspace / "doctor-diagnostics.zip"
             code, doctor, doctor_stdout, stderr = run_json(
@@ -256,9 +279,10 @@ class DiagnosticRedactionTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 1, stderr)
-            self.assertEqual(doctor["refusal"]["code"], "diagnostic_export_not_safe")
-            self.assertFalse(doctor_bundle.exists())
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(doctor["command"], "diagnostics.export")
+            self.assertTrue(doctor["self_verified"])
+            self.assertTrue(doctor_bundle.is_file())
             assert_no_secret_values(self, doctor_stdout)
 
         self.assertEqual(tree_snapshot(FIXTURES), fixtures_before)

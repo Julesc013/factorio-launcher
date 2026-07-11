@@ -158,4 +158,18 @@ std::string sha256_hex_file(const std::filesystem::path& path)
     return hash.finish();
 }
 
+std::string sha256_hex_bytes(const unsigned char* data, std::size_t size)
+{
+    Sha256 hash;
+    if (size != 0) {
+        hash.update(data, size);
+    }
+    return hash.finish();
+}
+
+std::string sha256_hex_bytes(const std::vector<unsigned char>& bytes)
+{
+    return sha256_hex_bytes(bytes.data(), bytes.size());
+}
+
 } // namespace facman::base

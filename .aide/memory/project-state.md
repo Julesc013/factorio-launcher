@@ -51,10 +51,11 @@ foundations that do not require a Factorio binary.
   observation. It always leaves the operator verdict pending.
 - Universal Setup owns read-only package verification, and FacMan routes its
   package-verification command through that pinned provider.
-- The diagnostic foundation now provides allowlisted, no-follow traversal with
-  depth, file-count, per-file, total-size, and time budgets, explicit omission
-  reports, and fail-closed JSON and INI redaction. General bundle export remains
-  unavailable.
+- Diagnostic export now combines bounded traversal with stable no-follow
+  handle reads, a reviewed-format allowlist, fail-closed structured redaction,
+  pseudonymous source identity, production archive output, transaction
+  recovery, and post-commit self-verification. Cross-platform exact-SHA CI for
+  this WorkUnit remains pending.
 
 ## Current Goal
 
@@ -62,17 +63,14 @@ Continue the ordered R3.3 WorkUnits in `.aide/memory/r3.3-workunits.md` from
 diagnostic export safety. The baseline, archive dependency, production core,
 local mod/modset routes, save/portable-transfer routes, and bounded workspace
 transaction recovery are frozen at green exact-SHA checkpoints. Keep
-`run.execute` and real Factorio isolation human-gated; do not schedule Windows
-discovery again.
+`run.execute` and real Factorio isolation human-gated; do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 
 - Real `run.execute` remains unavailable until the prepared operator-supplied
   Factorio isolation smoke receives a reviewed human pass.
-- General diagnostic export remains unavailable. Traversal budgets, no-follow
-  behavior, omission reporting, and JSON/INI fail-closed redaction are proven
-  as a foundation, not as complete adversarial proof of the dormant bundle
-  writer.
+- Native GUI diagnostic export UX remains deferred; the enabled authoritative
+  operation is exposed through the CLI and doctor CLI alias only.
 - Setup mutation, networking, credentials, dynamic plugins, and release
   publication remain deferred.
 

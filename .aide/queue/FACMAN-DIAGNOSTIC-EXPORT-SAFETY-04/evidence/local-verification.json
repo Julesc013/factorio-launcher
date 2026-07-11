@@ -1,0 +1,79 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 42
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 42
+
+## CHANGED_FILES
+
+- allowed: `.aide/memory/project-state.md` (M; matches active task allowed path)
+- allowed: `.aide/profile.yaml` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/evidence/remaining-risks.md` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/status.yaml` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/task.yaml` (M; matches active task allowed path)
+- allowed: `CMakeLists.txt` (M; matches active task allowed path)
+- allowed: `README.md` (M; matches active task allowed path)
+- allowed: `apps/cli/command_dispatch.cpp` (M; matches active task allowed path)
+- allowed: `contracts/command/frontend/frontend.required_commands.v1.toml` (M; matches active task allowed path)
+- allowed: `contracts/refusal/refusal_codes.v1.toml` (M; matches active task allowed path)
+- allowed: `contracts/schema/factorio/diagnostic_bundle.v1.schema.json` (M; matches active task allowed path)
+- allowed: `docs/quality/safety_claim_ledger.md` (M; matches active task allowed path)
+- allowed: `docs/roadmap.md` (M; matches active task allowed path)
+- allowed: `runtime/base/fl_sha256.cpp` (M; matches active task allowed path)
+- allowed: `runtime/base/fl_sha256.h` (M; matches active task allowed path)
+- allowed: `runtime/factorio/application/flb_factorio_application.cpp` (M; matches active task allowed path)
+- allowed: `runtime/factorio/binding/flb_api.c` (M; matches active task allowed path)
+- allowed: `runtime/factorio/diagnostics/README.md` (M; matches active task allowed path)
+- allowed: `runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp` (M; matches active task allowed path)
+- allowed: `runtime/factorio/diagnostics/flb_factorio_diagnostics.h` (M; matches active task allowed path)
+- allowed: `runtime/transaction/fl_transaction.cpp` (M; matches active task allowed path)
+- allowed: `tests/golden/diagnostics/diagnostic_bundle.redaction_report.v1.json` (M; matches active task allowed path)
+- allowed: `tests/golden/diagnostics/diagnostic_bundle.valid.redacted_manifest.v1.json` (M; matches active task allowed path)
+- allowed: `tests/native/flb_command_bridge_smoke.c` (M; matches active task allowed path)
+- allowed: `tests/test_cli.py` (M; matches active task allowed path)
+- allowed: `tests/test_diagnostic_redaction.py` (M; matches active task allowed path)
+- allowed: `tools/alpha_vertical_slice_check.py` (M; matches active task allowed path)
+- allowed: `tools/archive_core_check.py` (M; matches active task allowed path)
+- allowed: `tools/command_contract_check.py` (M; matches active task allowed path)
+- allowed: `tools/frontend_contract_check.py` (M; matches active task allowed path)
+- allowed: `tools/strict_check.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/diagnostics.export.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/schema/factorio/diagnostic_bundle_export.v1.schema.json` (??; matches active task allowed path)
+- allowed: `contracts/schema/factorio/diagnostic_file_read_report.v1.schema.json` (??; matches active task allowed path)
+- allowed: `contracts/schema/factorio/diagnostic_omission_report.v1.schema.json` (??; matches active task allowed path)
+- allowed: `docs/architecture/diagnostic-export-safety.v1.md` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/diagnostics.export.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/diagnostics.export.success.json` (??; matches active task allowed path)
+- allowed: `tests/test_diagnostic_export.py` (??; matches active task allowed path)
+- allowed: `tools/diagnostic_export_check.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.

@@ -248,6 +248,12 @@ int flb_context_create_v1(
             "explicit_persistent_write") != ULK_STATUS_OK ||
         flb_register_application_command(
             context,
+            "diagnostics.export",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/diagnostic_bundle_export.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
             "workspace.recovery.inspect",
             "[\"workspace_read\"]",
             "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",

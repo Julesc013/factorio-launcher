@@ -164,6 +164,7 @@ int main(void)
         run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.inspect\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.plan\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.apply\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"diagnostics.export\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"owner\":\"factorio-launcher\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "factorio_launch_preflight.v1.schema.json") != 0) {
         return 34;
@@ -272,7 +273,11 @@ int main(void)
         run_dry_run_write_refusal(
             context,
             "workspace.recovery.apply",
-            "{\"transaction_id\":\"tx-example\"}") != 0) {
+            "{\"transaction_id\":\"tx-example\"}") != 0 ||
+        run_dry_run_write_refusal(
+            context,
+            "diagnostics.export",
+            "{\"instance_id\":\"fixture\",\"output_path\":\"diagnostics.zip\"}") != 0) {
         return 38;
     }
 

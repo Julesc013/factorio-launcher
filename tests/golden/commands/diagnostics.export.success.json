@@ -1,0 +1,12 @@
+{
+  "schema": "factorio.diagnostic_bundle_export.v1",
+  "command": "diagnostics.export",
+  "status": "ok",
+  "instance_id": "isolated-proof",
+  "path": "diagnostics.zip",
+  "transaction_id": "tx-example",
+  "manifest_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "files": 8,
+  "omissions": 2,
+  "self_verified": true
+}

@@ -2,9 +2,26 @@
   "schema": "factorio.diagnostic_bundle.v1",
   "bundle_version": 1,
   "instance_id": "redaction-proof",
+  "policy_version": "facman.diagnostic_export.v1",
+  "source_identity_policy": "sha256-pseudonymous",
+  "files": [
+    {
+      "path": "instance/config/config.ini",
+      "kind": "config",
+      "redacted": true,
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  ],
+  "omission_count": 2,
+  "reports": {
+    "traversal": "reports/traversal.v1.json",
+    "redaction": "reports/redaction.v1.json",
+    "file_reads": "reports/file-reads.v1.json",
+    "omissions": "reports/omissions.v1.json"
+  },
   "redaction": {
     "policy_schema": "facman.redaction_policy.v1",
     "marker": "[FACMAN_REDACTED]",
-    "report_path": "redaction/report.v1.json"
+    "report_path": "reports/redaction.v1.json"
   }
 }

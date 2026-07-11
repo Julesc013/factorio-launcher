@@ -56,6 +56,12 @@ required_codes = [
   "diagnostic_bundle_write_refused",
   "diagnostic_binary_skipped",
   "diagnostic_archive_unsafe",
+  "diagnostic_source_path_invalid",
+  "diagnostic_source_link_refused",
+  "diagnostic_source_budget_exceeded",
+  "diagnostic_source_read_failed",
+  "diagnostic_source_changed",
+  "diagnostic_private_path_unredacted",
   "export_secret_refused",
   "redaction_policy_missing",
   "redaction_policy_invalid",
@@ -559,6 +565,48 @@ severity = "warning"
 effect = "workspace_read"
 retryable = false
 message = "An archive file was excluded from a diagnostic bundle rather than copied raw."
+
+[[code]]
+id = "diagnostic_source_path_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A diagnostic source path is not a bounded relative path under its reviewed root."
+
+[[code]]
+id = "diagnostic_source_link_refused"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A diagnostic source is linked, reparsed, multiply linked, or outside its opened root."
+
+[[code]]
+id = "diagnostic_source_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A diagnostic source exceeded the stable-handle read byte budget."
+
+[[code]]
+id = "diagnostic_source_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A diagnostic source could not be read completely from its stable handle."
+
+[[code]]
+id = "diagnostic_source_changed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A diagnostic source identity or relevant metadata changed while it was read."
+
+[[code]]
+id = "diagnostic_private_path_unredacted"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A diagnostic source retained a machine-private absolute path after sanitization."
 
 [[code]]
 id = "export_secret_refused"

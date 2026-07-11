@@ -367,6 +367,51 @@ Outcome apply(const fs::path& workspace, const std::string& id)
                 return step.find("committed") != std::string::npos;
             }) != record.completed_steps.end();
         if (commit_recorded) {
+            for (const fs::path& staging : record.staging_roots) {
+                if (!fs::exists(staging)) {
+                    record.recovery_actions.push_back("staging_already_absent");
+                    continue;
+                }
+                std::string link_detail;
+                if (staging.parent_path().lexically_normal() !=
+                        record.target.parent_path().lexically_normal() ||
+                    facman::base::path_crosses_link_or_reparse_point(staging, link_detail)) {
+                    unlock();
+                    return Refusal {
+                        "recovery_staging_unrecognized",
+                        "Committed recovery staging is not bound to the target parent",
+                        link_detail,
+                        false,
+                    };
+                }
+                std::string marker_name = facman::archive::owned_staging_marker_name();
+                fs::path marker = staging / marker_name;
+                if (!fs::exists(marker)) {
+                    marker_name = ".facman-staging.v1";
+                    marker = staging / marker_name;
+                }
+                std::error_code marker_error;
+                const fs::file_status marker_status = fs::symlink_status(marker, marker_error);
+                if (marker_error || !fs::is_regular_file(marker_status)) {
+                    unlock();
+                    return Refusal {
+                        "recovery_staging_unrecognized",
+                        "Committed recovery staging ownership is not recognized",
+                        path_text(staging),
+                        false,
+                    };
+                }
+                if (!facman::base::remove_owned_staging_tree(staging, marker_name, detail)) {
+                    unlock();
+                    return Refusal {
+                        "recovery_write_refused",
+                        "Committed owned staging cleanup failed",
+                        detail,
+                        true,
+                    };
+                }
+                record.recovery_actions.push_back("removed_committed_owned_staging");
+            }
             for (const char* marker_name : {facman::archive::owned_staging_marker_name(), ".facman-staging.v1"}) {
                 const fs::path marker = record.target / marker_name;
                 std::error_code marker_error;

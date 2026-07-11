@@ -3,17 +3,29 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/diagnostic_bundle.v1.schema.json",
   "title": "Factorio Diagnostic Bundle",
   "type": "object",
-  "required": ["schema", "bundle_version", "instance_id", "files", "redaction"],
+  "required": [
+    "schema",
+    "bundle_version",
+    "instance_id",
+    "policy_version",
+    "source_identity_policy",
+    "files",
+    "omission_count",
+    "reports",
+    "redaction"
+  ],
   "properties": {
     "schema": { "const": "factorio.diagnostic_bundle.v1" },
     "bundle_version": { "type": "integer", "minimum": 1 },
     "instance_id": { "type": "string" },
+    "policy_version": { "const": "facman.diagnostic_export.v1" },
+    "source_identity_policy": { "const": "sha256-pseudonymous" },
     "created_at": { "type": "string" },
     "files": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["path", "kind"],
+        "required": ["path", "kind", "redacted", "sha256"],
         "properties": {
           "path": { "type": "string" },
           "kind": {
@@ -25,14 +37,31 @@
               "doctor_report",
               "config",
               "log",
+              "diagnostic_text",
               "modset_lock",
-              "redaction_report"
+              "redaction_report",
+              "traversal_report",
+              "file_read_report",
+              "omission_report"
             ]
           },
-          "redacted": { "type": "boolean" }
+          "redacted": { "type": "boolean" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
         },
         "additionalProperties": false
       }
+    },
+    "omission_count": { "type": "integer", "minimum": 0 },
+    "reports": {
+      "type": "object",
+      "required": ["traversal", "redaction", "file_reads", "omissions"],
+      "properties": {
+        "traversal": { "type": "string" },
+        "redaction": { "type": "string" },
+        "file_reads": { "type": "string" },
+        "omissions": { "type": "string" }
+      },
+      "additionalProperties": false
     },
     "excluded_paths": {
       "type": "array",

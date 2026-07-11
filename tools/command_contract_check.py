@@ -33,6 +33,7 @@ EXPECTED_COMMANDS = {
     "workspace.recovery.inspect",
     "workspace.recovery.plan",
     "workspace.recovery.apply",
+    "diagnostics.export",
 }
 
 COMMAND_PATTERN = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_-]+)+$")

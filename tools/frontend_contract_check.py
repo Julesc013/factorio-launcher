@@ -22,10 +22,10 @@ EXPECTED_REQUIRED = {
     "launch_plan.build",
     "launch_plan.preflight",
     "run.preview",
-    "diagnostics.export",
 }
 
 EXPECTED_DEFERRED = {
+    "diagnostics.export",
     "run.execute",
     "mods.import",
     "modsets.lock",

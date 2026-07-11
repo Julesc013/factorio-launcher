@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.diagnostic_refusal.v1",
+  "command": "diagnostics.export",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "diagnostic_source_changed",
+    "reason": "a selected diagnostic source changed during stable handle reading",
+    "recoverable": false
+  }
+}

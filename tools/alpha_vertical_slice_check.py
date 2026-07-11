@@ -11,6 +11,7 @@ REQUIRED_GOLDENS = {
     "product.inspect.success.json": {"command": "product.inspect"},
     "command_graph.inspect.success.json": {"command": "command_graph.inspect"},
     "diagnostics.report.success.json": {"command": "diagnostics.report"},
+    "diagnostics.export.success.json": {"command": "diagnostics.export"},
     "installs.import.success.json": {"command": "installs.import"},
     "installs.inspect.success.json": {"command": "installs.inspect"},
     "instances.create.success.json": {"command": "instances.create"},

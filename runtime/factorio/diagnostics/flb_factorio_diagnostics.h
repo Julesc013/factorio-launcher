@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace facman::factorio::diagnostics {
@@ -62,6 +63,42 @@ struct TraversalResult {
     std::uintmax_t total_size = 0;
 };
 
+struct StableReadResult {
+    bool safe = false;
+    std::vector<unsigned char> bytes;
+    std::uint64_t size = 0;
+    std::string identity_sha256;
+    std::string content_sha256;
+    std::string code;
+    std::string detail;
+};
+
+struct ExportRequest {
+    std::string instance_id;
+    std::filesystem::path output_path;
+};
+
+struct ExportResult {
+    std::string instance_id;
+    std::filesystem::path output_path;
+    std::string transaction_id;
+    std::string manifest_sha256;
+    std::size_t file_count = 0;
+    std::size_t omission_count = 0;
+    bool self_verified = false;
+};
+
+struct Refusal {
+    std::string command;
+    std::string instance_id;
+    std::string code;
+    std::string reason;
+    std::string detail;
+    bool recoverable = false;
+};
+
+using ExportOutcome = std::variant<ExportResult, Refusal>;
+
 RedactionPolicy default_redaction_policy();
 
 RedactionResult redact_text(const std::string& text, const std::string& logical_path);
@@ -96,6 +133,19 @@ TraversalResult collect_bounded_files(
     const std::filesystem::path& root,
     const TraversalPolicy& policy
 );
+
+StableReadResult stable_read_relative(
+    const std::filesystem::path& allowed_root,
+    const std::filesystem::path& relative_path,
+    std::uint64_t maximum_bytes);
+
+ExportOutcome export_bundle(
+    const std::filesystem::path& workspace,
+    const ExportRequest& request);
+
+std::string to_json(const ExportResult& result);
+
+std::string to_json(const Refusal& refusal);
 
 } // namespace facman::factorio::diagnostics
 

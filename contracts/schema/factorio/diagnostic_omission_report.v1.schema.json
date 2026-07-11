@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/diagnostic_omission_report.v1.schema.json",
+  "title": "Factorio Diagnostic Omission Report",
+  "type": "object",
+  "required": ["schema", "omissions"],
+  "properties": {
+    "schema": { "const": "factorio.diagnostic_omission_report.v1" },
+    "omissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "reason"],
+        "properties": {
+          "path": { "type": "string" },
+          "reason": {
+            "enum": [
+              "archive_format_omitted",
+              "unknown_format",
+              "sensitive_path_omitted",
+              "allowlist_root_escapes",
+              "allowlist_root_invalid",
+              "file_count_limit_exceeded",
+              "file_size_limit_exceeded",
+              "link_or_reparse_refused",
+              "maximum_depth_exceeded",
+              "root_missing_or_unsafe",
+              "time_budget_exhausted",
+              "total_size_limit_exceeded",
+              "traversal_error"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,6 +1,7 @@
 #include "flb_factorio_application.h"
 
 #include "fl_path_safety.h"
+#include "flb_factorio_diagnostics.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
@@ -18,6 +19,7 @@
 #include <vector>
 
 namespace fs = std::filesystem;
+namespace diagnostic_operations = facman::factorio::diagnostics;
 namespace discovery = facman::factorio::discovery;
 namespace launch = facman::factorio::launch;
 namespace mod_operations = facman::factorio::modsets::operations;
@@ -46,6 +48,7 @@ enum class CommandId {
     recovery_inspect,
     recovery_plan,
     recovery_apply,
+    diagnostics_export,
     unsupported,
 };
 
@@ -83,6 +86,7 @@ using BackupSaveRequest = save_operations::BackupRequest;
 using CloneSaveRequest = save_operations::CloneRequest;
 using ExportInstanceRequest = save_operations::ExportRequest;
 using ImportInstanceRequest = save_operations::ImportRequest;
+using ExportDiagnosticRequest = diagnostic_operations::ExportRequest;
 
 using ApplicationPayload = std::variant<
     std::monostate,
@@ -99,7 +103,8 @@ using ApplicationPayload = std::variant<
     CloneSaveRequest,
     ExportInstanceRequest,
     ImportInstanceRequest,
-    RecoveryRequest>;
+    RecoveryRequest,
+    ExportDiagnosticRequest>;
 
 struct ApplicationRequest {
     CommandId command = CommandId::unsupported;
@@ -124,7 +129,9 @@ using ApplicationOutput = std::variant<
     save_operations::ImportResult,
     save_operations::Refusal,
     transactions::RecoveryResult,
-    transactions::Refusal>;
+    transactions::Refusal,
+    diagnostic_operations::ExportResult,
+    diagnostic_operations::Refusal>;
 
 struct ApplicationResult {
     int status = ULK_STATUS_OK;
@@ -628,6 +635,16 @@ bool decode_request(
         request.payload = std::move(typed);
         return true;
     }
+    case CommandId::diagnostics_export: {
+        if (!validate_fields(payload, {"instance_id", "output_path"}, {}, detail)) return false;
+        ExportDiagnosticRequest typed;
+        std::string output;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "output_path", output, detail)) return false;
+        typed.output_path = output;
+        request.payload = std::move(typed);
+        return true;
+    }
     case CommandId::recovery_inspect: {
         if (!validate_fields(payload, {}, {}, detail)) return false;
         request.payload = RecoveryRequest {};
@@ -669,6 +686,7 @@ CommandId command_id(ulk_string_view command)
     if (value == "workspace.recovery.inspect") return CommandId::recovery_inspect;
     if (value == "workspace.recovery.plan") return CommandId::recovery_plan;
     if (value == "workspace.recovery.apply") return CommandId::recovery_apply;
+    if (value == "diagnostics.export") return CommandId::diagnostics_export;
     return CommandId::unsupported;
 }
 
@@ -777,7 +795,8 @@ private:
             request.command == CommandId::saves_clone ||
             request.command == CommandId::instance_export ||
             request.command == CommandId::instance_import ||
-            request.command == CommandId::recovery_apply;
+            request.command == CommandId::recovery_apply ||
+            request.command == CommandId::diagnostics_export;
         if (request.dry_run && data_write) {
             return refused(
                 safety_refusal(
@@ -851,6 +870,10 @@ private:
             return recovery_result(
                 transactions::apply(workspace_, std::get<RecoveryRequest>(request.payload).transaction_id),
                 "workspace.recovery.apply");
+        case CommandId::diagnostics_export:
+            return diagnostic_result(diagnostic_operations::export_bundle(
+                workspace_,
+                std::get<ExportDiagnosticRequest>(request.payload)));
         default:
             return refused(
                 safety_refusal("command.execute", "invalid_request", "Unsupported application command", "", false),
@@ -1196,6 +1219,22 @@ private:
         return result;
     }
 
+    ApplicationResult diagnostic_result(const diagnostic_operations::ExportOutcome& outcome)
+    {
+        ApplicationResult result;
+        if (std::holds_alternative<diagnostic_operations::Refusal>(outcome)) {
+            const diagnostic_operations::Refusal& refusal =
+                std::get<diagnostic_operations::Refusal>(outcome);
+            result.status = ULK_STATUS_ERROR;
+            result.output = refusal;
+            result.error_code = refusal.code;
+            result.error_message = refusal.reason;
+            return result;
+        }
+        result.output = std::get<diagnostic_operations::ExportResult>(outcome);
+        return result;
+    }
+
     void ensure_workspace()
     {
         const char* dirs[] = {"installs/refs", "installs/setup_state_refs", "instances", "modsets", "saves", "profiles", "accounts", "audit", "diagnostics/reports", "exports"};
@@ -1274,6 +1313,14 @@ private:
         }
         if (std::holds_alternative<transactions::Refusal>(output)) {
             return transactions::to_json(std::get<transactions::Refusal>(output), recovery_command_);
+        }
+        if (std::holds_alternative<diagnostic_operations::ExportResult>(output)) {
+            return diagnostic_operations::to_json(
+                std::get<diagnostic_operations::ExportResult>(output));
+        }
+        if (std::holds_alternative<diagnostic_operations::Refusal>(output)) {
+            return diagnostic_operations::to_json(
+                std::get<diagnostic_operations::Refusal>(output));
         }
         return "";
     }

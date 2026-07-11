@@ -17,6 +17,7 @@ allowed_paths:
   - .aide/memory/project-state.md
   - .aide/queue/**
   - .aide/context/**
+  - README.md
   - CMakeLists.txt
   - apps/cli/command_dispatch.cpp
   - runtime/archive/**
@@ -31,6 +32,7 @@ allowed_paths:
   - contracts/schema/**
   - docs/architecture/**
   - docs/quality/**
+  - docs/roadmap.md
   - tests/golden/commands/**
   - tests/golden/diagnostics/**
   - tests/native/facman_diagnostic_traversal_smoke.cpp
@@ -39,6 +41,7 @@ allowed_paths:
   - tests/test_diagnostic_redaction.py
   - tests/test_diagnostic_export.py
   - tools/alpha_vertical_slice_check.py
+  - tools/archive_core_check.py
   - tools/command_contract_check.py
   - tools/diagnostic_export_check.py
   - tools/frontend_contract_check.py

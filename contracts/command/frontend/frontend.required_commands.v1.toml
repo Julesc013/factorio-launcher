@@ -18,9 +18,9 @@ required = [
   "launch_plan.build",
   "launch_plan.preflight",
   "run.preview",
-  "diagnostics.export",
 ]
 deferred = [
+  "diagnostics.export",
   "run.execute",
   "mods.import",
   "modsets.lock",
@@ -117,9 +117,9 @@ cli = "facman run <instance-id> --json"
 
 [[commands]]
 id = "diagnostics.export"
-phase = "required"
-backend_id = "diagnostics.run"
-cli = "facman diagnostics report --json"
+phase = "deferred"
+backend_id = "diagnostics.export"
+cli = "facman diagnostics export --instance <instance-id> --out <bundle.zip> --json"
 
 [[commands]]
 id = "run.execute"
@@ -226,7 +226,7 @@ doctor = "implemented"
 "launch_plan.build" = "implemented"
 "launch_plan.preflight" = "implemented"
 "run.preview" = "implemented"
-"diagnostics.export" = "stubbed_with_refusal"
+"diagnostics.export" = "implemented"
 "run.execute" = "stubbed_with_refusal"
 "modsets.lock" = "implemented"
 "mods.import" = "implemented"
@@ -337,7 +337,7 @@ doctor = "implemented"
 "launch_plan.build" = "implemented"
 "launch_plan.preflight" = "implemented"
 "run.preview" = "implemented"
-"diagnostics.export" = "implemented"
+"diagnostics.export" = "not_supported_with_reason"
 "run.execute" = "not_supported_with_reason"
 "modsets.lock" = "not_supported_with_reason"
 "mods.import" = "not_supported_with_reason"
@@ -411,7 +411,7 @@ doctor = "implemented"
 "launch_plan.build" = "implemented"
 "launch_plan.preflight" = "implemented"
 "run.preview" = "implemented"
-"diagnostics.export" = "implemented"
+"diagnostics.export" = "not_supported_with_reason"
 "run.execute" = "not_supported_with_reason"
 "modsets.lock" = "not_supported_with_reason"
 "mods.import" = "not_supported_with_reason"

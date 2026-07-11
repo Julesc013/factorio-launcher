@@ -27,9 +27,9 @@ current_focus:
     - launch_plan.build
     - launch_plan.preflight
     - run.preview
+    - diagnostics.export
   quarantined_capabilities:
     - run.execute
-    - diagnostics.export
     - setup.mutation
     - network.access
   evidence_authorities:
@@ -42,7 +42,7 @@ deferred_surfaces:
   - Native GUI implementation remains deferred until command graph stability.
   - Universal setup and universal launcher are sibling repos, not Factorio subtrees.
   - Real Factorio execution remains unavailable until operator-supplied isolation proof.
-  - General diagnostic export remains unavailable; the bounded traversal foundation does not prove the complete bundle writer.
+  - Diagnostic export is CLI-authoritative for reviewed local formats; native GUI export UX remains deferred.
 runtime:
   gateway_forwarding: deferred
   provider_calls: forbidden_until_reviewed_phase

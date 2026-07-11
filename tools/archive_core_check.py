@@ -81,10 +81,10 @@ def validate() -> list[str]:
             or "write_diagnostic_stored_zip_quarantined(" in text
         ):
             legacy_locations.append(relative)
-    expected_legacy_locations = ["apps/cli/command_dispatch.cpp"]
+    expected_legacy_locations: list[str] = []
     if sorted(set(legacy_locations)) != expected_legacy_locations:
         problems.append(
-            "legacy ZIP helpers must remain only in the not-yet-migrated consumers: "
+            "legacy ZIP helpers are forbidden after diagnostic migration: "
             + ", ".join(sorted(set(legacy_locations)))
         )
     return problems

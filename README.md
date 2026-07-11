@@ -116,8 +116,9 @@ instances, profiles, install references, and launch plans belong to
 - Launch planning is dry-run only. `run --execute` returns
   `isolation_not_proven` until an operator-supplied real Factorio smoke proves
   effective write-data isolation.
-- Diagnostic bundle export returns `diagnostic_export_not_safe` until
-  structured redaction and bounded no-follow traversal are proven.
+- Diagnostic bundle export accepts only reviewed local formats, reads each
+  selected file through a stable no-follow handle, redacts before staging, and
+  self-verifies a transaction-journaled production ZIP before success.
 
 ## Development
 
