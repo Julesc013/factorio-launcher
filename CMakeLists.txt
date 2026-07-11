@@ -3,6 +3,16 @@ project(facman LANGUAGES C CXX)
 
 option(FLAUNCH_BUILD_NATIVE_APPS "Build native CLI/TUI/daemon scaffolds" ON)
 option(FLAUNCH_BUILD_TESTS "Build FacMan native tests" ON)
+option(FLAUNCH_ENABLE_SANITIZERS "Enable ASan and UBSan for native proof builds" OFF)
+
+if(FLAUNCH_ENABLE_SANITIZERS)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+  else()
+    message(FATAL_ERROR "FLAUNCH_ENABLE_SANITIZERS requires GCC or Clang")
+  endif()
+endif()
 
 # Product/application static libraries are also linked into the public shared
 # binding. Keep one cross-platform object model so ELF shared links do not
@@ -114,6 +124,16 @@ add_library(facman_base_static STATIC
 target_include_directories(facman_base_static PUBLIC runtime/base)
 target_compile_features(facman_base_static PUBLIC cxx_std_17)
 
+add_library(facman_archive_static STATIC
+  runtime/archive/fl_archive_platform.cpp
+  runtime/archive/fl_archive_policy.cpp
+  runtime/archive/fl_archive_reader.cpp
+  runtime/archive/fl_archive_writer.cpp
+)
+target_include_directories(facman_archive_static PUBLIC runtime/archive)
+target_compile_features(facman_archive_static PUBLIC cxx_std_17)
+target_link_libraries(facman_archive_static PUBLIC facman_base_static miniz_static)
+
 add_library(flaunch_client_static STATIC ${FLAUNCH_CLIENT_SOURCES})
 target_include_directories(flaunch_client_static PUBLIC
   runtime/client
@@ -210,6 +230,26 @@ if(FLAUNCH_BUILD_TESTS)
   add_executable(miniz_dependency_smoke tests/native/miniz_dependency_smoke.c)
   target_link_libraries(miniz_dependency_smoke PRIVATE miniz_static)
   add_test(NAME miniz_dependency_smoke COMMAND miniz_dependency_smoke)
+
+  add_executable(fl_archive_core_smoke tests/native/fl_archive_core_smoke.cpp)
+  if(WIN32)
+    target_sources(fl_archive_core_smoke PRIVATE apps/cli/facman.manifest)
+  endif()
+  target_compile_features(fl_archive_core_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_archive_core_smoke PRIVATE facman_archive_static)
+  add_test(NAME fl_archive_core_smoke COMMAND fl_archive_core_smoke)
+
+  add_executable(fl_archive_probe tests/native/fl_archive_probe.cpp)
+  target_compile_features(fl_archive_probe PRIVATE cxx_std_17)
+  target_link_libraries(fl_archive_probe PRIVATE facman_archive_static)
+
+  add_executable(fl_archive_metadata_fuzz tests/native/fl_archive_metadata_fuzz.cpp)
+  target_compile_features(fl_archive_metadata_fuzz PRIVATE cxx_std_17)
+  target_link_libraries(fl_archive_metadata_fuzz PRIVATE facman_archive_static)
+
+  add_executable(fl_archive_plan_fuzz tests/native/fl_archive_plan_fuzz.cpp)
+  target_compile_features(fl_archive_plan_fuzz PRIVATE cxx_std_17)
+  target_link_libraries(fl_archive_plan_fuzz PRIVATE facman_archive_static)
 
   add_executable(flb_command_bridge_smoke tests/native/flb_command_bridge_smoke.c)
   target_link_libraries(flb_command_bridge_smoke PRIVATE flaunch_client_static flb_factorio_static)

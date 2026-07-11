@@ -19,7 +19,7 @@ items:
     description: Review, pin, vendor, and compile one permissively licensed source-only archive dependency.
   - id: FACMAN-ARCHIVE-CORE-03
     status: active
-    planning_state: implementation
+    planning_state: implementation_completed_local_ci_pending
     title: Build the production archive core
     task: .aide/queue/FACMAN-ARCHIVE-CORE-03/task.yaml
     evidence: .aide/queue/FACMAN-ARCHIVE-CORE-03/evidence

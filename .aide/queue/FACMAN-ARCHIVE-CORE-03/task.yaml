@@ -2,7 +2,7 @@ schema_version: aide.queue-task.v0
 id: FACMAN-ARCHIVE-CORE-03
 title: Build the production archive core
 status: active
-planning_state: implementation
+planning_state: implementation_completed_local_ci_pending
 created_at: 2026-07-11
 owner: Codex
 objective: >
@@ -12,6 +12,7 @@ objective: >
 depends_on:
   - FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01
 allowed_paths:
+  - .github/workflows/ci.yml
   - .aide/queue/**
   - .aide/context/**
   - .aide/profile.yaml
@@ -25,6 +26,7 @@ allowed_paths:
   - tools/archive_core_check.py
   - tools/source_format_check.py
   - tools/strict_check.py
+  - tools/structure_policy_check.py
 forbidden_paths:
   - apps/**
   - runtime/factorio/**

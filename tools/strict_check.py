@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 from tools import (
     aide_target_truth_check,
     alpha_vertical_slice_check,
+    archive_core_check,
     ci_proof_check,
     command_contract_check,
     discovery_golden_check,
@@ -38,6 +39,7 @@ from tools import (
 def main() -> int:
     checks: list[tuple[str, Callable[[], int]]] = [
         ("aide-target-truth", aide_target_truth_check.main),
+        ("archive-core", archive_core_check.main),
         ("ci-proof", ci_proof_check.main),
         ("structure", structure_policy_check.main),
         ("workspace-contract", workspace_contract_check.main),

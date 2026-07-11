@@ -1,0 +1,54 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 17
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 17
+
+## CHANGED_FILES
+
+- allowed: `.aide/queue/FACMAN-ARCHIVE-CORE-03/evidence/remaining-risks.md` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-ARCHIVE-CORE-03/status.yaml` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-ARCHIVE-CORE-03/task.yaml` (M; matches active task allowed path)
+- allowed: `.aide/queue/index.yaml` (M; matches active task allowed path)
+- allowed: `.github/workflows/ci.yml` (M; matches active task allowed path)
+- allowed: `CMakeLists.txt` (M; matches active task allowed path)
+- allowed: `tools/strict_check.py` (M; matches active task allowed path)
+- allowed: `tools/structure_policy_check.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-ARCHIVE-CORE-03/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-ARCHIVE-CORE-03/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `runtime/archive` (??; matches active task allowed path)
+- allowed: `tests/native/fl_archive_core_smoke.cpp` (??; matches active task allowed path)
+- allowed: `tests/native/fl_archive_metadata_fuzz.cpp` (??; matches active task allowed path)
+- allowed: `tests/native/fl_archive_plan_fuzz.cpp` (??; matches active task allowed path)
+- allowed: `tests/native/fl_archive_probe.cpp` (??; matches active task allowed path)
+- allowed: `tests/test_archive_core.py` (??; matches active task allowed path)
+- allowed: `tools/archive_core_check.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.

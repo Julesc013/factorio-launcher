@@ -26,6 +26,26 @@ jobs:
         run: cmake --build build/native-smoke
       - name: Run native tests
         run: ctest --test-dir build/native-smoke --output-on-failure
+      - name: Configure sanitized archive proof
+        run: >-
+          cmake -S . -B build/archive-sanitized
+          -DFLAUNCH_BUILD_NATIVE_APPS=OFF
+          -DFLAUNCH_ENABLE_SANITIZERS=ON
+      - name: Build sanitized archive proof
+        run: >-
+          cmake --build build/archive-sanitized --target
+          fl_archive_core_smoke fl_archive_probe
+          fl_archive_metadata_fuzz fl_archive_plan_fuzz
+      - name: Run sanitized archive corpus and fuzz proof
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+          FACMAN_FL_ARCHIVE_PROBE_EXE: ${{ github.workspace }}/build/archive-sanitized/fl_archive_probe
+          FACMAN_FL_ARCHIVE_METADATA_FUZZ_EXE: ${{ github.workspace }}/build/archive-sanitized/fl_archive_metadata_fuzz
+          FACMAN_FL_ARCHIVE_PLAN_FUZZ_EXE: ${{ github.workspace }}/build/archive-sanitized/fl_archive_plan_fuzz
+        run: |
+          ctest --test-dir build/archive-sanitized -R fl_archive_core_smoke --output-on-failure
+          python -m unittest tests.test_archive_core -v
       - name: Run Python unit tests
         run: python -m unittest discover -s tests -v
       - name: Run strict policy checks
@@ -86,6 +106,29 @@ jobs:
         run: |
           python tools/package_build.py --profile windows_legacy_winforms_x64 --out build/packages --build-root build/native-smoke
           python tools/package_runtime_smoke.py --root build/packages/windows_legacy_winforms_x64
+
+  macos-archive-core:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Clone universal repositories
+        run: |
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+      - name: Align dependency revisions to workspace lock
+        run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
+      - name: Configure macOS archive core
+        run: cmake -S . -B build/macos-archive -DFLAUNCH_BUILD_NATIVE_APPS=OFF
+      - name: Build macOS archive core
+        run: >-
+          cmake --build build/macos-archive --target
+          fl_archive_core_smoke fl_archive_probe
+          fl_archive_metadata_fuzz fl_archive_plan_fuzz
+      - name: Run macOS archive core smoke
+        run: ctest --test-dir build/macos-archive -R fl_archive_core_smoke --output-on-failure
 
   appkit-compile:
     runs-on: macos-15-intel

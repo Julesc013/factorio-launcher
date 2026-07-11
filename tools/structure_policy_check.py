@@ -168,6 +168,7 @@ ALLOWED_RELEASE_PROFILE_ROOTS = {
     "windows_modern_winui",
 }
 ALLOWED_RUNTIME_ROOTS = {
+    "archive",
     "base",
     "client",
     "factorio",
