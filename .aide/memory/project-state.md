@@ -58,10 +58,11 @@ foundations that do not require a Factorio binary.
 
 ## Current Goal
 
-Execute the ordered R3.3 WorkUnits in `.aide/memory/r3.3-workunits.md`, starting
-with baseline and queue reconciliation and then admitting one production
-archive dependency. Keep `run.execute` and real Factorio isolation human-gated;
-do not schedule Windows discovery again.
+Continue the ordered R3.3 WorkUnits in `.aide/memory/r3.3-workunits.md` from
+save and portable instance-transfer routing. The baseline, admitted archive
+dependency, production archive core, and local mod/modset routes are frozen at
+green exact-SHA checkpoints. Keep `run.execute` and real Factorio isolation
+human-gated; do not schedule Windows discovery again.
 
 ## Quarantined Capabilities
 
