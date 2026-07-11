@@ -50,3 +50,7 @@ The integrated universal main and FacMan dev identities are frozen in
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and deliberately pending human-verdict template are in
 [`real_factorio_isolation_smoke.template.md`](evidence/real_factorio_isolation_smoke.template.md).
+The preparation harness records exact identities, refuses incomplete protected
+snapshots, reports detailed before/after changes, supervises termination, and
+retains external write classifications without converting them into a human
+verdict.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import shutil
@@ -9,6 +10,7 @@ import tempfile
 import time
 import unittest
 import sys
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -18,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
 sys.path.insert(0, str(ROOT / "tools"))
 import json_contract  # noqa: E402
+import real_factorio_isolation_smoke as real_smoke  # noqa: E402
 
 PROBE_SCHEMA = json_contract.load_schema(
     ROOT / "contracts" / "schema" / "factorio" / "factorio_isolation_probe.v1.schema.json"
@@ -278,6 +281,35 @@ class InstanceIsolationProbeTests(unittest.TestCase):
             evidence = json.loads(prepared.stdout)
             self.assertEqual(evidence["status"], "prepared")
             self.assertEqual(evidence["operator_verdict"], "pending")
+            self.assertEqual(evidence["schema"], "facman.real_factorio_isolation_smoke.v2")
+            self.assertEqual(
+                evidence["identity"]["facman_executable"]["sha256"],
+                hashlib.sha256(facman_executable().read_bytes()).hexdigest(),
+            )
+            self.assertEqual(evidence["identity"]["facman_version"]["exit_status"], 0)
+            self.assertEqual(
+                evidence["identity"]["factorio_executable"]["sha256"],
+                hashlib.sha256(Path(preview["executable"]).read_bytes()).hexdigest(),
+            )
+            self.assertEqual(
+                evidence["identity"]["factorio_version"]["status"],
+                "not_run_in_prepare_mode",
+            )
+            self.assertEqual(
+                evidence["identity"]["effective_config_file"]["sha256"],
+                hashlib.sha256(
+                    Path(preview["effective_config"]["config_file"]).read_bytes()
+                ).hexdigest(),
+            )
+            self.assertTrue(
+                all(
+                    value["revision"]
+                    for value in evidence["identity"]["repositories"].values()
+                )
+            )
+            self.assertEqual(
+                evidence["system_wide_write_observation"]["review_status"], "pending"
+            )
             self.assertEqual(evidence, json.loads(evidence_path.read_text(encoding="utf-8")))
             self.assertFalse((instance_root / "locks" / "run.lock").exists())
 
@@ -292,6 +324,265 @@ class InstanceIsolationProbeTests(unittest.TestCase):
             self.assertEqual(unacknowledged.returncode, 2)
             self.assertIn("--acknowledge must exactly equal", unacknowledged.stderr)
             self.assertFalse((instance_root / "locks" / "run.lock").exists())
+
+    def test_real_smoke_snapshot_is_bounded_no_follow_and_reports_detailed_diff(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            protected = root / "protected"
+            kept = protected / "kept"
+            removed = protected / "removed"
+            kept.mkdir(parents=True)
+            removed.mkdir()
+            kept.joinpath("modified.txt").write_text("before\n", encoding="utf-8")
+            removed.joinpath("deleted.txt").write_text("deleted\n", encoding="utf-8")
+            before = real_smoke.snapshot(protected)
+            self.assertTrue(before["complete"])
+
+            kept.joinpath("modified.txt").write_text("after\n", encoding="utf-8")
+            removed.joinpath("deleted.txt").unlink()
+            removed.rmdir()
+            created = protected / "created"
+            created.mkdir()
+            created.joinpath("new.txt").write_text("created\n", encoding="utf-8")
+            after = real_smoke.snapshot(protected)
+            difference = real_smoke.snapshot_diff(before, after)
+
+            self.assertTrue(difference["complete"])
+            self.assertTrue(difference["changed"])
+            self.assertEqual(difference["created_directories"], ["created"])
+            self.assertEqual(difference["deleted_directories"], ["removed"])
+            self.assertEqual(difference["created_files"][0]["path"], "created/new.txt")
+            self.assertIsNone(difference["created_files"][0]["before_sha256"])
+            self.assertEqual(difference["deleted_files"][0]["path"], "removed/deleted.txt")
+            self.assertIsNone(difference["deleted_files"][0]["after_sha256"])
+            self.assertEqual(difference["modified_files"][0]["path"], "kept/modified.txt")
+            self.assertNotEqual(
+                difference["modified_files"][0]["before_sha256"],
+                difference["modified_files"][0]["after_sha256"],
+            )
+
+            limited = real_smoke.snapshot(protected, max_files=1)
+            self.assertFalse(limited["complete"])
+            self.assertTrue(
+                any(
+                    item["reason"] == "file_count_limit_exceeded"
+                    for item in limited["omitted_entries"]
+                )
+            )
+            byte_limited = real_smoke.snapshot(protected, max_bytes=1)
+            self.assertFalse(byte_limited["complete"])
+            self.assertTrue(
+                any(
+                    item["reason"] == "byte_limit_exceeded"
+                    for item in byte_limited["omitted_entries"]
+                )
+            )
+            ticks = [0.0]
+
+            def advancing_clock() -> float:
+                ticks[0] += 1.0
+                return ticks[0]
+
+            with patch.object(real_smoke.time, "monotonic", side_effect=advancing_clock):
+                time_limited = real_smoke.snapshot(protected, max_seconds=2.0)
+            self.assertFalse(time_limited["complete"])
+            self.assertTrue(
+                any(
+                    item["reason"] == "elapsed_time_limit_exceeded"
+                    for item in time_limited["omitted_entries"]
+                )
+            )
+
+            link = protected / "outside-link"
+            outside = root / "outside"
+            outside.mkdir()
+            try:
+                link.symlink_to(outside, target_is_directory=True)
+            except OSError:
+                pass
+            else:
+                linked = real_smoke.snapshot(protected)
+                self.assertFalse(linked["complete"])
+                self.assertTrue(
+                    any(
+                        item["path"] == "outside-link"
+                        and item["reason"] == "link_or_reparse_refused"
+                        for item in linked["omitted_entries"]
+                    )
+                )
+                nested = real_smoke.snapshot(link / "nested")
+                self.assertFalse(nested["complete"])
+                self.assertEqual(
+                    nested["omitted_entries"][0]["reason"],
+                    "root_link_or_reparse_refused",
+                )
+
+    def test_real_smoke_process_supervision_records_timeout_and_termination(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            report = real_smoke.supervise_process(
+                [sys.executable, "-c", "import time; time.sleep(5)"],
+                cwd=Path(tmp),
+                timeout_seconds=0.2,
+                termination_grace_seconds=0.2,
+            )
+            self.assertTrue(report["timed_out"])
+            self.assertTrue(report["termination_requested"])
+            self.assertIsNotNone(report["exit_status"])
+            self.assertLess(report["duration_seconds"], 3)
+            self.assertTrue(report["started_utc"].endswith("Z"))
+            self.assertTrue(report["ended_utc"].endswith("Z"))
+
+    def test_factorio_version_invocation_is_inside_protected_snapshot_window(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            facman = root / "facman.exe"
+            factorio = root / "factorio.exe"
+            facman.write_bytes(b"facman")
+            factorio.write_bytes(b"factorio")
+            app_root = root / "install"
+            protected = root / "protected"
+            instance_root = root / "instance"
+            config = instance_root / "config" / "config.ini"
+            for directory in [app_root, protected, config.parent, instance_root / "locks"]:
+                directory.mkdir(parents=True, exist_ok=True)
+            config.write_text("[path]\n", encoding="utf-8")
+            evidence_path = root / "evidence.json"
+            preview = {
+                "executable": str(factorio),
+                "app_dir": str(app_root),
+                "args": ["--config", str(config)],
+                "effective_config": {
+                    "config_file": str(config),
+                    "read_data": str(app_root / "data"),
+                    "write_data": str(instance_root),
+                    "mod_root": str(instance_root / "mods"),
+                    "save_root": str(instance_root / "saves"),
+                    "script_output_root": str(instance_root / "script-output"),
+                    "log_root": str(instance_root / "logs"),
+                },
+            }
+            preflight = {"status": "pass", "effective_config": preview["effective_config"]}
+
+            def version_identity(command: list[str], _timeout: float) -> dict:
+                if Path(command[0]) == factorio:
+                    protected.joinpath("version-write.txt").write_text(
+                        "observed\n", encoding="utf-8"
+                    )
+                return {
+                    "command": command,
+                    "started_utc": "2026-07-11T00:00:00Z",
+                    "ended_utc": "2026-07-11T00:00:01Z",
+                    "exit_status": 0,
+                    "timed_out": False,
+                    "termination_requested": False,
+                    "killed_after_timeout": False,
+                    "stdout": "version",
+                    "stderr": "",
+                }
+
+            clean_process = {
+                "command": [str(factorio)],
+                "process_id": 123,
+                "started_utc": "2026-07-11T00:00:01Z",
+                "ended_utc": "2026-07-11T00:00:02Z",
+                "duration_seconds": 1.0,
+                "exit_status": 0,
+                "timed_out": False,
+                "operator_interrupted": False,
+                "termination_requested": False,
+                "killed_after_grace_period": False,
+                "termination_grace_seconds": 1.0,
+                "child_process_observation": {"status": "observed", "processes": []},
+            }
+            revisions = {
+                name: {"revision": "a" * 40, "source": "test"}
+                for name in ["factorio_launcher", "universal_launcher", "universal_setup"]
+            }
+            argv = [
+                "real_factorio_isolation_smoke.py",
+                "--facman",
+                str(facman),
+                "--workspace",
+                str(root / "workspace"),
+                "--instance-id",
+                "smoke",
+                "--factorio-exe",
+                str(factorio),
+                "--protected-root",
+                str(protected),
+                "--evidence-out",
+                str(evidence_path),
+                "--execute-smoke",
+                "--acknowledge",
+                real_smoke.ACKNOWLEDGEMENT,
+            ]
+            with (
+                patch.object(sys, "argv", argv),
+                patch.object(real_smoke, "run_json", side_effect=[preview, preflight]),
+                patch.object(real_smoke, "run_command_identity", side_effect=version_identity),
+                patch.object(real_smoke, "repository_revisions", return_value=revisions),
+                patch.object(real_smoke, "supervise_process", return_value=clean_process),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()),
+            ):
+                code = real_smoke.main()
+            self.assertEqual(code, 1)
+            evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+            protected_diff = evidence["protected_snapshots"][str(protected)]["diff"]
+            self.assertEqual(
+                protected_diff["created_files"][0]["path"], "version-write.txt"
+            )
+            self.assertEqual(
+                evidence["automated_observation"], "protected_root_change_detected"
+            )
+            self.assertEqual(evidence["operator_verdict"], "pending")
+
+    def test_real_smoke_write_observation_records_artifact_and_classifications(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            artifact = root / "procmon-trace.pml"
+            artifact.write_bytes(b"trace")
+            classification = root / "classifications.json"
+            classification.write_text(
+                json.dumps(
+                    [
+                        {
+                            "path": "<instance>/saves/smoke.zip",
+                            "classification": "instance-local",
+                        },
+                        {
+                            "path": "<outside>/unresolved.tmp",
+                            "classification": "unresolved",
+                        },
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            args = real_smoke.build_parser().parse_args(
+                [
+                    "--facman",
+                    "facman.exe",
+                    "--workspace",
+                    "workspace",
+                    "--instance-id",
+                    "smoke",
+                    "--factorio-exe",
+                    "factorio.exe",
+                    "--evidence-out",
+                    "evidence.json",
+                    "--write-observation-method",
+                    "procmon",
+                    "--write-observation-artifact",
+                    str(artifact),
+                    "--write-observation-classification",
+                    str(classification),
+                ]
+            )
+            observation = real_smoke.write_observation(args)
+            self.assertEqual(
+                observation["artifact"]["sha256"], hashlib.sha256(b"trace").hexdigest()
+            )
+            self.assertEqual(observation["review_status"], "unexpected_or_unresolved")
 
     def test_preflight_refuses_malformed_missing_mismatched_and_reparse_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
