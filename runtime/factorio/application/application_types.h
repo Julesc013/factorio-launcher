@@ -35,6 +35,8 @@ enum class CommandId {
     run_preview,
     run_execute,
     setup_preview,
+    setup_operation,
+    utility_operation,
     mods_import,
     modsets_lock,
     modsets_verify,
@@ -55,6 +57,7 @@ enum class CommandId {
 };
 
 struct ScanInstallRefsRequest { std::vector<std::string> roots; };
+struct DoctorRequest { std::vector<std::string> roots; };
 struct ImportInstallRefRequest { std::string path; std::string install_id; };
 struct InspectInstallRefRequest { std::string install_id; };
 struct CreateInstanceRequest {
@@ -65,6 +68,16 @@ struct CreateInstanceRequest {
 };
 struct BuildLaunchPlanRequest { std::string instance_id; };
 struct RecoveryRequest { std::string transaction_id; };
+struct ServiceOperationRequest {
+    std::string operation;
+    std::string name;
+    std::string id;
+    std::string instance_id;
+    std::string path;
+    std::string query;
+    std::string version;
+    std::string archive;
+};
 
 using ImportModRequest = modsets::ImportRequest;
 using ModsetInstanceRequest = modsets::InstanceRequest;
@@ -79,6 +92,7 @@ using ExportDiagnosticRequest = diagnostics::ExportRequest;
 using ApplicationPayload = std::variant<
     std::monostate,
     ScanInstallRefsRequest,
+    DoctorRequest,
     ImportInstallRefRequest,
     InspectInstallRefRequest,
     CreateInstanceRequest,
@@ -92,6 +106,7 @@ using ApplicationPayload = std::variant<
     ExportInstanceRequest,
     ImportInstanceRequest,
     RecoveryRequest,
+    ServiceOperationRequest,
     ExportDiagnosticRequest>;
 
 struct ApplicationRequest {

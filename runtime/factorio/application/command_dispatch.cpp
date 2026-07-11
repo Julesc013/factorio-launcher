@@ -135,6 +135,8 @@ CommandId command_id(ulk_string_view command)
     if (value == "run.preview") return CommandId::run_preview;
     if (value == "run.execute") return CommandId::run_execute;
     if (value == "setup.preview") return CommandId::setup_preview;
+    if (value == "setup.operation") return CommandId::setup_operation;
+    if (value == "utility.operation") return CommandId::utility_operation;
     if (value == "mods.import") return CommandId::mods_import;
     if (value == "modsets.lock") return CommandId::modsets_lock;
     if (value == "modsets.verify") return CommandId::modsets_verify;
@@ -161,7 +163,8 @@ bool writes_persistent_state(CommandId command) noexcept
         command == CommandId::modsets_export || command == CommandId::saves_backup ||
         command == CommandId::saves_clone || command == CommandId::instance_export ||
         command == CommandId::instance_import || command == CommandId::recovery_apply ||
-        command == CommandId::migration_apply || command == CommandId::diagnostics_export;
+        command == CommandId::migration_apply || command == CommandId::diagnostics_export ||
+        command == CommandId::utility_operation;
 }
 
 bool decode_request(CommandId command, const std::string& text, bool dry_run, ApplicationRequest& request, std::string& detail)
@@ -183,12 +186,31 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
 
     switch (command) {
     case CommandId::product_inspect:
-    case CommandId::doctor_run:
     case CommandId::install_list:
     case CommandId::instance_list:
     case CommandId::setup_preview:
         if (!validate_fields(payload, {}, detail)) return false;
         request.payload = std::monostate {}; return true;
+    case CommandId::doctor_run: {
+        if (!validate_fields(payload, {"roots"}, detail)) return false;
+        DoctorRequest typed;
+        if (!optional_string_array(payload, "roots", typed.roots, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::setup_operation:
+    case CommandId::utility_operation: {
+        if (!validate_fields(payload, {"operation", "name", "id", "instance_id", "path", "query", "version", "archive"}, detail)) return false;
+        ServiceOperationRequest typed;
+        if (!required_string(payload, "operation", typed.operation, detail) ||
+            !optional_string(payload, "name", typed.name, detail) ||
+            !optional_string(payload, "id", typed.id, detail) ||
+            !optional_string(payload, "instance_id", typed.instance_id, detail) ||
+            !optional_string(payload, "path", typed.path, detail) ||
+            !optional_string(payload, "query", typed.query, detail) ||
+            !optional_string(payload, "version", typed.version, detail) ||
+            !optional_string(payload, "archive", typed.archive, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::run_execute:
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;
         request.payload = std::monostate {}; return true;

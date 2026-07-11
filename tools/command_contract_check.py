@@ -25,6 +25,8 @@ EXPECTED_COMMANDS = {
     "run.preview",
     "run.execute",
     "setup.preview",
+    "setup.operation",
+    "utility.operation",
     "mods.import",
     "modsets.lock",
     "modsets.verify",

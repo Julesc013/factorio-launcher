@@ -48,15 +48,11 @@ def validate() -> list[str]:
         problems.append("stored-only mod ZIP parser returned")
 
     mods_function = function_slice(cli, "int command_mods(", "int command_modsets(")
-    mods_cli = function_slice(
-        mods_function,
-        'if (options.args[1] == "import")',
-        'std::cerr << "Unknown mods subcommand',
-    )
+    mods_cli = mods_function
     modsets_cli = function_slice(cli, "int command_modsets(", "int command_saves(")
     for name, source in (("mods", mods_cli), ("modsets", modsets_cli)):
-        if "route_factorio_command(" not in source:
-            problems.append(f"{name} CLI does not use the authoritative command route")
+        if "call(options," not in source:
+            problems.append(f"{name} CLI does not use FacManClient")
         for forbidden in (
             "load_instance(",
             "inspect_mod_zip(",

@@ -70,6 +70,11 @@ required_codes = [
   "workspace_migration_apply_unproven",
   "workspace_list_failed",
   "setup_unavailable",
+  "unsupported_operation",
+  "unknown_server",
+  "package_verification_failed",
+  "utility_input_too_large",
+  "utility_input_read_failed",
 ]
 
 [[code]]
@@ -127,6 +132,41 @@ severity = "blocked"
 effect = "setup_preview"
 retryable = false
 message = "Universal Setup is unavailable in this application configuration."
+
+[[code]]
+id = "unsupported_operation"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The requested grouped application operation is not supported."
+
+[[code]]
+id = "unknown_server"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The server profile is not registered."
+
+[[code]]
+id = "package_verification_failed"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "Package verification did not satisfy all required checks."
+
+[[code]]
+id = "utility_input_too_large"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Utility input exceeds its bounded byte budget."
+
+[[code]]
+id = "utility_input_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Utility input could not be read completely from one stable object."
 
 [[code]]
 id = "diagnostic_export_not_safe"

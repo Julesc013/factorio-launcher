@@ -472,6 +472,27 @@
       "runtime_id": "saves.list"
     },
     {
+      "cli": "internal canonical setup route",
+      "command_id": "setup.operation",
+      "contract_path": "contracts/command/factorio/setup.operation.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read",
+        "setup_preview"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/setup.operation.refusal.json",
+      "golden_success": "tests/golden/commands/setup.operation.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "setup.operation"
+    },
+    {
       "availability": "unavailable_until_gateway",
       "cli": "facman setup preview --json",
       "command_id": "setup.preview",
@@ -490,6 +511,27 @@
       "response_schema": "contracts/schema/common/result.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "runtime_id": "setup.preview"
+    },
+    {
+      "cli": "internal canonical frontend utility route",
+      "command_id": "utility.operation",
+      "contract_path": "contracts/command/factorio/utility.operation.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/utility.operation.refusal.json",
+      "golden_success": "tests/golden/commands/utility.operation.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "utility.operation"
     },
     {
       "cli": "facman workspace migration apply --json",
@@ -616,6 +658,6 @@
   ],
   "owner": "factorio-launcher",
   "schema": "facman.generated_command_catalog.v1",
-  "source_digest": "189d32dd9028370834a8a0ee2c450526841e6e20afe4023f28beaec65f96abb7",
+  "source_digest": "3af1fd22c531d40be456cf439739507c06d0b4310b2fe7574d0df45e904bef7e",
   "version": "facman-0.1.0+dev.contract"
 }

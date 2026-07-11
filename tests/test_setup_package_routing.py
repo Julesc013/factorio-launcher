@@ -8,13 +8,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class SetupPackageRoutingTests(unittest.TestCase):
     def test_facman_package_verify_routes_through_canonical_usk_command(self) -> None:
-        source = (ROOT / "apps" / "cli" / "command_dispatch.cpp").read_text(encoding="utf-8")
-        start = source.index("int command_package(")
-        end = source.index("\nint command_product(", start)
-        command = source[start:end]
-        self.assertIn('setup_command_response_json("package.verify"', command)
-        self.assertNotIn("fl_runtime_verify_package", command)
-        self.assertIn("usk.package_verify_request.v1", command)
+        cli = (ROOT / "apps" / "cli" / "command_dispatch.cpp").read_text(encoding="utf-8")
+        setup = (
+            ROOT / "runtime" / "factorio" / "application" / "handlers" / "setup.cpp"
+        ).read_text(encoding="utf-8")
+        self.assertIn('call(options, "setup.operation", operation_payload("package.verify"))', cli)
+        self.assertNotIn("usk/usk_api.h", cli)
+        self.assertIn('setup_execute("package.verify"', setup)
+        self.assertIn("usk.package_verify_request.v1", setup)
 
     def test_workspace_lock_pins_integrated_universal_revisions(self) -> None:
         lock = (ROOT / "release" / "index" / "workspace_lock.v1.toml").read_text(

@@ -5,6 +5,6 @@
 #include "application_types.h"
 
 namespace facman::factorio::application::handlers {
-ApplicationResult run_doctor(ApplicationContext& context);
+ApplicationResult run_doctor(ApplicationContext& context, const DoctorRequest& request);
 }
 #endif

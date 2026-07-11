@@ -3,11 +3,20 @@
 
 #include "application_types.h"
 
+#include <cstddef>
 #include <string>
 
 namespace facman::factorio::application {
 
+struct SetupVerificationSummary {
+    bool verified = false;
+    std::string authenticity;
+    std::size_t files_verified = 0;
+};
+
 std::string json_quote(const std::string& value);
+std::string decode_json_string_field(const std::string& document, const char* key);
+SetupVerificationSummary decode_setup_verification(const std::string& envelope);
 std::string safety_refusal(
     const std::string& operation,
     const std::string& code,

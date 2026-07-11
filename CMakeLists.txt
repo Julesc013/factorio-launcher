@@ -4,6 +4,7 @@ project(facman LANGUAGES C CXX)
 option(FLAUNCH_BUILD_NATIVE_APPS "Build native CLI/TUI/daemon scaffolds" ON)
 option(FLAUNCH_BUILD_TESTS "Build FacMan native tests" ON)
 option(FLAUNCH_ENABLE_SANITIZERS "Enable ASan and UBSan for native proof builds" OFF)
+option(FACMAN_WITH_SETUP "Enable Universal Setup-backed preview and verification" ON)
 
 if(FLAUNCH_ENABLE_SANITIZERS)
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -99,7 +100,7 @@ if(WIN32)
   target_link_libraries(facman_platform_static PUBLIC Bcrypt)
 endif()
 
-if(NOT TARGET usk_static)
+if(FACMAN_WITH_SETUP AND NOT TARGET usk_static)
   if(EXISTS "${FLAUNCH_UNIVERSAL_SETUP_ROOT}/CMakeLists.txt")
     add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
   else()
@@ -246,9 +247,11 @@ add_library(flb_factorio_application_static STATIC
   runtime/factorio/application/handlers/saves.cpp
   runtime/factorio/application/handlers/setup.cpp
   runtime/factorio/application/handlers/unavailable.cpp
+  runtime/factorio/application/handlers/utility.cpp
 )
 target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_application_static PUBLIC runtime/factorio/application)
+target_compile_definitions(flb_factorio_application_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_factorio_application_static PUBLIC
   facman_base_static
   facman_workspace_static
@@ -259,6 +262,9 @@ target_link_libraries(flb_factorio_application_static PUBLIC
   flb_factorio_saves_static
   ulk_static
 )
+if(FACMAN_WITH_SETUP)
+  target_link_libraries(flb_factorio_application_static PUBLIC flaunch_runtime_static usk_static)
+endif()
 
 add_library(flb_factorio_static STATIC runtime/factorio/binding/flb_api.c)
 target_include_directories(flb_factorio_static PUBLIC include PRIVATE runtime/core/generated)
@@ -272,10 +278,15 @@ set_target_properties(flb_factorio_shared PROPERTIES OUTPUT_NAME flb_factorio WI
 
 add_library(flb_factorio ALIAS flb_factorio_static)
 
+add_library(facman_client_static STATIC runtime/client/facman_client.cpp)
+target_compile_features(facman_client_static PUBLIC cxx_std_17)
+target_include_directories(facman_client_static PUBLIC runtime/client)
+target_link_libraries(facman_client_static PUBLIC facman_core_static flaunch_client_static flb_factorio_static)
+add_library(facman::client ALIAS facman_client_static)
+
 if(FLAUNCH_BUILD_NATIVE_APPS)
   add_executable(facman_cli
     apps/cli/main.c
-    apps/cli/json_mode.c
     apps/cli/command_dispatch.cpp
   )
   if(WIN32)
@@ -283,7 +294,7 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
   endif()
   target_compile_features(facman_cli PRIVATE cxx_std_17)
   target_include_directories(facman_cli PRIVATE runtime/core/generated)
-  target_link_libraries(facman_cli PRIVATE facman_base_static flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_modsets_static flb_factorio_saves_static)
+  target_link_libraries(facman_cli PRIVATE facman_client_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 
   add_executable(facman_tui
@@ -302,7 +313,7 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     apps/daemon/progress_events.c
     apps/daemon/rpc_json.c
   )
-  target_link_libraries(facman_daemon PRIVATE flaunch_runtime_static ulk_static usk_static flb_factorio_static)
+  target_link_libraries(facman_daemon PRIVATE flaunch_runtime_static ulk_static flb_factorio_static)
   set_target_properties(facman_daemon PROPERTIES OUTPUT_NAME facmand)
 endif()
 
@@ -317,6 +328,11 @@ if(FLAUNCH_BUILD_TESTS)
   target_compile_features(fl_json_core_smoke PRIVATE cxx_std_17)
   target_link_libraries(fl_json_core_smoke PRIVATE facman_core_static)
   add_test(NAME fl_json_core_smoke COMMAND fl_json_core_smoke)
+
+  add_executable(facman_client_smoke tests/native/facman_client_smoke.cpp)
+  target_compile_features(facman_client_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_client_smoke PRIVATE facman_client_static)
+  add_test(NAME facman_client_smoke COMMAND facman_client_smoke)
 
   add_executable(fl_platform_io_smoke tests/native/fl_platform_io_smoke.cpp)
   target_compile_features(fl_platform_io_smoke PRIVATE cxx_std_17)

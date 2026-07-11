@@ -189,7 +189,8 @@ class DiagnosticRedactionTests(unittest.TestCase):
         self.assertNotIn("write_diagnostic_stored_zip_quarantined", dispatch)
         self.assertNotIn("write_diagnostic_bundle(", dispatch)
         self.assertIn('"diagnostics.export"', dispatch)
-        self.assertIn("route_factorio_command(", dispatch)
+        self.assertIn("facman::client::FacManClient", dispatch)
+        self.assertIn("call(options, \"diagnostics.export\"", dispatch)
         self.assertIn("stable_read_relative(", diagnostics)
         self.assertIn("write_to_new_owned_staging(", diagnostics)
 

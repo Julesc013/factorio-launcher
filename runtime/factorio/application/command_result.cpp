@@ -1,5 +1,7 @@
 #include "command_result.h"
 
+#include "fl_json.h"
+
 #include <sstream>
 #include <variant>
 
@@ -80,6 +82,43 @@ std::string output_json(const ApplicationOutput& output, const std::string& comm
 } // namespace
 
 std::string json_quote(const std::string& value) { return "\"" + json_escape(value) + "\""; }
+
+std::string decode_json_string_field(const std::string& source, const char* key)
+{
+    auto document = facman::core::json::parse(source);
+    if (!document || !document.value().is_object()) return {};
+    const auto* field = document.value().find(key);
+    if (field == nullptr || !field->is_string()) return {};
+    auto value = field->string_value();
+    return value ? value.value() : std::string();
+}
+
+SetupVerificationSummary decode_setup_verification(const std::string& envelope)
+{
+    SetupVerificationSummary summary;
+    auto document = facman::core::json::parse(envelope);
+    const auto* payload = document && document.value().is_object()
+        ? document.value().find("payload")
+        : nullptr;
+    if (payload == nullptr || !payload->is_object()) return summary;
+    const auto string_field = [payload](const char* key) {
+        const auto* field = payload->find(key);
+        if (field == nullptr || !field->is_string()) return std::string();
+        auto value = field->string_value();
+        return value ? value.value() : std::string();
+    };
+    summary.verified = string_field("integrity") == "pass" &&
+        string_field("compatibility") == "pass" &&
+        string_field("completeness") == "pass" &&
+        string_field("target_match") == "pass";
+    summary.authenticity = string_field("authenticity");
+    const auto* files = payload->find("files_verified");
+    if (files != nullptr && files->is_number()) {
+        auto value = files->number_value();
+        if (value) summary.files_verified = static_cast<std::size_t>(value.value());
+    }
+    return summary;
+}
 
 std::string safety_refusal(
     const std::string& operation,

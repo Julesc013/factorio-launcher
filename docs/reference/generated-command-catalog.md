@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `189d32dd9028370834a8a0ee2c450526841e6e20afe4023f28beaec65f96abb7`.
+Source digest: `3af1fd22c531d40be456cf439739507c06d0b4310b2fe7574d0df45e904bef7e`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -29,7 +29,9 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `saves.backup` | `saves.backup` | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> --json` |
 | `saves.clone` | `saves.clone` | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> --json` |
 | `saves.list` | `saves.list` | available | workspace_read | `facman saves list --instance <instance-id> --json` |
+| `setup.operation` | `setup.operation` | available | workspace_read, setup_preview | `internal canonical setup route` |
 | `setup.preview` | `setup.preview` | unavailable_until_gateway | workspace_read | `facman setup preview --json` |
+| `utility.operation` | `utility.operation` | available | workspace_read, workspace_write | `internal canonical frontend utility route` |
 | `workspace.migration.apply` | `workspace.migration.apply` | available | workspace_read, workspace_write | `facman workspace migration apply --json` |
 | `workspace.migration.inspect` | `workspace.migration.inspect` | available | workspace_read | `facman workspace migration inspect --json` |
 | `workspace.migration.plan` | `workspace.migration.plan` | available | workspace_read | `facman workspace migration plan --json` |

@@ -59,8 +59,8 @@ def validate() -> list[str]:
     ):
         if command not in app or command not in index:
             problems.append(f"workspace migration command is not registered end to end: {command}")
-    if '"workspace.migration." + operation' not in cli:
-        problems.append("workspace migration CLI does not route through the authoritative command boundary")
+    if '"workspace." + family + "." + action' not in cli or "call(options," not in cli:
+        problems.append("workspace migration CLI does not route through FacManClient")
 
     forbidden_outside_store = (
         '"installs/installed_state"',

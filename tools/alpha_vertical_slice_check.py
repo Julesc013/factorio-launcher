@@ -77,13 +77,13 @@ def validate_authoritative_preview_route() -> list[str]:
     cli_path = ROOT / "apps" / "cli" / "command_dispatch.cpp"
     binding_path = ROOT / "runtime" / "factorio" / "binding" / "flb_api.c"
     cli_text = cli_path.read_text(encoding="utf-8")
-    start = cli_text.find("int command_run(const CliOptions& options)")
-    end = cli_text.find("\n}\n\n} // namespace", start)
+    start = cli_text.find("int command_launch(const Options& options, bool run)")
+    end = cli_text.find("int command_transfer(", start)
     if start < 0 or end < 0:
         return [f"{cli_path.relative_to(ROOT)}: cannot locate command_run body"]
     run_body = cli_text[start:end]
     problems: list[str] = []
-    for anchor in ['route_factorio_command(', '"run.preview"']:
+    for anchor in ['call(options,', '"run.preview"']:
         if anchor not in run_body:
             problems.append(f"{cli_path.relative_to(ROOT)}: run preview is missing route anchor {anchor}")
     for forbidden in ["load_instance(", "load_install(", "build_launch_args(", "build_launch_plan_json("]:

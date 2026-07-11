@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"setup.operation","status":"refused","refusal":{"schema":"common.refusal.v1","code":"setup_unavailable","reason":"Setup operation is unavailable","recoverable":false}}

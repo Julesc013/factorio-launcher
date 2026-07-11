@@ -6,5 +6,6 @@
 
 namespace facman::factorio::application::handlers {
 ApplicationResult preview_setup(ApplicationContext& context);
+ApplicationResult setup_operation(ApplicationContext& context, const ServiceOperationRequest& request);
 }
 #endif

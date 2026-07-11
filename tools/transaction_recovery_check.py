@@ -52,8 +52,8 @@ def validate() -> list[str]:
     ):
         if anchor not in source + header + platform:
             problems.append(f"transaction recovery proof anchor missing: {anchor}")
-    if "route_factorio_command(" not in cli or '"workspace.recovery."' not in cli:
-        problems.append("workspace recovery CLI does not use the authoritative route")
+    if "call(options," not in cli or '"workspace." + family + "." + action' not in cli:
+        problems.append("workspace recovery CLI does not use FacManClient")
     for name, consumer in consumers.items():
         if "TransactionSession::begin(" not in consumer:
             problems.append(f"transactional writer family does not use TransactionSession: {name}")

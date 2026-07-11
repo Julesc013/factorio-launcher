@@ -53,8 +53,8 @@ def main() -> int:
     ]:
         if anchor in cli:
             problems.append(f"CLI retains migrated diagnostic backend behavior: {anchor}")
-    if '"diagnostics.export"' not in cli or "route_factorio_command(" not in cli:
-        problems.append("CLI diagnostic export does not normalize into the authoritative route")
+    if '"diagnostics.export"' not in cli or "call(options," not in cli:
+        problems.append("CLI diagnostic export does not normalize through FacManClient")
     if "diagnostic_export_not_safe" in cli:
         problems.append("CLI still quarantines diagnostic export after the complete safety route")
     if "diagnostics::export_bundle(" not in application:

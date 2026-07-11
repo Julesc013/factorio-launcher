@@ -92,12 +92,14 @@ class MacosPackageProofContractTests(unittest.TestCase):
         self.assertNotIn("FacMan.app", appkit_job)
         self.assertNotIn("open ", appkit_job)
 
-    def test_cli_verification_maps_macos_profile_to_setup_authority(self) -> None:
-        dispatch = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
+    def test_application_maps_macos_profile_to_setup_authority(self) -> None:
+        setup = (
+            ROOT / "runtime" / "factorio" / "application" / "handlers" / "setup.cpp"
+        ).read_text(encoding="utf-8")
         self.assertIn(
-            '{"macos_portable_cli_x64", "macos", "x64", "static_first"}', dispatch
+            '{"macos_portable_cli_x64", "macos", "x64", "static_first"}', setup
         )
-        self.assertIn('setup_command_response_json("package.verify"', dispatch)
+        self.assertIn('setup_execute("package.verify"', setup)
 
 
 if __name__ == "__main__":

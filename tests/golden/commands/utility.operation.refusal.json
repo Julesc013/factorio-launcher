@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"utility.operation","status":"refused","refusal":{"schema":"common.refusal.v1","code":"unsupported_operation","reason":"Utility operation is not supported","recoverable":false}}

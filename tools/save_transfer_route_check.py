@@ -50,13 +50,12 @@ def validate() -> list[str]:
         if legacy in cli:
             problems.append(f"migrated CLI backend returned: {legacy}")
     slices = {
-        "saves": function_slice(cli, "int command_saves(", "int command_export("),
-        "instance.export": function_slice(cli, "int command_export(", "int command_import("),
-        "instance.import": function_slice(cli, "int command_import(", "int command_servers("),
+        "saves": function_slice(cli, "int command_saves(", "int command_diagnostics("),
+        "instance.transfer": function_slice(cli, "int command_transfer(", "int command_servers("),
     }
     for name, source in slices.items():
-        if "route_factorio_command(" not in source:
-            problems.append(f"{name} CLI does not use the authoritative command route")
+        if "call(options," not in source:
+            problems.append(f"{name} CLI does not use FacManClient")
         for forbidden in (
             "load_instance(",
             "inspect_archive(",

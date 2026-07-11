@@ -5,6 +5,7 @@ import unittest
 from tools import (
     aide_queue_state_check,
     apps_boundary_check,
+    client_cli_boundary_check,
     critical_io_check,
     generated_catalog_check,
     manual_json_check,
@@ -22,6 +23,7 @@ class ArchitectureFitnessTests(unittest.TestCase):
             generated_catalog_check.main,
             version_truth_check.main,
             target_dependency_check.main,
+            client_cli_boundary_check.main,
             aide_queue_state_check.main,
         ]
         for check in checks:

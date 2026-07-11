@@ -16,6 +16,7 @@
 #include "handlers/saves.h"
 #include "handlers/setup.h"
 #include "handlers/unavailable.h"
+#include "handlers/utility.h"
 
 #include <filesystem>
 #include <string>
@@ -74,7 +75,7 @@ private:
                 "Dry-run requests never execute data writes");
         }
         switch (request.command) {
-        case CommandId::doctor_run: return handlers::run_doctor(context_);
+        case CommandId::doctor_run: return handlers::run_doctor(context_, std::get<DoctorRequest>(request.payload));
         case CommandId::install_list: return handlers::list_installs(context_);
         case CommandId::install_scan: return handlers::scan_installs(context_, std::get<ScanInstallRefsRequest>(request.payload));
         case CommandId::install_import: return handlers::import_install(context_, std::get<ImportInstallRefRequest>(request.payload));
@@ -85,6 +86,8 @@ private:
         case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
         case CommandId::run_execute: return handlers::unavailable(context_, "run.execute", "isolation_not_proven", "real Factorio write isolation has not been proven");
         case CommandId::setup_preview: return handlers::preview_setup(context_);
+        case CommandId::setup_operation: return handlers::setup_operation(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::utility_operation: return handlers::utility_operation(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::launch_plan_preflight: return handlers::preflight_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload));
         case CommandId::mods_import: return handlers::import_mod(context_, std::get<ImportModRequest>(request.payload));
         case CommandId::modsets_lock: return handlers::lock_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
