@@ -74,7 +74,9 @@ core, local mod/modset routes, save/portable-transfer routes, bounded workspace
 transaction recovery, reviewed diagnostic export, and Linux target package
 proof are frozen at green exact-SHA checkpoints. Continue with
 `FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03` on supported local filesystems only.
-Keep
+That local lock proof is now exact-SHA cross-platform green. Continue with
+`FACMAN-SBOM-AND-PROVENANCE-01`, keeping provenance distinct from publisher
+authenticity. Keep
 `run.execute` and real Factorio isolation human-gated; do not schedule Windows discovery again.
 The ordered authority remains `.aide/memory/r3.3-workunits.md`.
 

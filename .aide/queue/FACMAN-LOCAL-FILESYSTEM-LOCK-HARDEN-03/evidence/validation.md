@@ -1,6 +1,6 @@
 # Validation
 
-Result: LOCAL GATES PASS; EXACT-SHA CROSS-PLATFORM CI PENDING.
+Result: PASS, including exact-SHA cross-platform CI.
 
 - Full native Windows build: PASS.
 - Native CTest: PASS (9/9).
@@ -20,3 +20,8 @@ Linux `flock`/device/inode behavior and macOS compilation/local-filesystem
 classification require the exact implementation revision's target matrix.
 Shared/network and multi-host filesystems remain unpromoted regardless of that
 result.
+
+Revision `df6d8b081a813a4dd878c275a1e67becc7ccd3a0` passed CI run
+`29157471842` across Linux native/runtime, Windows native/package, macOS archive
+native compilation, and AppKit compile-only. Security run `29157471908` passed.
+No shared-filesystem claim is inferred from those local-runner results.
