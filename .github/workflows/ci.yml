@@ -159,7 +159,6 @@ jobs:
     runs-on: macos-15-intel
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/macos-native/facman
-      TMPDIR: ${{ runner.temp }}/facman-native-tmp
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -173,8 +172,10 @@ jobs:
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
       - name: Prepare no-link temporary root
         run: |
+          export TMPDIR="$RUNNER_TEMP/facman-native-tmp"
           mkdir -p "$TMPDIR"
           test "$(python -c 'import os; print(os.path.realpath(os.environ["TMPDIR"]))')" = "$TMPDIR"
+          echo "TMPDIR=$TMPDIR" >> "$GITHUB_ENV"
       - name: Configure complete macOS Intel native core
         run: >-
           cmake -S . -B build/macos-native

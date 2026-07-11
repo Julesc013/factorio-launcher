@@ -28,3 +28,10 @@ refused that linked root; downstream proof steps were skipped. The repair does
 not weaken traversal policy: it gives the macOS job an explicit resolved
 runner-owned `TMPDIR` and verifies that its real path is identical before any
 native test runs.
+
+Repair attempt `ce54b6f6db9235c5bbba275f87348414dc96d3ed`, workflow
+run `29158980502`, was rejected before jobs because GitHub does not expose the
+`runner` expression context in job-level `env`. The corrected workflow derives
+the same path from the documented `RUNNER_TEMP` process environment during the
+setup step and persists it with `GITHUB_ENV`; no native policy or test is
+changed or skipped.
