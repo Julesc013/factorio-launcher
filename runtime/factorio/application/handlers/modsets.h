@@ -1,0 +1,12 @@
+#ifndef FACMAN_FACTORIO_APPLICATION_HANDLERS_MODSETS_H
+#define FACMAN_FACTORIO_APPLICATION_HANDLERS_MODSETS_H
+
+#include "application_context.h"
+#include "application_types.h"
+
+namespace facman::factorio::application::handlers {
+ApplicationResult lock_modset(ApplicationContext& context, const ModsetInstanceRequest& request);
+ApplicationResult verify_modset(ApplicationContext& context, const ModsetInstanceRequest& request);
+ApplicationResult export_modset(ApplicationContext& context, const ExportModsetRequest& request);
+}
+#endif

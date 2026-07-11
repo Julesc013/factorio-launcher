@@ -123,6 +123,29 @@ static int run_dry_run_write_refusal(
     return 0;
 }
 
+static int run_refusal(
+    flb_context* context,
+    const char* command_name,
+    int dry_run,
+    const char* payload,
+    const char* code)
+{
+    ulk_command_request_v1 request;
+    ulk_command_response_v1 response;
+    int status;
+    memset(&request, 0, sizeof(request));
+    memset(&response, 0, sizeof(response));
+    response.struct_size = sizeof(response);
+    request.struct_size = sizeof(request);
+    request.command_name = view_from_cstr(command_name);
+    request.json_payload = view_from_cstr(payload);
+    request.dry_run = dry_run;
+    status = fl_command_client_execute_cabi_v1(context, &request, &response);
+    if (status == ULK_STATUS_OK || response.status == ULK_STATUS_OK) return 1;
+    if (!contains(response.json_payload, code)) return 2;
+    return 0;
+}
+
 int main(void)
 {
     flb_context* context = 0;
@@ -171,6 +194,14 @@ int main(void)
     }
     if (run_command(context, "install_refs.list", 1, "\"install_refs\":[]") != 0) {
         return 23;
+    }
+    if (run_command(context, "instance.list", 1, "\"instances\":[]") != 0) {
+        return 38;
+    }
+    if (run_command(context, "doctor.run", 1, "\"command\":\"doctor.run\"") != 0) return 40;
+    if (run_refusal(context, "run.execute", 0, "{}", "isolation_not_proven") != 0 ||
+        run_refusal(context, "setup.preview", 1, "{}", "setup_unavailable") != 0) {
+        return 39;
     }
     if (run_command(context, "install_refs.scan", 1, "\"schema\": \"factorio.discovery_report.v1\"") != 0) {
         return 24;

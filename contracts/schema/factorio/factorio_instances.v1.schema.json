@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_instances.v1.schema.json",
+  "title": "Factorio Instance List",
+  "type": "object",
+  "required": ["schema", "command", "instances"],
+  "properties": {
+    "schema": {"const": "factorio.instances.v1"},
+    "command": {"const": "instance.list"},
+    "instances": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

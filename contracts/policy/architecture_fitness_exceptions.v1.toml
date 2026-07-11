@@ -17,7 +17,7 @@ apps_boundary = [
   "apps/cli/command_dispatch.cpp:process",
 ]
 manual_json = [
-  "runtime/factorio/application/flb_factorio_application.cpp",
+  "runtime/factorio/application/command_result.cpp",
   "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp",
   "runtime/factorio/discovery/flb_factorio_discovery.cpp",
   "runtime/factorio/launch/flb_factorio_launch_plan.cpp",

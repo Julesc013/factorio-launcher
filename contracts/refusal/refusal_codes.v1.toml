@@ -68,6 +68,8 @@ required_codes = [
   "workspace_layout_future_or_unknown",
   "workspace_record_future_or_unknown_schema",
   "workspace_migration_apply_unproven",
+  "workspace_list_failed",
+  "setup_unavailable",
 ]
 
 [[code]]
@@ -111,6 +113,20 @@ severity = "blocked"
 effect = "process_execute"
 retryable = false
 message = "Process execution is unavailable until real product write isolation is proven."
+
+[[code]]
+id = "workspace_list_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Workspace records could not be listed safely."
+
+[[code]]
+id = "setup_unavailable"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup is unavailable in this application configuration."
 
 [[code]]
 id = "diagnostic_export_not_safe"

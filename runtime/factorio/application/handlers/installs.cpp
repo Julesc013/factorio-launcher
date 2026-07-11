@@ -1,0 +1,124 @@
+#include "handlers/installs.h"
+
+#include "command_result.h"
+#include "flb_factorio_discovery.h"
+
+#include <filesystem>
+#include <utility>
+#include <vector>
+
+namespace facman::factorio::application::handlers {
+namespace fs = std::filesystem;
+namespace discovery = facman::factorio::discovery;
+
+namespace {
+bool load_install(ApplicationContext& context, const std::string& id, discovery::InstallRef& install)
+{
+    auto record = context.installs().load(facman::core::InstallId(id));
+    if (!record) return false;
+    install.install_id = record.value().id.str();
+    install.root = record.value().root;
+    install.executable = record.value().executable;
+    install.version = record.value().version;
+    install.ownership = record.value().ownership;
+    install.source = record.value().source;
+    install.platform = record.value().platform;
+    install.verification_status = record.value().verification_status;
+    return true;
+}
+}
+
+ApplicationResult list_installs(ApplicationContext& context)
+{
+    auto records = context.installs().list();
+    if (!records) return refused(
+        safety_refusal("install_refs.list", records.error().code, "Install references could not be listed", records.error().message, true),
+        records.error().code, records.error().message);
+    std::string output = "{\"schema\":\"factorio.install_refs.v1\",\"command\":\"install_refs.list\",\"install_refs\":[";
+    for (std::size_t index = 0; index < records.value().size(); ++index) {
+        if (index) output += ',';
+        discovery::InstallRef install;
+        if (load_install(context, records.value()[index].id.str(), install)) {
+            output += discovery::install_ref_json(install);
+        }
+    }
+    output += "]}";
+    ApplicationResult result;
+    result.output = std::move(output);
+    return result;
+}
+
+ApplicationResult scan_installs(ApplicationContext&, const ScanInstallRefsRequest& request)
+{
+    std::vector<fs::path> roots;
+    for (const std::string& value : request.roots) roots.push_back(value);
+    ApplicationResult result;
+    result.output = discovery::discovery_report_json(discovery::scan_install_candidates(roots));
+    return result;
+}
+
+ApplicationResult import_install(ApplicationContext& context, const ImportInstallRefRequest& request)
+{
+    const std::string& root = request.path;
+    const std::string& id = request.install_id;
+    auto target = context.layout().install_ref(facman::core::InstallId(id));
+    if (!target) return refused(
+        safety_refusal("installs.import", target.error().code, "Install id cannot be used as a managed path", target.error().message, false),
+        target.error().code, target.error().message);
+    if (fs::exists(target.value())) return refused(
+        safety_refusal("installs.import", "persistent_target_exists", "Install reference already exists", target.value().string(), true),
+        "persistent_target_exists", "Install reference already exists");
+    discovery::InstallRef install = discovery::inspect_install(root, id);
+    if (install.verification_status == "invalid") return refused(
+        safety_refusal("installs.import", "invalid_install", "Install does not look like a Factorio directory", root, true),
+        "invalid_install", "Install does not look like a Factorio directory");
+    auto workspace_ready = context.workspace_repository().ensure();
+    if (!workspace_ready) return refused(
+        safety_refusal("installs.import", workspace_ready.error().code, "Workspace layout is unavailable", workspace_ready.error().message, false),
+        workspace_ready.error().code, workspace_ready.error().message);
+
+    const std::string text = discovery::install_ref_json(install);
+    transactions::Record transaction;
+    transaction.command_id = "installs.import";
+    transaction.target = target.value();
+    transaction.sources = {fs::path(root)};
+    transaction.commit_strategy = "durable_exclusive_file_create";
+    auto started = transactions::TransactionSession::begin(context.workspace(), std::move(transaction));
+    if (!started) return refused(
+        safety_refusal("installs.import", "recovery_write_refused", "Install journal preparation failed", started.error().message, true),
+        "recovery_write_refused", started.error().message);
+    transactions::TransactionSession session = started.take_value();
+    if (!session.validated("install_inspected") || !session.planned("managed_target_validated") ||
+        !session.staged("install_record_serialized") || !session.verified("install_record_validated") ||
+        !session.committing("durable_exclusive_create_started")) return refused(
+            safety_refusal("installs.import", "recovery_write_refused", "Install journal preparation failed", session.detail(), true),
+            "recovery_write_refused", session.detail());
+    facman::workspace::InstallRecord record;
+    record.id = facman::core::InstallId(id);
+    auto created = context.installs().create(record, text);
+    if (!created) {
+        session.failed(created.error().message);
+        return refused(
+            safety_refusal("installs.import", "persistent_write_refused", "Install reference could not be committed", created.error().message, true),
+            "persistent_write_refused", created.error().message);
+    }
+    if (!session.committed("install_record_committed") || !session.complete()) return refused(
+        safety_refusal("installs.import", "transaction_recovery_required", "Install committed but journal finalization failed", session.detail(), false),
+        "transaction_recovery_required", session.detail());
+    ApplicationResult result;
+    result.output = text;
+    return result;
+}
+
+ApplicationResult inspect_install(ApplicationContext& context, const InspectInstallRefRequest& request)
+{
+    discovery::InstallRef install;
+    if (!load_install(context, request.install_id, install)) return refused(
+        safety_refusal("installs.inspect", "unknown_install", "Install reference is not registered", request.install_id, true),
+        "unknown_install", "Install reference is not registered");
+    ApplicationResult result;
+    result.output = discovery::install_ref_json(install);
+    return result;
+}
+
+} // namespace facman::factorio::application::handlers

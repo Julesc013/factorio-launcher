@@ -17,11 +17,14 @@ EXPECTED_COMMANDS = {
     "installs.scan",
     "installs.import",
     "installs.inspect",
+    "install_refs.list",
     "instances.create",
+    "instance.list",
     "launch.plan",
     "launch_plan.preflight",
     "run.preview",
     "run.execute",
+    "setup.preview",
     "mods.import",
     "modsets.lock",
     "modsets.verify",
@@ -130,7 +133,7 @@ def validate_contract(path: Path, contract: dict, allowed_effects: set[str]) -> 
             problems.append(f"{path.relative_to(ROOT)}: {key} does not exist: {contract[key]}")
 
     availability = contract.get("availability", "implemented")
-    if availability not in {"implemented", "unavailable_until_isolation_proof"}:
+    if availability not in {"implemented", "unavailable_until_isolation_proof", "unavailable_until_gateway"}:
         problems.append(f"{path.relative_to(ROOT)}: unsupported availability {availability!r}")
     if availability == "implemented" and "golden_success" not in contract:
         problems.append(f"{path.relative_to(ROOT)}: implemented command missing golden_success")

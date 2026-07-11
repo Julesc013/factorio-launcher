@@ -22,6 +22,9 @@ def validate() -> list[str]:
     application = (ROOT / "runtime/factorio/application/flb_factorio_application.cpp").read_text(
         encoding="utf-8"
     )
+    application += (ROOT / "runtime/factorio/application/command_dispatch.cpp").read_text(encoding="utf-8")
+    application += (ROOT / "runtime/factorio/application/handlers/mods.cpp").read_text(encoding="utf-8")
+    application += (ROOT / "runtime/factorio/application/handlers/modsets.cpp").read_text(encoding="utf-8")
     operations = (ROOT / "runtime/factorio/modsets/flb_factorio_modset_operations.cpp").read_text(
         encoding="utf-8"
     )

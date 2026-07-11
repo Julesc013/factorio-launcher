@@ -241,6 +241,29 @@ Result<InstallRecord> InstallRepository::load(const InstallId& id) const
     return Result<InstallRecord>::success(std::move(record));
 }
 
+Result<std::vector<InstallRecord>> InstallRepository::list() const
+{
+    std::set<std::string> ids;
+    for (const fs::path& directory : {layout_.installs_refs_dir(), layout_.legacy_installs_dir()}) {
+        std::error_code error;
+        if (!fs::is_directory(directory, error) || error) continue;
+        for (fs::directory_iterator iterator(directory, fs::directory_options::skip_permission_denied, error), end;
+             iterator != end && !error; iterator.increment(error)) {
+            const fs::file_status status = iterator->symlink_status(error);
+            if (error || !fs::is_regular_file(status) || iterator->path().extension() != ".json") continue;
+            ids.insert(iterator->path().stem().string());
+        }
+        if (error) return failure<std::vector<InstallRecord>>("workspace_list_failed", error.message(), directory);
+    }
+    std::vector<InstallRecord> records;
+    for (const std::string& id : ids) {
+        auto record = load(InstallId(id));
+        if (!record) return failure<std::vector<InstallRecord>>(record.error().code, record.error().message, record.error().path);
+        records.push_back(record.take_value());
+    }
+    return Result<std::vector<InstallRecord>>::success(std::move(records));
+}
+
 Result<fs::path> InstallRepository::create(const InstallRecord& record, const std::string& json_text) const
 {
     auto target = layout_.install_ref(record.id);
@@ -293,6 +316,39 @@ Result<InstanceRecord> InstanceRepository::load(const InstanceId& id) const
     record.legacy_path = legacy;
     record.source_path = path;
     return Result<InstanceRecord>::success(std::move(record));
+}
+
+Result<std::vector<InstanceRecord>> InstanceRepository::list() const
+{
+    std::set<std::string> ids;
+    const fs::path directory = layout_.root() / "instances";
+    std::error_code error;
+    const bool directory_exists = fs::exists(directory, error);
+    if (!directory_exists && !error) {
+        return Result<std::vector<InstanceRecord>>::success({});
+    }
+    if (error) return failure<std::vector<InstanceRecord>>("workspace_list_failed", error.message(), directory);
+    if (fs::is_directory(directory, error) && !error) {
+        for (fs::directory_iterator iterator(directory, fs::directory_options::skip_permission_denied, error), end;
+             iterator != end && !error; iterator.increment(error)) {
+            const fs::file_status status = iterator->symlink_status(error);
+            if (error || !fs::is_directory(status)) continue;
+            const fs::path canonical = iterator->path() / "instance.v1.json";
+            const fs::path legacy = iterator->path() / "instance.manifest.json";
+            std::error_code manifest_error;
+            if (fs::is_regular_file(canonical, manifest_error) || fs::is_regular_file(legacy, manifest_error)) {
+                ids.insert(iterator->path().filename().string());
+            }
+        }
+    }
+    if (error) return failure<std::vector<InstanceRecord>>("workspace_list_failed", error.message(), directory);
+    std::vector<InstanceRecord> records;
+    for (const std::string& id : ids) {
+        auto record = load(InstanceId(id));
+        if (!record) return failure<std::vector<InstanceRecord>>(record.error().code, record.error().message, record.error().path);
+        records.push_back(record.take_value());
+    }
+    return Result<std::vector<InstanceRecord>>::success(std::move(records));
 }
 
 ModsetRepository::ModsetRepository(WorkspaceLayout layout) : layout_(std::move(layout)) {}

@@ -77,6 +77,7 @@ class InstallRepository {
 public:
     explicit InstallRepository(WorkspaceLayout layout);
     Result<InstallRecord> load(const InstallId& id) const;
+    Result<std::vector<InstallRecord>> list() const;
     Result<std::filesystem::path> create(const InstallRecord& record, const std::string& json) const;
 
 private:
@@ -87,6 +88,7 @@ class InstanceRepository {
 public:
     explicit InstanceRepository(WorkspaceLayout layout);
     Result<InstanceRecord> load(const InstanceId& id) const;
+    Result<std::vector<InstanceRecord>> list() const;
 
 private:
     WorkspaceLayout layout_;

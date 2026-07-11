@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"instance.list","operation":"instance.list","status":"refused","refusal":{"schema":"common.refusal.v1","code":"workspace_list_failed","reason":"Instances could not be listed","detail":"fixture","recoverable":true,"retryable":true,"severity":"blocked"}}

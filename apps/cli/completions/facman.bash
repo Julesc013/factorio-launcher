@@ -1,2 +1,2 @@
-# generated source-sha256: 6ecfc8b073bdfb30f272c366abe84ddd8e0a779fb124e35666d58ebd5345f42c
-complete -W "diagnostics doctor export import installs instances launch mods modsets product run saves workspace" facman
+# generated source-sha256: 189d32dd9028370834a8a0ee2c450526841e6e20afe4023f28beaec65f96abb7
+complete -W "diagnostics doctor export import installs instances launch mods modsets product run saves setup workspace" facman

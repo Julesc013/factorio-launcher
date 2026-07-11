@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"setup.preview","operation":"setup.preview","status":"refused","refusal":{"schema":"common.refusal.v1","code":"setup_unavailable","reason":"Universal Setup preview is unavailable in this application configuration","detail":"capability remains quarantined","recoverable":false,"retryable":false,"severity":"blocked"}}

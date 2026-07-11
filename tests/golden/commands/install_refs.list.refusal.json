@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"install_refs.list","operation":"install_refs.list","status":"refused","refusal":{"schema":"common.refusal.v1","code":"workspace_list_failed","reason":"Install references could not be listed","detail":"fixture","recoverable":true,"retryable":true,"severity":"blocked"}}

@@ -16,8 +16,11 @@ def validate() -> list[str]:
     application = (ROOT / "runtime/factorio/application/flb_factorio_application.cpp").read_text(
         encoding="utf-8"
     )
+    application += (ROOT / "runtime/factorio/application/command_dispatch.cpp").read_text(encoding="utf-8")
+    application += (ROOT / "runtime/factorio/application/handlers/recovery.cpp").read_text(encoding="utf-8")
     consumers = {
-        "application": application,
+        "application": (ROOT / "runtime/factorio/application/handlers/instances.cpp").read_text(encoding="utf-8") +
+            (ROOT / "runtime/factorio/application/handlers/installs.cpp").read_text(encoding="utf-8"),
         "modsets": (ROOT / "runtime/factorio/modsets/flb_factorio_modset_operations.cpp").read_text(encoding="utf-8"),
         "saves": (ROOT / "runtime/factorio/saves/flb_factorio_save_operations.cpp").read_text(encoding="utf-8"),
         "diagnostics": (ROOT / "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp").read_text(encoding="utf-8"),

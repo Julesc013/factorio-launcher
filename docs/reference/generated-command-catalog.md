@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `6ecfc8b073bdfb30f272c366abe84ddd8e0a779fb124e35666d58ebd5345f42c`.
+Source digest: `189d32dd9028370834a8a0ee2c450526841e6e20afe4023f28beaec65f96abb7`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -9,11 +9,13 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `diagnostics.export` | `diagnostics.export` | available | workspace_read, workspace_write | `facman diagnostics export --instance <instance-id> --out <bundle.zip> --json` |
 | `doctor.run` | `doctor.run` | available | workspace_read | `facman doctor --json` |
 | `factorio.product.inspect` | `factorio.product.inspect` | available | none | `FLB command bridge: factorio.product.inspect` |
+| `install_refs.list` | `install_refs.list` | available | workspace_read | `facman installs list --json` |
 | `installs.import` | `install_refs.import` | available | workspace_read, workspace_write | `facman installs import <factorio-dir> --id <install-id> --json` |
 | `installs.inspect` | `install_refs.inspect` | available | workspace_read | `facman installs inspect <install-id> --json` |
 | `installs.scan` | `install_refs.scan` | available | workspace_read | `facman installs scan --json` |
 | `instance.export` | `instance.export` | available | workspace_read, workspace_write | `facman export instance <instance-id> <pack.zip> --json` |
 | `instance.import` | `instance.import` | available | workspace_read, workspace_write | `facman import instance <pack.zip> --json` |
+| `instance.list` | `instance.list` | available | workspace_read | `facman instances list --json` |
 | `instances.create` | `instance.create` | available | workspace_read, workspace_write | `facman instances create <name> --install <install-id> --json` |
 | `launch.plan` | `launch_plan.build` | available | workspace_read | `facman launch plan <instance-id> --json` |
 | `launch_plan.preflight` | `launch_plan.preflight` | available | workspace_read | `facman launch plan <instance-id> --preflight --json` |
@@ -27,6 +29,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `saves.backup` | `saves.backup` | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> --json` |
 | `saves.clone` | `saves.clone` | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> --json` |
 | `saves.list` | `saves.list` | available | workspace_read | `facman saves list --instance <instance-id> --json` |
+| `setup.preview` | `setup.preview` | unavailable_until_gateway | workspace_read | `facman setup preview --json` |
 | `workspace.migration.apply` | `workspace.migration.apply` | available | workspace_read, workspace_write | `facman workspace migration apply --json` |
 | `workspace.migration.inspect` | `workspace.migration.inspect` | available | workspace_read | `facman workspace migration inspect --json` |
 | `workspace.migration.plan` | `workspace.migration.plan` | available | workspace_read | `facman workspace migration plan --json` |

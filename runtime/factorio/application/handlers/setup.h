@@ -1,0 +1,10 @@
+#ifndef FACMAN_FACTORIO_APPLICATION_HANDLERS_SETUP_H
+#define FACMAN_FACTORIO_APPLICATION_HANDLERS_SETUP_H
+
+#include "application_context.h"
+#include "application_types.h"
+
+namespace facman::factorio::application::handlers {
+ApplicationResult preview_setup(ApplicationContext& context);
+}
+#endif

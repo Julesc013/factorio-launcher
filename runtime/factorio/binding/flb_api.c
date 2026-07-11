@@ -12,29 +12,6 @@ struct flb_context {
     void* application;
 };
 
-static int flb_string_equals(ulk_string_view value, const char* expected)
-{
-    ulk_size index;
-    ulk_size expected_size;
-
-    if (value.data == 0 || expected == 0) {
-        return 0;
-    }
-
-    expected_size = (ulk_size)strlen(expected);
-    if (value.size != expected_size) {
-        return 0;
-    }
-
-    for (index = 0; index < expected_size; ++index) {
-        if (value.data[index] != expected[index]) {
-            return 0;
-        }
-    }
-
-    return 1;
-}
-
 static void flb_set_response(
     ulk_command_response_v1* response,
     int status,
@@ -186,8 +163,6 @@ int flb_command_execute_v1(
     ulk_command_response_v1* response
 )
 {
-    static const char product_payload[] =
-        "{\"schema\":\"ulk.command_response.v1\",\"status\":\"ok\",\"payload\":{\"schema\":\"factorio.product.v1\",\"product_id\":\"factorio\",\"display_name\":\"Factorio\",\"public_name\":\"FacMan - unofficial launcher and isolated instance manager for Factorio\",\"binding_id\":\"flb.factorio\",\"unofficial\":true,\"capabilities\":[\"install_refs\",\"instances\",\"profiles\",\"artifact_sets\",\"launch_plans\",\"diagnostics\",\"mods\",\"saves\",\"servers\"],\"boundaries\":{\"bundles_factorio_binaries\":false,\"repairs_foreign_installs\":false,\"uninstalls_foreign_installs\":false,\"uses_official_branding\":false,\"default_run_mode\":\"dry-run\"}},\"error\":null}";
     static const char invalid_payload[] =
         "{\"schema\":\"ulk.command_response.v1\",\"status\":\"invalid_argument\",\"payload\":null,\"error\":{\"code\":\"invalid_argument\",\"message\":\"Factorio binding command request is invalid\"}}";
     static const char invalid_message[] = "Factorio binding command request is invalid";
@@ -202,12 +177,6 @@ int flb_command_execute_v1(
         request->command_name.size == 0) {
         flb_set_response(response, ULK_STATUS_INVALID_ARGUMENT, invalid_payload, invalid_message);
         return ULK_STATUS_INVALID_ARGUMENT;
-    }
-
-    if (flb_string_equals(request->command_name, "product.inspect") ||
-        flb_string_equals(request->command_name, "factorio.product.inspect")) {
-        flb_set_response(response, ULK_STATUS_OK, product_payload, 0);
-        return ULK_STATUS_OK;
     }
 
     return ulk_command_execute_v1(context->launcher_context, request, response);

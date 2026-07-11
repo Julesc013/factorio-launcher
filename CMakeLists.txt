@@ -229,7 +229,24 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
 target_include_directories(flaunch_runtime_static PRIVATE runtime/base)
 target_link_libraries(flaunch_runtime_static PRIVATE facman_base_static)
 
-add_library(flb_factorio_application_static STATIC runtime/factorio/application/flb_factorio_application.cpp)
+add_library(flb_factorio_application_static STATIC
+  runtime/factorio/application/application_context.cpp
+  runtime/factorio/application/command_dispatch.cpp
+  runtime/factorio/application/command_result.cpp
+  runtime/factorio/application/flb_factorio_application.cpp
+  runtime/factorio/application/handlers/diagnostics.cpp
+  runtime/factorio/application/handlers/doctor.cpp
+  runtime/factorio/application/handlers/installs.cpp
+  runtime/factorio/application/handlers/instances.cpp
+  runtime/factorio/application/handlers/launch.cpp
+  runtime/factorio/application/handlers/mods.cpp
+  runtime/factorio/application/handlers/modsets.cpp
+  runtime/factorio/application/handlers/product.cpp
+  runtime/factorio/application/handlers/recovery.cpp
+  runtime/factorio/application/handlers/saves.cpp
+  runtime/factorio/application/handlers/setup.cpp
+  runtime/factorio/application/handlers/unavailable.cpp
+)
 target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_application_static PUBLIC runtime/factorio/application)
 target_link_libraries(flb_factorio_application_static PUBLIC

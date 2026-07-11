@@ -15,6 +15,8 @@ def main() -> int:
     diagnostics = diagnostics_path.read_text(encoding="utf-8")
     cli = cli_path.read_text(encoding="utf-8")
     application = application_path.read_text(encoding="utf-8")
+    application += (ROOT / "runtime/factorio/application/command_dispatch.cpp").read_text(encoding="utf-8")
+    application += (ROOT / "runtime/factorio/application/handlers/diagnostics.cpp").read_text(encoding="utf-8")
     binding = binding_path.read_text(encoding="utf-8")
     binding += (ROOT / "runtime/core/generated/command_catalog.h").read_text(encoding="utf-8")
 
@@ -55,7 +57,7 @@ def main() -> int:
         problems.append("CLI diagnostic export does not normalize into the authoritative route")
     if "diagnostic_export_not_safe" in cli:
         problems.append("CLI still quarantines diagnostic export after the complete safety route")
-    if "diagnostic_operations::export_bundle(" not in application:
+    if "diagnostics::export_bundle(" not in application:
         problems.append("typed application operation does not own diagnostic export")
     if '"diagnostics.export"' not in binding or "diagnostic_bundle_export.v1.schema.json" not in binding:
         problems.append("registered diagnostic descriptor is missing or has stale schema metadata")

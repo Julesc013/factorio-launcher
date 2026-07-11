@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_refs.v1.schema.json",
+  "title": "Factorio Install Reference List",
+  "type": "object",
+  "required": ["schema", "command", "install_refs"],
+  "properties": {
+    "schema": {"const": "factorio.install_refs.v1"},
+    "command": {"const": "install_refs.list"},
+    "install_refs": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}
