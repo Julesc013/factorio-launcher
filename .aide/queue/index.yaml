@@ -9,6 +9,12 @@ items:
     title: Close R3.4 architecture consolidation
     task: .aide/queue/active/FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01/evidence
+  - id: FACMAN-R3.4-TARGET-RUNNER-PROMOTION-01
+    status: planned
+    lifecycle_state: planned
+    title: Run R3.4 target promotion matrix
+    task: .aide/queue/next/FACMAN-R3.4-TARGET-RUNNER-PROMOTION-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-R3.4-TARGET-RUNNER-PROMOTION-01/evidence
   - id: FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01
     status: planned
     lifecycle_state: planned

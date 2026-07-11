@@ -1,0 +1,60 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-R3.4-TARGET-RUNNER-PROMOTION-01
+title: Run R3.4 target promotion matrix
+status: planned
+lifecycle_state: planned
+planning_state: planned
+created_at: 2026-07-11T23:40:34Z
+owner: unassigned
+objective: >
+  After an authorized push or equivalent target-runner handoff, execute Linux ASan/UBSan, libFuzzer, coverage and zero-skip package proof plus macOS Intel native/package/AppKit proof at the pinned R3.4 revisions; record artifact identities without promoting signing, publication, real Factorio execution, or Safe beta.
+allowed_paths:
+  - .github/**
+  - .aide/**
+  - docs/release/checkpoints/**
+  - release/**
+  - tools/**
+  - tests/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_client_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_release_readiness
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/release_readiness_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed

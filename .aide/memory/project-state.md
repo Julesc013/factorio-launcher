@@ -32,6 +32,7 @@ R3.4 consolidates the native architecture, install-tree packaging, test proof, A
 - Linux sanitizer, libFuzzer, clang-tidy, coverage, and target package results are CI-owned per revision.
 - macOS target package proof is CI-owned per revision; AppKit remains compile-only.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
+- Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.
 
 ## Authorities
 

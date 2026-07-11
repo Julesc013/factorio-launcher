@@ -91,12 +91,14 @@ def collect() -> dict[str, Any]:
             "release/profiles/macos_portable_cli_x64/profile.toml",
             "docs/quality/benchmarks/baseline.v1.json",
             ".aide/history/r3.3/index.json",
+            ".aide/history/r3.4/index.json",
         ],
         "known_blockers": [
             "Real Factorio isolation remains operator-only and has no human verdict.",
             "Linux sanitizer, libFuzzer, clang-tidy, coverage, and target package results are CI-owned per revision.",
             "macOS target package proof is CI-owned per revision; AppKit remains compile-only.",
             "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
+            "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.",
         ],
         "truth_boundaries": [
             "AIDE is development governance only and never a product dependency.",

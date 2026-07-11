@@ -8,10 +8,13 @@ leaving setup mutation to Universal Setup.
 The native architecture now uses generated metadata, shared core/platform
 primitives, repositories, typed transactions, decomposed application handlers,
 a client-only CLI, truthful frontend transports, module-local CMake, and a
-reproducible install-tree package pipeline. Test impact routing and compact
-AIDE state are implemented; supply-chain policy is the remaining mandatory
-R3.4 work unit. Historical R3.2/R3.3 sections below remain evidence context,
-not the active queue. Ordered future gates live in
+reproducible install-tree package pipeline. Test impact routing, compact AIDE
+state, SPDX/REUSE compliance, dependency licensing, and built-component SBOM
+closure are implemented. The local Windows closeout matrix is green; fresh
+Linux sanitizer/package and macOS Intel package/AppKit promotion remain a
+target-runner handoff, not an inferred local result. Historical R3.2/R3.3
+sections below remain evidence context, not the active queue. Ordered future
+gates live in
 [`future_layers_plan.md`](architecture/future_layers_plan.md).
 
 ## Immediate Safety And Truth Gates
