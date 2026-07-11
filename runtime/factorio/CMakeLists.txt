@@ -1,0 +1,75 @@
+add_library(flb_factorio_launch_static STATIC launch/flb_factorio_launch_plan.cpp)
+target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_launch_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
+target_link_libraries(flb_factorio_launch_static PUBLIC facman_base_static)
+
+add_library(flb_factorio_discovery_static STATIC discovery/flb_factorio_discovery.cpp)
+target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_discovery_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/discovery)
+if(WIN32)
+  target_link_libraries(flb_factorio_discovery_static PUBLIC Advapi32)
+endif()
+
+add_library(flb_factorio_diagnostics_static STATIC diagnostics/flb_factorio_diagnostics.cpp)
+target_compile_features(flb_factorio_diagnostics_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_diagnostics_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/diagnostics)
+target_link_libraries(flb_factorio_diagnostics_static PUBLIC facman_transaction_static facman_workspace_static)
+
+add_library(flb_factorio_mods_static STATIC mods/flb_factorio_mods.cpp)
+target_compile_features(flb_factorio_mods_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_mods_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/mods)
+target_link_libraries(flb_factorio_mods_static PUBLIC facman_archive_static facman_base_static)
+
+add_library(flb_factorio_modsets_static modsets/flb_factorio_modsets.cpp modsets/flb_factorio_modset_operations.cpp)
+target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_modsets_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/modsets ${CMAKE_CURRENT_SOURCE_DIR}/mods)
+target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static facman_workspace_static)
+
+add_library(flb_factorio_saves_static saves/flb_factorio_save_operations.cpp)
+target_compile_features(flb_factorio_saves_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_saves_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/saves ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
+target_link_libraries(flb_factorio_saves_static PUBLIC
+  facman_archive_static facman_base_static facman_transaction_static facman_workspace_static
+  flb_factorio_launch_static flb_factorio_modsets_static)
+
+add_library(facman_factorio_model INTERFACE)
+target_link_libraries(facman_factorio_model INTERFACE
+  flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_launch_static
+  flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static)
+add_library(facman::factorio_model ALIAS facman_factorio_model)
+
+add_library(flb_factorio_application_static STATIC
+  application/application_context.cpp application/command_dispatch.cpp application/command_result.cpp
+  application/flb_factorio_application.cpp application/handlers/diagnostics.cpp
+  application/handlers/doctor.cpp application/handlers/installs.cpp application/handlers/instances.cpp
+  application/handlers/launch.cpp application/handlers/mods.cpp application/handlers/modsets.cpp
+  application/handlers/product.cpp application/handlers/recovery.cpp application/handlers/saves.cpp
+  application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
+target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_application_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application)
+target_compile_definitions(flb_factorio_application_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
+target_link_libraries(flb_factorio_application_static PUBLIC
+  facman_base_static facman_workspace_static facman_factorio_model ulk_static)
+if(FACMAN_WITH_SETUP)
+  target_link_libraries(flb_factorio_application_static PUBLIC flaunch_runtime_static usk_static)
+endif()
+add_library(facman::factorio_application ALIAS flb_factorio_application_static)
+
+add_library(flb_factorio_static STATIC binding/flb_api.c)
+target_include_directories(flb_factorio_static PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/runtime/core/generated)
+target_link_libraries(flb_factorio_static PUBLIC ulk_static flb_factorio_application_static)
+
+add_library(flb_factorio_shared SHARED binding/flb_api.c)
+target_include_directories(flb_factorio_shared PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/runtime/core/generated)
+target_compile_definitions(flb_factorio_shared PRIVATE FLB_BUILD_SHARED)
+target_link_libraries(flb_factorio_shared PUBLIC ulk_shared flb_factorio_application_static)
+set_target_properties(flb_factorio_shared PROPERTIES OUTPUT_NAME flb_factorio WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+add_library(flb_factorio ALIAS flb_factorio_static)
+add_library(facman::binding ALIAS flb_factorio_static)
+foreach(target IN ITEMS
+    flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static
+    flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static
+    flb_factorio_application_static flb_factorio_static flb_factorio_shared)
+  facman_apply_policies(${target})
+endforeach()

@@ -61,13 +61,21 @@ def include_names(path: Path) -> set[str]:
 
 
 def cmake_target_links(target: str) -> list[str]:
-    text = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+    text = cmake_text()
     pattern = re.compile(rf"target_link_libraries\s*\(\s*{re.escape(target)}\s+(.*?)\)", re.DOTALL)
     match = pattern.search(text)
     if not match:
         return []
     tokens = re.findall(r"[A-Za-z0-9_:+.-]+", match.group(1))
     return [token for token in tokens if token not in {"PRIVATE", "PUBLIC", "INTERFACE"}]
+
+
+def cmake_text() -> str:
+    paths = [ROOT / "CMakeLists.txt", *sorted(ROOT.glob("cmake/*.cmake"))]
+    paths.extend(sorted((ROOT / "runtime").glob("**/CMakeLists.txt")))
+    paths.extend(sorted((ROOT / "apps").glob("**/CMakeLists.txt")))
+    paths.extend(sorted((ROOT / "tests").glob("**/CMakeLists.txt")))
+    return "\n".join(path.read_text(encoding="utf-8") for path in paths if path.is_file())
 
 
 def run(check_name: str, detector: Callable[[], set[str]]) -> int:

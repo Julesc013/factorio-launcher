@@ -1,0 +1,5 @@
+add_executable(facman_daemon
+  main.c cancellation.c platform_named_pipe_windows.c platform_unix_socket.c progress_events.c rpc_json.c)
+target_link_libraries(facman_daemon PRIVATE flaunch_runtime_static ulk_static flb_factorio_static)
+set_target_properties(facman_daemon PROPERTIES OUTPUT_NAME facmand)
+facman_apply_policies(facman_daemon)

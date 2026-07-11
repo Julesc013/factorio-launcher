@@ -21,7 +21,8 @@ def validate() -> list[str]:
 
     header = (ROOT / "runtime/workspace/fl_workspace_store.h").read_text(encoding="utf-8")
     source = (ROOT / "runtime/workspace/fl_workspace_store.cpp").read_text(encoding="utf-8")
-    cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+    cmake = (ROOT / "runtime/workspace/CMakeLists.txt").read_text(encoding="utf-8")
+    tests_cmake = (ROOT / "tests/native/CMakeLists.txt").read_text(encoding="utf-8")
     app = (ROOT / "runtime/factorio/application/flb_factorio_application.cpp").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
     index = (ROOT / "contracts/command/factorio/index.v1.toml").read_text(encoding="utf-8")
@@ -49,7 +50,7 @@ def validate() -> list[str]:
     ):
         if anchor not in source:
             problems.append(f"workspace store is missing safety anchor: {anchor}")
-    if "add_library(facman_workspace_static STATIC" not in cmake or "fl_workspace_store_smoke" not in cmake:
+    if "add_library(facman_workspace_static STATIC" not in cmake or "fl_workspace_store_smoke" not in tests_cmake:
         problems.append("CMake does not define the workspace store and native proof targets")
 
     for command in (

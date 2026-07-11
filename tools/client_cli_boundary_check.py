@@ -12,7 +12,12 @@ def validate() -> list[str]:
     header = (ROOT / "runtime/client/facman_client.h").read_text(encoding="utf-8")
     source = (ROOT / "runtime/client/facman_client.cpp").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
-    cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+    cmake = "\n".join(path.read_text(encoding="utf-8") for path in [
+        ROOT / "CMakeLists.txt",
+        ROOT / "cmake/FacManOptions.cmake",
+        ROOT / "apps/cli/CMakeLists.txt",
+        ROOT / "runtime/factorio/CMakeLists.txt",
+    ])
 
     for anchor in (
         "struct CommandRequest",
@@ -53,13 +58,13 @@ def validate() -> list[str]:
         if token in cli:
             problems.append(f"CLI contains forbidden backend token: {token}")
 
-    cli_target = re.search(r"add_executable\(facman_cli(.*?)\n\s*\)", cmake, re.DOTALL)
+    cli_target = re.search(r"add_executable\(facman_cli\s+([^\)]*)\)", cmake, re.DOTALL)
     if not cli_target or "apps/cli/json_mode.c" in cli_target.group(1):
         problems.append("CLI target still contains the legacy JSON backend source")
     links = re.search(r"target_link_libraries\(facman_cli\s+PRIVATE\s+([^\)]*)\)", cmake)
     if not links or links.group(1).split() != ["facman_client_static"]:
         problems.append("CLI target must link only facman_client_static")
-    if "option(FACMAN_WITH_SETUP" not in cmake or "if(FACMAN_WITH_SETUP)" not in cmake:
+    if "option(FACMAN_WITH_SETUP" not in cmake or "if(FACMAN_WITH_SETUP" not in cmake:
         problems.append("CMake does not expose the optional setup boundary")
     return problems
 

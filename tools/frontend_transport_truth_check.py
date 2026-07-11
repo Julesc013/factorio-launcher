@@ -60,10 +60,17 @@ def validate() -> list[str]:
     if "completion:^(FacManCommandResult *result)" not in appkit_window:
         problems.append("AppKit window does not render command completion asynchronously")
 
-    cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
-    if 'option(FACMAN_BUILD_EXPERIMENTAL_FRONTENDS "Build non-product TUI and daemon experiments" OFF)' not in cmake:
+    cmake = (ROOT / "cmake/FacManOptions.cmake").read_text(encoding="utf-8")
+    apps_cmake = (ROOT / "apps/CMakeLists.txt").read_text(encoding="utf-8")
+    default_off = (
+        "set(_facman_tui_default OFF)" in cmake
+        and "set(_facman_daemon_default OFF)" in cmake
+        and 'option(FACMAN_BUILD_TUI "Build the experimental TUI" ${_facman_tui_default})' in cmake
+        and 'option(FACMAN_BUILD_DAEMON "Build the experimental daemon" ${_facman_daemon_default})' in cmake
+    )
+    if not default_off:
         problems.append("experimental frontend build option is not default-off")
-    if "if(FACMAN_BUILD_EXPERIMENTAL_FRONTENDS)" not in cmake:
+    if "if(FACMAN_BUILD_TUI)" not in apps_cmake or "if(FACMAN_BUILD_DAEMON)" not in apps_cmake:
         problems.append("TUI and daemon targets are not guarded as experiments")
 
     for relative in (

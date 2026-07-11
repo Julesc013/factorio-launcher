@@ -46,7 +46,7 @@ class ArchiveDependencyAdmissionTests(unittest.TestCase):
         self.assertIn("Permission is hereby granted", MINIZ.joinpath("LICENSE").read_text())
         self.assertEqual(
             {path.name for path in (ROOT / "external").iterdir()},
-            {"README.md", "miniz", "picojson"},
+            {"CMakeLists.txt", "README.md", "miniz", "picojson"},
         )
         attributes = ROOT.joinpath(".gitattributes").read_text(encoding="utf-8")
         self.assertIn("external/miniz/LICENSE binary", attributes)
@@ -69,9 +69,10 @@ class ArchiveDependencyAdmissionTests(unittest.TestCase):
         self.assertIn("zip64_total_num_of_disks != 1U", source)
 
     def test_build_graph_uses_source_only_private_static_target(self) -> None:
-        cmake = ROOT.joinpath("CMakeLists.txt").read_text(encoding="utf-8")
-        self.assertIn("add_library(miniz_static STATIC external/miniz/miniz.c)", cmake)
-        self.assertIn("add_executable(miniz_dependency_smoke", cmake)
+        external_cmake = ROOT.joinpath("external/CMakeLists.txt").read_text(encoding="utf-8")
+        tests_cmake = ROOT.joinpath("tests/native/CMakeLists.txt").read_text(encoding="utf-8")
+        self.assertIn("add_library(miniz_static STATIC miniz/miniz.c)", external_cmake)
+        self.assertIn("facman_native_test(miniz_dependency_smoke", tests_cmake)
         forbidden_suffixes = {".dll", ".exe", ".lib", ".a", ".so", ".dylib"}
         self.assertFalse(
             any(path.suffix.lower() in forbidden_suffixes for path in MINIZ.rglob("*"))

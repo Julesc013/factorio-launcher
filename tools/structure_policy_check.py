@@ -16,6 +16,7 @@ ALLOWED_TOP_LEVEL = {
     "AGENTS.md",
     "CHANGELOG.md",
     "CMakeLists.txt",
+    "CMakePresets.json",
     "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
     "LICENSE",
@@ -296,7 +297,7 @@ def check_children(relative_root: str, allowed: set[str]) -> list[str]:
         problems.append(f"missing required root {relative_root}/")
         return problems
     for child in root.iterdir():
-        if child.name == "README.md":
+        if child.name in {"README.md", "CMakeLists.txt"}:
             continue
         if relative_root == "release/profiles" and child.name == "profile_catalog.v1.toml":
             continue

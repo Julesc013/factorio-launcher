@@ -1,0 +1,24 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {"name":"base","hidden":true,"binaryDir":"${sourceDir}/build/presets/${presetName}","cacheVariables":{"FACMAN_BUILD_TESTS":"ON"}},
+    {"name":"dev-windows","inherits":"base","generator":"Visual Studio 18 2026"},
+    {"name":"dev-linux","inherits":"base","generator":"Ninja","condition":{"type":"equals","lhs":"${hostSystemName}","rhs":"Linux"}},
+    {"name":"dev-macos","inherits":"base","generator":"Ninja","condition":{"type":"equals","lhs":"${hostSystemName}","rhs":"Darwin"}},
+    {"name":"ci-debug","inherits":"base","generator":"Ninja Multi-Config"},
+    {"name":"ci-release","inherits":"base","generator":"Ninja Multi-Config"},
+    {"name":"asan-ubsan","inherits":"base","generator":"Ninja","cacheVariables":{"FACMAN_ENABLE_SANITIZERS":"ON"}},
+    {"name":"coverage","inherits":"base","generator":"Ninja","cacheVariables":{"FACMAN_ENABLE_COVERAGE":"ON"}},
+    {"name":"package-windows-x64","inherits":"dev-windows","cacheVariables":{"CMAKE_INSTALL_PREFIX":"${sourceDir}/build/install/windows-x64"}},
+    {"name":"package-linux-x64","inherits":"dev-linux","cacheVariables":{"CMAKE_INSTALL_PREFIX":"${sourceDir}/build/install/linux-x64"}},
+    {"name":"package-macos-x64","inherits":"dev-macos","cacheVariables":{"CMAKE_INSTALL_PREFIX":"${sourceDir}/build/install/macos-x64","CMAKE_OSX_ARCHITECTURES":"x86_64"}}
+  ],
+  "buildPresets": [
+    {"name":"ci-debug","configurePreset":"ci-debug","configuration":"Debug"},
+    {"name":"ci-release","configurePreset":"ci-release","configuration":"Release"}
+  ],
+  "testPresets": [
+    {"name":"ci-debug","configurePreset":"ci-debug","configuration":"Debug","output":{"outputOnFailure":true}},
+    {"name":"ci-release","configurePreset":"ci-release","configuration":"Release","output":{"outputOnFailure":true}}
+  ]
+}

@@ -51,7 +51,7 @@ def validate() -> list[str]:
     reader = (ROOT / "runtime/archive/fl_archive_reader.cpp").read_text(encoding="utf-8")
     policy = (ROOT / "runtime/archive/fl_archive_policy.cpp").read_text(encoding="utf-8")
     writer = (ROOT / "runtime/archive/fl_archive_writer.cpp").read_text(encoding="utf-8")
-    cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+    cmake = (ROOT / "runtime/archive/CMakeLists.txt").read_text(encoding="utf-8")
     for anchor in sorted(REQUIRED_READER_ANCHORS):
         if anchor not in reader:
             problems.append(f"archive reader is missing refusal anchor: {anchor}")

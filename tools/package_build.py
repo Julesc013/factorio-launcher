@@ -560,17 +560,17 @@ def resolve_source_target(source_target: str, build_root: Path) -> Path:
         names = ["FacMan.WinForms.exe"]
         roots = [ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Debug"]
     else:
-        roots = [build_root, build_root / "Debug"]
+        configurations = ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]
+        roots = [build_root, *[build_root / configuration for configuration in configurations]]
+        for dependency in ["universal-launcher", "universal-setup"]:
+            roots.extend(build_root / dependency / configuration for configuration in configurations)
     for root in roots:
         for name in names:
             candidate = root / name
             if candidate.is_file():
                 return candidate
-    for name in names:
-        matches = sorted(build_root.rglob(name))
-        if matches:
-            return matches[0]
-    raise ValueError(f"missing built artifact for {source_target}; tried {', '.join(names)} under {build_root}")
+    searched = ", ".join(str(root / name) for root in roots for name in names)
+    raise ValueError(f"missing built artifact for {source_target}; deterministic candidates: {searched}")
 
 
 def pinned_source_revisions() -> dict[str, str]:
