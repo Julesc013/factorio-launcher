@@ -32,6 +32,9 @@ class MacosPackageProofContractTests(unittest.TestCase):
         self.assertFalse(any("app" in item.lower() or "gui" in item.lower() for item in destinations))
 
     def test_proof_schemas_are_strict_unsigned_and_zero_skip(self) -> None:
+        built_schema = json.loads(
+            (ROOT / "contracts/schema/release/built_package.v1.schema.json").read_text(encoding="utf-8")
+        )
         proof_schema = json.loads(
             (ROOT / "contracts/schema/release/macos_cli_package_proof.v1.schema.json").read_text(encoding="utf-8")
         )
@@ -39,6 +42,7 @@ class MacosPackageProofContractTests(unittest.TestCase):
             (ROOT / "contracts/schema/release/macos_linkage_proof.v1.schema.json").read_text(encoding="utf-8")
         )
         self.assertEqual(proof_schema["properties"]["required_skips"]["const"], 0)
+        self.assertIn("macos", built_schema["properties"]["target_os"]["enum"])
         self.assertEqual(proof_schema["properties"]["signed"]["const"], False)
         self.assertEqual(proof_schema["properties"]["notarized"]["const"], False)
         self.assertEqual(proof_schema["properties"]["published"]["const"], False)

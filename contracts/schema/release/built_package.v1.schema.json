@@ -30,7 +30,7 @@
     "schema": { "const": "facman.built_package.v1" },
     "profile_id": { "type": "string", "minLength": 1 },
     "lane": { "type": "string", "minLength": 1 },
-    "target_os": { "enum": ["windows", "linux", "portable"] },
+    "target_os": { "enum": ["windows", "macos", "linux", "portable"] },
     "target_arch": { "const": "x64" },
     "package_type": { "enum": ["portable_zip", "tarball"] },
     "entrypoint": { "type": "string", "minLength": 1 },

@@ -35,3 +35,11 @@ run `29158980502`, was rejected before jobs because GitHub does not expose the
 the same path from the documented `RUNNER_TEMP` process environment during the
 setup step and persists it with `GITHUB_ENV`; no native policy or test is
 changed or skipped.
+
+Replacement revision `ee882405c002f15e71d3e2c188823d2a89ededdd`, CI
+`29159016898`, passed the complete macOS native build, CTest 9/9, portable
+Python 226/226, and strict checks. The package builder then failed closed
+because `built_package.v1` had not yet admitted `macos` in its target enum.
+The schema-only repair adds that already indexed target and a regression
+assertion; it does not relax identity, architecture, linkage, integrity, or
+provenance checks.
