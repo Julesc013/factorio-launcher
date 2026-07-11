@@ -223,6 +223,20 @@ WorkUnit rather than an extension of R3.2.
 - The record is unsigned and unpublished: provenance is recorded, while
   publisher authenticity remains explicitly unproven.
 
+## FACMAN-MACOS-NATIVE-CLI-PROOF-01
+
+- One explicit `macos_portable_cli_x64` tarball contains only the functional
+  CLI, contracts/content, manifests, licenses, and minimal documentation.
+- The `macos-15-intel` gate builds the complete native core, runs all CTests,
+  portable Python and strict checks, then records x86_64 Mach-O identity,
+  deployment target 13.0, SDK/toolchain, inspected system dependencies, and
+  the absence of `LC_RPATH`.
+- Zero-skip package proof covers integrity, relocation, spaces, Unicode,
+  arbitrary working directory, empty `PATH`, external workspace, read-only
+  package root, SPDX/provenance, safe extraction, and post-extraction runtime.
+- Apple Silicon, universal binary, broader macOS compatibility, AppKit runtime,
+  signing, notarization, release, and publication remain unproven.
+
 ## FacMan-SETUP-HANDOFF-01
 
 - Managed install commands call Universal Setup.

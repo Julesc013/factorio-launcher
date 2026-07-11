@@ -8,6 +8,12 @@ pattern = "facman-<version>-linux-cli-x64-portable.tar.gz"
 
 [[artifact]]
 phase = 0
+profile_id = "macos_portable_cli_x64"
+release_class = "unsigned_ci_portable_archive"
+pattern = "facman-<version>-macos-cli-x64-portable.tar.gz"
+
+[[artifact]]
+phase = 0
 profile_id = "windows_portable_cli_x64"
 release_class = "unsigned_local_portable_archive"
 pattern = "facman-<version>-windows-cli-x64-portable.zip"

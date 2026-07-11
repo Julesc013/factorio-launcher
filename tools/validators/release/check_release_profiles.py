@@ -14,6 +14,7 @@ TOOL = "release-profile-check"
 
 REQUIRED_CATALOG_IDS = {
     "linux_portable_cli_x64",
+    "macos_portable_cli_x64",
     "portable_cli",
     "portable_full",
     "windows_legacy_winforms_x86",

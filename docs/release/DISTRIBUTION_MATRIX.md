@@ -46,6 +46,7 @@ windows_modern_winui_arm64
 macOS lanes:
 
 ```text
+macos_portable_cli_x64
 macos_legacy_appkit_x64
 macos_modern_swiftui_universal2
 ```

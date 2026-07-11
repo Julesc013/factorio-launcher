@@ -9,6 +9,7 @@ downloads_payload = false
 apply_authority = "universal_setup"
 compatible_lanes = [
   "linux_portable_cli_x64",
+  "macos_portable_cli_x64",
   "windows_portable_cli_x64",
   "windows_legacy_winforms_x64",
   "macos_legacy_appkit_x64",

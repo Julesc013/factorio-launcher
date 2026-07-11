@@ -19,6 +19,15 @@ runtime_smoke = "package_cli_integrity_linkage_and_relocation"
 package_smoke = "built_artifact_ci_unsigned"
 
 [[platform]]
+id = "macos_portable_cli_x64"
+minimum_os = "macos_13_0"
+runtime_floor = "macos_13_0_intel_ci_baseline"
+frontend_family = "cli"
+compile_proof = "github_macos_15_intel_native_cmake"
+runtime_smoke = "package_cli_integrity_linkage_and_relocation"
+package_smoke = "built_artifact_ci_unsigned"
+
+[[platform]]
 id = "windows_portable_cli_x64"
 minimum_os = "windows_10_22h2"
 runtime_floor = "static_native_runtime"

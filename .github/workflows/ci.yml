@@ -155,6 +155,53 @@ jobs:
             exit "$code"
           fi
 
+  macos-native-cli:
+    runs-on: macos-15-intel
+    env:
+      FACMAN_CLI_EXE: ${{ github.workspace }}/build/macos-native/facman
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Clone universal repositories
+        run: |
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+      - name: Align dependency revisions to workspace lock
+        run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
+      - name: Configure complete macOS Intel native core
+        run: >-
+          cmake -S . -B build/macos-native
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
+          -DFLAUNCH_BUILD_NATIVE_APPS=ON
+      - name: Build complete macOS Intel native core
+        run: cmake --build build/macos-native
+      - name: Run complete macOS native CTest suite
+        run: ctest --test-dir build/macos-native --output-on-failure
+      - name: Run complete portable Python suite on macOS
+        run: python -m unittest discover -s tests -v
+      - name: Run strict policy checks on macOS
+        run: python tools/strict_check.py
+      - name: Run required macOS Intel CLI package proof with zero skips
+        run: >-
+          python tools/macos_package_proof.py
+          --build-root build/macos-native
+          --out build/macos-package-proof/packages
+          --dist build/macos-package-proof/dist
+          --evidence build/macos-package-proof/evidence.v1.json
+      - name: Preserve unsigned macOS package proof artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-portable-cli-x64-${{ github.sha }}
+          path: |
+            build/macos-package-proof/dist/*.tar.gz
+            build/macos-package-proof/dist/*.provenance.v1.json
+            build/macos-package-proof/evidence.v1.json
+          if-no-files-found: error
+          retention-days: 14
+
   appkit-compile:
     runs-on: macos-15-intel
     steps:

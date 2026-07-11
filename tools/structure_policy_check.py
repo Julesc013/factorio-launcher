@@ -156,6 +156,7 @@ ALLOWED_RELEASE_PROFILE_ROOTS = {
     "linux_wayland_qt",
     "linux_x11_gtk",
     "macos_legacy_appkit_x64",
+    "macos_portable_cli_x64",
     "macos_legacy_appkit",
     "macos_modern_swiftui",
     "portable",

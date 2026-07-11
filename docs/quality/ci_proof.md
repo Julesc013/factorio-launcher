@@ -10,8 +10,13 @@ CI mirrors the bounded proof rather than implying release readiness.
 - `windows-native-package` builds the native core on Windows, runs CTest and
   the Python suite, compiles WinForms, and runs the selected
   `windows_portable_cli_x64` package proof through a zero-skip wrapper.
-- `appkit-compile` remains an explicit `macos-15-intel` legacy shell compile lane. It
-  is not a macOS native-core or package claim.
+- `macos-native-cli` builds the complete native core on `macos-15-intel`, runs
+  CTest, the portable Python suite and strict checks, then runs the zero-skip
+  `macos_portable_cli_x64` tarball proof. It records Mach-O architecture,
+  deployment target, SDK/toolchain, system linkage, relocation, integrity,
+  provenance, and runtime evidence.
+- `appkit-compile` remains an independent legacy shell compile-only lane. It is
+  not an AppKit runtime or app-package claim.
 - `security-policy` describes the current policy-only security check honestly.
 - `release-policy` validates unpublished release contracts and does not invoke
   the retired Python-package build path or publish artifacts.
@@ -23,5 +28,5 @@ and update the checker in the same reviewed change.
 Each selected package runner refuses the wrong host/architecture, any test
 failure, and any skipped required package test. The Windows runner also
 refuses a dirty checkout. Ordinary platform-specific skips elsewhere in the
-cross-platform test corpus do not satisfy or invalidate either target-specific
+cross-platform test corpus do not satisfy or invalidate any target-specific
 gate.

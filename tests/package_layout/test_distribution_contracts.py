@@ -12,6 +12,7 @@ class DistributionContractTests(unittest.TestCase):
     def test_first_release_profiles_exist(self) -> None:
         expected = [
             "release/profiles/linux_portable_cli_x64/profile.toml",
+            "release/profiles/macos_portable_cli_x64/profile.toml",
             "release/profiles/windows_portable_cli_x64/profile.toml",
             "release/profiles/windows_legacy_winforms_x64/profile.toml",
             "release/profiles/macos_legacy_appkit_x64/profile.toml",

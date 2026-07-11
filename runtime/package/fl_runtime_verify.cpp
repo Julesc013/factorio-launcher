@@ -253,6 +253,7 @@ bool load_package_identity(
     const Expected profiles[] = {
         {"windows_portable_cli_x64", "windows", "portable_zip", "static_first", "bin/facman.exe"},
         {"linux_portable_cli_x64", "linux", "tarball", "static_first", "bin/facman"},
+        {"macos_portable_cli_x64", "macos", "tarball", "static_first", "bin/facman"},
         {"portable_cli_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman"},
         {"portable_tui_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman-tui"},
         {"windows_legacy_winforms_x64", "windows", "portable_zip", "compatibility_bundle", "bin/FacMan.WinForms.exe"},
@@ -280,6 +281,12 @@ bool load_package_identity(
     if (identity.target_os == "linux") {
 #ifndef __linux__
         error = "Linux package cannot run on this operating system";
+        return false;
+#endif
+    }
+    if (identity.target_os == "macos") {
+#ifndef __APPLE__
+        error = "macOS package cannot run on this operating system";
         return false;
 #endif
     }
@@ -383,7 +390,8 @@ bool component_semantics_match(
         }
         if (component.runtime_role == "runtime_required") ++runtime_required;
         if (identity.profile == "windows_portable_cli_x64" ||
-            identity.profile == "linux_portable_cli_x64") {
+            identity.profile == "linux_portable_cli_x64" ||
+            identity.profile == "macos_portable_cli_x64") {
             const std::string selected_entrypoint =
                 identity.profile == "windows_portable_cli_x64" ? "bin/facman.exe" : "bin/facman";
             if (component.kind == "runtime_library") {
@@ -405,7 +413,8 @@ bool component_semantics_match(
         return false;
     }
     if ((identity.profile == "windows_portable_cli_x64" ||
-         identity.profile == "linux_portable_cli_x64") &&
+         identity.profile == "linux_portable_cli_x64" ||
+         identity.profile == "macos_portable_cli_x64") &&
         (!selected_cli || !selected_contracts || !selected_content)) {
         error = "static-first CLI package component roles are incomplete";
         return false;

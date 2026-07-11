@@ -47,7 +47,20 @@ extract to a versioned `%LOCALAPPDATA%/FacMan/runtime/...` directory, never to
 
 ## macOS
 
-The macOS package is an `.app` bundle:
+The bounded CLI package-preview lane is a target-specific Intel tarball:
+
+```text
+bin/facman
+contracts/schema/
+content/factorio/
+manifest/
+licenses/
+```
+
+It is proven separately from the GUI package model and does not imply AppKit
+runtime, Apple Silicon, universal binary, signing, or notarization support.
+
+The planned macOS GUI package is an `.app` bundle:
 
 ```text
 FacMan.app/

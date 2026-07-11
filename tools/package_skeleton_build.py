@@ -141,7 +141,7 @@ def support_paths(profile: dict[str, Any]) -> dict[str, str]:
     required_components = table(profile.get("required_components"))
     contracts = str(required_components.get("contracts", profile.get("contracts_path", "contracts/schema")))
     content = str(required_components.get("content", profile.get("content_path", "content/factorio")))
-    if target_os == "macos":
+    if target_os == "macos" and "gui" in table(profile.get("frontends")):
         base = "FacMan.app/Contents/Resources"
         return {
             "contracts": contracts,
@@ -175,9 +175,11 @@ def ensure_platform_scaffold(skeleton_root: Path, profile: dict[str, Any]) -> No
     target_os = str(profile.get("target_os", ""))
     if target_os == "windows":
         ensure_directory(skeleton_root / "bin")
-    elif target_os == "macos":
+    elif target_os == "macos" and "gui" in table(profile.get("frontends")):
         ensure_directory(skeleton_root / "FacMan.app" / "Contents" / "MacOS")
         ensure_directory(skeleton_root / "FacMan.app" / "Contents" / "Frameworks")
+    elif target_os == "macos":
+        ensure_directory(skeleton_root / "bin")
     elif target_os == "linux":
         ensure_directory(skeleton_root / "usr" / "bin")
         ensure_directory(skeleton_root / "usr" / "lib")

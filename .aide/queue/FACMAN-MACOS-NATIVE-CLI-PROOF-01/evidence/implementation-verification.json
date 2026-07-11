@@ -1,0 +1,74 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 37
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 37
+
+## CHANGED_FILES
+
+- allowed: `.aide/memory/project-state.md` (M; matches active task allowed path)
+- allowed: `.github/workflows/ci.yml` (M; matches active task allowed path)
+- allowed: `apps/cli/command_dispatch.cpp` (M; matches active task allowed path)
+- allowed: `docs/architecture/packaging_model.md` (M; matches active task allowed path)
+- allowed: `docs/quality/ci_proof.md` (M; matches active task allowed path)
+- allowed: `docs/quality/safety_claim_ledger.md` (M; matches active task allowed path)
+- allowed: `docs/release/DISTRIBUTION_MATRIX.md` (M; matches active task allowed path)
+- allowed: `docs/roadmap.md` (M; matches active task allowed path)
+- allowed: `release/index/artifact_matrix.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/distribution_lanes.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/package_manifest.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/release_index.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/support_matrix.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/update_report.v1.toml` (M; matches active task allowed path)
+- allowed: `release/packaging/macos/README.md` (M; matches active task allowed path)
+- allowed: `release/profiles/profile_catalog.v1.toml` (M; matches active task allowed path)
+- allowed: `runtime/package/fl_runtime_verify.cpp` (M; matches active task allowed path)
+- allowed: `tests/package_layout/test_distribution_contracts.py` (M; matches active task allowed path)
+- allowed: `tests/package_layout/test_package_skeletons.py` (M; matches active task allowed path)
+- allowed: `tests/test_package_manifests.py` (M; matches active task allowed path)
+- allowed: `tools/ci_proof_check.py` (M; matches active task allowed path)
+- allowed: `tools/package_build.py` (M; matches active task allowed path)
+- allowed: `tools/package_hash_manifest.py` (M; matches active task allowed path)
+- allowed: `tools/package_manifest_check.py` (M; matches active task allowed path)
+- allowed: `tools/package_skeleton_build.py` (M; matches active task allowed path)
+- allowed: `tools/package_skeleton_check.py` (M; matches active task allowed path)
+- allowed: `tools/structure_policy_check.py` (M; matches active task allowed path)
+- allowed: `tools/validators/release/check_release_profiles.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-MACOS-NATIVE-CLI-PROOF-01/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-MACOS-NATIVE-CLI-PROOF-01/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `contracts/schema/release/macos_cli_package_proof.v1.schema.json` (??; matches active task allowed path)
+- allowed: `contracts/schema/release/macos_linkage_proof.v1.schema.json` (??; matches active task allowed path)
+- allowed: `docs/architecture/macos-native-cli-package-proof.v1.md` (??; matches active task allowed path)
+- allowed: `release/packaging/macos/macos_portable_cli.v1.toml` (??; matches active task allowed path)
+- allowed: `release/profiles/macos_portable_cli_x64` (??; matches active task allowed path)
+- allowed: `tests/test_package_macos_proof.py` (??; matches active task allowed path)
+- allowed: `tools/macos_package_proof.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.

@@ -207,7 +207,7 @@ def validate_platform_rules(
         gui_entrypoint = str(entrypoints.get("gui", ""))
         if gui_entrypoint != "usr/bin/facman-gui-gtk":
             problems.append(f"{profile_id}: Linux GTK gui entrypoint must be usr/bin/facman-gui-gtk")
-    if target_os == "macos":
+    if target_os == "macos" and "gui" in package_skeleton_build.table(profile.get("frontends")):
         resources = skeleton_root / "FacMan.app" / "Contents" / "Resources"
         allowed = {
             resources / "contracts",

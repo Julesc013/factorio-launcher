@@ -285,7 +285,11 @@ def validate_profile_component_roles(root: Path, records: list[Any]) -> list[str
     except (OSError, tomllib.TOMLDecodeError) as exc:
         return [f"cannot read package manifest for component policy: {exc}"]
     profile_id = str(package.get("profile_id", ""))
-    if profile_id not in {"windows_portable_cli_x64", "linux_portable_cli_x64"}:
+    if profile_id not in {
+        "windows_portable_cli_x64",
+        "linux_portable_cli_x64",
+        "macos_portable_cli_x64",
+    }:
         return []
     by_destination = {
         str(record.get("destination")): record

@@ -30,6 +30,7 @@ class PackageManifestTests(unittest.TestCase):
             "release/packaging/macos/facman_app.v1.toml",
             "release/packaging/macos/legacy_x86_64.v1.toml",
             "release/packaging/macos/modern_universal.v1.toml",
+            "release/packaging/macos/macos_portable_cli.v1.toml",
             "release/packaging/linux/appimage.v1.toml",
             "release/packaging/linux/legacy_cli_tarball.v1.toml",
             "release/index/package_manifest.v1.toml",

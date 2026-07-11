@@ -30,6 +30,7 @@ DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
 DEFAULT_DIST = ROOT / "dist"
 SUPPORTED_BUILT_PROFILES = {
     "linux_portable_cli_x64",
+    "macos_portable_cli_x64",
     "windows_portable_cli_x64",
     "portable_cli_x64",
     "portable_tui_x64",
@@ -112,7 +113,7 @@ def build_profile(
     write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
     build_info = write_build_info(package_root, profile_id, profile, bundle, build_root)
     provenance_build.write_package_sbom(package_root, build_info)
-    write_platform_metadata(package_root, profile)
+    write_platform_metadata(package_root, profile, build_root)
     validate_package_root(package_root, profile, component_records)
     package_hash_manifest.write_manifests(package_root, component_records)
     if dist_root is not None:
@@ -166,7 +167,7 @@ def copy_support_payloads(
     profile_path: Path,
     bundle_path: Path,
 ) -> None:
-    if profile.get("id") == "linux_portable_cli_x64":
+    if profile.get("id") in {"linux_portable_cli_x64", "macos_portable_cli_x64"}:
         for name in ["PACKAGE_LAYOUT.md", "SUPPORT_POLICY.md"]:
             copy_file(
                 ROOT / "docs" / "release" / name,
@@ -175,7 +176,7 @@ def copy_support_payloads(
     else:
         copy_tree(ROOT / "docs" / "release", package_root / "docs" / "release")
     copy_tree(ROOT / "release" / "index", package_root / "release" / "index")
-    if profile.get("id") != "linux_portable_cli_x64":
+    if profile.get("id") not in {"linux_portable_cli_x64", "macos_portable_cli_x64"}:
         copy_tree(ROOT / "release" / "packaging", package_root / "release" / "packaging")
     profile_dir = profile_path.parent
     copy_tree(profile_dir, package_root / "release" / "profiles" / profile_dir.name)
@@ -272,6 +273,8 @@ def write_build_info(
 def toolchain_identity(profile: dict[str, Any], build_root: Path) -> dict[str, str]:
     if profile.get("target_os") == "linux":
         return linux_toolchain_identity()
+    if profile.get("target_os") == "macos":
+        return macos_toolchain_identity(build_root)
     cache = cmake_cache_values(build_root / "CMakeCache.txt")
     generator = cache.get("CMAKE_GENERATOR", "unknown")
     linker = cache.get("CMAKE_LINKER", "unknown")
@@ -324,7 +327,37 @@ def linux_toolchain_identity() -> dict[str, str]:
     return identity
 
 
-def write_platform_metadata(package_root: Path, profile: dict[str, Any]) -> None:
+def macos_toolchain_identity(build_root: Path) -> dict[str, str]:
+    cache = cmake_cache_values(build_root / "CMakeCache.txt")
+    deployment_target = cache.get("CMAKE_OSX_DEPLOYMENT_TARGET", "")
+    if deployment_target != "13.0":
+        raise ValueError(
+            "macos_portable_cli_x64: CMake deployment target must be exactly 13.0, "
+            f"got {deployment_target!r}"
+        )
+    machine = platform.machine().lower()
+    if machine not in {"x86_64", "amd64"}:
+        raise ValueError(f"macos_portable_cli_x64: Intel x64 runner required, got {machine}")
+    return {
+        "runner": "macos-15-intel",
+        "machine": platform.machine(),
+        "operating_system": platform.platform(),
+        "generator": cache.get("CMAKE_GENERATOR", "unknown"),
+        "compiler": first_line(run_capture([cache.get("CMAKE_CXX_COMPILER", "c++"), "--version"])),
+        "linker": first_line(run_capture(["ld", "-v"])),
+        "deployment_target": deployment_target,
+        "sdk": run_capture(["xcrun", "--show-sdk-version"]).strip(),
+    }
+
+
+def write_platform_metadata(
+    package_root: Path,
+    profile: dict[str, Any],
+    build_root: Path,
+) -> None:
+    if profile.get("target_os") == "macos":
+        write_macos_platform_metadata(package_root, build_root)
+        return
     if profile.get("target_os") != "linux":
         return
     executable = package_root / "bin" / "facman"
@@ -373,6 +406,85 @@ def write_platform_metadata(package_root: Path, profile: dict[str, Any]) -> None
     if problems:
         raise ValueError("Linux linkage metadata violates its contract: " + "; ".join(problems))
     (package_root / "manifest" / "linux_linkage.v1.json").write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def write_macos_platform_metadata(package_root: Path, build_root: Path) -> None:
+    executable = package_root / "bin" / "facman"
+    file_identity = run_capture(["file", str(executable)]).strip()
+    architectures = run_capture(["lipo", "-archs", str(executable)]).split()
+    if architectures != ["x86_64"]:
+        raise ValueError(
+            "macos_portable_cli_x64: Mach-O architecture must be exactly x86_64, "
+            f"got {architectures}"
+        )
+    if "Mach-O 64-bit executable x86_64" not in file_identity:
+        raise ValueError("macos_portable_cli_x64: file identity is not an x86_64 Mach-O executable")
+
+    otool_libraries = run_capture(["otool", "-L", str(executable)])
+    dependencies = sorted(
+        {
+            line.strip().split(" (", 1)[0]
+            for line in otool_libraries.splitlines()[1:]
+            if line.strip()
+        }
+    )
+    allowed_prefixes = ["/System/Library/Frameworks/", "/usr/lib/"]
+    unexpected = [
+        dependency
+        for dependency in dependencies
+        if not any(dependency.startswith(prefix) for prefix in allowed_prefixes)
+    ]
+    if not dependencies:
+        raise ValueError("macos_portable_cli_x64: no system dynamic dependencies were recorded")
+    if unexpected:
+        raise ValueError(
+            "macos_portable_cli_x64: unexpected dynamic dependencies: "
+            + ", ".join(unexpected)
+        )
+
+    load_commands = run_capture(["otool", "-l", str(executable)])
+    if re.search(r"^\s*cmd LC_RPATH\s*$", load_commands, flags=re.MULTILINE):
+        raise ValueError("macos_portable_cli_x64: LC_RPATH is forbidden")
+    deployment = re.search(r"\bminos\s+([0-9.]+)", load_commands)
+    if deployment is None:
+        deployment = re.search(
+            r"cmd LC_VERSION_MIN_MACOSX.*?\bversion\s+([0-9.]+)",
+            load_commands,
+            flags=re.DOTALL,
+        )
+    deployment_target = deployment.group(1) if deployment else ""
+    if deployment_target != "13.0":
+        raise ValueError(
+            "macos_portable_cli_x64: Mach-O deployment target must be 13.0, "
+            f"got {deployment_target!r}"
+        )
+    sdk_match = re.search(r"\bsdk\s+([0-9.]+)", load_commands)
+    sdk = sdk_match.group(1) if sdk_match else run_capture(["xcrun", "--show-sdk-version"]).strip()
+    toolchain = macos_toolchain_identity(build_root)
+    metadata = {
+        "schema": "facman.macos_linkage_proof.v1",
+        "profile_id": "macos_portable_cli_x64",
+        "runner": "macos-15-intel",
+        "architecture": "x86_64",
+        "file_identity": file_identity,
+        "linkage_model": "project_static_system_dynamic",
+        "deployment_target": deployment_target,
+        "sdk": sdk,
+        "dependencies": dependencies,
+        "allowed_dependency_prefixes": allowed_prefixes,
+        "rpath": None,
+        "toolchain": toolchain,
+    }
+    schema = json_contract.load_schema(
+        ROOT / "contracts" / "schema" / "release" / "macos_linkage_proof.v1.schema.json"
+    )
+    problems = json_contract.validate(metadata, schema)
+    if problems:
+        raise ValueError("macOS linkage metadata violates its contract: " + "; ".join(problems))
+    (package_root / "manifest" / "macos_linkage.v1.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
@@ -585,7 +697,13 @@ def assert_host_matches_profile(profile_id: str, profile: dict[str, Any]) -> Non
         raise ValueError(f"{profile_id}: Windows built-artifact proof must run on Windows")
     if target_os == "linux" and not sys.platform.startswith("linux"):
         raise ValueError(f"{profile_id}: Linux built-artifact proof must run on Linux")
-    if profile_id in {"windows_portable_cli_x64", "linux_portable_cli_x64"}:
+    if target_os == "macos" and sys.platform != "darwin":
+        raise ValueError(f"{profile_id}: macOS built-artifact proof must run on macOS")
+    if profile_id in {
+        "windows_portable_cli_x64",
+        "linux_portable_cli_x64",
+        "macos_portable_cli_x64",
+    }:
         machine = platform.machine().lower()
         if machine not in {"amd64", "x86_64"}:
             raise ValueError(f"{profile_id}: x64 proof cannot run on host architecture {machine}")

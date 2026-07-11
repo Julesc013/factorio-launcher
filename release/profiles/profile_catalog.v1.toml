@@ -18,6 +18,23 @@ unsupported_features = ["setup_mutation", "auto_update", "dynamic_component_load
 contract_backed = true
 
 [[profile]]
+id = "macos_portable_cli_x64"
+status = "built_artifact_proof"
+target_os = "macos"
+target_arch = "x64"
+frontend_stack = "cli"
+minimum_os = "macos_13_0"
+toolchain = "native_cxx17_static_first_system_dynamic"
+package_formats = ["tarball"]
+included_binaries = ["facman"]
+included_libraries = []
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_verify", "macho_linkage", "package_runtime_smoke", "archive_extraction_smoke"]
+unsupported_features = ["setup_mutation", "auto_update", "dynamic_component_loading", "apple_silicon", "universal_macos_binary", "appkit_runtime"]
+contract_backed = true
+
+[[profile]]
 id = "windows_portable_cli_x64"
 status = "built_artifact_proof"
 target_os = "windows"
