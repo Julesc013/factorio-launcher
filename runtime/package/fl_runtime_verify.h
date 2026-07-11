@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FL_RUNTIME_VERIFY_H
 #define FL_RUNTIME_VERIFY_H
 

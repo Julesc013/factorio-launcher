@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 set(_facman_cli_default ON)
 set(_facman_tests_default ON)
 set(_facman_sanitizers_default OFF)

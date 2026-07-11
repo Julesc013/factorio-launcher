@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FL_COMMAND_CLIENT_DAEMON_H
 #define FL_COMMAND_CLIENT_DAEMON_H
 

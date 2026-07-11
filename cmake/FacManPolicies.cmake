@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 add_library(facman_warnings INTERFACE)
 add_library(facman_hardening INTERFACE)
 add_library(facman_sanitizers INTERFACE)

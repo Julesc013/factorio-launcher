@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 import sys
@@ -108,6 +111,9 @@ def validate_miniz_component(path: Path, component: dict[str, Any]) -> list[str]
         "pin": "77d0dce8627735138c51770d1799a1ef48f2117d",
         "source": "https://github.com/richgel999/miniz",
         "source_archive": "miniz-3.1.2.zip",
+        "miniz_c_sha256": "e2c1aeb66eef9191d8c3feb164db2def2335a61d039bf04ed849f6b042433b30",
+        "miniz_h_sha256": "b53b62ed122e559b8f679e3cb787a0b0035fe87a58f909da0e44931678f4e85f",
+        "license_file_sha256": "0115478d567121238cf6cc1c0c361926cf07a49d9e4c9e66da97fac6a01646b3",
         "source_archive_sha256": "f0446d863f9c19926ad9483c523fdc42e42b8d4a6a431d27e09d49c79a140d9a",
         "license": "MIT",
     }

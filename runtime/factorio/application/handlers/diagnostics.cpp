@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #include "handlers/diagnostics.h"
 
 #include "command_result.h"

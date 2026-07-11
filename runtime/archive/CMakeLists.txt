@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 add_library(facman_archive_static STATIC
   fl_archive_platform.cpp fl_archive_policy.cpp fl_archive_reader.cpp fl_archive_writer.cpp)
 target_include_directories(facman_archive_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

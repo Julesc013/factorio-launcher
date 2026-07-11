@@ -1,9 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tomllib
@@ -41,7 +45,11 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def write_package_sbom(package_root: Path, build_info: dict[str, Any]) -> Path:
+def write_package_sbom(
+    package_root: Path,
+    build_info: dict[str, Any],
+    component_records: list[dict[str, Any]],
+) -> Path:
     source_revision = str(build_info["source_revisions"]["factorio_launcher"])
     profile_id = str(build_info["profile_id"])
     dependencies = load_dependencies()
@@ -74,6 +82,8 @@ def write_package_sbom(package_root: Path, build_info: dict[str, Any]) -> Path:
                 ),
             )
         )
+    built_packages = [built_component_package(record, build_info) for record in component_records]
+    packages.extend(built_packages)
     document = {
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
@@ -103,8 +113,19 @@ def write_package_sbom(package_root: Path, build_info: dict[str, Any]) -> Path:
                 }
                 for component_id in ("universal_launcher", "universal_setup", "miniz", "picojson")
             ],
+            *[
+                {
+                    "spdxElementId": "SPDXRef-Package-facman",
+                    "relationshipType": "CONTAINS",
+                    "relatedSpdxElement": package["SPDXID"],
+                }
+                for package in built_packages
+            ],
         ],
     }
+    coverage_problems = verify_sbom_component_coverage(document, component_records)
+    if coverage_problems:
+        raise ValueError("SPDX component coverage failed: " + "; ".join(coverage_problems))
     validate_or_raise(document, SPDX_SCHEMA, "SPDX document")
     destination = package_root / "manifest" / "sbom.spdx.v2.3.json"
     destination.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -222,6 +243,9 @@ def verify_artifact_provenance(
     try:
         sbom = load_json(expected_refs["sbom"])
         problems.extend(json_contract.validate(sbom, json_contract.load_schema(SPDX_SCHEMA)))
+        problems.extend(
+            verify_sbom_component_coverage(sbom, installed_component_records(package_root))
+        )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         problems.append(f"cannot validate package SPDX document: {exc}")
     ci = report.get("ci", {})
@@ -294,6 +318,72 @@ def spdx_package(
             }
         ]
     return package
+
+
+def built_component_package(record: dict[str, Any], build_info: dict[str, Any]) -> dict[str, Any]:
+    name = str(record["name"])
+    identifier = re.sub(r"[^A-Za-z0-9.-]+", "-", name).strip("-")
+    source_target = str(record["source_target"])
+    license_id = "MIT" if source_target in {"contracts/schema", "content/factorio"} else "NOASSERTION"
+    return {
+        "SPDXID": f"SPDXRef-Package-BuiltComponent-{identifier}",
+        "name": f"FacMan built component: {name}",
+        "versionInfo": str(build_info["canonical_version"]),
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": False,
+        "licenseConcluded": license_id,
+        "licenseDeclared": license_id,
+        "copyrightText": "NOASSERTION",
+        "packageComment": (
+            f"Installed destination: {record['destination']}; source target: {source_target}; "
+            f"runtime role: {record['runtime_role']}; unsigned evidence."
+        ),
+    }
+
+
+def verify_sbom_component_coverage(
+    document: dict[str, Any], component_records: list[dict[str, Any]]
+) -> list[str]:
+    package_ids = {
+        str(package.get("SPDXID", ""))
+        for package in document.get("packages", [])
+        if isinstance(package, dict)
+    }
+    relationship_ids = {
+        str(relationship.get("relatedSpdxElement", ""))
+        for relationship in document.get("relationships", [])
+        if isinstance(relationship, dict) and relationship.get("relationshipType") == "CONTAINS"
+    }
+    problems = []
+    for record in component_records:
+        identifier = re.sub(r"[^A-Za-z0-9.-]+", "-", str(record["name"])).strip("-")
+        expected = f"SPDXRef-Package-BuiltComponent-{identifier}"
+        if expected not in package_ids:
+            problems.append(f"missing SBOM package for built component {record['name']}")
+        if expected not in relationship_ids:
+            problems.append(f"missing SBOM containment for built component {record['name']}")
+    return problems
+
+
+def installed_component_records(package_root: Path) -> list[dict[str, Any]]:
+    package_manifest = tomllib.loads(
+        (package_root / "manifest/package.v1.toml").read_text(encoding="utf-8")
+    )
+    bundle_relative = Path(str(package_manifest["package_manifest"]))
+    bundle = tomllib.loads((package_root / bundle_relative).read_text(encoding="utf-8"))
+    components = bundle.get("components", [])
+    if not isinstance(components, list):
+        raise ValueError("installed package bundle components must be an array")
+    return [
+        {
+            "name": str(component["name"]),
+            "source_target": str(component["source_target"]),
+            "destination": str(component["destination"]),
+            "runtime_role": str(component["runtime_role"]),
+        }
+        for component in components
+        if isinstance(component, dict)
+    ]
 
 
 def display_name(component_id: str) -> str:

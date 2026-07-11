@@ -14,7 +14,7 @@ support_matrix = "release/index/support_matrix.v1.toml"
 release_index = "release/index/release_index.v1.toml"
 contracts_path = "contracts/schema"
 content_path = "content/factorio"
-licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 bundles_factorio_binaries = false
 credential_storage = false
 
@@ -35,7 +35,7 @@ binaries = ["usr/bin/facman-gui-gtk", "usr/bin/facman", "usr/bin/facman-tui", "u
 libraries = ["usr/lib/libulk.so", "usr/lib/libusk.so", "usr/lib/libflb_factorio.so"]
 contracts = "usr/share/facman/contracts/schema"
 content = "usr/share/facman/content/factorio"
-licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
 package_manifest = "release/packaging/linux/appimage.v1.toml"
 support_matrix = "release/index/support_matrix.v1.toml"

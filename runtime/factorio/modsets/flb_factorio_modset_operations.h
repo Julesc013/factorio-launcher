@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FLB_FACTORIO_MODSET_OPERATIONS_H
 #define FLB_FACTORIO_MODSET_OPERATIONS_H
 

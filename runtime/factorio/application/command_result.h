@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FACMAN_FACTORIO_COMMAND_RESULT_H
 #define FACMAN_FACTORIO_COMMAND_RESULT_H
 

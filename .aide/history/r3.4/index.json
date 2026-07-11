@@ -12,6 +12,14 @@
         "task.yaml": "ba0e94db942fe981fd8b53d271bf8f17cf993df2a79cd845b0520b3991a0af2e"
       },
       "task_id": "FACMAN-AIDE-EVIDENCE-AND-DOCS-COMPACTION-01"
+    },
+    {
+      "files": {
+        "evidence/validation.md": "30120912f09d37e169177ecf1cf8fed6de48b555422bd88ead6ea81f32bc2ce7",
+        "status.yaml": "08fb06568570dffa62e8def358ff774ff163f0bdd67143ddf86488028080a742",
+        "task.yaml": "cb2a0054b72f3244709cdd4a441f37be50cd548512154c2cd2dfd0aa5ba5d1c0"
+      },
+      "task_id": "FACMAN-COMPLIANCE-AND-SUPPLY-CHAIN-01"
     }
   ]
 }

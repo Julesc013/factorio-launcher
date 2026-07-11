@@ -3,4 +3,9 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
-  []
+  - id: FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01
+    status: planned
+    lifecycle_state: planned
+    title: Choose licenses for Universal repositories
+    task: .aide/queue/next/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/evidence

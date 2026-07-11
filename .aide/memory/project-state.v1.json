@@ -82,9 +82,9 @@
       "limitation": "signatures or trusted external metadata required"
     },
     {
-      "claim": "Package inputs and artifact provenance are recorded",
+      "claim": "Package inputs and provenance are recorded",
       "level": "target CI proven",
-      "limitation": "unsigned adjacent evidence does not authenticate publisher"
+      "limitation": "provider licenses are `NOASSERTION`; unsigned evidence is not publisher authentication"
     },
     {
       "claim": "Experimental public C ABI has a correctness floor",

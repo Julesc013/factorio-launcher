@@ -56,6 +56,11 @@ roots:
     canonical: true
     allowed: [vendored_dependencies, dependency_notices]
     forbidden: [unreviewed_binaries, credentials]
+  LICENSES:
+    authority: license_texts
+    canonical: true
+    allowed: [reuse_license_texts, packaged_dependency_notices]
+    forbidden: [invented_provider_licenses]
   examples:
     authority: non_authoritative_examples
     canonical: false

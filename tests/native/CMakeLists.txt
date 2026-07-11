@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 find_package(Threads REQUIRED)
 
 function(facman_native_test target source labels)

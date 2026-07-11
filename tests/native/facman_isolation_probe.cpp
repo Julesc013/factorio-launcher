@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #include "fl_path_safety.h"
 #include "flb_factorio_launch_plan.h"
 

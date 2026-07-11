@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-COMPLIANCE-AND-SUPPLY-CHAIN-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-11T22:59:31Z
+result: PASS
+evidence_path: .aide/queue/next/FACMAN-COMPLIANCE-AND-SUPPLY-CHAIN-01/evidence/
+active_at: 2026-07-11T22:59:32Z
+verified_at: 2026-07-11T23:16:25Z
+implementation_state: implemented
+reviewed_at: 2026-07-11T23:16:26Z
+closed_at: 2026-07-11T23:16:26Z
+archived_at: 2026-07-11T23:16:27Z

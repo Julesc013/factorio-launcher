@@ -4,11 +4,23 @@ Every selected built package contains `manifest/sbom.spdx.v2.3.json`. The SPDX
 2.3 document is included before component and hash-manifest generation, so the
 ordinary package integrity closure covers it.
 
-The document describes FacMan and its bundled Universal Launcher, Universal
-Setup, and Miniz dependencies. FacMan and Miniz have MIT license records.
-Universal Launcher and Universal Setup currently use `NOASSERTION` because
-their pinned repositories do not publish a standalone license file; provenance
-does not invent one.
+The document describes FacMan, every high-level component copied from the
+CMake install tree, and the pinned Universal Launcher, Universal Setup, Miniz,
+and PicoJSON dependencies. `CONTAINS` relationships close the installed
+component set; independent verification reconstructs that set from the
+installed bundle manifest and rejects a missing package or relationship.
+FacMan and Miniz have MIT license records, and PicoJSON has a BSD-2-Clause
+record. Built contracts and Factorio content declare MIT. Linked executables
+and libraries remain `NOASSERTION` while either provider's license is unknown,
+so aggregation cannot silently overstate their licensing.
+
+First-party source headers are managed by `tools/apply_spdx_headers.py`, and
+`REUSE.toml` records generated and third-party trees. Packages carry the exact
+vendored Miniz and PicoJSON notices as `licenses/Miniz.txt` and
+`licenses/PicoJSON.txt`. Their contents and the vendored Miniz source/license
+digests are machine-checked. Universal Launcher and Universal Setup continue
+to use `NOASSERTION`: selecting or patching those repositories' licenses is a
+pending operator decision, not an automated compliance action.
 
 ## Artifact binding
 

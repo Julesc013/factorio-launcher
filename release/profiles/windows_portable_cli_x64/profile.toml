@@ -14,7 +14,7 @@ support_matrix = "release/index/support_matrix.v1.toml"
 release_index = "release/index/release_index.v1.toml"
 contracts_path = "contracts/schema"
 content_path = "content/factorio"
-licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 bundles_factorio_binaries = false
 credential_storage = false
 
@@ -37,7 +37,7 @@ binaries = ["bin/facman.exe"]
 libraries = []
 contracts = "contracts/schema"
 content = "content/factorio"
-licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
 package_manifest = "release/packaging/windows/windows_portable_cli.v1.toml"
 support_matrix = "release/index/support_matrix.v1.toml"

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #include "fl_archive_platform.h"
 #include "fl_file_io.h"
 #include "fl_sha256.h"

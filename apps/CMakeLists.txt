@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 if(FACMAN_BUILD_CLI)
   add_subdirectory(cli)
 endif()

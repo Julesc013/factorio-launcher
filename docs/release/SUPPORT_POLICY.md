@@ -1,32 +1,31 @@
-# Support Policy
+# Support policy
 
-FacMan support is lane-based.
+FacMan is pre-1.0 and has no stable supported release. Support is explicit by
+source revision, release profile, and proof lane; repository contracts alone do
+not create a support promise.
 
-## Policy
+## Version support
 
-- Windows legacy is WinForms over .NET Framework 4.8 and is best-effort legacy
-  support.
-- Windows modern is WinUI and is a future primary modern lane.
-- macOS legacy is AppKit and is the first macOS native lane.
-- macOS modern is SwiftUI and follows after AppKit proof.
-- Linux X11 legacy is GTK 3 and is the first Linux GUI lane.
-- Linux Wayland modern is Qt 6 and follows after GTK proof.
+| Version or ref | Status | Scope |
+| --- | --- | --- |
+| Current default branch | development support | issue triage and current CI |
+| Named `0.1.0-dev` package preview | preview only | exact artifact/profile proof |
+| Historical R2/R3 checkpoints | unsupported evidence | reproducibility and audit only |
+| Unnamed local builds | unsupported | developer responsibility |
 
-Exact OS floors must be verified against current platform toolchain docs before
-release publication. Repository contracts can name target lanes, but they do
-not replace platform release validation.
+Only the current default branch and an explicitly named preview candidate
+receive security triage. No backport window is promised before a stable release
+policy is approved.
 
-## Deferred Claims
+## Platform proof scope
 
-The current repository contracts do not claim:
+- Windows CLI: Windows 10 22H2 x64 baseline, unsigned local/CI package proof.
+- Linux CLI: Ubuntu 24.04 x64 runner and glibc 2.39 baseline, unsigned target-CI proof.
+- macOS CLI: Intel x64 with deployment target 13.0, unsigned target-CI proof.
+- WinForms and AppKit are legacy/compile or command-client evidence only.
+- TUI, daemon, WinUI, SwiftUI, GTK, and Qt are not published supported products.
 
-- signed Windows installers
-- notarized macOS installers
-- AppImage compatibility across every distribution
-- package-manager publication
-- delta updates
-- managed Factorio install mutation
-- self-update apply
-
-Those claims require later release evidence and should be added only after the
-matching package verification passes.
+Exact floors live in `release/index/support_matrix.v1.toml` and must be verified
+for every candidate. Signing, notarization, installers, package-manager
+publication, self-update, setup mutation, and real Factorio execution are not
+support claims.

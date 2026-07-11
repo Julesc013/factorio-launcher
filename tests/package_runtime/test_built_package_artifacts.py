@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 import json
@@ -50,6 +53,8 @@ class BuiltPackageArtifactTests(unittest.TestCase):
             "content/factorio",
             "docs",
             "licenses/LICENSE",
+            "licenses/Miniz.txt",
+            "licenses/PicoJSON.txt",
             "licenses/THIRD_PARTY_NOTICES.md",
             "release",
             "manifest/package.v1.toml",
@@ -59,6 +64,14 @@ class BuiltPackageArtifactTests(unittest.TestCase):
         ]
         for relative in required:
             self.assertTrue((self.portable_cli / relative).exists(), relative)
+        for packaged, vendored in (
+            ("licenses/Miniz.txt", "external/miniz/LICENSE"),
+            ("licenses/PicoJSON.txt", "external/picojson/LICENSE"),
+        ):
+            self.assertEqual(
+                (self.portable_cli / packaged).read_text(encoding="utf-8").rstrip().splitlines(),
+                (ROOT / vendored).read_text(encoding="utf-8").rstrip().splitlines(),
+            )
 
     def test_portable_tui_is_not_a_default_built_artifact(self) -> None:
         with self.assertRaisesRegex(ValueError, "built artifact proof is not enabled"):
@@ -206,9 +219,24 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             (self.package_root / "manifest/sbom.spdx.v2.3.json").read_text(encoding="utf-8")
         )
         self.assertEqual(sbom["spdxVersion"], "SPDX-2.3")
+        package_names = {package["name"] for package in sbom["packages"]}
+        self.assertTrue(
+            {"FacMan", "Universal Launcher", "Universal Setup", "Miniz", "PicoJSON"}
+            <= package_names
+        )
+        built_package_ids = {
+            package["SPDXID"]
+            for package in sbom["packages"]
+            if package["SPDXID"].startswith("SPDXRef-Package-BuiltComponent-")
+        }
+        self.assertTrue(built_package_ids)
         self.assertEqual(
-            {package["name"] for package in sbom["packages"]},
-            {"FacMan", "Universal Launcher", "Universal Setup", "Miniz", "PicoJSON"},
+            built_package_ids,
+            {
+                relationship["relatedSpdxElement"]
+                for relationship in sbom["relationships"]
+                if relationship["relationshipType"] == "CONTAINS"
+            },
         )
         self.assertFalse(json.loads(provenance.read_text())["signed"])
         self.assertEqual(

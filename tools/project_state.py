@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 import argparse
@@ -118,7 +121,11 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Universal Launcher pin: `{data['current_revisions']['universal_launcher']}`;",
         f"- Universal Setup pin: `{data['current_revisions']['universal_setup']}`.",
         "",
-        "R3.4 consolidates the native architecture, install-tree packaging, test proof, AIDE state, and supply-chain policy. Commands use the authoritative Universal Launcher route. Windows read-only discovery is implemented and must not be scheduled again. The public C ABI remains experimental. The Windows x64 static-first package proof remains unsigned and unpublished.",
+        "R3.4 consolidates the native architecture, install-tree packaging, test proof, "
+        "AIDE state, and supply-chain policy. Commands use the authoritative Universal "
+        "Launcher route. Windows read-only discovery is implemented and must not be "
+        "scheduled again. The public C ABI remains experimental. The Windows x64 "
+        "static-first package proof remains unsigned and unpublished.",
         "",
         "## Quarantined capabilities",
         "",

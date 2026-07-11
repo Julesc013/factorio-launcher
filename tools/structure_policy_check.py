@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 import sys
@@ -20,7 +23,9 @@ ALLOWED_TOP_LEVEL = {
     "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
     "LICENSE",
+    "LICENSES",
     "README.md",
+    "REUSE.toml",
     "SECURITY.md",
     "THIRD_PARTY_NOTICES.md",
     "apps",
@@ -53,6 +58,7 @@ AIDE_ROOT_AUTHORITY = {
     "examples": False,
     "external": True,
     "include": True,
+    "LICENSES": True,
     "release": True,
     "runtime": True,
     "tests": True,

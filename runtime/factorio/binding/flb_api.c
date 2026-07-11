@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #include "flb/flb_api.h"
 
 #include "ulk/ulk_api.h"

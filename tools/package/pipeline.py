@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 import argparse
@@ -126,7 +129,7 @@ def build_profile(
     copy_support_payloads(package_root, profile, install_root)
     write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
     build_info = write_build_info(package_root, profile_id, profile, bundle, build_root)
-    provenance_build.write_package_sbom(package_root, build_info)
+    provenance_build.write_package_sbom(package_root, build_info, component_records)
     write_platform_metadata(package_root, profile, build_root)
     validate_package_root(package_root, profile, component_records)
     package_hash_manifest.write_manifests(package_root, component_records)

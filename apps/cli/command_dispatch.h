@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FLAUNCH_COMMAND_DISPATCH_H
 #define FLAUNCH_COMMAND_DISPATCH_H
 

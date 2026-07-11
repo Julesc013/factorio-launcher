@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 add_library(flb_factorio_launch_static STATIC launch/flb_factorio_launch_plan.cpp)
 target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #import <Foundation/Foundation.h>
 
 typedef NS_ENUM(NSInteger, FacManCommandStatus) {

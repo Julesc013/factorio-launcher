@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #include "fl_runtime_verify.h"
 
 #include "fl_runtime_component.h"

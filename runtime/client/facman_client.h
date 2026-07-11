@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FACMAN_RUNTIME_CLIENT_FACMAN_CLIENT_H
 #define FACMAN_RUNTIME_CLIENT_FACMAN_CLIENT_H
 

@@ -1,7 +1,45 @@
 {
   "schema": "facman.sbom.components.v1",
-  "status": "initial_dependency_component_record",
+  "status": "complete_release_dependency_component_record",
   "components": [
+    {
+      "id": "factorio_binding",
+      "name": "FacMan Factorio Binding",
+      "version": "0.1.0-dev",
+      "type": "application",
+      "source": "factorio-launcher/runtime/factorio",
+      "license": "MIT",
+      "linkage": "first_party",
+      "bundled_source": true,
+      "runtime_network": false,
+      "transitive_runtime_dependencies": ["universal_launcher", "universal_setup", "miniz", "picojson"]
+    },
+    {
+      "id": "universal_launcher",
+      "name": "Universal Launcher",
+      "version": "0.1.0-dev",
+      "type": "library",
+      "source": "https://github.com/Julesc013/universal-launcher",
+      "commit": "80a848375227dc858865874ef594c4b466877241",
+      "license": "NOASSERTION",
+      "linkage": "bundled_runtime",
+      "bundled_source": false,
+      "runtime_network": false,
+      "transitive_runtime_dependencies": []
+    },
+    {
+      "id": "universal_setup",
+      "name": "Universal Setup",
+      "version": "0.1.0-dev",
+      "type": "library",
+      "source": "https://github.com/Julesc013/universal-setup",
+      "commit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2",
+      "license": "NOASSERTION",
+      "linkage": "bundled_runtime",
+      "bundled_source": false,
+      "runtime_network": false,
+      "transitive_runtime_dependencies": []
+    },
     {
       "id": "miniz",
       "name": "Miniz",

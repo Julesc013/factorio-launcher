@@ -47,6 +47,7 @@ factorio-launcher/
     packaging/        platform package manifests
     profiles/         target-specific release/build profile definitions
 
+  LICENSES/           REUSE and packaged dependency license texts
   docs/               architecture, product, platform, planning docs
   tests/              unit, contract, integration, fixtures, golden proof
   tools/              validators and repository automation

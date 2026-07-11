@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #include "flb_factorio_save_operations.h"
 
 #include "fl_archive.h"

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 add_library(flaunch_client_static STATIC
   fl_command_client.c fl_command_client_cabi.c fl_command_client_cabi_execute.c
   fl_command_client_daemon.c fl_command_client_json.c)

@@ -1,0 +1,91 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-COMPLIANCE-AND-SUPPLY-CHAIN-01
+title: Verify licensing, SBOM coverage, and support policy
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-11T22:59:31Z
+owner: unassigned
+objective: >
+  Make first-party and vendored licensing machine-verifiable, document vulnerability and supported-version policy, cover every built component in SBOM evidence, and preserve provider NOASSERTION without claiming authenticity.
+allowed_paths:
+  - .aide/policies/**
+  - include/**
+  - runtime/**
+  - apps/**
+  - cmake/**
+  - tools/**
+  - external/**
+  - contracts/**
+  - release/**
+  - docs/**
+  - tests/**
+  - LICENSES/**
+  - REUSE.toml
+  - SECURITY.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_abi_layout_smoke
+  - facman_client_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.test_compliance
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_target_truth
+  - tests.test_cli
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_frontend_contract
+  - tests.test_frontend_parity
+  - tests.test_gui_surface
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_refusal_contract
+  - tests.test_release_readiness
+  - tests.test_schema_tools
+affected_strict_validators:
+  - tools/compliance_check.py
+  - tools/aide_target_truth_check.py
+  - tools/client_cli_boundary_check.py
+  - tools/command_contract_check.py
+  - tools/frontend_contract_check.py
+  - tools/frontend_parity_check.py
+  - tools/frontend_transport_truth_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_readiness_check.py
+  - tools/schema_validate.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-11T22:59:32Z
+verified_at: 2026-07-11T23:16:25Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-11T23:16:26Z
+closed_at: 2026-07-11T23:16:26Z
+archived_at: 2026-07-11T23:16:27Z

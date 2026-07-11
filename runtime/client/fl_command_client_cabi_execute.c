@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #include "fl_command_client_cabi.h"
 
 int fl_command_client_execute_cabi_v1(

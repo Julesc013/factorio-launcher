@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 add_library(facman_core_static STATIC json/fl_json.cpp)
 target_include_directories(facman_core_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/json)
 target_compile_features(facman_core_static PUBLIC cxx_std_17)

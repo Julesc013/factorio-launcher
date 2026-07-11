@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 import sys
@@ -21,6 +24,7 @@ from tools import (
     client_cli_boundary_check,
     cmake_architecture_check,
     command_contract_check,
+    compliance_check,
     diagnostic_export_check,
     discovery_golden_check,
     frontend_contract_check,
@@ -94,6 +98,7 @@ def main() -> int:
         ("transaction-recovery", transaction_recovery_check.main),
         ("diagnostic-export", diagnostic_export_check.main),
         ("command-contract", command_contract_check.main),
+        ("compliance", compliance_check.main),
         ("frontend-contract", frontend_contract_check.main),
         ("frontend-parity", frontend_parity_check.main),
         ("frontend-transport-truth", frontend_transport_truth_check.main),

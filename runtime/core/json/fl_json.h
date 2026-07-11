@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FACMAN_CORE_JSON_H
 #define FACMAN_CORE_JSON_H
 

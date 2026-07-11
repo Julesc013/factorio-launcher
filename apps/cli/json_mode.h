@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FLAUNCH_JSON_MODE_H
 #define FLAUNCH_JSON_MODE_H
 

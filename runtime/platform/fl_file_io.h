@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FACMAN_PLATFORM_FILE_IO_H
 #define FACMAN_PLATFORM_FILE_IO_H
 

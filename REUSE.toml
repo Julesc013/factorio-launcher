@@ -1,0 +1,28 @@
+version = 1
+SPDX-PackageName = "FacMan"
+SPDX-PackageSupplier = "Person: Jules C"
+SPDX-PackageDownloadLocation = "https://github.com/Julesc013/factorio-launcher"
+
+[[annotations]]
+path = ["runtime/core/generated/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jules C"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["external/miniz/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2010-2014 Rich Geldreich, Tenacious Software LLC, RAD Game Tools, and Valve Software"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["external/picojson/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2009-2014 Cybozu Labs, Inc. and Kazuho Oku"
+SPDX-License-Identifier = "BSD-2-Clause"
+
+[[annotations]]
+path = ["docs/**", "content/**", "contracts/**", "release/**", ".aide/**", "*.md", "*.toml", "*.json", "*.yaml", "*.yml"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jules C"
+SPDX-License-Identifier = "MIT"

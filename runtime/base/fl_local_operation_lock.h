@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
 #ifndef FACMAN_RUNTIME_BASE_FL_LOCAL_OPERATION_LOCK_H
 #define FACMAN_RUNTIME_BASE_FL_LOCAL_OPERATION_LOCK_H
 

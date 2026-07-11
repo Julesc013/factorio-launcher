@@ -14,7 +14,28 @@ account references. Those are user-trust surfaces.
 
 ## Reporting
 
-Open a private security advisory on GitHub or contact the maintainer directly.
-Include reproduction steps, affected versions, and whether secrets or user data
-could be exposed.
+Do not open a public issue for an undisclosed vulnerability. Open a private
+GitHub security advisory for `Julesc013/factorio-launcher`; if that channel is
+unavailable, contact the maintainer privately through the address published on
+the maintainer's GitHub profile. Never include real credentials, paid Factorio
+content, or third-party personal data in a report.
 
+Include affected version/commit, platform, reproduction steps, expected and
+actual behavior, impact, and whether credentials or user data may be exposed.
+Encrypted attachments may be requested after initial contact.
+
+## Response process
+
+- Receipt should be acknowledged within 7 calendar days.
+- Triage targets 14 calendar days, but no remediation deadline is promised.
+- Coordinated disclosure timing is agreed with the reporter after impact and a
+  fix path are understood.
+- Security fixes still require regression and release proof; a green test alone
+  is not publication authorization.
+
+## Supported versions
+
+FacMan has no stable release. Only the current default branch and an explicitly
+named package-preview candidate receive security triage. Historical R2/R3
+checkpoints and unsigned proof artifacts are evidence, not supported releases.
+See `docs/release/SUPPORT_POLICY.md` for platform and version scope.
