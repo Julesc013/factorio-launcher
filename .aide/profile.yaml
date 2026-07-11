@@ -14,9 +14,10 @@ current_focus:
     production archive layer, typed authoritative routes, recoverable writes,
     safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-R3.3-PROOF-CLOSEOUT-01: freeze the exact green R3.3 core revision,
-    platform matrices, artifact identities, claims, limitations, and failed
-    proof attempts before any stretch WorkUnit begins.
+    FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03: hold a stable platform lock handle
+    for the operation, record and revalidate file identity, refuse links and
+    substitution, and conservatively refuse unsupported shared filesystems.
+    Do not promote SMB, NFS, or multi-host guarantees.
     Windows read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan

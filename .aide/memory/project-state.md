@@ -64,12 +64,13 @@ foundations that do not require a Factorio binary.
 
 ## Current Goal
 
-Close the ordered R3.3 core through
-`FACMAN-R3.3-PROOF-CLOSEOUT-01`. The baseline, archive dependency, production
+The ordered R3.3 core through `FACMAN-R3.3-PROOF-CLOSEOUT-01` is frozen and
+green. The baseline, archive dependency, production
 core, local mod/modset routes, save/portable-transfer routes, bounded workspace
 transaction recovery, reviewed diagnostic export, and Linux target package
-proof are frozen at green exact-SHA checkpoints. Begin no stretch WorkUnit
-until the closeout revision itself is green. Keep
+proof are frozen at green exact-SHA checkpoints. Continue with
+`FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03` on supported local filesystems only.
+Keep
 `run.execute` and real Factorio isolation human-gated; do not schedule Windows discovery again.
 The ordered authority remains `.aide/memory/r3.3-workunits.md`.
 

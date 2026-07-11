@@ -60,9 +60,16 @@ items:
     evidence: .aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/evidence
     description: Build and prove one explicit Linux x64 portable CLI package with zero required skips.
   - id: FACMAN-R3.3-PROOF-CLOSEOUT-01
-    status: active
-    planning_state: validation
+    status: needs_review
+    planning_state: implementation_completed
     title: Freeze the revision-pinned R3.3 core checkpoint
     task: .aide/queue/FACMAN-R3.3-PROOF-CLOSEOUT-01/task.yaml
     evidence: .aide/queue/FACMAN-R3.3-PROOF-CLOSEOUT-01/evidence
     description: Reconcile exact artifacts, matrices, claims, limitations, and the core wave checkpoint.
+  - id: FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03
+    status: active
+    planning_state: implementation
+    title: Harden local-filesystem operation locks
+    task: .aide/queue/FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03/task.yaml
+    evidence: .aide/queue/FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03/evidence
+    description: Hold stable lock handles, verify identity, and refuse links, substitution, and unsupported shared filesystems.

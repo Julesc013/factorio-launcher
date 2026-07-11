@@ -1,6 +1,6 @@
 # Validation
 
-Result: PASS for the revision-pinned R3.3 core; closeout revision CI pending.
+Result: PASS for the revision-pinned R3.3 core and closeout revision.
 
 - FacMan implementation revision:
   `93edfdc59865e4a07f261bdabb61c6e2db6d0f99`.
@@ -21,3 +21,8 @@ Result: PASS for the revision-pinned R3.3 core; closeout revision CI pending.
 
 The closeout changes only governance, claims, and evidence. Its own exact SHA
 must pass the repository workflows before any stretch WorkUnit begins.
+
+Closeout revision `d8768ff` passed CI run `29156897355` across Linux,
+Windows/package, macOS archive, and AppKit compile-only. Security run
+`29156897356` also passed. The core is therefore fully green and Stretch A may
+begin without weakening any authority boundary.
