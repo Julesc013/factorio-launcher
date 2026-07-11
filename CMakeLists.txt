@@ -81,6 +81,14 @@ endif()
 add_library(miniz_static STATIC external/miniz/miniz.c)
 target_include_directories(miniz_static PUBLIC external/miniz)
 
+add_library(picojson_headers INTERFACE)
+target_include_directories(picojson_headers SYSTEM INTERFACE external/picojson)
+
+add_library(facman_core_static STATIC runtime/core/json/fl_json.cpp)
+target_include_directories(facman_core_static PUBLIC runtime/core runtime/core/json)
+target_compile_features(facman_core_static PUBLIC cxx_std_17)
+target_link_libraries(facman_core_static PRIVATE picojson_headers)
+
 if(NOT TARGET usk_static)
   if(EXISTS "${FLAUNCH_UNIVERSAL_SETUP_ROOT}/CMakeLists.txt")
     add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
@@ -260,6 +268,11 @@ if(FLAUNCH_BUILD_TESTS)
   add_executable(miniz_dependency_smoke tests/native/miniz_dependency_smoke.c)
   target_link_libraries(miniz_dependency_smoke PRIVATE miniz_static)
   add_test(NAME miniz_dependency_smoke COMMAND miniz_dependency_smoke)
+
+  add_executable(fl_json_core_smoke tests/native/fl_json_core_smoke.cpp)
+  target_compile_features(fl_json_core_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_json_core_smoke PRIVATE facman_core_static)
+  add_test(NAME fl_json_core_smoke COMMAND fl_json_core_smoke)
 
   add_executable(fl_archive_core_smoke tests/native/fl_archive_core_smoke.cpp)
   if(WIN32)

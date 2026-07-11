@@ -17,6 +17,22 @@
       "bundled_source": true,
       "runtime_network": false,
       "transitive_runtime_dependencies": []
+    },
+    {
+      "id": "picojson",
+      "name": "PicoJSON",
+      "version": "1.3.0+git.111c9be",
+      "type": "library",
+      "purl": "pkg:github/kazuho/picojson@1.3.0+git.111c9be",
+      "source": "https://github.com/kazuho/picojson",
+      "commit": "111c9be5188f7350c2eac9ddaedd8cca3d7bf394",
+      "source_file": "picojson.h",
+      "source_file_sha256": "eecfb89d1a72ab38a20322e4f959210c432167350fc84956856d94dfe6e4a526",
+      "license": "BSD-2-Clause",
+      "linkage": "private_header_only",
+      "bundled_source": true,
+      "runtime_network": false,
+      "transitive_runtime_dependencies": []
     }
   ],
   "provenance_recorded": true,

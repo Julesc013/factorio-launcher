@@ -20,3 +20,4 @@
 # extension, so the generic text rules do not cover it and core.autocrlf would
 # otherwise make its recorded provenance digest platform-dependent.
 external/miniz/LICENSE binary
+external/picojson/LICENSE binary

@@ -15,6 +15,19 @@ The full copyright, permission notice, and disclaimer are retained in
 `external/miniz/LICENSE`. Binary distributions containing Miniz must include
 that notice.
 
+## PicoJSON 1.3.0+git.111c9be
+
+- Source: https://github.com/kazuho/picojson
+- Pinned commit: `111c9be5188f7350c2eac9ddaedd8cca3d7bf394`
+- License: BSD-2-Clause
+- Use: source-vendored private header-only JSON parser behind `runtime/core/json`
+- Runtime networking: none
+- Transitive runtime dependencies: none
+
+The full copyright, redistribution conditions, and disclaimer are retained in
+`external/picojson/LICENSE`. Binary distributions containing PicoJSON must
+reproduce that notice in their documentation or other supplied materials.
+
 Dependencies must document:
 
 - dependency name and version

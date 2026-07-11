@@ -55,7 +55,7 @@ def write_package_sbom(package_root: Path, build_info: dict[str, Any]) -> Path:
             source_revision,
         )
     ]
-    for component_id in ("universal_launcher", "universal_setup", "miniz"):
+    for component_id in ("universal_launcher", "universal_setup", "miniz", "picojson"):
         component = dependencies[component_id]
         packages.append(
             spdx_package(
@@ -68,6 +68,8 @@ def write_package_sbom(package_root: Path, build_info: dict[str, Any]) -> Path:
                 purl=(
                     f"pkg:github/richgel999/miniz@{component['version']}"
                     if component_id == "miniz"
+                    else f"pkg:github/kazuho/picojson@{component['version']}"
+                    if component_id == "picojson"
                     else None
                 ),
             )
@@ -99,7 +101,7 @@ def write_package_sbom(package_root: Path, build_info: dict[str, Any]) -> Path:
                     "relationshipType": "DEPENDS_ON",
                     "relatedSpdxElement": f"SPDXRef-Package-{component_id.replace('_', '-')}",
                 }
-                for component_id in ("universal_launcher", "universal_setup", "miniz")
+                for component_id in ("universal_launcher", "universal_setup", "miniz", "picojson")
             ],
         ],
     }
@@ -299,6 +301,7 @@ def display_name(component_id: str) -> str:
         "universal_launcher": "Universal Launcher",
         "universal_setup": "Universal Setup",
         "miniz": "Miniz",
+        "picojson": "PicoJSON",
     }[component_id]
 
 
@@ -307,6 +310,7 @@ def source_location(component_id: str, component: dict[str, Any]) -> str:
         "universal_launcher": "https://github.com/Julesc013/universal-launcher",
         "universal_setup": "https://github.com/Julesc013/universal-setup",
         "miniz": str(component["source"]),
+        "picojson": str(component["source"]),
     }[component_id]
 
 

@@ -46,7 +46,7 @@ class ArchiveDependencyAdmissionTests(unittest.TestCase):
         self.assertIn("Permission is hereby granted", MINIZ.joinpath("LICENSE").read_text())
         self.assertEqual(
             {path.name for path in (ROOT / "external").iterdir()},
-            {"README.md", "miniz"},
+            {"README.md", "miniz", "picojson"},
         )
         attributes = ROOT.joinpath(".gitattributes").read_text(encoding="utf-8")
         self.assertIn("external/miniz/LICENSE binary", attributes)

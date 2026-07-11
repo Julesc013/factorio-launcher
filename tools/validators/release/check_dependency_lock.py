@@ -15,6 +15,7 @@ TOOL = "release-dependency-lock-check"
 REQUIRED_COMPONENTS = {
     "factorio_binding",
     "miniz",
+    "picojson",
     "universal_launcher",
     "universal_setup",
 }
@@ -61,6 +62,7 @@ def validate() -> list[str]:
     if launcher.get("install_mutation_authority") is not False:
         problems.append(f"{relative(lock_path)}: universal_launcher must not own install mutation")
     problems.extend(validate_miniz_component(lock_path, components.get("miniz", {})))
+    problems.extend(validate_picojson_component(lock_path, components.get("picojson", {})))
 
     build_path = _common.index_path("build_manifest")
     build = _common.load_toml(build_path)
@@ -93,8 +95,8 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
         problems.append(f"{prefix}: version is required")
     elif version in FORBIDDEN_FLOATING_PINS:
         problems.append(f"{prefix}: version must not be floating")
-    if component.get("license") not in {"MIT", "NOASSERTION"}:
-        problems.append(f"{prefix}: license must be MIT or NOASSERTION")
+    if component.get("license") not in {"MIT", "BSD-2-Clause", "NOASSERTION"}:
+        problems.append(f"{prefix}: license must be MIT, BSD-2-Clause, or NOASSERTION")
     return problems
 
 
@@ -108,6 +110,31 @@ def validate_miniz_component(path: Path, component: dict[str, Any]) -> list[str]
         "source_archive": "miniz-3.1.2.zip",
         "source_archive_sha256": "f0446d863f9c19926ad9483c523fdc42e42b8d4a6a431d27e09d49c79a140d9a",
         "license": "MIT",
+    }
+    problems: list[str] = []
+    for key, value in expected.items():
+        if component.get(key) != value:
+            problems.append(f"{prefix}: {key} must equal {value}")
+    if component.get("runtime_network") is not False:
+        problems.append(f"{prefix}: runtime_network must be false")
+    if component.get("transitive_runtime_dependencies") != []:
+        problems.append(f"{prefix}: transitive_runtime_dependencies must be empty")
+    if component.get("install_mutation_authority") is not False:
+        problems.append(f"{prefix}: install_mutation_authority must be false")
+    return problems
+
+
+def validate_picojson_component(path: Path, component: dict[str, Any]) -> list[str]:
+    prefix = f"{relative(path)} component picojson"
+    expected = {
+        "kind": "json_runtime",
+        "version": "1.3.0+git.111c9be",
+        "pin": "111c9be5188f7350c2eac9ddaedd8cca3d7bf394",
+        "source": "https://github.com/kazuho/picojson",
+        "source_file": "picojson.h",
+        "source_file_sha256": "eecfb89d1a72ab38a20322e4f959210c432167350fc84956856d94dfe6e4a526",
+        "license_file_sha256": "325af23f1286ed778387551ac1d9dfb6a6f5427861393278793e97c3a07ccbeb",
+        "license": "BSD-2-Clause",
     }
     problems: list[str] = []
     for key, value in expected.items():
