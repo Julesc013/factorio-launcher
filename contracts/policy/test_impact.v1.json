@@ -1,0 +1,123 @@
+{
+  "schema": "facman.test_impact.v1",
+  "categories": [
+    "fast-unit",
+    "contract",
+    "integration",
+    "filesystem",
+    "archive",
+    "transaction",
+    "package",
+    "platform",
+    "fuzz",
+    "operator"
+  ],
+  "minimums": {
+    "ctest": 16,
+    "python_test_files": 55,
+    "strict_validators": 44
+  },
+  "fast_python": [
+    "tests.test_json_contract_subset",
+    "tests.test_schema_tools",
+    "tests.test_generated_metadata",
+    "tests.test_architecture_fitness",
+    "tests.test_test_architecture"
+  ],
+  "category_python": {
+    "fast-unit": ["tests.test_json_contract_subset", "tests.test_schema_tools"],
+    "contract": ["tests.test_command_contracts", "tests.test_contract_truth", "tests.test_refusal_contract"],
+    "integration": ["tests.test_cli", "tests.test_vertical_slice", "tests.test_recovery"],
+    "filesystem": ["tests.test_workspace_store", "tests.test_safety_boundaries", "tests.test_diagnostic_export"],
+    "archive": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth"],
+    "transaction": ["tests.test_recovery", "tests.test_save_transfer"],
+    "package": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.package_runtime.test_built_package_artifacts"],
+    "platform": ["tests.test_windows_discovery", "tests.test_package_linux_proof", "tests.test_package_macos_proof"],
+    "fuzz": ["tests.test_archive_core"],
+    "operator": []
+  },
+  "modules": [
+    {
+      "paths": ["runtime/core/", "include/flb/"],
+      "native_targets": ["fl_json_core_smoke", "facman_abi_layout_smoke", "facman_abi_symbol_smoke"],
+      "python_tests": ["tests.test_command_contracts", "tests.test_contract_truth", "tests.test_generated_metadata"],
+      "strict_validators": ["tools/command_contract_check.py", "tools/generated_catalog_check.py", "tools/schema_validate.py"],
+      "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
+      "paths": ["runtime/platform/", "runtime/base/"],
+      "native_targets": ["fl_platform_io_smoke", "fl_path_safety_smoke", "facman_isolation_lock_smoke"],
+      "python_tests": ["tests.test_safety_boundaries", "tests.test_instance_isolation_probe"],
+      "strict_validators": ["tools/critical_io_check.py", "tools/security_policy_check.py"],
+      "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
+      "paths": ["runtime/workspace/"],
+      "native_targets": ["fl_workspace_store_smoke"],
+      "python_tests": ["tests.test_workspace_config", "tests.test_workspace_contract", "tests.test_workspace_store", "tests.test_recovery"],
+      "strict_validators": ["tools/workspace_contract_check.py", "tools/workspace_store_check.py"],
+      "package_profiles": []
+    },
+    {
+      "paths": ["runtime/transaction/"],
+      "native_targets": ["fl_transaction_session_smoke"],
+      "python_tests": ["tests.test_recovery", "tests.test_save_transfer"],
+      "strict_validators": ["tools/transaction_recovery_check.py"],
+      "package_profiles": []
+    },
+    {
+      "paths": ["runtime/archive/", "external/miniz/"],
+      "native_targets": ["fl_archive_core_smoke", "miniz_dependency_smoke"],
+      "python_tests": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth"],
+      "strict_validators": ["tools/archive_core_check.py"],
+      "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
+      "paths": ["runtime/factorio/"],
+      "native_targets": ["flb_command_bridge_smoke", "facman_diagnostic_traversal_smoke", "facman_isolation_lock_smoke"],
+      "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_save_transfer", "tests.test_vertical_slice"],
+      "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py"],
+      "package_profiles": []
+    },
+    {
+      "paths": ["runtime/client/", "apps/"],
+      "native_targets": ["facman_client_smoke", "flb_command_bridge_smoke"],
+      "python_tests": ["tests.test_cli", "tests.test_frontend_contract", "tests.test_frontend_parity", "tests.test_gui_surface"],
+      "strict_validators": ["tools/client_cli_boundary_check.py", "tools/frontend_contract_check.py", "tools/frontend_parity_check.py", "tools/frontend_transport_truth_check.py"],
+      "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
+      "paths": ["tools/package", "runtime/package/", "release/", "cmake/FacManInstall.cmake"],
+      "native_targets": ["facman_client_smoke"],
+      "python_tests": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.package_runtime.test_built_package_artifacts", "tests.package_layout.test_distribution_contracts"],
+      "strict_validators": ["tools/package_check.py", "tools/package_layout_check.py", "tools/package_manifest_check.py", "tools/package_pipeline_check.py", "tools/provenance_check.py"],
+      "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
+      "paths": ["contracts/"],
+      "native_targets": ["fl_json_core_smoke", "flb_command_bridge_smoke", "facman_abi_layout_smoke"],
+      "python_tests": ["tests.test_schema_tools", "tests.test_command_contracts", "tests.test_refusal_contract", "tests.test_contract_truth"],
+      "strict_validators": ["tools/schema_validate.py", "tools/command_contract_check.py", "tools/refusal_contract_check.py"],
+      "package_profiles": []
+    },
+    {
+      "paths": ["CMakeLists.txt", "cmake/", "tests/native/", ".github/workflows/"],
+      "native_targets": ["*"],
+      "python_tests": ["tests.test_ci_proof", "tests.test_structure_policy", "tests.test_test_architecture"],
+      "strict_validators": ["tools/cmake_architecture_check.py", "tools/ci_proof_check.py", "tools/test_architecture_check.py"],
+      "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
+      "paths": ["docs/", "README.md", "CONTRIBUTING.md"],
+      "native_targets": [],
+      "python_tests": ["tests.test_aide_target_truth", "tests.test_release_readiness"],
+      "strict_validators": ["tools/aide_target_truth_check.py", "tools/release_readiness_check.py"],
+      "package_profiles": []
+    }
+  ],
+  "operator": {
+    "automated": false,
+    "command": "python tools/dev.py test --category operator",
+    "message": "Operator acceptance is a human verdict and is never auto-passed."
+  }
+}

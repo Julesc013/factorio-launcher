@@ -1,0 +1,11 @@
+{
+  "schema": "facman.critical_coverage_policy.v1",
+  "modules": {
+    "runtime/archive": 1.0,
+    "runtime/base": 1.0,
+    "runtime/transaction": 1.0,
+    "runtime/workspace": 1.0
+  },
+  "metric": "line_percent",
+  "note": "Initial evidence floor; increases require measured CI coverage and may never be lowered without an explicit policy change."
+}

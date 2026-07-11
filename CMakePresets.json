@@ -9,6 +9,8 @@
     {"name":"ci-release","inherits":"base","generator":"Ninja Multi-Config"},
     {"name":"asan-ubsan","inherits":"base","generator":"Ninja","cacheVariables":{"FACMAN_ENABLE_SANITIZERS":"ON"}},
     {"name":"coverage","inherits":"base","generator":"Ninja","cacheVariables":{"FACMAN_ENABLE_COVERAGE":"ON"}},
+    {"name":"clang-tidy","inherits":"base","generator":"Ninja","cacheVariables":{"CMAKE_EXPORT_COMPILE_COMMANDS":"ON","FACMAN_ENABLE_CLANG_TIDY":"ON"}},
+    {"name":"libfuzzer","inherits":"base","generator":"Ninja","cacheVariables":{"CMAKE_C_COMPILER":"clang","CMAKE_CXX_COMPILER":"clang++","FACMAN_BUILD_CLI":"OFF","FACMAN_ENABLE_LIBFUZZER":"ON"}},
     {"name":"package-windows-x64","inherits":"dev-windows","cacheVariables":{"CMAKE_INSTALL_PREFIX":"${sourceDir}/build/install/windows-x64"}},
     {"name":"package-linux-x64","inherits":"dev-linux","cacheVariables":{"CMAKE_INSTALL_PREFIX":"${sourceDir}/build/install/linux-x64"}},
     {"name":"package-macos-x64","inherits":"dev-macos","cacheVariables":{"CMAKE_INSTALL_PREFIX":"${sourceDir}/build/install/macos-x64","CMAKE_OSX_ARCHITECTURES":"x86_64"}}

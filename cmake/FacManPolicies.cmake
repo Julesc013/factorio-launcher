@@ -3,8 +3,17 @@ add_library(facman_hardening INTERFACE)
 add_library(facman_sanitizers INTERFACE)
 add_library(facman_coverage INTERFACE)
 
+if(FACMAN_ENABLE_CLANG_TIDY)
+  find_program(FACMAN_CLANG_TIDY_EXE NAMES clang-tidy REQUIRED)
+  set(CMAKE_C_CLANG_TIDY "${FACMAN_CLANG_TIDY_EXE}" CACHE STRING "C clang-tidy command" FORCE)
+  set(CMAKE_CXX_CLANG_TIDY "${FACMAN_CLANG_TIDY_EXE}" CACHE STRING "C++ clang-tidy command" FORCE)
+endif()
+
 if(MSVC)
-  target_compile_options(facman_warnings INTERFACE /W4)
+  # C4996 rejects portable C/POSIX APIs such as getenv in favor of MSVC-only
+  # replacements. Keep the cross-platform API and enforce every other /W4
+  # diagnostic through /WX in CI.
+  target_compile_options(facman_warnings INTERFACE /W4 /wd4996)
   target_compile_options(facman_hardening INTERFACE /guard:cf)
   target_link_options(facman_hardening INTERFACE /guard:cf /DYNAMICBASE)
   if(FACMAN_WARNINGS_AS_ERRORS)
@@ -28,4 +37,17 @@ endif()
 
 function(facman_apply_policies target)
   target_link_libraries(${target} PRIVATE facman_warnings facman_hardening facman_sanitizers facman_coverage)
+endfunction()
+
+function(facman_add_libfuzzer target source)
+  if(NOT FACMAN_ENABLE_LIBFUZZER)
+    return()
+  endif()
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message(FATAL_ERROR "FACMAN_ENABLE_LIBFUZZER requires Clang")
+  endif()
+  add_executable(${target} ${source})
+  target_compile_features(${target} PRIVATE cxx_std_17)
+  target_compile_options(${target} PRIVATE -fsanitize=fuzzer,address,undefined -fno-omit-frame-pointer)
+  target_link_options(${target} PRIVATE -fsanitize=fuzzer,address,undefined)
 endfunction()

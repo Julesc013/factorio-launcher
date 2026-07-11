@@ -21,31 +21,49 @@ jobs:
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
       - name: Configure native core
-        run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_APPS=ON
+        run: >-
+          cmake -S . -B build/native-smoke
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          -DFACMAN_BUILD_CLI=ON
+          -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build native core
         run: cmake --build build/native-smoke
       - name: Run native tests
         run: ctest --test-dir build/native-smoke --output-on-failure
-      - name: Configure sanitized archive proof
+      - name: Run clang-tidy on changed first-party modules
+        run: python tools/clang_tidy_changed.py --base HEAD^ --build-root build/native-smoke
+      - name: Configure sanitized full-core proof
         run: >-
-          cmake -S . -B build/archive-sanitized
-          -DFLAUNCH_BUILD_NATIVE_APPS=OFF
-          -DFLAUNCH_ENABLE_SANITIZERS=ON
-      - name: Build sanitized archive proof
-        run: >-
-          cmake --build build/archive-sanitized --target
-          fl_archive_core_smoke fl_archive_probe
-          fl_archive_metadata_fuzz fl_archive_plan_fuzz
-      - name: Run sanitized archive corpus and fuzz proof
+          cmake -S . -B build/core-sanitized
+          -DCMAKE_BUILD_TYPE=Debug
+          -DFACMAN_BUILD_CLI=ON
+          -DFACMAN_ENABLE_SANITIZERS=ON
+          -DFACMAN_WARNINGS_AS_ERRORS=ON
+      - name: Build sanitized full core
+        run: cmake --build build/core-sanitized --parallel
+      - name: Run sanitized full CTest suite and archive corpus
         env:
           ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
-          FACMAN_FL_ARCHIVE_PROBE_EXE: ${{ github.workspace }}/build/archive-sanitized/fl_archive_probe
-          FACMAN_FL_ARCHIVE_METADATA_FUZZ_EXE: ${{ github.workspace }}/build/archive-sanitized/fl_archive_metadata_fuzz
-          FACMAN_FL_ARCHIVE_PLAN_FUZZ_EXE: ${{ github.workspace }}/build/archive-sanitized/fl_archive_plan_fuzz
+          FACMAN_FL_ARCHIVE_PROBE_EXE: ${{ github.workspace }}/build/core-sanitized/fl_archive_probe
+          FACMAN_FL_ARCHIVE_METADATA_FUZZ_EXE: ${{ github.workspace }}/build/core-sanitized/fl_archive_metadata_fuzz
+          FACMAN_FL_ARCHIVE_PLAN_FUZZ_EXE: ${{ github.workspace }}/build/core-sanitized/fl_archive_plan_fuzz
         run: |
-          ctest --test-dir build/archive-sanitized -R fl_archive_core_smoke --output-on-failure
+          ctest --test-dir build/core-sanitized --output-on-failure
           python -m unittest tests.test_archive_core -v
+      - name: Configure real bounded libFuzzer job
+        run: >-
+          cmake -S . -B build/libfuzzer
+          -DCMAKE_BUILD_TYPE=Debug
+          -DFACMAN_BUILD_CLI=OFF
+          -DFACMAN_ENABLE_LIBFUZZER=ON
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_CXX_COMPILER=clang++
+      - name: Run bounded libFuzzer job
+        run: |
+          cmake --build build/libfuzzer --target fl_archive_libfuzzer --parallel
+          ./build/libfuzzer/fl_archive_libfuzzer -runs=1000 tests/fixtures/factorio_saves tests/fixtures/factorio_mods
       - name: Run Python unit tests
         run: python -m unittest discover -s tests -v
       - name: Run strict policy checks
@@ -81,6 +99,43 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  linux-coverage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install coverage tooling
+        run: python -m pip install gcovr==8.6
+      - name: Clone universal repositories
+        run: |
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+      - name: Align dependency revisions to workspace lock
+        run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
+      - name: Configure coverage core
+        run: >-
+          cmake -S . -B build/coverage
+          -DCMAKE_BUILD_TYPE=Debug
+          -DFACMAN_BUILD_CLI=ON
+          -DFACMAN_ENABLE_COVERAGE=ON
+      - name: Build and execute coverage tests
+        run: |
+          cmake --build build/coverage --parallel
+          ctest --test-dir build/coverage --output-on-failure
+      - name: Generate and enforce critical-module coverage evidence
+        run: |
+          gcovr --root . --filter 'runtime/(archive|base|transaction|workspace)/' --json-pretty build/coverage/critical-coverage.json
+          python tools/coverage_policy_check.py --report build/coverage/critical-coverage.json
+      - name: Preserve coverage evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: critical-coverage-${{ github.sha }}
+          path: build/coverage/critical-coverage.json
+          if-no-files-found: error
+          retention-days: 14
+
   windows-native-package:
     runs-on: windows-2022
     env:
@@ -98,11 +153,15 @@ jobs:
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
       - name: Configure Windows native core
-        run: cmake -S . -B build/native-smoke -DFLAUNCH_BUILD_NATIVE_APPS=ON
+        run: cmake -S . -B build/native-smoke -DFACMAN_BUILD_CLI=ON -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build Windows native core
         run: cmake --build build/native-smoke --config Debug
       - name: Run Windows native tests
         run: ctest --test-dir build/native-smoke -C Debug --output-on-failure
+      - name: Build and test Windows Release
+        run: |
+          cmake --build build/native-smoke --config Release --parallel
+          ctest --test-dir build/native-smoke -C Release --output-on-failure
       - name: Build WinForms shell
         run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Debug
       - name: Smoke WinForms command client
@@ -182,6 +241,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
           -DFLAUNCH_BUILD_NATIVE_APPS=ON
+          -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build complete macOS Intel native core
         run: cmake --build build/macos-native
       - name: Run complete macOS native CTest suite

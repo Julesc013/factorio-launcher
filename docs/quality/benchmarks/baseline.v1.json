@@ -1,0 +1,48 @@
+{
+  "advisory": true,
+  "host": {
+    "machine": "AMD64",
+    "python": "3.11.9",
+    "system": "Windows"
+  },
+  "maximum_regression_percent": 25.0,
+  "measurements": {
+    "archive_inspect": {
+      "maximum_ms": 0.5917,
+      "median_ms": 0.0518,
+      "minimum_ms": 0.0418,
+      "repeats": 9
+    },
+    "command_dispatch": {
+      "maximum_ms": 16.048,
+      "median_ms": 14.8413,
+      "minimum_ms": 14.759,
+      "repeats": 9
+    },
+    "diagnostic_export_traversal": {
+      "maximum_ms": 0.5442,
+      "median_ms": 0.3833,
+      "minimum_ms": 0.376,
+      "repeats": 9
+    },
+    "mod_inspection": {
+      "maximum_ms": 0.0623,
+      "median_ms": 0.0377,
+      "minimum_ms": 0.0364,
+      "repeats": 9
+    },
+    "package_hashing": {
+      "maximum_ms": 3.0487,
+      "median_ms": 2.4221,
+      "minimum_ms": 2.3825,
+      "repeats": 9
+    },
+    "startup": {
+      "maximum_ms": 15.359,
+      "median_ms": 14.0484,
+      "minimum_ms": 13.9327,
+      "repeats": 9
+    }
+  },
+  "schema": "facman.performance_baseline.v1"
+}

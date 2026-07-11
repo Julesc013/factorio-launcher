@@ -26,6 +26,8 @@ option(FACMAN_WITH_SETUP "Enable Universal Setup-backed operations" ON)
 option(FACMAN_ENABLE_SANITIZERS "Enable ASan and UBSan" ${_facman_sanitizers_default})
 option(FACMAN_ENABLE_COVERAGE "Enable compiler coverage instrumentation" OFF)
 option(FACMAN_WARNINGS_AS_ERRORS "Treat first-party compiler warnings as errors" OFF)
+option(FACMAN_ENABLE_CLANG_TIDY "Run clang-tidy through CMake on first-party targets" OFF)
+option(FACMAN_ENABLE_LIBFUZZER "Build bounded libFuzzer targets with Clang" OFF)
 
 set(FLAUNCH_BUILD_NATIVE_APPS ${FACMAN_BUILD_CLI} CACHE BOOL "Compatibility alias for FACMAN_BUILD_CLI" FORCE)
 set(FLAUNCH_BUILD_TESTS ${FACMAN_BUILD_TESTS} CACHE BOOL "Compatibility alias for FACMAN_BUILD_TESTS" FORCE)
