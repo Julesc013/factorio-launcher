@@ -50,7 +50,6 @@ struct CliOptions {
 using InstallRef = factorio_discovery::InstallRef;
 using RedactionEvent = factorio_diagnostics::RedactionEvent;
 using ModRef = factorio_modsets::ModRef;
-using ModsetIssue = factorio_modsets::ModsetIssue;
 using ManagedPathResult = facman::base::ManagedPathResult;
 
 struct InstanceRef {
@@ -1125,112 +1124,6 @@ std::string string_array_json(const std::vector<std::string>& values)
     }
     out << "]";
     return out.str();
-}
-
-std::string mod_ref_to_json(const ModRef& mod)
-{
-    return factorio_modsets::mod_ref_json(mod);
-}
-
-void mark_mod_refused(ModRef& mod, const std::string& code, const std::string& reason, const std::string& detail)
-{
-    mod.valid = false;
-    mod.validation_status = "refused";
-    mod.refusal_code = code;
-    mod.refusal_reason = reason;
-    mod.refusal_detail = detail;
-}
-
-std::vector<ModsetIssue> validate_instance_modset(const InstanceRef& instance)
-{
-    return factorio_modsets::validate_modset(instance_mod_files(instance), instance.factorio_version);
-}
-
-std::string modset_lock_json(const InstanceRef& instance)
-{
-    std::vector<ModRef> mods = instance_mod_files(instance);
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"lockfile_version\": 1,\n";
-    out << "  \"schema\": \"factorio.modset_lock.v1\",\n";
-    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-    out << "  \"factorio_version\": " << quote(instance.factorio_version) << ",\n";
-    out << "  \"mods\": [";
-    for (std::size_t index = 0; index < mods.size(); ++index) {
-        if (index) {
-            out << ",";
-        }
-        out << "\n    " << mod_ref_to_json(mods[index]);
-    }
-    if (!mods.empty()) {
-        out << "\n  ";
-    }
-    out << "]\n";
-    out << "}\n";
-    return out.str();
-}
-
-struct LockEntry {
-    std::string file_name;
-    std::string sha1;
-    std::string sha256;
-};
-
-std::vector<LockEntry> lock_entries(const std::string& text)
-{
-    std::vector<LockEntry> entries;
-    std::size_t position = 0;
-    for (;;) {
-        std::size_t file_pos = text.find("\"file_name\"", position);
-        if (file_pos == std::string::npos) {
-            break;
-        }
-        std::size_t sha_pos = text.find("\"sha1\"", file_pos);
-        if (sha_pos == std::string::npos) {
-            break;
-        }
-        std::size_t sha256_pos = text.find("\"sha256\"", file_pos);
-        LockEntry entry;
-        entry.file_name = json_string_value(text.substr(file_pos), "file_name");
-        entry.sha1 = json_string_value(text.substr(sha_pos), "sha1");
-        if (sha256_pos != std::string::npos) {
-            entry.sha256 = json_string_value(text.substr(sha256_pos), "sha256");
-        }
-        if (!entry.file_name.empty()) {
-            entries.push_back(entry);
-        }
-        position = sha_pos + 6;
-    }
-    return entries;
-}
-
-std::vector<std::string> verify_modset_lock(const InstanceRef& instance)
-{
-    std::vector<std::string> problems;
-    fs::path lock_path = modset_lock_path(instance);
-    if (!fs::is_regular_file(lock_path)) {
-        problems.push_back("missing modset lockfile");
-        return problems;
-    }
-    std::vector<LockEntry> entries = lock_entries(read_text(lock_path));
-    for (const LockEntry& entry : entries) {
-        fs::path mod_path = instance.local_data_root / "mods" / entry.file_name;
-        if (!fs::is_regular_file(mod_path)) {
-            problems.push_back("missing mod file: " + entry.file_name);
-            continue;
-        }
-        std::string actual_sha1 = factorio_modsets::sha1_hex_file(mod_path);
-        if (actual_sha1 != entry.sha1) {
-            problems.push_back("sha1 mismatch: " + entry.file_name);
-        }
-        if (!entry.sha256.empty()) {
-            std::string actual_sha256 = factorio_modsets::sha256_hex_file(mod_path);
-            if (actual_sha256 != entry.sha256) {
-                problems.push_back("sha256 mismatch: " + entry.file_name);
-            }
-        }
-    }
-    return problems;
 }
 
 struct ZipRecord {
@@ -2988,54 +2881,25 @@ int command_mods(const CliOptions& options)
             std::cerr << "mods import requires --instance <instance-id>\n";
             return 2;
         }
-        InstanceRef instance;
-        if (!load_instance(options.workspace, instance_id, instance)) {
-            std::cerr << "Unknown instance: " << instance_id << "\n";
-            return 1;
-        }
-        fs::path source = options.args[2];
-        if (!fs::is_regular_file(source) || source.extension() != ".zip") {
-            std::cerr << "Mod import requires a local .zip file\n";
-            return 1;
-        }
-        ModRef mod = mod_ref_from_path(source);
-        if (mod.valid && !factorio_modsets::factorio_versions_compatible(mod.factorio_version, instance.factorio_version)) {
-            mark_mod_refused(
-                mod,
-                "mod_factorio_version_incompatible",
-                "Mod factorio_version is not compatible with this instance",
-                mod.factorio_version + " != " + factorio_modsets::factorio_minor_version(instance.factorio_version)
-            );
-        }
-        if (!mod.valid) {
-            std::string result = factorio_modsets::mod_refusal_json("mods.import", instance.instance_id, source, mod);
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Refused: " << mod.refusal_reason << "\n";
-                std::cerr << "Code: " << mod.refusal_code << "\n";
-            }
-            return 1;
-        }
-        fs::path destination = instance.local_data_root / "mods" / source.filename();
-        if (fs::exists(destination)) {
-            return emit_safety_refusal(
-                options,
-                "mods.import",
-                "persistent_target_exists",
-                "Mod target already exists",
-                path_string(destination),
-                true);
-        }
-        fs::create_directories(destination.parent_path());
-        fs::copy_file(source, destination, fs::copy_options::none);
-        mod.file_path = destination;
+        std::ostringstream request;
+        request << "{\"source_path\":" << quote(options.args[2])
+                << ",\"instance_id\":" << quote(instance_id) << "}";
+        RoutedCommandResult routed = route_factorio_command(
+            options.workspace,
+            "mods.import",
+            request.str(),
+            false);
         if (has_flag(options.args, "--json")) {
-            std::cout << mod_ref_to_json(mod) << "\n";
+            std::cout << routed.payload << "\n";
+        } else if (routed.status == ULK_STATUS_OK) {
+            std::cout << "Imported mod " << json_string_value(routed.payload, "name")
+                      << " " << json_string_value(routed.payload, "version")
+                      << " into " << instance_id << "\n";
         } else {
-            std::cout << "Imported mod " << mod.name << " " << mod.version << " into " << instance.instance_id << "\n";
+            std::cerr << "Refused: " << json_string_value(routed.payload, "reason") << "\n";
+            std::cerr << "Code: " << json_string_value(routed.payload, "code") << "\n";
         }
-        return 0;
+        return routed.status == ULK_STATUS_OK ? 0 : 1;
     }
 
     std::cerr << "Unknown mods subcommand\n";
@@ -3048,130 +2912,38 @@ int command_modsets(const CliOptions& options)
         std::cerr << "Missing modsets subcommand or instance id\n";
         return 2;
     }
-    InstanceRef instance;
-    if (!load_instance(options.workspace, options.args[2], instance)) {
-        std::cerr << "Unknown instance: " << options.args[2] << "\n";
-        return 1;
+    const std::string operation = options.args[1];
+    if (operation != "lock" && operation != "verify" && operation != "export") {
+        std::cerr << "Unknown modsets subcommand\n";
+        return 2;
     }
-
-    if (options.args[1] == "lock") {
-        std::vector<ModsetIssue> issues = validate_instance_modset(instance);
-        if (!issues.empty()) {
-            std::string result = factorio_modsets::modset_refusal_json(
-                "modsets.lock",
-                instance.instance_id,
-                issues[0]
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Refused: " << issues[0].reason << "\n";
-                std::cerr << "Code: " << issues[0].code << "\n";
-            }
-            return 1;
-        }
-        std::string lock = modset_lock_json(instance);
-        write_text(modset_lock_path(instance), lock);
-        write_text(workspace_modset_lock_path(options.workspace, instance), lock);
-        if (has_flag(options.args, "--json")) {
-            std::cout << lock;
-        } else {
-            std::cout << "Locked modset for " << instance.instance_id << "\n";
-        }
-        return 0;
+    if (operation == "export" && options.args.size() < 4) {
+        std::cerr << "modsets export requires <instance-id> <pack.zip>\n";
+        return 2;
     }
-
-    if (options.args[1] == "verify") {
-        std::vector<std::string> problems = verify_modset_lock(instance);
-        if (has_flag(options.args, "--json")) {
-            std::cout << "{\n";
-            std::cout << "  \"schema\": \"factorio.modset_verify.v1\",\n";
-            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-            std::cout << "  \"status\": " << quote(problems.empty() ? "ok" : "error") << ",\n";
-            std::cout << "  \"problems\": [";
-            for (std::size_t index = 0; index < problems.size(); ++index) {
-                if (index) {
-                    std::cout << ",";
-                }
-                std::cout << quote(problems[index]);
-            }
-            std::cout << "]";
-            if (!problems.empty()) {
-                std::cout << ",\n";
-                std::cout << "  \"refusal\": {\n";
-                std::cout << "    \"schema\": \"common.refusal.v1\",\n";
-                std::cout << "    \"code\": \"mod_hash_mismatch\",\n";
-                std::cout << "    \"reason\": \"One or more locked mod hashes do not match local artifacts\",\n";
-                std::cout << "    \"recoverable\": true,\n";
-                std::cout << "    \"retryable\": true,\n";
-                std::cout << "    \"severity\": \"error\"\n";
-                std::cout << "  }\n";
-            } else {
-                std::cout << "\n";
-            }
-            std::cout << "}\n";
-        } else if (problems.empty()) {
-            std::cout << "Modset verified for " << instance.instance_id << "\n";
-        } else {
-            for (const std::string& problem : problems) {
-                std::cerr << problem << "\n";
-            }
-        }
-        return problems.empty() ? 0 : 1;
+    const std::string command_id = "modsets." + operation;
+    std::ostringstream request;
+    request << "{\"instance_id\":" << quote(options.args[2]);
+    if (operation == "export") request << ",\"output_path\":" << quote(options.args[3]);
+    request << "}";
+    RoutedCommandResult routed = route_factorio_command(
+        options.workspace,
+        command_id.c_str(),
+        request.str(),
+        operation == "verify");
+    if (has_flag(options.args, "--json")) {
+        std::cout << routed.payload << "\n";
+    } else if (routed.status != ULK_STATUS_OK) {
+        std::cerr << "Refused: " << json_string_value(routed.payload, "reason") << "\n";
+        std::cerr << "Code: " << json_string_value(routed.payload, "code") << "\n";
+    } else if (operation == "lock") {
+        std::cout << "Locked modset for " << options.args[2] << "\n";
+    } else if (operation == "verify") {
+        std::cout << "Modset verified for " << options.args[2] << "\n";
+    } else {
+        std::cout << "Exported modset pack to " << options.args[3] << "\n";
     }
-
-    if (options.args[1] == "export") {
-        if (options.args.size() < 4) {
-            std::cerr << "modsets export requires <instance-id> <pack.zip>\n";
-            return 2;
-        }
-        std::vector<ModsetIssue> issues = validate_instance_modset(instance);
-        if (!issues.empty()) {
-            std::string result = factorio_modsets::modset_refusal_json(
-                "modsets.export",
-                instance.instance_id,
-                issues[0]
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Refused: " << issues[0].reason << "\n";
-                std::cerr << "Code: " << issues[0].code << "\n";
-            }
-            return 1;
-        }
-        fs::path lock_path = modset_lock_path(instance);
-        if (!fs::is_regular_file(lock_path)) {
-            std::string lock = modset_lock_json(instance);
-            write_text(lock_path, lock);
-            write_text(workspace_modset_lock_path(options.workspace, instance), lock);
-        }
-
-        std::vector<std::pair<std::string, std::vector<unsigned char>>> files;
-        files.push_back({"modset-lock.v1.json", read_bytes(lock_path)});
-        for (const ModRef& mod : instance_mod_files(instance)) {
-            files.push_back({"mods/" + mod.file_name, read_bytes(mod.file_path)});
-        }
-        fs::path output_path = options.args[3];
-        if (!write_stored_zip(output_path, files)) {
-            std::cerr << "Failed to write modset export: " << path_string(output_path) << "\n";
-            return 1;
-        }
-        if (has_flag(options.args, "--json")) {
-            std::cout << "{\n";
-            std::cout << "  \"schema\": \"factorio.modset_export.v1\",\n";
-            std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-            std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
-            std::cout << "  \"files\": " << files.size() << "\n";
-            std::cout << "}\n";
-        } else {
-            std::cout << "Exported modset pack to " << path_string(output_path) << "\n";
-        }
-        return 0;
-    }
-
-    std::cerr << "Unknown modsets subcommand\n";
-    return 2;
+    return routed.status == ULK_STATUS_OK ? 0 : 1;
 }
 
 int command_saves(const CliOptions& options)

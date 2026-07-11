@@ -101,6 +101,28 @@ static int run_invalid_payload(
     return 0;
 }
 
+static int run_dry_run_write_refusal(
+    flb_context* context,
+    const char* command_name,
+    const char* payload)
+{
+    ulk_command_request_v1 request;
+    ulk_command_response_v1 response;
+    int status;
+
+    memset(&request, 0, sizeof(request));
+    memset(&response, 0, sizeof(response));
+    response.struct_size = sizeof(response);
+    request.struct_size = sizeof(request);
+    request.command_name = view_from_cstr(command_name);
+    request.json_payload = view_from_cstr(payload);
+    request.dry_run = 1;
+    status = fl_command_client_execute_cabi_v1(context, &request, &response);
+    if (status == ULK_STATUS_OK || response.status == ULK_STATUS_OK) return 1;
+    if (!contains(response.json_payload, "\"code\":\"dry_run_write_not_executed\"")) return 2;
+    return 0;
+}
+
 int main(void)
 {
     flb_context* context = 0;
@@ -130,6 +152,10 @@ int main(void)
     }
     if (run_command(context, "command_graph.inspect", 1, "\"command\":\"run.preview\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"launch_plan.preflight\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"mods.import\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"modsets.lock\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"modsets.verify\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"modsets.export\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"owner\":\"factorio-launcher\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "factorio_launch_preflight.v1.schema.json") != 0) {
         return 34;
@@ -194,6 +220,32 @@ int main(void)
             "{}",
             "missing non-empty string field") != 0) {
         return 36;
+    }
+    if (run_invalid_payload(
+            context,
+            "mods.import",
+            "{\"source_path\":\"mod.zip\"}",
+            "missing non-empty string field") != 0 ||
+        run_invalid_payload(
+            context,
+            "modsets.export",
+            "{\"instance_id\":\"fixture\"}",
+            "missing non-empty string field") != 0) {
+        return 37;
+    }
+    if (run_dry_run_write_refusal(
+            context,
+            "mods.import",
+            "{\"source_path\":\"mod.zip\",\"instance_id\":\"fixture\"}") != 0 ||
+        run_dry_run_write_refusal(
+            context,
+            "modsets.lock",
+            "{\"instance_id\":\"fixture\"}") != 0 ||
+        run_dry_run_write_refusal(
+            context,
+            "modsets.export",
+            "{\"instance_id\":\"fixture\",\"output_path\":\"pack.zip\"}") != 0) {
+        return 38;
     }
 
     memset(&request, 0, sizeof(request));

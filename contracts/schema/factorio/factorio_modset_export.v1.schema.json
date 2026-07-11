@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_modset_export.v1.schema.json",
+  "title": "Factorio Modset Export",
+  "type": "object",
+  "required": ["schema", "instance_id", "path", "files"],
+  "properties": {
+    "schema": { "const": "factorio.modset_export.v1" },
+    "instance_id": { "type": "string" },
+    "path": { "type": "string" },
+    "files": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": false
+}

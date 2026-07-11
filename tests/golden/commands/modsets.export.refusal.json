@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.modset_refusal.v1",
+  "command": "modsets.export",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "modset_verification_failed",
+    "reason": "modset must verify before export",
+    "recoverable": true
+  }
+}

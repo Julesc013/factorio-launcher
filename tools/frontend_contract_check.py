@@ -27,7 +27,10 @@ EXPECTED_REQUIRED = {
 
 EXPECTED_DEFERRED = {
     "run.execute",
+    "mods.import",
     "modsets.lock",
+    "modsets.verify",
+    "modsets.export",
     "saves.backup",
     "export.instance",
     "import.instance",

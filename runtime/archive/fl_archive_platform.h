@@ -38,6 +38,11 @@ private:
 Status create_owned_staging_root(const std::filesystem::path& staging_root);
 Status cleanup_owned_staging_root(const std::filesystem::path& staging_root);
 
+Status commit_owned_staged_file_no_clobber(
+    const std::filesystem::path& staging_root,
+    const std::filesystem::path& staged_file,
+    const std::filesystem::path& destination);
+
 } // namespace facman::archive
 
 #endif

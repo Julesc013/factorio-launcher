@@ -191,7 +191,31 @@ int flb_context_create_v1(
             "run.preview",
             "[\"workspace_read\"]",
             "contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
-            "preview_only_no_process") != ULK_STATUS_OK) {
+            "preview_only_no_process") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "mods.import",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_mod_ref.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "modsets.lock",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_modset_lock.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "modsets.verify",
+            "[\"workspace_read\"]",
+            "contracts/schema/factorio/factorio_modset_verify.v1.schema.json",
+            "read_only") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "modsets.export",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_modset_export.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK) {
         flb_factorio_application_destroy(context->application);
         ulk_context_destroy_v1(context->launcher_context);
         free(context);

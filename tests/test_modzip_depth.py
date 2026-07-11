@@ -8,6 +8,7 @@ import zipfile
 from pathlib import Path
 
 from native_cli import invoke
+from tools import json_contract
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
@@ -71,17 +72,123 @@ def fixture_zip(folder: str, file_name: str) -> Path:
     return MOD_FIXTURES / folder / file_name
 
 
-def write_mod_zip(path: Path, info: dict, prefix: str | None = None) -> None:
+def write_mod_zip(
+    path: Path,
+    info: dict,
+    prefix: str | None = None,
+    compression: int = zipfile.ZIP_STORED,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     folder = prefix or path.stem
     zip_info = zipfile.ZipInfo(f"{folder}/info.json", (2026, 7, 9, 0, 0, 0))
-    zip_info.compress_type = zipfile.ZIP_STORED
+    zip_info.compress_type = compression
     zip_info.external_attr = 0o644 << 16
-    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
+    with zipfile.ZipFile(path, "w", compression=compression) as archive:
         archive.writestr(zip_info, json.dumps(info, indent=2, sort_keys=True) + "\n")
 
 
 class ModZipDepthTests(unittest.TestCase):
+    def test_unsafe_and_over_budget_archives_refuse_before_import_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            source_root = workspace / "sources"
+            source_root.mkdir()
+            cases = {
+                "unsafe_mod_1.0.0.zip": [("../outside.txt", b"escape")],
+                "budget_mod_1.0.0.zip": [("budget_mod_1.0.0/bomb.bin", b"0" * (5 * 1024 * 1024))],
+            }
+            for filename, extras in cases.items():
+                with self.subTest(filename=filename):
+                    path = source_root / filename
+                    name = filename.split("_", 1)[0]
+                    info = {
+                        "name": name,
+                        "version": "1.0.0",
+                        "factorio_version": "2.0",
+                    }
+                    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                        archive.writestr(f"{path.stem}/info.json", json.dumps(info))
+                        for entry, payload in extras:
+                            archive.writestr(entry, payload)
+                    before = sha256(path)
+                    code, refusal, _stderr = run_json(
+                        ["--workspace", tmp, "mods", "import", str(path), "--instance", "modzip", "--json"]
+                    )
+                    self.assertEqual(code, 1)
+                    self.assertEqual(refusal["refusal"]["code"], "unsafe_archive_path")
+                    self.assertEqual(sha256(path), before)
+                    self.assertFalse((workspace / "instances" / "modzip" / "mods" / filename).exists())
+
+    def test_deflated_real_world_mod_routes_import_lock_verify_and_export(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            source = workspace / "source" / "compressed_mod_1.2.3.zip"
+            write_mod_zip(
+                source,
+                {
+                    "name": "compressed_mod",
+                    "version": "1.2.3",
+                    "title": "Compressed Mod",
+                    "factorio_version": "2.0",
+                    "dependencies": ["base >= 2.0"],
+                },
+                compression=zipfile.ZIP_DEFLATED,
+            )
+            before = sha256(source)
+            code, imported, stderr = run_json(
+                ["--workspace", tmp, "mods", "import", str(source), "--instance", "modzip", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(imported["metadata_source"], "info_json")
+            self.assertEqual(
+                json_contract.validate(
+                    imported,
+                    json_contract.load_schema(
+                        ROOT / "contracts/schema/factorio/factorio_mod_ref.v1.schema.json"
+                    ),
+                ),
+                [],
+            )
+            self.assertEqual(sha256(source), before)
+            code, _lock, stderr = run_json(["--workspace", tmp, "modsets", "lock", "modzip", "--json"])
+            self.assertEqual(code, 0, stderr)
+            code, verified, stderr = run_json(["--workspace", tmp, "modsets", "verify", "modzip", "--json"])
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(verified["status"], "ok")
+            self.assertEqual(
+                json_contract.validate(
+                    verified,
+                    json_contract.load_schema(
+                        ROOT / "contracts/schema/factorio/factorio_modset_verify.v1.schema.json"
+                    ),
+                ),
+                [],
+            )
+            output = workspace / "compressed-pack.zip"
+            code, exported, stderr = run_json(
+                ["--workspace", tmp, "modsets", "export", "modzip", str(output), "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(exported["files"], 2)
+            self.assertEqual(
+                json_contract.validate(
+                    exported,
+                    json_contract.load_schema(
+                        ROOT / "contracts/schema/factorio/factorio_modset_export.v1.schema.json"
+                    ),
+                ),
+                [],
+            )
+            with zipfile.ZipFile(output) as archive:
+                self.assertEqual(
+                    sorted(archive.namelist()),
+                    ["mods/compressed_mod_1.2.3.zip", "modset-lock.v1.json"],
+                )
+                self.assertTrue(all(info.CRC or info.file_size == 0 for info in archive.infolist()))
+            self.assertFalse(any(path.name.startswith(".facman-") for path in workspace.rglob("*")))
+
     def test_valid_fixture_locks_match_goldens_and_preserve_sources(self) -> None:
         cases = {
             "valid_simple.modset_lock.v1.json": fixture_zip("valid_simple", "simple_mod_1.0.0.zip"),
@@ -338,6 +445,49 @@ class ModZipDepthTests(unittest.TestCase):
             self.assertEqual(verify["refusal"]["code"], "mod_hash_mismatch")
             self.assertTrue(any("sha1 mismatch" in problem for problem in verify["problems"]))
             self.assertTrue(any("sha256 mismatch" in problem for problem in verify["problems"]))
+
+    def test_verify_rejects_metadata_drift_even_when_lock_hashes_are_rewritten(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            setup_instance(workspace)
+            source = workspace / "source" / "metadata_drift_1.0.0.zip"
+            write_mod_zip(
+                source,
+                {
+                    "name": "metadata_drift",
+                    "version": "1.0.0",
+                    "title": "Original title",
+                    "factorio_version": "2.0",
+                },
+                compression=zipfile.ZIP_DEFLATED,
+            )
+            code, _result, stderr = run_json(
+                ["--workspace", tmp, "mods", "import", str(source), "--instance", "modzip", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _lock, stderr = run_json(["--workspace", tmp, "modsets", "lock", "modzip", "--json"])
+            self.assertEqual(code, 0, stderr)
+            installed = workspace / "instances/modzip/mods/metadata_drift_1.0.0.zip"
+            write_mod_zip(
+                installed,
+                {
+                    "name": "metadata_drift",
+                    "version": "1.0.0",
+                    "title": "Changed title",
+                    "factorio_version": "2.0",
+                },
+                compression=zipfile.ZIP_DEFLATED,
+            )
+            lock_path = workspace / "instances/modzip/mods/modset-lock.v1.json"
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+            lock["mods"][0]["sha1"] = hashlib.sha1(installed.read_bytes()).hexdigest()
+            lock["mods"][0]["sha256"] = sha256(installed)
+            lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
+            code, verified, _stderr = run_json(
+                ["--workspace", tmp, "modsets", "verify", "modzip", "--json"]
+            )
+            self.assertEqual(code, 1)
+            self.assertIn("metadata drift", "\n".join(verified["problems"]))
 
     def test_exported_modset_is_portable_and_source_tree_is_read_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

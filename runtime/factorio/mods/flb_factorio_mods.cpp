@@ -1,5 +1,9 @@
 #include "flb_factorio_mods.h"
 
+#include "fl_archive.h"
+#include "fl_sha256.h"
+
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <cstdint>
@@ -14,33 +18,12 @@ namespace fs = std::filesystem;
 
 namespace {
 
-struct ZipEntry {
-    std::string name;
-    std::vector<unsigned char> data;
-};
-
-struct ZipReadResult {
-    bool ok = false;
-    std::string code;
-    std::string reason;
-    std::vector<ZipEntry> entries;
-};
-
 struct InfoJson {
     bool ok = false;
     std::string error;
     std::map<std::string, std::string> strings;
     std::vector<std::string> dependencies;
 };
-
-std::vector<unsigned char> read_bytes(const fs::path& path)
-{
-    std::ifstream in(path, std::ios::binary);
-    return std::vector<unsigned char>(
-        std::istreambuf_iterator<char>(in),
-        std::istreambuf_iterator<char>()
-    );
-}
 
 std::string json_escape(const std::string& value)
 {
@@ -90,126 +73,6 @@ std::string quote(const std::string& value)
 std::string path_string(const fs::path& path)
 {
     return path.lexically_normal().generic_string();
-}
-
-std::uint16_t read_le16(const std::vector<unsigned char>& data, std::size_t offset)
-{
-    if (offset + 2 > data.size()) {
-        return 0;
-    }
-    return static_cast<std::uint16_t>(data[offset]) |
-           static_cast<std::uint16_t>(data[offset + 1] << 8);
-}
-
-std::uint32_t read_le32(const std::vector<unsigned char>& data, std::size_t offset)
-{
-    if (offset + 4 > data.size()) {
-        return 0;
-    }
-    return static_cast<std::uint32_t>(data[offset]) |
-           (static_cast<std::uint32_t>(data[offset + 1]) << 8) |
-           (static_cast<std::uint32_t>(data[offset + 2]) << 16) |
-           (static_cast<std::uint32_t>(data[offset + 3]) << 24);
-}
-
-bool archive_entry_is_safe(const std::string& name)
-{
-    if (name.empty() || name[0] == '/' || name[0] == '\\') {
-        return false;
-    }
-    if (name.find(':') != std::string::npos || name.find('\\') != std::string::npos) {
-        return false;
-    }
-    fs::path path(name);
-    for (const fs::path& part : path) {
-        if (part == "..") {
-            return false;
-        }
-    }
-    return true;
-}
-
-ZipReadResult read_stored_zip(const fs::path& input_path)
-{
-    ZipReadResult result;
-    std::vector<unsigned char> data = read_bytes(input_path);
-    std::size_t offset = 0;
-
-    while (offset + 30 <= data.size()) {
-        std::uint32_t signature = read_le32(data, offset);
-        if (signature == 0x02014b50u || signature == 0x06054b50u) {
-            break;
-        }
-        if (signature != 0x04034b50u) {
-            result.code = "mod_zip_malformed_info_json";
-            result.reason = "mod ZIP local header is not readable";
-            return result;
-        }
-
-        std::uint16_t method = read_le16(data, offset + 8);
-        std::uint32_t compressed_size = read_le32(data, offset + 18);
-        std::uint32_t uncompressed_size = read_le32(data, offset + 22);
-        std::uint16_t name_size = read_le16(data, offset + 26);
-        std::uint16_t extra_size = read_le16(data, offset + 28);
-        std::size_t name_offset = offset + 30;
-        std::size_t data_offset = name_offset + name_size + extra_size;
-        std::size_t next_offset = data_offset + compressed_size;
-
-        if (method != 0 || compressed_size != uncompressed_size) {
-            result.code = "mod_zip_malformed_info_json";
-            result.reason = "only stored ZIP entries are supported in deterministic fixtures";
-            return result;
-        }
-        if (data_offset > data.size() || next_offset > data.size()) {
-            result.code = "mod_zip_malformed_info_json";
-            result.reason = "mod ZIP entry size is invalid";
-            return result;
-        }
-
-        std::string name(
-            data.begin() + static_cast<std::ptrdiff_t>(name_offset),
-            data.begin() + static_cast<std::ptrdiff_t>(name_offset + name_size)
-        );
-        if (!archive_entry_is_safe(name)) {
-            result.code = "unsafe_archive_path";
-            result.reason = "mod ZIP contains an unsafe entry path";
-            return result;
-        }
-
-        ZipEntry entry;
-        entry.name = name;
-        entry.data.assign(
-            data.begin() + static_cast<std::ptrdiff_t>(data_offset),
-            data.begin() + static_cast<std::ptrdiff_t>(next_offset)
-        );
-        result.entries.push_back(entry);
-        offset = next_offset;
-    }
-
-    if (result.entries.empty()) {
-        result.code = "mod_zip_malformed_info_json";
-        result.reason = "mod ZIP contains no readable entries";
-        return result;
-    }
-    result.ok = true;
-    return result;
-}
-
-const ZipEntry* find_mod_info_entry(const std::vector<ZipEntry>& entries)
-{
-    for (const ZipEntry& entry : entries) {
-        if (entry.name == "info.json") {
-            return &entry;
-        }
-    }
-    for (const ZipEntry& entry : entries) {
-        const std::string suffix = "/info.json";
-        if (entry.name.size() > suffix.size() &&
-            entry.name.compare(entry.name.size() - suffix.size(), suffix.size(), suffix) == 0) {
-            return &entry;
-        }
-    }
-    return nullptr;
 }
 
 std::string trim_copy(const std::string& text)
@@ -612,6 +475,103 @@ std::uint32_t rotate_right(std::uint32_t value, int bits)
     return (value >> bits) | (value << (32 - bits));
 }
 
+class StreamingSha1 {
+public:
+    void update(const unsigned char* data, std::size_t size)
+    {
+        total_bytes_ += size;
+        while (size > 0) {
+            const std::size_t count = std::min(size, block_.size() - block_size_);
+            std::copy(data, data + count, block_.begin() + block_size_);
+            data += count;
+            size -= count;
+            block_size_ += count;
+            if (block_size_ == block_.size()) {
+                transform(block_.data());
+                block_size_ = 0;
+            }
+        }
+    }
+
+    std::string finish()
+    {
+        const std::uint64_t bit_length = total_bytes_ * 8U;
+        const unsigned char marker = 0x80U;
+        update(&marker, 1);
+        const unsigned char zero = 0;
+        while (block_size_ != 56) update(&zero, 1);
+        std::array<unsigned char, 8> length {};
+        for (std::size_t index = 0; index < length.size(); ++index) {
+            length[7 - index] = static_cast<unsigned char>((bit_length >> (index * 8U)) & 0xffU);
+        }
+        update(length.data(), length.size());
+        std::ostringstream out;
+        out << std::hex << std::setfill('0') << std::nouppercase;
+        for (std::uint32_t value : state_) out << std::setw(8) << value;
+        return out.str();
+    }
+
+private:
+    void transform(const unsigned char* block)
+    {
+        std::array<std::uint32_t, 80> words {};
+        for (std::size_t index = 0; index < 16; ++index) {
+            const std::size_t offset = index * 4;
+            words[index] =
+                (static_cast<std::uint32_t>(block[offset]) << 24) |
+                (static_cast<std::uint32_t>(block[offset + 1]) << 16) |
+                (static_cast<std::uint32_t>(block[offset + 2]) << 8) |
+                static_cast<std::uint32_t>(block[offset + 3]);
+        }
+        for (std::size_t index = 16; index < words.size(); ++index) {
+            words[index] = rotate_left(
+                words[index - 3] ^ words[index - 8] ^ words[index - 14] ^ words[index - 16],
+                1);
+        }
+        std::uint32_t a = state_[0];
+        std::uint32_t b = state_[1];
+        std::uint32_t c = state_[2];
+        std::uint32_t d = state_[3];
+        std::uint32_t e = state_[4];
+        for (std::size_t index = 0; index < words.size(); ++index) {
+            std::uint32_t function = 0;
+            std::uint32_t constant = 0;
+            if (index < 20) {
+                function = (b & c) | ((~b) & d);
+                constant = 0x5a827999U;
+            } else if (index < 40) {
+                function = b ^ c ^ d;
+                constant = 0x6ed9eba1U;
+            } else if (index < 60) {
+                function = (b & c) | (b & d) | (c & d);
+                constant = 0x8f1bbcdcU;
+            } else {
+                function = b ^ c ^ d;
+                constant = 0xca62c1d6U;
+            }
+            const std::uint32_t temporary =
+                rotate_left(a, 5) + function + e + constant + words[index];
+            e = d;
+            d = c;
+            c = rotate_left(b, 30);
+            b = a;
+            a = temporary;
+        }
+        state_[0] += a;
+        state_[1] += b;
+        state_[2] += c;
+        state_[3] += d;
+        state_[4] += e;
+    }
+
+    std::array<std::uint32_t, 5> state_ = {
+        0x67452301U, 0xefcdab89U, 0x98badcfeU, 0x10325476U, 0xc3d2e1f0U,
+    };
+    std::array<unsigned char, 64> block_ {};
+    std::size_t block_size_ = 0;
+    std::uint64_t total_bytes_ = 0;
+};
+
 std::string sha1_hex(const std::vector<unsigned char>& input)
 {
     std::vector<unsigned char> message = input;
@@ -855,13 +815,44 @@ ModRef inspect_mod_zip(const fs::path& path)
         );
     }
 
-    ZipReadResult zip = read_stored_zip(path);
-    if (!zip.ok) {
-        mark_refused(mod, zip.code, zip.reason, mod.file_name);
+    facman::archive::Limits archive_limits;
+    facman::archive::Plan archive_plan;
+    facman::archive::Status archive_status = facman::archive::inspect_archive(
+        path,
+        archive_limits,
+        archive_plan);
+    if (!archive_status.ok()) {
+        const bool policy_refusal =
+            archive_status.code.rfind("archive_path_", 0) == 0 ||
+            archive_status.code.rfind("archive_entry_", 0) == 0 ||
+            archive_status.code.find("collision") != std::string::npos ||
+            archive_status.code.find("limit") != std::string::npos;
+        mark_refused(
+            mod,
+            policy_refusal ? "unsafe_archive_path" : "mod_zip_malformed_info_json",
+            policy_refusal ? "Mod ZIP failed production archive safety policy" :
+                "Mod ZIP metadata or content is malformed",
+            archive_status.code + ": " + archive_status.detail);
         return mod;
     }
 
-    const ZipEntry* info_entry = find_mod_info_entry(zip.entries);
+    const facman::archive::Entry* info_entry = nullptr;
+    for (const facman::archive::Entry& entry : archive_plan.entries) {
+        if (!entry.directory && entry.path == "info.json") {
+            info_entry = &entry;
+            break;
+        }
+    }
+    if (info_entry == nullptr) {
+        const std::string suffix = "/info.json";
+        for (const facman::archive::Entry& entry : archive_plan.entries) {
+            if (!entry.directory && entry.path.size() > suffix.size() &&
+                entry.path.compare(entry.path.size() - suffix.size(), suffix.size(), suffix) == 0) {
+                info_entry = &entry;
+                break;
+            }
+        }
+    }
     if (info_entry == nullptr) {
         mark_refused(
             mod,
@@ -872,7 +863,34 @@ ModRef inspect_mod_zip(const fs::path& path)
         return mod;
     }
 
-    std::string info_text(info_entry->data.begin(), info_entry->data.end());
+    constexpr std::uint64_t maximum_info_json_bytes = 1024 * 1024;
+    if (info_entry->expanded_size > maximum_info_json_bytes) {
+        mark_refused(
+            mod,
+            "mod_zip_malformed_info_json",
+            "Mod ZIP info.json exceeds the metadata byte limit",
+            std::to_string(info_entry->expanded_size));
+        return mod;
+    }
+    std::string info_text;
+    info_text.reserve(static_cast<std::size_t>(info_entry->expanded_size));
+    archive_status = facman::archive::stream_entry(
+        archive_plan,
+        info_entry->index,
+        archive_limits,
+        [&](const unsigned char* data, std::size_t size) {
+            if (size > maximum_info_json_bytes - info_text.size()) return false;
+            info_text.append(reinterpret_cast<const char*>(data), size);
+            return true;
+        });
+    if (!archive_status.ok()) {
+        mark_refused(
+            mod,
+            "mod_zip_malformed_info_json",
+            "Mod ZIP info.json could not be streamed and verified",
+            archive_status.code + ": " + archive_status.detail);
+        return mod;
+    }
     JsonReader reader(info_text);
     InfoJson info = reader.parse_info();
     if (!info.ok) {
@@ -1039,12 +1057,25 @@ std::string mod_refusal_json(
 
 std::string sha1_hex_file(const fs::path& path)
 {
-    return sha1_hex(read_bytes(path));
+    std::ifstream input(path, std::ios::binary);
+    if (!input) return "";
+    StreamingSha1 hash;
+    std::array<unsigned char, 64 * 1024> buffer {};
+    while (input) {
+        input.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
+        const std::streamsize count = input.gcount();
+        if (count > 0) hash.update(buffer.data(), static_cast<std::size_t>(count));
+    }
+    return input.eof() ? hash.finish() : "";
 }
 
 std::string sha256_hex_file(const fs::path& path)
 {
-    return sha256_hex(read_bytes(path));
+    try {
+        return facman::base::sha256_hex_file(path);
+    } catch (...) {
+        return "";
+    }
 }
 
 std::string factorio_minor_version(const std::string& version)

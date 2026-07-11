@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_modset_verify.v1.schema.json",
+  "title": "Factorio Modset Verification",
+  "type": "object",
+  "required": ["schema", "instance_id", "status", "problems"],
+  "properties": {
+    "schema": { "const": "factorio.modset_verify.v1" },
+    "instance_id": { "type": "string" },
+    "status": { "enum": ["ok", "error"] },
+    "problems": { "type": "array", "items": { "type": "string" } },
+    "refusal": { "$ref": "../common/refusal.v1.schema.json" }
+  },
+  "additionalProperties": false
+}

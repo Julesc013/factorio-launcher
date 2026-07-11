@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.modset_refusal.v1",
+  "command": "modsets.verify",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unknown_instance",
+    "reason": "modset instance is not registered",
+    "recoverable": true
+  }
+}

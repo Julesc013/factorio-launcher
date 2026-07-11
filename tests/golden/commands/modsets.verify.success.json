@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.modset_verify.v1",
+  "command": "modsets.verify",
+  "instance_id": "modded",
+  "status": "ok",
+  "problems": []
+}

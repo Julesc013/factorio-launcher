@@ -48,6 +48,13 @@ class CliTests(unittest.TestCase):
         self.assertEqual(graph["schema"], "ulk.command_graph.v1")
         commands = {command["command"] for command in graph["commands"]}
         self.assertIn("launch_plan.build", commands)
+        self.assertTrue(
+            {"mods.import", "modsets.lock", "modsets.verify", "modsets.export"}.issubset(commands)
+        )
+        descriptors = {command["command"]: command for command in graph["commands"]}
+        self.assertEqual(descriptors["mods.import"]["effects"], ["workspace_read", "workspace_write"])
+        self.assertEqual(descriptors["modsets.verify"]["dry_run_behavior"], "read_only")
+        self.assertEqual(descriptors["modsets.export"]["owner"], "factorio-launcher")
         self.assertIn("install_refs.scan", commands)
         self.assertIn("install_refs.import", commands)
         self.assertIn("run.preview", commands)

@@ -77,10 +77,7 @@ def validate() -> list[str]:
         text = path.read_text(encoding="utf-8", errors="ignore")
         if "read_stored_zip(" in text or "write_stored_zip(" in text:
             legacy_locations.append(relative)
-    expected_legacy_locations = [
-        "apps/cli/command_dispatch.cpp",
-        "runtime/factorio/mods/flb_factorio_mods.cpp",
-    ]
+    expected_legacy_locations = ["apps/cli/command_dispatch.cpp"]
     if sorted(set(legacy_locations)) != expected_legacy_locations:
         problems.append(
             "legacy ZIP helpers must remain only in the not-yet-migrated consumers: "

@@ -30,6 +30,7 @@ allowed_paths:
   - docs/quality/**
   - tests/fixtures/factorio_mods/**
   - tests/golden/modsets/**
+  - tests/golden/commands/**
   - tests/native/flb_command_bridge_smoke.c
   - tests/test_archive_core.py
   - tests/test_cli.py
@@ -41,6 +42,7 @@ allowed_paths:
   - tools/command_contract_check.py
   - tools/frontend_contract_check.py
   - tools/frontend_parity_check.py
+  - tools/modset_route_check.py
   - tools/refusal_contract_check.py
   - tools/refusal_golden_check.py
   - tools/schema_validate.py

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_mod_ref.v1.schema.json",
+  "title": "Factorio Local Mod Reference",
+  "type": "object",
+  "required": [
+    "schema", "name", "version", "factorio_version", "file_name",
+    "sha1", "sha256", "source", "metadata_source", "enabled",
+    "validation_status", "dependencies", "optional_dependencies",
+    "incompatibilities"
+  ],
+  "properties": {
+    "schema": { "const": "factorio.mod_ref.v1" },
+    "name": { "type": "string" },
+    "title": { "type": "string" },
+    "version": { "type": "string" },
+    "factorio_version": { "type": "string" },
+    "file_name": { "type": "string" },
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source": { "const": "local" },
+    "metadata_source": { "const": "info_json" },
+    "enabled": { "type": "boolean" },
+    "validation_status": { "const": "ok" },
+    "dependencies": { "type": "array" },
+    "optional_dependencies": { "type": "array" },
+    "incompatibilities": { "type": "array" }
+  },
+  "additionalProperties": true
+}

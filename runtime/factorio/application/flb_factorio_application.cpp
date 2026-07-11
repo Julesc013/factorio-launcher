@@ -3,6 +3,7 @@
 #include "fl_path_safety.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_launch_plan.h"
+#include "flb_factorio_modset_operations.h"
 
 #include <filesystem>
 #include <fstream>
@@ -10,12 +11,14 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
 namespace fs = std::filesystem;
 namespace discovery = facman::factorio::discovery;
 namespace launch = facman::factorio::launch;
+namespace mod_operations = facman::factorio::modsets::operations;
 
 namespace {
 
@@ -27,6 +30,10 @@ enum class CommandId {
     launch_plan_build,
     launch_plan_preflight,
     run_preview,
+    mods_import,
+    modsets_lock,
+    modsets_verify,
+    modsets_export,
     unsupported,
 };
 
@@ -54,13 +61,20 @@ struct BuildLaunchPlanRequest {
     std::string instance_id;
 };
 
+using ImportModRequest = mod_operations::ImportRequest;
+using ModsetInstanceRequest = mod_operations::InstanceRequest;
+using ExportModsetRequest = mod_operations::ExportRequest;
+
 using ApplicationPayload = std::variant<
     std::monostate,
     ScanInstallRefsRequest,
     ImportInstallRefRequest,
     InspectInstallRefRequest,
     CreateInstanceRequest,
-    BuildLaunchPlanRequest>;
+    BuildLaunchPlanRequest,
+    ImportModRequest,
+    ModsetInstanceRequest,
+    ExportModsetRequest>;
 
 struct ApplicationRequest {
     CommandId command = CommandId::unsupported;
@@ -72,7 +86,12 @@ using ApplicationOutput = std::variant<
     std::monostate,
     std::string,
     launch::LaunchPlanResult,
-    launch::LaunchPreflightResult>;
+    launch::LaunchPreflightResult,
+    mod_operations::ImportResult,
+    mod_operations::LockResult,
+    mod_operations::VerifyResult,
+    mod_operations::ExportResult,
+    mod_operations::Refusal>;
 
 struct ApplicationResult {
     int status = ULK_STATUS_OK;
@@ -501,6 +520,34 @@ bool decode_request(
         request.payload = std::move(typed);
         return true;
     }
+    case CommandId::mods_import: {
+        if (!validate_fields(payload, {"source_path", "instance_id"}, {}, detail)) return false;
+        ImportModRequest typed;
+        std::string source_path;
+        if (!required_string(payload, "source_path", source_path, detail) ||
+            !required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        typed.source_path = source_path;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::modsets_lock:
+    case CommandId::modsets_verify: {
+        if (!validate_fields(payload, {"instance_id"}, {}, detail)) return false;
+        ModsetInstanceRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::modsets_export: {
+        if (!validate_fields(payload, {"instance_id", "output_path"}, {}, detail)) return false;
+        ExportModsetRequest typed;
+        std::string output_path;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "output_path", output_path, detail)) return false;
+        typed.output_path = output_path;
+        request.payload = std::move(typed);
+        return true;
+    }
     default:
         detail = "unsupported command";
         return false;
@@ -517,6 +564,10 @@ CommandId command_id(ulk_string_view command)
     if (value == "launch_plan.build") return CommandId::launch_plan_build;
     if (value == "launch_plan.preflight") return CommandId::launch_plan_preflight;
     if (value == "run.preview") return CommandId::run_preview;
+    if (value == "mods.import") return CommandId::mods_import;
+    if (value == "modsets.lock") return CommandId::modsets_lock;
+    if (value == "modsets.verify") return CommandId::modsets_verify;
+    if (value == "modsets.export") return CommandId::modsets_export;
     return CommandId::unsupported;
 }
 
@@ -618,6 +669,20 @@ private:
                 "workspace_unavailable",
                 "Workspace root is required");
         }
+        const bool mod_write = request.command == CommandId::mods_import ||
+            request.command == CommandId::modsets_lock ||
+            request.command == CommandId::modsets_export;
+        if (request.dry_run && mod_write) {
+            return refused(
+                safety_refusal(
+                    "command.execute",
+                    "dry_run_write_not_executed",
+                    "Dry-run requests never execute mod or modset writes",
+                    "submit the canonical command with dry_run=false after reviewing its target",
+                    true),
+                "dry_run_write_not_executed",
+                "Dry-run requests never execute mod or modset writes");
+        }
         switch (request.command) {
         case CommandId::install_scan: return scan(std::get<ScanInstallRefsRequest>(request.payload));
         case CommandId::install_import: return import_install(std::get<ImportInstallRefRequest>(request.payload));
@@ -634,6 +699,22 @@ private:
         case CommandId::launch_plan_preflight:
             return preflight_launch_plan(
                 std::get<BuildLaunchPlanRequest>(request.payload));
+        case CommandId::mods_import:
+            return operation_result(mod_operations::import_mod(
+                workspace_,
+                std::get<ImportModRequest>(request.payload)));
+        case CommandId::modsets_lock:
+            return operation_result(mod_operations::lock_modset(
+                workspace_,
+                std::get<ModsetInstanceRequest>(request.payload)));
+        case CommandId::modsets_verify:
+            return operation_result(mod_operations::verify_modset(
+                workspace_,
+                std::get<ModsetInstanceRequest>(request.payload)));
+        case CommandId::modsets_export:
+            return operation_result(mod_operations::export_modset(
+                workspace_,
+                std::get<ExportModsetRequest>(request.payload)));
         default:
             return refused(
                 safety_refusal("command.execute", "invalid_request", "Unsupported application command", "", false),
@@ -886,6 +967,31 @@ private:
         return result;
     }
 
+    template <typename ResultType>
+    ApplicationResult operation_result(
+        const std::variant<ResultType, mod_operations::Refusal>& outcome)
+    {
+        ApplicationResult result;
+        if (std::holds_alternative<mod_operations::Refusal>(outcome)) {
+            const mod_operations::Refusal& refusal = std::get<mod_operations::Refusal>(outcome);
+            result.status = ULK_STATUS_ERROR;
+            result.output = refusal;
+            result.error_code = refusal.code;
+            result.error_message = refusal.reason;
+            return result;
+        }
+        const ResultType& value = std::get<ResultType>(outcome);
+        result.output = value;
+        if constexpr (std::is_same_v<ResultType, mod_operations::VerifyResult>) {
+            if (!value.problems.empty()) {
+                result.status = ULK_STATUS_ERROR;
+                result.error_code = "modset_verification_failed";
+                result.error_message = "Locked modset verification failed";
+            }
+        }
+        return result;
+    }
+
     void ensure_workspace()
     {
         const char* dirs[] = {"installs/refs", "installs/setup_state_refs", "instances", "modsets", "saves", "profiles", "accounts", "audit", "diagnostics/reports", "exports"};
@@ -925,6 +1031,21 @@ private:
         }
         if (std::holds_alternative<launch::LaunchPreflightResult>(output)) {
             return launch::launch_preflight_json(std::get<launch::LaunchPreflightResult>(output));
+        }
+        if (std::holds_alternative<mod_operations::ImportResult>(output)) {
+            return mod_operations::to_json(std::get<mod_operations::ImportResult>(output));
+        }
+        if (std::holds_alternative<mod_operations::LockResult>(output)) {
+            return mod_operations::to_json(std::get<mod_operations::LockResult>(output));
+        }
+        if (std::holds_alternative<mod_operations::VerifyResult>(output)) {
+            return mod_operations::to_json(std::get<mod_operations::VerifyResult>(output));
+        }
+        if (std::holds_alternative<mod_operations::ExportResult>(output)) {
+            return mod_operations::to_json(std::get<mod_operations::ExportResult>(output));
+        }
+        if (std::holds_alternative<mod_operations::Refusal>(output)) {
+            return mod_operations::to_json(std::get<mod_operations::Refusal>(output));
         }
         return "";
     }

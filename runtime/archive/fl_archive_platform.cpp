@@ -3,7 +3,16 @@
 #include "fl_path_safety.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <system_error>
+
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace facman::archive {
 
@@ -141,6 +150,50 @@ Status cleanup_owned_staging_root(const std::filesystem::path& staging_root)
             detail)) {
         return Status::failure("archive_staging_cleanup_failed", detail);
     }
+    return Status::success();
+}
+
+Status commit_owned_staged_file_no_clobber(
+    const std::filesystem::path& staging_root,
+    const std::filesystem::path& staged_file,
+    const std::filesystem::path& destination)
+{
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(staging_root / owned_staging_marker_name(), error) ||
+        !std::filesystem::is_regular_file(staged_file, error) ||
+        staged_file.parent_path().lexically_normal() != staging_root.lexically_normal()) {
+        return Status::failure("archive_staged_file_not_owned", staged_file.u8string());
+    }
+    if (std::filesystem::exists(destination, error)) {
+        return Status::failure("archive_commit_target_exists", destination.u8string());
+    }
+    std::string link_detail;
+    if (facman::base::path_crosses_link_or_reparse_point(destination.parent_path(), link_detail)) {
+        return Status::failure("archive_commit_parent_link_refused", link_detail);
+    }
+#ifdef _WIN32
+    if (!MoveFileW(staged_file.c_str(), destination.c_str())) {
+        return Status::failure(
+            "archive_commit_no_clobber_failed",
+            "MoveFileW failed with error " + std::to_string(GetLastError()));
+    }
+#else
+    if (::link(staged_file.c_str(), destination.c_str()) != 0) {
+        return Status::failure("archive_commit_no_clobber_failed", std::strerror(errno));
+    }
+    if (::unlink(staged_file.c_str()) != 0) {
+        const int unlink_error = errno;
+        if (::unlink(destination.c_str()) == 0) {
+            return Status::failure(
+                "archive_commit_staging_unlink_failed",
+                std::string(std::strerror(unlink_error)) + "; destination rollback succeeded");
+        }
+        return Status::failure(
+            "archive_commit_state_uncertain",
+            std::string("staging unlink failed: ") + std::strerror(unlink_error) +
+                "; destination rollback failed: " + std::strerror(errno));
+    }
+#endif
     return Status::success();
 }
 

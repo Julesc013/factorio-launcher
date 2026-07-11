@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.mod_refusal.v1",
+  "command": "mods.import",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unsafe_archive_path",
+    "reason": "mod archive is unsafe",
+    "recoverable": true
+  }
+}

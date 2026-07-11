@@ -1,0 +1,72 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 35
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 35
+
+## CHANGED_FILES
+
+- allowed: `.aide/queue/FACMAN-MODSET-ARCHIVE-ROUTE-03/evidence/remaining-risks.md` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-MODSET-ARCHIVE-ROUTE-03/status.yaml` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-MODSET-ARCHIVE-ROUTE-03/task.yaml` (M; matches active task allowed path)
+- allowed: `CMakeLists.txt` (M; matches active task allowed path)
+- allowed: `apps/cli/command_dispatch.cpp` (M; matches active task allowed path)
+- allowed: `contracts/command/frontend/frontend.required_commands.v1.toml` (M; matches active task allowed path)
+- allowed: `contracts/refusal/refusal_codes.v1.toml` (M; matches active task allowed path)
+- allowed: `runtime/archive/fl_archive_platform.cpp` (M; matches active task allowed path)
+- allowed: `runtime/archive/fl_archive_platform.h` (M; matches active task allowed path)
+- allowed: `runtime/factorio/application/flb_factorio_application.cpp` (M; matches active task allowed path)
+- allowed: `runtime/factorio/binding/flb_api.c` (M; matches active task allowed path)
+- allowed: `runtime/factorio/mods/flb_factorio_mods.cpp` (M; matches active task allowed path)
+- allowed: `tests/native/flb_command_bridge_smoke.c` (M; matches active task allowed path)
+- allowed: `tests/test_cli.py` (M; matches active task allowed path)
+- allowed: `tests/test_modzip_depth.py` (M; matches active task allowed path)
+- allowed: `tools/archive_core_check.py` (M; matches active task allowed path)
+- allowed: `tools/command_contract_check.py` (M; matches active task allowed path)
+- allowed: `tools/frontend_contract_check.py` (M; matches active task allowed path)
+- allowed: `tools/strict_check.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-MODSET-ARCHIVE-ROUTE-03/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-MODSET-ARCHIVE-ROUTE-03/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/mods.import.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/modsets.export.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/modsets.verify.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/schema/factorio/factorio_mod_ref.v1.schema.json` (??; matches active task allowed path)
+- allowed: `contracts/schema/factorio/factorio_modset_export.v1.schema.json` (??; matches active task allowed path)
+- allowed: `contracts/schema/factorio/factorio_modset_verify.v1.schema.json` (??; matches active task allowed path)
+- allowed: `runtime/factorio/modsets/flb_factorio_modset_operations.cpp` (??; matches active task allowed path)
+- allowed: `runtime/factorio/modsets/flb_factorio_modset_operations.h` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/mods.import.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/mods.import.success.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/modsets.export.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/modsets.verify.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/modsets.verify.success.json` (??; matches active task allowed path)
+- allowed: `tools/modset_route_check.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.

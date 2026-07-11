@@ -161,8 +161,12 @@ target_link_libraries(flb_factorio_diagnostics_static PUBLIC facman_base_static)
 add_library(flb_factorio_mods_static STATIC runtime/factorio/mods/flb_factorio_mods.cpp)
 target_compile_features(flb_factorio_mods_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_mods_static PUBLIC runtime/factorio/mods)
+target_link_libraries(flb_factorio_mods_static PUBLIC facman_archive_static facman_base_static)
 
-add_library(flb_factorio_modsets_static STATIC runtime/factorio/modsets/flb_factorio_modsets.cpp)
+add_library(flb_factorio_modsets_static STATIC
+  runtime/factorio/modsets/flb_factorio_modsets.cpp
+  runtime/factorio/modsets/flb_factorio_modset_operations.cpp
+)
 target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_modsets_static PUBLIC runtime/factorio/modsets runtime/factorio/mods)
 target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static)
@@ -176,6 +180,7 @@ target_link_libraries(flb_factorio_application_static PUBLIC
   facman_base_static
   flb_factorio_discovery_static
   flb_factorio_launch_static
+  flb_factorio_modsets_static
   ulk_static
 )
 

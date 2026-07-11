@@ -580,3 +580,42 @@ severity = "blocked"
 effect = "workspace_read"
 retryable = false
 message = "The required redaction policy is malformed or unsupported."
+
+[[code]]
+id = "mod_zip_source_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The supplied local mod source is not a regular ZIP file."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_source_changed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The local mod source changed while FacMan was staging it."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "mod_staging_verification_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The staged mod did not match the inspected source metadata."
+suggested_next_command = "facman mods import <mod.zip> --instance <id> --json"
+
+[[code]]
+id = "modset_verification_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The local modset did not pass lock, metadata, dependency, and archive verification."
+suggested_next_command = "facman modsets verify <instance-id> --json"
+
+[[code]]
+id = "dry_run_write_not_executed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A dry-run request did not execute a persistent mod or modset write."

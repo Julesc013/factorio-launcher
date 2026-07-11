@@ -1,0 +1,7 @@
+{
+  "schema": "factorio.mod_ref.v1",
+  "command": "mods.import",
+  "name": "example",
+  "version": "1.0.0",
+  "status": "ok"
+}
