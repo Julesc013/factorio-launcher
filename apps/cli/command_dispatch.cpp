@@ -7,6 +7,7 @@
 #include "fl_command_client_cabi.h"
 #include "fl_path_safety.h"
 #include "fl_runtime_verify.h"
+#include "fl_transaction.h"
 #include "usk/usk_api.h"
 
 #include <algorithm>
@@ -1378,6 +1379,7 @@ std::string diagnostic_doctor_report_json(const CliOptions& options)
 {
     std::vector<fs::path> installs = install_ref_files(options.workspace);
     std::vector<fs::path> instances = instance_manifest_files(options.workspace);
+    const std::size_t incomplete_transactions = facman::transaction::incomplete_count(options.workspace);
     std::ostringstream out;
     out << "{\n";
     out << "  \"schema\": \"factorio.diagnostic_report.v1\",\n";
@@ -1386,6 +1388,7 @@ std::string diagnostic_doctor_report_json(const CliOptions& options)
     out << "  \"workspace\": \"$FACMAN_WORKSPACE\",\n";
     out << "  \"registered_installs\": " << installs.size() << ",\n";
     out << "  \"instances\": " << instances.size() << ",\n";
+    out << "  \"incomplete_transactions\": " << incomplete_transactions << ",\n";
     out << "  \"problems\": " << (installs.empty() ? "[\"no install references registered yet\"]" : "[]") << ",\n";
     out << "  \"suggested_fixes\": " << (installs.empty()
         ? "[\"run facman installs scan --search-root <folder> --json or facman installs import <factorio-dir> --id <install-id>\"]"
@@ -2022,6 +2025,7 @@ int command_doctor(const CliOptions& options)
 {
     std::vector<fs::path> installs = install_ref_files(options.workspace);
     std::vector<fs::path> instances = instance_manifest_files(options.workspace);
+    const std::size_t incomplete_transactions = facman::transaction::incomplete_count(options.workspace);
     bool has_discovery_roots = has_explicit_scan_roots(options.args);
     std::vector<InstallRef> discovery = has_discovery_roots ? scan_install_candidates(options.args) : std::vector<InstallRef>();
     bool invalid_candidates = false;
@@ -2030,7 +2034,7 @@ int command_doctor(const CliOptions& options)
             invalid_candidates = true;
         }
     }
-    bool warning = installs.empty() || invalid_candidates;
+    bool warning = installs.empty() || invalid_candidates || incomplete_transactions != 0;
     std::string diagnostic_bundle_output = option_value(options.args, "--diagnostic-bundle");
     bool diagnostic_bundle_written = false;
     std::size_t diagnostic_bundle_file_count = 0;
@@ -2107,6 +2111,7 @@ int command_doctor(const CliOptions& options)
         std::cout << "  \"workspace\": " << quote(path_string(options.workspace)) << ",\n";
         std::cout << "  \"registered_installs\": " << installs.size() << ",\n";
         std::cout << "  \"instances\": " << instances.size() << ",\n";
+        std::cout << "  \"incomplete_transactions\": " << incomplete_transactions << ",\n";
         std::cout << "  \"problems\": [";
         bool wrote_problem = false;
         if (installs.empty()) {
@@ -2118,6 +2123,11 @@ int command_doctor(const CliOptions& options)
                 std::cout << ",";
             }
             std::cout << quote("invalid Factorio install candidates found");
+            wrote_problem = true;
+        }
+        if (incomplete_transactions != 0) {
+            if (wrote_problem) std::cout << ",";
+            std::cout << quote("incomplete workspace transactions require recovery inspection");
             wrote_problem = true;
         }
         std::cout << "],\n";
@@ -2132,6 +2142,12 @@ int command_doctor(const CliOptions& options)
                 std::cout << ",";
             }
             std::cout << quote("inspect invalid candidates and choose a valid Factorio install root");
+            wrote_fix = true;
+        }
+        if (incomplete_transactions != 0) {
+            if (wrote_fix) std::cout << ",";
+            std::cout << quote("run facman workspace recovery inspect --json");
+            wrote_fix = true;
         }
         std::cout << "],\n";
         std::cout << "  \"checks\": [";
@@ -2140,6 +2156,8 @@ int command_doctor(const CliOptions& options)
         if (has_discovery_roots) {
             std::cout << ",{\"id\":\"discovery_candidates\",\"status\":\"" << (invalid_candidates ? "warning" : "ok") << "\"}";
         }
+        std::cout << ", {\"id\":\"workspace_transactions\",\"status\":\""
+            << (incomplete_transactions == 0 ? "ok" : "warning") << "\"}";
         std::cout << "],\n";
         std::cout << "  \"warnings\": ";
         if (warning) {
@@ -2154,6 +2172,11 @@ int command_doctor(const CliOptions& options)
                     std::cout << ",";
                 }
                 std::cout << quote("invalid Factorio install candidates found");
+                wrote_warning = true;
+            }
+            if (incomplete_transactions != 0) {
+                if (wrote_warning) std::cout << ",";
+                std::cout << quote("incomplete workspace transactions require recovery inspection");
             }
             std::cout << "]";
         } else {
@@ -2933,6 +2956,39 @@ int command_run(const CliOptions& options)
     return routed.status == ULK_STATUS_OK ? 0 : 1;
 }
 
+int command_workspace(const CliOptions& options)
+{
+    if (options.args.size() < 3 || options.args[1] != "recovery") {
+        std::cerr << "workspace recovery requires inspect, plan, or apply\n";
+        return 2;
+    }
+    const std::string operation = options.args[2];
+    if (operation != "inspect" && operation != "plan" && operation != "apply") {
+        std::cerr << "workspace recovery requires inspect, plan, or apply\n";
+        return 2;
+    }
+    std::ostringstream request;
+    if (operation == "inspect") {
+        request << "{}";
+    } else {
+        if (options.args.size() < 4) {
+            std::cerr << "workspace recovery " << operation << " requires <transaction-id>\n";
+            return 2;
+        }
+        request << "{\"transaction_id\":" << quote(options.args[3]) << "}";
+    }
+    const std::string command_id = "workspace.recovery." + operation;
+    const RoutedCommandResult routed = route_factorio_command(
+        options.workspace,
+        command_id.c_str(),
+        request.str(),
+        operation != "apply");
+    if (has_flag(options.args, "--json")) std::cout << routed.payload << "\n";
+    else if (routed.status == ULK_STATUS_OK) std::cout << routed.payload << "\n";
+    else std::cerr << "Refused: " << json_string_value(routed.payload, "reason") << "\n";
+    return routed.status == ULK_STATUS_OK ? 0 : 1;
+}
+
 } // namespace
 
 extern "C" int flaunch_dispatch_command(int argc, char** argv)
@@ -2988,6 +3044,9 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     }
     if (command == "saves") {
         return command_saves(options);
+    }
+    if (command == "workspace") {
+        return command_workspace(options);
     }
     if (command == "export") {
         return command_export(options);

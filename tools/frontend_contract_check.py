@@ -36,6 +36,9 @@ EXPECTED_DEFERRED = {
     "saves.clone",
     "instance.export",
     "instance.import",
+    "workspace.recovery.inspect",
+    "workspace.recovery.plan",
+    "workspace.recovery.apply",
     "setup.preview",
 }
 

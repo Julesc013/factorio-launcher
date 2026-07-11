@@ -3,6 +3,7 @@
 #include "fl_archive.h"
 #include "fl_archive_platform.h"
 #include "fl_path_safety.h"
+#include "fl_transaction.h"
 
 #include <algorithm>
 #include <array>
@@ -13,6 +14,7 @@
 
 namespace facman::factorio::modsets::operations {
 namespace fs = std::filesystem;
+namespace tx = facman::transaction;
 namespace {
 
 struct Instance {
@@ -301,13 +303,29 @@ ImportOutcome import_mod(const fs::path& workspace, const ImportRequest& request
     const fs::file_time_type source_time = fs::last_write_time(request.source_path);
     const std::string source_sha256 = sha256_hex_file(request.source_path);
     const fs::path staging = unique_staging(mods_root, ".facman-mod-import-");
+    tx::Record transaction;
+    transaction.command_id = command;
+    transaction.target = destination;
+    transaction.sources = {request.source_path};
+    transaction.staging_roots = {staging};
+    transaction.expected_hashes = {source_sha256};
+    transaction.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+    std::string journal_detail;
+    if (!tx::begin(workspace, transaction, journal_detail) ||
+        !tx::advance(workspace, transaction, "validated", "request_validated", journal_detail) ||
+        !tx::advance(workspace, transaction, "planned", "source_and_target_validated", journal_detail)) {
+        return refuse(command, request.instance_id, "recovery_write_refused", "Mod import journal preparation failed", journal_detail);
+    }
     facman::archive::Status status = facman::archive::create_owned_staging_root(staging);
     if (!status.ok()) {
+        (void)tx::fail(workspace, transaction, "failed_before_commit", status.detail, journal_detail);
         return refuse(command, request.instance_id, "persistent_write_refused", "Could not create owned mod staging", status.code + ": " + status.detail);
     }
+    if (!tx::advance(workspace, transaction, "staging", "owned_staging_created", journal_detail)) return refuse(command, request.instance_id, "recovery_write_refused", "Mod import staging journal update failed", journal_detail);
     const fs::path staged_file = staging / request.source_path.filename();
     auto fail_staging = [&](const std::string& code, const std::string& reason, const std::string& detail) -> ImportOutcome {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        (void)tx::fail(workspace, transaction, "failed_before_commit", detail, journal_detail);
         return refuse(command, request.instance_id, code, reason, detail);
     };
     if (!stream_copy(request.source_path, staged_file) || fs::file_size(request.source_path) != source_size ||
@@ -320,12 +338,19 @@ ImportOutcome import_mod(const fs::path& workspace, const ImportRequest& request
     if (!staged_mod.valid || staged_mod.name != mod.name || staged_mod.version != mod.version) {
         return fail_staging("mod_staging_verification_failed", "Staged mod did not match inspected source", staged_mod.refusal_detail);
     }
+    if (!tx::advance(workspace, transaction, "staged", "source_copied", journal_detail) ||
+        !tx::advance(workspace, transaction, "verified", "staged_mod_verified", journal_detail) ||
+        !tx::advance(workspace, transaction, "committing", "no_clobber_commit_started", journal_detail)) {
+        return fail_staging("recovery_write_refused", "Mod import journal update failed", journal_detail);
+    }
     status = facman::archive::commit_owned_staged_file_no_clobber(staging, staged_file, destination);
     if (!status.ok()) return fail_staging("persistent_write_refused", "Mod no-clobber commit failed", status.code + ": " + status.detail);
+    if (!tx::advance(workspace, transaction, "committed", "mod_file_committed", journal_detail)) return refuse(command, request.instance_id, "transaction_recovery_required", "Mod committed but journal update failed", journal_detail, false);
     status = facman::archive::cleanup_owned_staging_root(staging);
     if (!status.ok()) {
         return refuse(command, request.instance_id, "persistent_write_refused", "Committed mod but staging cleanup requires review", status.code + ": " + status.detail, false);
     }
+    if (!tx::complete(workspace, transaction, journal_detail)) return refuse(command, request.instance_id, "transaction_recovery_required", "Mod committed but journal close requires recovery", journal_detail, false);
     mod.file_path = destination;
     return ImportResult {request.instance_id, request.source_path, destination, mod};
 }
@@ -399,6 +424,19 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         entries.push_back({"mods/" + mod.file_name, mod.file_path, false});
     }
     const fs::path staging = unique_staging(output_parent, ".facman-modset-export-");
+    tx::Record transaction;
+    transaction.command_id = command;
+    transaction.target = request.output_path;
+    transaction.sources = {instance.root};
+    transaction.staging_roots = {staging};
+    transaction.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+    std::string journal_detail;
+    if (!tx::begin(workspace, transaction, journal_detail) ||
+        !tx::advance(workspace, transaction, "validated", "request_validated", journal_detail) ||
+        !tx::advance(workspace, transaction, "planned", "verified_modset_and_target_validated", journal_detail) ||
+        !tx::advance(workspace, transaction, "staging", "owned_staging_selected", journal_detail)) {
+        return refuse(command, request.instance_id, "recovery_write_refused", "Modset export journal preparation failed", journal_detail);
+    }
     facman::archive::WriteOptions options;
     options.method = facman::archive::CompressionMethod::deflate;
     options.reproducible = true;
@@ -410,7 +448,13 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         options,
         written);
     if (!status.ok()) {
+        (void)tx::fail(workspace, transaction, "failed_before_commit", status.detail, journal_detail);
         return refuse(command, request.instance_id, "persistent_write_refused", "Modset archive staging failed", status.code + ": " + status.detail);
+    }
+    if (!tx::advance(workspace, transaction, "staged", "archive_written", journal_detail) ||
+        !tx::advance(workspace, transaction, "verified", "archive_self_verified", journal_detail) ||
+        !tx::advance(workspace, transaction, "committing", "no_clobber_commit_started", journal_detail)) {
+        return refuse(command, request.instance_id, "recovery_write_refused", "Modset export journal update failed", journal_detail);
     }
     status = facman::archive::commit_owned_staged_file_no_clobber(
         staging,
@@ -418,12 +462,23 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
         request.output_path);
     if (!status.ok()) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        (void)tx::fail(workspace, transaction, "failed_before_commit", status.detail, journal_detail);
         return refuse(command, request.instance_id, "persistent_write_refused", "Modset archive commit failed", status.code + ": " + status.detail);
+    }
+    if (!tx::advance(workspace, transaction, "committed", "modset_archive_committed", journal_detail)) {
+        return refuse(
+            command,
+            request.instance_id,
+            "transaction_recovery_required",
+            "Modset export committed but journal update failed",
+            journal_detail,
+            false);
     }
     status = facman::archive::cleanup_owned_staging_root(staging);
     if (!status.ok()) {
         return refuse(command, request.instance_id, "persistent_write_refused", "Committed export staging cleanup requires review", status.code + ": " + status.detail, false);
     }
+    if (!tx::complete(workspace, transaction, journal_detail)) return refuse(command, request.instance_id, "transaction_recovery_required", "Modset export committed but journal close requires recovery", journal_detail, false);
     return ExportResult {request.instance_id, request.output_path, entries.size()};
 }
 

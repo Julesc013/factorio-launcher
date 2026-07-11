@@ -54,6 +54,9 @@ class CliTests(unittest.TestCase):
         self.assertTrue(
             {"saves.list", "saves.backup", "saves.clone", "instance.export", "instance.import"}.issubset(commands)
         )
+        self.assertTrue(
+            {"workspace.recovery.inspect", "workspace.recovery.plan", "workspace.recovery.apply"}.issubset(commands)
+        )
         descriptors = {command["command"]: command for command in graph["commands"]}
         self.assertEqual(descriptors["mods.import"]["effects"], ["workspace_read", "workspace_write"])
         self.assertEqual(descriptors["modsets.verify"]["dry_run_behavior"], "read_only")
@@ -449,6 +452,12 @@ class CliTests(unittest.TestCase):
             restored_manifest = json.loads((restored_root / "instance.v1.json").read_text(encoding="utf-8"))
             self.assertEqual(Path(restored_manifest["local_data_root"]), restored_root)
             self.assertEqual(tree_snapshot(fixture_root), fixture_before)
+            code, stdout, stderr = invoke(
+                ["--workspace", tmp, "workspace", "recovery", "inspect", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            self.assertTrue(json.loads(stdout)["transactions"])
+            self.assertTrue(all(item["state"] == "complete" for item in json.loads(stdout)["transactions"]))
 
     def test_save_roundtrip_refusals_are_structured_and_non_mutating(self) -> None:
         fixtures_before = tree_snapshot(SAVE_FIXTURES)

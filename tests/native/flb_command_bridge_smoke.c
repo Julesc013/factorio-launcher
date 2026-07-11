@@ -161,6 +161,9 @@ int main(void)
         run_command(context, "command_graph.inspect", 1, "\"command\":\"saves.clone\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"instance.export\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"instance.import\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.inspect\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.plan\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.apply\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"owner\":\"factorio-launcher\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "factorio_launch_preflight.v1.schema.json") != 0) {
         return 34;
@@ -265,7 +268,11 @@ int main(void)
         run_dry_run_write_refusal(
             context,
             "instance.import",
-            "{\"source_path\":\"instance.zip\"}") != 0) {
+            "{\"source_path\":\"instance.zip\"}") != 0 ||
+        run_dry_run_write_refusal(
+            context,
+            "workspace.recovery.apply",
+            "{\"transaction_id\":\"tx-example\"}") != 0) {
         return 38;
     }
 

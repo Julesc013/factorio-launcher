@@ -5,6 +5,7 @@
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
 #include "flb_factorio_save_operations.h"
+#include "fl_transaction.h"
 
 #include <filesystem>
 #include <fstream>
@@ -21,6 +22,7 @@ namespace discovery = facman::factorio::discovery;
 namespace launch = facman::factorio::launch;
 namespace mod_operations = facman::factorio::modsets::operations;
 namespace save_operations = facman::factorio::saves::operations;
+namespace transactions = facman::transaction;
 
 namespace {
 
@@ -41,6 +43,9 @@ enum class CommandId {
     saves_clone,
     instance_export,
     instance_import,
+    recovery_inspect,
+    recovery_plan,
+    recovery_apply,
     unsupported,
 };
 
@@ -68,6 +73,8 @@ struct BuildLaunchPlanRequest {
     std::string instance_id;
 };
 
+struct RecoveryRequest { std::string transaction_id; };
+
 using ImportModRequest = mod_operations::ImportRequest;
 using ModsetInstanceRequest = mod_operations::InstanceRequest;
 using ExportModsetRequest = mod_operations::ExportRequest;
@@ -91,7 +98,8 @@ using ApplicationPayload = std::variant<
     BackupSaveRequest,
     CloneSaveRequest,
     ExportInstanceRequest,
-    ImportInstanceRequest>;
+    ImportInstanceRequest,
+    RecoveryRequest>;
 
 struct ApplicationRequest {
     CommandId command = CommandId::unsupported;
@@ -114,7 +122,9 @@ using ApplicationOutput = std::variant<
     save_operations::CloneResult,
     save_operations::ExportResult,
     save_operations::ImportResult,
-    save_operations::Refusal>;
+    save_operations::Refusal,
+    transactions::RecoveryResult,
+    transactions::Refusal>;
 
 struct ApplicationResult {
     int status = ULK_STATUS_OK;
@@ -618,6 +628,19 @@ bool decode_request(
         request.payload = std::move(typed);
         return true;
     }
+    case CommandId::recovery_inspect: {
+        if (!validate_fields(payload, {}, {}, detail)) return false;
+        request.payload = RecoveryRequest {};
+        return true;
+    }
+    case CommandId::recovery_plan:
+    case CommandId::recovery_apply: {
+        if (!validate_fields(payload, {"transaction_id"}, {}, detail)) return false;
+        RecoveryRequest typed;
+        if (!required_string(payload, "transaction_id", typed.transaction_id, detail)) return false;
+        request.payload = std::move(typed);
+        return true;
+    }
     default:
         detail = "unsupported command";
         return false;
@@ -643,6 +666,9 @@ CommandId command_id(ulk_string_view command)
     if (value == "saves.clone") return CommandId::saves_clone;
     if (value == "instance.export") return CommandId::instance_export;
     if (value == "instance.import") return CommandId::instance_import;
+    if (value == "workspace.recovery.inspect") return CommandId::recovery_inspect;
+    if (value == "workspace.recovery.plan") return CommandId::recovery_plan;
+    if (value == "workspace.recovery.apply") return CommandId::recovery_apply;
     return CommandId::unsupported;
 }
 
@@ -750,7 +776,8 @@ private:
             request.command == CommandId::saves_backup ||
             request.command == CommandId::saves_clone ||
             request.command == CommandId::instance_export ||
-            request.command == CommandId::instance_import;
+            request.command == CommandId::instance_import ||
+            request.command == CommandId::recovery_apply;
         if (request.dry_run && data_write) {
             return refused(
                 safety_refusal(
@@ -814,6 +841,16 @@ private:
             return save_operation_result(save_operations::import_instance(
                 workspace_,
                 std::get<ImportInstanceRequest>(request.payload)));
+        case CommandId::recovery_inspect:
+            return recovery_result(transactions::inspect(workspace_), "workspace.recovery.inspect");
+        case CommandId::recovery_plan:
+            return recovery_result(
+                transactions::plan(workspace_, std::get<RecoveryRequest>(request.payload).transaction_id),
+                "workspace.recovery.plan");
+        case CommandId::recovery_apply:
+            return recovery_result(
+                transactions::apply(workspace_, std::get<RecoveryRequest>(request.payload).transaction_id),
+                "workspace.recovery.apply");
         default:
             return refused(
                 safety_refusal("command.execute", "invalid_request", "Unsupported application command", "", false),
@@ -969,10 +1006,26 @@ private:
                 "staging_target_exists",
                 "Instance staging target already exists");
         }
+        transactions::Record transaction;
+        transaction.command_id = "instance.create";
+        transaction.target = target.path;
+        transaction.sources = {install.root};
+        transaction.staging_roots = {staging};
+        transaction.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+        std::string journal_error;
+        if (!transactions::begin(workspace_, transaction, journal_error) ||
+            !transactions::advance(workspace_, transaction, "validated", "request_validated", journal_error) ||
+            !transactions::advance(workspace_, transaction, "planned", "target_and_install_validated", journal_error)) {
+            return refused(safety_refusal("instances.create", "recovery_write_refused", "Instance journal preparation failed", journal_error, true), "recovery_write_refused", journal_error);
+        }
         fs::create_directories(staging);
         std::string error;
         if (!facman::base::write_text_new_atomic(staging / ".facman-staging.v1", "facman-instance-staging-v1\n", error)) {
+            (void)transactions::fail(workspace_, transaction, "failed_before_commit", error, journal_error);
             return refused(safety_refusal("instances.create", "persistent_write_refused", "Staging marker failed", error, true), "persistent_write_refused", error);
+        }
+        if (!transactions::advance(workspace_, transaction, "staging", "owned_staging_created", journal_error)) {
+            return refused(safety_refusal("instances.create", "recovery_write_refused", "Instance staging journal update failed", journal_error, true), "recovery_write_refused", journal_error);
         }
         const char* dirs[] = {"config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "exports", "cache", "locks"};
         for (const char* dir : dirs) fs::create_directories(staging / dir);
@@ -989,13 +1042,32 @@ private:
                 launch::effective_config_ini(launch_instance, launch_install),
                 error) &&
             facman::base::write_text_new_atomic(staging / "instance.v1.json", instance_json(instance), error);
-        if (!staged || !facman::base::commit_directory_no_clobber(staging, target.path, error)) {
+        if (!staged ||
+            !transactions::advance(workspace_, transaction, "staged", "instance_files_staged", journal_error) ||
+            !transactions::advance(workspace_, transaction, "verified", "instance_configuration_verified", journal_error) ||
+            !transactions::advance(workspace_, transaction, "committing", "no_clobber_commit_started", journal_error) ||
+            !facman::base::commit_directory_no_clobber(staging, target.path, error)) {
             std::string cleanup;
             (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup);
+            (void)transactions::fail(workspace_, transaction, "failed_before_commit", error.empty() ? journal_error : error, journal_error);
             return refused(safety_refusal("instances.create", "persistent_write_refused", "Instance commit failed", error, true), "persistent_write_refused", error);
+        }
+        if (!transactions::advance(workspace_, transaction, "committed", "instance_directory_committed", journal_error)) {
+            return refused(safety_refusal("instances.create", "transaction_recovery_required", "Instance committed but journal update failed", journal_error, false), "transaction_recovery_required", journal_error);
         }
         std::error_code marker_error;
         fs::remove(target.path / ".facman-staging.v1", marker_error);
+        if (marker_error || !transactions::complete(workspace_, transaction, journal_error)) {
+            return refused(
+                safety_refusal(
+                    "instances.create",
+                    "transaction_recovery_required",
+                    "Instance committed but finalization requires recovery",
+                    marker_error ? marker_error.message() : journal_error,
+                    false),
+                "transaction_recovery_required",
+                journal_error);
+        }
         ApplicationResult result;
         result.output = instance_json(instance);
         return result;
@@ -1108,6 +1180,22 @@ private:
         return result;
     }
 
+    ApplicationResult recovery_result(const transactions::Outcome& outcome, const std::string& command)
+    {
+        ApplicationResult result;
+        if (std::holds_alternative<transactions::Refusal>(outcome)) {
+            const transactions::Refusal& refusal = std::get<transactions::Refusal>(outcome);
+            result.status = ULK_STATUS_ERROR;
+            result.output = refusal;
+            result.error_code = refusal.code;
+            result.error_message = refusal.reason;
+            recovery_command_ = command;
+            return result;
+        }
+        result.output = std::get<transactions::RecoveryResult>(outcome);
+        return result;
+    }
+
     void ensure_workspace()
     {
         const char* dirs[] = {"installs/refs", "installs/setup_state_refs", "instances", "modsets", "saves", "profiles", "accounts", "audit", "diagnostics/reports", "exports"};
@@ -1181,6 +1269,12 @@ private:
         if (std::holds_alternative<save_operations::Refusal>(output)) {
             return save_operations::to_json(std::get<save_operations::Refusal>(output));
         }
+        if (std::holds_alternative<transactions::RecoveryResult>(output)) {
+            return std::get<transactions::RecoveryResult>(output).json;
+        }
+        if (std::holds_alternative<transactions::Refusal>(output)) {
+            return transactions::to_json(std::get<transactions::Refusal>(output), recovery_command_);
+        }
         return "";
     }
 
@@ -1203,6 +1297,7 @@ private:
     fs::path workspace_;
     std::string response_json_;
     std::string error_message_;
+    std::string recovery_command_;
 };
 
 } // namespace

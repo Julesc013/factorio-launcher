@@ -1,0 +1,1 @@
+{"schema":"facman.workspace_recovery.v1","command":"workspace.recovery.plan","transactions":[{"transaction_id":"tx-example","command_id":"instance.import","state":"recovery_required","target":"instances/example","target_exists":false,"actions":["remove_owned_staging"]}]}

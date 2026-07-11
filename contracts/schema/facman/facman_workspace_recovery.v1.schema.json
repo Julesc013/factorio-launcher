@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
+  "title": "FacMan Workspace Recovery",
+  "type": "object",
+  "required": ["schema", "command", "transactions"],
+  "properties": {
+    "schema": { "const": "facman.workspace_recovery.v1" },
+    "command": { "enum": ["workspace.recovery.inspect", "workspace.recovery.plan", "workspace.recovery.apply"] },
+    "transactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["transaction_id", "command_id", "state", "target", "target_exists", "actions"],
+        "properties": {
+          "transaction_id": { "type": "string", "minLength": 1 },
+          "command_id": { "type": "string", "minLength": 1 },
+          "state": { "type": "string", "minLength": 1 },
+          "target": { "type": "string" },
+          "target_exists": { "type": "boolean" },
+          "actions": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

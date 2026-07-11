@@ -245,6 +245,24 @@ int flb_context_create_v1(
             "instance.import",
             "[\"workspace_read\",\"workspace_write\"]",
             "contracts/schema/factorio/factorio_instance_import.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "workspace.recovery.inspect",
+            "[\"workspace_read\"]",
+            "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
+            "read_only") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "workspace.recovery.plan",
+            "[\"workspace_read\"]",
+            "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
+            "read_only") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "workspace.recovery.apply",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
             "explicit_persistent_write") != ULK_STATUS_OK) {
         flb_factorio_application_destroy(context->application);
         ulk_context_destroy_v1(context->launcher_context);

@@ -30,6 +30,9 @@ EXPECTED_COMMANDS = {
     "saves.clone",
     "instance.export",
     "instance.import",
+    "workspace.recovery.inspect",
+    "workspace.recovery.plan",
+    "workspace.recovery.apply",
 }
 
 COMMAND_PATTERN = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_-]+)+$")

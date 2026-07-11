@@ -134,6 +134,11 @@ target_include_directories(facman_archive_static PUBLIC runtime/archive)
 target_compile_features(facman_archive_static PUBLIC cxx_std_17)
 target_link_libraries(facman_archive_static PUBLIC facman_base_static miniz_static)
 
+add_library(facman_transaction_static STATIC runtime/transaction/fl_transaction.cpp)
+target_include_directories(facman_transaction_static PUBLIC runtime/transaction runtime/archive runtime/base)
+target_compile_features(facman_transaction_static PUBLIC cxx_std_17)
+target_link_libraries(facman_transaction_static PUBLIC facman_archive_static facman_base_static)
+
 add_library(flaunch_client_static STATIC ${FLAUNCH_CLIENT_SOURCES})
 target_include_directories(flaunch_client_static PUBLIC
   runtime/client
@@ -169,7 +174,7 @@ add_library(flb_factorio_modsets_static STATIC
 )
 target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_modsets_static PUBLIC runtime/factorio/modsets runtime/factorio/mods)
-target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static)
+target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static)
 
 add_library(flb_factorio_saves_static
   runtime/factorio/saves/flb_factorio_save_operations.cpp
@@ -182,6 +187,7 @@ target_include_directories(flb_factorio_saves_static PUBLIC
 target_link_libraries(flb_factorio_saves_static PUBLIC
   facman_archive_static
   facman_base_static
+  facman_transaction_static
   flb_factorio_launch_static
   flb_factorio_modsets_static
 )

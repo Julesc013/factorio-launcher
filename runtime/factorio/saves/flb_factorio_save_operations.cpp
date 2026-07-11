@@ -6,6 +6,7 @@
 #include "fl_sha256.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modsets.h"
+#include "fl_transaction.h"
 
 #include <algorithm>
 #include <array>
@@ -29,6 +30,7 @@
 
 namespace facman::factorio::saves::operations {
 namespace fs = std::filesystem;
+namespace tx = facman::transaction;
 namespace {
 
 struct Instance {
@@ -207,6 +209,43 @@ struct StableCopyResult {
     std::string sha1;
     std::string sha256;
     std::string detail;
+};
+
+class OperationJournal {
+public:
+    bool start(
+        const fs::path& workspace,
+        const std::string& command,
+        const fs::path& target,
+        const std::vector<fs::path>& sources,
+        const std::vector<fs::path>& staging)
+    {
+        workspace_ = workspace;
+        record_.command_id = command;
+        record_.target = target;
+        record_.sources = sources;
+        record_.staging_roots = staging;
+        record_.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+        return tx::begin(workspace_, record_, detail_) &&
+            step("validated", "request_validated") &&
+            step("planned", "target_and_sources_validated");
+    }
+    bool step(const std::string& state, const std::string& completed)
+    {
+        return tx::advance(workspace_, record_, state, completed, detail_);
+    }
+    bool finish() { return tx::complete(workspace_, record_, detail_); }
+    void failed(const std::string& error)
+    {
+        std::string ignored;
+        (void)tx::fail(workspace_, record_, "failed_before_commit", error, ignored);
+    }
+    tx::Record& record() { return record_; }
+    const std::string& detail() const { return detail_; }
+private:
+    fs::path workspace_;
+    tx::Record record_;
+    std::string detail_;
 };
 
 bool stable_copy(const fs::path& source, const fs::path& destination, StableCopyResult& result)
@@ -588,25 +627,45 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
     fs::create_directories(destination.parent_path(), error);
     if (error) return refuse(command, request.instance_id, save.file_name, "persistent_write_refused", "Backup parent could not be created", error.message());
     const fs::path staging = unique_staging(destination.parent_path(), ".facman-save-backup-");
+    OperationJournal journal;
+    if (!journal.start(workspace, command, destination, {save.path}, {staging})) {
+        return refuse(command, request.instance_id, save.file_name, "recovery_write_refused", "Backup journal preparation failed", journal.detail());
+    }
     facman::archive::Status status = facman::archive::create_owned_staging_root(staging);
-    if (!status.ok()) return refuse(command, request.instance_id, save.file_name, "persistent_write_refused", "Backup staging refused", status.code + ": " + status.detail);
+    if (!status.ok()) { journal.failed(status.detail); return refuse(command, request.instance_id, save.file_name, "persistent_write_refused", "Backup staging refused", status.code + ": " + status.detail); }
+    if (!journal.step("staging", "owned_staging_created")) return refuse(command, request.instance_id, save.file_name, "recovery_write_refused", "Backup staging journal update failed", journal.detail());
     const fs::path staged = staging / destination.filename();
     StableCopyResult copied;
     if (!stable_copy(save.path, staged, copied)) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed(copied.detail);
         return refuse(command, request.instance_id, save.file_name, "save_source_changed", "Save source could not be read through one stable handle", copied.detail);
     }
+    if (!journal.step("staged", "stable_source_copied")) return refuse(command, request.instance_id, save.file_name, "recovery_write_refused", "Backup staged journal update failed", journal.detail());
     SaveRef staged_save;
     std::string detail;
     if (!inspect_save(staged, staged_save, detail) || !staged_save.factorio_save_recognized) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed(detail);
         return refuse(command, request.instance_id, save.file_name, "save_malformed", "Staged backup verification failed", detail);
+    }
+    if (!journal.step("verified", "staged_save_verified") ||
+        !journal.step("committing", "no_clobber_commit_started")) {
+        return refuse(
+            command,
+            request.instance_id,
+            save.file_name,
+            "recovery_write_refused",
+            "Backup commit journal update failed",
+            journal.detail());
     }
     status = facman::archive::commit_owned_staged_file_no_clobber(staging, staged, destination);
     if (!status.ok()) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed(status.detail);
         return refuse(command, request.instance_id, save.file_name, "persistent_write_refused", "Backup commit failed", status.code + ": " + status.detail);
     }
+    if (!journal.step("committed", "backup_file_committed")) return refuse(command, request.instance_id, save.file_name, "transaction_recovery_required", "Backup committed but journal update failed", journal.detail(), false);
     const BackupResult result {request.instance_id, save, destination, manifest, utc_now(), copied.sha1, copied.sha256};
     std::string write_detail;
     if (!facman::base::write_text_new_atomic(manifest, to_json(result) + "\n", write_detail)) {
@@ -614,6 +673,7 @@ BackupOutcome backup_save(const fs::path& workspace, const BackupRequest& reques
     }
     status = facman::archive::cleanup_owned_staging_root(staging);
     if (!status.ok()) return refuse(command, request.instance_id, save.file_name, "transaction_recovery_required", "Backup committed but staging cleanup requires recovery", status.detail, false);
+    if (!journal.finish()) return refuse(command, request.instance_id, save.file_name, "transaction_recovery_required", "Backup committed but journal close requires recovery", journal.detail(), false);
     return result;
 }
 
@@ -639,21 +699,35 @@ CloneOutcome clone_save(const fs::path& workspace, const CloneRequest& request)
     const fs::path destination = target.root / "saves" / save.file_name;
     if (fs::exists(destination)) return refuse(command, target.instance_id, save.file_name, "save_clone_target_exists", "Save clone target already exists", path_string(destination));
     const fs::path staging = unique_staging(destination.parent_path(), ".facman-save-clone-");
+    OperationJournal journal;
+    if (!journal.start(workspace, command, destination, {save.path}, {staging})) {
+        return refuse(command, source.instance_id, save.file_name, "recovery_write_refused", "Clone journal preparation failed", journal.detail());
+    }
     facman::archive::Status status = facman::archive::create_owned_staging_root(staging);
-    if (!status.ok()) return refuse(command, source.instance_id, save.file_name, "persistent_write_refused", "Clone staging refused", status.code + ": " + status.detail);
+    if (!status.ok()) { journal.failed(status.detail); return refuse(command, source.instance_id, save.file_name, "persistent_write_refused", "Clone staging refused", status.code + ": " + status.detail); }
+    if (!journal.step("staging", "owned_staging_created")) return refuse(command, source.instance_id, save.file_name, "recovery_write_refused", "Clone staging journal update failed", journal.detail());
     const fs::path staged = staging / destination.filename();
     StableCopyResult copied;
     if (!stable_copy(save.path, staged, copied)) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed(copied.detail);
         return refuse(command, source.instance_id, save.file_name, "save_source_changed", "Save source could not be read through one stable handle", copied.detail);
+    }
+    if (!journal.step("staged", "stable_source_copied") ||
+        !journal.step("verified", "staged_hash_verified") ||
+        !journal.step("committing", "no_clobber_commit_started")) {
+        return refuse(command, source.instance_id, save.file_name, "recovery_write_refused", "Clone journal update failed", journal.detail());
     }
     status = facman::archive::commit_owned_staged_file_no_clobber(staging, staged, destination);
     if (!status.ok()) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        journal.failed(status.detail);
         return refuse(command, source.instance_id, save.file_name, "persistent_write_refused", "Clone commit failed", status.code + ": " + status.detail);
     }
+    if (!journal.step("committed", "clone_file_committed")) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but journal update failed", journal.detail(), false);
     status = facman::archive::cleanup_owned_staging_root(staging);
     if (!status.ok()) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but staging cleanup requires recovery", status.detail, false);
+    if (!journal.finish()) return refuse(command, source.instance_id, save.file_name, "transaction_recovery_required", "Clone committed but journal close requires recovery", journal.detail(), false);
     return CloneResult {source.instance_id, target.instance_id, save, destination, utc_now(), copied.sha1, copied.sha256};
 }
 
@@ -678,8 +752,14 @@ ExportOutcome export_instance(const fs::path& workspace, const ExportRequest& re
     fs::create_directories(destination.parent_path(), error);
     if (error) return refuse(command, request.instance_id, "", "persistent_write_refused", "Export parent could not be created", error.message());
     const fs::path payload_root = unique_staging(destination.parent_path(), ".facman-instance-payload-");
+    const fs::path archive_staging = unique_staging(destination.parent_path(), ".facman-instance-archive-");
+    OperationJournal journal;
+    if (!journal.start(workspace, command, destination, {instance.root}, {payload_root, archive_staging})) {
+        return refuse(command, request.instance_id, "", "recovery_write_refused", "Export journal preparation failed", journal.detail());
+    }
     facman::archive::Status status = facman::archive::create_owned_staging_root(payload_root);
-    if (!status.ok()) return refuse(command, request.instance_id, "", "persistent_write_refused", "Export payload staging refused", status.detail);
+    if (!status.ok()) { journal.failed(status.detail); return refuse(command, request.instance_id, "", "persistent_write_refused", "Export payload staging refused", status.detail); }
+    if (!journal.step("staging", "payload_staging_created")) return refuse(command, request.instance_id, "", "recovery_write_refused", "Export staging journal update failed", journal.detail());
     std::vector<ExportFile> files;
     ExportFile generated;
     if (!write_generated(payload_root, "instance.v1.json", portable_instance_json(instance), generated)) {
@@ -735,7 +815,7 @@ ExportOutcome export_instance(const fs::path& workspace, const ExportRequest& re
     std::vector<facman::archive::WriteEntry> entries;
     entries.push_back({generated.path, generated.source, false});
     for (const ExportFile& file : files) entries.push_back({file.path, file.source, false});
-    const fs::path archive_staging = unique_staging(destination.parent_path(), ".facman-instance-archive-");
+    if (!journal.step("staged", "portable_payload_materialized")) return refuse(command, request.instance_id, "", "recovery_write_refused", "Export payload journal update failed", journal.detail());
     facman::archive::WriteOptions options;
     options.method = facman::archive::CompressionMethod::deflate;
     options.reproducible = true;
@@ -748,7 +828,18 @@ ExportOutcome export_instance(const fs::path& workspace, const ExportRequest& re
         written);
     if (!status.ok()) {
         (void)facman::archive::cleanup_owned_staging_root(payload_root);
+        journal.failed(status.detail);
         return refuse(command, request.instance_id, "", "persistent_write_refused", "Instance export staging failed", status.code + ": " + status.detail);
+    }
+    if (!journal.step("verified", "archive_self_verified") ||
+        !journal.step("committing", "no_clobber_commit_started")) {
+        return refuse(
+            command,
+            request.instance_id,
+            "",
+            "recovery_write_refused",
+            "Export commit journal update failed",
+            journal.detail());
     }
     status = facman::archive::commit_owned_staged_file_no_clobber(
         archive_staging,
@@ -757,13 +848,16 @@ ExportOutcome export_instance(const fs::path& workspace, const ExportRequest& re
     if (!status.ok()) {
         (void)facman::archive::cleanup_owned_staging_root(archive_staging);
         (void)facman::archive::cleanup_owned_staging_root(payload_root);
+        journal.failed(status.detail);
         return refuse(command, request.instance_id, "", "persistent_write_refused", "Instance export commit failed", status.code + ": " + status.detail);
     }
+    if (!journal.step("committed", "export_archive_committed")) return refuse(command, request.instance_id, "", "transaction_recovery_required", "Export committed but journal update failed", journal.detail(), false);
     const facman::archive::Status archive_cleanup = facman::archive::cleanup_owned_staging_root(archive_staging);
     const facman::archive::Status payload_cleanup = facman::archive::cleanup_owned_staging_root(payload_root);
     if (!archive_cleanup.ok() || !payload_cleanup.ok()) {
         return refuse(command, request.instance_id, "", "transaction_recovery_required", "Export committed but staging cleanup requires recovery", archive_cleanup.detail + payload_cleanup.detail, false);
     }
+    if (!journal.finish()) return refuse(command, request.instance_id, "", "transaction_recovery_required", "Export committed but journal close requires recovery", journal.detail(), false);
     return ExportResult {request.instance_id, destination, files.size() + 1, {"local_data_root", "config.ini paths and secrets"}};
 }
 
@@ -825,6 +919,19 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
         return refuse(command, instance.instance_id, "", "instance_import_manifest_invalid", "Archive plan does not match the declared file closure", path_string(request.source_path), false);
     }
     const fs::path staging = unique_staging(instance.root.parent_path(), ".facman-instance-import-");
+    tx::Record transaction;
+    transaction.command_id = command;
+    transaction.target = instance.root;
+    transaction.sources = {request.source_path};
+    transaction.staging_roots = {staging};
+    transaction.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
+    std::string journal_detail;
+    if (!tx::begin(workspace, transaction, journal_detail) ||
+        !tx::advance(workspace, transaction, "validated", "request_validated", journal_detail) ||
+        !tx::advance(workspace, transaction, "planned", "archive_plan_and_hash_closure_validated", journal_detail) ||
+        !tx::advance(workspace, transaction, "staging", "owned_staging_selected", journal_detail)) {
+        return refuse(command, instance.instance_id, "", "recovery_write_refused", "Instance import journal could not be durably prepared", journal_detail);
+    }
     std::size_t middle_entry = plan.entries.size() / 2;
     status = facman::archive::extract_to_new_owned_staging(
         plan,
@@ -836,7 +943,14 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
             if (fault_requested("during_middle_file") && index == plan.entries[middle_entry].index) return false;
             return true;
         });
-    if (!status.ok()) return refuse(command, instance.instance_id, "", "persistent_write_refused", "Instance extraction staging failed", status.code + ": " + status.detail);
+    if (!status.ok()) {
+        (void)tx::fail(workspace, transaction, "failed_before_commit", status.code + ": " + status.detail, journal_detail);
+        return refuse(command, instance.instance_id, "", "persistent_write_refused", "Instance extraction staging failed", status.code + ": " + status.detail);
+    }
+    if (!tx::advance(workspace, transaction, "staged", "archive_extracted", journal_detail)) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        return refuse(command, instance.instance_id, "", "recovery_write_refused", "Instance import staged but journal update failed", journal_detail);
+    }
     if (fault_requested("after_extraction")) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
         return refuse(command, instance.instance_id, "", "transaction_recovery_required", "Injected interruption after extraction", "owned staging removed");
@@ -844,7 +958,12 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
     std::string detail;
     if (!verify_staged_tree(staging, hashes, detail)) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        (void)tx::fail(workspace, transaction, "failed_before_commit", detail, journal_detail);
         return refuse(command, instance.instance_id, "", "instance_import_manifest_invalid", "Staged instance hash closure failed", detail, false);
+    }
+    if (!tx::advance(workspace, transaction, "verified", "staged_tree_hashes_verified", journal_detail)) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        return refuse(command, instance.instance_id, "", "recovery_write_refused", "Instance import verified but journal update failed", journal_detail);
     }
     if (fault_requested("after_verification")) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
@@ -866,15 +985,26 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
         (void)facman::archive::cleanup_owned_staging_root(staging);
         return refuse(command, instance.instance_id, "", "transaction_recovery_required", "Injected interruption before commit", "owned staging removed");
     }
+    if (!tx::advance(workspace, transaction, "committing", "local_metadata_materialized", journal_detail)) {
+        (void)facman::archive::cleanup_owned_staging_root(staging);
+        return refuse(command, instance.instance_id, "", "recovery_write_refused", "Instance import commit journal update failed", journal_detail);
+    }
     if (!facman::base::commit_directory_no_clobber(staging, instance.root, write_detail)) {
         (void)facman::archive::cleanup_owned_staging_root(staging);
+        (void)tx::fail(workspace, transaction, "failed_before_commit", write_detail, journal_detail);
         return refuse(command, instance.instance_id, "", "persistent_write_refused", "Instance import commit failed", write_detail);
+    }
+    if (!tx::advance(workspace, transaction, "committed", "target_committed", journal_detail)) {
+        return refuse(command, instance.instance_id, "", "transaction_recovery_required", "Instance committed but journal update failed", journal_detail, false);
     }
     if (fault_requested("after_commit_before_journal_close")) {
         return refuse(command, instance.instance_id, "", "transaction_recovery_required", "Injected interruption after commit", path_string(instance.root), false);
     }
     fs::remove(instance.root / facman::archive::owned_staging_marker_name(), error);
     if (error) return refuse(command, instance.instance_id, "", "transaction_recovery_required", "Instance committed but ownership marker cleanup requires recovery", error.message(), false);
+    if (!tx::complete(workspace, transaction, journal_detail)) {
+        return refuse(command, instance.instance_id, "", "transaction_recovery_required", "Instance committed but journal close requires recovery", journal_detail, false);
+    }
     return ImportResult {instance.instance_id, instance.root, plan.entries.size()};
 }
 

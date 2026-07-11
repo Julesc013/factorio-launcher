@@ -165,6 +165,27 @@ class SaveTransferTests(unittest.TestCase):
                     self.assertEqual(list((workspace / "instances").glob(".facman-instance-import-*")), [])
             finally:
                 os.environ.pop("FACMAN_TEST_SAVE_TRANSFER_FAIL_STAGE", None)
+            code, stdout, stderr = invoke(
+                ["--workspace", tmp, "workspace", "recovery", "inspect", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            committed = next(
+                item for item in json.loads(stdout)["transactions"] if Path(item["target"]).name == "fault-7"
+            )
+            code, stdout, stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "workspace",
+                    "recovery",
+                    "apply",
+                    committed["transaction_id"],
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout)["transactions"][0]["state"], "complete")
+            self.assertFalse((workspace / "instances" / "fault-7" / ".facman-archive-staging.v1").exists())
 
     def test_backup_refuses_multiply_linked_source_before_destination(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -196,6 +217,47 @@ class SaveTransferTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "save_source_changed")
             self.assertFalse(destination.exists())
+
+    def test_transaction_state_faults_never_leave_an_apparently_partial_instance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.prepare(workspace)
+            save = workspace / "instances" / "source-world" / "saves" / "world.zip"
+            with zipfile.ZipFile(save, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("level-init.dat", b"transaction states")
+            pack = workspace / "portable.zip"
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "export", "instance", "source-world", str(pack), "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            states = (
+                "requested",
+                "validated",
+                "planned",
+                "staging",
+                "staged",
+                "verified",
+                "committing",
+                "committed",
+                "audited",
+                "complete",
+            )
+            try:
+                for index, state in enumerate(states):
+                    instance_id = f"state-{index}"
+                    os.environ["FACMAN_TEST_TRANSACTION_FAIL_STATE"] = state
+                    code, _stdout, _stderr = invoke(
+                        ["--workspace", tmp, "import", "instance", str(pack), "--id", instance_id, "--json"]
+                    )
+                    self.assertEqual(code, 1, state)
+                    target = workspace / "instances" / instance_id
+                    if state in {"committed", "audited", "complete"}:
+                        self.assertTrue((target / "instance.v1.json").is_file(), state)
+                        self.assertTrue((target / "config" / "config.ini").is_file(), state)
+                    else:
+                        self.assertFalse(target.exists(), state)
+            finally:
+                os.environ.pop("FACMAN_TEST_TRANSACTION_FAIL_STATE", None)
 
 
 if __name__ == "__main__":

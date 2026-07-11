@@ -1,0 +1,73 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 36
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 36
+
+## CHANGED_FILES
+
+- allowed: `.aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/evidence/remaining-risks.md` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/status.yaml` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/task.yaml` (M; matches active task allowed path)
+- allowed: `CMakeLists.txt` (M; matches active task allowed path)
+- allowed: `apps/cli/command_dispatch.cpp` (M; matches active task allowed path)
+- allowed: `contracts/command/frontend/frontend.required_commands.v1.toml` (M; matches active task allowed path)
+- allowed: `contracts/refusal/refusal_codes.v1.toml` (M; matches active task allowed path)
+- allowed: `runtime/factorio/application/flb_factorio_application.cpp` (M; matches active task allowed path)
+- allowed: `runtime/factorio/binding/flb_api.c` (M; matches active task allowed path)
+- allowed: `runtime/factorio/modsets/flb_factorio_modset_operations.cpp` (M; matches active task allowed path)
+- allowed: `runtime/factorio/saves/flb_factorio_save_operations.cpp` (M; matches active task allowed path)
+- allowed: `tests/native/flb_command_bridge_smoke.c` (M; matches active task allowed path)
+- allowed: `tests/test_cli.py` (M; matches active task allowed path)
+- allowed: `tests/test_save_transfer.py` (M; matches active task allowed path)
+- allowed: `tools/command_contract_check.py` (M; matches active task allowed path)
+- allowed: `tools/frontend_contract_check.py` (M; matches active task allowed path)
+- allowed: `tools/strict_check.py` (M; matches active task allowed path)
+- allowed: `tools/structure_policy_check.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/evidence/local-review.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/evidence/local-verification.json` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/workspace.recovery.apply.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/workspace.recovery.inspect.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/workspace.recovery.plan.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/schema/facman` (??; matches active task allowed path)
+- allowed: `docs/architecture/workspace-transaction-recovery.v1.md` (??; matches active task allowed path)
+- allowed: `runtime/transaction` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/workspace.recovery.apply.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/workspace.recovery.apply.success.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/workspace.recovery.inspect.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/workspace.recovery.inspect.success.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/workspace.recovery.plan.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/workspace.recovery.plan.success.json` (??; matches active task allowed path)
+- allowed: `tests/test_recovery.py` (??; matches active task allowed path)
+- allowed: `tools/transaction_recovery_check.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.

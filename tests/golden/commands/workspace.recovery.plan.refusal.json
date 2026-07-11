@@ -1,0 +1,1 @@
+{"schema":"facman.workspace_recovery_refusal.v1","command":"workspace.recovery.plan","status":"refused","refusal":{"schema":"common.refusal.v1","code":"recovery_journal_invalid","reason":"recovery journal is invalid","recoverable":false}}

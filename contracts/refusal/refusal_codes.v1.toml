@@ -641,3 +641,31 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = false
 message = "A committed target or owned staging path requires explicit transaction recovery."
+
+[[code]]
+id = "recovery_journal_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The requested transaction journal is missing, corrupt, or unsupported."
+
+[[code]]
+id = "recovery_lock_contended"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Another recovery attempt owns the requested transaction."
+
+[[code]]
+id = "recovery_staging_unrecognized"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The transaction staging root does not carry its expected ownership marker."
+
+[[code]]
+id = "recovery_write_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Recovery could not durably update the recognized transaction state."

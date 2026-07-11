@@ -1,0 +1,1 @@
+{"schema":"facman.workspace_recovery_refusal.v1","command":"workspace.recovery.apply","status":"refused","refusal":{"schema":"common.refusal.v1","code":"recovery_staging_unrecognized","reason":"recovery staging ownership is not recognized","recoverable":false}}

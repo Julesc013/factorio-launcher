@@ -33,6 +33,7 @@ from tools import (
     security_policy_check,
     source_format_check,
     structure_policy_check,
+    transaction_recovery_check,
     ui_accessibility_check,
     workspace_contract_check,
 )
@@ -57,6 +58,7 @@ def main() -> int:
         ("language-runtime-policy", language_runtime_policy_check.main),
         ("modset-route", modset_route_check.main),
         ("save-transfer-route", save_transfer_route_check.main),
+        ("transaction-recovery", transaction_recovery_check.main),
         ("command-contract", command_contract_check.main),
         ("frontend-contract", frontend_contract_check.main),
         ("frontend-parity", frontend_parity_check.main),

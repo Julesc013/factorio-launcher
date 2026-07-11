@@ -31,6 +31,9 @@ deferred = [
   "saves.clone",
   "instance.export",
   "instance.import",
+  "workspace.recovery.inspect",
+  "workspace.recovery.plan",
+  "workspace.recovery.apply",
   "setup.preview",
 ]
 
@@ -179,6 +182,24 @@ backend_id = "instance.import"
 cli = "facman import instance <path> --json"
 
 [[commands]]
+id = "workspace.recovery.inspect"
+phase = "deferred"
+backend_id = "workspace.recovery.inspect"
+cli = "facman workspace recovery inspect --json"
+
+[[commands]]
+id = "workspace.recovery.plan"
+phase = "deferred"
+backend_id = "workspace.recovery.plan"
+cli = "facman workspace recovery plan <transaction-id> --json"
+
+[[commands]]
+id = "workspace.recovery.apply"
+phase = "deferred"
+backend_id = "workspace.recovery.apply"
+cli = "facman workspace recovery apply <transaction-id> --json"
+
+[[commands]]
 id = "setup.preview"
 phase = "deferred"
 backend_id = "install_local.plan"
@@ -216,6 +237,9 @@ doctor = "implemented"
 "saves.clone" = "implemented"
 "instance.export" = "implemented"
 "instance.import" = "implemented"
+"workspace.recovery.inspect" = "implemented"
+"workspace.recovery.plan" = "implemented"
+"workspace.recovery.apply" = "implemented"
 "setup.preview" = "stubbed_with_refusal"
 
 [[frontends]]
@@ -250,6 +274,9 @@ doctor = "stubbed_with_refusal"
 "saves.clone" = "not_supported_with_reason"
 "instance.export" = "not_supported_with_reason"
 "instance.import" = "not_supported_with_reason"
+"workspace.recovery.inspect" = "not_supported_with_reason"
+"workspace.recovery.plan" = "not_supported_with_reason"
+"workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -284,6 +311,9 @@ doctor = "stubbed_with_refusal"
 "saves.clone" = "not_supported_with_reason"
 "instance.export" = "not_supported_with_reason"
 "instance.import" = "not_supported_with_reason"
+"workspace.recovery.inspect" = "not_supported_with_reason"
+"workspace.recovery.plan" = "not_supported_with_reason"
+"workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -318,6 +348,9 @@ doctor = "implemented"
 "saves.clone" = "not_supported_with_reason"
 "instance.export" = "not_supported_with_reason"
 "instance.import" = "not_supported_with_reason"
+"workspace.recovery.inspect" = "not_supported_with_reason"
+"workspace.recovery.plan" = "not_supported_with_reason"
+"workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -352,6 +385,9 @@ doctor = "not_supported_with_reason"
 "saves.clone" = "not_supported_with_reason"
 "instance.export" = "not_supported_with_reason"
 "instance.import" = "not_supported_with_reason"
+"workspace.recovery.inspect" = "not_supported_with_reason"
+"workspace.recovery.plan" = "not_supported_with_reason"
+"workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -386,6 +422,9 @@ doctor = "implemented"
 "saves.clone" = "not_supported_with_reason"
 "instance.export" = "not_supported_with_reason"
 "instance.import" = "not_supported_with_reason"
+"workspace.recovery.inspect" = "not_supported_with_reason"
+"workspace.recovery.plan" = "not_supported_with_reason"
+"workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -420,6 +459,9 @@ doctor = "not_supported_with_reason"
 "saves.clone" = "not_supported_with_reason"
 "instance.export" = "not_supported_with_reason"
 "instance.import" = "not_supported_with_reason"
+"workspace.recovery.inspect" = "not_supported_with_reason"
+"workspace.recovery.plan" = "not_supported_with_reason"
+"workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -454,6 +496,9 @@ doctor = "stubbed_with_refusal"
 "saves.clone" = "not_supported_with_reason"
 "instance.export" = "not_supported_with_reason"
 "instance.import" = "not_supported_with_reason"
+"workspace.recovery.inspect" = "not_supported_with_reason"
+"workspace.recovery.plan" = "not_supported_with_reason"
+"workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -488,4 +533,7 @@ doctor = "stubbed_with_refusal"
 "saves.clone" = "not_supported_with_reason"
 "instance.export" = "not_supported_with_reason"
 "instance.import" = "not_supported_with_reason"
+"workspace.recovery.inspect" = "not_supported_with_reason"
+"workspace.recovery.plan" = "not_supported_with_reason"
+"workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"

@@ -36,6 +36,7 @@ allowed_paths:
   - tests/native/flb_command_bridge_smoke.c
   - tests/test_cli.py
   - tests/test_recovery.py
+  - tests/test_save_transfer.py
   - tools/command_contract_check.py
   - tools/frontend_contract_check.py
   - tools/frontend_parity_check.py
@@ -43,6 +44,7 @@ allowed_paths:
   - tools/refusal_golden_check.py
   - tools/schema_validate.py
   - tools/strict_check.py
+  - tools/structure_policy_check.py
   - tools/transaction_recovery_check.py
 forbidden_paths:
   - runtime/factorio/diagnostics/**
