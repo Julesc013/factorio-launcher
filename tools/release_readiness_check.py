@@ -35,6 +35,7 @@ REQUIRED_RELEASE_PROFILES = (
     "macos_modern_swiftui",
     "linux_x11_gtk",
     "linux_x11_gtk_x64",
+    "linux_portable_cli_x64",
     "linux_wayland_qt",
 )
 
@@ -48,6 +49,7 @@ REQUIRED_PACKAGING_PATHS = (
     "release/packaging/macos/facman_app.v1.toml",
     "release/packaging/linux/appimage.v1.toml",
     "release/packaging/linux/legacy_cli_tarball.v1.toml",
+    "release/packaging/linux/linux_portable_cli.v1.toml",
 )
 
 
@@ -116,6 +118,7 @@ def check_release_profiles() -> list[str]:
         if not path.is_file():
             problems.append(f"missing release profile {path.relative_to(ROOT)}")
     for profile in [
+        "linux_portable_cli_x64",
         "windows_portable_cli_x64",
         "windows_legacy_winforms_x64",
         "macos_legacy_appkit_x64",

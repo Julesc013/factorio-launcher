@@ -9,6 +9,7 @@ generic `legacy` or `modern`.
 The first contract-backed package lanes are:
 
 - `windows_portable_cli_x64` (the first target-specific static built proof)
+- `linux_portable_cli_x64` (target-specific project-static/system-dynamic CLI proof)
 - `windows_legacy_winforms_x64`
 - `macos_legacy_appkit_x64`
 - `linux_x11_gtk_x64`

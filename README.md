@@ -119,6 +119,10 @@ instances, profiles, install references, and launch plans belong to
 - Diagnostic bundle export accepts only reviewed local formats, reads each
   selected file through a stable no-follow handle, redacts before staging, and
   self-verifies a transaction-journaled production ZIP before success.
+- The Linux x64 CLI package-preview lane is scoped to the Ubuntu 24.04 runner,
+  records its glibc/toolchain and inspected system dependencies, and proves an
+  unsigned, unpublished tarball with zero required skips. It is not a
+  universal Unix or fully static claim.
 
 ## Development
 

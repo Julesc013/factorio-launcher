@@ -63,6 +63,22 @@ jobs:
         run: |
           python tools/package_runtime_smoke.py --root build/packages/portable_cli_x64
           python tools/package_runtime_smoke.py --root build/packages/portable_tui_x64
+      - name: Run required Linux x64 CLI package proof with zero skips
+        run: >-
+          python tools/linux_package_proof.py
+          --build-root build/native-smoke
+          --out build/linux-package-proof/packages
+          --dist build/linux-package-proof/dist
+          --evidence build/linux-package-proof/evidence.v1.json
+      - name: Preserve unsigned Linux package proof artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-portable-cli-x64-${{ github.sha }}
+          path: |
+            build/linux-package-proof/dist/*.tar.gz
+            build/linux-package-proof/evidence.v1.json
+          if-no-files-found: error
+          retention-days: 14
 
   windows-native-package:
     runs-on: windows-2022

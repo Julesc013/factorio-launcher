@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.linux_linkage_proof.v1",
+  "title": "FacMan Linux ELF Linkage Proof",
+  "type": "object",
+  "required": [
+    "schema",
+    "profile_id",
+    "runner",
+    "architecture",
+    "elf_machine",
+    "linkage_model",
+    "needed",
+    "allowed_needed",
+    "rpath",
+    "runpath",
+    "ldd",
+    "toolchain"
+  ],
+  "properties": {
+    "schema": { "const": "facman.linux_linkage_proof.v1" },
+    "profile_id": { "const": "linux_portable_cli_x64" },
+    "runner": { "const": "ubuntu-24.04" },
+    "architecture": { "const": "x86_64" },
+    "elf_machine": { "const": "Advanced Micro Devices X86-64" },
+    "linkage_model": { "const": "project_static_system_dynamic" },
+    "needed": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "allowed_needed": { "type": "array", "items": { "type": "string" } },
+    "rpath": { "type": "null" },
+    "runpath": { "type": "null" },
+    "ldd": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "toolchain": {
+      "type": "object",
+      "required": ["runner", "machine", "libc", "compiler", "linker"],
+      "properties": {
+        "runner": { "type": "string" },
+        "machine": { "type": "string" },
+        "libc": { "type": "string" },
+        "compiler": { "type": "string" },
+        "linker": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

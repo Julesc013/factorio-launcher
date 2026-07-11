@@ -30,9 +30,9 @@
     "schema": { "const": "facman.built_package.v1" },
     "profile_id": { "type": "string", "minLength": 1 },
     "lane": { "type": "string", "minLength": 1 },
-    "target_os": { "enum": ["windows", "portable"] },
+    "target_os": { "enum": ["windows", "linux", "portable"] },
     "target_arch": { "const": "x64" },
-    "package_type": { "enum": ["portable_zip"] },
+    "package_type": { "enum": ["portable_zip", "tarball"] },
     "entrypoint": { "type": "string", "minLength": 1 },
     "linkage_model": {
       "enum": ["static_first", "static_first_with_reference_components", "compatibility_bundle"]

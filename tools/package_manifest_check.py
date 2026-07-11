@@ -15,6 +15,7 @@ INDEX = ROOT / "release" / "index"
 PROFILES = ROOT / "release" / "profiles"
 
 REQUIRED_PROFILE_IDS = {
+    "linux_portable_cli_x64",
     "windows_portable_cli_x64",
     "windows_legacy_winforms_x64",
     "macos_legacy_appkit_x64",

@@ -185,6 +185,22 @@ WorkUnit rather than an extension of R3.2.
 - Factorio account login, credential-store implementation, diagnostic upload,
   Mod Portal token behavior, and GUI diagnostic UX remain deferred.
 
+## FACMAN-LINUX-CLI-PACKAGE-PROOF-03
+
+- One explicit `linux_portable_cli_x64` tarball contains the functional CLI,
+  required contracts/content, manifests, licenses, and minimal documentation.
+- The Ubuntu 24.04 x64 gate records sibling revisions, compiler, linker, glibc
+  baseline, ELF identity, inspected system dependencies, and the absence of
+  `RPATH`/`RUNPATH`.
+- Zero-skip runtime proof covers spaces, Unicode, renamed extraction, arbitrary
+  working directory, empty `PATH`, an external workspace, and a read-only
+  package root.
+- Integrity proof rejects missing, modified, extra, linked, wrong-target,
+  wrong-architecture, and incomplete payloads before safe archive extraction
+  and post-extraction smoke.
+- The claim is package-preview evidence for that runner and dependency set,
+  not universal Unix support or a completely static binary.
+
 ## FacMan-SETUP-HANDOFF-01
 
 - Managed install commands call Universal Setup.

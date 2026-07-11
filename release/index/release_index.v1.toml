@@ -12,6 +12,7 @@ package_manifest = "release/index/package_manifest.v1.toml"
 support_matrix = "release/index/support_matrix.v1.toml"
 distribution_lanes = "release/index/distribution_lanes.v1.toml"
 profiles = [
+  "release/profiles/linux_portable_cli_x64/profile.toml",
   "release/profiles/windows_portable_cli_x64/profile.toml",
   "release/profiles/windows_legacy_winforms_x64/profile.toml",
   "release/profiles/macos_legacy_appkit_x64/profile.toml",

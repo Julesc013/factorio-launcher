@@ -223,7 +223,7 @@ bool load_package_identity(
         values["python_runtime"] != "false" || values["bundles_factorio_binaries"] != "false" ||
         (values["source_dirty"] != "true" && values["source_dirty"] != "false") ||
         values["workspace_lock"] != "release/index/workspace_lock.v1.toml" ||
-        values["package_type"] != "portable_zip") {
+        (values["package_type"] != "portable_zip" && values["package_type"] != "tarball")) {
         error = "package manifest fixed policy fields are invalid";
         return false;
     }
@@ -246,14 +246,16 @@ bool load_package_identity(
     struct Expected {
         const char* profile;
         const char* target_os;
+        const char* package_type;
         const char* linkage;
         const char* entrypoint;
     };
     const Expected profiles[] = {
-        {"windows_portable_cli_x64", "windows", "static_first", "bin/facman.exe"},
-        {"portable_cli_x64", "portable", "static_first_with_reference_components", "bin/facman"},
-        {"portable_tui_x64", "portable", "static_first_with_reference_components", "bin/facman-tui"},
-        {"windows_legacy_winforms_x64", "windows", "compatibility_bundle", "bin/FacMan.WinForms.exe"},
+        {"windows_portable_cli_x64", "windows", "portable_zip", "static_first", "bin/facman.exe"},
+        {"linux_portable_cli_x64", "linux", "tarball", "static_first", "bin/facman"},
+        {"portable_cli_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman"},
+        {"portable_tui_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman-tui"},
+        {"windows_legacy_winforms_x64", "windows", "portable_zip", "compatibility_bundle", "bin/FacMan.WinForms.exe"},
     };
     const Expected* expected = nullptr;
     for (const Expected& candidate : profiles) {
@@ -264,6 +266,7 @@ bool load_package_identity(
         return false;
     }
     if (identity.target_os != expected->target_os || identity.target_arch != "x64" ||
+        values["package_type"] != expected->package_type ||
         identity.linkage != expected->linkage || identity.entrypoint != expected->entrypoint) {
         error = "package target, linkage, or entrypoint identity does not match profile " + identity.profile;
         return false;
@@ -271,6 +274,12 @@ bool load_package_identity(
     if (identity.target_os == "windows") {
 #ifndef _WIN32
         error = "Windows package cannot run on this operating system";
+        return false;
+#endif
+    }
+    if (identity.target_os == "linux") {
+#ifndef __linux__
+        error = "Linux package cannot run on this operating system";
         return false;
 #endif
     }
@@ -373,12 +382,16 @@ bool component_semantics_match(
             return false;
         }
         if (component.runtime_role == "runtime_required") ++runtime_required;
-        if (identity.profile == "windows_portable_cli_x64") {
+        if (identity.profile == "windows_portable_cli_x64" ||
+            identity.profile == "linux_portable_cli_x64") {
+            const std::string selected_entrypoint =
+                identity.profile == "windows_portable_cli_x64" ? "bin/facman.exe" : "bin/facman";
             if (component.kind == "runtime_library") {
-                error = "static-first Windows CLI package declares a shared runtime library";
+                error = "static-first CLI package declares a shared project runtime library";
                 return false;
             }
-            if (component.destination == "bin/facman.exe" && component.runtime_role == "runtime_required") {
+            if (component.destination == selected_entrypoint &&
+                component.runtime_role == "runtime_required") {
                 selected_cli = true;
             }
             if (component.destination.rfind("contracts/schema/", 0) == 0 &&
@@ -391,9 +404,10 @@ bool component_semantics_match(
         error = "component manifest has no runtime_required component";
         return false;
     }
-    if (identity.profile == "windows_portable_cli_x64" &&
+    if ((identity.profile == "windows_portable_cli_x64" ||
+         identity.profile == "linux_portable_cli_x64") &&
         (!selected_cli || !selected_contracts || !selected_content)) {
-        error = "static-first Windows CLI package component roles are incomplete";
+        error = "static-first CLI package component roles are incomplete";
         return false;
     }
     return true;

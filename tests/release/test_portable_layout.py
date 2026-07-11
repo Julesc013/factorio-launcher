@@ -10,6 +10,17 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class PortableLayoutTests(unittest.TestCase):
+    def test_linux_portable_cli_is_static_first_and_target_specific(self) -> None:
+        profile = load_toml(ROOT / "release/profiles/linux_portable_cli_x64/profile.toml")
+        bundle = expanded_bundle(profile)
+        destinations = component_destinations(bundle)
+        self.assertEqual(profile["target_os"], "linux")
+        self.assertEqual(profile["target_arch"], "x64")
+        self.assertEqual(profile["linkage"]["model"], "static_first")
+        self.assertTrue(profile["linkage"]["system_dynamic_dependencies_inspected"])
+        self.assertEqual(profile["required_components"]["libraries"], [])
+        self.assertEqual(destinations, {"bin/facman", "contracts/schema", "content/factorio"})
+
     def test_windows_portable_cli_is_static_first_and_target_specific(self) -> None:
         profile = load_toml(ROOT / "release/profiles/windows_portable_cli_x64/profile.toml")
         bundle = expanded_bundle(profile)

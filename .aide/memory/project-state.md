@@ -56,6 +56,10 @@ foundations that do not require a Factorio binary.
   pseudonymous source identity, production archive output, transaction
   recovery, and post-commit self-verification. The exact-SHA Linux,
   Windows/package, macOS archive, AppKit, schema, and security matrix is green.
+- The explicit Linux x64 CLI package-preview profile and zero-skip proof gate
+  are implemented. Target ELF, glibc, dependency, extraction, relocation, and
+  runtime promotion remains pending until the exact implementation revision
+  passes on the Ubuntu 24.04 runner.
 
 ## Current Goal
 

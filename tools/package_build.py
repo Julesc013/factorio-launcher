@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -21,6 +22,7 @@ DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
 DEFAULT_DIST = ROOT / "dist"
 SUPPORTED_BUILT_PROFILES = {
+    "linux_portable_cli_x64",
     "windows_portable_cli_x64",
     "portable_cli_x64",
     "portable_tui_x64",
@@ -102,6 +104,7 @@ def build_profile(
     copy_support_payloads(package_root, profile, profile_path, bundle_path)
     write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
     write_build_info(package_root, profile_id, profile, bundle)
+    write_platform_metadata(package_root, profile)
     validate_package_root(package_root, profile, component_records)
     package_hash_manifest.write_manifests(package_root, component_records)
     if dist_root is not None:
@@ -154,9 +157,17 @@ def copy_support_payloads(
     profile_path: Path,
     bundle_path: Path,
 ) -> None:
-    copy_tree(ROOT / "docs" / "release", package_root / "docs" / "release")
+    if profile.get("id") == "linux_portable_cli_x64":
+        for name in ["PACKAGE_LAYOUT.md", "SUPPORT_POLICY.md"]:
+            copy_file(
+                ROOT / "docs" / "release" / name,
+                package_root / "docs" / "release" / name,
+            )
+    else:
+        copy_tree(ROOT / "docs" / "release", package_root / "docs" / "release")
     copy_tree(ROOT / "release" / "index", package_root / "release" / "index")
-    copy_tree(ROOT / "release" / "packaging", package_root / "release" / "packaging")
+    if profile.get("id") != "linux_portable_cli_x64":
+        copy_tree(ROOT / "release" / "packaging", package_root / "release" / "packaging")
     profile_dir = profile_path.parent
     copy_tree(profile_dir, package_root / "release" / "profiles" / profile_dir.name)
     copy_file(ROOT / "release" / "profiles" / "profile_catalog.v1.toml", package_root / "release" / "profiles" / "profile_catalog.v1.toml")
@@ -234,10 +245,102 @@ def write_build_info(
         "signed": False,
         "published": False,
     }
+    if profile.get("target_os") == "linux":
+        info["toolchain"] = linux_toolchain_identity()
     (package_root / "manifest" / "build_info.v1.json").write_text(
         json.dumps(info, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def linux_toolchain_identity() -> dict[str, str]:
+    identity = {
+        "runner": "ubuntu-24.04",
+        "machine": platform.machine(),
+        "libc": " ".join(platform.libc_ver()).strip(),
+        "compiler": first_line(run_capture(["c++", "--version"])),
+        "linker": first_line(run_capture(["ld", "--version"])),
+    }
+    if identity["libc"] != "glibc 2.39":
+        raise ValueError(
+            "linux_portable_cli_x64: declared Ubuntu 24.04 glibc 2.39 baseline "
+            f"does not match runner identity {identity['libc']!r}"
+        )
+    return identity
+
+
+def write_platform_metadata(package_root: Path, profile: dict[str, Any]) -> None:
+    if profile.get("target_os") != "linux":
+        return
+    executable = package_root / "bin" / "facman"
+    header = run_capture(["readelf", "-h", str(executable)])
+    dynamic = run_capture(["readelf", "-d", str(executable)])
+    ldd = run_capture(["ldd", str(executable)])
+    if "Advanced Micro Devices X86-64" not in header:
+        raise ValueError("linux_portable_cli_x64: ELF machine is not x86-64")
+    if "(RPATH)" in dynamic or "(RUNPATH)" in dynamic:
+        raise ValueError("linux_portable_cli_x64: source/build RPATH or RUNPATH is forbidden")
+    needed = sorted(set(re.findall(r"Shared library: \[(.*?)\]", dynamic)))
+    allowed = {
+        "ld-linux-x86-64.so.2",
+        "libc.so.6",
+        "libdl.so.2",
+        "libgcc_s.so.1",
+        "libm.so.6",
+        "libpthread.so.0",
+        "librt.so.1",
+        "libstdc++.so.6",
+    }
+    unexpected = sorted(set(needed) - allowed)
+    if unexpected:
+        raise ValueError(
+            "linux_portable_cli_x64: unexpected dynamic dependencies: "
+            + ", ".join(unexpected)
+        )
+    metadata = {
+        "schema": "facman.linux_linkage_proof.v1",
+        "profile_id": "linux_portable_cli_x64",
+        "runner": "ubuntu-24.04",
+        "architecture": "x86_64",
+        "elf_machine": "Advanced Micro Devices X86-64",
+        "linkage_model": "project_static_system_dynamic",
+        "needed": needed,
+        "allowed_needed": sorted(allowed),
+        "rpath": None,
+        "runpath": None,
+        "ldd": [line.strip() for line in ldd.splitlines() if line.strip()],
+        "toolchain": linux_toolchain_identity(),
+    }
+    schema = json_contract.load_schema(
+        ROOT / "contracts" / "schema" / "release" / "linux_linkage_proof.v1.schema.json"
+    )
+    problems = json_contract.validate(metadata, schema)
+    if problems:
+        raise ValueError("Linux linkage metadata violates its contract: " + "; ".join(problems))
+    (package_root / "manifest" / "linux_linkage.v1.json").write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def run_capture(command: list[str]) -> str:
+    completed = subprocess.run(
+        command,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    if completed.returncode != 0:
+        raise ValueError(
+            f"required tool failed ({completed.returncode}): {' '.join(command)}: "
+            f"{completed.stdout.strip()}"
+        )
+    return completed.stdout
+
+
+def first_line(value: str) -> str:
+    return value.splitlines()[0].strip() if value.splitlines() else "unknown"
 
 
 def validate_package_root(
@@ -366,9 +469,13 @@ def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -
         replacement = version[len(version_prefix):]
     artifact_id = artifact_template.replace("<version>", replacement)
     archive_base = dist_root / artifact_id
-    if archive_base.with_suffix(".zip").exists():
-        archive_base.with_suffix(".zip").unlink()
-    shutil.make_archive(str(archive_base), "zip", root_dir=package_root)
+    package_type = str(bundle.get("package_type", ""))
+    archive_format = "gztar" if package_type == "tarball" else "zip"
+    archive_suffix = ".tar.gz" if archive_format == "gztar" else ".zip"
+    archive_path = Path(str(archive_base) + archive_suffix)
+    if archive_path.exists():
+        archive_path.unlink()
+    shutil.make_archive(str(archive_base), archive_format, root_dir=package_root)
 
 
 def load_profile(profile_id: str) -> tuple[Path, dict[str, Any]]:
@@ -420,7 +527,9 @@ def assert_host_matches_profile(profile_id: str, profile: dict[str, Any]) -> Non
     target_arch = str(profile.get("target_arch", ""))
     if target_os == "windows" and os.name != "nt":
         raise ValueError(f"{profile_id}: Windows built-artifact proof must run on Windows")
-    if profile_id == "windows_portable_cli_x64":
+    if target_os == "linux" and not sys.platform.startswith("linux"):
+        raise ValueError(f"{profile_id}: Linux built-artifact proof must run on Linux")
+    if profile_id in {"windows_portable_cli_x64", "linux_portable_cli_x64"}:
         machine = platform.machine().lower()
         if machine not in {"amd64", "x86_64"}:
             raise ValueError(f"{profile_id}: x64 proof cannot run on host architecture {machine}")

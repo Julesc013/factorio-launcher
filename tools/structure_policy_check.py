@@ -151,6 +151,7 @@ ALLOWED_RELEASE_ROOTS = {"index", "packaging", "profiles"}
 ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
 ALLOWED_RELEASE_PROFILE_ROOTS = {
     "dev",
+    "linux_portable_cli_x64",
     "linux_x11_gtk_x64",
     "linux_wayland_qt",
     "linux_x11_gtk",

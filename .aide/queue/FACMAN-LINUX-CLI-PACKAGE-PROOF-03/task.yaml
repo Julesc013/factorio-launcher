@@ -27,10 +27,13 @@ allowed_paths:
   - docs/quality/**
   - docs/roadmap.md
   - release/**
+  - runtime/package/**
   - tests/test_package_*.py
+  - tests/package_layout/**
   - tests/test_release_*.py
   - tests/test_schema_tools.py
   - tools/ci_proof_check.py
+  - tools/linux_package_proof.py
   - tools/language_runtime_policy_check.py
   - tools/package_*.py
   - tools/release_*.py

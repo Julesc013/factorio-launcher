@@ -1,0 +1,66 @@
+schema = "facman.release_profile.v1"
+id = "linux_portable_cli_x64"
+lane = "linux_portable_cli"
+target_os = "linux"
+target_arch = "x64"
+minimum_os = "ubuntu_24_04_runner_baseline"
+runtime_floor = "glibc_2_39_ci_baseline"
+support_tier = "package_preview"
+package_types = ["tarball"]
+install_modes = ["portable", "user", "system"]
+package_manifest = "release/packaging/linux/linux_portable_cli.v1.toml"
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+release_index = "release/index/release_index.v1.toml"
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+bundles_factorio_binaries = false
+credential_storage = false
+
+[frontends]
+cli = "apps/cli"
+
+[entrypoints]
+cli = "bin/facman"
+
+[required_components]
+binaries = ["bin/facman"]
+libraries = []
+contracts = "contracts/schema"
+content = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/linux/linux_portable_cli.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+
+[linkage]
+model = "static_first"
+replaceable_components = false
+shared_libraries_shipped = false
+system_dynamic_dependencies_inspected = true
+
+[capabilities]
+setup_mutation = false
+network_download = false
+mod_portal_download = false
+server_execution = false
+devtool_execution = false
+auto_update = false
+
+[unsupported]
+features = [
+  "gui_frontend",
+  "tui_frontend",
+  "daemon_frontend",
+  "dynamic_component_loading",
+  "mod_portal_download",
+  "network_download",
+  "setup_mutation",
+  "server_execution",
+  "devtool_execution",
+  "auto_update",
+  "universal_linux_distribution_support",
+  "completely_static_binary",
+]
+commands = ["mod_portal.download", "server.execute", "devtools.execute", "setup.apply"]

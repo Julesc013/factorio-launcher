@@ -3,7 +3,10 @@
 CI mirrors the bounded proof rather than implying release readiness.
 
 - `linux-native` builds the native core and sibling repositories, runs CTest,
-  the Python suite, strict checks, and portable compatibility packages.
+  the Python suite, strict checks, portable compatibility packages, and the
+  zero-skip `linux_portable_cli_x64` tarball proof. The proof records ELF,
+  glibc/toolchain, dynamic dependency, relocation, integrity, and runtime
+  evidence and uploads the unsigned, unpublished artifact and report.
 - `windows-native-package` builds the native core on Windows, runs CTest and
   the Python suite, compiles WinForms, and runs the selected
   `windows_portable_cli_x64` package proof through a zero-skip wrapper.
@@ -17,7 +20,8 @@ CI mirrors the bounded proof rather than implying release readiness.
 changes may replace the commands, but they must preserve equivalent evidence
 and update the checker in the same reviewed change.
 
-The selected package runner refuses a dirty checkout, a non-Windows host, any
-test failure, and any skipped required package test. Ordinary platform-specific
-skips elsewhere in the cross-platform test corpus do not satisfy or invalidate
-that target-specific gate.
+Each selected package runner refuses the wrong host/architecture, any test
+failure, and any skipped required package test. The Windows runner also
+refuses a dirty checkout. Ordinary platform-specific skips elsewhere in the
+cross-platform test corpus do not satisfy or invalidate either target-specific
+gate.

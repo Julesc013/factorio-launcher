@@ -1,0 +1,76 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 39
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 39
+
+## CHANGED_FILES
+
+- allowed: `.aide/memory/project-state.md` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/task.yaml` (M; matches active task allowed path)
+- allowed: `.github/workflows/ci.yml` (M; matches active task allowed path)
+- allowed: `README.md` (M; matches active task allowed path)
+- allowed: `contracts/schema/release/built_package.v1.schema.json` (M; matches active task allowed path)
+- allowed: `docs/quality/ci_proof.md` (M; matches active task allowed path)
+- allowed: `docs/quality/safety_claim_ledger.md` (M; matches active task allowed path)
+- allowed: `docs/roadmap.md` (M; matches active task allowed path)
+- allowed: `release/index/artifact_matrix.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/distribution_lanes.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/package_manifest.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/release_index.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/support_matrix.v1.toml` (M; matches active task allowed path)
+- allowed: `release/index/update_report.v1.toml` (M; matches active task allowed path)
+- allowed: `release/packaging/linux/README.md` (M; matches active task allowed path)
+- allowed: `release/profiles/README.md` (M; matches active task allowed path)
+- allowed: `release/profiles/profile_catalog.v1.toml` (M; matches active task allowed path)
+- allowed: `runtime/package/fl_runtime_verify.cpp` (M; matches active task allowed path)
+- allowed: `tests/package_layout/test_distribution_contracts.py` (M; matches active task allowed path)
+- allowed: `tests/package_layout/test_package_skeletons.py` (M; matches active task allowed path)
+- allowed: `tests/release/test_portable_layout.py` (M; matches active task allowed path)
+- allowed: `tools/ci_proof_check.py` (M; matches active task allowed path)
+- allowed: `tools/package_build.py` (M; matches active task allowed path)
+- allowed: `tools/package_hash_manifest.py` (M; matches active task allowed path)
+- allowed: `tools/package_manifest_check.py` (M; matches active task allowed path)
+- allowed: `tools/release_readiness_check.py` (M; matches active task allowed path)
+- allowed: `tools/structure_policy_check.py` (M; matches active task allowed path)
+- allowed: `tools/validators/release/check_release_profiles.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/evidence/local-review.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/evidence/local-verification.json` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `contracts/schema/release/linux_cli_package_proof.v1.schema.json` (??; matches active task allowed path)
+- allowed: `contracts/schema/release/linux_linkage_proof.v1.schema.json` (??; matches active task allowed path)
+- allowed: `docs/architecture/linux-portable-cli-package-proof.v1.md` (??; matches active task allowed path)
+- allowed: `release/packaging/linux/linux_portable_cli.v1.toml` (??; matches active task allowed path)
+- allowed: `release/profiles/linux_portable_cli_x64` (??; matches active task allowed path)
+- allowed: `tests/test_package_linux_proof.py` (??; matches active task allowed path)
+- allowed: `tools/linux_package_proof.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.
