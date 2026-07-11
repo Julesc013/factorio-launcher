@@ -10,17 +10,22 @@ if str(ROOT) not in sys.path:
 
 from tools import (
     aide_target_truth_check,
+    aide_queue_state_check,
     alpha_vertical_slice_check,
+    apps_boundary_check,
     archive_core_check,
+    critical_io_check,
     ci_proof_check,
     command_contract_check,
     diagnostic_export_check,
     discovery_golden_check,
     frontend_contract_check,
     frontend_parity_check,
+    generated_catalog_check,
     gui_surface_check,
     language_runtime_policy_check,
     local_lock_check,
+    manual_json_check,
     modset_route_check,
     save_transfer_route_check,
     package_check,
@@ -37,14 +42,23 @@ from tools import (
     source_format_check,
     structure_policy_check,
     transaction_recovery_check,
+    target_dependency_check,
     ui_accessibility_check,
     workspace_contract_check,
+    version_truth_check,
 )
 
 
 def main() -> int:
     checks: list[tuple[str, Callable[[], int]]] = [
         ("aide-target-truth", aide_target_truth_check.main),
+        ("aide-queue-state", aide_queue_state_check.main),
+        ("apps-boundary", apps_boundary_check.main),
+        ("manual-json", manual_json_check.main),
+        ("critical-io", critical_io_check.main),
+        ("generated-catalog", generated_catalog_check.main),
+        ("version-truth", version_truth_check.main),
+        ("target-dependency", target_dependency_check.main),
         ("archive-core", archive_core_check.main),
         ("ci-proof", ci_proof_check.main),
         ("structure", structure_policy_check.main),

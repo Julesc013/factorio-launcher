@@ -1,0 +1,31 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import architecture_fitness
+
+MARKERS = ("json_escape(", "json_string_value(", 'find("\\\"" + key', "parse_json_")
+
+
+def detect() -> set[str]:
+    violations: set[str] = set()
+    for path in architecture_fitness.first_party_sources("runtime"):
+        if "/core/json/" in f"/{architecture_fitness.relative(path)}/":
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if any(marker in text for marker in MARKERS):
+            violations.add(architecture_fitness.relative(path))
+    return violations
+
+
+def main() -> int:
+    return architecture_fitness.run("manual_json", detect)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

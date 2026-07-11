@@ -1,0 +1,690 @@
+{
+  "binary_sizes_bytes": {
+    "facman-tui.exe": 51712,
+    "facman.exe": 3642880,
+    "facmand.exe": 52736
+  },
+  "include_dependency_graph": {
+    "apps/cli/command_dispatch.cpp": [
+      "algorithm",
+      "cctype",
+      "chrono",
+      "command_dispatch.h",
+      "cstdint",
+      "cstdlib",
+      "cstring",
+      "ctime",
+      "filesystem",
+      "fl_command_client_cabi.h",
+      "fl_path_safety.h",
+      "fl_runtime_verify.h",
+      "fl_transaction.h",
+      "flb_factorio_diagnostics.h",
+      "flb_factorio_discovery.h",
+      "flb_factorio_launch_plan.h",
+      "flb_factorio_modsets.h",
+      "fstream",
+      "iomanip",
+      "iostream",
+      "sstream",
+      "string",
+      "sys/types.h",
+      "sys/wait.h",
+      "unistd.h",
+      "usk/usk_api.h",
+      "vector",
+      "windows.h"
+    ],
+    "apps/cli/json_mode.c": [
+      "json_mode.h",
+      "string.h"
+    ],
+    "apps/cli/main.c": [
+      "command_dispatch.h"
+    ],
+    "apps/daemon/main.c": [
+      "stdio.h"
+    ],
+    "apps/gui/linux/gtk/main.c": [
+      "stdio.h"
+    ],
+    "apps/gui/linux/qt/main.cpp": [
+      "iostream"
+    ],
+    "apps/tui/tui_main.c": [
+      "stdio.h"
+    ],
+    "include/flb/flb_api.h": [
+      "ulk/ulk_command.h",
+      "ulk/ulk_types.h"
+    ],
+    "include/flb/flb_diagnostics.h": [
+      "flb_api.h"
+    ],
+    "include/flb/flb_discovery.h": [
+      "flb_api.h"
+    ],
+    "include/flb/flb_export.h": [
+      "flb_api.h"
+    ],
+    "include/flb/flb_install.h": [
+      "flb_api.h"
+    ],
+    "include/flb/flb_instance.h": [
+      "flb_api.h"
+    ],
+    "include/flb/flb_launch.h": [
+      "flb_api.h"
+    ],
+    "include/flb/flb_modset.h": [
+      "flb_api.h"
+    ],
+    "include/flb/flb_product.h": [
+      "ulk/ulk_product.h"
+    ],
+    "include/flb/flb_result.h": [
+      "ulk/ulk_error.h"
+    ],
+    "runtime/archive/fl_archive.h": [
+      "cstdint",
+      "filesystem",
+      "functional",
+      "string",
+      "vector"
+    ],
+    "runtime/archive/fl_archive_platform.cpp": [
+      "algorithm",
+      "cerrno",
+      "cstring",
+      "fl_archive_platform.h",
+      "fl_path_safety.h",
+      "system_error",
+      "unistd.h",
+      "windows.h"
+    ],
+    "runtime/archive/fl_archive_platform.h": [
+      "cstdint",
+      "filesystem",
+      "fl_archive.h",
+      "fstream",
+      "mutex",
+      "string"
+    ],
+    "runtime/archive/fl_archive_policy.cpp": [
+      "algorithm",
+      "cctype",
+      "fl_archive_policy.h",
+      "limits",
+      "sstream",
+      "unordered_map"
+    ],
+    "runtime/archive/fl_archive_policy.h": [
+      "fl_archive.h",
+      "set",
+      "string",
+      "vector"
+    ],
+    "runtime/archive/fl_archive_reader.cpp": [
+      "algorithm",
+      "array",
+      "chrono",
+      "cstring",
+      "fl_archive.h",
+      "fl_archive_platform.h",
+      "fl_archive_policy.h",
+      "fstream",
+      "limits",
+      "miniz.h",
+      "set",
+      "vector"
+    ],
+    "runtime/archive/fl_archive_writer.cpp": [
+      "algorithm",
+      "chrono",
+      "cstring",
+      "filesystem",
+      "fl_archive.h",
+      "fl_archive_platform.h",
+      "fl_archive_policy.h",
+      "limits",
+      "map",
+      "miniz.h"
+    ],
+    "runtime/base/fl_local_operation_lock.cpp": [
+      "algorithm",
+      "cerrno",
+      "cstring",
+      "fcntl.h",
+      "fl_local_operation_lock.h",
+      "fl_path_safety.h",
+      "sstream",
+      "sys/file.h",
+      "sys/mount.h",
+      "sys/stat.h",
+      "sys/vfs.h",
+      "system_error",
+      "unistd.h",
+      "utility",
+      "windows.h"
+    ],
+    "runtime/base/fl_local_operation_lock.h": [
+      "cstddef",
+      "cstdint",
+      "filesystem",
+      "string"
+    ],
+    "runtime/base/fl_path_safety.cpp": [
+      "algorithm",
+      "atomic",
+      "cctype",
+      "cerrno",
+      "chrono",
+      "cstring",
+      "fcntl.h",
+      "fl_path_safety.h",
+      "sstream",
+      "stdio.h",
+      "sys/syscall.h",
+      "system_error",
+      "unistd.h",
+      "windows.h"
+    ],
+    "runtime/base/fl_path_safety.h": [
+      "filesystem",
+      "string"
+    ],
+    "runtime/base/fl_sha256.cpp": [
+      "algorithm",
+      "array",
+      "cstdint",
+      "fl_sha256.h",
+      "fstream",
+      "iomanip",
+      "sstream",
+      "stdexcept"
+    ],
+    "runtime/base/fl_sha256.h": [
+      "cstddef",
+      "filesystem",
+      "string",
+      "vector"
+    ],
+    "runtime/client/fl_command_client.c": [
+      "fl_command_client.h"
+    ],
+    "runtime/client/fl_command_client_cabi.c": [
+      "fl_command_client_cabi.h"
+    ],
+    "runtime/client/fl_command_client_cabi.h": [
+      "flb/flb_api.h"
+    ],
+    "runtime/client/fl_command_client_cabi_execute.c": [
+      "fl_command_client_cabi.h"
+    ],
+    "runtime/client/fl_command_client_daemon.c": [
+      "fl_command_client_daemon.h"
+    ],
+    "runtime/client/fl_command_client_json.c": [
+      "fl_command_client_json.h"
+    ],
+    "runtime/factorio/application/flb_factorio_application.cpp": [
+      "filesystem",
+      "fl_path_safety.h",
+      "fl_transaction.h",
+      "flb_factorio_application.h",
+      "flb_factorio_diagnostics.h",
+      "flb_factorio_discovery.h",
+      "flb_factorio_launch_plan.h",
+      "flb_factorio_modset_operations.h",
+      "flb_factorio_save_operations.h",
+      "fstream",
+      "map",
+      "set",
+      "sstream",
+      "string",
+      "type_traits",
+      "variant",
+      "vector"
+    ],
+    "runtime/factorio/application/flb_factorio_application.h": [
+      "ulk/ulk_command.h"
+    ],
+    "runtime/factorio/binding/flb_api.c": [
+      "flb/flb_api.h",
+      "flb_factorio_application.h",
+      "stdlib.h",
+      "string.h",
+      "ulk/ulk_api.h"
+    ],
+    "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp": [
+      "algorithm",
+      "array",
+      "cctype",
+      "cerrno",
+      "chrono",
+      "cstdlib",
+      "cwctype",
+      "fcntl.h",
+      "fl_archive.h",
+      "fl_archive_platform.h",
+      "fl_path_safety.h",
+      "fl_sha256.h",
+      "fl_transaction.h",
+      "flb_factorio_diagnostics.h",
+      "fstream",
+      "map",
+      "set",
+      "sstream",
+      "sys/stat.h",
+      "unistd.h",
+      "windows.h"
+    ],
+    "runtime/factorio/diagnostics/flb_factorio_diagnostics.h": [
+      "cstddef",
+      "cstdint",
+      "filesystem",
+      "string",
+      "variant",
+      "vector"
+    ],
+    "runtime/factorio/discovery/flb_factorio_discovery.cpp": [
+      "algorithm",
+      "cctype",
+      "cstdlib",
+      "flb_factorio_discovery.h",
+      "fstream",
+      "set",
+      "sstream",
+      "windows.h"
+    ],
+    "runtime/factorio/discovery/flb_factorio_discovery.h": [
+      "filesystem",
+      "string",
+      "vector"
+    ],
+    "runtime/factorio/launch/flb_factorio_launch_plan.cpp": [
+      "algorithm",
+      "cerrno",
+      "chrono",
+      "csignal",
+      "cstdlib",
+      "cwctype",
+      "fl_local_operation_lock.h",
+      "fl_path_safety.h",
+      "flb_factorio_launch_plan.h",
+      "fstream",
+      "iterator",
+      "map",
+      "process.h",
+      "sstream",
+      "unistd.h",
+      "windows.h"
+    ],
+    "runtime/factorio/launch/flb_factorio_launch_plan.h": [
+      "cstdint",
+      "filesystem",
+      "memory",
+      "string",
+      "vector"
+    ],
+    "runtime/factorio/mods/flb_factorio_mods.cpp": [
+      "algorithm",
+      "array",
+      "cctype",
+      "cstdint",
+      "fl_archive.h",
+      "fl_sha256.h",
+      "flb_factorio_mods.h",
+      "fstream",
+      "iomanip",
+      "map",
+      "sstream"
+    ],
+    "runtime/factorio/mods/flb_factorio_mods.h": [
+      "filesystem",
+      "string",
+      "vector"
+    ],
+    "runtime/factorio/modsets/flb_factorio_modset_operations.cpp": [
+      "algorithm",
+      "array",
+      "chrono",
+      "filesystem",
+      "fl_archive.h",
+      "fl_archive_platform.h",
+      "fl_path_safety.h",
+      "fl_transaction.h",
+      "flb_factorio_modset_operations.h",
+      "fstream",
+      "sstream"
+    ],
+    "runtime/factorio/modsets/flb_factorio_modset_operations.h": [
+      "filesystem",
+      "flb_factorio_modsets.h",
+      "string",
+      "variant",
+      "vector"
+    ],
+    "runtime/factorio/modsets/flb_factorio_modsets.cpp": [
+      "cctype",
+      "flb_factorio_modsets.h",
+      "map",
+      "set",
+      "sstream"
+    ],
+    "runtime/factorio/modsets/flb_factorio_modsets.h": [
+      "filesystem",
+      "flb_factorio_mods.h",
+      "string",
+      "vector"
+    ],
+    "runtime/factorio/saves/flb_factorio_save_operations.cpp": [
+      "algorithm",
+      "array",
+      "chrono",
+      "cstdlib",
+      "ctime",
+      "fcntl.h",
+      "filesystem",
+      "fl_archive.h",
+      "fl_archive_platform.h",
+      "fl_path_safety.h",
+      "fl_sha256.h",
+      "fl_transaction.h",
+      "flb_factorio_launch_plan.h",
+      "flb_factorio_modsets.h",
+      "flb_factorio_save_operations.h",
+      "fstream",
+      "map",
+      "set",
+      "sstream",
+      "sys/stat.h",
+      "unistd.h",
+      "windows.h"
+    ],
+    "runtime/factorio/saves/flb_factorio_save_operations.h": [
+      "cstdint",
+      "filesystem",
+      "string",
+      "variant",
+      "vector"
+    ],
+    "runtime/package/fl_runtime_component.cpp": [
+      "cctype",
+      "fl_runtime_component.h",
+      "fstream",
+      "limits",
+      "set",
+      "sstream",
+      "utility"
+    ],
+    "runtime/package/fl_runtime_component.h": [
+      "cstdint",
+      "filesystem",
+      "string",
+      "vector"
+    ],
+    "runtime/package/fl_runtime_extract.c": [
+      "fl_runtime_extract.h"
+    ],
+    "runtime/package/fl_runtime_locator.c": [
+      "fl_runtime_locator.h"
+    ],
+    "runtime/package/fl_runtime_manifest.c": [
+      "fl_runtime_manifest.h"
+    ],
+    "runtime/package/fl_runtime_verify.cpp": [
+      "algorithm",
+      "cctype",
+      "cstring",
+      "filesystem",
+      "fl_runtime_component.h",
+      "fl_runtime_locator.h",
+      "fl_runtime_verify.h",
+      "fl_sha256.h",
+      "fstream",
+      "map",
+      "set",
+      "sstream",
+      "string",
+      "windows.h"
+    ],
+    "runtime/package/fl_runtime_verify.h": [
+      "stddef.h"
+    ],
+    "runtime/transaction/fl_transaction.cpp": [
+      "algorithm",
+      "chrono",
+      "cstdlib",
+      "ctime",
+      "fcntl.h",
+      "filesystem",
+      "fl_archive.h",
+      "fl_local_operation_lock.h",
+      "fl_path_safety.h",
+      "fl_transaction.h",
+      "fstream",
+      "set",
+      "sstream",
+      "unistd.h",
+      "windows.h"
+    ],
+    "runtime/transaction/fl_transaction.h": [
+      "filesystem",
+      "string",
+      "variant",
+      "vector"
+    ]
+  },
+  "known_exception_counts": {
+    "aide_queue_state": 0,
+    "apps_boundary": 11,
+    "critical_io": 5,
+    "generated_catalog": 2,
+    "manual_json": 9,
+    "target_dependency": 10,
+    "version_truth": 2
+  },
+  "line_counts": {
+    "roots": {
+      "apps": {
+        "files": 60,
+        "physical_lines": 10162
+      },
+      "contracts": {
+        "files": 108,
+        "physical_lines": 4098
+      },
+      "docs": {
+        "files": 152,
+        "physical_lines": 9827
+      },
+      "include": {
+        "files": 11,
+        "physical_lines": 135
+      },
+      "release": {
+        "files": 68,
+        "physical_lines": 2791
+      },
+      "runtime": {
+        "files": 77,
+        "physical_lines": 13867
+      },
+      "tests": {
+        "files": 338,
+        "physical_lines": 28529
+      },
+      "tools": {
+        "files": 145,
+        "physical_lines": 30647
+      }
+    },
+    "total_files": 959,
+    "total_physical_lines": 100056
+  },
+  "measurement_host": {
+    "machine": "AMD64",
+    "processor_count": 12,
+    "python": "3.11.9",
+    "release": "10",
+    "system": "Windows"
+  },
+  "notes": [
+    "Workspace matrix timing is the clean rerun after an excluded compiler-lock collision.",
+    "Archive throughput and diagnostic export fixtures are added when their focused benchmark harnesses land.",
+    "All sizes are unsigned local proof artifacts; no release or publication claim is implied."
+  ],
+  "schema": "facman.architecture_fitness_baseline.v1",
+  "selected_package": {
+    "name": "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
+    "size_bytes": 941283
+  },
+  "source_revision": "eca688fcfc89abccb9f02993423bdb46f2440ddf",
+  "target_dependency_graph": {
+    "facman_archive_static": [
+      "facman_base_static",
+      "miniz_static"
+    ],
+    "facman_base_static": [],
+    "facman_cli": [
+      "facman_base_static",
+      "flaunch_client_static",
+      "flaunch_runtime_static",
+      "ulk_static",
+      "usk_static",
+      "flb_factorio_static",
+      "flb_factorio_launch_static",
+      "flb_factorio_discovery_static",
+      "flb_factorio_diagnostics_static",
+      "flb_factorio_modsets_static",
+      "flb_factorio_saves_static"
+    ],
+    "facman_daemon": [
+      "flaunch_runtime_static",
+      "ulk_static",
+      "usk_static",
+      "flb_factorio_static"
+    ],
+    "facman_diagnostic_traversal_smoke": [
+      "flb_factorio_diagnostics_static"
+    ],
+    "facman_isolation_lock_smoke": [
+      "flb_factorio_launch_static",
+      "facman_base_static"
+    ],
+    "facman_isolation_probe": [
+      "flb_factorio_launch_static",
+      "facman_base_static",
+      "Threads::Threads"
+    ],
+    "facman_transaction_static": [
+      "facman_archive_static",
+      "facman_base_static"
+    ],
+    "facman_tui": [
+      "flaunch_client_static",
+      "flaunch_runtime_static",
+      "ulk_static"
+    ],
+    "fl_archive_core_smoke": [
+      "facman_archive_static"
+    ],
+    "fl_archive_metadata_fuzz": [
+      "facman_archive_static"
+    ],
+    "fl_archive_plan_fuzz": [
+      "facman_archive_static"
+    ],
+    "fl_archive_probe": [
+      "facman_archive_static"
+    ],
+    "fl_path_safety_smoke": [
+      "facman_base_static",
+      "Threads::Threads"
+    ],
+    "flaunch_client_static": [],
+    "flaunch_runtime_static": [
+      "facman_base_static"
+    ],
+    "flb_command_bridge_smoke": [
+      "flaunch_client_static",
+      "flb_factorio_static"
+    ],
+    "flb_factorio": [],
+    "flb_factorio_application_static": [
+      "facman_base_static",
+      "flb_factorio_discovery_static",
+      "flb_factorio_diagnostics_static",
+      "flb_factorio_launch_static",
+      "flb_factorio_modsets_static",
+      "flb_factorio_saves_static",
+      "ulk_static"
+    ],
+    "flb_factorio_diagnostics_static": [
+      "facman_transaction_static"
+    ],
+    "flb_factorio_discovery_static": [
+      "Advapi32"
+    ],
+    "flb_factorio_launch_static": [
+      "facman_base_static"
+    ],
+    "flb_factorio_mods_static": [
+      "facman_archive_static",
+      "facman_base_static"
+    ],
+    "flb_factorio_modsets_static": [
+      "flb_factorio_mods_static",
+      "facman_transaction_static"
+    ],
+    "flb_factorio_saves_static": [
+      "facman_archive_static",
+      "facman_base_static",
+      "facman_transaction_static",
+      "flb_factorio_launch_static",
+      "flb_factorio_modsets_static"
+    ],
+    "flb_factorio_shared": [
+      "ulk_shared",
+      "flb_factorio_application_static"
+    ],
+    "flb_factorio_static": [
+      "ulk_static",
+      "flb_factorio_application_static"
+    ],
+    "miniz_dependency_smoke": [
+      "miniz_static"
+    ],
+    "miniz_static": []
+  },
+  "test_inventory": {
+    "factorio_launcher_ctest": 9,
+    "required_test_skips": 0,
+    "required_windows_package_tests": 14,
+    "universal_launcher_ctest": 1,
+    "universal_setup_ctest": 2
+  },
+  "timings": {
+    "cli_version_startup": {
+      "maximum_ms": 21.816,
+      "median_ms": 16.577,
+      "minimum_ms": 15.733,
+      "repeats": 7
+    },
+    "command_graph_inspect": {
+      "maximum_ms": 21.178,
+      "median_ms": 18.575,
+      "minimum_ms": 17.494,
+      "repeats": 7
+    },
+    "diagnostic_doctor": {
+      "maximum_ms": 19.589,
+      "median_ms": 16.03,
+      "minimum_ms": 15.616,
+      "repeats": 7
+    },
+    "required_package_proof_seconds": 10.335,
+    "workspace_matrix_seconds": 142.733
+  }
+}

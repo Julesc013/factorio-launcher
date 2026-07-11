@@ -1,0 +1,57 @@
+schema = "facman.architecture_fitness_exceptions.v1"
+baseline_revision = "eca688f"
+policy = "exact_known_set_no_silent_growth"
+
+[checks]
+apps_boundary = [
+  "apps/cli/command_dispatch.cpp:filesystem",
+  "apps/cli/command_dispatch.cpp:include:fl_path_safety.h",
+  "apps/cli/command_dispatch.cpp:include:fl_runtime_verify.h",
+  "apps/cli/command_dispatch.cpp:include:fl_transaction.h",
+  "apps/cli/command_dispatch.cpp:include:flb_factorio_diagnostics.h",
+  "apps/cli/command_dispatch.cpp:include:flb_factorio_discovery.h",
+  "apps/cli/command_dispatch.cpp:include:flb_factorio_launch_plan.h",
+  "apps/cli/command_dispatch.cpp:include:flb_factorio_modsets.h",
+  "apps/cli/command_dispatch.cpp:include:usk/usk_api.h",
+  "apps/cli/command_dispatch.cpp:persistence",
+  "apps/cli/command_dispatch.cpp:process",
+]
+manual_json = [
+  "runtime/factorio/application/flb_factorio_application.cpp",
+  "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp",
+  "runtime/factorio/discovery/flb_factorio_discovery.cpp",
+  "runtime/factorio/launch/flb_factorio_launch_plan.cpp",
+  "runtime/factorio/mods/flb_factorio_mods.cpp",
+  "runtime/factorio/modsets/flb_factorio_modset_operations.cpp",
+  "runtime/factorio/modsets/flb_factorio_modsets.cpp",
+  "runtime/factorio/saves/flb_factorio_save_operations.cpp",
+  "runtime/transaction/fl_transaction.cpp",
+]
+critical_io = [
+  "runtime/archive/fl_archive_platform.h",
+  "runtime/archive/fl_archive_reader.cpp",
+  "runtime/factorio/modsets/flb_factorio_modset_operations.cpp",
+  "runtime/factorio/saves/flb_factorio_save_operations.cpp",
+  "runtime/transaction/fl_transaction.cpp",
+]
+generated_catalog = [
+  "missing:contracts/generated/command_catalog.v1.json",
+  "missing:include/facman/generated/version.h",
+]
+version_truth = [
+  "apps/cli/command_dispatch.cpp:hardcoded:0.1.0",
+  "missing:release/index/version.v1.toml",
+]
+target_dependency = [
+  "facman_cli:link:facman_base_static",
+  "facman_cli:link:flb_factorio_diagnostics_static",
+  "facman_cli:link:flb_factorio_discovery_static",
+  "facman_cli:link:flb_factorio_launch_static",
+  "facman_cli:link:flb_factorio_modsets_static",
+  "facman_cli:link:flb_factorio_saves_static",
+  "facman_cli:link:flb_factorio_static",
+  "facman_cli:link:flaunch_runtime_static",
+  "facman_cli:link:ulk_static",
+  "facman_cli:link:usk_static",
+]
+aide_queue_state = []
