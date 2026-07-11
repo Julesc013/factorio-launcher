@@ -187,8 +187,8 @@ def mutation_proofs(package_root: Path, root: Path) -> None:
     require_integrity_failure(missing, "missing")
 
     modified = copy_case(package_root, root / "modified payload")
-    readme = modified / "docs" / "README.md"
-    readme.write_bytes(readme.read_bytes() + b"\nmodified\n")
+    package_layout = modified / "docs" / "release" / "PACKAGE_LAYOUT.md"
+    package_layout.write_bytes(package_layout.read_bytes() + b"\nmodified\n")
     require_integrity_failure(modified, "SHA-256 mismatch")
 
     extra = copy_case(package_root, root / "extra payload")

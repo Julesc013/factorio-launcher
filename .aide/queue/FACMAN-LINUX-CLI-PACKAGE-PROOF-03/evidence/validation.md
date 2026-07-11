@@ -23,6 +23,14 @@ read-only-root, or Linux runtime claims are promoted. The target run must have
 zero required skips and emit a schema-valid evidence document plus the exact
 artifact SHA-256.
 
+Exact revision `1b5ec68468c6ea09ef6d615ae8819b38e641d3af` reached every
+Linux baseline gate, including native tests, the sanitizer archive corpus and
+fuzz proof, Python, strict checks, and compatibility packages, but failed the
+new package-proof step in run `29156193096`. The mutation fixture named a
+documentation file excluded by the intentionally minimal Linux payload. The
+repair targets the packaged `docs/release/PACKAGE_LAYOUT.md`; it does not
+weaken or skip the modified-payload refusal.
+
 ## Authority boundary
 
 The package remains unsigned and unpublished. This WorkUnit does not execute
