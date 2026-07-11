@@ -1,15 +1,16 @@
 #include "flb_factorio_application.h"
 
 #include "fl_path_safety.h"
+#include "fl_file_io.h"
 #include "flb_factorio_diagnostics.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
 #include "flb_factorio_save_operations.h"
 #include "fl_transaction.h"
+#include "fl_workspace_store.h"
 
 #include <filesystem>
-#include <fstream>
 #include <map>
 #include <set>
 #include <sstream>
@@ -25,6 +26,7 @@ namespace launch = facman::factorio::launch;
 namespace mod_operations = facman::factorio::modsets::operations;
 namespace save_operations = facman::factorio::saves::operations;
 namespace transactions = facman::transaction;
+namespace workspace_store = facman::workspace;
 
 namespace {
 
@@ -48,6 +50,9 @@ enum class CommandId {
     recovery_inspect,
     recovery_plan,
     recovery_apply,
+    migration_inspect,
+    migration_plan,
+    migration_apply,
     diagnostics_export,
     unsupported,
 };
@@ -140,15 +145,7 @@ struct ApplicationResult {
     std::string error_message;
 };
 
-struct InstanceRecord {
-    std::string instance_id;
-    std::string display_name;
-    std::string install_ref;
-    std::string factorio_version;
-    fs::path local_data_root;
-    std::string profile = "gui";
-    std::string template_id = "vanilla";
-};
+using InstanceRecord = workspace_store::InstanceRecord;
 
 std::string json_escape(const std::string& value)
 {
@@ -175,14 +172,6 @@ std::string json_escape(const std::string& value)
 std::string quote(const std::string& value)
 {
     return "\"" + json_escape(value) + "\"";
-}
-
-std::string read_text(const fs::path& path)
-{
-    std::ifstream input(path, std::ios::binary);
-    std::ostringstream output;
-    output << input.rdbuf();
-    return output.str();
 }
 
 std::string json_string_value(const std::string& text, const std::string& key)
@@ -645,7 +634,10 @@ bool decode_request(
         request.payload = std::move(typed);
         return true;
     }
-    case CommandId::recovery_inspect: {
+    case CommandId::recovery_inspect:
+    case CommandId::migration_inspect:
+    case CommandId::migration_plan:
+    case CommandId::migration_apply: {
         if (!validate_fields(payload, {}, {}, detail)) return false;
         request.payload = RecoveryRequest {};
         return true;
@@ -686,6 +678,9 @@ CommandId command_id(ulk_string_view command)
     if (value == "workspace.recovery.inspect") return CommandId::recovery_inspect;
     if (value == "workspace.recovery.plan") return CommandId::recovery_plan;
     if (value == "workspace.recovery.apply") return CommandId::recovery_apply;
+    if (value == "workspace.migration.inspect") return CommandId::migration_inspect;
+    if (value == "workspace.migration.plan") return CommandId::migration_plan;
+    if (value == "workspace.migration.apply") return CommandId::migration_apply;
     if (value == "diagnostics.export") return CommandId::diagnostics_export;
     return CommandId::unsupported;
 }
@@ -722,11 +717,11 @@ std::string instance_json(const InstanceRecord& instance)
     std::ostringstream out;
     out << "{\n";
     out << "  \"schema\": \"factorio.instance.v1\",\n";
-    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
+    out << "  \"instance_id\": " << quote(instance.id.str()) << ",\n";
     out << "  \"display_name\": " << quote(instance.display_name) << ",\n";
-    out << "  \"install_ref\": " << quote(instance.install_ref) << ",\n";
+    out << "  \"install_ref\": " << quote(instance.install_ref.str()) << ",\n";
     out << "  \"factorio_version\": " << quote(instance.factorio_version) << ",\n";
-    out << "  \"local_data_root\": " << quote(instance.local_data_root.lexically_normal().string()) << ",\n";
+    out << "  \"local_data_root\": " << quote(facman::platform::path_to_utf8(instance.root.lexically_normal())) << ",\n";
     out << "  \"profile\": " << quote(instance.profile) << ",\n";
     out << "  \"modset\": null,\n";
     out << "  \"template\": " << quote(instance.template_id) << ",\n";
@@ -796,6 +791,7 @@ private:
             request.command == CommandId::instance_export ||
             request.command == CommandId::instance_import ||
             request.command == CommandId::recovery_apply ||
+            request.command == CommandId::migration_apply ||
             request.command == CommandId::diagnostics_export;
         if (request.dry_run && data_write) {
             return refused(
@@ -870,6 +866,12 @@ private:
             return recovery_result(
                 transactions::apply(workspace_, std::get<RecoveryRequest>(request.payload).transaction_id),
                 "workspace.recovery.apply");
+        case CommandId::migration_inspect:
+            return migration_result("workspace.migration.inspect");
+        case CommandId::migration_plan:
+            return migration_result("workspace.migration.plan");
+        case CommandId::migration_apply:
+            return migration_result("workspace.migration.apply");
         case CommandId::diagnostics_export:
             return diagnostic_result(diagnostic_operations::export_bundle(
                 workspace_,
@@ -880,6 +882,24 @@ private:
                 "invalid_request",
                 "Unsupported application command");
         }
+    }
+
+    ApplicationResult migration_result(const std::string& operation)
+    {
+        workspace_store::WorkspaceRepository repository {workspace_store::WorkspaceLayout(workspace_)};
+        facman::core::Result<workspace_store::MigrationReport> outcome =
+            operation == "workspace.migration.inspect" ? repository.inspect_migration() :
+            operation == "workspace.migration.plan" ? repository.plan_migration() :
+            repository.apply_migration();
+        if (!outcome) {
+            return refused(
+                safety_refusal(operation, outcome.error().code, outcome.error().message, outcome.error().path, false),
+                outcome.error().code,
+                outcome.error().message);
+        }
+        ApplicationResult result;
+        result.output = workspace_store::migration_report_json(outcome.value());
+        return result;
     }
 
     ApplicationResult scan(const ScanInstallRefsRequest& request)
@@ -897,17 +917,17 @@ private:
     {
         const std::string& root = request.path;
         const std::string& id = request.install_id;
-        facman::base::ManagedPathResult target = facman::base::managed_file(
-            workspace_, fs::path("installs") / "refs", id, ".json");
-        if (!target.ok()) {
+        workspace_store::WorkspaceLayout layout(workspace_);
+        auto target = layout.install_ref(facman::core::InstallId(id));
+        if (!target) {
             return refused(
-                safety_refusal("installs.import", target.code, "Install id cannot be used as a managed path", target.detail, false),
-                target.code,
-                target.detail);
+                safety_refusal("installs.import", target.error().code, "Install id cannot be used as a managed path", target.error().message, false),
+                target.error().code,
+                target.error().message);
         }
-        if (fs::exists(target.path)) {
+        if (fs::exists(target.value())) {
             return refused(
-                safety_refusal("installs.import", "persistent_target_exists", "Install reference already exists", target.path.string(), true),
+                safety_refusal("installs.import", "persistent_target_exists", "Install reference already exists", target.value().string(), true),
                 "persistent_target_exists",
                 "Install reference already exists");
         }
@@ -918,14 +938,22 @@ private:
                 "invalid_install",
                 "Install does not look like a Factorio directory");
         }
-        ensure_workspace();
-        std::string text = discovery::install_ref_json(install);
-        std::string error;
-        if (!facman::base::write_text_new_atomic(target.path, text, error)) {
+        auto workspace_ready = ensure_workspace();
+        if (!workspace_ready) {
             return refused(
-                safety_refusal("installs.import", "persistent_write_refused", "Install reference could not be committed", error, true),
+                safety_refusal("installs.import", workspace_ready.error().code, "Workspace layout is unavailable", workspace_ready.error().message, false),
+                workspace_ready.error().code,
+                workspace_ready.error().message);
+        }
+        std::string text = discovery::install_ref_json(install);
+        workspace_store::InstallRecord record;
+        record.id = facman::core::InstallId(id);
+        auto created = workspace_store::InstallRepository(layout).create(record, text);
+        if (!created) {
+            return refused(
+                safety_refusal("installs.import", "persistent_write_refused", "Install reference could not be committed", created.error().message, true),
                 "persistent_write_refused",
-                error);
+                created.error().message);
         }
         ApplicationResult result;
         result.output = text;
@@ -934,28 +962,18 @@ private:
 
     bool load_install(const std::string& id, discovery::InstallRef& install)
     {
-        facman::base::ManagedPathResult target = facman::base::managed_file(
-            workspace_, fs::path("installs") / "refs", id, ".json");
-        if (!target.ok()) {
-            return false;
-        }
-        if (!fs::is_regular_file(target.path)) {
-            target = facman::base::managed_file(
-                workspace_, fs::path("installs") / "installed_state", id, ".json");
-        }
-        if (!target.ok() || !fs::is_regular_file(target.path)) {
-            return false;
-        }
-        std::string text = read_text(target.path);
-        install.install_id = json_string_value(text, "install_id");
-        install.root = json_string_value(text, "root");
-        install.executable = json_string_value(text, "executable");
-        install.version = json_string_value(text, "version");
-        install.ownership = json_string_value(text, "ownership");
-        install.source = json_string_value(text, "source");
-        install.platform = json_string_value(text, "platform");
-        install.verification_status = json_string_value(text, "status");
-        return install.install_id == id;
+        auto record = workspace_store::InstallRepository(workspace_store::WorkspaceLayout(workspace_)).load(
+            facman::core::InstallId(id));
+        if (!record) return false;
+        install.install_id = record.value().id.str();
+        install.root = record.value().root;
+        install.executable = record.value().executable;
+        install.version = record.value().version;
+        install.ownership = record.value().ownership;
+        install.source = record.value().source;
+        install.platform = record.value().platform;
+        install.verification_status = record.value().verification_status;
+        return true;
     }
 
     ApplicationResult inspect_install(const InspectInstallRefRequest& request)
@@ -975,37 +993,29 @@ private:
 
     bool load_instance(const std::string& id, InstanceRecord& instance)
     {
-        facman::base::ManagedPathResult root = facman::base::managed_directory(workspace_, "instances", id);
-        if (!root.ok() || !fs::is_regular_file(root.path / "instance.v1.json")) {
-            return false;
-        }
-        std::string text = read_text(root.path / "instance.v1.json");
-        instance.instance_id = json_string_value(text, "instance_id");
-        instance.display_name = json_string_value(text, "display_name");
-        instance.install_ref = json_string_value(text, "install_ref");
-        instance.factorio_version = json_string_value(text, "factorio_version");
-        instance.profile = json_string_value(text, "profile");
-        instance.template_id = json_string_value(text, "template");
-        instance.local_data_root = root.path;
-        return instance.instance_id == id;
+        auto record = workspace_store::InstanceRepository(workspace_store::WorkspaceLayout(workspace_)).load(
+            facman::core::InstanceId(id));
+        if (!record) return false;
+        instance = record.take_value();
+        return true;
     }
 
     ApplicationResult create_instance(const CreateInstanceRequest& request)
     {
         InstanceRecord instance;
         instance.display_name = request.display_name;
-        instance.instance_id = request.instance_id;
-        instance.install_ref = request.install_id;
+        instance.id = facman::core::InstanceId(request.instance_id);
+        instance.install_ref = facman::core::InstallId(request.install_id);
         instance.template_id = request.template_id;
         discovery::InstallRef install;
-        if (!load_install(instance.install_ref, install)) {
+        if (!load_install(instance.install_ref.str(), install)) {
             return refused(
-                safety_refusal("instances.create", "unknown_install", "Install reference is not registered", instance.install_ref, true),
+                safety_refusal("instances.create", "unknown_install", "Install reference is not registered", instance.install_ref.str(), true),
                 "unknown_install",
                 "Install reference is not registered");
         }
         facman::base::ManagedPathResult target = facman::base::managed_directory(
-            workspace_, "instances", instance.instance_id);
+            workspace_, "instances", instance.id.str());
         if (!target.ok()) {
             return refused(
                 safety_refusal("instances.create", target.code, "Instance id cannot be used as a managed path", target.detail, false),
@@ -1018,9 +1028,15 @@ private:
                 "persistent_target_exists",
                 "Instance target already exists");
         }
-        ensure_workspace();
+        auto workspace_ready = ensure_workspace();
+        if (!workspace_ready) {
+            return refused(
+                safety_refusal("instances.create", workspace_ready.error().code, "Workspace layout is unavailable", workspace_ready.error().message, false),
+                workspace_ready.error().code,
+                workspace_ready.error().message);
+        }
         instance.factorio_version = install.version;
-        instance.local_data_root = target.path;
+        instance.root = target.path;
         fs::path staging = target.path;
         staging += ".facman-staging";
         if (fs::exists(staging)) {
@@ -1053,9 +1069,9 @@ private:
         const char* dirs[] = {"config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "exports", "cache", "locks"};
         for (const char* dir : dirs) fs::create_directories(staging / dir);
         launch::InstanceLaunchRef launch_instance;
-        launch_instance.instance_id = instance.instance_id;
+        launch_instance.instance_id = instance.id.str();
         launch_instance.profile_id = instance.profile;
-        launch_instance.local_data_root = target.path;
+        launch_instance.local_data_root = instance.root;
         launch::InstallLaunchRef launch_install;
         launch_install.root = install.root;
         launch_install.executable = install.executable;
@@ -1109,16 +1125,16 @@ private:
                 "Instance is not registered");
         }
         discovery::InstallRef install;
-        if (!load_install(instance.install_ref, install)) {
+        if (!load_install(instance.install_ref.str(), install)) {
             return refused(
-                safety_refusal("launch_plan.preview", "unknown_install", "Install reference is not registered", instance.install_ref, true),
+                safety_refusal("launch_plan.preview", "unknown_install", "Install reference is not registered", instance.install_ref.str(), true),
                 "unknown_install",
                 "Install reference is not registered");
         }
         launch::InstanceLaunchRef instance_ref;
-        instance_ref.instance_id = instance.instance_id;
+        instance_ref.instance_id = instance.id.str();
         instance_ref.profile_id = instance.profile;
-        instance_ref.local_data_root = instance.local_data_root;
+        instance_ref.local_data_root = instance.root;
         launch::InstallLaunchRef install_ref;
         install_ref.root = install.root;
         install_ref.executable = install.executable;
@@ -1139,16 +1155,16 @@ private:
                 "Instance is not registered");
         }
         discovery::InstallRef install;
-        if (!load_install(instance.install_ref, install)) {
+        if (!load_install(instance.install_ref.str(), install)) {
             return refused(
-                safety_refusal("launch_plan.preflight", "unknown_install", "Install reference is not registered", instance.install_ref, true),
+                safety_refusal("launch_plan.preflight", "unknown_install", "Install reference is not registered", instance.install_ref.str(), true),
                 "unknown_install",
                 "Install reference is not registered");
         }
         launch::InstanceLaunchRef instance_ref;
-        instance_ref.instance_id = instance.instance_id;
+        instance_ref.instance_id = instance.id.str();
         instance_ref.profile_id = instance.profile;
-        instance_ref.local_data_root = instance.local_data_root;
+        instance_ref.local_data_root = instance.root;
         launch::InstallLaunchRef install_ref;
         install_ref.root = install.root;
         install_ref.executable = install.executable;
@@ -1235,33 +1251,9 @@ private:
         return result;
     }
 
-    void ensure_workspace()
+    facman::core::Result<workspace_store::WorkspaceRecord> ensure_workspace()
     {
-        const char* dirs[] = {"installs/refs", "installs/setup_state_refs", "instances", "modsets", "saves", "profiles", "accounts", "audit", "diagnostics/reports", "exports"};
-        for (const char* dir : dirs) fs::create_directories(workspace_ / dir);
-        fs::path manifest = workspace_ / "workspace.v1.json";
-        if (!fs::exists(manifest)) {
-            std::string error;
-            (void)facman::base::write_text_new_atomic(
-                manifest,
-                "{\n"
-                "  \"schema\": \"facman.factorio.workspace.v1\",\n"
-                "  \"workspace_id\": \"local\",\n"
-                "  \"layout_version\": 1,\n"
-                "  \"roots\": {\n"
-                "    \"installs\": \"installs\",\n"
-                "    \"instances\": \"instances\",\n"
-                "    \"profiles\": \"profiles\",\n"
-                "    \"modsets\": \"modsets\",\n"
-                "    \"accounts\": \"accounts\",\n"
-                "    \"cache\": \"cache\",\n"
-                "    \"audit\": \"audit\",\n"
-                "    \"diagnostics\": \"diagnostics\",\n"
-                "    \"exports\": \"exports\"\n"
-                "  }\n"
-                "}\n",
-                error);
-        }
+        return workspace_store::WorkspaceRepository(workspace_store::WorkspaceLayout(workspace_)).ensure();
     }
 
     std::string output_json(const ApplicationOutput& output)

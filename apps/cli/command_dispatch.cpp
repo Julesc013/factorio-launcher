@@ -2403,17 +2403,18 @@ int command_run(const CliOptions& options)
 
 int command_workspace(const CliOptions& options)
 {
-    if (options.args.size() < 3 || options.args[1] != "recovery") {
-        std::cerr << "workspace recovery requires inspect, plan, or apply\n";
+    if (options.args.size() < 3 || (options.args[1] != "recovery" && options.args[1] != "migration")) {
+        std::cerr << "workspace requires recovery or migration followed by inspect, plan, or apply\n";
         return 2;
     }
+    const std::string family = options.args[1];
     const std::string operation = options.args[2];
     if (operation != "inspect" && operation != "plan" && operation != "apply") {
-        std::cerr << "workspace recovery requires inspect, plan, or apply\n";
+        std::cerr << "workspace " << family << " requires inspect, plan, or apply\n";
         return 2;
     }
     std::ostringstream request;
-    if (operation == "inspect") {
+    if (family == "migration" || operation == "inspect") {
         request << "{}";
     } else {
         if (options.args.size() < 4) {
@@ -2422,7 +2423,8 @@ int command_workspace(const CliOptions& options)
         }
         request << "{\"transaction_id\":" << quote(options.args[3]) << "}";
     }
-    const std::string command_id = "workspace.recovery." + operation;
+    const std::string command_id = family == "recovery" ?
+        "workspace.recovery." + operation : "workspace.migration." + operation;
     const RoutedCommandResult routed = route_factorio_command(
         options.workspace,
         command_id.c_str(),

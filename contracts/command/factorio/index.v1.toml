@@ -25,6 +25,9 @@ files = [
   "saves.clone.v1.toml",
   "saves.list.v1.toml",
   "workspace.recovery.apply.v1.toml",
+  "workspace.migration.apply.v1.toml",
+  "workspace.migration.inspect.v1.toml",
+  "workspace.migration.plan.v1.toml",
   "workspace.recovery.inspect.v1.toml",
   "workspace.recovery.plan.v1.toml",
 ]
@@ -48,6 +51,9 @@ registered = [
   "saves.clone",
   "saves.list",
   "workspace.recovery.apply",
+  "workspace.migration.apply",
+  "workspace.migration.inspect",
+  "workspace.migration.plan",
   "workspace.recovery.inspect",
   "workspace.recovery.plan",
 ]

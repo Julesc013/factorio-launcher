@@ -65,6 +65,9 @@ required_codes = [
   "export_secret_refused",
   "redaction_policy_missing",
   "redaction_policy_invalid",
+  "workspace_layout_future_or_unknown",
+  "workspace_record_future_or_unknown_schema",
+  "workspace_migration_apply_unproven",
 ]
 
 [[code]]
@@ -717,3 +720,24 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = true
 message = "Recovery could not durably update the recognized transaction state."
+
+[[code]]
+id = "workspace_layout_future_or_unknown"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The workspace manifest uses an unknown schema or future layout version."
+
+[[code]]
+id = "workspace_record_future_or_unknown_schema"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A persistent workspace record uses an unknown or future schema."
+
+[[code]]
+id = "workspace_migration_apply_unproven"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Migration apply is disabled until backup and transaction-journal execution has dedicated proof."

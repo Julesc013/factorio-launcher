@@ -5,6 +5,7 @@
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
 #include "fl_transaction.h"
+#include "fl_workspace_store.h"
 
 #include <algorithm>
 #include <array>
@@ -1361,18 +1362,19 @@ ExportOutcome export_bundle(
             false);
     }
 
-    const facman::base::ManagedPathResult managed =
-        facman::base::managed_directory(workspace, "instances", request.instance_id);
-    if (!managed.ok()) {
+    facman::workspace::WorkspaceLayout workspace_layout(workspace);
+    auto instance_record = facman::workspace::InstanceRepository(workspace_layout).load(
+        facman::core::InstanceId(request.instance_id));
+    if (!instance_record) {
         return refuse(
             request,
-            managed.code,
+            instance_record.error().code,
             "Diagnostic instance path is unsafe",
-            managed.detail,
+            instance_record.error().message,
             false);
     }
-    const fs::path instance_manifest_relative =
-        fs::path("instances") / request.instance_id / "instance.v1.json";
+    const fs::path managed_instance_root = instance_record.value().root;
+    const fs::path instance_manifest_relative = instance_record.value().source_path.lexically_relative(workspace);
     StableReadResult instance_manifest = stable_read_relative(
         workspace,
         instance_manifest_relative,
@@ -1397,47 +1399,17 @@ ExportOutcome export_bundle(
             instance_structure.error,
             false);
     }
-    const fs::path declared_root = json_string_value(instance_text, "local_data_root");
-    if (declared_root.empty() ||
-        fs::absolute(declared_root).lexically_normal() !=
-            fs::absolute(managed.path).lexically_normal()) {
-        return refuse(
-            request,
-            "diagnostic_bundle_policy_invalid",
-            "Instance manifest root does not match the managed instance root",
-            "instance root mismatch",
-            false);
-    }
-    const std::string install_id = json_string_value(instance_text, "install_ref");
-    if (install_id.empty()) {
-        return refuse(
-            request,
-            "diagnostic_structured_input_invalid",
-            "Instance manifest has no install reference",
-            "install_ref is missing",
-            false);
-    }
-    facman::base::ManagedPathResult install_manifest = facman::base::managed_file(
-        workspace,
-        fs::path("installs") / "refs",
-        install_id,
-        ".json");
-    if (!install_manifest.ok() || !fs::is_regular_file(install_manifest.path, error)) {
-        install_manifest = facman::base::managed_file(
-            workspace,
-            fs::path("installs") / "installed_state",
-            install_id,
-            ".json");
-    }
-    if (!install_manifest.ok()) {
+    auto install_record = facman::workspace::InstallRepository(workspace_layout).load(
+        instance_record.value().install_ref);
+    if (!install_record) {
         return refuse(
             request,
             "diagnostic_bundle_source_missing",
             "Selected install reference is unavailable",
-            install_manifest.detail,
+            install_record.error().message,
             true);
     }
-    const fs::path install_relative = install_manifest.path.lexically_relative(workspace);
+    const fs::path install_relative = install_record.value().source_path.lexically_relative(workspace);
     StableReadResult install_read = stable_read_relative(
         workspace,
         install_relative,
@@ -1451,7 +1423,7 @@ ExportOutcome export_bundle(
             true);
     }
     const std::string install_text(install_read.bytes.begin(), install_read.bytes.end());
-    const fs::path install_root = json_string_value(install_text, "root");
+    const fs::path install_root = install_record.value().root;
 
     const fs::path payload_staging = unique_staging(
         output_parent,
@@ -1474,7 +1446,7 @@ ExportOutcome export_bundle(
     transaction.sources = {
         workspace / "workspace.v1.json",
         workspace / instance_manifest_relative,
-        install_manifest.path,
+        install_record.value().source_path,
     };
     transaction.staging_roots = {payload_staging, archive_staging};
     transaction.commit_strategy = "destination_volume_stage_verify_atomic_no_replace";
@@ -1507,7 +1479,7 @@ ExportOutcome export_bundle(
             "workspace/workspace.v1.json",
             "workspace",
             workspace,
-            managed.path,
+            managed_instance_root,
             install_root,
             files,
             events,
@@ -1518,7 +1490,7 @@ ExportOutcome export_bundle(
             "instance/instance.v1.json",
             "instance_manifest",
             workspace,
-            managed.path,
+            managed_instance_root,
             install_root,
             files,
             events,
@@ -1529,7 +1501,7 @@ ExportOutcome export_bundle(
             "installs/selected-install-ref.v1.json",
             "install_ref",
             workspace,
-            managed.path,
+            managed_instance_root,
             install_root,
             files,
             events,
@@ -1544,11 +1516,9 @@ ExportOutcome export_bundle(
             false);
     }
 
-    const fs::path modset_path = facman::base::managed_file(
-        workspace,
-        "modsets",
-        request.instance_id,
-        ".modset-lock.v1.json").path;
+    auto modset_result = facman::workspace::ModsetRepository(workspace_layout).canonical_lock(
+        facman::core::InstanceId(request.instance_id));
+    const fs::path modset_path = modset_result ? modset_result.value() : fs::path();
     if (fs::is_regular_file(modset_path, error) && !error) {
         const fs::path relative = modset_path.lexically_relative(workspace);
         transaction.sources.push_back(modset_path);
@@ -1558,7 +1528,7 @@ ExportOutcome export_bundle(
                 "modsets/modset-lock.v1.json",
                 "modset_lock",
                 workspace,
-                managed.path,
+                managed_instance_root,
                 install_root,
                 files,
                 events,
@@ -1576,7 +1546,7 @@ ExportOutcome export_bundle(
 
     TraversalPolicy traversal_policy;
     traversal_policy.allowlisted_roots = {"config", "logs", "crash", "script-output"};
-    TraversalResult traversal = collect_bounded_files(managed.path, traversal_policy);
+    TraversalResult traversal = collect_bounded_files(managed_instance_root, traversal_policy);
     for (const TraversalOmission& omission : traversal.omissions) {
         omissions.push_back({"instance/" + omission.path, omission.reason});
     }
@@ -1596,7 +1566,7 @@ ExportOutcome export_bundle(
             true);
     }
     for (const fs::path& selected : traversal.files) {
-        const fs::path relative = selected.lexically_relative(managed.path);
+        const fs::path relative = selected.lexically_relative(managed_instance_root);
         std::string kind;
         std::string omission_reason;
         if (!recognized_format(relative, kind, omission_reason)) {
@@ -1609,12 +1579,12 @@ ExportOutcome export_bundle(
         }
         transaction.sources.push_back(selected);
         if (!collect_known_file(
-                managed.path,
+                managed_instance_root,
                 relative,
                 "instance/" + relative.generic_string(),
                 kind,
                 workspace,
-                managed.path,
+                managed_instance_root,
                 install_root,
                 files,
                 events,

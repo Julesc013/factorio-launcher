@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"workspace.migration.apply","status":"refused","refusal":{"schema":"common.refusal.v1","code":"workspace_migration_apply_unproven","reason":"backup and journal execution is not yet proven","recoverable":false}}

@@ -1,4 +1,4 @@
-# generated source-sha256: c578bafc3e92d783e8ffa22986c46fcf5db689e91f3889c797c06dda03651cd6
+# generated source-sha256: 6ecfc8b073bdfb30f272c366abe84ddd8e0a779fb124e35666d58ebd5345f42c
 complete -c facman -f -a diagnostics
 complete -c facman -f -a doctor
 complete -c facman -f -a export

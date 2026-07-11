@@ -143,6 +143,21 @@ add_library(facman_base_static STATIC
 target_include_directories(facman_base_static PUBLIC runtime/base)
 target_compile_features(facman_base_static PUBLIC cxx_std_17)
 
+add_library(facman_workspace_static STATIC runtime/workspace/fl_workspace_store.cpp)
+target_include_directories(facman_workspace_static PUBLIC
+  runtime/workspace
+  runtime/core
+  runtime/core/json
+  runtime/base
+  runtime/platform
+)
+target_compile_features(facman_workspace_static PUBLIC cxx_std_17)
+target_link_libraries(facman_workspace_static PUBLIC
+  facman_base_static
+  facman_core_static
+  facman_platform_static
+)
+
 add_library(facman_archive_static STATIC
   runtime/archive/fl_archive_platform.cpp
   runtime/archive/fl_archive_policy.cpp
@@ -156,7 +171,7 @@ target_link_libraries(facman_archive_static PUBLIC facman_base_static facman_pla
 add_library(facman_transaction_static STATIC runtime/transaction/fl_transaction.cpp)
 target_include_directories(facman_transaction_static PUBLIC runtime/transaction runtime/archive runtime/base)
 target_compile_features(facman_transaction_static PUBLIC cxx_std_17)
-target_link_libraries(facman_transaction_static PUBLIC facman_archive_static facman_base_static)
+target_link_libraries(facman_transaction_static PUBLIC facman_archive_static facman_base_static facman_workspace_static)
 
 add_library(flaunch_client_static STATIC ${FLAUNCH_CLIENT_SOURCES})
 target_include_directories(flaunch_client_static PUBLIC
@@ -180,7 +195,7 @@ endif()
 add_library(flb_factorio_diagnostics_static STATIC runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp)
 target_compile_features(flb_factorio_diagnostics_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_diagnostics_static PUBLIC runtime/factorio/diagnostics)
-target_link_libraries(flb_factorio_diagnostics_static PUBLIC facman_transaction_static)
+target_link_libraries(flb_factorio_diagnostics_static PUBLIC facman_transaction_static facman_workspace_static)
 
 add_library(flb_factorio_mods_static STATIC runtime/factorio/mods/flb_factorio_mods.cpp)
 target_compile_features(flb_factorio_mods_static PUBLIC cxx_std_17)
@@ -193,7 +208,7 @@ add_library(flb_factorio_modsets_static STATIC
 )
 target_compile_features(flb_factorio_modsets_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_modsets_static PUBLIC runtime/factorio/modsets runtime/factorio/mods)
-target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static)
+target_link_libraries(flb_factorio_modsets_static PUBLIC flb_factorio_mods_static facman_transaction_static facman_workspace_static)
 
 add_library(flb_factorio_saves_static
   runtime/factorio/saves/flb_factorio_save_operations.cpp
@@ -207,6 +222,7 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
   facman_archive_static
   facman_base_static
   facman_transaction_static
+  facman_workspace_static
   flb_factorio_launch_static
   flb_factorio_modsets_static
 )
@@ -218,6 +234,7 @@ target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_application_static PUBLIC runtime/factorio/application)
 target_link_libraries(flb_factorio_application_static PUBLIC
   facman_base_static
+  facman_workspace_static
   flb_factorio_discovery_static
   flb_factorio_diagnostics_static
   flb_factorio_launch_static
@@ -288,6 +305,11 @@ if(FLAUNCH_BUILD_TESTS)
   target_compile_features(fl_platform_io_smoke PRIVATE cxx_std_17)
   target_link_libraries(fl_platform_io_smoke PRIVATE facman_platform_static)
   add_test(NAME fl_platform_io_smoke COMMAND fl_platform_io_smoke)
+
+  add_executable(fl_workspace_store_smoke tests/native/fl_workspace_store_smoke.cpp)
+  target_compile_features(fl_workspace_store_smoke PRIVATE cxx_std_17)
+  target_link_libraries(fl_workspace_store_smoke PRIVATE facman_workspace_static)
+  add_test(NAME fl_workspace_store_smoke COMMAND fl_workspace_store_smoke)
 
   add_executable(fl_archive_core_smoke tests/native/fl_archive_core_smoke.cpp)
   if(WIN32)

@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"workspace.migration.inspect","status":"refused","refusal":{"schema":"common.refusal.v1","code":"workspace_layout_future_or_unknown","reason":"future workspace layout is not readable","recoverable":false}}

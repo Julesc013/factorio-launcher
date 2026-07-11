@@ -178,6 +178,7 @@ ALLOWED_RUNTIME_ROOTS = {
     "package",
     "platform",
     "transaction",
+    "workspace",
 }
 ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "accounts",

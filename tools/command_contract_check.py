@@ -34,6 +34,9 @@ EXPECTED_COMMANDS = {
     "workspace.recovery.inspect",
     "workspace.recovery.plan",
     "workspace.recovery.apply",
+    "workspace.migration.inspect",
+    "workspace.migration.plan",
+    "workspace.migration.apply",
     "diagnostics.export",
 }
 

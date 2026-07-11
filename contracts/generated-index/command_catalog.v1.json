@@ -432,6 +432,67 @@
       "runtime_id": "saves.list"
     },
     {
+      "cli": "facman workspace migration apply --json",
+      "command_id": "workspace.migration.apply",
+      "contract_path": "contracts/command/factorio/workspace.migration.apply.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/workspace.migration.apply.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.migration.apply.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "workspace.migration.apply"
+    },
+    {
+      "cli": "facman workspace migration inspect --json",
+      "command_id": "workspace.migration.inspect",
+      "contract_path": "contracts/command/factorio/workspace.migration.inspect.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/workspace.migration.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.migration.inspect.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "workspace.migration.inspect"
+    },
+    {
+      "cli": "facman workspace migration plan --json",
+      "command_id": "workspace.migration.plan",
+      "contract_path": "contracts/command/factorio/workspace.migration.plan.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/workspace.migration.plan.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.migration.plan.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "workspace.migration.plan"
+    },
+    {
       "cli": "facman workspace recovery apply <transaction-id> --json",
       "command_id": "workspace.recovery.apply",
       "contract_path": "contracts/command/factorio/workspace.recovery.apply.v1.toml",
@@ -495,6 +556,6 @@
   ],
   "owner": "factorio-launcher",
   "schema": "facman.generated_command_catalog.v1",
-  "source_digest": "c578bafc3e92d783e8ffa22986c46fcf5db689e91f3889c797c06dda03651cd6",
+  "source_digest": "6ecfc8b073bdfb30f272c366abe84ddd8e0a779fb124e35666d58ebd5345f42c",
   "version": "facman-0.1.0+dev.contract"
 }

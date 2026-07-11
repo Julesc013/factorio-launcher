@@ -4,6 +4,7 @@
 #include "fl_archive_platform.h"
 #include "fl_path_safety.h"
 #include "fl_transaction.h"
+#include "fl_workspace_store.h"
 
 #include <algorithm>
 #include <array>
@@ -106,33 +107,27 @@ Refusal refuse(
 
 bool load_instance(const fs::path& workspace, const std::string& instance_id, Instance& instance)
 {
-    facman::base::ManagedPathResult managed = facman::base::managed_directory(
-        workspace,
-        "instances",
-        instance_id);
-    if (!managed.ok()) return false;
-    fs::path manifest = managed.path / "instance.v1.json";
-    if (!fs::is_regular_file(manifest)) manifest = managed.path / "instance.manifest.json";
-    if (!fs::is_regular_file(manifest)) return false;
-    const std::string text = read_text(manifest);
-    instance.instance_id = json_string_value(text, "instance_id");
-    instance.factorio_version = json_string_value(text, "factorio_version");
-    instance.root = managed.path;
-    return instance.instance_id == instance_id && !instance.factorio_version.empty();
+    auto record = facman::workspace::InstanceRepository(facman::workspace::WorkspaceLayout(workspace)).load(
+        facman::core::InstanceId(instance_id));
+    if (!record) return false;
+    instance.instance_id = record.value().id.str();
+    instance.factorio_version = record.value().factorio_version;
+    instance.root = record.value().root;
+    return !instance.factorio_version.empty();
 }
 
 fs::path instance_lock_path(const Instance& instance)
 {
-    return instance.root / "mods" / "modset-lock.v1.json";
+    auto path = facman::workspace::WorkspaceLayout(instance.root.parent_path().parent_path()).instance_modset_lock(
+        facman::core::InstanceId(instance.instance_id));
+    return path ? path.value() : fs::path();
 }
 
 fs::path workspace_lock_path(const fs::path& workspace, const Instance& instance)
 {
-    return facman::base::managed_file(
-        workspace,
-        "modsets",
-        instance.instance_id,
-        ".modset-lock.v1.json").path;
+    auto path = facman::workspace::ModsetRepository(facman::workspace::WorkspaceLayout(workspace)).canonical_lock(
+        facman::core::InstanceId(instance.instance_id));
+    return path ? path.value() : fs::path();
 }
 
 std::vector<ModRef> instance_mods(const Instance& instance)

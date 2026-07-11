@@ -11,7 +11,7 @@ namespace facman::transaction {
 struct Record {
     std::string transaction_id;
     std::string command_id;
-    std::string workspace_id = "local";
+    std::string workspace_id;
     std::filesystem::path target;
     std::vector<std::filesystem::path> sources;
     std::string created_utc;

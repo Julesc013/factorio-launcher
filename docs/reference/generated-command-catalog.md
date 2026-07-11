@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `c578bafc3e92d783e8ffa22986c46fcf5db689e91f3889c797c06dda03651cd6`.
+Source digest: `6ecfc8b073bdfb30f272c366abe84ddd8e0a779fb124e35666d58ebd5345f42c`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -27,6 +27,9 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `saves.backup` | `saves.backup` | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> --json` |
 | `saves.clone` | `saves.clone` | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> --json` |
 | `saves.list` | `saves.list` | available | workspace_read | `facman saves list --instance <instance-id> --json` |
+| `workspace.migration.apply` | `workspace.migration.apply` | available | workspace_read, workspace_write | `facman workspace migration apply --json` |
+| `workspace.migration.inspect` | `workspace.migration.inspect` | available | workspace_read | `facman workspace migration inspect --json` |
+| `workspace.migration.plan` | `workspace.migration.plan` | available | workspace_read | `facman workspace migration plan --json` |
 | `workspace.recovery.apply` | `workspace.recovery.apply` | available | workspace_read, workspace_write | `facman workspace recovery apply <transaction-id> --json` |
 | `workspace.recovery.inspect` | `workspace.recovery.inspect` | available | workspace_read | `facman workspace recovery inspect --json` |
 | `workspace.recovery.plan` | `workspace.recovery.plan` | available | workspace_read | `facman workspace recovery plan <transaction-id> --json` |

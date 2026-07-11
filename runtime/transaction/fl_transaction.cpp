@@ -3,6 +3,7 @@
 #include "fl_archive.h"
 #include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
+#include "fl_workspace_store.h"
 
 #include <algorithm>
 #include <chrono>
@@ -291,6 +292,13 @@ std::string recovery_json(const std::string& command, const std::vector<Record>&
 
 bool begin(const fs::path& workspace, Record& record, std::string& detail)
 {
+    auto workspace_record = facman::workspace::WorkspaceRepository(
+        facman::workspace::WorkspaceLayout(workspace)).ensure();
+    if (!workspace_record) {
+        detail = workspace_record.error().code + ": " + workspace_record.error().message;
+        return false;
+    }
+    record.workspace_id = workspace_record.value().id.str();
     fs::create_directories(journal_root(workspace));
     if (facman::base::path_crosses_link_or_reparse_point(journal_root(workspace), detail)) return false;
     if (record.transaction_id.empty()) {

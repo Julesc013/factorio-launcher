@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+  "title": "FacMan Workspace Migration",
+  "type": "object",
+  "required": ["schema", "command", "status", "apply_enabled", "actions"],
+  "properties": {
+    "schema": { "const": "facman.workspace_migration.v1" },
+    "command": { "enum": ["workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"] },
+    "status": { "enum": ["no_changes", "changes_detected"] },
+    "apply_enabled": { "type": "boolean" },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "source", "target", "backup_required", "journal_required"],
+        "properties": {
+          "kind": { "enum": ["create_workspace_identity", "replace_literal_local_workspace_identity", "canonicalize_legacy_install_ref", "canonicalize_legacy_instance_manifest"] },
+          "source": { "type": "string" },
+          "target": { "type": "string" },
+          "backup_required": { "type": "boolean" },
+          "journal_required": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

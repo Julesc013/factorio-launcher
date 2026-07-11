@@ -1,0 +1,1 @@
+{"schema":"facman.safety_refusal.v1","command":"workspace.migration.plan","status":"refused","refusal":{"schema":"common.refusal.v1","code":"workspace_record_future_or_unknown_schema","reason":"future persistent records are not migrated","recoverable":false}}

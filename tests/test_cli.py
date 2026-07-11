@@ -57,6 +57,9 @@ class CliTests(unittest.TestCase):
         self.assertTrue(
             {"workspace.recovery.inspect", "workspace.recovery.plan", "workspace.recovery.apply"}.issubset(commands)
         )
+        self.assertTrue(
+            {"workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"}.issubset(commands)
+        )
         self.assertIn("diagnostics.export", commands)
         descriptors = {command["command"]: command for command in graph["commands"]}
         self.assertEqual(descriptors["mods.import"]["effects"], ["workspace_read", "workspace_write"])

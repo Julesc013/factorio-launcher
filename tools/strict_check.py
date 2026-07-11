@@ -45,6 +45,7 @@ from tools import (
     target_dependency_check,
     ui_accessibility_check,
     workspace_contract_check,
+    workspace_store_check,
     version_truth_check,
 )
 
@@ -63,6 +64,7 @@ def main() -> int:
         ("ci-proof", ci_proof_check.main),
         ("structure", structure_policy_check.main),
         ("workspace-contract", workspace_contract_check.main),
+        ("workspace-store", workspace_store_check.main),
         ("schema", schema_validate.main),
         ("security", security_policy_check.main),
         ("source-format", source_format_check.main),

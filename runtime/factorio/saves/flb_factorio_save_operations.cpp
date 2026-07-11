@@ -7,6 +7,7 @@
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modsets.h"
 #include "fl_transaction.h"
+#include "fl_workspace_store.h"
 
 #include <algorithm>
 #include <array>
@@ -159,32 +160,25 @@ Refusal refuse(
 
 bool load_instance(const fs::path& workspace, const std::string& instance_id, Instance& instance)
 {
-    const facman::base::ManagedPathResult managed =
-        facman::base::managed_directory(workspace, "instances", instance_id);
-    if (!managed.ok()) return false;
-    fs::path manifest = managed.path / "instance.v1.json";
-    if (!fs::is_regular_file(manifest)) manifest = managed.path / "instance.manifest.json";
-    if (!fs::is_regular_file(manifest)) return false;
-    const std::string text = read_text(manifest);
-    instance.instance_id = json_string_value(text, "instance_id");
-    instance.display_name = json_string_value(text, "display_name");
-    instance.install_ref = json_string_value(text, "install_ref");
-    instance.factorio_version = json_string_value(text, "factorio_version");
-    instance.profile = json_string_value(text, "profile");
-    instance.template_id = json_string_value(text, "template");
-    instance.root = managed.path;
-    return instance.instance_id == instance_id && !instance.install_ref.empty();
+    auto record = facman::workspace::InstanceRepository(facman::workspace::WorkspaceLayout(workspace)).load(
+        facman::core::InstanceId(instance_id));
+    if (!record) return false;
+    instance.instance_id = record.value().id.str();
+    instance.display_name = record.value().display_name;
+    instance.install_ref = record.value().install_ref.str();
+    instance.factorio_version = record.value().factorio_version;
+    instance.profile = record.value().profile;
+    instance.template_id = record.value().template_id;
+    instance.root = record.value().root;
+    return true;
 }
 
 bool load_install_root(const fs::path& workspace, const std::string& install_id, fs::path& root)
 {
-    facman::base::ManagedPathResult ref =
-        facman::base::managed_file(workspace, "installs/refs", install_id, ".json");
-    if (!ref.ok() || !fs::is_regular_file(ref.path)) {
-        ref = facman::base::managed_file(workspace, "installs/installed_state", install_id, ".json");
-    }
-    if (!ref.ok() || !fs::is_regular_file(ref.path)) return false;
-    root = json_string_value(read_text(ref.path), "root");
+    auto record = facman::workspace::InstallRepository(facman::workspace::WorkspaceLayout(workspace)).load(
+        facman::core::InstallId(install_id));
+    if (!record) return false;
+    root = record.value().root;
     return !root.empty() && fs::is_directory(root / "data");
 }
 
