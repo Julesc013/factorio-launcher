@@ -618,4 +618,26 @@ id = "dry_run_write_not_executed"
 severity = "blocked"
 effect = "workspace_write"
 retryable = true
-message = "A dry-run request did not execute a persistent mod or modset write."
+message = "A dry-run request did not execute a persistent data write."
+
+[[code]]
+id = "save_source_changed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The save source changed while FacMan was reading and staging it."
+suggested_next_command = "facman saves list --instance <instance-id> --json"
+
+[[code]]
+id = "instance_source_changed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "An instance source file changed while FacMan was creating its portable export."
+
+[[code]]
+id = "transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "A committed target or owned staging path requires explicit transaction recovery."

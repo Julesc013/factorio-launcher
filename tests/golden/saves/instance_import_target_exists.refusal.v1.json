@@ -1,6 +1,6 @@
 {
   "schema": "factorio.instance_transfer_refusal.v1",
-  "command": "import.instance",
+  "command": "instance.import",
   "status": "refused",
   "instance_id": "target-world",
   "refusal": {

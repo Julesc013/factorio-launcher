@@ -125,8 +125,8 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
         FacManDeferred(@"run.execute", @"run.execute", @"Launch Plan", @"Execute Run"),
         FacManDeferred(@"modsets.lock", @"modsets.lock", @"Diagnostics", @"Lock Modset"),
         FacManDeferred(@"saves.backup", @"saves.backup", @"Diagnostics", @"Backup Save"),
-        FacManDeferred(@"export.instance", @"export.instance", @"Diagnostics", @"Export Instance"),
-        FacManDeferred(@"import.instance", @"import.instance", @"Diagnostics", @"Import Instance"),
+        FacManDeferred(@"instance.export", @"instance.export", @"Diagnostics", @"Export Instance"),
+        FacManDeferred(@"instance.import", @"instance.import", @"Diagnostics", @"Import Instance"),
         FacManDeferred(@"setup.preview", @"install_local.plan", @"Installs", @"Setup Preview")
     ];
 }

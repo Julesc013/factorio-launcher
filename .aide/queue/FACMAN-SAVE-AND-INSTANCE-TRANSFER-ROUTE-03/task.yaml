@@ -19,6 +19,12 @@ allowed_paths:
   - .aide/context/**
   - CMakeLists.txt
   - apps/cli/command_dispatch.cpp
+  - apps/gui/windows/winforms/README.md
+  - apps/gui/windows/winforms/CommandCatalog.cs
+  - apps/gui/windows/winforms/MainForm.cs
+  - apps/gui/macos/appkit/README.md
+  - apps/gui/macos/appkit/CommandClient.mm
+  - apps/gui/macos/appkit/MainWindowController.m
   - runtime/archive/**
   - runtime/base/**
   - runtime/factorio/application/**
@@ -36,12 +42,15 @@ allowed_paths:
   - tests/golden/saves/**
   - tests/native/flb_command_bridge_smoke.c
   - tests/test_cli.py
+  - tests/test_diagnostic_redaction.py
   - tests/test_safety_boundaries.py
   - tests/test_save_transfer.py
   - tools/archive_core_check.py
+  - tools/alpha_vertical_slice_check.py
   - tools/command_contract_check.py
   - tools/frontend_contract_check.py
   - tools/frontend_parity_check.py
+  - tools/gui_surface_check.py
   - tools/refusal_contract_check.py
   - tools/refusal_golden_check.py
   - tools/save_transfer_route_check.py

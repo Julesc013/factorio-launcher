@@ -602,7 +602,8 @@ Status stream_entry(
 Status extract_to_new_owned_staging(
     const Plan& plan,
     const std::filesystem::path& staging_root,
-    const Limits& limits)
+    const Limits& limits,
+    const ExtractionCheckpoint& checkpoint)
 {
     Status status = create_owned_staging_root(staging_root);
     if (!status.ok()) return status;
@@ -614,6 +615,9 @@ Status extract_to_new_owned_staging(
         return failure;
     };
     for (const Entry& entry : plan.entries) {
+        if (checkpoint && !checkpoint(entry.index, "before_entry")) {
+            return fail(Status::failure("archive_extract_fault_injected", entry.path));
+        }
         const std::filesystem::path destination = staging_root / std::filesystem::u8path(entry.path);
         std::error_code error;
         if (entry.directory) {
@@ -632,7 +636,7 @@ Status extract_to_new_owned_staging(
         }
         status = stream_entry(plan, entry.index, limits, [&](const unsigned char* data, std::size_t size) {
             output.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(size));
-            return static_cast<bool>(output);
+            return static_cast<bool>(output) && (!checkpoint || checkpoint(entry.index, "after_chunk"));
         });
         output.flush();
         const bool output_ok = static_cast<bool>(output);
@@ -640,6 +644,9 @@ Status extract_to_new_owned_staging(
         if (!status.ok()) return fail(status);
         if (!output_ok || output.fail()) {
             return fail(Status::failure("archive_extract_output_flush_failed", destination.u8string()));
+        }
+        if (checkpoint && !checkpoint(entry.index, "after_entry")) {
+            return fail(Status::failure("archive_extract_fault_injected", entry.path));
         }
     }
     return Status::success();

@@ -1,0 +1,13 @@
+{
+  "schema": "factorio.save_clone.v1",
+  "command": "saves.clone",
+  "source_instance_id": "source-world",
+  "target_instance_id": "target-world",
+  "save": "starter.zip",
+  "source_path": "instances/source-world/saves/starter.zip",
+  "destination_path": "instances/target-world/saves/starter.zip",
+  "path": "instances/target-world/saves/starter.zip",
+  "created_at": "2026-07-10T00:00:00Z",
+  "sha1": "1111111111111111111111111111111111111111",
+  "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+}

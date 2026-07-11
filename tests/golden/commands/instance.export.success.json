@@ -4,5 +4,7 @@
   "instance_id": "source-world",
   "path": "source-world.zip",
   "files": 5,
-  "redactions": ["local_data_root", "config.ini paths and secrets"]
+  "redactions": ["local_data_root", "config.ini paths and secrets"],
+  "file_hash_closure": true,
+  "deep_save_semantics_inspected": false
 }

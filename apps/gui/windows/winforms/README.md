@@ -33,8 +33,8 @@ items with reasons:
 - `run.execute`
 - `modsets.lock`
 - `saves.backup`
-- `export.instance`
-- `import.instance`
+- `instance.export`
+- `instance.import`
 - `setup.preview`
 
 Use the Settings/About screen to point the shell at a built `facman` executable

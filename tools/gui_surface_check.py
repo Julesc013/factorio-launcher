@@ -47,8 +47,8 @@ WINFORMS_DEFERRED_COMMANDS = {
     "run.execute",
     "modsets.lock",
     "saves.backup",
-    "export.instance",
-    "import.instance",
+    "instance.export",
+    "instance.import",
     "setup.preview",
 }
 

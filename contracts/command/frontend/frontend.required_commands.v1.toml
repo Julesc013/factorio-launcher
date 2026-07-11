@@ -26,9 +26,11 @@ deferred = [
   "modsets.lock",
   "modsets.verify",
   "modsets.export",
+  "saves.list",
   "saves.backup",
-  "export.instance",
-  "import.instance",
+  "saves.clone",
+  "instance.export",
+  "instance.import",
   "setup.preview",
 ]
 
@@ -147,21 +149,33 @@ backend_id = "modsets.export"
 cli = "facman modsets export <instance-id> <pack.zip> --json"
 
 [[commands]]
+id = "saves.list"
+phase = "deferred"
+backend_id = "saves.list"
+cli = "facman saves list --instance <instance-id> --json"
+
+[[commands]]
 id = "saves.backup"
 phase = "deferred"
 backend_id = "saves.backup"
 cli = "facman saves backup <instance-id> --json"
 
 [[commands]]
-id = "export.instance"
+id = "saves.clone"
 phase = "deferred"
-backend_id = "export.instance"
+backend_id = "saves.clone"
+cli = "facman saves clone <save> --instance <source-id> --to-instance <target-id> --json"
+
+[[commands]]
+id = "instance.export"
+phase = "deferred"
+backend_id = "instance.export"
 cli = "facman export instance <instance-id> --output <path> --json"
 
 [[commands]]
-id = "import.instance"
+id = "instance.import"
 phase = "deferred"
-backend_id = "import.instance"
+backend_id = "instance.import"
 cli = "facman import instance <path> --json"
 
 [[commands]]
@@ -197,9 +211,11 @@ doctor = "implemented"
 "mods.import" = "implemented"
 "modsets.verify" = "implemented"
 "modsets.export" = "implemented"
+"saves.list" = "implemented"
 "saves.backup" = "implemented"
-"export.instance" = "implemented"
-"import.instance" = "implemented"
+"saves.clone" = "implemented"
+"instance.export" = "implemented"
+"instance.import" = "implemented"
 "setup.preview" = "stubbed_with_refusal"
 
 [[frontends]]
@@ -229,9 +245,11 @@ doctor = "stubbed_with_refusal"
 "mods.import" = "not_supported_with_reason"
 "modsets.verify" = "not_supported_with_reason"
 "modsets.export" = "not_supported_with_reason"
+"saves.list" = "not_supported_with_reason"
 "saves.backup" = "not_supported_with_reason"
-"export.instance" = "not_supported_with_reason"
-"import.instance" = "not_supported_with_reason"
+"saves.clone" = "not_supported_with_reason"
+"instance.export" = "not_supported_with_reason"
+"instance.import" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -261,9 +279,11 @@ doctor = "stubbed_with_refusal"
 "mods.import" = "not_supported_with_reason"
 "modsets.verify" = "not_supported_with_reason"
 "modsets.export" = "not_supported_with_reason"
+"saves.list" = "not_supported_with_reason"
 "saves.backup" = "not_supported_with_reason"
-"export.instance" = "not_supported_with_reason"
-"import.instance" = "not_supported_with_reason"
+"saves.clone" = "not_supported_with_reason"
+"instance.export" = "not_supported_with_reason"
+"instance.import" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -293,9 +313,11 @@ doctor = "implemented"
 "mods.import" = "not_supported_with_reason"
 "modsets.verify" = "not_supported_with_reason"
 "modsets.export" = "not_supported_with_reason"
+"saves.list" = "not_supported_with_reason"
 "saves.backup" = "not_supported_with_reason"
-"export.instance" = "not_supported_with_reason"
-"import.instance" = "not_supported_with_reason"
+"saves.clone" = "not_supported_with_reason"
+"instance.export" = "not_supported_with_reason"
+"instance.import" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -325,9 +347,11 @@ doctor = "not_supported_with_reason"
 "mods.import" = "not_supported_with_reason"
 "modsets.verify" = "not_supported_with_reason"
 "modsets.export" = "not_supported_with_reason"
+"saves.list" = "not_supported_with_reason"
 "saves.backup" = "not_supported_with_reason"
-"export.instance" = "not_supported_with_reason"
-"import.instance" = "not_supported_with_reason"
+"saves.clone" = "not_supported_with_reason"
+"instance.export" = "not_supported_with_reason"
+"instance.import" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -357,9 +381,11 @@ doctor = "implemented"
 "mods.import" = "not_supported_with_reason"
 "modsets.verify" = "not_supported_with_reason"
 "modsets.export" = "not_supported_with_reason"
+"saves.list" = "not_supported_with_reason"
 "saves.backup" = "not_supported_with_reason"
-"export.instance" = "not_supported_with_reason"
-"import.instance" = "not_supported_with_reason"
+"saves.clone" = "not_supported_with_reason"
+"instance.export" = "not_supported_with_reason"
+"instance.import" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -389,9 +415,11 @@ doctor = "not_supported_with_reason"
 "mods.import" = "not_supported_with_reason"
 "modsets.verify" = "not_supported_with_reason"
 "modsets.export" = "not_supported_with_reason"
+"saves.list" = "not_supported_with_reason"
 "saves.backup" = "not_supported_with_reason"
-"export.instance" = "not_supported_with_reason"
-"import.instance" = "not_supported_with_reason"
+"saves.clone" = "not_supported_with_reason"
+"instance.export" = "not_supported_with_reason"
+"instance.import" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -421,9 +449,11 @@ doctor = "stubbed_with_refusal"
 "mods.import" = "not_supported_with_reason"
 "modsets.verify" = "not_supported_with_reason"
 "modsets.export" = "not_supported_with_reason"
+"saves.list" = "not_supported_with_reason"
 "saves.backup" = "not_supported_with_reason"
-"export.instance" = "not_supported_with_reason"
-"import.instance" = "not_supported_with_reason"
+"saves.clone" = "not_supported_with_reason"
+"instance.export" = "not_supported_with_reason"
+"instance.import" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
 
 [[frontends]]
@@ -453,7 +483,9 @@ doctor = "stubbed_with_refusal"
 "mods.import" = "not_supported_with_reason"
 "modsets.verify" = "not_supported_with_reason"
 "modsets.export" = "not_supported_with_reason"
+"saves.list" = "not_supported_with_reason"
 "saves.backup" = "not_supported_with_reason"
-"export.instance" = "not_supported_with_reason"
-"import.instance" = "not_supported_with_reason"
+"saves.clone" = "not_supported_with_reason"
+"instance.export" = "not_supported_with_reason"
+"instance.import" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"

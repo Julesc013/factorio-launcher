@@ -1,0 +1,94 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 57
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 57
+
+## CHANGED_FILES
+
+- allowed: `.aide/queue/FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03/evidence/remaining-risks.md` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03/status.yaml` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03/task.yaml` (M; matches active task allowed path)
+- allowed: `CMakeLists.txt` (M; matches active task allowed path)
+- allowed: `apps/cli/command_dispatch.cpp` (M; matches active task allowed path)
+- allowed: `apps/gui/macos/appkit/CommandClient.mm` (M; matches active task allowed path)
+- allowed: `apps/gui/macos/appkit/MainWindowController.m` (M; matches active task allowed path)
+- allowed: `apps/gui/macos/appkit/README.md` (M; matches active task allowed path)
+- allowed: `apps/gui/windows/winforms/CommandCatalog.cs` (M; matches active task allowed path)
+- allowed: `apps/gui/windows/winforms/MainForm.cs` (M; matches active task allowed path)
+- allowed: `apps/gui/windows/winforms/README.md` (M; matches active task allowed path)
+- allowed: `contracts/command/factorio/export.instance.v1.toml` (RM; matches active task allowed path)
+- allowed: `contracts/command/factorio/instance.export.v1.toml` (RM; matches active task allowed path)
+- allowed: `contracts/command/factorio/import.instance.v1.toml` (RM; matches active task allowed path)
+- allowed: `contracts/command/factorio/instance.import.v1.toml` (RM; matches active task allowed path)
+- allowed: `contracts/command/frontend/frontend.required_commands.v1.toml` (M; matches active task allowed path)
+- allowed: `contracts/refusal/refusal_codes.v1.toml` (M; matches active task allowed path)
+- allowed: `contracts/schema/factorio/factorio_instance_export.v1.schema.json` (M; matches active task allowed path)
+- allowed: `contracts/schema/factorio/factorio_instance_import.v1.schema.json` (M; matches active task allowed path)
+- allowed: `runtime/archive/fl_archive.h` (M; matches active task allowed path)
+- allowed: `runtime/archive/fl_archive_reader.cpp` (M; matches active task allowed path)
+- allowed: `runtime/factorio/application/flb_factorio_application.cpp` (M; matches active task allowed path)
+- allowed: `runtime/factorio/binding/flb_api.c` (M; matches active task allowed path)
+- allowed: `tests/golden/commands/export.instance.refusal.json` (RM; matches active task allowed path)
+- allowed: `tests/golden/commands/instance.export.refusal.json` (RM; matches active task allowed path)
+- allowed: `tests/golden/commands/export.instance.success.json` (RM; matches active task allowed path)
+- allowed: `tests/golden/commands/instance.export.success.json` (RM; matches active task allowed path)
+- allowed: `tests/golden/commands/import.instance.refusal.json` (RM; matches active task allowed path)
+- allowed: `tests/golden/commands/instance.import.refusal.json` (RM; matches active task allowed path)
+- allowed: `tests/golden/commands/import.instance.success.json` (RM; matches active task allowed path)
+- allowed: `tests/golden/commands/instance.import.success.json` (RM; matches active task allowed path)
+- allowed: `tests/golden/saves/export_instance.with_saves.v1.json` (M; matches active task allowed path)
+- allowed: `tests/golden/saves/import_instance.with_saves.v1.json` (M; matches active task allowed path)
+- allowed: `tests/golden/saves/instance_import_target_exists.refusal.v1.json` (M; matches active task allowed path)
+- allowed: `tests/native/flb_command_bridge_smoke.c` (M; matches active task allowed path)
+- allowed: `tests/test_cli.py` (M; matches active task allowed path)
+- allowed: `tests/test_diagnostic_redaction.py` (M; matches active task allowed path)
+- allowed: `tools/alpha_vertical_slice_check.py` (M; matches active task allowed path)
+- allowed: `tools/archive_core_check.py` (M; matches active task allowed path)
+- allowed: `tools/command_contract_check.py` (M; matches active task allowed path)
+- allowed: `tools/frontend_contract_check.py` (M; matches active task allowed path)
+- allowed: `tools/gui_surface_check.py` (M; matches active task allowed path)
+- allowed: `tools/strict_check.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03/evidence/changed-files.md` (??; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03/evidence/validation.md` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/saves.clone.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/command/factorio/saves.list.v1.toml` (??; matches active task allowed path)
+- allowed: `contracts/schema/factorio/factorio_saves.v1.schema.json` (??; matches active task allowed path)
+- allowed: `docs/architecture/save-and-instance-transfer.v1.md` (??; matches active task allowed path)
+- allowed: `runtime/factorio/saves/flb_factorio_save_operations.cpp` (??; matches active task allowed path)
+- allowed: `runtime/factorio/saves/flb_factorio_save_operations.h` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/saves.clone.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/saves.clone.success.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/saves.list.refusal.json` (??; matches active task allowed path)
+- allowed: `tests/golden/commands/saves.list.success.json` (??; matches active task allowed path)
+- allowed: `tests/test_save_transfer.py` (??; matches active task allowed path)
+- allowed: `tools/save_transfer_route_check.py` (??; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.

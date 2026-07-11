@@ -272,8 +272,8 @@ namespace FacMan.WinForms
             AddCommandRow(form, "diagnostics.export", "Export Diagnostics", EmptyInputs);
             AddDeferredRow(form, "modsets.lock");
             AddDeferredRow(form, "saves.backup");
-            AddDeferredRow(form, "export.instance");
-            AddDeferredRow(form, "import.instance");
+            AddDeferredRow(form, "instance.export");
+            AddDeferredRow(form, "instance.import");
         }
 
         private void AddSettingsTab(TabControl tabs)

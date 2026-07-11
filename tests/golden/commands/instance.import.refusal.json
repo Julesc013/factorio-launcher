@@ -1,6 +1,6 @@
 {
   "schema": "factorio.command_refusal.v1",
-  "command": "import.instance",
+  "command": "instance.import",
   "status": "refused",
   "refusal": {
     "schema": "common.refusal.v1",

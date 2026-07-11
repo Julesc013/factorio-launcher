@@ -4,6 +4,7 @@
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
+#include "flb_factorio_save_operations.h"
 
 #include <filesystem>
 #include <fstream>
@@ -19,6 +20,7 @@ namespace fs = std::filesystem;
 namespace discovery = facman::factorio::discovery;
 namespace launch = facman::factorio::launch;
 namespace mod_operations = facman::factorio::modsets::operations;
+namespace save_operations = facman::factorio::saves::operations;
 
 namespace {
 
@@ -34,6 +36,11 @@ enum class CommandId {
     modsets_lock,
     modsets_verify,
     modsets_export,
+    saves_list,
+    saves_backup,
+    saves_clone,
+    instance_export,
+    instance_import,
     unsupported,
 };
 
@@ -64,6 +71,11 @@ struct BuildLaunchPlanRequest {
 using ImportModRequest = mod_operations::ImportRequest;
 using ModsetInstanceRequest = mod_operations::InstanceRequest;
 using ExportModsetRequest = mod_operations::ExportRequest;
+using ListSavesRequest = save_operations::InstanceRequest;
+using BackupSaveRequest = save_operations::BackupRequest;
+using CloneSaveRequest = save_operations::CloneRequest;
+using ExportInstanceRequest = save_operations::ExportRequest;
+using ImportInstanceRequest = save_operations::ImportRequest;
 
 using ApplicationPayload = std::variant<
     std::monostate,
@@ -74,7 +86,12 @@ using ApplicationPayload = std::variant<
     BuildLaunchPlanRequest,
     ImportModRequest,
     ModsetInstanceRequest,
-    ExportModsetRequest>;
+    ExportModsetRequest,
+    ListSavesRequest,
+    BackupSaveRequest,
+    CloneSaveRequest,
+    ExportInstanceRequest,
+    ImportInstanceRequest>;
 
 struct ApplicationRequest {
     CommandId command = CommandId::unsupported;
@@ -91,7 +108,13 @@ using ApplicationOutput = std::variant<
     mod_operations::LockResult,
     mod_operations::VerifyResult,
     mod_operations::ExportResult,
-    mod_operations::Refusal>;
+    mod_operations::Refusal,
+    save_operations::ListResult,
+    save_operations::BackupResult,
+    save_operations::CloneResult,
+    save_operations::ExportResult,
+    save_operations::ImportResult,
+    save_operations::Refusal>;
 
 struct ApplicationResult {
     int status = ULK_STATUS_OK;
@@ -548,6 +571,53 @@ bool decode_request(
         request.payload = std::move(typed);
         return true;
     }
+    case CommandId::saves_list: {
+        if (!validate_fields(payload, {"instance_id"}, {}, detail)) return false;
+        ListSavesRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::saves_backup: {
+        if (!validate_fields(payload, {"instance_id", "save", "output_path"}, {}, detail)) return false;
+        BackupSaveRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "save", typed.save, detail)) return false;
+        auto output = payload.strings.find("output_path");
+        if (output != payload.strings.end()) typed.output_path = output->second;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::saves_clone: {
+        if (!validate_fields(payload, {"source_instance_id", "target_instance_id", "save"}, {}, detail)) return false;
+        CloneSaveRequest typed;
+        if (!required_string(payload, "source_instance_id", typed.source_instance_id, detail) ||
+            !required_string(payload, "target_instance_id", typed.target_instance_id, detail) ||
+            !required_string(payload, "save", typed.save, detail)) return false;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::instance_export: {
+        if (!validate_fields(payload, {"instance_id", "output_path"}, {}, detail)) return false;
+        ExportInstanceRequest typed;
+        std::string output;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "output_path", output, detail)) return false;
+        typed.output_path = output;
+        request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::instance_import: {
+        if (!validate_fields(payload, {"source_path", "instance_id"}, {}, detail)) return false;
+        ImportInstanceRequest typed;
+        std::string source;
+        if (!required_string(payload, "source_path", source, detail)) return false;
+        typed.source_path = source;
+        auto instance_id = payload.strings.find("instance_id");
+        if (instance_id != payload.strings.end()) typed.instance_id_override = instance_id->second;
+        request.payload = std::move(typed);
+        return true;
+    }
     default:
         detail = "unsupported command";
         return false;
@@ -568,6 +638,11 @@ CommandId command_id(ulk_string_view command)
     if (value == "modsets.lock") return CommandId::modsets_lock;
     if (value == "modsets.verify") return CommandId::modsets_verify;
     if (value == "modsets.export") return CommandId::modsets_export;
+    if (value == "saves.list") return CommandId::saves_list;
+    if (value == "saves.backup") return CommandId::saves_backup;
+    if (value == "saves.clone") return CommandId::saves_clone;
+    if (value == "instance.export") return CommandId::instance_export;
+    if (value == "instance.import") return CommandId::instance_import;
     return CommandId::unsupported;
 }
 
@@ -669,19 +744,23 @@ private:
                 "workspace_unavailable",
                 "Workspace root is required");
         }
-        const bool mod_write = request.command == CommandId::mods_import ||
+        const bool data_write = request.command == CommandId::mods_import ||
             request.command == CommandId::modsets_lock ||
-            request.command == CommandId::modsets_export;
-        if (request.dry_run && mod_write) {
+            request.command == CommandId::modsets_export ||
+            request.command == CommandId::saves_backup ||
+            request.command == CommandId::saves_clone ||
+            request.command == CommandId::instance_export ||
+            request.command == CommandId::instance_import;
+        if (request.dry_run && data_write) {
             return refused(
                 safety_refusal(
                     "command.execute",
                     "dry_run_write_not_executed",
-                    "Dry-run requests never execute mod or modset writes",
+                    "Dry-run requests never execute data writes",
                     "submit the canonical command with dry_run=false after reviewing its target",
                     true),
                 "dry_run_write_not_executed",
-                "Dry-run requests never execute mod or modset writes");
+                "Dry-run requests never execute data writes");
         }
         switch (request.command) {
         case CommandId::install_scan: return scan(std::get<ScanInstallRefsRequest>(request.payload));
@@ -715,6 +794,26 @@ private:
             return operation_result(mod_operations::export_modset(
                 workspace_,
                 std::get<ExportModsetRequest>(request.payload)));
+        case CommandId::saves_list:
+            return save_operation_result(save_operations::list_saves(
+                workspace_,
+                std::get<ListSavesRequest>(request.payload)));
+        case CommandId::saves_backup:
+            return save_operation_result(save_operations::backup_save(
+                workspace_,
+                std::get<BackupSaveRequest>(request.payload)));
+        case CommandId::saves_clone:
+            return save_operation_result(save_operations::clone_save(
+                workspace_,
+                std::get<CloneSaveRequest>(request.payload)));
+        case CommandId::instance_export:
+            return save_operation_result(save_operations::export_instance(
+                workspace_,
+                std::get<ExportInstanceRequest>(request.payload)));
+        case CommandId::instance_import:
+            return save_operation_result(save_operations::import_instance(
+                workspace_,
+                std::get<ImportInstanceRequest>(request.payload)));
         default:
             return refused(
                 safety_refusal("command.execute", "invalid_request", "Unsupported application command", "", false),
@@ -992,6 +1091,23 @@ private:
         return result;
     }
 
+    template <typename ResultType>
+    ApplicationResult save_operation_result(
+        const std::variant<ResultType, save_operations::Refusal>& outcome)
+    {
+        ApplicationResult result;
+        if (std::holds_alternative<save_operations::Refusal>(outcome)) {
+            const save_operations::Refusal& refusal = std::get<save_operations::Refusal>(outcome);
+            result.status = ULK_STATUS_ERROR;
+            result.output = refusal;
+            result.error_code = refusal.code;
+            result.error_message = refusal.reason;
+            return result;
+        }
+        result.output = std::get<ResultType>(outcome);
+        return result;
+    }
+
     void ensure_workspace()
     {
         const char* dirs[] = {"installs/refs", "installs/setup_state_refs", "instances", "modsets", "saves", "profiles", "accounts", "audit", "diagnostics/reports", "exports"};
@@ -1046,6 +1162,24 @@ private:
         }
         if (std::holds_alternative<mod_operations::Refusal>(output)) {
             return mod_operations::to_json(std::get<mod_operations::Refusal>(output));
+        }
+        if (std::holds_alternative<save_operations::ListResult>(output)) {
+            return save_operations::to_json(std::get<save_operations::ListResult>(output));
+        }
+        if (std::holds_alternative<save_operations::BackupResult>(output)) {
+            return save_operations::to_json(std::get<save_operations::BackupResult>(output));
+        }
+        if (std::holds_alternative<save_operations::CloneResult>(output)) {
+            return save_operations::to_json(std::get<save_operations::CloneResult>(output));
+        }
+        if (std::holds_alternative<save_operations::ExportResult>(output)) {
+            return save_operations::to_json(std::get<save_operations::ExportResult>(output));
+        }
+        if (std::holds_alternative<save_operations::ImportResult>(output)) {
+            return save_operations::to_json(std::get<save_operations::ImportResult>(output));
+        }
+        if (std::holds_alternative<save_operations::Refusal>(output)) {
+            return save_operations::to_json(std::get<save_operations::Refusal>(output));
         }
         return "";
     }

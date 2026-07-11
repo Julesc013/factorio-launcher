@@ -158,8 +158,8 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [self addButton:@"Export Diagnostics" commandId:@"diagnostics.export" toView:view frame:NSMakeRect(16, 320, 160, 30)];
     [self addDeferredButton:@"modsets.lock" toView:view frame:NSMakeRect(16, 270, 160, 30)];
     [self addDeferredButton:@"saves.backup" toView:view frame:NSMakeRect(186, 270, 160, 30)];
-    [self addDeferredButton:@"export.instance" toView:view frame:NSMakeRect(356, 270, 160, 30)];
-    [self addDeferredButton:@"import.instance" toView:view frame:NSMakeRect(526, 270, 160, 30)];
+    [self addDeferredButton:@"instance.export" toView:view frame:NSMakeRect(356, 270, 160, 30)];
+    [self addDeferredButton:@"instance.import" toView:view frame:NSMakeRect(526, 270, 160, 30)];
 }
 
 - (void)addSettingsTab:(NSTabView *)tabs

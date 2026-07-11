@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_saves.v1.schema.json",
+  "title": "Factorio Save List",
+  "type": "object",
+  "required": ["schema", "command", "instance_id", "saves"],
+  "properties": {
+    "schema": { "const": "factorio.saves.v1" },
+    "command": { "const": "saves.list" },
+    "instance_id": { "type": "string", "minLength": 1 },
+    "saves": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "file_name", "path", "size", "archive_structurally_valid", "factorio_save_recognized", "deep_save_semantics_inspected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "file_name": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "size": { "type": "integer", "minimum": 0 },
+          "archive_structurally_valid": { "type": "boolean" },
+          "factorio_save_recognized": { "type": "boolean" },
+          "deep_save_semantics_inspected": { "const": false }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

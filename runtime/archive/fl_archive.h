@@ -60,6 +60,7 @@ struct Plan {
 };
 
 using DataSink = std::function<bool(const unsigned char*, std::size_t)>;
+using ExtractionCheckpoint = std::function<bool(std::uint32_t, const char*)>;
 
 Status inspect_archive(
     const std::filesystem::path& archive_path,
@@ -75,7 +76,8 @@ Status stream_entry(
 Status extract_to_new_owned_staging(
     const Plan& plan,
     const std::filesystem::path& staging_root,
-    const Limits& limits);
+    const Limits& limits,
+    const ExtractionCheckpoint& checkpoint = {});
 
 struct WriteEntry {
     std::string archive_path;

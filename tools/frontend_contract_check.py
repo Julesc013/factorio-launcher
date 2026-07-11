@@ -31,9 +31,11 @@ EXPECTED_DEFERRED = {
     "modsets.lock",
     "modsets.verify",
     "modsets.export",
+    "saves.list",
     "saves.backup",
-    "export.instance",
-    "import.instance",
+    "saves.clone",
+    "instance.export",
+    "instance.import",
     "setup.preview",
 }
 

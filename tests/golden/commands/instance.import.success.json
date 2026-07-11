@@ -1,6 +1,6 @@
 {
   "schema": "factorio.instance_import.v1",
-  "command": "import.instance",
+  "command": "instance.import",
   "instance_id": "restored-world",
   "path": "instances/restored-world",
   "files": 5

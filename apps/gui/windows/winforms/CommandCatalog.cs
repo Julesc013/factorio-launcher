@@ -153,8 +153,8 @@ namespace FacMan.WinForms
             commands.Add(Deferred("run.execute", "Launch Plan", "Execute Run", "run.execute"));
             commands.Add(Deferred("modsets.lock", "Diagnostics", "Lock Modset", "modsets.lock"));
             commands.Add(Deferred("saves.backup", "Diagnostics", "Backup Save", "saves.backup"));
-            commands.Add(Deferred("export.instance", "Diagnostics", "Export Instance", "export.instance"));
-            commands.Add(Deferred("import.instance", "Diagnostics", "Import Instance", "import.instance"));
+            commands.Add(Deferred("instance.export", "Diagnostics", "Export Instance", "instance.export"));
+            commands.Add(Deferred("instance.import", "Diagnostics", "Import Instance", "instance.import"));
             commands.Add(Deferred("setup.preview", "Installs", "Setup Preview", "install_local.plan"));
 
             return commands.AsReadOnly();

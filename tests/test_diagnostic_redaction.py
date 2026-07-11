@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from native_cli import facman_executable, invoke
@@ -285,7 +286,8 @@ class DiagnosticRedactionTests(unittest.TestCase):
             self.assertEqual(exported["redactions"], expected["redactions"])
             assert_no_secret_values(self, stdout)
 
-            pack_bytes = pack.read_bytes()
-            self.assertIn(b"[FACMAN_REDACTED]", pack_bytes)
-            self.assertNotIn(str(workspace).encode("utf-8"), pack_bytes)
-            assert_no_secret_values(self, pack_bytes)
+            with zipfile.ZipFile(pack) as archive:
+                payload = b"".join(archive.read(name) for name in archive.namelist())
+            self.assertIn(b"[FACMAN_REDACTED]", payload)
+            self.assertNotIn(str(workspace).encode("utf-8"), payload)
+            assert_no_secret_values(self, payload)

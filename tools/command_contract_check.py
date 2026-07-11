@@ -25,9 +25,11 @@ EXPECTED_COMMANDS = {
     "modsets.lock",
     "modsets.verify",
     "modsets.export",
+    "saves.list",
     "saves.backup",
-    "export.instance",
-    "import.instance",
+    "saves.clone",
+    "instance.export",
+    "instance.import",
 }
 
 COMMAND_PATTERN = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_-]+)+$")

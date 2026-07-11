@@ -3,9 +3,10 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_instance_import.v1.schema.json",
   "title": "Factorio Instance Import Result",
   "type": "object",
-  "required": ["schema", "instance_id", "path", "files"],
+  "required": ["schema", "command", "instance_id", "path", "files"],
   "properties": {
     "schema": { "const": "factorio.instance_import.v1" },
+    "command": { "const": "instance.import" },
     "instance_id": { "type": "string", "minLength": 1 },
     "path": { "type": "string", "minLength": 1 },
     "files": { "type": "integer", "minimum": 1 }

@@ -215,6 +215,36 @@ int flb_context_create_v1(
             "modsets.export",
             "[\"workspace_read\",\"workspace_write\"]",
             "contracts/schema/factorio/factorio_modset_export.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "saves.list",
+            "[\"workspace_read\"]",
+            "contracts/schema/factorio/factorio_saves.v1.schema.json",
+            "read_only") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "saves.backup",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_save_backup.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "saves.clone",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_save_clone.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "instance.export",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_instance_export.v1.schema.json",
+            "explicit_persistent_write") != ULK_STATUS_OK ||
+        flb_register_application_command(
+            context,
+            "instance.import",
+            "[\"workspace_read\",\"workspace_write\"]",
+            "contracts/schema/factorio/factorio_instance_import.v1.schema.json",
             "explicit_persistent_write") != ULK_STATUS_OK) {
         flb_factorio_application_destroy(context->application);
         ulk_context_destroy_v1(context->launcher_context);

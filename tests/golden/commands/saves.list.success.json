@@ -1,0 +1,16 @@
+{
+  "schema": "factorio.saves.v1",
+  "command": "saves.list",
+  "instance_id": "source-world",
+  "saves": [
+    {
+      "name": "starter",
+      "file_name": "starter.zip",
+      "path": "instances/source-world/saves/starter.zip",
+      "size": 282,
+      "archive_structurally_valid": true,
+      "factorio_save_recognized": true,
+      "deep_save_semantics_inspected": false
+    }
+  ]
+}

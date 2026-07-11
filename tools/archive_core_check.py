@@ -75,7 +75,11 @@ def validate() -> list[str]:
         if relative.startswith(("build/", "external/", ".aide/")):
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        if "read_stored_zip(" in text or "write_stored_zip(" in text:
+        if (
+            "read_stored_zip(" in text
+            or "write_stored_zip(" in text
+            or "write_diagnostic_stored_zip_quarantined(" in text
+        ):
             legacy_locations.append(relative)
     expected_legacy_locations = ["apps/cli/command_dispatch.cpp"]
     if sorted(set(legacy_locations)) != expected_legacy_locations:

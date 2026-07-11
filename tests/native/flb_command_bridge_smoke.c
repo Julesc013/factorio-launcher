@@ -156,6 +156,11 @@ int main(void)
         run_command(context, "command_graph.inspect", 1, "\"command\":\"modsets.lock\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"modsets.verify\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"modsets.export\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"saves.list\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"saves.backup\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"saves.clone\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"instance.export\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"instance.import\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"owner\":\"factorio-launcher\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "factorio_launch_preflight.v1.schema.json") != 0) {
         return 34;
@@ -244,7 +249,23 @@ int main(void)
         run_dry_run_write_refusal(
             context,
             "modsets.export",
-            "{\"instance_id\":\"fixture\",\"output_path\":\"pack.zip\"}") != 0) {
+            "{\"instance_id\":\"fixture\",\"output_path\":\"pack.zip\"}") != 0 ||
+        run_dry_run_write_refusal(
+            context,
+            "saves.backup",
+            "{\"instance_id\":\"fixture\",\"save\":\"starter\"}") != 0 ||
+        run_dry_run_write_refusal(
+            context,
+            "saves.clone",
+            "{\"source_instance_id\":\"fixture\",\"target_instance_id\":\"other\",\"save\":\"starter\"}") != 0 ||
+        run_dry_run_write_refusal(
+            context,
+            "instance.export",
+            "{\"instance_id\":\"fixture\",\"output_path\":\"instance.zip\"}") != 0 ||
+        run_dry_run_write_refusal(
+            context,
+            "instance.import",
+            "{\"source_path\":\"instance.zip\"}") != 0) {
         return 38;
     }
 

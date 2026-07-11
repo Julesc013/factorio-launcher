@@ -51,10 +51,15 @@ class CliTests(unittest.TestCase):
         self.assertTrue(
             {"mods.import", "modsets.lock", "modsets.verify", "modsets.export"}.issubset(commands)
         )
+        self.assertTrue(
+            {"saves.list", "saves.backup", "saves.clone", "instance.export", "instance.import"}.issubset(commands)
+        )
         descriptors = {command["command"]: command for command in graph["commands"]}
         self.assertEqual(descriptors["mods.import"]["effects"], ["workspace_read", "workspace_write"])
         self.assertEqual(descriptors["modsets.verify"]["dry_run_behavior"], "read_only")
         self.assertEqual(descriptors["modsets.export"]["owner"], "factorio-launcher")
+        self.assertEqual(descriptors["saves.list"]["effects"], ["workspace_read"])
+        self.assertEqual(descriptors["instance.import"]["dry_run_behavior"], "explicit_persistent_write")
         self.assertIn("install_refs.scan", commands)
         self.assertIn("install_refs.import", commands)
         self.assertIn("run.preview", commands)
@@ -416,15 +421,16 @@ class CliTests(unittest.TestCase):
             self.assertIn("config.ini paths and secrets", exported["redactions"])
             pack_bytes = pack.read_bytes()
             self.assertTrue(pack_bytes.startswith(b"PK\x03\x04"))
-            self.assertIn(b"$FACMAN_INSTANCE_ROOT", pack_bytes)
-            self.assertNotIn(str(Path(tmp)).encode("utf-8"), pack_bytes)
-            self.assertIn(b"[FACMAN_REDACTED]", pack_bytes)
-            self.assertNotIn(b"super-secret-token", pack_bytes)
-            self.assertNotIn(b"service-secret", pack_bytes)
-            self.assertNotIn(b"hunter2", pack_bytes)
             with zipfile.ZipFile(pack) as archive:
                 self.assertIn("manifest/export.v1.json", archive.namelist())
                 self.assertIn("saves/starter.zip", archive.namelist())
+                portable_payload = archive.read("instance.v1.json") + archive.read("config/config.ini")
+                self.assertIn(b"$FACMAN_INSTANCE_ROOT", portable_payload)
+                self.assertNotIn(str(Path(tmp)).encode("utf-8"), portable_payload)
+                self.assertIn(b"[FACMAN_REDACTED]", portable_payload)
+                self.assertNotIn(b"super-secret-token", portable_payload)
+                self.assertNotIn(b"service-secret", portable_payload)
+                self.assertNotIn(b"hunter2", portable_payload)
 
             code, stdout, stderr = invoke(
                 ["--workspace", tmp, "import", "instance", str(pack), "--id", "restored-world", "--json"]

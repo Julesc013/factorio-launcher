@@ -3,12 +3,15 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_instance_export.v1.schema.json",
   "title": "Factorio Instance Export Result",
   "type": "object",
-  "required": ["schema", "instance_id", "path", "files", "redactions"],
+  "required": ["schema", "command", "instance_id", "path", "files", "redactions", "file_hash_closure", "deep_save_semantics_inspected"],
   "properties": {
     "schema": { "const": "factorio.instance_export.v1" },
+    "command": { "const": "instance.export" },
     "instance_id": { "type": "string", "minLength": 1 },
     "path": { "type": "string", "minLength": 1 },
     "files": { "type": "integer", "minimum": 1 },
+    "file_hash_closure": { "const": true },
+    "deep_save_semantics_inspected": { "const": false },
     "redactions": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }

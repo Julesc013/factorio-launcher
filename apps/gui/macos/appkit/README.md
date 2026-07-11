@@ -26,8 +26,8 @@ states with reasons:
 - `run.execute`
 - `modsets.lock`
 - `saves.backup`
-- `export.instance`
-- `import.instance`
+- `instance.export`
+- `instance.import`
 - `setup.preview`
 
 The AppKit shell must not own Factorio discovery, setup mutation, Mod Portal

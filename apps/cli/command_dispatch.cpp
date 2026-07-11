@@ -68,22 +68,10 @@ struct ProcessResult {
     std::string error;
 };
 
-struct SaveRef {
-    std::string name;
-    std::string file_name;
-    fs::path file_path;
-    std::uintmax_t size;
-};
-
 struct ServerRef {
     std::string server_id;
     std::string display_name;
     std::string instance_id;
-};
-
-struct ZipEntry {
-    std::string name;
-    std::vector<unsigned char> data;
 };
 
 struct DiagnosticBundleEntry {
@@ -597,21 +585,6 @@ void write_le32(std::ostream& out, std::uint32_t value)
 {
     write_le16(out, static_cast<std::uint16_t>(value & 0xffff));
     write_le16(out, static_cast<std::uint16_t>((value >> 16) & 0xffff));
-}
-
-std::uint16_t read_le16(const std::vector<unsigned char>& data, std::size_t offset)
-{
-    return static_cast<std::uint16_t>(
-        static_cast<std::uint16_t>(data[offset]) |
-        static_cast<std::uint16_t>(data[offset + 1] << 8));
-}
-
-std::uint32_t read_le32(const std::vector<unsigned char>& data, std::size_t offset)
-{
-    return static_cast<std::uint32_t>(data[offset]) |
-           (static_cast<std::uint32_t>(data[offset + 1]) << 8) |
-           (static_cast<std::uint32_t>(data[offset + 2]) << 16) |
-           (static_cast<std::uint32_t>(data[offset + 3]) << 24);
 }
 
 std::uint32_t crc32_bytes(const std::vector<unsigned char>& bytes)
@@ -1133,7 +1106,7 @@ struct ZipRecord {
     std::uint32_t offset;
 };
 
-bool write_stored_zip(const fs::path& output_path, const std::vector<std::pair<std::string, std::vector<unsigned char>>>& files)
+bool write_diagnostic_stored_zip_quarantined(const fs::path& output_path, const std::vector<std::pair<std::string, std::vector<unsigned char>>>& files)
 {
     if (!output_path.parent_path().empty()) {
         fs::create_directories(output_path.parent_path());
@@ -1203,85 +1176,6 @@ bool write_stored_zip(const fs::path& output_path, const std::vector<std::pair<s
     return true;
 }
 
-bool archive_entry_is_safe(const std::string& name)
-{
-    if (name.empty() || name[0] == '/' || name[0] == '\\') {
-        return false;
-    }
-    if (name.find(':') != std::string::npos || name.find('\\') != std::string::npos) {
-        return false;
-    }
-    fs::path path(name);
-    for (const fs::path& part : path) {
-        if (part == "..") {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool read_stored_zip(const fs::path& input_path, std::vector<ZipEntry>& entries, std::string& error)
-{
-    std::vector<unsigned char> data = read_bytes(input_path);
-    std::size_t offset = 0;
-    entries.clear();
-
-    while (offset + 30 <= data.size()) {
-        std::uint32_t signature = read_le32(data, offset);
-        if (signature == 0x02014b50u || signature == 0x06054b50u) {
-            break;
-        }
-        if (signature != 0x04034b50u) {
-            error = "unsupported zip header";
-            return false;
-        }
-
-        std::uint16_t method = read_le16(data, offset + 8);
-        std::uint32_t compressed_size = read_le32(data, offset + 18);
-        std::uint32_t uncompressed_size = read_le32(data, offset + 22);
-        std::uint16_t name_size = read_le16(data, offset + 26);
-        std::uint16_t extra_size = read_le16(data, offset + 28);
-        std::size_t name_offset = offset + 30;
-        std::size_t data_offset = name_offset + name_size + extra_size;
-        std::size_t next_offset = data_offset + compressed_size;
-
-        if (method != 0) {
-            error = "only stored zip entries are supported";
-            return false;
-        }
-        if (compressed_size != uncompressed_size || data_offset > data.size() || next_offset > data.size()) {
-            error = "zip entry size is invalid";
-            return false;
-        }
-
-        std::string name(data.begin() + static_cast<std::ptrdiff_t>(name_offset),
-                         data.begin() + static_cast<std::ptrdiff_t>(name_offset + name_size));
-        if (!archive_entry_is_safe(name)) {
-            error = "zip entry path is unsafe";
-            return false;
-        }
-
-        ZipEntry entry;
-        entry.name = name;
-        entry.data.assign(data.begin() + static_cast<std::ptrdiff_t>(data_offset),
-                          data.begin() + static_cast<std::ptrdiff_t>(next_offset));
-        entries.push_back(entry);
-        offset = next_offset;
-    }
-
-    return !entries.empty();
-}
-
-const ZipEntry* find_zip_entry(const std::vector<ZipEntry>& entries, const std::string& name)
-{
-    for (const ZipEntry& entry : entries) {
-        if (entry.name == name) {
-            return &entry;
-        }
-    }
-    return 0;
-}
-
 std::string utc_now_iso8601()
 {
     auto now = std::chrono::system_clock::now();
@@ -1302,209 +1196,6 @@ std::vector<unsigned char> bytes_from_text(const std::string& text)
     return std::vector<unsigned char>(text.begin(), text.end());
 }
 
-std::vector<SaveRef> instance_save_files(const InstanceRef& instance)
-{
-    std::vector<SaveRef> saves;
-    fs::path save_root = instance.local_data_root / "saves";
-    if (!fs::exists(save_root)) {
-        return saves;
-    }
-    for (const fs::directory_entry& entry : fs::directory_iterator(save_root)) {
-        if (!entry.is_regular_file() || entry.path().extension() != ".zip") {
-            continue;
-        }
-        SaveRef save;
-        save.file_path = entry.path();
-        save.file_name = entry.path().filename().string();
-        save.name = entry.path().stem().string();
-        save.size = fs::file_size(entry.path());
-        saves.push_back(save);
-    }
-    std::sort(saves.begin(), saves.end(), [](const SaveRef& left, const SaveRef& right) {
-        return left.file_name < right.file_name;
-    });
-    return saves;
-}
-
-std::string save_ref_json(const SaveRef& save)
-{
-    std::ostringstream out;
-    out << "{";
-    out << "\"name\":" << quote(save.name) << ",";
-    out << "\"file_name\":" << quote(save.file_name) << ",";
-    out << "\"path\":" << quote(path_string(save.file_path)) << ",";
-    out << "\"size\":" << save.size;
-    out << "}";
-    return out.str();
-}
-
-std::string saves_json(const InstanceRef& instance)
-{
-    std::vector<SaveRef> saves = instance_save_files(instance);
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.saves.v1\",\n";
-    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-    out << "  \"saves\": [";
-    for (std::size_t index = 0; index < saves.size(); ++index) {
-        if (index) {
-            out << ",";
-        }
-        out << save_ref_json(saves[index]);
-    }
-    out << "]\n";
-    out << "}\n";
-    return out.str();
-}
-
-bool resolve_instance_save(const InstanceRef& instance, const std::string& save_name, SaveRef& out)
-{
-    std::string identifier_error;
-    if (!facman::base::validate_identifier(save_name, identifier_error)) {
-        return false;
-    }
-    fs::path save_root = instance.local_data_root / "saves";
-    fs::path candidate = save_root / save_name;
-    if (!fs::is_regular_file(candidate) && candidate.extension() != ".zip") {
-        candidate = save_root / (save_name + ".zip");
-    }
-    if (!fs::is_regular_file(candidate)) {
-        return false;
-    }
-    out.file_path = candidate;
-    out.file_name = candidate.filename().string();
-    out.name = candidate.stem().string();
-    out.size = fs::file_size(candidate);
-    return true;
-}
-
-bool validate_save_zip(const SaveRef& save, std::string& detail)
-{
-    std::vector<ZipEntry> entries;
-    std::string error;
-    if (!read_stored_zip(save.file_path, entries, error)) {
-        detail = error.empty() ? "save archive has no readable entries" : error;
-        return false;
-    }
-    detail.clear();
-    return true;
-}
-
-bool instance_save_is_locked(const InstanceRef& instance)
-{
-    return fs::exists(instance.local_data_root / "locks" / "save.write.lock");
-}
-
-std::string save_refusal_json(
-    const std::string& command,
-    const std::string& instance_id,
-    const std::string& save_name,
-    const std::string& code,
-    const std::string& reason,
-    bool recoverable,
-    const std::string& detail,
-    const std::string& suggested_next_command
-)
-{
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.save_refusal.v1\",\n";
-    out << "  \"command\": " << quote(command) << ",\n";
-    out << "  \"status\": \"refused\",\n";
-    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
-    out << "  \"save\": " << quote(save_name) << ",\n";
-    out << "  \"refusal\": {\n";
-    out << "    \"schema\": \"common.refusal.v1\",\n";
-    out << "    \"code\": " << quote(code) << ",\n";
-    out << "    \"reason\": " << quote(reason) << ",\n";
-    out << "    \"recoverable\": " << (recoverable ? "true" : "false") << ",\n";
-    out << "    \"retryable\": " << (recoverable ? "true" : "false") << ",\n";
-    out << "    \"severity\": \"blocked\"\n";
-    out << "  },\n";
-    out << "  \"details\": {\"detail\": " << quote(detail) << "},\n";
-    out << "  \"suggested_next_command\": " << quote(suggested_next_command) << "\n";
-    out << "}\n";
-    return out.str();
-}
-
-std::string instance_transfer_refusal_json(
-    const std::string& command,
-    const std::string& instance_id,
-    const std::string& code,
-    const std::string& reason,
-    bool recoverable,
-    const std::string& detail
-)
-{
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.instance_transfer_refusal.v1\",\n";
-    out << "  \"command\": " << quote(command) << ",\n";
-    out << "  \"status\": \"refused\",\n";
-    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
-    out << "  \"refusal\": {\n";
-    out << "    \"schema\": \"common.refusal.v1\",\n";
-    out << "    \"code\": " << quote(code) << ",\n";
-    out << "    \"reason\": " << quote(reason) << ",\n";
-    out << "    \"recoverable\": " << (recoverable ? "true" : "false") << ",\n";
-    out << "    \"retryable\": " << (recoverable ? "true" : "false") << ",\n";
-    out << "    \"severity\": \"blocked\"\n";
-    out << "  },\n";
-    out << "  \"details\": {\"detail\": " << quote(detail) << "}\n";
-    out << "}\n";
-    return out.str();
-}
-
-std::string save_backup_result_json(
-    const InstanceRef& instance,
-    const SaveRef& save,
-    const fs::path& backup_path,
-    const fs::path& manifest_path,
-    const std::string& created_at
-)
-{
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.save_backup.v1\",\n";
-    out << "  \"command\": \"saves.backup\",\n";
-    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-    out << "  \"save\": " << quote(save.file_name) << ",\n";
-    out << "  \"source_path\": " << quote(path_string(save.file_path)) << ",\n";
-    out << "  \"destination_path\": " << quote(path_string(backup_path)) << ",\n";
-    out << "  \"path\": " << quote(path_string(backup_path)) << ",\n";
-    out << "  \"manifest_path\": " << quote(path_string(manifest_path)) << ",\n";
-    out << "  \"created_at\": " << quote(created_at) << ",\n";
-    out << "  \"sha1\": " << quote(factorio_modsets::sha1_hex_file(save.file_path)) << ",\n";
-    out << "  \"sha256\": " << quote(factorio_modsets::sha256_hex_file(save.file_path)) << "\n";
-    out << "}\n";
-    return out.str();
-}
-
-std::string save_clone_result_json(
-    const InstanceRef& source,
-    const InstanceRef& target,
-    const SaveRef& save,
-    const fs::path& clone_path,
-    const std::string& created_at
-)
-{
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.save_clone.v1\",\n";
-    out << "  \"command\": \"saves.clone\",\n";
-    out << "  \"source_instance_id\": " << quote(source.instance_id) << ",\n";
-    out << "  \"target_instance_id\": " << quote(target.instance_id) << ",\n";
-    out << "  \"save\": " << quote(save.file_name) << ",\n";
-    out << "  \"source_path\": " << quote(path_string(save.file_path)) << ",\n";
-    out << "  \"destination_path\": " << quote(path_string(clone_path)) << ",\n";
-    out << "  \"path\": " << quote(path_string(clone_path)) << ",\n";
-    out << "  \"created_at\": " << quote(created_at) << ",\n";
-    out << "  \"sha1\": " << quote(factorio_modsets::sha1_hex_file(save.file_path)) << ",\n";
-    out << "  \"sha256\": " << quote(factorio_modsets::sha256_hex_file(save.file_path)) << "\n";
-    out << "}\n";
-    return out.str();
-}
-
 std::string redacted_instance_json(const InstanceRef& instance)
 {
     InstanceRef redacted = instance;
@@ -1523,43 +1214,6 @@ std::string portable_effective_config_ini()
         "[path]\n"
         "read-data=$FACMAN_INSTALL_ROOT/data\n"
         "write-data=$FACMAN_INSTANCE_ROOT\n";
-}
-
-std::string export_manifest_json(const InstanceRef& instance, std::size_t file_count)
-{
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.instance_export_manifest.v1\",\n";
-    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-    out << "  \"portable\": true,\n";
-    out << "  \"redaction_policy\": \"facman.redaction_policy.v1\",\n";
-    out << "  \"redaction_marker\": " << quote(factorio_diagnostics::redaction_marker()) << ",\n";
-    out << "  \"redactions\": [\"local_data_root\", \"config.ini paths and secrets\"],\n";
-    out << "  \"files\": " << file_count << "\n";
-    out << "}\n";
-    return out.str();
-}
-
-std::vector<std::pair<std::string, std::vector<unsigned char>>> instance_export_files(const InstanceRef& instance)
-{
-    std::vector<std::pair<std::string, std::vector<unsigned char>>> files;
-    files.push_back({"instance.v1.json", bytes_from_text(redacted_instance_json(instance))});
-
-    files.push_back({"config/config.ini", bytes_from_text(portable_effective_config_ini())});
-
-    fs::path modset_lock = modset_lock_path(instance);
-    if (fs::is_regular_file(modset_lock)) {
-        files.push_back({"mods/modset-lock.v1.json", read_bytes(modset_lock)});
-    }
-    for (const ModRef& mod : instance_mod_files(instance)) {
-        files.push_back({"mods/" + mod.file_name, read_bytes(mod.file_path)});
-    }
-    for (const SaveRef& save : instance_save_files(instance)) {
-        files.push_back({"saves/" + save.file_name, read_bytes(save.file_path)});
-    }
-
-    files.insert(files.begin(), {"manifest/export.v1.json", bytes_from_text(export_manifest_json(instance, files.size() + 1))});
-    return files;
 }
 
 std::string relative_to_root(const fs::path& root, const fs::path& path)
@@ -1872,7 +1526,7 @@ bool write_diagnostic_bundle(
     std::string manifest = diagnostic_bundle_manifest_json(instance_id, utc_now_iso8601(), manifest_entries, events);
     files.insert(files.begin(), {"manifest/diagnostic-bundle.v1.json", bytes_from_text(manifest)});
     file_count = files.size();
-    return write_stored_zip(output_path, files);
+    return write_diagnostic_stored_zip_quarantined(output_path, files);
 }
 
 std::string command_line_for_display(const fs::path& executable, const std::vector<std::string>& args)
@@ -2952,259 +2606,58 @@ int command_saves(const CliOptions& options)
         std::cerr << "Missing saves subcommand\n";
         return 2;
     }
-    if (options.args[1] == "list") {
-        std::string instance_id = option_value(options.args, "--instance");
-        if (instance_id.empty()) {
-            std::cerr << "saves list requires --instance <instance-id>\n";
+    const std::string operation = options.args[1];
+    std::ostringstream request;
+    std::string command_id;
+    if (operation == "list") {
+        const std::string instance_id = option_value(options.args, "--instance");
+        if (instance_id.empty()) { std::cerr << "saves list requires --instance <instance-id>\n"; return 2; }
+        command_id = "saves.list";
+        request << "{\"instance_id\":" << quote(instance_id) << "}";
+    } else if (operation == "backup") {
+        const std::string instance_id = option_value(options.args, "--instance");
+        if (options.args.size() < 3 || instance_id.empty()) {
+            std::cerr << "saves backup requires <save> --instance <instance-id>\n";
             return 2;
         }
-        InstanceRef instance;
-        if (!load_instance(options.workspace, instance_id, instance)) {
-            std::cerr << "Unknown instance: " << instance_id << "\n";
-            return 1;
+        command_id = "saves.backup";
+        request << "{\"instance_id\":" << quote(instance_id) << ",\"save\":" << quote(options.args[2]);
+        const std::string output = option_value(options.args, "--to");
+        if (!output.empty()) request << ",\"output_path\":" << quote(output);
+        request << "}";
+    } else if (operation == "clone") {
+        const std::string source = option_value(options.args, "--instance");
+        const std::string target = option_value(options.args, "--to-instance");
+        if (options.args.size() < 3 || source.empty() || target.empty()) {
+            std::cerr << "saves clone requires <save> --instance <source-id> --to-instance <target-id>\n";
+            return 2;
         }
-        if (has_flag(options.args, "--json")) {
-            std::cout << saves_json(instance);
-        } else {
-            for (const SaveRef& save : instance_save_files(instance)) {
-                std::cout << save.file_name << "\n";
-            }
-        }
-        return 0;
+        command_id = "saves.clone";
+        request << "{\"source_instance_id\":" << quote(source)
+            << ",\"target_instance_id\":" << quote(target)
+            << ",\"save\":" << quote(options.args[2]) << "}";
+    } else {
+        std::cerr << "Unknown saves subcommand\n";
+        return 2;
     }
-
-    if (options.args[1] == "backup") {
-        if (options.args.size() < 3) {
-            std::cerr << "saves backup requires <save>\n";
-            return 2;
-        }
-        std::string instance_id = option_value(options.args, "--instance");
-        if (instance_id.empty()) {
-            std::cerr << "saves backup requires --instance <instance-id>\n";
-            return 2;
-        }
-        InstanceRef instance;
-        if (!load_instance(options.workspace, instance_id, instance)) {
-            std::cerr << "Unknown instance: " << instance_id << "\n";
-            return 1;
-        }
-        if (instance_save_is_locked(instance)) {
-            std::string result = save_refusal_json(
-                "saves.backup",
-                instance.instance_id,
-                options.args[2],
-                "save_locked",
-                "Save writes are locked for this instance",
-                true,
-                path_string(instance.local_data_root / "locks" / "save.write.lock"),
-                "facman saves list --instance <instance-id> --json"
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Save is locked: " << options.args[2] << "\n";
-            }
-            return 1;
-        }
-        SaveRef save;
-        if (!resolve_instance_save(instance, options.args[2], save)) {
-            std::string result = save_refusal_json(
-                "saves.backup",
-                instance.instance_id,
-                options.args[2],
-                "save_not_found",
-                "Save is not present in the instance",
-                true,
-                "No matching .zip save exists under the instance saves directory.",
-                "facman saves list --instance <instance-id> --json"
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Unknown save in instance: " << options.args[2] << "\n";
-            }
-            return 1;
-        }
-        std::string validation_detail;
-        if (!validate_save_zip(save, validation_detail)) {
-            std::string result = save_refusal_json(
-                "saves.backup",
-                instance.instance_id,
-                save.file_name,
-                "save_malformed",
-                "Save archive is malformed or unsupported",
-                true,
-                validation_detail,
-                "facman saves list --instance <instance-id> --json"
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Malformed save archive: " << save.file_name << "\n";
-            }
-            return 1;
-        }
-        std::string output = option_value(options.args, "--to");
-        fs::path backup_path = output.empty()
-            ? instance.local_data_root / "backups" / (save.name + ".backup.zip")
-            : fs::path(output);
-        if (fs::exists(backup_path)) {
-            std::string result = save_refusal_json(
-                "saves.backup",
-                instance.instance_id,
-                save.file_name,
-                "save_backup_target_exists",
-                "Save backup target already exists",
-                true,
-                path_string(backup_path),
-                "facman saves backup <save> --instance <instance-id> --to <new-path> --json"
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Backup target already exists: " << path_string(backup_path) << "\n";
-            }
-            return 1;
-        }
-        if (!backup_path.parent_path().empty()) {
-            fs::create_directories(backup_path.parent_path());
-        }
-        std::error_code copy_error;
-        bool copied = fs::copy_file(save.file_path, backup_path, fs::copy_options::none, copy_error);
-        if (!copied || copy_error) {
-            std::cerr << "Failed to copy save backup: " << path_string(backup_path) << "\n";
-            return 1;
-        }
-        fs::path manifest_path = backup_path;
-        manifest_path += ".manifest.json";
-        std::string created_at = utc_now_iso8601();
-        std::string result = save_backup_result_json(instance, save, backup_path, manifest_path, created_at);
-        write_text(manifest_path, result);
-        if (has_flag(options.args, "--json")) {
-            std::cout << result;
-        } else {
-            std::cout << "Backed up " << save.file_name << " to " << path_string(backup_path) << "\n";
-        }
-        return 0;
+    const RoutedCommandResult routed = route_factorio_command(
+        options.workspace,
+        command_id.c_str(),
+        request.str(),
+        operation == "list");
+    if (has_flag(options.args, "--json")) {
+        std::cout << routed.payload << "\n";
+    } else if (routed.status != ULK_STATUS_OK) {
+        std::cerr << "Refused: " << json_string_value(routed.payload, "reason") << "\n";
+        std::cerr << "Code: " << json_string_value(routed.payload, "code") << "\n";
+    } else if (operation == "list") {
+        std::cout << routed.payload << "\n";
+    } else if (operation == "backup") {
+        std::cout << "Backed up save to " << json_string_value(routed.payload, "destination_path") << "\n";
+    } else {
+        std::cout << "Cloned save to " << json_string_value(routed.payload, "destination_path") << "\n";
     }
-
-    if (options.args[1] == "clone") {
-        if (options.args.size() < 3) {
-            std::cerr << "saves clone requires <save>\n";
-            return 2;
-        }
-        std::string source_id = option_value(options.args, "--instance");
-        std::string target_id = option_value(options.args, "--to-instance");
-        if (source_id.empty() || target_id.empty()) {
-            std::cerr << "saves clone requires --instance <source-id> --to-instance <target-id>\n";
-            return 2;
-        }
-        InstanceRef source;
-        InstanceRef target;
-        if (!load_instance(options.workspace, source_id, source)) {
-            std::cerr << "Unknown source instance: " << source_id << "\n";
-            return 1;
-        }
-        if (!load_instance(options.workspace, target_id, target)) {
-            std::cerr << "Unknown target instance: " << target_id << "\n";
-            return 1;
-        }
-        if (instance_save_is_locked(source) || instance_save_is_locked(target)) {
-            std::string lock_path = instance_save_is_locked(source)
-                ? path_string(source.local_data_root / "locks" / "save.write.lock")
-                : path_string(target.local_data_root / "locks" / "save.write.lock");
-            std::string result = save_refusal_json(
-                "saves.clone",
-                source.instance_id,
-                options.args[2],
-                "save_locked",
-                "Save writes are locked for source or target instance",
-                true,
-                lock_path,
-                "facman saves list --instance <instance-id> --json"
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Save is locked: " << options.args[2] << "\n";
-            }
-            return 1;
-        }
-        SaveRef save;
-        if (!resolve_instance_save(source, options.args[2], save)) {
-            std::string result = save_refusal_json(
-                "saves.clone",
-                source.instance_id,
-                options.args[2],
-                "save_not_found",
-                "Save is not present in the source instance",
-                true,
-                "No matching .zip save exists under the source instance saves directory.",
-                "facman saves list --instance <instance-id> --json"
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Unknown save in source instance: " << options.args[2] << "\n";
-            }
-            return 1;
-        }
-        std::string validation_detail;
-        if (!validate_save_zip(save, validation_detail)) {
-            std::string result = save_refusal_json(
-                "saves.clone",
-                source.instance_id,
-                save.file_name,
-                "save_malformed",
-                "Save archive is malformed or unsupported",
-                true,
-                validation_detail,
-                "facman saves list --instance <instance-id> --json"
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Malformed save archive: " << save.file_name << "\n";
-            }
-            return 1;
-        }
-        fs::path clone_path = target.local_data_root / "saves" / save.file_name;
-        if (fs::exists(clone_path)) {
-            std::string result = save_refusal_json(
-                "saves.clone",
-                target.instance_id,
-                save.file_name,
-                "save_clone_target_exists",
-                "Save clone target already exists",
-                true,
-                path_string(clone_path),
-                "facman saves clone <save> --instance <source-id> --to-instance <new-target-id> --json"
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Clone target already exists: " << path_string(clone_path) << "\n";
-            }
-            return 1;
-        }
-        fs::create_directories(clone_path.parent_path());
-        std::error_code copy_error;
-        bool copied = fs::copy_file(save.file_path, clone_path, fs::copy_options::none, copy_error);
-        if (!copied || copy_error) {
-            std::cerr << "Failed to copy save clone: " << path_string(clone_path) << "\n";
-            return 1;
-        }
-        std::string result = save_clone_result_json(source, target, save, clone_path, utc_now_iso8601());
-        if (has_flag(options.args, "--json")) {
-            std::cout << result;
-        } else {
-            std::cout << "Cloned " << save.file_name << " to " << target.instance_id << "\n";
-        }
-        return 0;
-    }
-
-    std::cerr << "Unknown saves subcommand\n";
-    return 2;
+    return routed.status == ULK_STATUS_OK ? 0 : 1;
 }
 
 int command_export(const CliOptions& options)
@@ -3213,64 +2666,18 @@ int command_export(const CliOptions& options)
         std::cerr << "export instance requires <instance-id> <pack.zip>\n";
         return 2;
     }
-    InstanceRef instance;
-    if (!load_instance(options.workspace, options.args[2], instance)) {
-        std::cerr << "Unknown instance: " << options.args[2] << "\n";
-        return 1;
-    }
-    fs::path output_path = options.args[3];
-    if (fs::exists(output_path)) {
-        std::string result = instance_transfer_refusal_json(
-            "export.instance",
-            instance.instance_id,
-            "instance_export_target_exists",
-            "Instance export target already exists",
-            true,
-            path_string(output_path)
-        );
-        if (has_flag(options.args, "--json")) {
-            std::cout << result;
-        } else {
-            std::cerr << "Instance export target already exists: " << path_string(output_path) << "\n";
-        }
-        return 1;
-    }
-    for (const SaveRef& save : instance_save_files(instance)) {
-        std::string validation_detail;
-        if (!validate_save_zip(save, validation_detail)) {
-            std::string result = instance_transfer_refusal_json(
-                "export.instance",
-                instance.instance_id,
-                "save_malformed",
-                "Save archive is malformed or unsupported",
-                true,
-                save.file_name + ": " + validation_detail
-            );
-            if (has_flag(options.args, "--json")) {
-                std::cout << result;
-            } else {
-                std::cerr << "Malformed save archive: " << save.file_name << "\n";
-            }
-            return 1;
-        }
-    }
-    std::vector<std::pair<std::string, std::vector<unsigned char>>> files = instance_export_files(instance);
-    if (!write_stored_zip(output_path, files)) {
-        std::cerr << "Failed to write instance export: " << path_string(output_path) << "\n";
-        return 1;
-    }
-    if (has_flag(options.args, "--json")) {
-        std::cout << "{\n";
-        std::cout << "  \"schema\": \"factorio.instance_export.v1\",\n";
-        std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-        std::cout << "  \"path\": " << quote(path_string(output_path)) << ",\n";
-        std::cout << "  \"files\": " << files.size() << ",\n";
-        std::cout << "  \"redactions\": [\"local_data_root\", \"config.ini paths and secrets\"]\n";
-        std::cout << "}\n";
-    } else {
-        std::cout << "Exported instance pack to " << path_string(output_path) << "\n";
-    }
-    return 0;
+    std::ostringstream request;
+    request << "{\"instance_id\":" << quote(options.args[2])
+        << ",\"output_path\":" << quote(options.args[3]) << "}";
+    const RoutedCommandResult routed = route_factorio_command(
+        options.workspace,
+        "instance.export",
+        request.str(),
+        false);
+    if (has_flag(options.args, "--json")) std::cout << routed.payload << "\n";
+    else if (routed.status == ULK_STATUS_OK) std::cout << "Exported instance pack to " << options.args[3] << "\n";
+    else std::cerr << "Refused: " << json_string_value(routed.payload, "reason") << "\n";
+    return routed.status == ULK_STATUS_OK ? 0 : 1;
 }
 
 int command_import(const CliOptions& options)
@@ -3279,237 +2686,20 @@ int command_import(const CliOptions& options)
         std::cerr << "import instance requires <pack.zip>\n";
         return 2;
     }
-    fs::path pack_path = options.args[2];
-    auto refuse = [&](const std::string& instance_id,
-                      const std::string& code,
-                      const std::string& reason,
-                      bool recoverable,
-                      const std::string& detail) -> int {
-        std::string result = instance_transfer_refusal_json(
-            "import.instance",
-            instance_id,
-            code,
-            reason,
-            recoverable,
-            detail
-        );
-        if (has_flag(options.args, "--json")) {
-            std::cout << result;
-        } else {
-            std::cerr << reason << ": " << detail << "\n";
-        }
-        return 1;
-    };
-
-    if (!fs::is_regular_file(pack_path)) {
-        return refuse(
-            "",
-            "instance_import_manifest_invalid",
-            "Instance pack does not exist",
-            true,
-            path_string(pack_path)
-        );
-    }
-
-    std::vector<ZipEntry> entries;
-    std::string error;
-    if (!read_stored_zip(pack_path, entries, error)) {
-        bool unsafe = error == "zip entry path is unsafe";
-        return refuse(
-            "",
-            unsafe ? "unsafe_archive_path" : "instance_import_manifest_invalid",
-            unsafe ? "Instance pack contains an unsafe archive entry" : "Could not read instance pack",
-            !unsafe,
-            error
-        );
-    }
-
-    for (const ZipEntry& entry : entries) {
-        if (!archive_entry_is_safe(entry.name)) {
-            return refuse(
-                "",
-                "unsafe_archive_path",
-                "Instance pack contains an unsafe archive entry",
-                false,
-                entry.name
-            );
-        }
-    }
-
-    const ZipEntry* manifest_entry = find_zip_entry(entries, "instance.v1.json");
-    if (manifest_entry == 0) {
-        return refuse(
-            "",
-            "instance_import_manifest_invalid",
-            "Instance pack is missing instance.v1.json",
-            true,
-            path_string(pack_path)
-        );
-    }
-    std::string manifest_text(manifest_entry->data.begin(), manifest_entry->data.end());
-
-    InstanceRef instance;
-    instance.instance_id = option_value(options.args, "--id", json_string_value(manifest_text, "instance_id"));
-    if (instance.instance_id.empty()) {
-        return refuse(
-            "",
-            "instance_import_manifest_invalid",
-            "Instance pack has no instance id",
-            true,
-            path_string(pack_path)
-        );
-    }
-    instance.display_name = json_string_value(manifest_text, "display_name");
-    instance.install_ref = json_string_value(manifest_text, "install_ref");
-    instance.factorio_version = json_string_value(manifest_text, "factorio_version");
-    instance.profile = json_string_value(manifest_text, "profile");
-    instance.template_id = json_string_value(manifest_text, "template");
-    InstallRef selected_install;
-    if (!load_install(options.workspace, instance.install_ref, selected_install)) {
-        return refuse(
-            instance.instance_id,
-            "unknown_install",
-            "Instance pack references an install that is not registered",
-            true,
-            instance.install_ref);
-    }
-    ManagedPathResult target = instance_root_result(options.workspace, instance.instance_id);
-    if (!target.ok()) {
-        return refuse(
-            instance.instance_id,
-            target.code,
-            "Instance import id cannot be used as a managed path",
-            false,
-            target.detail);
-    }
-    instance.local_data_root = target.path;
-
-    if (fs::exists(instance.local_data_root)) {
-        return refuse(
-            instance.instance_id,
-            "instance_import_target_exists",
-            "Instance import target already exists",
-            true,
-            path_string(instance.local_data_root)
-        );
-    }
-    ensure_workspace(options.workspace);
-
-    fs::path staging = target.path;
-    staging += ".facman-staging";
-    if (fs::exists(staging)) {
-        return refuse(
-            instance.instance_id,
-            "staging_target_exists",
-            "Instance import staging target already exists",
-            true,
-            path_string(staging));
-    }
-    fs::create_directories(staging);
-    std::string staging_error;
-    if (!facman::base::write_text_new_atomic(
-            staging / ".facman-staging.v1",
-            "facman-instance-import-staging-v1\n",
-            staging_error)) {
-        return refuse(
-            instance.instance_id,
-            "persistent_write_refused",
-            "Instance import staging marker could not be written",
-            true,
-            staging_error);
-    }
-
-    for (const ZipEntry& entry : entries) {
-        if (entry.name.rfind("manifest/", 0) == 0) {
-            continue;
-        }
-        fs::path output_path = staging / fs::path(entry.name);
-        fs::create_directories(output_path.parent_path());
-        std::ofstream out(output_path, std::ios::binary);
-        out.write(reinterpret_cast<const char*>(entry.data.data()), static_cast<std::streamsize>(entry.data.size()));
-        if (!out) {
-            out.close();
-            std::string cleanup_error;
-            (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
-            return refuse(
-                instance.instance_id,
-                "persistent_write_refused",
-                "Instance import entry could not be staged",
-                true,
-                entry.name);
-        }
-    }
-
-    std::error_code manifest_error;
-    fs::remove(staging / "instance.v1.json", manifest_error);
-    std::error_code legacy_config_error;
-    fs::remove(staging / "config" / "config-path.cfg", legacy_config_error);
-    fs::remove(staging / "config" / "config.ini", legacy_config_error);
-    facman::factorio::launch::InstanceLaunchRef launch_instance;
-    launch_instance.instance_id = instance.instance_id;
-    launch_instance.profile_id = instance.profile;
-    launch_instance.local_data_root = target.path;
-    facman::factorio::launch::InstallLaunchRef launch_install;
-    launch_install.root = selected_install.root;
-    launch_install.executable = selected_install.executable;
-    launch_install.ownership = selected_install.ownership;
-    if (!facman::base::write_text_new_atomic(
-            staging / "config" / "config.ini",
-            facman::factorio::launch::effective_config_ini(launch_instance, launch_install),
-            staging_error)) {
-        std::string cleanup_error;
-        (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
-        return refuse(
-            instance.instance_id,
-            "persistent_write_refused",
-            "Instance effective config could not be staged",
-            true,
-            staging_error);
-    }
-    if (!facman::base::write_text_new_atomic(
-            staging / "instance.v1.json",
-            instance_json(instance),
-            staging_error)) {
-        std::string cleanup_error;
-        (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
-        return refuse(
-            instance.instance_id,
-            "persistent_write_refused",
-            "Instance import manifest could not be staged",
-            true,
-            staging_error);
-    }
-    if (!facman::base::commit_directory_no_clobber(staging, target.path, staging_error)) {
-        std::string cleanup_error;
-        (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup_error);
-        return refuse(
-            instance.instance_id,
-            "persistent_write_refused",
-            "Instance import could not be committed without overwrite",
-            true,
-            staging_error);
-    }
-    std::error_code marker_error;
-    fs::remove(target.path / ".facman-staging.v1", marker_error);
-
-    fs::path lock_path = modset_lock_path(instance);
-    fs::path workspace_lock_path = workspace_modset_lock_path(options.workspace, instance);
-    if (fs::is_regular_file(lock_path) && !workspace_lock_path.empty() && !fs::exists(workspace_lock_path)) {
-        std::string lock_error;
-        (void)facman::base::write_text_new_atomic(workspace_lock_path, read_text(lock_path), lock_error);
-    }
-
-    if (has_flag(options.args, "--json")) {
-        std::cout << "{\n";
-        std::cout << "  \"schema\": \"factorio.instance_import.v1\",\n";
-        std::cout << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-        std::cout << "  \"path\": " << quote(path_string(instance.local_data_root)) << ",\n";
-        std::cout << "  \"files\": " << entries.size() << "\n";
-        std::cout << "}\n";
-    } else {
-        std::cout << "Imported instance " << instance.instance_id << " from " << path_string(pack_path) << "\n";
-    }
-    return 0;
+    std::ostringstream request;
+    request << "{\"source_path\":" << quote(options.args[2]);
+    const std::string instance_id = option_value(options.args, "--id");
+    if (!instance_id.empty()) request << ",\"instance_id\":" << quote(instance_id);
+    request << "}";
+    const RoutedCommandResult routed = route_factorio_command(
+        options.workspace,
+        "instance.import",
+        request.str(),
+        false);
+    if (has_flag(options.args, "--json")) std::cout << routed.payload << "\n";
+    else if (routed.status == ULK_STATUS_OK) std::cout << "Imported instance " << json_string_value(routed.payload, "instance_id") << "\n";
+    else std::cerr << "Refused: " << json_string_value(routed.payload, "reason") << "\n";
+    return routed.status == ULK_STATUS_OK ? 0 : 1;
 }
 
 int command_servers(const CliOptions& options)
