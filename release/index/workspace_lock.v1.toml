@@ -12,11 +12,11 @@ path = "."
 [[component]]
 id = "universal_launcher"
 source = "universal-launcher"
-pin = "c9f0e679592f4317aca63d243d1a323fa2b002bd"
+pin = "80a848375227dc858865874ef594c4b466877241"
 path = "../universal-launcher"
 
 [[component]]
 id = "universal_setup"
 source = "universal-setup"
-pin = "b98d40bf23b5df598333fa94367a93c612e09f17"
+pin = "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
 path = "../universal-setup"

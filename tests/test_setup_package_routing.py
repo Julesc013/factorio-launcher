@@ -16,11 +16,12 @@ class SetupPackageRoutingTests(unittest.TestCase):
         self.assertNotIn("fl_runtime_verify_package", command)
         self.assertIn("usk.package_verify_request.v1", command)
 
-    def test_workspace_lock_pins_the_proven_usk_verifier_revision(self) -> None:
+    def test_workspace_lock_pins_integrated_universal_revisions(self) -> None:
         lock = (ROOT / "release" / "index" / "workspace_lock.v1.toml").read_text(
             encoding="utf-8"
         )
-        self.assertIn("b98d40bf23b5df598333fa94367a93c612e09f17", lock)
+        self.assertIn("80a848375227dc858865874ef594c4b466877241", lock)
+        self.assertIn("4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2", lock)
 
 
 if __name__ == "__main__":
