@@ -413,14 +413,18 @@ def write_platform_metadata(
 
 def write_macos_platform_metadata(package_root: Path, build_root: Path) -> None:
     executable = package_root / "bin" / "facman"
-    file_identity = run_capture(["file", str(executable)]).strip()
+    raw_file_identity = run_capture(["file", str(executable)]).strip()
+    identity_prefix, separator, file_identity = raw_file_identity.partition(":")
+    if separator != ":" or Path(identity_prefix) != executable:
+        raise ValueError("macos_portable_cli_x64: file tool did not identify the packaged executable")
+    file_identity = file_identity.strip()
     architectures = run_capture(["lipo", "-archs", str(executable)]).split()
     if architectures != ["x86_64"]:
         raise ValueError(
             "macos_portable_cli_x64: Mach-O architecture must be exactly x86_64, "
             f"got {architectures}"
         )
-    if "Mach-O 64-bit executable x86_64" not in file_identity:
+    if file_identity != "Mach-O 64-bit executable x86_64":
         raise ValueError("macos_portable_cli_x64: file identity is not an x86_64 Mach-O executable")
 
     otool_libraries = run_capture(["otool", "-L", str(executable)])

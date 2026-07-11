@@ -43,3 +43,11 @@ because `built_package.v1` had not yet admitted `macos` in its target enum.
 The schema-only repair adds that already indexed target and a regression
 assertion; it does not relax identity, architecture, linkage, integrity, or
 provenance checks.
+
+Revision `745f17767fb5f0f36d97c0dddcf3a1c6878cb4e9`, CI
+`29159110943`, passed the complete macOS native, CTest, Python, strict, package,
+and artifact-upload sequence. Inspection of artifact `8250313374` found that
+the `file` tool's identity string retained an absolute ephemeral runner path in
+the packaged linkage metadata. The pre-freeze repair strips the executable
+prefix and makes the schema require exactly `Mach-O 64-bit executable x86_64`;
+the artifact must be regenerated and re-proven before checkpoint promotion.

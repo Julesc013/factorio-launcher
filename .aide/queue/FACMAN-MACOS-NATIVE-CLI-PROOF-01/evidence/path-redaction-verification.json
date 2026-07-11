@@ -1,0 +1,41 @@
+# AIDE Verification Report
+
+## VERIFIER_RESULT
+
+- result: PASS
+- method: deterministic repo-local checks
+- contents_inline: false
+- provider_or_model_calls: none
+
+## CHECK_COUNTS
+
+- info: 4
+- warnings: 0
+- errors: 0
+- checked_files: 0
+- changed_files: 4
+
+## CHANGED_FILES
+
+- allowed: `.aide/queue/FACMAN-MACOS-NATIVE-CLI-PROOF-01/evidence/validation.md` (M; matches active task allowed path)
+- allowed: `contracts/schema/release/macos_linkage_proof.v1.schema.json` (M; matches active task allowed path)
+- allowed: `tests/test_package_macos_proof.py` (M; matches active task allowed path)
+- allowed: `tools/package_build.py` (M; matches active task allowed path)
+
+## WARNINGS
+
+- none
+
+## ERRORS
+
+- none
+
+## EVIDENCE_REFS
+
+
+## LIMITS
+
+- Structural verifier only; no LLM judging.
+- Diff scope is path-based only.
+- Secret scan is heuristic only.
+- Token counts use chars / 4 approximation.

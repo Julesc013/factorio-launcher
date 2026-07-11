@@ -13,7 +13,7 @@
     "profile_id": { "const": "macos_portable_cli_x64" },
     "runner": { "const": "macos-15-intel" },
     "architecture": { "const": "x86_64" },
-    "file_identity": { "type": "string", "minLength": 1 },
+    "file_identity": { "const": "Mach-O 64-bit executable x86_64" },
     "linkage_model": { "const": "project_static_system_dynamic" },
     "deployment_target": { "const": "13.0" },
     "sdk": { "type": "string", "minLength": 1 },

@@ -47,9 +47,17 @@ class MacosPackageProofContractTests(unittest.TestCase):
         self.assertEqual(proof_schema["properties"]["notarized"]["const"], False)
         self.assertEqual(proof_schema["properties"]["published"]["const"], False)
         self.assertEqual(linkage_schema["properties"]["deployment_target"]["const"], "13.0")
+        self.assertEqual(
+            linkage_schema["properties"]["file_identity"]["const"],
+            "Mach-O 64-bit executable x86_64",
+        )
         self.assertEqual(linkage_schema["properties"]["rpath"]["type"], "null")
         self.assertFalse(proof_schema["additionalProperties"])
         self.assertFalse(linkage_schema["additionalProperties"])
+
+        builder = (ROOT / "tools/package_build.py").read_text(encoding="utf-8")
+        self.assertIn('raw_file_identity.partition(":")', builder)
+        self.assertNotIn('"file_identity": raw_file_identity', builder)
 
     def test_ci_runs_full_native_and_package_proof_without_promoting_appkit(self) -> None:
         workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
