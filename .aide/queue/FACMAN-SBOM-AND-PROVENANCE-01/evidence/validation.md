@@ -1,6 +1,6 @@
 # Validation
 
-Result: LOCAL GATES PASS; EXACT-SHA ARTIFACT CI PENDING.
+Result: PASS, including exact-SHA artifact provenance CI.
 
 - Complete Python suite: PASS (222/222, zero skips).
 - Strict checks: PASS with 63 schemas and the new provenance checker.
@@ -27,3 +27,17 @@ that its CI-identity mutation assigned `github_actions` to a record already
 holding that value. The repair corrupts the CI-bound source SHA and additionally
 compares GitHub run identity with the active build environment; no provenance
 field or validation rule is weakened.
+
+Final revision `4819b9d1bd70756bb60f44719565f3020adabab0` passed replacement
+CI `29158246484` across Linux native/package/provenance, Windows
+native/package/provenance, macOS archive, and AppKit compile-only. Security run
+`29158246490` passed; schema run `29158099731` passed the unchanged 63-schema
+surface introduced by the implementation revision.
+
+The clean Linux tarball is 810160 bytes with SHA-256
+`cfb0123a98a9f8c26619aaeb680daaa5655cb9dfe83d38a6ce0c65de54135176`.
+Its adjacent provenance SHA-256 is
+`09469b1097e0baf14a922af11479f6faee810ca317325489a2f3bdb9af8d65d5`
+and records Actions run `29158246484`, clean source-state digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+and `publisher_authenticity_not_proven`.

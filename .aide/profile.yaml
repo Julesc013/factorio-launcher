@@ -14,10 +14,11 @@ current_focus:
     production archive layer, typed authoritative routes, recoverable writes,
     safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-SBOM-AND-PROVENANCE-01: generate unsigned SPDX SBOM and artifact
-    provenance containing dependency/license, toolchain, source revision,
-    workspace lock, component manifest, artifact digest, CI identity, and
-    timestamp-policy evidence. Publisher authenticity remains unproven.
+    FACMAN-MACOS-NATIVE-CLI-PROOF-01: on the explicit macOS Intel runner build
+    the complete native core, run CTest and portable Python, then build and
+    smoke one target-specific x64 CLI package with architecture, deployment
+    target, linkage, integrity, provenance, and zero-skip package evidence.
+    AppKit remains compile-only.
     Windows read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan

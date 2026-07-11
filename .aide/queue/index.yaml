@@ -74,9 +74,16 @@ items:
     evidence: .aide/queue/FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03/evidence
     description: Hold stable lock handles, verify identity, and refuse links, substitution, and unsupported shared filesystems.
   - id: FACMAN-SBOM-AND-PROVENANCE-01
-    status: active
-    planning_state: implementation
+    status: needs_review
+    planning_state: implementation_completed
     title: Generate unsigned SBOM and build provenance
     task: .aide/queue/FACMAN-SBOM-AND-PROVENANCE-01/task.yaml
     evidence: .aide/queue/FACMAN-SBOM-AND-PROVENANCE-01/evidence
     description: Record package dependencies, licenses, toolchain, sources, locks, components, artifact digest, and CI identity without claiming authenticity.
+  - id: FACMAN-MACOS-NATIVE-CLI-PROOF-01
+    status: active
+    planning_state: implementation
+    title: Prove the native macOS x64 CLI package lane
+    task: .aide/queue/FACMAN-MACOS-NATIVE-CLI-PROOF-01/task.yaml
+    evidence: .aide/queue/FACMAN-MACOS-NATIVE-CLI-PROOF-01/evidence
+    description: Build native FacMan, run CTest/Python, and prove one target-specific macOS x64 CLI package while AppKit remains compile-only.

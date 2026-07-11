@@ -80,7 +80,9 @@ proof are frozen at green exact-SHA checkpoints. Continue with
 `FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03` on supported local filesystems only.
 That local lock proof is now exact-SHA cross-platform green. Continue with
 `FACMAN-SBOM-AND-PROVENANCE-01`, keeping provenance distinct from publisher
-authenticity. Keep
+authenticity. That unsigned provenance proof is now exact-SHA target-CI green.
+Continue with `FACMAN-MACOS-NATIVE-CLI-PROOF-01`, keeping AppKit compile-only.
+Keep
 `run.execute` and real Factorio isolation human-gated; do not schedule Windows discovery again.
 The ordered authority remains `.aide/memory/r3.3-workunits.md`.
 

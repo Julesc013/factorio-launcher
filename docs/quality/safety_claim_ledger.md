@@ -27,7 +27,7 @@ reported as stronger runtime evidence.
 | Linux x64 CLI tarball runs after relocation | target CI proven | ELF allowlist, archive, read-only and relocation matrix | Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished |
 | Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and setup mutation remain unproven |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
-| Package inputs and artifact provenance are recorded | local implementation proven | SPDX, source/toolchain/CI identities, manifest and artifact digests | unsigned adjacent evidence does not authenticate publisher; target CI pending |
+| Package inputs and artifact provenance are recorded | target CI proven | SPDX, source/toolchain/CI identities, manifest and artifact digests | unsigned adjacent evidence does not authenticate publisher |
 | Experimental public C ABI has a correctness floor | bounded correctness proof | size, ownership, ABI-query, and native-smoke tests | stable third-party compatibility and independent consumers remain unproven |
 
 Each promotion record must identify the repository revision, sibling
