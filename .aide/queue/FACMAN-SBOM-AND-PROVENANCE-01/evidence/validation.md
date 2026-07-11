@@ -19,3 +19,11 @@ this WorkUnit is promoted.
 
 All records say `publisher_authenticity_not_proven`, `signed: false`, and
 `published: false`. No signature or trusted attestation claim is made.
+
+Revision `a8aeef52c041dabcff23bf2b1de82f45a24e6691` passed Linux target
+package/provenance, macOS archive, AppKit, schema, and security gates in runs
+`29158099720`, `29158099731`, and `29158099722`. The Windows Python lane found
+that its CI-identity mutation assigned `github_actions` to a record already
+holding that value. The repair corrupts the CI-bound source SHA and additionally
+compares GitHub run identity with the active build environment; no provenance
+field or validation rule is weakened.

@@ -230,6 +230,8 @@ def verify_artifact_provenance(
         for key in ("run_id", "run_attempt", "workflow", "repository"):
             if ci.get(key) in {"", "not_applicable", None}:
                 problems.append(f"GitHub Actions provenance is missing {key}")
+        if os.environ.get("GITHUB_ACTIONS") == "true" and ci != ci_identity(source_sha):
+            problems.append("GitHub Actions identity disagrees with the current build environment")
     elif ci.get("provider") == "local":
         if any(ci.get(key) != "not_applicable" for key in ("run_id", "run_attempt", "workflow")):
             problems.append("local provenance contains a false CI run identity")

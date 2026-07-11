@@ -251,7 +251,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             if field == "source_revisions":
                 data[field]["factorio_launcher"] = "0" * 40
             else:
-                data[field]["provider"] = "github_actions"
+                data[field]["source_sha"] = "0" * 40
             changed_provenance.write_text(
                 json.dumps(data, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
