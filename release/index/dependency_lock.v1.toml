@@ -32,3 +32,18 @@ pin = "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
 bundled = true
 source = "universal-setup"
 install_mutation_authority = true
+
+[[component]]
+id = "miniz"
+kind = "archive_runtime"
+version = "3.1.2"
+abi_version = 1
+pin = "77d0dce8627735138c51770d1799a1ef48f2117d"
+bundled = true
+source = "https://github.com/richgel999/miniz"
+source_archive = "miniz-3.1.2.zip"
+source_archive_sha256 = "f0446d863f9c19926ad9483c523fdc42e42b8d4a6a431d27e09d49c79a140d9a"
+license = "MIT"
+install_mutation_authority = false
+runtime_network = false
+transitive_runtime_dependencies = []

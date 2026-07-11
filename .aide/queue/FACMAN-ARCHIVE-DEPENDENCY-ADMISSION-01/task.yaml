@@ -1,0 +1,47 @@
+schema_version: aide.queue-task.v0
+id: FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01
+title: Admit one production archive dependency
+status: needs_review
+planning_state: implementation_completed
+created_at: 2026-07-11
+owner: Codex
+objective: >
+  Select, review, source-pin, vendor, and prove one permissively licensed
+  archive dependency that supports the complete R3.3 archive consumer floor
+  without adding an opaque binary, runtime networking, or unreviewed transitives.
+depends_on:
+  - FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01
+allowed_paths:
+  - .aide/queue/**
+  - .aide/context/**
+  - .aide/profile.yaml
+  - external/miniz/**
+  - CMakeLists.txt
+  - THIRD_PARTY_NOTICES.md
+  - docs/architecture/decisions/**
+  - release/index/dependency_lock.v1.toml
+  - release/index/sbom.components.v1.json
+  - tests/native/miniz_dependency_smoke.c
+  - tests/test_archive_dependency_admission.py
+  - tools/aide_target_truth_check.py
+  - tools/validators/release/check_dependency_lock.py
+forbidden_paths:
+  - runtime/archive/**
+  - runtime/factorio/**
+  - apps/**
+  - include/**
+  - .git/**
+  - .env
+  - secrets/**
+acceptance:
+  - One exact source release and commit are recorded with matching SHA-256.
+  - License and redistribution obligations are reviewed and notices updated.
+  - Stored, deflate, ZIP64, descriptors, CRC, callbacks, encryption detection, and external attributes are evidenced.
+  - No transitive runtime dependency, prebuilt binary, or product networking is added.
+  - Static compile smoke passes in the supported local toolchain and CI-ready CMake graph.
+  - Initial SBOM and dependency-lock records are machine checked.
+non_goals:
+  - no production archive abstraction yet
+  - no consumer migration
+  - no hand-written deflate or ZIP64
+  - no second dependency

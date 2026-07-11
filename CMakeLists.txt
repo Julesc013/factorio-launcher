@@ -68,6 +68,9 @@ if(FLAUNCH_BUILD_TESTS)
   enable_testing()
 endif()
 
+add_library(miniz_static STATIC external/miniz/miniz.c)
+target_include_directories(miniz_static PUBLIC external/miniz)
+
 if(NOT TARGET usk_static)
   if(EXISTS "${FLAUNCH_UNIVERSAL_SETUP_ROOT}/CMakeLists.txt")
     add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
@@ -203,6 +206,10 @@ endif()
 
 if(FLAUNCH_BUILD_TESTS)
   find_package(Threads REQUIRED)
+
+  add_executable(miniz_dependency_smoke tests/native/miniz_dependency_smoke.c)
+  target_link_libraries(miniz_dependency_smoke PRIVATE miniz_static)
+  add_test(NAME miniz_dependency_smoke COMMAND miniz_dependency_smoke)
 
   add_executable(flb_command_bridge_smoke tests/native/flb_command_bridge_smoke.c)
   target_link_libraries(flb_command_bridge_smoke PRIVATE flaunch_client_static flb_factorio_static)

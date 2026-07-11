@@ -10,3 +10,10 @@ items:
     task: .aide/queue/FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01/task.yaml
     evidence: .aide/queue/FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01/evidence
     description: Reconcile the exact R3.3 baseline and repair active-task projection before runtime work.
+  - id: FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01
+    status: needs_review
+    planning_state: implementation_completed
+    title: Admit one production archive dependency
+    task: .aide/queue/FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01/task.yaml
+    evidence: .aide/queue/FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01/evidence
+    description: Review, pin, vendor, and compile one permissively licensed source-only archive dependency.

@@ -14,9 +14,10 @@ current_focus:
     production archive layer, typed authoritative routes, recoverable writes,
     safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01: reconcile the exact baseline
-    and repair target-local active-task projection before archive work. Windows
-    read-only discovery is implemented and must not be scheduled again.
+    FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01: admit exactly one source-pinned,
+    permissively licensed archive dependency after provenance, license, notice,
+    lock, SBOM, and compile evidence. Windows read-only discovery is implemented
+    and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import

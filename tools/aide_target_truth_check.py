@@ -81,7 +81,6 @@ def validate_profile_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
         "phase: r3.3-production-data-paths-recovery-and-cross-platform-proof",
-        "FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01",
         "production archive layer",
         "read-only discovery is implemented",
         "must not be scheduled again",

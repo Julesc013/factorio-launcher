@@ -1,0 +1,24 @@
+{
+  "schema": "facman.sbom.components.v1",
+  "status": "initial_dependency_component_record",
+  "components": [
+    {
+      "id": "miniz",
+      "name": "Miniz",
+      "version": "3.1.2",
+      "type": "library",
+      "purl": "pkg:github/richgel999/miniz@3.1.2",
+      "source": "https://github.com/richgel999/miniz",
+      "commit": "77d0dce8627735138c51770d1799a1ef48f2117d",
+      "source_archive": "miniz-3.1.2.zip",
+      "source_archive_sha256": "f0446d863f9c19926ad9483c523fdc42e42b8d4a6a431d27e09d49c79a140d9a",
+      "license": "MIT",
+      "linkage": "private_static",
+      "bundled_source": true,
+      "runtime_network": false,
+      "transitive_runtime_dependencies": []
+    }
+  ],
+  "provenance_recorded": true,
+  "publisher_authenticity_proven": false
+}

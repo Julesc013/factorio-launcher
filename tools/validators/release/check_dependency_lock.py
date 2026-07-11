@@ -14,6 +14,7 @@ TOOL = "release-dependency-lock-check"
 
 REQUIRED_COMPONENTS = {
     "factorio_binding",
+    "miniz",
     "universal_launcher",
     "universal_setup",
 }
@@ -59,6 +60,7 @@ def validate() -> list[str]:
         problems.append(f"{relative(lock_path)}: universal_setup must own install mutation")
     if launcher.get("install_mutation_authority") is not False:
         problems.append(f"{relative(lock_path)}: universal_launcher must not own install mutation")
+    problems.extend(validate_miniz_component(lock_path, components.get("miniz", {})))
 
     build_path = _common.index_path("build_manifest")
     build = _common.load_toml(build_path)
@@ -91,6 +93,30 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
         problems.append(f"{prefix}: version is required")
     elif version in FORBIDDEN_FLOATING_PINS:
         problems.append(f"{prefix}: version must not be floating")
+    return problems
+
+
+def validate_miniz_component(path: Path, component: dict[str, Any]) -> list[str]:
+    prefix = f"{relative(path)} component miniz"
+    expected = {
+        "kind": "archive_runtime",
+        "version": "3.1.2",
+        "pin": "77d0dce8627735138c51770d1799a1ef48f2117d",
+        "source": "https://github.com/richgel999/miniz",
+        "source_archive": "miniz-3.1.2.zip",
+        "source_archive_sha256": "f0446d863f9c19926ad9483c523fdc42e42b8d4a6a431d27e09d49c79a140d9a",
+        "license": "MIT",
+    }
+    problems: list[str] = []
+    for key, value in expected.items():
+        if component.get(key) != value:
+            problems.append(f"{prefix}: {key} must equal {value}")
+    if component.get("runtime_network") is not False:
+        problems.append(f"{prefix}: runtime_network must be false")
+    if component.get("transitive_runtime_dependencies") != []:
+        problems.append(f"{prefix}: transitive_runtime_dependencies must be empty")
+    if component.get("install_mutation_authority") is not False:
+        problems.append(f"{prefix}: install_mutation_authority must be false")
     return problems
 
 
