@@ -31,6 +31,13 @@ documentation file excluded by the intentionally minimal Linux payload. The
 repair targets the packaged `docs/release/PACKAGE_LAYOUT.md`; it does not
 weaken or skip the modified-payload refusal.
 
+Replacement revision `daf14a16eff6b665018df5eede3de0f3bf6c65a4` again passed
+every Linux baseline gate before failing the new package proof in run
+`29156309202`. A source audit found that the CLI compatibility mapping used to
+construct the Universal Setup verification request did not yet recognize the
+new Linux profile. The repair adds that exact profile/target/linkage mapping;
+Universal Setup remains the verification authority.
+
 ## Authority boundary
 
 The package remains unsigned and unpublished. This WorkUnit does not execute

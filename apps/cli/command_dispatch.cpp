@@ -1316,6 +1316,7 @@ int command_package(const std::vector<std::string>& args)
     };
     static const ExpectedPackage expected_packages[] = {
         {"windows_portable_cli_x64", "windows", "x64", "static_first"},
+        {"linux_portable_cli_x64", "linux", "x64", "static_first"},
         {"windows_legacy_winforms_x64", "windows", "x64", "compatibility_bundle"},
         {"portable_cli_x64", "portable", "x64", "static_first_with_reference_components"},
         {"portable_tui_x64", "portable", "x64", "static_first_with_reference_components"},

@@ -76,6 +76,14 @@ class LinuxPackageProofContractTests(unittest.TestCase):
         ]:
             self.assertIn(anchor, proof)
 
+    def test_cli_verification_maps_the_linux_profile_to_setup_authority(self) -> None:
+        dispatch = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
+        self.assertIn(
+            '{"linux_portable_cli_x64", "linux", "x64", "static_first"}',
+            dispatch,
+        )
+        self.assertIn('setup_command_response_json("package.verify"', dispatch)
+
 
 if __name__ == "__main__":
     unittest.main()

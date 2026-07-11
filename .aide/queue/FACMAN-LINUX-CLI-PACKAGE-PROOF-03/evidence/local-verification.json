@@ -9,16 +9,18 @@
 
 ## CHECK_COUNTS
 
-- info: 2
+- info: 4
 - warnings: 0
 - errors: 0
 - checked_files: 0
-- changed_files: 2
+- changed_files: 4
 
 ## CHANGED_FILES
 
 - allowed: `.aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/evidence/validation.md` (M; matches active task allowed path)
-- allowed: `tools/linux_package_proof.py` (M; matches active task allowed path)
+- allowed: `.aide/queue/FACMAN-LINUX-CLI-PACKAGE-PROOF-03/task.yaml` (M; matches active task allowed path)
+- allowed: `apps/cli/command_dispatch.cpp` (M; matches active task allowed path)
+- allowed: `tests/test_package_linux_proof.py` (M; matches active task allowed path)
 
 ## WARNINGS
 

@@ -19,6 +19,7 @@ allowed_paths:
   - .aide/queue/**
   - .aide/context/**
   - .github/workflows/**
+  - apps/cli/command_dispatch.cpp
   - CMakeLists.txt
   - README.md
   - cmake/**
