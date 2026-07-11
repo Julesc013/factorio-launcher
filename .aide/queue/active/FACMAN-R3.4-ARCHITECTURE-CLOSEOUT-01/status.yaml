@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-11T23:18:58Z
+result: PENDING
+evidence_path: .aide/queue/next/FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01/evidence/
+active_at: 2026-07-11T23:18:58Z

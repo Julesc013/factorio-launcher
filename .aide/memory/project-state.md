@@ -5,7 +5,7 @@ Generated from `.aide/memory/project-state.v1.json`; edit the generator or canon
 ## Current
 
 - phase: `r3.4-architecture-consolidation`;
-- active WorkUnit: `none`;
+- active WorkUnit: `FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01`;
 - FacMan revision: live `HEAD` (resolve with `git rev-parse HEAD`);
 - Universal Launcher pin: `80a848375227dc858865874ef594c4b466877241`;
 - Universal Setup pin: `4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`.

@@ -3,6 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01
+    status: active
+    lifecycle_state: active
+    title: Close R3.4 architecture consolidation
+    task: .aide/queue/active/FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01/evidence
   - id: FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01
     status: planned
     lifecycle_state: planned
