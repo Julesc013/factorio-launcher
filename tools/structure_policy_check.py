@@ -145,7 +145,7 @@ ALLOWED_FACTORIO_CONTENT_ROOTS = {
     "ui",
 }
 
-ALLOWED_CONTRACT_ROOTS = {"abi", "command", "policy", "result", "refusal", "diagnostic", "schema"}
+ALLOWED_CONTRACT_ROOTS = {"abi", "command", "generated-index", "policy", "result", "refusal", "diagnostic", "schema"}
 ALLOWED_SCHEMA_ROOTS = {"common", "facman", "factorio", "release", "ui"}
 ALLOWED_RELEASE_ROOTS = {"index", "packaging", "profiles"}
 ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
@@ -173,6 +173,7 @@ ALLOWED_RUNTIME_ROOTS = {
     "archive",
     "base",
     "client",
+    "core",
     "factorio",
     "package",
     "platform",

@@ -209,11 +209,11 @@ target_link_libraries(flb_factorio_application_static PUBLIC
 )
 
 add_library(flb_factorio_static STATIC runtime/factorio/binding/flb_api.c)
-target_include_directories(flb_factorio_static PUBLIC include)
+target_include_directories(flb_factorio_static PUBLIC include PRIVATE runtime/core/generated)
 target_link_libraries(flb_factorio_static PUBLIC ulk_static flb_factorio_application_static)
 
 add_library(flb_factorio_shared SHARED runtime/factorio/binding/flb_api.c)
-target_include_directories(flb_factorio_shared PUBLIC include)
+target_include_directories(flb_factorio_shared PUBLIC include PRIVATE runtime/core/generated)
 target_compile_definitions(flb_factorio_shared PRIVATE FLB_BUILD_SHARED)
 target_link_libraries(flb_factorio_shared PUBLIC ulk_shared flb_factorio_application_static)
 set_target_properties(flb_factorio_shared PROPERTIES OUTPUT_NAME flb_factorio WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -230,6 +230,7 @@ if(FLAUNCH_BUILD_NATIVE_APPS)
     target_sources(facman_cli PRIVATE apps/cli/facman.manifest)
   endif()
   target_compile_features(facman_cli PRIVATE cxx_std_17)
+  target_include_directories(facman_cli PRIVATE runtime/core/generated)
   target_link_libraries(facman_cli PRIVATE facman_base_static flaunch_client_static flaunch_runtime_static ulk_static usk_static flb_factorio_static flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_modsets_static flb_factorio_saves_static)
   set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 

@@ -91,6 +91,7 @@ def validate_authoritative_preview_route() -> list[str]:
             problems.append(f"{cli_path.relative_to(ROOT)}: run preview retains frontend backend behavior {forbidden}")
 
     binding_text = binding_path.read_text(encoding="utf-8")
+    binding_text += (ROOT / "runtime/core/generated/command_catalog.h").read_text(encoding="utf-8")
     for anchor in ["ulk_command_descriptor_v2", '"run.preview"', '"launch_plan.preflight"']:
         if anchor not in binding_text:
             problems.append(f"{binding_path.relative_to(ROOT)}: missing authoritative descriptor anchor {anchor}")

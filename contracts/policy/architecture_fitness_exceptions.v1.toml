@@ -34,14 +34,8 @@ critical_io = [
   "runtime/factorio/saves/flb_factorio_save_operations.cpp",
   "runtime/transaction/fl_transaction.cpp",
 ]
-generated_catalog = [
-  "missing:contracts/generated/command_catalog.v1.json",
-  "missing:include/facman/generated/version.h",
-]
-version_truth = [
-  "apps/cli/command_dispatch.cpp:hardcoded:0.1.0",
-  "missing:release/index/version.v1.toml",
-]
+generated_catalog = []
+version_truth = []
 target_dependency = [
   "facman_cli:link:facman_base_static",
   "facman_cli:link:flb_factorio_diagnostics_static",

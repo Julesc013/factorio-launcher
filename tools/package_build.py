@@ -38,6 +38,7 @@ SUPPORTED_BUILT_PROFILES = {
 }
 WORKSPACE_LOCK_PATH = ROOT / "release" / "index" / "workspace_lock.v1.toml"
 DEPENDENCY_LOCK_PATH = ROOT / "release" / "index" / "dependency_lock.v1.toml"
+VERSION_PATH = ROOT / "release" / "index" / "version.v1.toml"
 FORBIDDEN_FILE_MARKERS = {
     "factorio.exe",
     "Factorio.app",
@@ -236,14 +237,14 @@ def write_build_info(
     bundle: dict[str, Any],
     build_root: Path,
 ) -> dict[str, Any]:
-    build_index = load_toml(ROOT / "release" / "index" / "build_manifest.v1.toml")
+    build_index = load_toml(VERSION_PATH)
     source_revisions = pinned_source_revisions()
     info = {
         "schema": "facman.package_build_info.v1",
         "profile_id": profile_id,
         "artifact_level": "built-artifact",
-        "canonical_version": build_index.get("canonical_version", "facman-0.1.0+dev"),
-        "filename_version": build_index.get("filename_version", "facman-0.1.0-dev"),
+        "canonical_version": build_index["canonical_version"],
+        "filename_version": build_index["filename_version"],
         "source_commit": source_revisions["factorio_launcher"],
         "source_timestamp_policy": "source_commit_utc",
         "source_timestamp_utc": provenance_build.source_commit_timestamp(
@@ -631,8 +632,8 @@ def maybe_copy_windows_alias(source: Path, destination: Path) -> None:
 
 def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -> Path:
     owned_output.ensure_owned_output_root(dist_root, "package-archives")
-    build_index = load_toml(ROOT / "release" / "index" / "build_manifest.v1.toml")
-    version = str(build_index.get("filename_version", "facman-0.1.0-dev"))
+    build_index = load_toml(VERSION_PATH)
+    version = str(build_index["filename_version"])
     artifact_template = str(bundle.get("artifact_id", package_root.name))
     version_prefix = artifact_template.split("<version>", 1)[0]
     replacement = version

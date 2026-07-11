@@ -1,5 +1,10 @@
 # Versioning
 
+The canonical machine-readable source is `release/index/version.v1.toml`.
+Native headers, the CLI display version, package/provenance versions,
+filenames, and generated command documentation derive from that contract. Do
+not edit generated headers or duplicate version strings in runtime code.
+
 FacMan product versions, schema versions, and ABI versions are separate
 compatibility surfaces.
 

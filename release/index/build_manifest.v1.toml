@@ -1,4 +1,5 @@
 schema = "facman.build_manifest.v1"
+version_contract = "release/index/version.v1.toml"
 canonical_version = "facman-0.1.0+dev.contract"
 filename_version = "facman-0.1.0-dev.contract"
 channel = "pinned"

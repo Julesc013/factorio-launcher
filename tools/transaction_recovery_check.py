@@ -11,6 +11,7 @@ def validate() -> list[str]:
     source = (ROOT / "runtime/transaction/fl_transaction.cpp").read_text(encoding="utf-8")
     header = (ROOT / "runtime/transaction/fl_transaction.h").read_text(encoding="utf-8")
     binding = (ROOT / "runtime/factorio/binding/flb_api.c").read_text(encoding="utf-8")
+    binding += (ROOT / "runtime/core/generated/command_catalog.h").read_text(encoding="utf-8")
     application = (ROOT / "runtime/factorio/application/flb_factorio_application.cpp").read_text(
         encoding="utf-8"
     )

@@ -12,6 +12,7 @@ release_profiles = [
 ]
 required_paths = [
   "contracts/schema",
+  "contracts/generated-index",
   "contracts/schema/release/product_manifest.v1.schema.json",
   "contracts/schema/release/build_manifest.v1.schema.json",
   "contracts/schema/release/dependency_lock.v1.schema.json",
@@ -27,6 +28,7 @@ required_paths = [
   "release/index/support_matrix.v1.toml",
   "release/index/product_manifest.v1.toml",
   "release/index/build_manifest.v1.toml",
+  "release/index/version.v1.toml",
   "release/index/dependency_lock.v1.toml",
   "release/index/workspace_lock.v1.toml",
   "release/index/install_modes.v1.toml",

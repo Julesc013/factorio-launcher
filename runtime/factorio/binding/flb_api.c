@@ -2,6 +2,7 @@
 
 #include "ulk/ulk_api.h"
 #include "flb_factorio_application.h"
+#include "command_catalog.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -149,135 +150,34 @@ int flb_context_create_v1(
         context->application = flb_factorio_application_create(workspace_root);
         free(workspace_root);
     }
-    if (context->application == 0 ||
-        flb_register_application_command(
-            context,
-            "install_refs.scan",
-            "[\"workspace_read\"]",
-            "contracts/schema/factorio/factorio_discovery_report.v1.schema.json",
-            "read_only") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "install_refs.import",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_install_ref.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "install_refs.inspect",
-            "[\"workspace_read\"]",
-            "contracts/schema/factorio/factorio_install_ref.v1.schema.json",
-            "read_only") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "instance.create",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_instance.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "launch_plan.build",
-            "[\"workspace_read\"]",
-            "contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
-            "preview_only") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "launch_plan.preflight",
-            "[\"workspace_read\"]",
-            "contracts/schema/factorio/factorio_launch_preflight.v1.schema.json",
-            "read_only_no_process") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "run.preview",
-            "[\"workspace_read\"]",
-            "contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
-            "preview_only_no_process") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "mods.import",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_mod_ref.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "modsets.lock",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_modset_lock.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "modsets.verify",
-            "[\"workspace_read\"]",
-            "contracts/schema/factorio/factorio_modset_verify.v1.schema.json",
-            "read_only") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "modsets.export",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_modset_export.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "saves.list",
-            "[\"workspace_read\"]",
-            "contracts/schema/factorio/factorio_saves.v1.schema.json",
-            "read_only") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "saves.backup",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_save_backup.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "saves.clone",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_save_clone.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "instance.export",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_instance_export.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "instance.import",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/factorio_instance_import.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "diagnostics.export",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/factorio/diagnostic_bundle_export.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "workspace.recovery.inspect",
-            "[\"workspace_read\"]",
-            "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
-            "read_only") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "workspace.recovery.plan",
-            "[\"workspace_read\"]",
-            "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
-            "read_only") != ULK_STATUS_OK ||
-        flb_register_application_command(
-            context,
-            "workspace.recovery.apply",
-            "[\"workspace_read\",\"workspace_write\"]",
-            "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
-            "explicit_persistent_write") != ULK_STATUS_OK) {
+    if (context->application != 0) {
+        size_t command_index;
+        for (command_index = 0;
+             command_index < FACMAN_GENERATED_REGISTERED_COMMAND_COUNT;
+             ++command_index) {
+            const facman_generated_command_descriptor* descriptor =
+                &facman_generated_registered_commands[command_index];
+            if (flb_register_application_command(
+                    context,
+                    descriptor->command_name,
+                    descriptor->effects_json,
+                    descriptor->response_schema,
+                    descriptor->dry_run_behavior) != ULK_STATUS_OK) {
+                break;
+            }
+        }
+        if (command_index == FACMAN_GENERATED_REGISTERED_COMMAND_COUNT) {
+            *out_context = context;
+            return ULK_STATUS_OK;
+        }
+    }
+    {
         flb_factorio_application_destroy(context->application);
         ulk_context_destroy_v1(context->launcher_context);
         free(context);
         *out_context = 0;
         return ULK_STATUS_ERROR;
     }
-    *out_context = context;
-    return ULK_STATUS_OK;
 }
 
 int flb_command_execute_v1(

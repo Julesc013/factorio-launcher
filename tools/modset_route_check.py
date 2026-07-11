@@ -18,6 +18,7 @@ def function_slice(text: str, start: str, end: str) -> str:
 def validate() -> list[str]:
     problems: list[str] = []
     binding = (ROOT / "runtime/factorio/binding/flb_api.c").read_text(encoding="utf-8")
+    binding += (ROOT / "runtime/core/generated/command_catalog.h").read_text(encoding="utf-8")
     application = (ROOT / "runtime/factorio/application/flb_factorio_application.cpp").read_text(
         encoding="utf-8"
     )

@@ -1,0 +1,60 @@
+schema = "facman.command_catalog_index.v1"
+owner = "factorio-launcher"
+binding = "flb.factorio"
+
+files = [
+  "diagnostics.export.v1.toml",
+  "doctor.run.v1.toml",
+  "factorio.product.inspect.v1.toml",
+  "installs.import.v1.toml",
+  "installs.inspect.v1.toml",
+  "installs.scan.v1.toml",
+  "instance.export.v1.toml",
+  "instance.import.v1.toml",
+  "instances.create.v1.toml",
+  "launch_plan.preflight.v1.toml",
+  "launch.plan.v1.toml",
+  "mods.import.v1.toml",
+  "modsets.export.v1.toml",
+  "modsets.lock.v1.toml",
+  "modsets.verify.v1.toml",
+  "product.inspect.v1.toml",
+  "run.execute.v1.toml",
+  "run.preview.v1.toml",
+  "saves.backup.v1.toml",
+  "saves.clone.v1.toml",
+  "saves.list.v1.toml",
+  "workspace.recovery.apply.v1.toml",
+  "workspace.recovery.inspect.v1.toml",
+  "workspace.recovery.plan.v1.toml",
+]
+
+registered = [
+  "diagnostics.export",
+  "install_refs.import",
+  "install_refs.inspect",
+  "install_refs.scan",
+  "instance.create",
+  "instance.export",
+  "instance.import",
+  "launch_plan.build",
+  "launch_plan.preflight",
+  "mods.import",
+  "modsets.export",
+  "modsets.lock",
+  "modsets.verify",
+  "run.preview",
+  "saves.backup",
+  "saves.clone",
+  "saves.list",
+  "workspace.recovery.apply",
+  "workspace.recovery.inspect",
+  "workspace.recovery.plan",
+]
+
+[runtime_ids]
+"installs.import" = "install_refs.import"
+"installs.inspect" = "install_refs.inspect"
+"installs.scan" = "install_refs.scan"
+"instances.create" = "instance.create"
+"launch.plan" = "launch_plan.build"

@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.command_refusal.v1",
+  "command": "installs.inspect",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unknown_install",
+    "reason": "install reference does not exist",
+    "recoverable": true
+  }
+}

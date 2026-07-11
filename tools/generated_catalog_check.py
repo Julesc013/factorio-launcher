@@ -8,14 +8,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import architecture_fitness
+from tools.codegen import generate_metadata
 
 
 def detect() -> set[str]:
-    required = [
-        architecture_fitness.ROOT / "contracts/generated/command_catalog.v1.json",
-        architecture_fitness.ROOT / "include/facman/generated/version.h",
-    ]
-    return {f"missing:{architecture_fitness.relative(path)}" for path in required if not path.is_file()}
+    return {f"stale:{problem.split(': ', 1)[-1]}" for problem in generate_metadata.generate(write=False)}
 
 
 def main() -> int:

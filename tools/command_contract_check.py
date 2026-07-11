@@ -16,6 +16,7 @@ EXPECTED_COMMANDS = {
     "doctor.run",
     "installs.scan",
     "installs.import",
+    "installs.inspect",
     "instances.create",
     "launch.plan",
     "launch_plan.preflight",
@@ -43,7 +44,7 @@ def main() -> int:
     problems: list[str] = []
     allowed_effects, effects_problems = load_effects_policy()
     problems.extend(effects_problems)
-    contracts = sorted(path for path in COMMAND_ROOT.glob("*.v1.toml") if path.name != "README.md")
+    contracts = sorted(path for path in COMMAND_ROOT.glob("*.v1.toml") if path.name != "index.v1.toml")
     seen: set[str] = set()
     for path in contracts:
         contract, contract_problems = load_contract(path)

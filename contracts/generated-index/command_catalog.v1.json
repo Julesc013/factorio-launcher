@@ -1,0 +1,500 @@
+{
+  "binding": "flb.factorio",
+  "commands": [
+    {
+      "cli": "facman diagnostics export --instance <instance-id> --out <bundle.zip> --json",
+      "command_id": "diagnostics.export",
+      "contract_path": "contracts/command/factorio/diagnostics.export.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/diagnostics.export.refusal.json",
+      "golden_success": "tests/golden/commands/diagnostics.export.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/diagnostic_bundle_export.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "diagnostics.export"
+    },
+    {
+      "cli": "facman doctor --json",
+      "command_id": "doctor.run",
+      "contract_path": "contracts/command/factorio/doctor.run.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/doctor.run.refusal.json",
+      "golden_success": "tests/golden/commands/doctor.run.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": false,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_diagnostic_report.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "doctor.run"
+    },
+    {
+      "cli": "FLB command bridge: factorio.product.inspect",
+      "command_id": "factorio.product.inspect",
+      "contract_path": "contracts/command/factorio/factorio.product.inspect.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "none"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/factorio.product.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/factorio.product.inspect.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": false,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_product.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "factorio.product.inspect"
+    },
+    {
+      "cli": "facman installs import <factorio-dir> --id <install-id> --json",
+      "command_id": "installs.import",
+      "contract_path": "contracts/command/factorio/installs.import.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/installs.import.refusal.json",
+      "golden_success": "tests/golden/commands/installs.import.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_install_ref.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "install_refs.import"
+    },
+    {
+      "cli": "facman installs inspect <install-id> --json",
+      "command_id": "installs.inspect",
+      "contract_path": "contracts/command/factorio/installs.inspect.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/installs.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/installs.inspect.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_install_ref.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "install_refs.inspect"
+    },
+    {
+      "cli": "facman installs scan --json",
+      "command_id": "installs.scan",
+      "contract_path": "contracts/command/factorio/installs.scan.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/installs.scan.refusal.json",
+      "golden_success": "tests/golden/commands/installs.scan.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_discovery_report.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "install_refs.scan"
+    },
+    {
+      "cli": "facman export instance <instance-id> <pack.zip> --json",
+      "command_id": "instance.export",
+      "contract_path": "contracts/command/factorio/instance.export.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/instance.export.refusal.json",
+      "golden_success": "tests/golden/commands/instance.export.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_instance_export.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "instance.export"
+    },
+    {
+      "cli": "facman import instance <pack.zip> --json",
+      "command_id": "instance.import",
+      "contract_path": "contracts/command/factorio/instance.import.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/instance.import.refusal.json",
+      "golden_success": "tests/golden/commands/instance.import.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_instance_import.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "instance.import"
+    },
+    {
+      "cli": "facman instances create <name> --install <install-id> --json",
+      "command_id": "instances.create",
+      "contract_path": "contracts/command/factorio/instances.create.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/instances.create.refusal.json",
+      "golden_success": "tests/golden/commands/instances.create.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_instance.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "instance.create"
+    },
+    {
+      "cli": "facman launch plan <instance-id> --json",
+      "command_id": "launch.plan",
+      "contract_path": "contracts/command/factorio/launch.plan.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/launch.plan.refusal.json",
+      "golden_success": "tests/golden/commands/launch.plan.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "launch_plan.build"
+    },
+    {
+      "cli": "facman launch plan <instance-id> --preflight --json",
+      "command_id": "launch_plan.preflight",
+      "contract_path": "contracts/command/factorio/launch_plan.preflight.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/launch_plan.preflight.refusal.json",
+      "golden_success": "tests/golden/commands/launch_plan.preflight.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_launch_preflight.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "launch_plan.preflight"
+    },
+    {
+      "cli": "facman mods import <mod.zip> --instance <instance-id> --json",
+      "command_id": "mods.import",
+      "contract_path": "contracts/command/factorio/mods.import.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/mods.import.refusal.json",
+      "golden_success": "tests/golden/commands/mods.import.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_mod_ref.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "mods.import"
+    },
+    {
+      "cli": "facman modsets export <instance-id> <pack.zip> --json",
+      "command_id": "modsets.export",
+      "contract_path": "contracts/command/factorio/modsets.export.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/modsets.export.refusal.json",
+      "golden_success": "tests/golden/commands/modsets.export.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_modset_export.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "modsets.export"
+    },
+    {
+      "cli": "facman modsets lock <instance-id> --json",
+      "command_id": "modsets.lock",
+      "contract_path": "contracts/command/factorio/modsets.lock.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/modsets.lock.refusal.json",
+      "golden_success": "tests/golden/commands/modsets.lock.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_modset_lock.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "modsets.lock"
+    },
+    {
+      "cli": "facman modsets verify <instance-id> --json",
+      "command_id": "modsets.verify",
+      "contract_path": "contracts/command/factorio/modsets.verify.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/modsets.verify.refusal.json",
+      "golden_success": "tests/golden/commands/modsets.verify.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_modset_verify.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "modsets.verify"
+    },
+    {
+      "cli": "facman product inspect --json",
+      "command_id": "product.inspect",
+      "contract_path": "contracts/command/factorio/product.inspect.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "none"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/product.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/product.inspect.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": false,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_product.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "product.inspect"
+    },
+    {
+      "availability": "unavailable_until_isolation_proof",
+      "cli": "facman run <instance-id> --execute --json",
+      "command_id": "run.execute",
+      "contract_path": "contracts/command/factorio/run.execute.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/run.execute.refusal.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": false,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/common/result.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "run.execute"
+    },
+    {
+      "cli": "facman run <instance-id> --json",
+      "command_id": "run.preview",
+      "contract_path": "contracts/command/factorio/run.preview.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/run.preview.refusal.json",
+      "golden_success": "tests/golden/commands/run.preview.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "run.preview"
+    },
+    {
+      "cli": "facman saves backup <save> --instance <instance-id> --json",
+      "command_id": "saves.backup",
+      "contract_path": "contracts/command/factorio/saves.backup.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/saves.backup.refusal.json",
+      "golden_success": "tests/golden/commands/saves.backup.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_save_backup.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "saves.backup"
+    },
+    {
+      "cli": "facman saves clone <save> --instance <source-id> --to-instance <target-id> --json",
+      "command_id": "saves.clone",
+      "contract_path": "contracts/command/factorio/saves.clone.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/saves.clone.refusal.json",
+      "golden_success": "tests/golden/commands/saves.clone.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_save_clone.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "saves.clone"
+    },
+    {
+      "cli": "facman saves list --instance <instance-id> --json",
+      "command_id": "saves.list",
+      "contract_path": "contracts/command/factorio/saves.list.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/saves.list.refusal.json",
+      "golden_success": "tests/golden/commands/saves.list.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_saves.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "saves.list"
+    },
+    {
+      "cli": "facman workspace recovery apply <transaction-id> --json",
+      "command_id": "workspace.recovery.apply",
+      "contract_path": "contracts/command/factorio/workspace.recovery.apply.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": false,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/workspace.recovery.apply.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.recovery.apply.success.json",
+      "mutates_workspace": true,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "workspace.recovery.apply"
+    },
+    {
+      "cli": "facman workspace recovery inspect --json",
+      "command_id": "workspace.recovery.inspect",
+      "contract_path": "contracts/command/factorio/workspace.recovery.inspect.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/workspace.recovery.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.recovery.inspect.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "workspace.recovery.inspect"
+    },
+    {
+      "cli": "facman workspace recovery plan <transaction-id> --json",
+      "command_id": "workspace.recovery.plan",
+      "contract_path": "contracts/command/factorio/workspace.recovery.plan.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "golden_refusal": "tests/golden/commands/workspace.recovery.plan.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.recovery.plan.success.json",
+      "mutates_workspace": false,
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "request_schema": "contracts/schema/common/command_request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_recovery.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "runtime_id": "workspace.recovery.plan"
+    }
+  ],
+  "owner": "factorio-launcher",
+  "schema": "facman.generated_command_catalog.v1",
+  "source_digest": "c578bafc3e92d783e8ffa22986c46fcf5db689e91f3889c797c06dda03651cd6",
+  "version": "facman-0.1.0+dev.contract"
+}

@@ -16,6 +16,7 @@ def main() -> int:
     cli = cli_path.read_text(encoding="utf-8")
     application = application_path.read_text(encoding="utf-8")
     binding = binding_path.read_text(encoding="utf-8")
+    binding += (ROOT / "runtime/core/generated/command_catalog.h").read_text(encoding="utf-8")
 
     required_diagnostics = [
         "stable_read_relative(",

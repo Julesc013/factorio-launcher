@@ -9,6 +9,8 @@
 #include "fl_runtime_verify.h"
 #include "fl_transaction.h"
 #include "usk/usk_api.h"
+#include "version.h"
+#include "generated/command_help.inc"
 
 #include <algorithm>
 #include <chrono>
@@ -41,7 +43,7 @@ namespace factorio_modsets = facman::factorio::modsets;
 
 namespace {
 
-const char* kVersion = "0.1.0";
+const char* kVersion = FACMAN_VERSION_SEMVER;
 
 struct CliOptions {
     fs::path workspace;
@@ -1260,6 +1262,10 @@ int print_help()
     std::cout << "FacMan " << kVersion << "\n";
     std::cout << "Usage: facman [--workspace PATH] <command> [options]\n\n";
     std::cout << "Commands:\n";
+    for (const char* command_help : kGeneratedCommandHelp) {
+        std::cout << "  " << command_help << "\n";
+    }
+    std::cout << "Additional compatibility and refusal commands:\n";
     std::cout << "  product inspect [--json]\n";
     std::cout << "  package verify [--json]\n";
     std::cout << "  command-graph inspect [--json]\n";
