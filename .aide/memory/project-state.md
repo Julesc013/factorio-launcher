@@ -56,19 +56,22 @@ foundations that do not require a Factorio binary.
   pseudonymous source identity, production archive output, transaction
   recovery, and post-commit self-verification. The exact-SHA Linux,
   Windows/package, macOS archive, AppKit, schema, and security matrix is green.
-- The explicit Linux x64 CLI package-preview profile and zero-skip proof gate
-  are implemented. Target ELF, glibc, dependency, extraction, relocation, and
-  runtime promotion remains pending until the exact implementation revision
-  passes on the Ubuntu 24.04 runner.
+- The explicit Linux x64 CLI package-preview profile passed its zero-skip
+  Ubuntu 24.04 target proof at revision
+  `93edfdc59865e4a07f261bdabb61c6e2db6d0f99`. ELF, glibc, dependency,
+  extraction, relocation, read-only-root, and pathless runtime evidence is
+  schema-valid and the unsigned artifact digest is revision-pinned.
 
 ## Current Goal
 
-Continue the ordered R3.3 WorkUnits in `.aide/memory/r3.3-workunits.md` from
-the target-specific Linux CLI package proof. The baseline, archive dependency,
-production core, local mod/modset routes, save/portable-transfer routes,
-bounded workspace transaction recovery, and reviewed diagnostic export are
-frozen at green exact-SHA checkpoints. Keep
+Close the ordered R3.3 core through
+`FACMAN-R3.3-PROOF-CLOSEOUT-01`. The baseline, archive dependency, production
+core, local mod/modset routes, save/portable-transfer routes, bounded workspace
+transaction recovery, reviewed diagnostic export, and Linux target package
+proof are frozen at green exact-SHA checkpoints. Begin no stretch WorkUnit
+until the closeout revision itself is green. Keep
 `run.execute` and real Factorio isolation human-gated; do not schedule Windows discovery again.
+The ordered authority remains `.aide/memory/r3.3-workunits.md`.
 
 ## Quarantined Capabilities
 

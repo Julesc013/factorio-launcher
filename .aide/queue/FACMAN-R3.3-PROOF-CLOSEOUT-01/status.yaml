@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v0
+task_id: FACMAN-R3.3-PROOF-CLOSEOUT-01
+status: active
+planning_state: validation
+owner: Codex
+created_at: 2026-07-12
+started_at: 2026-07-12
+result: pending
+review_gate:
+  required: true
+  status: checkpoint_in_progress
+evidence_path: .aide/queue/FACMAN-R3.3-PROOF-CLOSEOUT-01/evidence/
+recommended_next: FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03

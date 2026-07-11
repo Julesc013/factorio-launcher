@@ -14,10 +14,9 @@ current_focus:
     production archive layer, typed authoritative routes, recoverable writes,
     safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-LINUX-CLI-PACKAGE-PROOF-03: add one explicit Linux x64 portable CLI
-    profile with target/linkage metadata, dynamic-dependency allowlisting,
-    integrity closure, extraction/relocation/runtime proof, and zero required
-    skips. Do not claim a universal Unix or fully static binary.
+    FACMAN-R3.3-PROOF-CLOSEOUT-01: freeze the exact green R3.3 core revision,
+    platform matrices, artifact identities, claims, limitations, and failed
+    proof attempts before any stretch WorkUnit begins.
     Windows read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan

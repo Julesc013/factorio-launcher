@@ -1,6 +1,6 @@
 # Validation
 
-Result: LOCAL GATES PASS; TARGET LINUX PACKAGE PROOF PENDING EXACT-SHA CI.
+Result: PASS, including exact-SHA zero-skip Linux target proof.
 
 ## Local proof
 
@@ -44,6 +44,20 @@ baseline and reached the relocated/external-workspace smoke in run
 package-parent path while separately requiring that path never appear in
 command output. The repair uses a distinct temporary root, preserving both
 the external-workspace assertion and the package/source path-leak refusal.
+
+Final revision `93edfdc59865e4a07f261bdabb61c6e2db6d0f99` passed CI run
+`29156543059`: Linux native CTest 9/9, sanitizer archive proof, complete Python
+221/221, strict checks, portable compatibility packages, and the new Linux
+target proof with zero required skips. Windows native/package, macOS archive,
+and AppKit compile-only jobs also passed. Security run `29156543070` passed;
+schema run `29156192783` passed the unchanged 61-schema/package surface at the
+implementation revision.
+
+The Linux artifact is
+`facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz`, 798340 bytes, SHA-256
+`b69ce3b9a4cda455e79f354c85873f0e17af281e26057c2537a511d49ab1cbed`.
+It is unsigned, unpublished, and scoped only to the recorded Ubuntu 24.04 x64
+runner, glibc 2.39, GCC 13.3, Binutils 2.42, and inspected dependencies.
 
 ## Authority boundary
 

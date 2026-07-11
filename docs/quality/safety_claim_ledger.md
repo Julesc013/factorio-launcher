@@ -24,7 +24,7 @@ reported as stronger runtime evidence.
 | Run preview uses the authoritative route | live-contract tested | normalized CLI, registered FLB handler, typed request/result, shared argument builder | no process starts; real Factorio remains unproven |
 | Windows install discovery is read-only | provider-tested | Steam VDF, registry/default roots, standalone roots, zero-write tests | registry proof is host-dependent; macOS and Linux provider databases remain future work |
 | Windows x64 static CLI package runs after relocation | host-tested built artifact | strict profile/component/lock verification and relocation matrix | local Windows x64 only; unsigned and unpublished |
-| Linux x64 CLI tarball runs after relocation | target CI gate defined | ELF allowlist, archive, read-only and relocation matrix | Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished |
+| Linux x64 CLI tarball runs after relocation | target CI proven | ELF allowlist, archive, read-only and relocation matrix | Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished |
 | Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and setup mutation remain unproven |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Experimental public C ABI has a correctness floor | bounded correctness proof | size, ownership, ABI-query, and native-smoke tests | stable third-party compatibility and independent consumers remain unproven |
@@ -47,6 +47,10 @@ The R3.2 revision-pinned matrix and package evidence are recorded in
 
 The integrated universal main and FacMan dev identities are frozen in
 [`r3.2-public-integration-proof.md`](../release/checkpoints/r3.2-public-integration-proof.md).
+
+The R3.3 production-data, recovery, diagnostics, and Linux package core is
+frozen in
+[`r3.3-production-data-recovery-proof.md`](../release/checkpoints/r3.3-production-data-recovery-proof.md).
 
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and deliberately pending human-verdict template are in
