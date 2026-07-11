@@ -363,7 +363,7 @@ bool inspect_save(const fs::path& path, SaveRef& save, std::string& detail)
 {
     facman::archive::Plan plan;
     const facman::archive::Status status =
-        facman::archive::inspect_archive(path, facman::archive::Limits {}, plan);
+        facman::archive::inspect_archive(path, facman::archive::SaveArchivePolicy::limits(), plan);
     if (!status.ok()) {
         detail = status.code + ": " + status.detail;
         return false;
@@ -532,7 +532,7 @@ bool stream_plan_entry(
         const facman::archive::Status status = facman::archive::stream_entry(
             plan,
             entry.index,
-            facman::archive::Limits {},
+            facman::archive::InstanceTransferPolicy::limits(),
             [&](const unsigned char* bytes, std::size_t size) {
                 if (size > maximum - text.size()) return false;
                 text.append(reinterpret_cast<const char*>(bytes), size);
@@ -819,6 +819,7 @@ ExportOutcome export_instance(const fs::path& workspace, const ExportRequest& re
     facman::archive::WriteOptions options;
     options.method = facman::archive::CompressionMethod::deflate;
     options.reproducible = true;
+    options.limits = facman::archive::InstanceTransferPolicy::limits();
     facman::archive::WriteResult written;
     status = facman::archive::write_to_new_owned_staging(
         archive_staging,
@@ -865,7 +866,10 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
 {
     const std::string command = "instance.import";
     facman::archive::Plan plan;
-    facman::archive::Status status = facman::archive::inspect_archive(request.source_path, facman::archive::Limits {}, plan);
+    facman::archive::Status status = facman::archive::inspect_archive(
+        request.source_path,
+        facman::archive::InstanceTransferPolicy::limits(),
+        plan);
     if (!status.ok()) {
         const bool unsafe = status.code.find("path") != std::string::npos || status.code.find("collision") != std::string::npos;
         return refuse(command, request.instance_id_override, "", unsafe ? "unsafe_archive_path" : "instance_import_manifest_invalid", "Instance pack inspection failed", status.code + ": " + status.detail, !unsafe);
@@ -936,7 +940,7 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
     status = facman::archive::extract_to_new_owned_staging(
         plan,
         staging,
-        facman::archive::Limits {},
+        facman::archive::InstanceTransferPolicy::limits(),
         [&](std::uint32_t index, const char* checkpoint) {
             if (std::string(checkpoint) != "after_chunk") return true;
             if (fault_requested("during_first_file") && index == plan.entries.front().index) return false;

@@ -815,7 +815,7 @@ ModRef inspect_mod_zip(const fs::path& path)
         );
     }
 
-    facman::archive::Limits archive_limits;
+    const facman::archive::Limits archive_limits = facman::archive::ModArchivePolicy::limits();
     facman::archive::Plan archive_plan;
     facman::archive::Status archive_status = facman::archive::inspect_archive(
         path,

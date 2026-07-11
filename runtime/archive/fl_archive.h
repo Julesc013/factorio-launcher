@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -24,6 +25,26 @@ struct Limits {
     std::size_t maximum_path_bytes = 1024;
     std::size_t maximum_directory_depth = 64;
     std::uint64_t maximum_read_milliseconds = 30000;
+};
+
+struct ModArchivePolicy {
+    static Limits limits();
+};
+
+struct SaveArchivePolicy {
+    static Limits limits();
+};
+
+struct InstanceTransferPolicy {
+    static Limits limits();
+};
+
+struct DiagnosticBundlePolicy {
+    static Limits limits();
+};
+
+struct PackageArchivePolicy {
+    static Limits limits();
 };
 
 struct Status {
@@ -49,6 +70,8 @@ struct Entry {
     std::uint32_t external_attributes = 0;
 };
 
+class ReaderState;
+
 struct Plan {
     std::filesystem::path archive_path;
     std::uint64_t archive_size = 0;
@@ -57,15 +80,26 @@ struct Plan {
     std::uint64_t total_expanded_size = 0;
     bool zip64 = false;
     std::vector<Entry> entries;
+    std::shared_ptr<ReaderState> reader;
 };
 
 using DataSink = std::function<bool(const unsigned char*, std::size_t)>;
 using ExtractionCheckpoint = std::function<bool(std::uint32_t, const char*)>;
+using WriteCheckpoint = std::function<bool(const char*)>;
 
 Status inspect_archive(
     const std::filesystem::path& archive_path,
     const Limits& limits,
     Plan& plan);
+
+Status verify_entry(
+    const Plan& plan,
+    std::uint32_t entry_index,
+    const Limits& limits);
+
+Status verify_all(
+    const Plan& plan,
+    const Limits& limits);
 
 Status stream_entry(
     const Plan& plan,
@@ -90,6 +124,7 @@ struct WriteOptions {
     bool reproducible = true;
     bool force_zip64 = false;
     Limits limits;
+    WriteCheckpoint checkpoint;
 };
 
 struct WriteResult {

@@ -440,6 +440,7 @@ ExportOutcome export_modset(const fs::path& workspace, const ExportRequest& requ
     facman::archive::WriteOptions options;
     options.method = facman::archive::CompressionMethod::deflate;
     options.reproducible = true;
+    options.limits = facman::archive::PackageArchivePolicy::limits();
     facman::archive::WriteResult written;
     facman::archive::Status status = facman::archive::write_to_new_owned_staging(
         staging,

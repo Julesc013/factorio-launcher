@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = {
+    "docs/architecture/archive-stable-lifetime.v1.md",
     "runtime/archive/fl_archive.h",
     "runtime/archive/fl_archive_platform.cpp",
     "runtime/archive/fl_archive_policy.cpp",
@@ -58,14 +59,34 @@ def validate() -> list[str]:
         if anchor not in policy:
             problems.append(f"archive policy is missing refusal anchor: {anchor}")
     for anchor in (
+        "ReaderState",
+        "verify_contents_impl",
+        "open_miniz_reader(file",
+    ):
+        if anchor not in reader:
+            problems.append(f"archive reader is missing stable-lifetime anchor: {anchor}")
+    for anchor in (
         "create_owned_staging_root",
         "inspect_archive(output_path",
+        "verify_all(verified",
         "mz_zip_writer_add_read_buf_callback",
+        "sources.at(entry.archive_path)",
     ):
         if anchor not in writer:
             problems.append(f"archive writer is missing staging/streaming anchor: {anchor}")
     if "add_library(facman_archive_static STATIC" not in cmake:
         problems.append("CMake does not define the production archive static library")
+
+    header = (ROOT / "runtime/archive/fl_archive.h").read_text(encoding="utf-8")
+    for consumer_policy in (
+        "ModArchivePolicy",
+        "SaveArchivePolicy",
+        "InstanceTransferPolicy",
+        "DiagnosticBundlePolicy",
+        "PackageArchivePolicy",
+    ):
+        if consumer_policy not in header:
+            problems.append(f"archive core is missing consumer policy: {consumer_policy}")
 
     legacy_locations: list[str] = []
     for path in ROOT.rglob("*"):

@@ -13,6 +13,12 @@
 #include <vector>
 
 namespace facman::archive {
+
+class ReaderState {
+public:
+    RandomAccessFile file;
+};
+
 namespace {
 
 constexpr std::uint32_t kLocalSignature = 0x04034b50U;
@@ -469,12 +475,9 @@ std::size_t miniz_read(void* opaque, mz_uint64 offset, void* buffer, std::size_t
     return static_cast<RandomAccessFile*>(opaque)->read(offset, buffer, size);
 }
 
-Status open_miniz_reader(
-    const std::filesystem::path& path,
-    RandomAccessFile& file,
-    mz_zip_archive& zip)
+Status open_miniz_reader(RandomAccessFile& file, mz_zip_archive& zip)
 {
-    Status status = file.open(path);
+    Status status = file.revalidate();
     if (!status.ok()) return status;
     std::memset(&zip, 0, sizeof(zip));
     zip.m_pRead = miniz_read;
@@ -531,11 +534,12 @@ Status consume_entry(
     return Status::success();
 }
 
-Status verify_contents(const Plan& plan, const Limits& limits)
+Status verify_contents_impl(const Plan& plan, const Limits& limits)
 {
-    RandomAccessFile file;
+    if (!plan.reader) return Status::failure("archive_reader_lifetime_missing", "archive plan has no stable reader");
+    RandomAccessFile& file = plan.reader->file;
     mz_zip_archive zip {};
-    Status status = open_miniz_reader(plan.archive_path, file, zip);
+    Status status = open_miniz_reader(file, zip);
     if (!status.ok()) return status;
     if (zip.m_total_files != plan.entries.size()) {
         mz_zip_reader_end(&zip);
@@ -562,7 +566,8 @@ Status inspect_archive(
 {
     plan = {};
     plan.archive_path = archive_path;
-    RandomAccessFile file;
+    plan.reader = std::make_shared<ReaderState>();
+    RandomAccessFile& file = plan.reader->file;
     Status status = file.open(archive_path);
     if (!status.ok()) return status;
     plan.archive_size = file.size();
@@ -574,7 +579,7 @@ Status inspect_archive(
     if (!status.ok()) return status;
     status = parse_entries(file, limits, entry_count, plan);
     if (!status.ok()) return status;
-    return verify_contents(plan, limits);
+    return Status::success();
 }
 
 Status stream_entry(
@@ -586,9 +591,10 @@ Status stream_entry(
     if (entry_index >= plan.entries.size()) {
         return Status::failure("archive_entry_index_invalid", std::to_string(entry_index));
     }
-    RandomAccessFile file;
+    if (!plan.reader) return Status::failure("archive_reader_lifetime_missing", "archive plan has no stable reader");
+    RandomAccessFile& file = plan.reader->file;
     mz_zip_archive zip {};
-    Status status = open_miniz_reader(plan.archive_path, file, zip);
+    Status status = open_miniz_reader(file, zip);
     if (!status.ok()) return status;
     const auto started = std::chrono::steady_clock::now();
     status = consume_entry(zip, plan.entries[entry_index], limits, sink, started);
@@ -596,6 +602,20 @@ Status stream_entry(
         return Status::failure("archive_reader_close_failed", "Miniz reader cleanup failed");
     }
     return status;
+}
+
+Status verify_entry(
+    const Plan& plan,
+    std::uint32_t entry_index,
+    const Limits& limits)
+{
+    const DataSink discard = [](const unsigned char*, std::size_t) { return true; };
+    return stream_entry(plan, entry_index, limits, discard);
+}
+
+Status verify_all(const Plan& plan, const Limits& limits)
+{
+    return verify_contents_impl(plan, limits);
 }
 
 Status extract_to_new_owned_staging(

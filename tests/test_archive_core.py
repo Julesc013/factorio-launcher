@@ -50,6 +50,21 @@ def inspect(path: Path, *limits: str) -> tuple[int, str, str]:
     return completed.returncode, completed.stdout.strip(), completed.stderr.strip()
 
 
+def verify(path: Path, *limits: str) -> tuple[int, str, str]:
+    completed = subprocess.run(
+        [str(native_executable("fl_archive_probe")), "verify", str(path), *limits],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=30,
+    )
+    return completed.returncode, completed.stdout.strip(), completed.stderr.strip()
+
+
 def write_zip(path: Path, entries: list[tuple[zipfile.ZipInfo | str, bytes]], compression: int) -> None:
     with zipfile.ZipFile(path, "w", compression=compression, allowZip64=True) as archive:
         for name, payload in entries:
@@ -184,7 +199,8 @@ class ArchiveCoreTests(unittest.TestCase):
             }
             for name, expected in corpus.items():
                 with self.subTest(name=name):
-                    code, status, _detail = inspect(root / name)
+                    operation = verify if name == "bad-crc.zip" else inspect
+                    code, status, _detail = operation(root / name)
                     self.assertEqual(code, 2)
                     if expected:
                         self.assertEqual(status, expected)
@@ -237,7 +253,7 @@ class ArchiveCoreTests(unittest.TestCase):
             self.assertEqual(inspect(archive, "--ratio", "2")[1], "archive_compression_ratio_limit")
             self.assertEqual(inspect(archive, "--path", "4")[1], "archive_path_too_long")
             self.assertEqual(inspect(archive, "--depth", "0")[1], "archive_path_depth_exceeded")
-            self.assertEqual(inspect(archive, "--milliseconds", "0")[1], "archive_read_limit_or_sink_failed")
+            self.assertEqual(verify(archive, "--milliseconds", "0")[1], "archive_read_limit_or_sink_failed")
 
     def test_property_generated_safe_paths_and_payloads_validate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

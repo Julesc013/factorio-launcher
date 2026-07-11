@@ -64,6 +64,17 @@ int prove_path_policy()
         collisions.add(keys, false).code != "archive_path_unicode_normalization_collision") {
         return 12;
     }
+    const Limits mods = facman::archive::ModArchivePolicy::limits();
+    const Limits saves = facman::archive::SaveArchivePolicy::limits();
+    const Limits transfers = facman::archive::InstanceTransferPolicy::limits();
+    const Limits diagnostics = facman::archive::DiagnosticBundlePolicy::limits();
+    const Limits packages = facman::archive::PackageArchivePolicy::limits();
+    if (mods.maximum_entry_count != 4096 || saves.maximum_entry_count != 2048 ||
+        transfers.maximum_total_expanded_bytes != 12ULL * 1024ULL * 1024ULL * 1024ULL ||
+        diagnostics.maximum_archive_bytes != 32ULL * 1024ULL * 1024ULL ||
+        packages.maximum_entry_count != 100000) {
+        return 13;
+    }
     return 0;
 }
 
@@ -85,6 +96,17 @@ int prove_writer_and_reader(const fs::path& root, CompressionMethod method, bool
     options.method = method;
     options.force_zip64 = force_zip64;
     options.reproducible = true;
+    const fs::path original_source = source / fs::u8path("payload-\xE2\x98\x83.txt");
+    const fs::path retained_source = source / "payload-retained-original.txt";
+    bool source_replaced = false;
+    options.checkpoint = [&](const char* checkpoint) {
+        if (std::string(checkpoint) != "after_sources_opened") return true;
+        std::error_code source_error;
+        fs::rename(original_source, retained_source, source_error);
+        if (source_error || !write_file(original_source, "substituted source bytes\n")) return false;
+        source_replaced = true;
+        return true;
+    };
     const fs::path staging = root / (force_zip64 ? "writer zip64 staging" :
         method == CompressionMethod::stored ? "writer stored staging" : "writer deflate staging");
     WriteResult result;
@@ -94,6 +116,14 @@ int prove_writer_and_reader(const fs::path& root, CompressionMethod method, bool
         entries,
         options,
         result);
+    std::error_code source_restore_error;
+    if (source_replaced) {
+        fs::remove(original_source, source_restore_error);
+        source_restore_error.clear();
+        fs::rename(retained_source, original_source, source_restore_error);
+    }
+    options.checkpoint = {};
+    if (source_restore_error) return 32;
     if (!status.ok()) return 21;
     if (result.verified_plan.entries.size() != entries.size() ||
         result.verified_plan.zip64 != force_zip64) {
@@ -106,6 +136,32 @@ int prove_writer_and_reader(const fs::path& root, CompressionMethod method, bool
     for (const auto& entry : result.verified_plan.entries) {
         if (!entry.directory && entry.expanded_size != 0 && entry.method != method) return 23;
     }
+    const auto payload = std::find_if(
+        result.verified_plan.entries.begin(),
+        result.verified_plan.entries.end(),
+        [](const facman::archive::Entry& entry) { return !entry.directory && entry.expanded_size != 0; });
+    if (payload == result.verified_plan.entries.end()) return 27;
+
+    // The verified plan owns the original object. Replacing the pathname after
+    // inspection must not redirect a later stream or extraction to new bytes.
+    const fs::path retained_archive = result.archive_path.string() + ".retained-original";
+    std::error_code replacement_error;
+    fs::rename(result.archive_path, retained_archive, replacement_error);
+    if (replacement_error || !write_file(result.archive_path, "substituted archive path\n")) return 29;
+    std::string retained_payload;
+    status = facman::archive::stream_entry(
+        result.verified_plan,
+        payload->index,
+        options.limits,
+        [&](const unsigned char* bytes, std::size_t size) {
+            retained_payload.append(reinterpret_cast<const char*>(bytes), size);
+            return true;
+        });
+    fs::remove(result.archive_path, replacement_error);
+    replacement_error.clear();
+    fs::rename(retained_archive, result.archive_path, replacement_error);
+    if (!status.ok() || replacement_error || retained_payload != "streamed payload\n") return 30;
+
     const fs::path extraction = root / (force_zip64 ? "extract zip64" :
         method == CompressionMethod::stored ? "extract stored" : "extract deflate");
     status = facman::archive::extract_to_new_owned_staging(
@@ -129,13 +185,9 @@ int prove_writer_and_reader(const fs::path& root, CompressionMethod method, bool
         if (!status.ok() || read_file(repeat.archive_path) != read_file(result.archive_path)) {
             return 26;
         }
-        const auto payload = std::find_if(
-            result.verified_plan.entries.begin(),
-            result.verified_plan.entries.end(),
-            [](const facman::archive::Entry& entry) { return !entry.directory && entry.expanded_size != 0; });
-        if (payload == result.verified_plan.entries.end()) return 27;
-        std::fstream corrupt(result.archive_path, std::ios::binary | std::ios::in | std::ios::out);
         const std::uint64_t corrupt_offset = payload->data_offset + payload->compressed_size / 2;
+        result.verified_plan.reader.reset();
+        std::fstream corrupt(result.archive_path, std::ios::binary | std::ios::in | std::ios::out);
         corrupt.seekg(static_cast<std::streamoff>(corrupt_offset));
         char byte = 0;
         corrupt.read(&byte, 1);
@@ -143,11 +195,15 @@ int prove_writer_and_reader(const fs::path& root, CompressionMethod method, bool
         corrupt.seekp(static_cast<std::streamoff>(corrupt_offset));
         corrupt.write(&byte, 1);
         corrupt.close();
+        Plan corrupted_plan;
+        status = facman::archive::inspect_archive(result.archive_path, options.limits, corrupted_plan);
         const fs::path failed_staging = root / "failed extraction staging";
-        status = facman::archive::extract_to_new_owned_staging(
-            result.verified_plan,
-            failed_staging,
-            options.limits);
+        if (status.ok()) {
+            status = facman::archive::extract_to_new_owned_staging(
+                corrupted_plan,
+                failed_staging,
+                options.limits);
+        }
         if (status.ok() || fs::exists(failed_staging)) {
             std::cerr << "failed-extract-status=" << status.code
                       << " detail=" << status.detail

@@ -7,6 +7,62 @@
 #include <unordered_map>
 
 namespace facman::archive {
+
+Limits ModArchivePolicy::limits()
+{
+    Limits limits;
+    limits.maximum_archive_bytes = 2ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_entry_count = 4096;
+    limits.maximum_entry_expanded_bytes = 2ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_total_expanded_bytes = 4ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_directory_depth = 32;
+    return limits;
+}
+
+Limits SaveArchivePolicy::limits()
+{
+    Limits limits;
+    limits.maximum_entry_count = 2048;
+    limits.maximum_entry_compressed_bytes = 4ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_entry_expanded_bytes = 8ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_total_expanded_bytes = 8ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_directory_depth = 32;
+    return limits;
+}
+
+Limits InstanceTransferPolicy::limits()
+{
+    Limits limits;
+    limits.maximum_entry_count = 20000;
+    limits.maximum_total_expanded_bytes = 12ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_read_milliseconds = 120000;
+    return limits;
+}
+
+Limits DiagnosticBundlePolicy::limits()
+{
+    Limits limits;
+    limits.maximum_archive_bytes = 32ULL * 1024ULL * 1024ULL;
+    limits.maximum_entry_count = 512;
+    limits.maximum_entry_compressed_bytes = 2ULL * 1024ULL * 1024ULL;
+    limits.maximum_entry_expanded_bytes = 2ULL * 1024ULL * 1024ULL;
+    limits.maximum_total_expanded_bytes = 24ULL * 1024ULL * 1024ULL;
+    limits.maximum_compression_ratio = 200;
+    limits.maximum_directory_depth = 16;
+    limits.maximum_read_milliseconds = 10000;
+    return limits;
+}
+
+Limits PackageArchivePolicy::limits()
+{
+    Limits limits;
+    limits.maximum_entry_count = 100000;
+    limits.maximum_path_bytes = 2048;
+    limits.maximum_directory_depth = 128;
+    limits.maximum_read_milliseconds = 120000;
+    return limits;
+}
+
 namespace {
 
 Status refuse(const char* code, const std::string& detail)

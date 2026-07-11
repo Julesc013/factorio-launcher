@@ -38,6 +38,11 @@ int main(int argc, char** argv)
         print_status(status);
         return status.ok() ? 0 : 2;
     }
+    if (std::string(argv[1]) == "verify") {
+        if (status.ok()) status = facman::archive::verify_all(plan, limits);
+        print_status(status);
+        return status.ok() ? 0 : 2;
+    }
     if (std::string(argv[1]) == "extract" && argc >= 4) {
         if (!status.ok()) {
             print_status(status);

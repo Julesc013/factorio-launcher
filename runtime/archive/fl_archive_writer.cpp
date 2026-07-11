@@ -27,7 +27,8 @@ std::size_t miniz_read(void* opaque, mz_uint64 offset, void* buffer, std::size_t
 Status validate_write_entries(
     std::vector<WriteEntry>& entries,
     const WriteOptions& options,
-    std::map<std::string, std::uint64_t>& expected_sizes)
+    std::map<std::string, std::uint64_t>& expected_sizes,
+    std::map<std::string, std::shared_ptr<RandomAccessFile>>& sources)
 {
     if (entries.size() > options.limits.maximum_entry_count) {
         return Status::failure("archive_entry_count_limit", std::to_string(entries.size()));
@@ -54,16 +55,17 @@ Status validate_write_entries(
         if (!status.ok()) return status;
         if (entry.directory) continue;
 
-        RandomAccessFile source;
-        status = source.open(entry.source_path);
+        auto source = std::make_shared<RandomAccessFile>();
+        status = source->open(entry.source_path);
         if (!status.ok()) return status;
         status = enforce_entry_limits(
-            source.size(),
-            source.size(),
+            source->size(),
+            source->size(),
             total_expanded,
             options.limits);
         if (!status.ok()) return status;
-        expected_sizes[entry.archive_path] = source.size();
+        expected_sizes[entry.archive_path] = source->size();
+        sources[entry.archive_path] = std::move(source);
     }
     return Status::success();
 }
@@ -105,8 +107,12 @@ Status write_to_new_owned_staging(
     Status status = validate_archive_path(archive_filename, false, options.limits, output_keys);
     if (!status.ok()) return status;
     std::map<std::string, std::uint64_t> expected_sizes;
-    status = validate_write_entries(entries, options, expected_sizes);
+    std::map<std::string, std::shared_ptr<RandomAccessFile>> sources;
+    status = validate_write_entries(entries, options, expected_sizes, sources);
     if (!status.ok()) return status;
+    if (options.checkpoint && !options.checkpoint("after_sources_opened")) {
+        return Status::failure("archive_writer_checkpoint_refused", "after_sources_opened");
+    }
     status = create_owned_staging_root(staging_root);
     if (!status.ok()) return status;
 
@@ -159,10 +165,9 @@ Status write_to_new_owned_staging(
             continue;
         }
 
-        RandomAccessFile source;
-        status = source.open(entry.source_path);
-        if (!status.ok()) return abort_writer(zip, output, staging_root, status);
-        if (source.size() != expected_sizes[entry.archive_path]) {
+        RandomAccessFile& source = *sources.at(entry.archive_path);
+        status = source.revalidate();
+        if (!status.ok() || source.size() != expected_sizes[entry.archive_path]) {
             return abort_writer(
                 zip,
                 output,
@@ -191,6 +196,10 @@ Status write_to_new_owned_staging(
                 staging_root,
                 Status::failure("archive_writer_add_file_failed", entry.archive_path));
         }
+        status = source.revalidate();
+        if (!status.ok()) {
+            return abort_writer(zip, output, staging_root, status);
+        }
     }
     if (!mz_zip_writer_finalize_archive(&zip)) {
         return abort_writer(
@@ -215,6 +224,12 @@ Status write_to_new_owned_staging(
 
     Plan verified;
     status = inspect_archive(output_path, options.limits, verified);
+    if (!status.ok()) {
+        const Status cleanup = cleanup_owned_staging_root(staging_root);
+        if (!cleanup.ok()) status.detail += "; cleanup: " + cleanup.detail;
+        return status;
+    }
+    status = verify_all(verified, options.limits);
     if (!status.ok()) {
         const Status cleanup = cleanup_owned_staging_root(staging_root);
         if (!cleanup.ok()) status.detail += "; cleanup: " + cleanup.detail;

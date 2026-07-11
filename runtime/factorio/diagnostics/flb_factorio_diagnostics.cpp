@@ -1679,11 +1679,7 @@ ExportOutcome export_bundle(
     archive::WriteOptions options;
     options.method = archive::CompressionMethod::deflate;
     options.reproducible = true;
-    options.limits.maximum_archive_bytes = 32ULL * 1024ULL * 1024ULL;
-    options.limits.maximum_entry_count = 512;
-    options.limits.maximum_entry_expanded_bytes = 2ULL * 1024ULL * 1024ULL;
-    options.limits.maximum_total_expanded_bytes = 24ULL * 1024ULL * 1024ULL;
-    options.limits.maximum_read_milliseconds = 10000;
+    options.limits = archive::DiagnosticBundlePolicy::limits();
     archive::WriteResult written;
     archive::Status archive_status = archive::write_to_new_owned_staging(
         archive_staging,
