@@ -14,11 +14,11 @@ current_focus:
     production archive layer, typed authoritative routes, recoverable writes,
     safe diagnostics, and a target-specific Linux package proof.
   next_task: >
-    FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03: migrate saves.list,
-    saves.backup, saves.clone, instance.export, and instance.import through
-    canonical ULK descriptors, registered FLB typed handlers, and the
-    production archive core. Remove the migrated CLI backend and final legacy
-    archive helpers after parity is green.
+    FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03: add one bounded operation journal
+    and explicit inspect, plan, and apply recovery surfaces for currently
+    enabled multi-file writers. Recovery may remove only recognized owned
+    staging paths and must never infer that an incomplete journal makes a
+    committed target disposable.
     Windows read-only discovery is implemented and must not be scheduled again.
   authoritative_command_slice:
     - install_refs.scan

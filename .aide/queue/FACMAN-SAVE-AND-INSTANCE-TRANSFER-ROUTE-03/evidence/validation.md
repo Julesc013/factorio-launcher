@@ -1,6 +1,6 @@
 # Validation
 
-Result: local PASS; exact-SHA cross-platform CI pending.
+Result: PASS, including exact-SHA cross-platform CI.
 
 ## Behavior proven locally
 
@@ -39,6 +39,19 @@ Result: local PASS; exact-SHA cross-platform CI pending.
   goldens).
 - AIDE Lite test: PASS.
 - `git diff --check`: PASS.
+
+## Exact-SHA CI
+
+- FacMan revision: `8eec96e51fccd2aa0386d8588a3b9a721609a96e`.
+- CI run `29153354121`: PASS.
+  - Linux native and ASan/UBSan archive corpus/fuzz: PASS.
+  - Windows native, complete Python suite, WinForms build/client smoke,
+    zero-skip package proof, selected package integrity/relocation, and legacy
+    compatibility package: PASS.
+  - macOS archive native smoke: PASS.
+  - AppKit compile-only: PASS.
+- Schema run `29153354128`: PASS.
+- Security-policy run `29153354069`: PASS.
 
 ## Authority boundary
 
