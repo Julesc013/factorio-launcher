@@ -575,7 +575,7 @@ private:
     std::uint64_t total_bytes_ = 0;
 };
 
-std::string sha1_hex(const std::vector<unsigned char>& input)
+[[maybe_unused]] std::string sha1_hex(const std::vector<unsigned char>& input)
 {
     std::vector<unsigned char> message = input;
     std::uint64_t bit_length = static_cast<std::uint64_t>(message.size()) * 8u;
@@ -654,7 +654,7 @@ std::string sha1_hex(const std::vector<unsigned char>& input)
     return out.str();
 }
 
-std::string sha256_hex(const std::vector<unsigned char>& input)
+[[maybe_unused]] std::string sha256_hex(const std::vector<unsigned char>& input)
 {
     static const std::array<std::uint32_t, 64> k = {
         0x428a2f98u, 0x71374491u, 0xb5c0fbcfu, 0xe9b5dba5u, 0x3956c25bu, 0x59f111f1u, 0x923f82a4u,

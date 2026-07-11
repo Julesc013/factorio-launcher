@@ -18,7 +18,9 @@
 #include <string>
 
 #ifdef _WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 #endif
 
@@ -230,7 +232,7 @@ bool load_package_identity(
         error = "package manifest fixed policy fields are invalid";
         return false;
     }
-    for (const std::string& key : {
+    for (const std::string key : {
              "source_revision", "proof_baseline_revision", "universal_launcher_revision",
              "universal_setup_revision"}) {
         if (!is_hex_revision(values[key])) {

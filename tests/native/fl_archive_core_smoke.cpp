@@ -5,6 +5,7 @@
 #include "fl_archive_platform.h"
 #include "fl_archive_policy.h"
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>

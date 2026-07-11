@@ -106,7 +106,14 @@ Refusal refuse(
     const std::string& detail,
     bool recoverable = true)
 {
-    return {command, instance_id, code, reason, detail, recoverable};
+    Refusal refusal;
+    refusal.command = command;
+    refusal.instance_id = instance_id;
+    refusal.code = code;
+    refusal.reason = reason;
+    refusal.detail = detail;
+    refusal.recoverable = recoverable;
+    return refusal;
 }
 
 bool load_instance(const fs::path& workspace, const std::string& instance_id, Instance& instance)

@@ -719,7 +719,9 @@ struct Omission {
     std::string reason;
 };
 
-std::string json_string_value(const std::string& text, const std::string& key)
+[[maybe_unused]] std::string json_string_value(
+    const std::string& text,
+    const std::string& key)
 {
     const std::string marker = "\"" + key + "\"";
     std::size_t position = text.find(marker);
