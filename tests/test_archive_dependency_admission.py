@@ -16,7 +16,7 @@ MINIZ = ROOT / "external" / "miniz"
 
 
 class ArchiveDependencyAdmissionTests(unittest.TestCase):
-    def test_dependency_lock_and_initial_sbom_pin_exact_miniz_release(self) -> None:
+    def test_dependency_lock_and_sbom_pin_exact_miniz_release(self) -> None:
         self.assertEqual(check_dependency_lock.validate(), [])
         with (ROOT / "release" / "index" / "dependency_lock.v1.toml").open("rb") as handle:
             lock = tomllib.load(handle)
@@ -35,7 +35,8 @@ class ArchiveDependencyAdmissionTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        self.assertEqual(sbom["components"][0]["commit"], miniz["pin"])
+        sbom_miniz = next(item for item in sbom["components"] if item["id"] == "miniz")
+        self.assertEqual(sbom_miniz["commit"], miniz["pin"])
         self.assertFalse(sbom["publisher_authenticity_proven"])
 
     def test_vendored_release_files_match_reviewed_hashes(self) -> None:
