@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <cmath>
 #include <set>
-#include <sstream>
 #include <system_error>
 #include <vector>
 
@@ -118,19 +117,23 @@ std::string uuid_from_random()
 
 std::string workspace_json(const std::string& id)
 {
-    std::ostringstream out;
-    out << "{\n"
-        << "  \"schema\": \"facman.factorio.workspace.v1\",\n"
-        << "  \"workspace_id\": " << json::escape_string(id) << ",\n"
-        << "  \"layout_version\": 1,\n"
-        << "  \"roots\": {\n"
-        << "    \"installs\": \"installs\", \"instances\": \"instances\",\n"
-        << "    \"profiles\": \"profiles\", \"modsets\": \"modsets\",\n"
-        << "    \"accounts\": \"accounts\", \"cache\": \"cache\",\n"
-        << "    \"audit\": \"audit\", \"diagnostics\": \"diagnostics\",\n"
-        << "    \"exports\": \"exports\"\n"
-        << "  }\n}\n";
-    return out.str();
+    json::ObjectBuilder roots;
+    roots.add_string("installs", "installs");
+    roots.add_string("instances", "instances");
+    roots.add_string("profiles", "profiles");
+    roots.add_string("modsets", "modsets");
+    roots.add_string("accounts", "accounts");
+    roots.add_string("cache", "cache");
+    roots.add_string("audit", "audit");
+    roots.add_string("diagnostics", "diagnostics");
+    roots.add_string("exports", "exports");
+
+    json::ObjectBuilder document;
+    document.add_string("schema", "facman.factorio.workspace.v1");
+    document.add_string("workspace_id", id);
+    (void)document.add_unsigned_integer("layout_version", 1);
+    document.add_object("roots", roots);
+    return document.serialize() + "\n";
 }
 
 } // namespace
@@ -535,23 +538,23 @@ Result<MigrationReport> WorkspaceRepository::apply_migration() const
 
 std::string migration_report_json(const MigrationReport& report)
 {
-    std::ostringstream out;
-    out << "{\"schema\":\"facman.workspace_migration.v1\",\"command\":"
-        << json::escape_string(report.operation)
-        << ",\"status\":" << json::escape_string(report.actions.empty() ? "no_changes" : "changes_detected")
-        << ",\"apply_enabled\":" << (report.apply_enabled ? "true" : "false")
-        << ",\"actions\":[";
-    for (std::size_t index = 0; index < report.actions.size(); ++index) {
-        if (index) out << ',';
-        const MigrationAction& action = report.actions[index];
-        out << "{\"kind\":" << json::escape_string(action.kind)
-            << ",\"source\":" << json::escape_string(facman::platform::path_to_utf8(action.source))
-            << ",\"target\":" << json::escape_string(facman::platform::path_to_utf8(action.target))
-            << ",\"backup_required\":" << (action.backup_required ? "true" : "false")
-            << ",\"journal_required\":" << (action.journal_required ? "true" : "false") << '}';
+    json::ArrayBuilder actions;
+    for (const MigrationAction& action : report.actions) {
+        json::ObjectBuilder item;
+        item.add_string("kind", action.kind);
+        item.add_string("source", facman::platform::path_to_utf8(action.source));
+        item.add_string("target", facman::platform::path_to_utf8(action.target));
+        item.add_bool("backup_required", action.backup_required);
+        item.add_bool("journal_required", action.journal_required);
+        actions.add_object(item);
     }
-    out << "]}\n";
-    return out.str();
+    json::ObjectBuilder document;
+    document.add_string("schema", "facman.workspace_migration.v1");
+    document.add_string("command", report.operation);
+    document.add_string("status", report.actions.empty() ? "no_changes" : "changes_detected");
+    document.add_bool("apply_enabled", report.apply_enabled);
+    document.add_array("actions", actions);
+    return document.serialize() + "\n";
 }
 
 } // namespace facman::workspace

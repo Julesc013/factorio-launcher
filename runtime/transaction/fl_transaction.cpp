@@ -18,10 +18,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
-#include <sstream>
 
 namespace facman::transaction {
 namespace fs = std::filesystem;
+namespace json = facman::core::json;
 
 const char* state_name(State state) noexcept
 {
@@ -109,18 +109,6 @@ facman::core::Result<RelativePath> RelativePath::parse(std::string value)
 
 namespace {
 
-std::string escape(const std::string& value)
-{
-    std::string out;
-    for (char ch : value) {
-        if (ch == '\\' || ch == '"') { out.push_back('\\'); out.push_back(ch); }
-        else if (ch == '\n') out += "\\n";
-        else if (ch == '\r') out += "\\r";
-        else out.push_back(ch);
-    }
-    return out;
-}
-std::string quote(const std::string& value) { return "\"" + escape(value) + "\""; }
 std::string path_text(const fs::path& path) { return facman::platform::path_to_utf8(path.lexically_normal()); }
 
 std::string utc_now()
@@ -181,30 +169,24 @@ bool string_values(
     return true;
 }
 
-std::string string_array(const std::vector<std::string>& values)
+json::ArrayBuilder string_array_builder(const std::vector<std::string>& values)
 {
-    std::ostringstream out;
-    out << '[';
-    for (std::size_t index = 0; index < values.size(); ++index) {
-        if (index) out << ',';
-        out << quote(values[index]);
-    }
-    out << ']';
-    return out.str();
+    json::ArrayBuilder output;
+    for (const std::string& value : values) output.add_string(value);
+    return output;
 }
 
-std::string expected_files_json(const std::vector<ExpectedFile>& values)
+json::ArrayBuilder expected_files_builder(const std::vector<ExpectedFile>& values)
 {
-    std::ostringstream out;
-    out << '[';
-    for (std::size_t index = 0; index < values.size(); ++index) {
-        if (index) out << ',';
-        out << "{\"path\":" << quote(values[index].path.str())
-            << ",\"sha256\":" << quote(values[index].sha256.str())
-            << ",\"size\":" << values[index].size << '}';
+    json::ArrayBuilder output;
+    for (const ExpectedFile& value : values) {
+        json::ObjectBuilder item;
+        item.add_string("path", value.path.str());
+        item.add_string("sha256", value.sha256.str());
+        (void)item.add_unsigned_integer("size", value.size);
+        output.add_object(item);
     }
-    out << ']';
-    return out.str();
+    return output;
 }
 
 std::string record_json(const Record& record)
@@ -213,32 +195,30 @@ std::string record_json(const Record& record)
     std::vector<std::string> staging;
     for (const fs::path& path : record.sources) sources.push_back(path_text(path));
     for (const fs::path& path : record.staging_roots) staging.push_back(path_text(path));
-    std::ostringstream out;
-    out << "{\n  \"schema\":" << quote(record.schema_version >= 2U ? "facman.transaction.v2" : "facman.transaction.v1") << ",\n"
-        << "  \"transaction_id\":" << quote(record.transaction_id) << ",\n"
-        << "  \"command_id\":" << quote(record.command_id) << ",\n"
-        << "  \"workspace_id\":" << quote(record.workspace_id) << ",\n";
+    json::ObjectBuilder document;
+    document.add_string("schema", record.schema_version >= 2U ? "facman.transaction.v2" : "facman.transaction.v1");
+    document.add_string("transaction_id", record.transaction_id);
+    document.add_string("command_id", record.command_id);
+    document.add_string("workspace_id", record.workspace_id);
     if (record.schema_version >= 2U) {
-        out << "  \"marker_nonce\":" << quote(record.marker_nonce) << ",\n";
+        document.add_string("marker_nonce", record.marker_nonce);
     }
-    out
-        << "  \"target\":" << quote(path_text(record.target)) << ",\n"
-        << "  \"source_identities\":" << string_array(sources) << ",\n"
-        << "  \"created_utc\":" << quote(record.created_utc) << ",\n"
-        << "  \"updated_utc\":" << quote(record.updated_utc) << ",\n"
-        << "  \"state\":" << quote(state_name(record.state)) << ",\n"
-        << "  \"completed_steps\":" << string_array(record.completed_steps) << ",\n"
-        << "  \"owned_staging_roots\":" << string_array(staging) << ",\n";
+    document.add_string("target", path_text(record.target));
+    document.add_array("source_identities", string_array_builder(sources));
+    document.add_string("created_utc", record.created_utc);
+    document.add_string("updated_utc", record.updated_utc);
+    document.add_string("state", state_name(record.state));
+    document.add_array("completed_steps", string_array_builder(record.completed_steps));
+    document.add_array("owned_staging_roots", string_array_builder(staging));
     if (record.schema_version >= 2U) {
-        out << "  \"expected_files\":" << expected_files_json(record.expected_files) << ",\n";
+        document.add_array("expected_files", expected_files_builder(record.expected_files));
     } else {
-        out << "  \"expected_file_hashes\":[],\n";
+        document.add_array("expected_file_hashes", json::ArrayBuilder {});
     }
-    out
-        << "  \"commit_strategy\":" << quote(record.commit_strategy) << ",\n"
-        << "  \"error\":" << quote(record.error) << ",\n"
-        << "  \"recovery_actions\":" << string_array(record.recovery_actions) << "\n}\n";
-    return out.str();
+    document.add_string("commit_strategy", record.commit_strategy);
+    document.add_string("error", record.error);
+    document.add_array("recovery_actions", string_array_builder(record.recovery_actions));
+    return document.serialize() + "\n";
 }
 
 fs::path journal_root(const fs::path& workspace) { return workspace / "transactions"; }
@@ -378,10 +358,13 @@ std::string target_digest(const Record& record)
 
 std::string marker_json(const Record& record)
 {
-    return "{\"schema\":\"facman.transaction_staging.v2\",\"transaction_id\":" +
-        quote(record.transaction_id) + ",\"command_id\":" + quote(record.command_id) +
-        ",\"target_sha256\":" + quote(target_digest(record)) +
-        ",\"nonce\":" + quote(record.marker_nonce) + "}\n";
+    json::ObjectBuilder document;
+    document.add_string("schema", "facman.transaction_staging.v2");
+    document.add_string("transaction_id", record.transaction_id);
+    document.add_string("command_id", record.command_id);
+    document.add_string("target_sha256", target_digest(record));
+    document.add_string("nonce", record.marker_nonce);
+    return document.serialize() + "\n";
 }
 
 bool stable_text(const fs::path& path, std::string& text, std::string& detail)
@@ -455,20 +438,22 @@ std::vector<Record> records(const fs::path& workspace, std::string* invalid_deta
 
 std::string recovery_json(const std::string& command, const std::vector<Record>& values)
 {
-    std::ostringstream out;
-    out << "{\"schema\":\"facman.workspace_recovery.v1\",\"command\":" << quote(command) << ",\"transactions\":[";
-    for (std::size_t index = 0; index < values.size(); ++index) {
-        if (index) out << ',';
-        const Record& record = values[index];
-        out << "{\"transaction_id\":" << quote(record.transaction_id)
-            << ",\"command_id\":" << quote(record.command_id)
-            << ",\"state\":" << quote(state_name(record.state))
-            << ",\"target\":" << quote(path_text(record.target))
-            << ",\"target_exists\":" << (fs::exists(record.target) ? "true" : "false")
-            << ",\"actions\":" << string_array(record.recovery_actions) << '}';
+    json::ArrayBuilder transactions;
+    for (const Record& record : values) {
+        json::ObjectBuilder item;
+        item.add_string("transaction_id", record.transaction_id);
+        item.add_string("command_id", record.command_id);
+        item.add_string("state", state_name(record.state));
+        item.add_string("target", path_text(record.target));
+        item.add_bool("target_exists", fs::exists(record.target));
+        item.add_array("actions", string_array_builder(record.recovery_actions));
+        transactions.add_object(item);
     }
-    out << "]}";
-    return out.str();
+    json::ObjectBuilder document;
+    document.add_string("schema", "facman.workspace_recovery.v1");
+    document.add_string("command", command);
+    document.add_array("transactions", transactions);
+    return document.serialize();
 }
 
 } // namespace
@@ -759,9 +744,10 @@ Outcome apply(const fs::path& workspace, const std::string& id)
             true,
         };
     }
-    const std::string lock_content =
-        "{\"schema\":\"facman.recovery_lock.v1\",\"identity\":" +
-        quote(recovery_lock.identity_text()) + "}\n";
+    json::ObjectBuilder lock_document;
+    lock_document.add_string("schema", "facman.recovery_lock.v1");
+    lock_document.add_string("identity", recovery_lock.identity_text());
+    const std::string lock_content = lock_document.serialize() + "\n";
     if (!recovery_lock.write_text(lock_content, detail)) {
         std::string ignored;
         (void)recovery_lock.remove_exact(ignored);
@@ -960,12 +946,22 @@ bool apply_retention(const fs::path& workspace, const RetentionPolicy& policy, s
 
 std::string to_json(const Refusal& refusal, const std::string& command)
 {
-    std::ostringstream out;
-    out << "{\"schema\":\"facman.workspace_recovery_refusal.v1\",\"command\":" << quote(command)
-        << ",\"status\":\"refused\",\"refusal\":{\"schema\":\"common.refusal.v1\",\"code\":" << quote(refusal.code)
-        << ",\"reason\":" << quote(refusal.reason) << ",\"recoverable\":" << (refusal.recoverable ? "true" : "false")
-        << ",\"retryable\":" << (refusal.recoverable ? "true" : "false") << ",\"severity\":\"blocked\"},\"details\":{\"detail\":" << quote(refusal.detail) << "}}";
-    return out.str();
+    json::ObjectBuilder refusal_document;
+    refusal_document.add_string("schema", "common.refusal.v1");
+    refusal_document.add_string("code", refusal.code);
+    refusal_document.add_string("reason", refusal.reason);
+    refusal_document.add_bool("recoverable", refusal.recoverable);
+    refusal_document.add_bool("retryable", refusal.recoverable);
+    refusal_document.add_string("severity", "blocked");
+    json::ObjectBuilder details;
+    details.add_string("detail", refusal.detail);
+    json::ObjectBuilder document;
+    document.add_string("schema", "facman.workspace_recovery_refusal.v1");
+    document.add_string("command", command);
+    document.add_string("status", "refused");
+    document.add_object("refusal", refusal_document);
+    document.add_object("details", details);
+    return document.serialize();
 }
 
 } // namespace facman::transaction
