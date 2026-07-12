@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"saves.inspect","status":"refused","refusal":{"schema":"common.refusal.v1","code":"save_not_found","reason":"save was not found","recoverable":true}}

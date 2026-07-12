@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://facman.invalid/schema/factorio/factorio_launch_profile_report.v1.schema.json","title":"Factorio launch profile report","type":"object","additionalProperties":false,
+  "properties":{"schema":{"const":"factorio.launch_profile_report.v1"},"command":{"enum":["profiles.inspect","profiles.create","profiles.clone"]},"status":{"const":"ok"},"profile_id":{"type":"string"},"template_id":{"const":"vanilla"},"shipped":{"type":"boolean"},"settings":{"type":"object"},"portable":{"const":true},"arbitrary_execution":{"const":false},"mutation_executed":{"type":"boolean"}},
+  "required":["schema","command","status","profile_id","template_id","shipped","settings","portable","arbitrary_execution","mutation_executed"]
+}

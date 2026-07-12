@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://facman.invalid/schema/factorio/factorio_instance_template.v1.schema.json","title":"Factorio instance template","type":"object","additionalProperties":false,
+  "properties":{"schema":{"const":"factorio.instance_template.v1"},"command":{"const":"templates.inspect"},"template_id":{"const":"vanilla"},"display_name_default":{"type":"string"},"directory_policy":{"type":"object","additionalProperties":{"type":"string"}},"content_policy":{"type":"object","additionalProperties":{"type":"string"}},"launch_mode":{"enum":["gui","headless-plan","benchmark-preview"]},"safe_settings":{"type":"object"},"forbidden_capabilities":{"type":"object","additionalProperties":{"const":true}},"mutation_executed":{"const":false}},
+  "required":["schema","command","template_id","display_name_default","directory_policy","content_policy","launch_mode","safe_settings","forbidden_capabilities","mutation_executed"]
+}

@@ -19,7 +19,4 @@ int render_response(
     const std::string& command,
     const facman::core::Result<facman::client::CommandResponse>& response,
     bool structured);
-void render_menu(std::ostream& output, bool ascii_only);
-const char* menu_command(unsigned int selection);
-
 }  // namespace facman::tui

@@ -21,6 +21,63 @@ INDEX = ROOT / "contracts/command/factorio/index.v1.toml"
 VERSION = ROOT / "release/index/version.v1.toml"
 FRONTEND = ROOT / "contracts/command/frontend/frontend.required_commands.v1.toml"
 
+PREFERENCE_REQUEST_FIELDS = [
+    ("preferred_workspace", "path", False),
+    ("preferred_transport", "enum", False),
+    ("default_instance_template", "identifier", False),
+    ("default_launch_profile", "identifier", False),
+    ("display_color_policy", "enum", False),
+    ("tui_page_size", "string", False),
+    ("command_timeout_seconds", "string", False),
+    ("backup_destination", "path", False),
+    ("backup_keep_last", "string", False),
+    ("discovery_providers", "string_array", False),
+    ("discovery_roots", "string_array", False),
+]
+
+SNAPSHOT_RETENTION_REQUEST_FIELDS = [
+    ("instance_id", "identifier", True),
+    ("keep_last", "string", False),
+    ("keep_daily", "string", False),
+    ("keep_weekly", "string", False),
+    ("maximum_total_bytes", "string", False),
+    ("minimum_age_days", "string", False),
+]
+
+PROFILE_PATCH_FIELDS = [
+    ("window_mode", "enum", False),
+    ("graphics_quality", "enum", False),
+    ("audio", "enum", False),
+    ("selection_mode", "enum", False),
+    ("selection", "string", False),
+    ("launch_mode", "enum", False),
+    ("benchmark_ticks", "string", False),
+    ("additional_arguments", "string_array", False),
+]
+
+MODSET_SOLVER_FIELDS = [
+    ("instance_id", "identifier", True),
+    ("enabled_mods", "string_array", False),
+    ("disabled_mods", "string_array", False),
+    ("version_preferences", "string_array", False),
+    ("maximum_packages", "string", False),
+    ("maximum_versions_per_package", "string", False),
+    ("maximum_graph_edges", "string", False),
+    ("maximum_solver_states", "string", False),
+    ("maximum_backtracks", "string", False),
+    ("maximum_elapsed_ms", "string", False),
+    ("maximum_explanation_nodes", "string", False),
+]
+
+SAVE_RETENTION_FIELDS = [
+    ("instance_id", "identifier", True),
+    ("keep_last", "string", False),
+    ("keep_daily", "string", False),
+    ("keep_weekly", "string", False),
+    ("maximum_total_bytes", "string", False),
+    ("minimum_age_days", "string", False),
+]
+
 OUTPUTS = {
     "catalog_json": ROOT / "contracts/generated-index/command_catalog.v2.json",
     "command_header": ROOT / "runtime/core/generated/command_catalog.h",
@@ -45,23 +102,68 @@ OUTPUTS = {
 }
 
 REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
+    "preferences.apply": PREFERENCE_REQUEST_FIELDS,
+    "preferences.plan": PREFERENCE_REQUEST_FIELDS,
+    "preferences.validate": PREFERENCE_REQUEST_FIELDS,
     "onboarding.plan": [("preferred_install", "identifier", False), ("instance_display_name", "string", False), ("template_id", "identifier", False), ("workspace", "path", False)],
     "launch_plan.explain": [("instance_id", "identifier", True)],
-    "modsets.explain": [("instance_id", "identifier", True)],
+    "modsets.plan": MODSET_SOLVER_FIELDS,
+    "modsets.diff": MODSET_SOLVER_FIELDS,
+    "modsets.explain": MODSET_SOLVER_FIELDS,
+    "modsets.apply": MODSET_SOLVER_FIELDS,
+    "modsets.rollback": [("instance_id", "identifier", True), ("transaction_id", "string", True)],
     "doctor.run": [("roots", "string_array", False)],
     "install_refs.scan": [("roots", "string_array", False)],
     "install_refs.import": [("path", "path", True), ("install_id", "identifier", True)],
     "install_refs.inspect": [("install_id", "identifier", True)],
     "instance.create": [("display_name", "string", True), ("instance_id", "identifier", True), ("install_id", "identifier", True), ("template_id", "identifier", False)],
+    "instances.inspect": [("instance_id", "identifier", True)],
+    "instances.verify": [("instance_id", "identifier", True)],
+    "instances.diff": [("left_instance_id", "identifier", True), ("right_ref", "string", True)],
+    "instances.clone": [("source_instance_id", "identifier", True), ("destination_instance_id", "identifier", True), ("display_name", "string", False), ("install_ref", "identifier", False)],
+    "instances.rename": [("instance_id", "identifier", True), ("display_name", "string", True)],
+    "instances.archive": [("instance_id", "identifier", True)],
+    "instances.restore": [("archive_id", "string", True), ("new_instance_id", "identifier", False)],
+    "snapshots.create": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True), ("saves", "string_array", False)],
+    "snapshots.list": [("instance_id", "identifier", True)],
+    "snapshots.inspect": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True)],
+    "snapshots.verify": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True)],
+    "snapshots.diff": [("instance_id", "identifier", True), ("left_snapshot_id", "identifier", True), ("right_snapshot_id", "identifier", True)],
+    "snapshots.restore": [("snapshot_ref", "path", True), ("target_instance_id", "identifier", True)],
+    "snapshots.retention.plan": SNAPSHOT_RETENTION_REQUEST_FIELDS,
+    "snapshots.retention.apply": SNAPSHOT_RETENTION_REQUEST_FIELDS,
+    "templates.list": [],
+    "templates.inspect": [("template_id", "identifier", True)],
+    "templates.validate": [("template_id", "identifier", True)],
+    "profiles.list": [],
+    "profiles.inspect": [("profile_id", "identifier", True)],
+    "profiles.create": [("profile_id", "identifier", True), ("template_id", "identifier", False), *PROFILE_PATCH_FIELDS],
+    "profiles.clone": [("source_profile_id", "identifier", True), ("destination_profile_id", "identifier", True)],
+    "profiles.diff": [("left_profile_id", "identifier", True), ("right_profile_id", "identifier", True)],
+    "profiles.plan": [("instance_id", "identifier", True), ("profile_id", "identifier", True), *PROFILE_PATCH_FIELDS],
+    "profiles.apply": [("instance_id", "identifier", True), ("profile_id", "identifier", True), *PROFILE_PATCH_FIELDS],
+    "profiles.archive": [("profile_id", "identifier", True)],
     "launch_plan.build": [("instance_id", "identifier", True)],
     "launch_plan.preflight": [("instance_id", "identifier", True)],
     "run.preview": [("instance_id", "identifier", True)],
     "run.execute": [("instance_id", "identifier", False)],
     "mods.import": [("source_path", "path", True), ("instance_id", "identifier", True)],
+    "mods.list": [],
+    "mods.index": [("roots", "string_array", False)],
+    "mods.inspect": [("identity", "string", True)],
+    "mods.verify": [("identity", "string", True)],
+    "mods.explain": [("identity", "string", True)],
     "modsets.lock": [("instance_id", "identifier", True)],
     "modsets.verify": [("instance_id", "identifier", True)],
     "modsets.export": [("instance_id", "identifier", True), ("output_path", "path", True)],
     "saves.list": [("instance_id", "identifier", True)],
+    "saves.index": [("instance_id", "identifier", True)],
+    "saves.inspect": [("instance_id", "identifier", True), ("save", "string", True)],
+    "saves.verify": [("instance_id", "identifier", True), ("save", "string", True)],
+    "saves.associate": [("instance_id", "identifier", True), ("save", "string", True), ("profile_id", "identifier", False), ("source_operation", "string", False)],
+    "saves.diff": [("instance_id", "identifier", True), ("save", "string", True), ("other_save", "string", True)],
+    "saves.retention.plan": SAVE_RETENTION_FIELDS,
+    "saves.retention.apply": SAVE_RETENTION_FIELDS,
     "saves.backup": [("instance_id", "identifier", True), ("save", "string", True), ("output_path", "path", False)],
     "saves.clone": [("source_instance_id", "identifier", True), ("target_instance_id", "identifier", True), ("save", "string", True)],
     "instance.export": [("instance_id", "identifier", True), ("output_path", "path", True)],
@@ -78,6 +180,11 @@ REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
     "mods.install": [("query", "string", False), ("instance_id", "identifier", False)],
     "mods.update": [("instance_id", "identifier", False)],
     "servers.create": [("name", "string", True), ("id", "identifier", False), ("instance_id", "identifier", True)],
+    "servers.inspect": [("server_id", "identifier", True)],
+    "servers.validate": [("server_id", "identifier", True), ("save", "string", False)],
+    "servers.plan": [("server_id", "identifier", True), ("save", "string", False)],
+    "servers.diff": [("server_id", "identifier", True), ("other_server_id", "identifier", True)],
+    "servers.export": [("server_id", "identifier", True), ("output_path", "path", True), ("save", "string", False), ("include_save", "string", False)],
     "servers.start": [("id", "identifier", True)],
     "servers.stop": [("id", "identifier", True)],
     "servers.rcon": [("id", "identifier", True)],
@@ -92,6 +199,16 @@ REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
         ("instance_id", "identifier", False), ("path", "path", False), ("query", "string", False),
         ("version", "string", False), ("archive", "path", False),
     ],
+}
+
+ENUM_CHOICES: dict[str, list[str]] = {
+    "audio": ["enabled", "disabled"],
+    "display_color_policy": ["auto", "always", "never"],
+    "graphics_quality": ["low", "medium", "high"],
+    "launch_mode": ["gui", "headless-plan", "benchmark-preview"],
+    "preferred_transport": ["direct", "process", "daemon"],
+    "selection_mode": ["none", "load-save", "benchmark-save"],
+    "window_mode": ["windowed", "fullscreen"],
 }
 
 APPLICATION_ID_OVERRIDES = {
@@ -274,6 +391,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
                 "default": None,
                 "repeatable": kind == "string_array",
                 "request_field": name,
+                "choices": ENUM_CHOICES.get(name, []),
             }
             for name, kind, required in REQUEST_FIELDS.get(runtime_id, [])
         ],
@@ -357,7 +475,8 @@ def render_winforms_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         inputs = REQUEST_FIELDS.get(str(item["runtime_id"]), [])
         input_lines = ", ".join(
             f"new CommandInput({c_string(name)}, {c_string(humanize(name))}, {str(required).lower()}, "
-            f"{c_string(kind)}, {str(kind == 'string_array').lower()}, {c_string(name)}, null)"
+            f"{c_string(kind)}, {str(kind == 'string_array').lower()}, {c_string(name)}, null, "
+            f"new string[] {{ {', '.join(c_string(choice) for choice in ENUM_CHOICES.get(name, []))} }})"
             for name, kind, required in inputs
         )
         grammar = metadata["cli_grammar"]
@@ -425,6 +544,7 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
                 "required": required,
                 "repeatable": kind == "string_array",
                 "default": None,
+                "choices": ENUM_CHOICES.get(name, []),
             }
             for name, kind, required in REQUEST_FIELDS.get(str(item["runtime_id"]), [])
         ]

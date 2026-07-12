@@ -27,6 +27,7 @@
     <Compile Include="GeneratedCommandCatalog.cs" />
     <Compile Include="CommandClient.cs" />
     <Compile Include="CliProcessClient.cs" />
+    <Compile Include="OperationalVisualization.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

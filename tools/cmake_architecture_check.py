@@ -15,7 +15,7 @@ def validate() -> list[str]:
     root = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     modules = [
         "external", "runtime/core", "runtime/platform", "runtime/base", "runtime/workspace",
-        "runtime/archive", "runtime/transaction", "runtime/package", "runtime/factorio",
+        "runtime/archive", "runtime/transaction", "runtime/preferences", "runtime/package", "runtime/factorio",
         "runtime/client", "apps", "tests/native",
     ]
     for module in modules:
@@ -30,7 +30,7 @@ def validate() -> list[str]:
         if "build" not in path.parts
     )
     for alias in (
-        "facman::core", "facman::platform", "facman::workspace", "facman::archive",
+        "facman::core", "facman::platform", "facman::workspace", "facman::archive", "facman::preferences",
         "facman::package", "facman::factorio_model", "facman::factorio_application",
         "facman::binding", "facman::client", "facman::cli",
     ):

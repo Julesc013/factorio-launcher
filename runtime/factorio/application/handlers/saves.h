@@ -13,5 +13,6 @@ ApplicationResult backup_save(ApplicationContext& context, const BackupSaveReque
 ApplicationResult clone_save(ApplicationContext& context, const CloneSaveRequest& request);
 ApplicationResult export_instance(ApplicationContext& context, const ExportInstanceRequest& request);
 ApplicationResult import_instance(ApplicationContext& context, const ImportInstanceRequest& request);
+ApplicationResult dispatch_save_index(ApplicationContext& context, const ApplicationRequest& request);
 }
 #endif

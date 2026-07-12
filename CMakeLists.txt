@@ -64,6 +64,7 @@ add_subdirectory(runtime/base)
 add_subdirectory(runtime/workspace)
 add_subdirectory(runtime/archive)
 add_subdirectory(runtime/transaction)
+add_subdirectory(runtime/preferences)
 add_subdirectory(runtime/package)
 
 if(FACMAN_WITH_SETUP AND NOT TARGET usk_static)

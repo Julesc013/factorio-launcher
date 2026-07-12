@@ -43,6 +43,13 @@ std::string factorio_minor_version(const std::string& version);
 
 bool factorio_versions_compatible(const std::string& mod_factorio_version, const std::string& instance_version);
 
+int compare_versions(const std::string& left, const std::string& right);
+
+bool version_constraint_satisfied(
+    const std::string& actual,
+    const std::string& oper,
+    const std::string& expected);
+
 std::vector<ModsetIssue> validate_modset(const std::vector<ModRef>& mods, const std::string& factorio_version);
 
 std::string modset_refusal_json(

@@ -9,6 +9,7 @@
 #include "fl_json.h"
 #include "fl_path_safety.h"
 #include "flb_factorio_diagnostics.h"
+#include "flb_factorio_server_plan.h"
 
 #include <algorithm>
 #include <cctype>
@@ -72,11 +73,42 @@ std::string portal_refusal(const ServiceOperationRequest& request)
 
 std::string server_json(const std::string& id, const std::string& name, const std::string& instance)
 {
+    facman::core::json::ObjectBuilder visibility;
+    visibility.add_bool("public", false);
+    visibility.add_bool("lan", true);
+    facman::core::json::ObjectBuilder autosave;
+    (void)autosave.add_unsigned_integer("interval_minutes", 10);
+    (void)autosave.add_unsigned_integer("slots", 5);
+    facman::core::json::ObjectBuilder settings;
+    settings.add_string("name", name);
+    (void)settings.add_unsigned_integer("maximum_players", 0);
+    (void)settings.add_unsigned_integer("port", 34197);
+    facman::core::json::ObjectBuilder map_generation;
+    map_generation.add_string("preset", "default");
+    facman::core::json::ObjectBuilder map_settings;
+    map_settings.add_string("difficulty", "normal");
+    facman::core::json::ArrayBuilder tags;
+    facman::core::json::ArrayBuilder references;
     facman::core::json::ObjectBuilder output;
-    output.add_string("schema", "factorio.server.v1");
+    output.add_string("schema", "factorio.server_profile.v2");
+    (void)output.add_unsigned_integer("schema_version", 2);
     output.add_string("server_id", id);
     output.add_string("display_name", name);
     output.add_string("instance_id", instance);
+    output.add_string("save_selection", "");
+    output.add_string("launch_profile", "headless-plan");
+    output.add_object("server_settings", settings);
+    output.add_object("map_generation_settings", map_generation);
+    output.add_object("map_settings", map_settings);
+    output.add_object("visibility_policy", visibility);
+    output.add_object("autosave_policy", autosave);
+    output.add_string("description", "");
+    output.add_array("tags", tags);
+    output.add_array("allowlist_references", references);
+    facman::core::json::ArrayBuilder bans;
+    output.add_array("banlist_references", bans);
+    facman::core::json::ArrayBuilder credentials;
+    output.add_array("credential_references", credentials);
     output.add_string("status", "stopped");
     output.add_string("start_policy", "manual");
     output.add_string("execution", "not_implemented");
@@ -254,6 +286,30 @@ ApplicationResult list_servers(ApplicationContext& context)
 ApplicationResult control_server(ApplicationContext& context, const ServiceOperationRequest& request)
 {
     return server_unavailable(context, request);
+}
+
+ApplicationResult dispatch_server_plan(ApplicationContext& context, const ApplicationRequest& request)
+{
+    const auto& value = std::get<ServerPlanRequest>(request.payload);
+    namespace planner = facman::factorio::server;
+    facman::core::Result<std::string> result = [&]() {
+        switch (request.command) {
+        case CommandId::servers_inspect: return planner::inspect(context.workspace(), value);
+        case CommandId::servers_validate: return planner::validate(context.workspace(), value);
+        case CommandId::servers_plan: return planner::plan(context.workspace(), value);
+        case CommandId::servers_diff: return planner::diff(context.workspace(), value);
+        case CommandId::servers_export: return planner::export_bundle(context.workspace(), value);
+        default: return facman::core::Result<std::string>::failure(
+            {"unsupported_operation", "Unsupported server planning command", "servers"});
+        }
+    }();
+    const std::string operation = request.command == CommandId::servers_inspect ? "servers.inspect" :
+        request.command == CommandId::servers_validate ? "servers.validate" :
+        request.command == CommandId::servers_plan ? "servers.plan" :
+        request.command == CommandId::servers_diff ? "servers.diff" : "servers.export";
+    if (result) { ApplicationResult output; output.output = result.take_value(); return output; }
+    return refused(safety_refusal(operation, result.error().code, "Server planning operation was refused",
+        result.error().message, result.error().recoverable), result.error().code, result.error().message, result.error().kind);
 }
 
 ApplicationResult redact_diagnostics(ApplicationContext&, const ServiceOperationRequest& request)

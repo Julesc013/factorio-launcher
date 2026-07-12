@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"profiles.apply","status":"refused","refusal":{"schema":"common.refusal.v1","code":"profile_transaction_recovery_required","reason":"workspace recovery required","recoverable":false}}

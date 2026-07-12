@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"profiles.diff","status":"refused","refusal":{"schema":"common.refusal.v1","code":"unknown_profile","reason":"profile is not registered","recoverable":true}}

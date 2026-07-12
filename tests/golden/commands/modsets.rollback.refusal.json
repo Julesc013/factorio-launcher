@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"modsets.rollback","status":"refused","refusal":{"schema":"common.refusal.v1","code":"modset_history_invalid","reason":"activation history failed verification","recoverable":false}}

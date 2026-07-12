@@ -46,3 +46,21 @@ protected-root invariance, and exclusive instance lock behavior. It does not
 prove Factorio's internal interpretation of those settings. Execution remains
 unavailable until an operator-supplied real Factorio smoke receives a reviewed
 human verdict.
+
+## Portable snapshots
+
+The snapshot lifecycle is available through `snapshots create`, `list`,
+`inspect`, `verify`, `diff`, `restore`, and the separate retention `plan` and
+`apply` commands. Snapshot archives use `factorio.instance_snapshot.v1` and
+the production deterministic ZIP writer (deflate/ZIP64 as required). The
+archive carries a SHA-256 closure over portable instance metadata, generated
+non-secret configuration, a modset lock reference when present, and only saves
+explicitly selected with `--save`.
+
+Credentials, tokens, machine-local absolute paths, locks, journals, logs,
+crashes, caches, and temporary content are excluded. There is no full-secrets
+mode. Restore verifies the archive plan, schema, closure, install version,
+profile/template identifiers, and no-clobber destination before committing an
+owned staging directory. Retention planning is read-only; retention apply only
+moves verified archive/record pairs into FacMan-owned trash and never performs
+permanent deletion.

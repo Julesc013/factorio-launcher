@@ -168,8 +168,9 @@ int prove_commit_strategies_and_retention(const fs::path& workspace)
 int main()
 {
     int result = prove_transition_table();
-    const fs::path root = fs::current_path() / fs::u8path("transaction-session-unicode-\xE2\x98\x83") /
-        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    const fs::path root = fs::current_path() / fs::u8path(
+        "transaction-session-unicode-\xE2\x98\x83-" +
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     std::error_code error;
     fs::create_directories(root, error);
     if (error) return 1;

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_server_profile.v2.schema.json",
+  "title": "Factorio Server Profile v2",
+  "type": "object",
+  "required": ["schema", "schema_version", "server_id", "display_name", "instance_id", "save_selection", "launch_profile", "server_settings", "map_generation_settings", "map_settings", "visibility_policy", "autosave_policy", "description", "tags", "allowlist_references", "banlist_references", "credential_references"],
+  "properties": {
+    "schema": { "const": "factorio.server_profile.v2" }, "schema_version": { "const": 2 },
+    "server_id": { "type": "string" }, "display_name": { "type": "string" }, "instance_id": { "type": "string" },
+    "save_selection": { "type": "string" }, "launch_profile": { "type": "string" },
+    "server_settings": { "type": "object" }, "map_generation_settings": { "type": "object" }, "map_settings": { "type": "object" },
+    "visibility_policy": { "type": "object" }, "autosave_policy": { "type": "object" }, "description": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } }, "allowlist_references": { "type": "array", "items": { "type": "string" } },
+    "banlist_references": { "type": "array", "items": { "type": "string" } }, "credential_references": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

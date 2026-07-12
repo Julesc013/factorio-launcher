@@ -14,6 +14,7 @@
 @end
 
 static NSString *FacManStatusText(FacManCommandStatus status);
+static NSString *FacManVisualizationTitle(NSString *renderer);
 
 @implementation MainWindowController
 
@@ -69,9 +70,12 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [self addDoctorTab:tabs];
     [self addInstallsTab:tabs];
     [self addInstancesTab:tabs];
+    [self addGeneratedTab:@"Snapshots" prefixes:@[ @"snapshots." ] toTabs:tabs];
+    [self addGeneratedTab:@"Profiles" prefixes:@[ @"profiles.", @"templates." ] toTabs:tabs];
     [self addLaunchPlanTab:tabs];
     [self addGeneratedTab:@"Mods" prefixes:@[ @"mods.", @"modsets." ] toTabs:tabs];
     [self addGeneratedTab:@"Saves" prefixes:@[ @"saves." ] toTabs:tabs];
+    [self addGeneratedTab:@"Servers" prefixes:@[ @"servers." ] toTabs:tabs];
     [self addDiagnosticsTab:tabs];
     [self addGeneratedTab:@"Recovery" prefixes:@[ @"workspace.recovery.", @"workspace.migration." ] toTabs:tabs];
     [self addGeneratedTab:@"Capabilities" prefixes:@[ @"capabilities.", @"workspace." ] toTabs:tabs];
@@ -203,6 +207,7 @@ static NSString *FacManStatusText(FacManCommandStatus status);
 {
     NSTextField *field = [[NSTextField alloc] initWithFrame:frame];
     [field setStringValue:placeholder ?: @""];
+    [field setAccessibilityLabel:key ?: @"Path or command input"];
     [view addSubview:field];
     if (key != nil) {
         [self.inputFields setObject:field forKey:key];
@@ -217,6 +222,7 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [label setEditable:NO];
     [label setBezeled:NO];
     [label setDrawsBackground:NO];
+    [label setAccessibilityLabel:text];
     [view addSubview:label];
 }
 
@@ -229,6 +235,8 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [button setTarget:self];
     [button setAction:@selector(runCommand:)];
     [button setIdentifier:commandId];
+    [button setAccessibilityLabel:title];
+    [button setAccessibilityHelp:[NSString stringWithFormat:@"Run generated command %@", commandId]];
     [view addSubview:button];
 }
 
@@ -275,7 +283,9 @@ static NSString *FacManStatusText(FacManCommandStatus status);
                                workspace:[self.workspaceField stringValue]
                                  cliPath:[self.cliPathField stringValue]
                               completion:^(FacManCommandResult *result) {
-                                  [self renderText:[result displayText]];
+                                  [self renderText:[NSString stringWithFormat:@"View: %@\nRisk: %@\nEffects: %@\n\n%@",
+                                      FacManVisualizationTitle(command.renderer), command.riskTier, command.effects,
+                                      [result displayText]]];
                                   if (sender != nil) [sender setEnabled:YES];
                               }];
 }
@@ -307,7 +317,13 @@ static NSString *FacManStatusText(FacManCommandStatus status);
                   frame:NSMakeRect(0, y + 2, 150, 22)];
         NSString *type = [field objectForKey:@"type"];
         NSControl *control = nil;
-        if ([type isEqualToString:@"boolean"]) {
+        NSArray *choices = [field objectForKey:@"choices"];
+        if ([choices count] > 0) {
+            NSPopUpButton *popup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(160, y, 350, 26) pullsDown:NO];
+            if (!required) [popup addItemWithTitle:@""];
+            [popup addItemsWithTitles:choices];
+            control = popup;
+        } else if ([type isEqualToString:@"boolean"]) {
             NSButton *toggle = [[NSButton alloc] initWithFrame:NSMakeRect(160, y, 330, 24)];
             [toggle setButtonType:NSSwitchButton];
             [toggle setTitle:@"Enabled"];
@@ -323,6 +339,8 @@ static NSString *FacManStatusText(FacManCommandStatus status);
             control = text;
         }
         [form addSubview:control];
+        [control setAccessibilityLabel:key];
+        [control setAccessibilityHelp:[NSString stringWithFormat:@"%@ %@ field", required ? @"Required" : @"Optional", type]];
         [controls setObject:control forKey:key];
         index++;
     }
@@ -340,6 +358,8 @@ static NSString *FacManStatusText(FacManCommandStatus status);
             value = [[(NSPathControl *)control URL] path] ?: @"";
         } else if ([control isKindOfClass:[NSButton class]]) {
             value = [(NSButton *)control state] == NSControlStateValueOn ? @"true" : @"false";
+        } else if ([control isKindOfClass:[NSPopUpButton class]]) {
+            value = [(NSPopUpButton *)control titleOfSelectedItem] ?: @"";
         } else if ([control isKindOfClass:[NSTextField class]]) {
             value = [(NSTextField *)control stringValue];
         }
@@ -354,15 +374,13 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     if ([cli length] > 0) {
         [self.cliPathField setStringValue:cli];
     }
-    NSString *workspace = [[[NSProcessInfo processInfo] environment] objectForKey:@"FACMAN_WORKSPACE"];
-    if ([workspace length] > 0) {
-        [self.workspaceField setStringValue:workspace];
-    }
+    [self.workspaceField setStringValue:@""];
 }
 
 - (void)renderText:(NSString *)text
 {
     [self.resultView setString:text ?: @""];
+    NSAccessibilityPostNotification(self.resultView, NSAccessibilityValueChangedNotification);
 }
 
 @end
@@ -376,4 +394,16 @@ static NSString *FacManStatusText(FacManCommandStatus status)
         return @"stubbed_with_refusal";
     }
     return @"not_supported_with_reason";
+}
+
+static NSString *FacManVisualizationTitle(NSString *renderer)
+{
+    if ([renderer hasPrefix:@"instance_diff"]) return @"Instance diff";
+    if ([renderer hasPrefix:@"snapshots_"]) return @"Snapshot list or diff";
+    if ([renderer hasPrefix:@"modsets_"]) return @"Modset plan graph";
+    if ([renderer hasPrefix:@"saves_"]) return @"Save index or retention plan";
+    if ([renderer hasPrefix:@"servers_"]) return @"Server plan";
+    if ([renderer containsString:@"recovery"] || [renderer containsString:@"transaction"])
+        return @"Transaction and recovery state";
+    return @"Structured command result";
 }

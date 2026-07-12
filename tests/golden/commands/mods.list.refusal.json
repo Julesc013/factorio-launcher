@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"mods.list","status":"refused","refusal":{"schema":"common.refusal.v1","code":"inventory_root_read_failed","reason":"managed inventory root could not be read","recoverable":true}}

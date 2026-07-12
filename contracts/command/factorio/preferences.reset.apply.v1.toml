@@ -1,0 +1,13 @@
+command_id = "preferences.reset.apply"
+cli = "facman preferences reset apply --json"
+effects = ["workspace_read", "workspace_write"]
+request_schema = "contracts/schema/command/preferences.reset.apply.request.v1.schema.json"
+response_schema = "contracts/schema/facman/facman_preferences_report.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = false
+executes_process = false
+mutates_workspace = true
+golden_success = "tests/golden/commands/preferences.reset.apply.success.json"
+golden_refusal = "tests/golden/commands/preferences.reset.apply.refusal.json"

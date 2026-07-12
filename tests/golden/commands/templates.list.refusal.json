@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"templates.list","status":"refused","refusal":{"schema":"common.refusal.v1","code":"profile_list_failed","reason":"template catalog unavailable","recoverable":true}}

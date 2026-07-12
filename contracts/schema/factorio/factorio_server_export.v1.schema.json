@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_server_export.v1.schema.json",
+  "title": "Portable Server Plan Export",
+  "type": "object",
+  "required": ["schema", "command", "status", "server_id", "path", "contains_save", "contains_secrets", "contains_factorio_binary", "contains_execution_scripts", "process_started", "network_socket_opened", "firewall_changed", "mutation_executed"],
+  "properties": {
+    "schema": { "const": "factorio.server_export.v1" }, "command": { "const": "servers.export" }, "status": { "const": "ok" },
+    "server_id": { "type": "string" }, "path": { "type": "string" }, "contains_save": { "type": "boolean" },
+    "contains_secrets": { "const": false }, "contains_factorio_binary": { "const": false }, "contains_execution_scripts": { "const": false },
+    "process_started": { "const": false }, "network_socket_opened": { "const": false }, "firewall_changed": { "const": false },
+    "mutation_executed": { "const": true }
+  },
+  "additionalProperties": false
+}

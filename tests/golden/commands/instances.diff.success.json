@@ -1,0 +1,1 @@
+{"schema":"factorio.instance_diff.v1","command":"instances.diff","status":"ok","left_instance_id":"main","right_ref":"copy","selected_settings_equal":{"install_ref":true,"profile":true,"template":true,"factorio_version":true},"differences":[],"volatile_content_ignored":true,"mutation_executed":false}

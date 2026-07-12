@@ -17,12 +17,16 @@ struct Invocation {
     std::string payload = "{}";
     bool allow_write = false;
     bool cancel_before_start = false;
+    std::shared_ptr<facman::client::ProgressSink> progress;
     std::chrono::milliseconds timeout {std::chrono::minutes(5)};
 };
 
 class CommandClient {
 public:
-    explicit CommandClient(std::filesystem::path workspace);
+    explicit CommandClient(
+        std::filesystem::path workspace,
+        std::string transport = "direct",
+        std::filesystem::path process_executable = {});
     facman::core::Result<facman::client::CommandResponse> execute(const Invocation& invocation);
 
 private:

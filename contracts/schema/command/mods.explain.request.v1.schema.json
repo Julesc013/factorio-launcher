@@ -1,0 +1,16 @@
+{
+  "$id": "https://facman.invalid/schema/command/mods.explain.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "identity": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "identity"
+  ],
+  "title": "mods.explain request",
+  "type": "object"
+}

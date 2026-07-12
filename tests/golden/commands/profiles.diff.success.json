@@ -1,0 +1,1 @@
+{"schema":"factorio.launch_profile_diff.v1","command":"profiles.diff","left_profile_id":"gui","right_profile_id":"quiet","differences":[{"field":"audio","left":"enabled","right":"disabled"}],"mutation_executed":false}

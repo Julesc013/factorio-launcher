@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_snapshot_diff.v1.schema.json",
+  "title": "Factorio snapshot diff",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.snapshot_diff.v1"}, "command": {"const": "snapshots.diff"}, "status": {"const": "ok"},
+    "instance_id": {"type": "string"}, "left_snapshot_id": {"type": "string"}, "right_snapshot_id": {"type": "string"},
+    "differences": {"type": "array", "items": {"type": "object", "additionalProperties": false, "properties": {"path": {"type": "string"}, "left_sha256": {"type": "string"}, "right_sha256": {"type": "string"}}, "required": ["path", "left_sha256", "right_sha256"]}},
+    "mutation_executed": {"const": false}
+  },
+  "required": ["schema", "command", "status", "instance_id", "left_snapshot_id", "right_snapshot_id", "differences", "mutation_executed"]
+}

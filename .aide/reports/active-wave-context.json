@@ -1,10 +1,10 @@
 {
   "active_workunit": null,
   "open_blockers": [
-    "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
-    "Release, signing, publication and Safe beta promotion are outside this wave."
+    "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+    "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
   ],
   "schema_version": "aide.wave-context.v1",
-  "wave_id": "facman-r3.6",
+  "wave_id": "facman-r3.7",
   "wave_status": "complete"
 }

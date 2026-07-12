@@ -27,9 +27,9 @@
   "category_python": {
     "fast-unit": ["tests.test_json_contract_subset", "tests.test_schema_tools"],
     "contract": ["tests.test_command_contracts", "tests.test_contract_truth", "tests.test_refusal_contract"],
-    "integration": ["tests.test_cli", "tests.test_vertical_slice", "tests.test_recovery"],
+    "integration": ["tests.test_cli", "tests.test_vertical_slice", "tests.test_recovery", "tests.test_profiles_templates"],
     "filesystem": ["tests.test_workspace_store", "tests.test_safety_boundaries", "tests.test_diagnostic_export"],
-    "archive": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth"],
+    "archive": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth", "tests.test_instance_snapshots", "tests.test_local_mod_inventory"],
     "transaction": ["tests.test_recovery", "tests.test_save_transfer"],
     "package": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.package_runtime.test_built_package_artifacts"],
     "platform": ["tests.test_windows_discovery", "tests.test_package_linux_proof", "tests.test_package_macos_proof"],
@@ -73,6 +73,13 @@
       "package_profiles": []
     },
     {
+      "paths": ["runtime/preferences/", "tests/test_workspace_preferences.py"],
+      "native_targets": ["facman_preferences_smoke", "facman_workspace_resolver_smoke", "flb_command_bridge_smoke"],
+      "python_tests": ["tests.test_workspace_preferences", "tests.test_workspace_resolver", "tests.test_command_contracts", "tests.test_contract_truth"],
+      "strict_validators": ["tools/command_contract_check.py", "tools/frontend_contract_check.py", "tools/schema_validate.py", "tools/workspace_resolver_check.py"],
+      "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
       "paths": ["runtime/archive/", "external/miniz/"],
       "native_targets": ["fl_archive_core_smoke", "miniz_dependency_smoke"],
       "python_tests": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth"],
@@ -82,8 +89,8 @@
     {
       "paths": ["runtime/factorio/"],
       "native_targets": ["flb_command_bridge_smoke", "facman_diagnostic_traversal_smoke", "facman_isolation_lock_smoke"],
-      "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_save_transfer", "tests.test_vertical_slice"],
-      "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py"],
+      "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_instance_lifecycle", "tests.test_instance_snapshots", "tests.test_local_mod_inventory", "tests.test_local_modset_solver", "tests.test_profiles_templates", "tests.test_save_index_retention", "tests.test_save_transfer", "tests.test_server_plan", "tests.test_vertical_slice"],
+      "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py", "tools/instance_lifecycle_check.py", "tools/snapshot_lifecycle_check.py", "tools/profile_template_check.py", "tools/mod_inventory_check.py", "tools/modset_solver_check.py", "tools/save_index_check.py", "tools/server_plan_check.py"],
       "package_profiles": []
     },
     {

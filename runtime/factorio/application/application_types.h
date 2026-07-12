@@ -7,10 +7,18 @@
 #include "flb_factorio_diagnostics.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
+#include "flb_factorio_modset_solver.h"
+#include "flb_factorio_mods.h"
 #include "flb_factorio_save_operations.h"
+#include "flb_factorio_save_index.h"
 #include "fl_transaction.h"
 #include "fl_identity.h"
 #include "fl_result.h"
+#include "fl_preferences.h"
+#include "flb_factorio_instance_lifecycle.h"
+#include "flb_factorio_snapshots.h"
+#include "flb_factorio_profiles.h"
+#include "flb_factorio_server_plan.h"
 
 #include "ulk/ulk_command.h"
 
@@ -25,6 +33,10 @@ namespace launch = facman::factorio::launch;
 namespace modsets = facman::factorio::modsets::operations;
 namespace saves = facman::factorio::saves::operations;
 namespace transactions = facman::transaction;
+namespace preferences = facman::preferences;
+namespace instance_lifecycle = facman::factorio::instance;
+namespace snapshots = facman::factorio::snapshots;
+namespace profiles = facman::factorio::profiles;
 
 enum class CommandId {
 #include "generated/command_ids.inc"
@@ -51,6 +63,7 @@ struct OnboardingPlanRequest {
 };
 struct ExplainInstanceRequest { facman::core::InstanceId instance_id; };
 struct RecoveryRequest { std::string transaction_id; };
+struct PreferencesRequest { preferences::Preferences values; };
 struct ServiceOperationRequest {
     std::string operation;
     std::string name;
@@ -63,14 +76,35 @@ struct ServiceOperationRequest {
 };
 
 using ImportModRequest = modsets::ImportRequest;
+using ModInventoryRequest = facman::factorio::mods::InventoryRequest;
 using ModsetInstanceRequest = modsets::InstanceRequest;
 using ExportModsetRequest = modsets::ExportRequest;
+using ModsetSolverRequest = facman::factorio::modsets::solver::Request;
 using ListSavesRequest = saves::InstanceRequest;
+using SaveIndexRequest = facman::factorio::saves::index::Request;
 using BackupSaveRequest = saves::BackupRequest;
 using CloneSaveRequest = saves::CloneRequest;
 using ExportInstanceRequest = saves::ExportRequest;
 using ImportInstanceRequest = saves::ImportRequest;
 using ExportDiagnosticRequest = diagnostics::ExportRequest;
+using InspectInstanceRequest = instance_lifecycle::InspectRequest;
+using DiffInstanceRequest = instance_lifecycle::DiffRequest;
+using CloneInstanceRequest = instance_lifecycle::CloneRequest;
+using RenameInstanceRequest = instance_lifecycle::RenameRequest;
+using ArchiveInstanceRequest = instance_lifecycle::ArchiveRequest;
+using RestoreInstanceRequest = instance_lifecycle::RestoreRequest;
+using CreateSnapshotRequest = snapshots::CreateRequest;
+using ListSnapshotsRequest = snapshots::ListRequest;
+using SnapshotRequest = snapshots::SnapshotRequest;
+using DiffSnapshotRequest = snapshots::DiffRequest;
+using RestoreSnapshotRequest = snapshots::RestoreRequest;
+using SnapshotRetentionRequest = snapshots::RetentionRequest;
+using ProfileIdRequest = profiles::IdRequest;
+using CreateProfileRequest = profiles::CreateRequest;
+using CloneProfileRequest = profiles::CloneRequest;
+using DiffProfileRequest = profiles::DiffRequest;
+using EffectiveProfileRequest = profiles::EffectiveRequest;
+using ServerPlanRequest = facman::factorio::server::Request;
 
 using ApplicationPayload = std::variant<
     std::monostate,
@@ -84,14 +118,36 @@ using ApplicationPayload = std::variant<
     OnboardingPlanRequest,
     ExplainInstanceRequest,
     ImportModRequest,
+    ModInventoryRequest,
     ModsetInstanceRequest,
     ExportModsetRequest,
+    ModsetSolverRequest,
     ListSavesRequest,
+    SaveIndexRequest,
     BackupSaveRequest,
     CloneSaveRequest,
     ExportInstanceRequest,
     ImportInstanceRequest,
     RecoveryRequest,
+    PreferencesRequest,
+    InspectInstanceRequest,
+    DiffInstanceRequest,
+    CloneInstanceRequest,
+    RenameInstanceRequest,
+    ArchiveInstanceRequest,
+    RestoreInstanceRequest,
+    CreateSnapshotRequest,
+    ListSnapshotsRequest,
+    SnapshotRequest,
+    DiffSnapshotRequest,
+    RestoreSnapshotRequest,
+    SnapshotRetentionRequest,
+    ProfileIdRequest,
+    CreateProfileRequest,
+    CloneProfileRequest,
+    DiffProfileRequest,
+    EffectiveProfileRequest,
+    ServerPlanRequest,
     ServiceOperationRequest,
     ExportDiagnosticRequest>;
 

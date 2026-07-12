@@ -1,0 +1,1751 @@
+{
+  "architecture_invariants": [
+    "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
+    "Universal Setup owns installed-state mutation and Universal Launcher owns product-neutral orchestration.",
+    "Frontends render generated contracts and contain no Factorio backend decisions.",
+    "AIDE makes no provider, model, Gateway, or product-network call.",
+    "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
+    "Archive and retention operations are reversible and never hard-delete managed content."
+  ],
+  "blockers": [
+    "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+    "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+  ],
+  "checkpoints": [
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
+        "FACMAN-INSTANCE-LIFECYCLE-02",
+        "FACMAN-INSTANCE-SNAPSHOT-01",
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "765d64a5c6904b4c4fc272a402406ba193202ee189f8a155263765a339c6cd98",
+      "test_fingerprints": {
+        "tests/test_aide_compaction.py": "0072c8ca7cee83a8ecb7cbb37040b5943e313c31ab345716727e35247be31ae1",
+        "tests/test_repro_workspace_smoke.py": "b301f29507631ceb1bd39053ec39cfb35423362ea5f0474a65995d92d96493f4"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-INSTANCE-LIFECYCLE-02",
+        "FACMAN-INSTANCE-SNAPSHOT-01",
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "95e1840a263f7f9aab59ec2e5f6e4b60a377d6b468ce7cfc103a3c079012ad75",
+      "test_fingerprints": {
+        "tests/test_workspace_preferences.py": "1f269ab18379c0c9319436939c6ab2cd84a376a3c8750dbebd0c2352c586bd0d"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-INSTANCE-SNAPSHOT-01",
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "8ed989f5841814b5a55eaa77cd688fee5498f33d00df42a5311ad71fe97515bc",
+      "test_fingerprints": {
+        "tests/test_instance_lifecycle.py": "125b70463950918c618de25b5786c1b52eb1acb58c1add0a48209ddd9dada903"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-INSTANCE-LIFECYCLE-02"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "9f4b3d351dfb23dc5252886ac77e8b83ff772599",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "bb1b57569db23c1efd185cd300efac66d9153d3063489d573691570b301cb1dc",
+      "test_fingerprints": {
+        "tests/test_archive_core.py": "7a7dfd08ae07741f6620f98dc1a49dd541c02f75f9325f3eaf11478bc0c85ae9",
+        "tests/test_instance_snapshots.py": "29a2879d2f9ad7ae87928a8a8255cf7adf491698e4304d57eb333bcdad0295ab"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-INSTANCE-SNAPSHOT-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "645a331a4c54ff5f0d1959d9f71285dd8418a1376bd6b76eb573717a361803fa",
+      "test_fingerprints": {
+        "tests/test_profiles_templates.py": "6b1e8b1b3db9b928e53f1114d6af68051873c9c3ffa977d80a18f0ae9d358be8"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-PROFILES-AND-TEMPLATES-02"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "8335fde1ba12aaacff3cd44e318834be6fb3518c",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "4a88da349f9b94c27686c8adee49ab2c9073208017d099c8848c8e8c3b1b3a26",
+      "test_fingerprints": {
+        "tests/test_local_mod_inventory.py": "8a64a97aa0d64f33d1b04c61aeac7e552eff2ff5de941185daabc41c7a50a519",
+        "tests/test_modzip_depth.py": "5c7788f3d0f23b03d22e63d56e7236607747bcae5c2c2bebd1926b9422ebb872"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-LOCAL-MOD-INVENTORY-02"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "b93d7376c625d824b4a401a59e610ac92a734d28",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "4d977e8b2b40546ac51b1555bfde416844d940b7024747d922e6c36a4b1f5621",
+      "test_fingerprints": {
+        "tests/fuzz": "missing",
+        "tests/test_local_modset_solver.py": "dea4d35cb7422e3afbd0653144562a8a5696cd23c17e54f89bab1d263045303a"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-LOCAL-MODSET-SOLVER-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "7a6890f837689f241d86f6bc32a195ef74a677224d81d620eda23c06b3bed2a4",
+      "test_fingerprints": {
+        "tests/test_save_index_retention.py": "28a7e29b55ea9cd6ee7314631e2fac3a07cf2ac1505e598934706d18b53a8e5a",
+        "tests/test_save_transfer.py": "2bfc741d9e8ca7c7837e5df5e98ebc44de64eb8fc9c383f637ae5b69558704c8"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-SAVE-INDEX-AND-RETENTION-02"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "578bfb57bf824ef8093f9caaac364d17639d84fa",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "36ed26410f2b6b71620adb332546e45248953dc53f53a90c7c29405b65d01701",
+      "test_fingerprints": {
+        "tests/test_server_planning.py": "missing"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-SERVER-PLAN-02"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "27f97882e589d9b6b2439e636c370017cf9167650471221693c9ac81b90c26a5",
+      "test_fingerprints": {
+        "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+        "tests/test_tui_product.py": "70af14536ac7fba53e757755c3012d81cac54c5a237359a78ab4275dfc872f45"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-OPERATIONAL-UX-03"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "8556b05e033a3739d7bd5c78b8c530d3cff2ff3c",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "35a6339bfe11a9ae9bfa517cab22ad9ff94d4545e9fb78fc66072e755b5ac747",
+      "test_fingerprints": {
+        "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+        "tests/test_r37_lifecycle_journey.py": "902fa2f6a8336ee2f4aab05e7c606c87daaa8af8313242c93a04429d9b8d687d"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "1f840e533774815788663dfb70a2c791f0a8d832",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [],
+      "source_fingerprint": "c59bed80fa994b5503fbca4ef71d52cda09db4c884b5b5c6797c6278ebbe3744",
+      "test_fingerprints": {
+        "py -3 .aide/scripts/aide_lite.py test": "missing",
+        "py -3 tools/dev.py verify-all": "missing"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.7-CLOSEOUT-01"
+    }
+  ],
+  "created_at": "2026-07-12T00:00:00Z",
+  "current_exact_revision": "1f840e533774815788663dfb70a2c791f0a8d832",
+  "provider_revisions": {
+    "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+    "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+  },
+  "schema_version": "aide.wave.v1",
+  "status": "complete",
+  "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
+  "updated_at": "2026-07-12T20:36:20Z",
+  "validation_cache": {
+    "advisory_only": true,
+    "entries": [
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T13:29:34Z",
+        "result": "PASS",
+        "source_fingerprint": "765d64a5c6904b4c4fc272a402406ba193202ee189f8a155263765a339c6cd98",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_aide_compaction.py": "0072c8ca7cee83a8ecb7cbb37040b5943e313c31ab345716727e35247be31ae1",
+          "tests/test_repro_workspace_smoke.py": "b301f29507631ceb1bd39053ec39cfb35423362ea5f0474a65995d92d96493f4"
+        },
+        "test_results": {
+          "aide_lite": "PASS",
+          "benchmark_advisory": "PASS",
+          "clean_three_repo_baseline": "PASS",
+          "python_275": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T14:14:43Z",
+        "result": "PASS",
+        "source_fingerprint": "95e1840a263f7f9aab59ec2e5f6e4b60a377d6b468ce7cfc103a3c079012ad75",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_workspace_preferences.py": "1f269ab18379c0c9319436939c6ab2cd84a376a3c8750dbebd0c2352c586bd0d"
+        },
+        "test_results": {
+          "aide_lite": "PASS",
+          "clean_repro": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "winforms": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T15:00:58Z",
+        "result": "PASS",
+        "source_fingerprint": "8ed989f5841814b5a55eaa77cd688fee5498f33d00df42a5311ad71fe97515bc",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_instance_lifecycle.py": "125b70463950918c618de25b5786c1b52eb1acb58c1add0a48209ddd9dada903"
+        },
+        "test_results": {
+          "affected_release": "PASS",
+          "clean_repro": "PASS",
+          "fault_matrix": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "winforms": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-INSTANCE-LIFECYCLE-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T15:47:51Z",
+        "result": "PASS",
+        "source_fingerprint": "bb1b57569db23c1efd185cd300efac66d9153d3063489d573691570b301cb1dc",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_archive_core.py": "7a7dfd08ae07741f6620f98dc1a49dd541c02f75f9325f3eaf11478bc0c85ae9",
+          "tests/test_instance_snapshots.py": "29a2879d2f9ad7ae87928a8a8255cf7adf491698e4304d57eb333bcdad0295ab"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "deterministic_roundtrip": "PASS",
+          "release_full": "PASS",
+          "retention_trash": "PASS",
+          "selected_save_restore": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-INSTANCE-SNAPSHOT-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T16:19:45Z",
+        "result": "PASS",
+        "source_fingerprint": "645a331a4c54ff5f0d1959d9f71285dd8418a1376bd6b76eb573717a361803fa",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_profiles_templates.py": "6b1e8b1b3db9b928e53f1114d6af68051873c9c3ffa977d80a18f0ae9d358be8"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "plan_apply_layering": "PASS",
+          "release_full": "PASS",
+          "reserved_argument_boundary": "PASS",
+          "strict": "PASS",
+          "vanilla_compatibility": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-PROFILES-AND-TEMPLATES-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T16:46:27Z",
+        "result": "PASS",
+        "source_fingerprint": "4a88da349f9b94c27686c8adee49ab2c9073208017d099c8848c8e8c3b1b3a26",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_local_mod_inventory.py": "8a64a97aa0d64f33d1b04c61aeac7e552eff2ff5de941185daabc41c7a50a519",
+          "tests/test_modzip_depth.py": "5c7788f3d0f23b03d22e63d56e7236607747bcae5c2c2bebd1926b9422ebb872"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "derived_builtins": "PASS",
+          "managed_roots_complete": "PASS",
+          "no_portal": "PASS",
+          "release_full": "PASS",
+          "stable_identity": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-LOCAL-MOD-INVENTORY-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T17:23:39Z",
+        "result": "PASS",
+        "source_fingerprint": "4d977e8b2b40546ac51b1555bfde416844d940b7024747d922e6c36a4b1f5621",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/fuzz": "missing",
+          "tests/test_local_modset_solver.py": "dea4d35cb7422e3afbd0653144562a8a5696cd23c17e54f89bab1d263045303a"
+        },
+        "test_results": {
+          "bounded_solver": "PASS",
+          "clean_repro": "PASS",
+          "deterministic_output": "PASS",
+          "no_network": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "transactional_apply": "PASS",
+          "transactional_rollback": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-LOCAL-MODSET-SOLVER-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T17:45:16Z",
+        "result": "PASS",
+        "source_fingerprint": "7a6890f837689f241d86f6bc32a195ef74a677224d81d620eda23c06b3bed2a4",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_save_index_retention.py": "28a7e29b55ea9cd6ee7314631e2fac3a07cf2ac1505e598934706d18b53a8e5a",
+          "tests/test_save_transfer.py": "2bfc741d9e8ca7c7837e5df5e98ebc44de64eb8fc9c383f637ae5b69558704c8"
+        },
+        "test_results": {
+          "bounded_stable_index": "PASS",
+          "clean_repro": "PASS",
+          "deep_metadata_unsupported": "PASS",
+          "no_save_mutation": "PASS",
+          "release_full": "PASS",
+          "reversible_retention": "PASS",
+          "sidecar_drift": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-SAVE-INDEX-AND-RETENTION-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T18:10:17Z",
+        "result": "PASS",
+        "source_fingerprint": "36ed26410f2b6b71620adb332546e45248953dc53f53a90c7c29405b65d01701",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_server_planning.py": "missing"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "no_firewall": "PASS",
+          "no_network_socket": "PASS",
+          "no_process": "PASS",
+          "release_full": "PASS",
+          "secret_free_export": "PASS",
+          "strict": "PASS",
+          "unavailable_execution": "PASS",
+          "useful_reproducible_plan": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-SERVER-PLAN-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T18:37:54Z",
+        "result": "PASS",
+        "source_fingerprint": "27f97882e589d9b6b2439e636c370017cf9167650471221693c9ac81b90c26a5",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tests/test_tui_product.py": "70af14536ac7fba53e757755c3012d81cac54c5a237359a78ab4275dfc872f45"
+        },
+        "test_results": {
+          "accessibility": "PASS",
+          "appkit_generated_contract": "PASS",
+          "clean_repro": "PASS",
+          "daemon_unavailable": "PASS",
+          "desktop_visualizations": "PASS",
+          "direct_transport": "PASS",
+          "frontend_no_backend_logic": "PASS",
+          "generated_guided_forms": "PASS",
+          "process_transport": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "tui_release_build": "PASS",
+          "winforms_release_build": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-OPERATIONAL-UX-03"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T19:35:38Z",
+        "result": "PASS",
+        "source_fingerprint": "35a6339bfe11a9ae9bfa517cab22ad9ff94d4545e9fb78fc66072e755b5ac747",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+          "tests/test_r37_lifecycle_journey.py": "902fa2f6a8336ee2f4aab05e7c606c87daaa8af8313242c93a04429d9b8d687d"
+        },
+        "test_results": {
+          "adversarial_matrix": "PASS",
+          "appkit_generated_contract": "PASS",
+          "bounded_stdio": "PASS",
+          "clean_three_repo_repro": "PASS",
+          "cli": "PASS",
+          "direct_flb": "PASS",
+          "fixture_hashes_unchanged": "PASS",
+          "full_scale_performance": "PASS",
+          "lifecycle_journey": "PASS",
+          "no_execution": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "tui_guided": "PASS",
+          "tui_noninteractive": "PASS",
+          "tui_process": "PASS",
+          "winforms_generated_client": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T20:35:32Z",
+        "result": "PASS",
+        "source_fingerprint": "a79bf95297a5bd5df3cc4c2866139c10eb71ec9b1b4e12d69f9de30c7a5311a4",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "py -3 .aide/scripts/aide_lite.py test": "missing",
+          "py -3 tools/dev.py verify-all": "missing"
+        },
+        "test_results": {
+          "advisory_benchmark": "PASS",
+          "aide_review_commit_policy": "PASS",
+          "all_ctests": "PASS",
+          "all_python": "PASS",
+          "appkit_compile_current_level": "PASS",
+          "architecture_exception_zero": "PASS",
+          "bounded_fuzzers": "PASS",
+          "codeql": "PASS",
+          "compatibility_corpus": "PASS",
+          "critical_coverage": "PASS",
+          "fresh_adversarial_review": "PASS",
+          "generated_metadata_parity": "PASS",
+          "human_claim_not_promoted": "PASS",
+          "lifecycle_journey": "PASS",
+          "linux_debug": "PASS",
+          "linux_release": "PASS",
+          "linux_sanitizers": "PASS",
+          "macos_intel_native": "PASS",
+          "reproducible_archives": "PASS",
+          "schema_law": "PASS",
+          "security_policy": "PASS",
+          "standalone_ulk": "PASS",
+          "standalone_usk": "PASS",
+          "windows_debug": "PASS",
+          "windows_release": "PASS",
+          "windows_setup_off": "PASS",
+          "winforms_build_client": "PASS",
+          "x64_cli_tui_packages": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.7-CLOSEOUT-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T20:36:20Z",
+        "result": "PASS",
+        "source_fingerprint": "c59bed80fa994b5503fbca4ef71d52cda09db4c884b5b5c6797c6278ebbe3744",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "py -3 .aide/scripts/aide_lite.py test": "missing",
+          "py -3 tools/dev.py verify-all": "missing"
+        },
+        "test_results": {
+          "advisory_benchmark": "PASS",
+          "aide_review_commit_policy": "PASS",
+          "all_ctests": "PASS",
+          "all_python": "PASS",
+          "appkit_compile_current_level": "PASS",
+          "architecture_exception_zero": "PASS",
+          "bounded_fuzzers": "PASS",
+          "codeql": "PASS",
+          "compatibility_corpus": "PASS",
+          "critical_coverage": "PASS",
+          "fresh_adversarial_review": "PASS",
+          "generated_metadata_parity": "PASS",
+          "human_claim_not_promoted": "PASS",
+          "lifecycle_journey": "PASS",
+          "linux_debug": "PASS",
+          "linux_release": "PASS",
+          "linux_sanitizers": "PASS",
+          "macos_intel_native": "PASS",
+          "reproducible_archives": "PASS",
+          "schema_law": "PASS",
+          "security_policy": "PASS",
+          "standalone_ulk": "PASS",
+          "standalone_usk": "PASS",
+          "windows_debug": "PASS",
+          "windows_release": "PASS",
+          "windows_setup_off": "PASS",
+          "winforms_build_client": "PASS",
+          "x64_cli_tui_packages": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.7-CLOSEOUT-01"
+      }
+    ]
+  },
+  "wave_id": "facman-r3.7",
+  "workunits": [
+    {
+      "affected_contracts": [
+        "release/index/workspace_lock.v1.toml"
+      ],
+      "affected_targets": [
+        "project-state",
+        "repro-workspace-smoke",
+        "aide-lite"
+      ],
+      "affected_tests": [
+        "tests/test_aide_compaction.py",
+        "tests/test_repro_workspace_smoke.py"
+      ],
+      "allowed_paths": [
+        ".aide/",
+        "docs/",
+        "tests/",
+        "tools/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "r3.7-baseline-truth"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T13:29:35Z",
+      "dependencies": [],
+      "forbidden_paths": [
+        "runtime execution code",
+        "evidence branch mutation"
+      ],
+      "id": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01",
+      "last_green_commit": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
+      "provider_revisions": {},
+      "status": "closed",
+      "stop_conditions": [
+        "revision mismatch",
+        "provider mismatch",
+        "clean baseline failure"
+      ],
+      "title": "Preserve R3.6 authority and establish R3.7 truth",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T13:29:34Z",
+        "result": "PASS",
+        "source_fingerprint": "765d64a5c6904b4c4fc272a402406ba193202ee189f8a155263765a339c6cd98",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_aide_compaction.py": "0072c8ca7cee83a8ecb7cbb37040b5943e313c31ab345716727e35247be31ae1",
+          "tests/test_repro_workspace_smoke.py": "b301f29507631ceb1bd39053ec39cfb35423362ea5f0474a65995d92d96493f4"
+        },
+        "test_results": {
+          "aide_lite": "PASS",
+          "benchmark_advisory": "PASS",
+          "clean_three_repo_baseline": "PASS",
+          "python_275": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "facman.preferences.v1",
+        "contracts/command/"
+      ],
+      "affected_targets": [
+        "facman_client_static",
+        "facman_cli",
+        "facman_tui"
+      ],
+      "affected_tests": [
+        "tests/test_workspace_preferences.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "apps/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "shared-workspace-and-preferences-truth"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T14:14:43Z",
+      "dependencies": [
+        "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+      ],
+      "forbidden_paths": [
+        "credentials",
+        "shell commands",
+        "setup mutation"
+      ],
+      "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
+      "last_green_commit": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T14:10:14Z",
+      "status": "closed",
+      "stop_conditions": [
+        "legacy workspace becomes unreadable",
+        "a secret field is accepted"
+      ],
+      "title": "Add shared non-secret preferences and workspace resolution",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T14:14:43Z",
+        "result": "PASS",
+        "source_fingerprint": "95e1840a263f7f9aab59ec2e5f6e4b60a377d6b468ce7cfc103a3c079012ad75",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_workspace_preferences.py": "1f269ab18379c0c9319436939c6ab2cd84a376a3c8750dbebd0c2352c586bd0d"
+        },
+        "test_results": {
+          "aide_lite": "PASS",
+          "clean_repro": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "winforms": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/instance/",
+        "contracts/command/instances.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static",
+        "facman_client_static"
+      ],
+      "affected_tests": [
+        "tests/test_instance_lifecycle.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "reversible-instance-lifecycle"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T15:00:58Z",
+      "dependencies": [
+        "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      ],
+      "forbidden_paths": [
+        "instances.purge",
+        "mutable instance IDs",
+        "unowned deletion"
+      ],
+      "id": "FACMAN-INSTANCE-LIFECYCLE-02",
+      "last_green_commit": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T14:16:11Z",
+      "status": "closed",
+      "stop_conditions": [
+        "no-clobber cannot be preserved",
+        "recovery is uncertain"
+      ],
+      "title": "Implement reversible instance inspection and lifecycle",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T15:00:58Z",
+        "result": "PASS",
+        "source_fingerprint": "8ed989f5841814b5a55eaa77cd688fee5498f33d00df42a5311ad71fe97515bc",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_instance_lifecycle.py": "125b70463950918c618de25b5786c1b52eb1acb58c1add0a48209ddd9dada903"
+        },
+        "test_results": {
+          "affected_release": "PASS",
+          "clean_repro": "PASS",
+          "fault_matrix": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "winforms": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "factorio.instance_snapshot.v1",
+        "contracts/command/snapshots.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static",
+        "facman_client_static"
+      ],
+      "affected_tests": [
+        "tests/test_instance_snapshots.py",
+        "tests/test_archive_core.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "deterministic-secret-safe-snapshots"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T15:47:51Z",
+      "dependencies": [
+        "FACMAN-INSTANCE-LIFECYCLE-02"
+      ],
+      "forbidden_paths": [
+        "secret-bearing snapshots",
+        "machine-local paths",
+        "permanent deletion"
+      ],
+      "id": "FACMAN-INSTANCE-SNAPSHOT-01",
+      "last_green_commit": "9f4b3d351dfb23dc5252886ac77e8b83ff772599",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T15:03:14Z",
+      "status": "closed",
+      "stop_conditions": [
+        "self-verification fails",
+        "secret exclusion cannot fail closed"
+      ],
+      "title": "Implement deterministic portable instance snapshots",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T15:47:51Z",
+        "result": "PASS",
+        "source_fingerprint": "bb1b57569db23c1efd185cd300efac66d9153d3063489d573691570b301cb1dc",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_archive_core.py": "7a7dfd08ae07741f6620f98dc1a49dd541c02f75f9325f3eaf11478bc0c85ae9",
+          "tests/test_instance_snapshots.py": "29a2879d2f9ad7ae87928a8a8255cf7adf491698e4304d57eb333bcdad0295ab"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "deterministic_roundtrip": "PASS",
+          "release_full": "PASS",
+          "retention_trash": "PASS",
+          "selected_save_restore": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "factorio.instance_template.v1",
+        "factorio.launch_profile.v1"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static",
+        "facman_client_static"
+      ],
+      "affected_tests": [
+        "tests/test_profiles_templates.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "content/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "portable-safe-customization"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T16:19:46Z",
+      "dependencies": [
+        "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      ],
+      "forbidden_paths": [
+        "scripts",
+        "arbitrary executables",
+        "reserved argument override"
+      ],
+      "id": "FACMAN-PROFILES-AND-TEMPLATES-02",
+      "last_green_commit": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T15:48:55Z",
+      "status": "closed",
+      "stop_conditions": [
+        "customization gains execution authority",
+        "vanilla instances break"
+      ],
+      "title": "Implement declarative templates and launch profiles",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T16:19:45Z",
+        "result": "PASS",
+        "source_fingerprint": "645a331a4c54ff5f0d1959d9f71285dd8418a1376bd6b76eb573717a361803fa",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_profiles_templates.py": "6b1e8b1b3db9b928e53f1114d6af68051873c9c3ffa977d80a18f0ae9d358be8"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "plan_apply_layering": "PASS",
+          "release_full": "PASS",
+          "reserved_argument_boundary": "PASS",
+          "strict": "PASS",
+          "vanilla_compatibility": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/mod/",
+        "contracts/command/mods.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static"
+      ],
+      "affected_tests": [
+        "tests/test_local_mod_inventory.py",
+        "tests/test_modzip_depth.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "complete-managed-local-mod-inventory"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T16:46:28Z",
+      "dependencies": [
+        "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      ],
+      "forbidden_paths": [
+        "Mod Portal access",
+        "arbitrary scans",
+        "source mutation"
+      ],
+      "id": "FACMAN-LOCAL-MOD-INVENTORY-02",
+      "last_green_commit": "8335fde1ba12aaacff3cd44e318834be6fb3518c",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T16:20:38Z",
+      "status": "closed",
+      "stop_conditions": [
+        "stable reads fail",
+        "archive budgets are bypassed"
+      ],
+      "title": "Index bounded local mod inventory",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T16:46:27Z",
+        "result": "PASS",
+        "source_fingerprint": "4a88da349f9b94c27686c8adee49ab2c9073208017d099c8848c8e8c3b1b3a26",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_local_mod_inventory.py": "8a64a97aa0d64f33d1b04c61aeac7e552eff2ff5de941185daabc41c7a50a519",
+          "tests/test_modzip_depth.py": "5c7788f3d0f23b03d22e63d56e7236607747bcae5c2c2bebd1926b9422ebb872"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "derived_builtins": "PASS",
+          "managed_roots_complete": "PASS",
+          "no_portal": "PASS",
+          "release_full": "PASS",
+          "stable_identity": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/modset/",
+        "contracts/command/modsets.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static"
+      ],
+      "affected_tests": [
+        "tests/test_local_modset_solver.py",
+        "tests/fuzz/"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "deterministic-bounded-local-solver",
+        "transactional-modset-rollback"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T17:23:40Z",
+      "dependencies": [
+        "FACMAN-LOCAL-MOD-INVENTORY-02"
+      ],
+      "forbidden_paths": [
+        "network fetch",
+        "unbounded backtracking",
+        "external drift overwrite"
+      ],
+      "id": "FACMAN-LOCAL-MODSET-SOLVER-01",
+      "last_green_commit": "b93d7376c625d824b4a401a59e610ac92a734d28",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T16:47:40Z",
+      "status": "closed",
+      "stop_conditions": [
+        "a budget can be exceeded",
+        "same inputs differ"
+      ],
+      "title": "Implement deterministic bounded local dependency planning",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T17:23:39Z",
+        "result": "PASS",
+        "source_fingerprint": "4d977e8b2b40546ac51b1555bfde416844d940b7024747d922e6c36a4b1f5621",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/fuzz": "missing",
+          "tests/test_local_modset_solver.py": "dea4d35cb7422e3afbd0653144562a8a5696cd23c17e54f89bab1d263045303a"
+        },
+        "test_results": {
+          "bounded_solver": "PASS",
+          "clean_repro": "PASS",
+          "deterministic_output": "PASS",
+          "no_network": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "transactional_apply": "PASS",
+          "transactional_rollback": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "factorio.save_ref.v1",
+        "contracts/command/saves.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static"
+      ],
+      "affected_tests": [
+        "tests/test_save_index_retention.py",
+        "tests/test_save_transfer.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "bounded-structural-save-intelligence"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T17:45:17Z",
+      "dependencies": [
+        "FACMAN-INSTANCE-LIFECYCLE-02"
+      ],
+      "forbidden_paths": [
+        "save mutation",
+        "deep save claims",
+        "permanent deletion"
+      ],
+      "id": "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+      "last_green_commit": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T17:24:40Z",
+      "status": "closed",
+      "stop_conditions": [
+        "save drift is accepted",
+        "retention is irreversible"
+      ],
+      "title": "Implement structural save intelligence and reversible retention",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T17:45:16Z",
+        "result": "PASS",
+        "source_fingerprint": "7a6890f837689f241d86f6bc32a195ef74a677224d81d620eda23c06b3bed2a4",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_save_index_retention.py": "28a7e29b55ea9cd6ee7314631e2fac3a07cf2ac1505e598934706d18b53a8e5a",
+          "tests/test_save_transfer.py": "2bfc741d9e8ca7c7837e5df5e98ebc44de64eb8fc9c383f637ae5b69558704c8"
+        },
+        "test_results": {
+          "bounded_stable_index": "PASS",
+          "clean_repro": "PASS",
+          "deep_metadata_unsupported": "PASS",
+          "no_save_mutation": "PASS",
+          "release_full": "PASS",
+          "reversible_retention": "PASS",
+          "sidecar_drift": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "factorio.server_profile.v2",
+        "contracts/command/servers.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static"
+      ],
+      "affected_tests": [
+        "tests/test_server_planning.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/",
+        "examples/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "functional-non-executing-server-planning"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T18:10:17Z",
+      "dependencies": [
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02"
+      ],
+      "forbidden_paths": [
+        "server execution",
+        "network sockets",
+        "RCON",
+        "plaintext credentials"
+      ],
+      "id": "FACMAN-SERVER-PLAN-02",
+      "last_green_commit": "578bfb57bf824ef8093f9caaac364d17639d84fa",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T17:46:10Z",
+      "status": "closed",
+      "stop_conditions": [
+        "a socket opens",
+        "a process starts",
+        "secrets enter exports"
+      ],
+      "title": "Implement reproducible headless server configuration planning",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T18:10:17Z",
+        "result": "PASS",
+        "source_fingerprint": "36ed26410f2b6b71620adb332546e45248953dc53f53a90c7c29405b65d01701",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_server_planning.py": "missing"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "no_firewall": "PASS",
+          "no_network_socket": "PASS",
+          "no_process": "PASS",
+          "release_full": "PASS",
+          "secret_free_export": "PASS",
+          "strict": "PASS",
+          "unavailable_execution": "PASS",
+          "useful_reproducible_plan": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "contracts/generated-index/command_catalog.v2.json"
+      ],
+      "affected_targets": [
+        "facman_tui",
+        "FacMan.WinForms",
+        "FacMan.AppKit"
+      ],
+      "affected_tests": [
+        "tests/test_tui_product.py",
+        "tests/test_frontend_contract.py"
+      ],
+      "allowed_paths": [
+        "apps/",
+        "runtime/core/generated/",
+        "tools/codegen/",
+        "contracts/",
+        "tests/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "guided-operational-ux",
+        "generated-frontend-parity"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T18:37:55Z",
+      "dependencies": [
+        "FACMAN-INSTANCE-SNAPSHOT-01",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SERVER-PLAN-02"
+      ],
+      "forbidden_paths": [
+        "frontend backend logic",
+        "secret history",
+        "daemon promotion"
+      ],
+      "id": "FACMAN-OPERATIONAL-UX-03",
+      "last_green_commit": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T18:11:28Z",
+      "status": "closed",
+      "stop_conditions": [
+        "frontend invents grammar",
+        "accessibility regresses"
+      ],
+      "title": "Generate guided frontend forms and operational visualizations",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T18:37:54Z",
+        "result": "PASS",
+        "source_fingerprint": "27f97882e589d9b6b2439e636c370017cf9167650471221693c9ac81b90c26a5",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tests/test_tui_product.py": "70af14536ac7fba53e757755c3012d81cac54c5a237359a78ab4275dfc872f45"
+        },
+        "test_results": {
+          "accessibility": "PASS",
+          "appkit_generated_contract": "PASS",
+          "clean_repro": "PASS",
+          "daemon_unavailable": "PASS",
+          "desktop_visualizations": "PASS",
+          "direct_transport": "PASS",
+          "frontend_no_backend_logic": "PASS",
+          "generated_guided_forms": "PASS",
+          "process_transport": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "tui_release_build": "PASS",
+          "winforms_release_build": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/",
+        "contracts/generated-index/command_catalog.v2.json"
+      ],
+      "affected_targets": [
+        "all non-execution clients"
+      ],
+      "affected_tests": [
+        "tests/test_r37_lifecycle_journey.py",
+        "tests/package_runtime/"
+      ],
+      "allowed_paths": [
+        "tests/",
+        "tools/",
+        "docs/quality/",
+        "release/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "r3.7-cross-transport-lifecycle-proof"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T19:35:38Z",
+      "dependencies": [
+        "FACMAN-OPERATIONAL-UX-03"
+      ],
+      "forbidden_paths": [
+        "real Factorio execution",
+        "fixture mutation",
+        "unbounded fixtures"
+      ],
+      "id": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+      "last_green_commit": "8556b05e033a3739d7bd5c78b8c530d3cff2ff3c",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T18:38:49Z",
+      "status": "closed",
+      "stop_conditions": [
+        "transport semantics diverge",
+        "a refusal must weaken"
+      ],
+      "title": "Prove the reversible lifecycle across transports and packages",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T19:35:38Z",
+        "result": "PASS",
+        "source_fingerprint": "35a6339bfe11a9ae9bfa517cab22ad9ff94d4545e9fb78fc66072e755b5ac747",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+          "tests/test_r37_lifecycle_journey.py": "902fa2f6a8336ee2f4aab05e7c606c87daaa8af8313242c93a04429d9b8d687d"
+        },
+        "test_results": {
+          "adversarial_matrix": "PASS",
+          "appkit_generated_contract": "PASS",
+          "bounded_stdio": "PASS",
+          "clean_three_repo_repro": "PASS",
+          "cli": "PASS",
+          "direct_flb": "PASS",
+          "fixture_hashes_unchanged": "PASS",
+          "full_scale_performance": "PASS",
+          "lifecycle_journey": "PASS",
+          "no_execution": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "tui_guided": "PASS",
+          "tui_noninteractive": "PASS",
+          "tui_process": "PASS",
+          "winforms_generated_client": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "contracts/",
+        "release/index/workspace_lock.v1.toml"
+      ],
+      "affected_targets": [
+        "all"
+      ],
+      "affected_tests": [
+        "py -3 tools/dev.py verify-all",
+        "py -3 .aide/scripts/aide_lite.py test"
+      ],
+      "allowed_paths": [
+        ".aide/",
+        "docs/",
+        "release/",
+        "tests/",
+        "tools/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "r3.7-instance-content-lifecycle"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T20:36:20Z",
+      "dependencies": [
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
+      ],
+      "forbidden_paths": [
+        "run.execute promotion",
+        "human verdict automation",
+        "publication"
+      ],
+      "id": "FACMAN-R3.7-CLOSEOUT-01",
+      "last_green_commit": "1f840e533774815788663dfb70a2c791f0a8d832",
+      "provider_revisions": {},
+      "started_at": "2026-07-12T19:37:18Z",
+      "status": "closed",
+      "stop_conditions": [
+        "mandatory proof is not green",
+        "evidence is stale"
+      ],
+      "title": "Close R3.7 with exact cross-platform evidence",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T20:36:20Z",
+        "result": "PASS",
+        "source_fingerprint": "c59bed80fa994b5503fbca4ef71d52cda09db4c884b5b5c6797c6278ebbe3744",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "py -3 .aide/scripts/aide_lite.py test": "missing",
+          "py -3 tools/dev.py verify-all": "missing"
+        },
+        "test_results": {
+          "advisory_benchmark": "PASS",
+          "aide_review_commit_policy": "PASS",
+          "all_ctests": "PASS",
+          "all_python": "PASS",
+          "appkit_compile_current_level": "PASS",
+          "architecture_exception_zero": "PASS",
+          "bounded_fuzzers": "PASS",
+          "codeql": "PASS",
+          "compatibility_corpus": "PASS",
+          "critical_coverage": "PASS",
+          "fresh_adversarial_review": "PASS",
+          "generated_metadata_parity": "PASS",
+          "human_claim_not_promoted": "PASS",
+          "lifecycle_journey": "PASS",
+          "linux_debug": "PASS",
+          "linux_release": "PASS",
+          "linux_sanitizers": "PASS",
+          "macos_intel_native": "PASS",
+          "reproducible_archives": "PASS",
+          "schema_law": "PASS",
+          "security_policy": "PASS",
+          "standalone_ulk": "PASS",
+          "standalone_usk": "PASS",
+          "windows_debug": "PASS",
+          "windows_release": "PASS",
+          "windows_setup_off": "PASS",
+          "winforms_build_client": "PASS",
+          "x64_cli_tui_packages": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    }
+  ]
+}

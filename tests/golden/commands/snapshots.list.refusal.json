@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"snapshots.list","status":"refused","refusal":{"schema":"common.refusal.v1","code":"snapshot_record_invalid","reason":"snapshot record is invalid","recoverable":true}}

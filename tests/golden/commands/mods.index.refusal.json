@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"mods.index","status":"refused","refusal":{"schema":"common.refusal.v1","code":"inventory_root_unsafe","reason":"explicit inventory root is unsafe","recoverable":true}}

@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"preferences.reset.apply","status":"refused","refusal":{"schema":"common.refusal.v1","code":"preferences_recovery_required","reason":"reset requires recovery","recoverable":false}}

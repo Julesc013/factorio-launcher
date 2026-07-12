@@ -126,7 +126,9 @@ def validate_project_state_text(text: str) -> list[str]:
     required = [
         "R3.5 is the architecture endpoint",
         "R3.6 used that foundation",
-        "checkpoint: `r3.6-product-readiness`",
+        "checkpoint: `r3.7-baseline`",
+        "R3.7 now adds reversible local instance and content management",
+        "evidence revision: `29cf22fa15250698b7587a9868737c10f3bcc749`",
         "Real Factorio isolation remains operator-only and has no human verdict",
         "public C ABI remains experimental",
         "completed wave revision: `fc8423572e9c055991558f8a4e7cbbc95e0c4a24`",

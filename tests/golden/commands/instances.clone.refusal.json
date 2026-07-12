@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"instances.clone","status":"refused","refusal":{"schema":"common.refusal.v1","code":"instance_clone_target_exists","reason":"clone destination already exists","recoverable":true}}

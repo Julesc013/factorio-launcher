@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"templates.validate","status":"refused","refusal":{"schema":"common.refusal.v1","code":"unknown_template","reason":"template is not shipped","recoverable":true}}

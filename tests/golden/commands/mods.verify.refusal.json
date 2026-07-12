@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"mods.verify","status":"refused","refusal":{"schema":"common.refusal.v1","code":"inventory_identity_changed","reason":"archive identity changed","recoverable":true}}

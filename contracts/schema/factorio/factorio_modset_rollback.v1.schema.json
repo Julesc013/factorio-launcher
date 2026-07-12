@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_modset_rollback.v1.schema.json",
+  "title": "Transactional Modset Rollback",
+  "type": "object",
+  "required": ["schema", "command", "status", "instance_id", "transaction_id", "local_artifacts_only", "portal_access", "mutation_executed"],
+  "properties": {
+    "schema": { "const": "factorio.modset_rollback.v1" },
+    "command": { "const": "modsets.rollback" },
+    "status": { "const": "rolled_back" },
+    "instance_id": { "type": "string" },
+    "transaction_id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "local_artifacts_only": { "const": true },
+    "portal_access": { "const": false },
+    "mutation_executed": { "const": true }
+  },
+  "additionalProperties": false
+}

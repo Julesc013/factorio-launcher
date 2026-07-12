@@ -1,0 +1,1 @@
+{"schema":"factorio.snapshot_report.v1","command":"snapshots.inspect","status":"ok","snapshot_id":"before-update","instance_id":"main","path":"<workspace>/snapshots/main/before-update.zip","file_count":3,"archive_bytes":1024,"portable":true,"deterministic":true,"secret_content_included":false,"selected_saves":[],"mutation_executed":false}

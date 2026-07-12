@@ -13,6 +13,7 @@ SOURCE_SUFFIXES = {".c", ".cc", ".cpp", ".cs", ".h", ".hpp", ".m", ".mm", ".swif
 ALLOWED_CSHARP_ROOTS = (
     ROOT / "apps" / "gui" / "windows" / "winforms",
     ROOT / "apps" / "gui" / "windows" / "winui",
+    ROOT / "tests" / "frontend_harness",
 )
 ALLOWED_SWIFT_ROOTS = (ROOT / "apps" / "gui" / "macos" / "swiftui",)
 ALLOWED_OBJC_ROOTS = (ROOT / "apps" / "gui" / "macos" / "appkit",)
@@ -54,7 +55,7 @@ def check_language_roots() -> list[str]:
     for path in ROOT.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in SOURCE_SUFFIXES:
             continue
-        if ".git" in path.parts:
+        if any(part in {".git", "bin", "obj"} for part in path.parts):
             continue
         if path.suffix.lower() == ".cs" and not is_relative_to_any(path, ALLOWED_CSHARP_ROOTS):
             problems.append(f"C# is isolated to Windows GUI shells: {path.relative_to(ROOT)}")

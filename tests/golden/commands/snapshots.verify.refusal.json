@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"snapshots.verify","status":"refused","refusal":{"schema":"common.refusal.v1","code":"snapshot_hash_closure_mismatch","reason":"snapshot hash closure failed","recoverable":true}}

@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"snapshots.diff","status":"refused","refusal":{"schema":"common.refusal.v1","code":"snapshot_id_invalid","reason":"snapshot identifiers are invalid","recoverable":true}}

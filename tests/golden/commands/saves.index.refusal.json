@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"saves.index","status":"refused","refusal":{"schema":"common.refusal.v1","code":"save_index_read_failed","reason":"save index could not be read","recoverable":true}}

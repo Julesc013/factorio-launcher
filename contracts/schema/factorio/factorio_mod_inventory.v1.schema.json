@@ -1,0 +1,13 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://facman.invalid/schema/factorio/factorio_mod_inventory.v1.schema.json",
+  "title":"Factorio local mod inventory",
+  "type":"object","additionalProperties":false,
+  "properties":{
+    "schema":{"const":"factorio.mod_inventory.v1"},"command":{"enum":["mods.list","mods.index"]},"status":{"const":"ok"},
+    "records":{"type":"array","items":{"type":"object"}},"record_count":{"type":"integer","minimum":0},
+    "managed_roots_complete":{"const":true},"explicit_roots_included":{"type":"boolean"},"recursive_scan":{"const":false},
+    "portal_access":{"const":false},"source_mutation":{"const":false},"mutation_executed":{"const":false}
+  },
+  "required":["schema","command","status","records","record_count","managed_roots_complete","explicit_roots_included","recursive_scan","portal_access","source_mutation","mutation_executed"]
+}

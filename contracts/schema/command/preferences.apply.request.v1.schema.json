@@ -1,0 +1,52 @@
+{
+  "$id": "https://facman.invalid/schema/command/preferences.apply.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "backup_destination": {
+      "type": "string"
+    },
+    "backup_keep_last": {
+      "type": "string"
+    },
+    "command_timeout_seconds": {
+      "type": "string"
+    },
+    "default_instance_template": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "default_launch_profile": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "discovery_providers": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    },
+    "discovery_roots": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    },
+    "display_color_policy": {
+      "type": "string"
+    },
+    "preferred_transport": {
+      "type": "string"
+    },
+    "preferred_workspace": {
+      "type": "string"
+    },
+    "tui_page_size": {
+      "type": "string"
+    }
+  },
+  "title": "preferences.apply request",
+  "type": "object"
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_save_ref.v1.schema.json",
+  "title": "Factorio Save Association",
+  "type": "object",
+  "required": ["schema", "save_sha256", "instance_id", "modset_lock_sha256", "profile_id", "source_operation", "backup_history", "created_utc", "last_verified_utc"],
+  "properties": {
+    "schema": { "const": "factorio.save_ref.v1" }, "save_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "instance_id": { "type": "string" }, "modset_lock_sha256": { "type": "string" }, "profile_id": { "type": "string" },
+    "source_operation": { "type": "string" }, "backup_history": { "type": "array", "items": { "type": "string" } },
+    "created_utc": { "type": "string" }, "last_verified_utc": { "type": "string" }
+  },
+  "additionalProperties": false
+}

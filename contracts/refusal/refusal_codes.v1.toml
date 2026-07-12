@@ -75,6 +75,78 @@ required_codes = [
   "package_verification_failed",
   "utility_input_too_large",
   "utility_input_read_failed",
+  "preferences_document_invalid",
+  "preferences_too_large",
+  "preferences_read_failed",
+  "preferences_type_invalid",
+  "preferences_field_unsupported",
+  "preferences_path_unsafe",
+  "preferences_path_unavailable",
+  "preferences_directory_refused",
+  "preferences_write_failed",
+  "preferences_transport_invalid",
+  "preferences_recovery_required",
+  "preferences_journal_failed",
+  "preferences_request_invalid",
+  "preferences_secret_forbidden",
+  "preferences_transport_unavailable",
+  "preferences_color_invalid",
+  "preferences_page_size_invalid",
+  "preferences_timeout_invalid",
+  "preferences_retention_invalid",
+  "preferences_version_unsupported",
+  "instance_archive_commit_failed",
+  "instance_archive_directory_refused",
+  "instance_archive_hash_mismatch",
+  "instance_archive_id_invalid",
+  "instance_archive_manifest_invalid",
+  "instance_archive_not_found",
+  "instance_archive_target_exists",
+  "instance_backup_failed",
+  "instance_clone_commit_failed",
+  "instance_clone_target_exists",
+  "instance_copy_verification_failed",
+  "instance_directory_refused",
+  "instance_display_name_invalid",
+  "instance_effective_config_invalid",
+  "instance_fault_injected",
+  "instance_file_read_failed",
+  "instance_file_unsafe",
+  "instance_install_missing",
+  "instance_link_refused",
+  "instance_rename_failed",
+  "instance_restore_commit_failed",
+  "instance_restore_install_incompatible",
+  "instance_restore_target_exists",
+  "instance_root_unsafe",
+  "instance_save_invalid",
+  "instance_snapshot_unavailable",
+  "instance_staging_failed",
+  "instance_transaction_failed",
+  "instance_transaction_recovery_required",
+  "instance_tree_budget_exceeded",
+  "instance_tree_read_failed",
+  "instance_write_failed",
+  "snapshot_target_exists",
+  "snapshot_id_invalid",
+  "snapshot_archive_invalid",
+  "snapshot_hash_closure_mismatch",
+  "snapshot_record_invalid",
+  "snapshot_install_incompatible",
+  "snapshot_transaction_recovery_required",
+  "unknown_template",
+  "unknown_profile",
+  "profile_list_failed",
+  "profile_arguments_invalid",
+  "profile_target_exists",
+  "profile_selection_invalid",
+  "profile_transaction_recovery_required",
+  "profile_shipped_immutable",
+  "inventory_root_read_failed",
+  "inventory_root_unsafe",
+  "inventory_record_not_found",
+  "inventory_identity_changed",
+  "inventory_identity_ambiguous",
 ]
 
 [[code]]
@@ -181,6 +253,370 @@ severity = "blocked"
 effect = "workspace_read"
 retryable = true
 message = "Utility input could not be read completely from one stable object."
+
+[[code]]
+id = "preferences_document_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The preferences document is malformed or violates its bounded schema."
+
+[[code]]
+id = "preferences_too_large"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The preferences document exceeds the bounded read limit."
+
+[[code]]
+id = "preferences_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The preferences document could not be read as one stable object."
+
+[[code]]
+id = "preferences_type_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A preferences field has the wrong type or exceeds its bounded value limit."
+
+[[code]]
+id = "preferences_field_unsupported"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The preferences document contains an unknown field."
+
+[[code]]
+id = "preferences_path_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The preferences path is linked, reparsed, or not a regular owned file."
+
+[[code]]
+id = "preferences_path_unavailable"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The platform did not provide a safe per-user configuration path."
+
+[[code]]
+id = "preferences_directory_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The preferences directory could not be created or remained unsafe after creation."
+
+[[code]]
+id = "preferences_write_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The preferences document could not be written and durably flushed."
+
+[[code]]
+id = "preferences_transport_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The preferred transport is not one of the supported transport identifiers."
+
+[[code]]
+id = "preferences_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The preferences target committed but its transaction requires explicit recovery."
+
+[[code]]
+id = "preferences_journal_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The preferences transaction journal could not record a required state transition."
+
+[[code]]
+id = "preferences_request_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The preferences request omitted required proposed values."
+
+[[code]]
+id = "preferences_secret_forbidden"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Preferences cannot contain tokens, passwords, cookies, credentials, scripts, or commands."
+
+[[code]]
+id = "preferences_transport_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The selected preferences transport is not available in this build."
+
+[[code]]
+id = "preferences_color_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The display color policy is not auto, always, or never."
+
+[[code]]
+id = "preferences_page_size_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The TUI page size is outside its supported bounded range."
+
+[[code]]
+id = "preferences_timeout_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The command timeout is outside its supported bounded range."
+
+[[code]]
+id = "preferences_retention_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The backup retention count exceeds its supported bounded range."
+
+[[code]]
+id = "preferences_version_unsupported"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The preferences document uses an unknown or future schema version."
+
+[[code]]
+id = "instance_archive_commit_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance could not be moved into its owned trash target without clobbering content."
+
+[[code]]
+id = "instance_archive_directory_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The owned instance trash directory is unavailable or crosses an unsafe path."
+
+[[code]]
+id = "instance_archive_hash_mismatch"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Archived instance content does not match its recorded file hash closure."
+
+[[code]]
+id = "instance_archive_id_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The instance archive identifier is not a safe owned directory leaf."
+
+[[code]]
+id = "instance_archive_manifest_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The owned instance archive metadata is malformed, mismatched, or incomplete."
+
+[[code]]
+id = "instance_archive_not_found"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested owned instance archive record is unavailable."
+
+[[code]]
+id = "instance_archive_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The unique owned instance trash target already exists."
+
+[[code]]
+id = "instance_backup_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance manifest backup could not be copied and hash-verified."
+
+[[code]]
+id = "instance_clone_commit_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The verified instance clone staging tree could not be committed without replacement."
+
+[[code]]
+id = "instance_clone_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested instance clone destination already exists."
+
+[[code]]
+id = "instance_copy_verification_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "An instance lifecycle copy did not preserve the expected file size and SHA-256 digest."
+
+[[code]]
+id = "instance_directory_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "An owned instance staging directory could not be created safely."
+
+[[code]]
+id = "instance_display_name_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The requested instance display name is empty or exceeds its bounded length."
+
+[[code]]
+id = "instance_effective_config_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The instance effective configuration is missing or does not match its managed paths."
+
+[[code]]
+id = "instance_fault_injected"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A lifecycle proof fault was injected before a normal operation could complete."
+
+[[code]]
+id = "instance_file_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "An instance file could not be read as one stable object."
+
+[[code]]
+id = "instance_file_unsafe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "An instance file is not a bounded singly-linked regular file."
+
+[[code]]
+id = "instance_install_missing"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The instance install reference is not registered in this workspace."
+
+[[code]]
+id = "instance_link_refused"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Instance traversal encountered a link or reparse point."
+
+[[code]]
+id = "instance_rename_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The display-name-only instance manifest replacement could not be completed."
+
+[[code]]
+id = "instance_restore_commit_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The verified restored instance staging tree could not be committed without replacement."
+
+[[code]]
+id = "instance_restore_install_incompatible"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The archived Factorio version no longer matches its registered install reference."
+
+[[code]]
+id = "instance_restore_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested instance restore destination already exists."
+
+[[code]]
+id = "instance_root_unsafe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The instance root is unavailable or crosses a link or reparse point."
+
+[[code]]
+id = "instance_save_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "An instance save does not satisfy the bounded Factorio save archive structure."
+
+[[code]]
+id = "instance_snapshot_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Snapshot comparison is unavailable until the snapshot lifecycle work unit is complete."
+
+[[code]]
+id = "instance_staging_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The owned instance lifecycle staging tree could not be prepared or populated."
+
+[[code]]
+id = "instance_transaction_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance lifecycle transaction journal could not record a required pre-commit state."
+
+[[code]]
+id = "instance_transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "An instance lifecycle commit or prior workspace transaction requires explicit recovery."
+
+[[code]]
+id = "instance_tree_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The instance tree exceeds the bounded file-count or byte traversal budget."
+
+[[code]]
+id = "instance_tree_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The instance tree could not be enumerated completely and safely."
+
+[[code]]
+id = "instance_write_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A generated instance lifecycle file could not be written and durably flushed."
 
 [[code]]
 id = "diagnostic_export_not_safe"
@@ -811,3 +1247,416 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = false
 message = "Migration apply is disabled until backup and transaction-journal execution has dedicated proof."
+
+[[code]]
+id = "snapshot_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested snapshot archive or record already exists."
+
+[[code]]
+id = "snapshot_id_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The snapshot identifier is not safe for persistent portable state."
+
+[[code]]
+id = "snapshot_archive_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The snapshot archive violates its format, integrity, or consumer-limit policy."
+
+[[code]]
+id = "snapshot_hash_closure_mismatch"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Snapshot entries do not match the manifest SHA-256 closure."
+
+[[code]]
+id = "snapshot_record_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The snapshot sidecar record is malformed or does not match its archive."
+
+[[code]]
+id = "snapshot_install_incompatible"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The restore workspace lacks a compatible registered Factorio install."
+
+[[code]]
+id = "snapshot_transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Snapshot mutation is blocked until the workspace transaction is recovered."
+
+[[code]]
+id = "unknown_template"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested instance template is not shipped."
+
+[[code]]
+id = "unknown_profile"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested launch profile is not registered."
+
+[[code]]
+id = "profile_list_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The launch profile catalog could not be read safely."
+
+[[code]]
+id = "profile_arguments_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A profile argument is duplicate, reserved, or outside the explicit allowlist."
+
+[[code]]
+id = "profile_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The launch profile destination already exists."
+
+[[code]]
+id = "profile_selection_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "Profile save selection is not a safe instance-local archive name."
+
+[[code]]
+id = "profile_transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Profile mutation is blocked until the workspace transaction is recovered."
+
+[[code]]
+id = "profile_shipped_immutable"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Shipped profiles are immutable and cannot be archived."
+
+[[code]]
+id = "inventory_root_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A managed local mod inventory root could not be read safely."
+
+[[code]]
+id = "inventory_root_unsafe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "An explicit local mod inventory root is relative, linked, or not a directory."
+
+[[code]]
+id = "inventory_record_not_found"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested local mod inventory identity was not found."
+
+[[code]]
+id = "inventory_identity_changed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The local mod archive identity changed during verification."
+
+[[code]]
+id = "inventory_identity_ambiguous"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested local mod inventory identity matches multiple records."
+
+[[code]]
+id = "local_dependency_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "No compatible local artifact satisfies a required dependency."
+
+[[code]]
+id = "solver_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The local dependency solver exhausted an explicit resource budget."
+
+[[code]]
+id = "modset_external_drift"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Modset state changed or disagrees with its trusted local counterpart."
+
+[[code]]
+id = "modset_state_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Modset state could not be read as a bounded stable regular file."
+
+[[code]]
+id = "modset_version_preference_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A local solver version preference is malformed or duplicated."
+
+[[code]]
+id = "modset_request_conflict"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A modset request enables and disables the same package."
+
+[[code]]
+id = "modset_archive_changed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A selected local archive changed after dependency planning."
+
+[[code]]
+id = "modset_path_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "A modset activation path crosses a link or reparse boundary."
+
+[[code]]
+id = "modset_path_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed modset state paths could not be represented safely."
+
+[[code]]
+id = "modset_fault_injected"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A test-only modset activation fault was injected and rolled back."
+
+[[code]]
+id = "modset_result_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "A modset result could not be represented as canonical JSON."
+
+[[code]]
+id = "modset_transaction_id_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "Rollback requires a valid local activation transaction identifier."
+
+[[code]]
+id = "modset_history_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Modset activation history is incomplete or fails identity verification."
+
+[[code]]
+id = "modset_already_rolled_back"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The requested modset activation has already been rolled back."
+
+[[code]]
+id = "save_stable_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A save could not be read through a stable bounded no-follow handle."
+
+[[code]]
+id = "save_sidecar_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A save association sidecar could not be read safely."
+
+[[code]]
+id = "save_sidecar_drift"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A save association sidecar changed during verification."
+
+[[code]]
+id = "save_archive_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A save archive exceeds its structural member budget."
+
+[[code]]
+id = "save_root_unsafe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The managed save root crosses a link or reparse boundary."
+
+[[code]]
+id = "save_index_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The direct managed save index could not be enumerated."
+
+[[code]]
+id = "save_index_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The managed save count exceeds its explicit index budget."
+
+[[code]]
+id = "save_association_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "A save association already exists and will not be silently overwritten."
+
+[[code]]
+id = "save_association_write_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A save association sidecar could not be committed durably."
+
+[[code]]
+id = "save_transaction_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A save metadata or retention transaction could not advance safely."
+
+[[code]]
+id = "save_transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Save metadata or retention work is blocked until transaction recovery."
+
+[[code]]
+id = "save_retention_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Save retention could not prepare owned reversible trash."
+
+[[code]]
+id = "server_profile_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A server profile could not be read through a bounded stable handle."
+
+[[code]]
+id = "server_profile_drift"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A server profile changed during validation."
+
+[[code]]
+id = "server_profile_secret_refused"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A server profile contains a plaintext sensitive field instead of a credential reference."
+
+[[code]]
+id = "server_profile_schema_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The server profile schema is unsupported."
+
+[[code]]
+id = "server_profile_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The server profile identity or instance reference is invalid."
+
+[[code]]
+id = "server_settings_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The server port, player limit, visibility, or autosave policy is invalid."
+
+[[code]]
+id = "server_save_required"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Server planning requires an explicit structurally valid save selection."
+
+[[code]]
+id = "server_save_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The selected server save is missing or structurally invalid."
+
+[[code]]
+id = "server_modset_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The server instance modset does not verify."
+
+[[code]]
+id = "server_export_target_invalid"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The server plan export target is missing, occupied, or unsafe."
+
+[[code]]
+id = "server_export_write_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The server plan bundle could not be staged or committed."
+
+[[code]]
+id = "server_export_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The server plan export transaction failed before commit."
+
+[[code]]
+id = "server_export_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The server plan bundle committed but transaction recovery is required."

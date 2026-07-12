@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"profiles.clone","status":"refused","refusal":{"schema":"common.refusal.v1","code":"profile_target_exists","reason":"destination profile exists","recoverable":true}}

@@ -20,6 +20,8 @@ struct InstanceLaunchRef {
     std::string instance_id;
     std::string profile_id;
     std::filesystem::path local_data_root;
+    std::string launch_mode = "gui";
+    std::vector<std::string> profile_arguments;
 };
 
 struct InstallLaunchRef {

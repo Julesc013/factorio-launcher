@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"preferences.validate","status":"refused","refusal":{"schema":"common.refusal.v1","code":"preferences_secret_forbidden","reason":"secret fields are forbidden","recoverable":false}}

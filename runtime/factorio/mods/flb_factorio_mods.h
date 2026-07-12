@@ -5,8 +5,11 @@
 #define FLB_FACTORIO_MODS_H
 
 #include <filesystem>
+#include <cstdint>
 #include <string>
 #include <vector>
+
+#include "fl_result.h"
 
 namespace facman::factorio::mods {
 
@@ -39,7 +42,19 @@ struct ModRef {
     std::string refusal_detail;
     std::vector<DependencyRef> dependencies;
     std::vector<DependencyRef> optional_dependencies;
+    std::vector<DependencyRef> hidden_optional_dependencies;
     std::vector<DependencyRef> incompatibilities;
+    std::uint64_t archive_size = 0;
+    std::uint64_t expanded_size = 0;
+    std::string archive_policy_result;
+    std::vector<std::string> instance_references;
+    std::vector<std::string> lock_references;
+    bool virtual_package = false;
+};
+
+struct InventoryRequest {
+    std::vector<std::filesystem::path> roots;
+    std::string identity;
 };
 
 ModRef inspect_mod_zip(const std::filesystem::path& path);
@@ -62,6 +77,15 @@ std::string sha256_hex_file(const std::filesystem::path& path);
 std::string factorio_minor_version(const std::string& version);
 
 bool factorio_versions_compatible(const std::string& mod_factorio_version, const std::string& instance_version);
+
+facman::core::Result<std::string> inventory_list(const std::filesystem::path& workspace);
+facman::core::Result<std::string> inventory_index(const std::filesystem::path& workspace, const InventoryRequest& request);
+facman::core::Result<std::string> inventory_inspect(const std::filesystem::path& workspace, const InventoryRequest& request);
+facman::core::Result<std::string> inventory_verify(const std::filesystem::path& workspace, const InventoryRequest& request);
+facman::core::Result<std::string> inventory_explain(const std::filesystem::path& workspace, const InventoryRequest& request);
+facman::core::Result<std::vector<ModRef>> local_inventory(
+    const std::filesystem::path& workspace,
+    const std::vector<std::filesystem::path>& explicit_roots = {});
 
 } // namespace facman::factorio::mods
 

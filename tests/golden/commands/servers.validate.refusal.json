@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"servers.validate","status":"refused","refusal":{"schema":"common.refusal.v1","code":"server_save_invalid","reason":"save is invalid","recoverable":true}}

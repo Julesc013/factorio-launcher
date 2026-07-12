@@ -1,0 +1,13 @@
+command_id = "instances.rename"
+cli = "facman instances rename <instance-id> --name <display-name> --json"
+effects = ["workspace_read", "workspace_write"]
+request_schema = "contracts/schema/command/instances.rename.request.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_instance_lifecycle.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = false
+executes_process = false
+mutates_workspace = true
+golden_success = "tests/golden/commands/instances.rename.success.json"
+golden_refusal = "tests/golden/commands/instances.rename.refusal.json"

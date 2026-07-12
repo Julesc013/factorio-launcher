@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_snapshot_retention_report.v1.schema.json",
+  "title": "Factorio snapshot retention report",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.snapshot_retention_report.v1"}, "command": {"enum": ["snapshots.retention.plan", "snapshots.retention.apply"]}, "status": {"const": "ok"}, "instance_id": {"type": "string"},
+    "policy": {"type": "object", "additionalProperties": false, "properties": {"keep_last": {"type": "integer", "minimum": 0}, "keep_daily": {"type": "integer", "minimum": 0}, "keep_weekly": {"type": "integer", "minimum": 0}, "maximum_total_bytes": {"type": "integer", "minimum": 0}, "minimum_age_days": {"type": "integer", "minimum": 0}}, "required": ["keep_last", "keep_daily", "keep_weekly", "maximum_total_bytes", "minimum_age_days"]},
+    "snapshots": {"type": "array", "items": {"type": "object", "additionalProperties": false, "properties": {"snapshot_id": {"type": "string"}, "created_utc": {"type": "string"}, "size": {"type": "integer", "minimum": 0}, "action": {"enum": ["keep", "move_to_trash"]}}, "required": ["snapshot_id", "created_utc", "size", "action"]}},
+    "total_bytes": {"type": "integer", "minimum": 0}, "candidate_count": {"type": "integer", "minimum": 0}, "permanent_delete": {"const": false}, "mutation_executed": {"type": "boolean"}
+  },
+  "required": ["schema", "command", "status", "instance_id", "policy", "snapshots", "total_bytes", "candidate_count", "permanent_delete", "mutation_executed"]
+}

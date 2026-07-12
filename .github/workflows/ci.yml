@@ -37,6 +37,17 @@ jobs:
         run: cmake --build build/native-smoke
       - name: Run native tests
         run: ctest --test-dir build/native-smoke --output-on-failure
+      - name: Configure Linux Release core
+        run: >-
+          cmake -S . -B build/native-release
+          -DCMAKE_BUILD_TYPE=Release
+          -DFACMAN_BUILD_CLI=ON
+          -DFACMAN_BUILD_TUI=ON
+          -DFACMAN_WARNINGS_AS_ERRORS=ON
+      - name: Build and test Linux Release
+        run: |
+          cmake --build build/native-release --parallel
+          ctest --test-dir build/native-release --output-on-failure
       - name: Run clang-tidy on changed first-party modules
         run: python tools/clang_tidy_changed.py --base HEAD^ --build-root build/native-smoke
       - name: Configure sanitized full-core proof

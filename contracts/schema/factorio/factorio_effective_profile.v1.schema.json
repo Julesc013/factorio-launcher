@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://facman.invalid/schema/factorio/factorio_effective_profile.v1.schema.json","title":"Factorio effective profile","type":"object","additionalProperties":false,
+  "properties":{"schema":{"const":"factorio.effective_profile.v1"},"command":{"enum":["profiles.plan","profiles.apply"]},"status":{"const":"ok"},"instance_id":{"type":"string"},"profile_id":{"type":"string"},"template_id":{"const":"vanilla"},"settings":{"type":"object"},"launch_arguments":{"type":"array","items":{"type":"string"}},"reserved_arguments_controlled_by_facman":{"const":true},"execution_enabled":{"const":false},"mutation_executed":{"type":"boolean"},"transaction_id":{"type":"string"}},
+  "required":["schema","command","status","instance_id","profile_id","template_id","settings","launch_arguments","reserved_arguments_controlled_by_facman","execution_enabled","mutation_executed"]
+}

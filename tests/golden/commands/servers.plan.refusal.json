@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"servers.plan","status":"refused","refusal":{"schema":"common.refusal.v1","code":"server_modset_invalid","reason":"modset must verify","recoverable":true}}

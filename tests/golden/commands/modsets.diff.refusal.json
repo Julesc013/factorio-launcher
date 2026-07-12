@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"modsets.diff","status":"refused","refusal":{"schema":"common.refusal.v1","code":"solver_budget_exceeded","reason":"solver budget was exhausted","recoverable":true}}

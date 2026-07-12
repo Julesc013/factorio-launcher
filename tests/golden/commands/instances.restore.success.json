@@ -1,0 +1,1 @@
+{"schema":"factorio.instance_lifecycle.v1","command":"instances.restore","status":"ok","instance_id":"main","transaction_id":"tx-example","archive_id":"tx-example-main","path":"<workspace>/instances/main","mutation_executed":true,"hard_delete_available":false}

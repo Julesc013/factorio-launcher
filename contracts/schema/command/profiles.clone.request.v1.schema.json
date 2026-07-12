@@ -1,0 +1,23 @@
+{
+  "$id": "https://facman.invalid/schema/command/profiles.clone.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "destination_profile_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "source_profile_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_profile_id",
+    "destination_profile_id"
+  ],
+  "title": "profiles.clone request",
+  "type": "object"
+}

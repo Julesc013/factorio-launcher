@@ -1,5 +1,24 @@
 {
+  "active_wave": {
+    "id": "facman-r3.7",
+    "status": "active"
+  },
   "active_workunit": null,
+  "baseline_evidence": {
+    "benchmark": "advisory comparison PASS with no greater-than-25-percent warnings",
+    "command": "py -3 tools/repro_workspace_smoke.py --require-clean --build --python py -3",
+    "elapsed_seconds": 166.5,
+    "initial_failure": "repro package proof did not bind its native build root or enable facman_tui",
+    "native_test_counts": {
+      "factorio_launcher": 19,
+      "universal_launcher": 1,
+      "universal_setup": 2
+    },
+    "proof_harness_repair_revision": "47bc5ef",
+    "python_elapsed_seconds": 141.9,
+    "python_test_count": 275,
+    "result": "PASS"
+  },
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -53,8 +72,8 @@
     },
     {
       "claim": "Windows, Linux, and macOS install discovery is read-only",
-      "level": "target CI proven for bounded providers",
-      "limitation": "host databases and target layouts remain scoped to tested providers; no package-manager or Spotlight execution"
+      "level": "target CI proven",
+      "limitation": "scoped roots/layouts only; no package-manager or Spotlight execution"
     },
     {
       "claim": "Non-execution product journey is functional",
@@ -118,10 +137,10 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "8bc0dd0e9ad16acd34c9d8fc992407b46f5627b50b714e1311f79f5ceb274d2b",
-    "contracts": 58,
-    "registered_routes": 56,
-    "schemas": 130
+    "catalog_digest": "02ff62c3fa3077c37c71bcf54d1e4f55e20c6a8d68498426f1020c6d031c8a18",
+    "contracts": 71,
+    "registered_routes": 69,
+    "schemas": 149
   },
   "completed_wave": {
     "id": "facman-r3.6",
@@ -129,31 +148,57 @@
     "status": "complete"
   },
   "current_artifacts": [
-    "build/Release/facman.exe (local unsigned build, when present)",
-    "release/profiles/windows_portable_cli_x64/profile.toml",
-    "release/profiles/linux_portable_cli_x64/profile.toml",
-    "release/profiles/macos_portable_cli_x64/profile.toml",
-    "release/profiles/windows_portable_tui_x64/profile.toml",
-    "release/profiles/linux_portable_tui_x64/profile.toml",
-    "release/profiles/macos_portable_tui_x64/profile.toml",
-    "docs/quality/benchmarks/baseline.v1.json",
-    ".aide/history/r3.3/index.json",
-    ".aide/history/r3.4/index.json",
-    ".aide/history/r3.5/index.json",
-    ".aide/history/r3.6/index.json",
-    "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip sha256:fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b",
-    "facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz sha256:f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
-    "facman-0.1.0-dev.contract-macos-cli-x64-portable.tar.gz sha256:ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706",
-    "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip sha256:2526a5f5d085087301f66d2855a1942d01457cb598c1bf41704388948295b595",
-    "facman-0.1.0-dev.contract-windows-tui-x64-portable.zip sha256:8b87f28e098096dfd6672b1d9701bd227bdfaf99d0d8f5ade9eacb9021ddd3a1"
+    {
+      "artifact": "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
+      "authenticity": "not_proven_unsigned",
+      "checkpoint": "r3.5-zero-exception-productization",
+      "revision": "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
+      "sha256": "fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b",
+      "target": "windows_portable_cli_x64"
+    },
+    {
+      "artifact": "facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz",
+      "authenticity": "not_proven_unsigned",
+      "checkpoint": "r3.5-zero-exception-productization",
+      "revision": "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
+      "sha256": "f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
+      "target": "linux_portable_cli_x64"
+    },
+    {
+      "artifact": "facman-0.1.0-dev.contract-macos-cli-x64-portable.tar.gz",
+      "authenticity": "not_proven_unsigned",
+      "checkpoint": "r3.5-zero-exception-productization",
+      "revision": "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
+      "sha256": "ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706",
+      "target": "macos_portable_cli_x64"
+    },
+    {
+      "artifact": "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
+      "authenticity": "not_proven_unsigned",
+      "checkpoint": "r3.6-product-readiness",
+      "revision": "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
+      "sha256": "2526a5f5d085087301f66d2855a1942d01457cb598c1bf41704388948295b595",
+      "target": "windows_portable_cli_x64"
+    },
+    {
+      "artifact": "facman-0.1.0-dev.contract-windows-tui-x64-portable.zip",
+      "authenticity": "not_proven_unsigned",
+      "checkpoint": "r3.6-product-readiness",
+      "revision": "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
+      "sha256": "8b87f28e098096dfd6672b1d9701bd227bdfaf99d0d8f5ade9eacb9021ddd3a1",
+      "target": "windows_portable_tui_x64"
+    }
   ],
-  "current_checkpoint": "r3.6-product-readiness",
-  "current_phase": "r3.6-product-readiness-complete",
+  "current_checkpoint": "r3.7-baseline",
+  "current_phase": "r3.7-instance-content-lifecycle-active",
   "current_revisions": {
     "factorio_launcher": "HEAD",
     "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
   },
+  "evidence_revision": "29cf22fa15250698b7587a9868737c10f3bcc749",
+  "implementation_revision": "HEAD",
+  "integration_revision": "29cf22fa15250698b7587a9868737c10f3bcc749",
   "known_blockers": [
     "Real Factorio isolation remains operator-only and has no human verdict.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
@@ -181,6 +226,10 @@
       "revision": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2",
       "source": "universal-setup"
     }
+  },
+  "provider_revisions": {
+    "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+    "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
   },
   "quarantined_capabilities": [
     "run.execute pending operator-supplied real Factorio verdict",
