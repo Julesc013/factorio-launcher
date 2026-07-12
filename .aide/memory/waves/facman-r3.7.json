@@ -348,18 +348,42 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "1f840e533774815788663dfb70a2c791f0a8d832",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [],
+      "source_fingerprint": "c59bed80fa994b5503fbca4ef71d52cda09db4c884b5b5c6797c6278ebbe3744",
+      "test_fingerprints": {
+        "py -3 .aide/scripts/aide_lite.py test": "missing",
+        "py -3 tools/dev.py verify-all": "missing"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.7-CLOSEOUT-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "8556b05e033a3739d7bd5c78b8c530d3cff2ff3c",
+  "current_exact_revision": "1f840e533774815788663dfb70a2c791f0a8d832",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
   },
   "schema_version": "aide.wave.v1",
-  "status": "active",
+  "status": "complete",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T19:35:38Z",
+  "updated_at": "2026-07-12T20:36:20Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -700,6 +724,108 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T20:35:32Z",
+        "result": "PASS",
+        "source_fingerprint": "a79bf95297a5bd5df3cc4c2866139c10eb71ec9b1b4e12d69f9de30c7a5311a4",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "py -3 .aide/scripts/aide_lite.py test": "missing",
+          "py -3 tools/dev.py verify-all": "missing"
+        },
+        "test_results": {
+          "advisory_benchmark": "PASS",
+          "aide_review_commit_policy": "PASS",
+          "all_ctests": "PASS",
+          "all_python": "PASS",
+          "appkit_compile_current_level": "PASS",
+          "architecture_exception_zero": "PASS",
+          "bounded_fuzzers": "PASS",
+          "codeql": "PASS",
+          "compatibility_corpus": "PASS",
+          "critical_coverage": "PASS",
+          "fresh_adversarial_review": "PASS",
+          "generated_metadata_parity": "PASS",
+          "human_claim_not_promoted": "PASS",
+          "lifecycle_journey": "PASS",
+          "linux_debug": "PASS",
+          "linux_release": "PASS",
+          "linux_sanitizers": "PASS",
+          "macos_intel_native": "PASS",
+          "reproducible_archives": "PASS",
+          "schema_law": "PASS",
+          "security_policy": "PASS",
+          "standalone_ulk": "PASS",
+          "standalone_usk": "PASS",
+          "windows_debug": "PASS",
+          "windows_release": "PASS",
+          "windows_setup_off": "PASS",
+          "winforms_build_client": "PASS",
+          "x64_cli_tui_packages": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.7-CLOSEOUT-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T20:36:20Z",
+        "result": "PASS",
+        "source_fingerprint": "c59bed80fa994b5503fbca4ef71d52cda09db4c884b5b5c6797c6278ebbe3744",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "py -3 .aide/scripts/aide_lite.py test": "missing",
+          "py -3 tools/dev.py verify-all": "missing"
+        },
+        "test_results": {
+          "advisory_benchmark": "PASS",
+          "aide_review_commit_policy": "PASS",
+          "all_ctests": "PASS",
+          "all_python": "PASS",
+          "appkit_compile_current_level": "PASS",
+          "architecture_exception_zero": "PASS",
+          "bounded_fuzzers": "PASS",
+          "codeql": "PASS",
+          "compatibility_corpus": "PASS",
+          "critical_coverage": "PASS",
+          "fresh_adversarial_review": "PASS",
+          "generated_metadata_parity": "PASS",
+          "human_claim_not_promoted": "PASS",
+          "lifecycle_journey": "PASS",
+          "linux_debug": "PASS",
+          "linux_release": "PASS",
+          "linux_sanitizers": "PASS",
+          "macos_intel_native": "PASS",
+          "reproducible_archives": "PASS",
+          "schema_law": "PASS",
+          "security_policy": "PASS",
+          "standalone_ulk": "PASS",
+          "standalone_usk": "PASS",
+          "windows_debug": "PASS",
+          "windows_release": "PASS",
+          "windows_setup_off": "PASS",
+          "winforms_build_client": "PASS",
+          "x64_cli_tui_packages": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.7-CLOSEOUT-01"
       }
     ]
   },
@@ -1550,6 +1676,8 @@
       "claim_impacts": [
         "r3.7-instance-content-lifecycle"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T20:36:20Z",
       "dependencies": [
         "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
       ],
@@ -1559,14 +1687,65 @@
         "publication"
       ],
       "id": "FACMAN-R3.7-CLOSEOUT-01",
-      "last_green_commit": null,
+      "last_green_commit": "1f840e533774815788663dfb70a2c791f0a8d832",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T19:37:18Z",
+      "status": "closed",
       "stop_conditions": [
         "mandatory proof is not green",
         "evidence is stale"
       ],
-      "title": "Close R3.7 with exact cross-platform evidence"
+      "title": "Close R3.7 with exact cross-platform evidence",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T20:36:20Z",
+        "result": "PASS",
+        "source_fingerprint": "c59bed80fa994b5503fbca4ef71d52cda09db4c884b5b5c6797c6278ebbe3744",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "py -3 .aide/scripts/aide_lite.py test": "missing",
+          "py -3 tools/dev.py verify-all": "missing"
+        },
+        "test_results": {
+          "advisory_benchmark": "PASS",
+          "aide_review_commit_policy": "PASS",
+          "all_ctests": "PASS",
+          "all_python": "PASS",
+          "appkit_compile_current_level": "PASS",
+          "architecture_exception_zero": "PASS",
+          "bounded_fuzzers": "PASS",
+          "codeql": "PASS",
+          "compatibility_corpus": "PASS",
+          "critical_coverage": "PASS",
+          "fresh_adversarial_review": "PASS",
+          "generated_metadata_parity": "PASS",
+          "human_claim_not_promoted": "PASS",
+          "lifecycle_journey": "PASS",
+          "linux_debug": "PASS",
+          "linux_release": "PASS",
+          "linux_sanitizers": "PASS",
+          "macos_intel_native": "PASS",
+          "reproducible_archives": "PASS",
+          "schema_law": "PASS",
+          "security_policy": "PASS",
+          "standalone_ulk": "PASS",
+          "standalone_usk": "PASS",
+          "windows_debug": "PASS",
+          "windows_release": "PASS",
+          "windows_setup_off": "PASS",
+          "winforms_build_client": "PASS",
+          "x64_cli_tui_packages": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     }
   ]
 }
