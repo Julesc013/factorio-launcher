@@ -296,12 +296,33 @@ def facman_executable(build_root: Path) -> Path:
     return repo_build_dir(build_root, "factorio-launcher") / "facman"
 
 
-def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str], build_root: Path) -> int:
-    build_dirs = {name: repo_build_dir(build_root, name) for name in REPO_NAMES}
+def validation_environment(repos: dict[str, Path], build_dirs: dict[str, Path]) -> dict[str, str]:
     env = os.environ.copy()
     env["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(repos["universal-setup"])
     env["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(repos["universal-launcher"])
-    env["FACMAN_CLI_EXE"] = str(facman_executable(build_root))
+    env["FACMAN_NATIVE_BUILD_ROOT"] = str(build_dirs["factorio-launcher"])
+    env["FACMAN_CLI_EXE"] = str(facman_executable(build_dirs["factorio-launcher"].parent))
+    return env
+
+
+def factorio_configure_command(repos: dict[str, Path], build_dir: Path) -> list[str]:
+    return [
+        "cmake",
+        "-S",
+        ".",
+        "-B",
+        str(build_dir),
+        f"-DFLAUNCH_UNIVERSAL_SETUP_ROOT={repos['universal-setup'].as_posix()}",
+        f"-DFLAUNCH_UNIVERSAL_LAUNCHER_ROOT={repos['universal-launcher'].as_posix()}",
+        "-DFLAUNCH_BUILD_NATIVE_APPS=ON",
+        "-DFLAUNCH_BUILD_TESTS=ON",
+        "-DFACMAN_BUILD_TUI=ON",
+    ]
+
+
+def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str], build_root: Path) -> int:
+    build_dirs = {name: repo_build_dir(build_root, name) for name in REPO_NAMES}
+    env = validation_environment(repos, build_dirs)
     print(f"repro-workspace-smoke: build-root={build_root}")
 
     steps = [
@@ -332,17 +353,7 @@ def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str], bui
         (
             "factorio-launcher cmake configure",
             repos["factorio-launcher"],
-            [
-                "cmake",
-                "-S",
-                ".",
-                "-B",
-                str(build_dirs["factorio-launcher"]),
-                f"-DFLAUNCH_UNIVERSAL_SETUP_ROOT={repos['universal-setup'].as_posix()}",
-                f"-DFLAUNCH_UNIVERSAL_LAUNCHER_ROOT={repos['universal-launcher'].as_posix()}",
-                "-DFLAUNCH_BUILD_NATIVE_APPS=ON",
-                "-DFLAUNCH_BUILD_TESTS=ON",
-            ],
+            factorio_configure_command(repos, build_dirs["factorio-launcher"]),
         ),
         ("factorio-launcher cmake build", repos["factorio-launcher"], ["cmake", "--build", str(build_dirs["factorio-launcher"])]),
         (
