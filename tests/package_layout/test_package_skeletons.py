@@ -17,7 +17,7 @@ class PackageSkeletonTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "package-skeletons"
             built = package_skeleton_build.materialize_all(root)
-            self.assertEqual(len(built), 8)
+            self.assertEqual(len(built), len(package_skeleton_build.load_profiles()))
             self.assertEqual(package_skeleton_check.validate_root(root), [])
 
     def test_builder_refuses_unowned_output_root(self) -> None:
