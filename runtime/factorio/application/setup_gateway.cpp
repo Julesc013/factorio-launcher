@@ -103,10 +103,20 @@ public:
         if (!document || !document.value().is_object()) {
             return facman::core::Result<PackageVerifyResult>::failure({"setup_response_invalid", "Universal Setup returned invalid JSON", ""});
         }
+        const auto* report = document.value().find("payload");
+        if (string_field(document.value(), "status") != "ok" || report == nullptr || !report->is_object()) {
+            return facman::core::Result<PackageVerifyResult>::failure({
+                "setup_response_invalid",
+                "Universal Setup package verification envelope has no successful report payload",
+                ""});
+        }
         PackageVerifyResult result;
-        result.verified = string_field(document.value(), "status") == "pass";
-        result.authenticity = string_field(document.value(), "authenticity");
-        const auto* files = document.value().find("files_verified");
+        result.verified = string_field(*report, "integrity") == "pass" &&
+            string_field(*report, "compatibility") == "pass" &&
+            string_field(*report, "completeness") == "pass" &&
+            string_field(*report, "target_match") == "pass";
+        result.authenticity = string_field(*report, "authenticity");
+        const auto* files = report->find("files_verified");
         if (files != nullptr) {
             auto count = files->unsigned_integer_value();
             if (count) result.files_verified = count.value();
