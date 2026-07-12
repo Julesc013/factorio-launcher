@@ -260,7 +260,9 @@ Result<std::vector<InstallRecord>> InstallRepository::list() const
     }
     std::vector<InstallRecord> records;
     for (const std::string& id : ids) {
-        auto record = load(InstallId(id));
+        auto parsed_id = InstallId::parse_legacy(id);
+        if (!parsed_id) return failure<std::vector<InstallRecord>>(parsed_id.error().code, parsed_id.error().message);
+        auto record = load(parsed_id.value());
         if (!record) return failure<std::vector<InstallRecord>>(record.error().code, record.error().message, record.error().path);
         records.push_back(record.take_value());
     }
@@ -307,7 +309,9 @@ Result<InstanceRecord> InstanceRepository::load(const InstanceId& id) const
     InstanceRecord record;
     record.id = id;
     record.display_name = optional_string(document.value(), "display_name", id.str());
-    record.install_ref = InstallId(install_ref.value());
+    auto parsed_install = InstallId::parse_legacy(install_ref.value());
+    if (!parsed_install) return failure<InstanceRecord>(parsed_install.error().code, parsed_install.error().message, path);
+    record.install_ref = parsed_install.take_value();
     record.factorio_version = optional_string(document.value(), "factorio_version");
     record.profile = optional_string(document.value(), "profile", "gui");
     record.template_id = optional_string(document.value(), "template", "vanilla");
@@ -347,7 +351,9 @@ Result<std::vector<InstanceRecord>> InstanceRepository::list() const
     if (error) return failure<std::vector<InstanceRecord>>("workspace_list_failed", error.message(), directory);
     std::vector<InstanceRecord> records;
     for (const std::string& id : ids) {
-        auto record = load(InstanceId(id));
+        auto parsed_id = InstanceId::parse_legacy(id);
+        if (!parsed_id) return failure<std::vector<InstanceRecord>>(parsed_id.error().code, parsed_id.error().message);
+        auto record = load(parsed_id.value());
         if (!record) return failure<std::vector<InstanceRecord>>(record.error().code, record.error().message, record.error().path);
         records.push_back(record.take_value());
     }
@@ -409,7 +415,9 @@ Result<WorkspaceRecord> WorkspaceRepository::load() const
         return failure<WorkspaceRecord>("workspace_layout_future_or_unknown", schema.value(), path);
     }
     WorkspaceRecord record;
-    record.id = WorkspaceId(id.value());
+    auto parsed_id = WorkspaceId::parse_legacy(id.value());
+    if (!parsed_id) return failure<WorkspaceRecord>(parsed_id.error().code, parsed_id.error().message, path);
+    record.id = parsed_id.take_value();
     record.layout_version = 1;
     record.schema = schema.value();
     record.legacy_local_identity = id.value() == "local";
@@ -456,8 +464,9 @@ Result<std::vector<MigrationAction>> collect_migration_actions(const WorkspaceLa
             const fs::file_status status = entry.symlink_status(error);
             if (error) return failure<std::vector<MigrationAction>>("workspace_migration_scan_failed", error.message(), entry.path());
             if (!fs::is_regular_file(status) || entry.path().extension() != ".json") continue;
-            const InstallId id(entry.path().stem().string());
-            auto target = layout.install_ref(id);
+            auto id = InstallId::parse_legacy(entry.path().stem().string());
+            if (!id) return failure<std::vector<MigrationAction>>(id.error().code, id.error().message, entry.path());
+            auto target = layout.install_ref(id.value());
             if (!target) return failure<std::vector<MigrationAction>>(target.error().code, target.error().message, entry.path());
             error.clear();
             if (!fs::exists(target.value(), error) && !error) {

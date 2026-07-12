@@ -13,6 +13,7 @@ from tools import (
     critical_io_check,
     generated_catalog_check,
     manual_json_check,
+    strong_id_check,
     target_dependency_check,
     version_truth_check,
 )
@@ -23,6 +24,7 @@ class ArchitectureFitnessTests(unittest.TestCase):
         checks = [
             apps_boundary_check.main,
             manual_json_check.main,
+            strong_id_check.main,
             critical_io_check.main,
             generated_catalog_check.main,
             version_truth_check.main,

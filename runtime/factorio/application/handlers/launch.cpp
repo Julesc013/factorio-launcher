@@ -12,7 +12,9 @@ namespace discovery = facman::factorio::discovery;
 namespace {
 bool load_install(ApplicationContext& context, const std::string& id, discovery::InstallRef& install)
 {
-    auto record = context.installs().load(facman::core::InstallId(id));
+    auto parsed_id = facman::core::InstallId::parse_legacy(id);
+    if (!parsed_id) return false;
+    auto record = context.installs().load(parsed_id.value());
     if (!record) return false;
     install.install_id = record.value().id.str();
     install.root = record.value().root;
@@ -32,7 +34,11 @@ ApplicationResult load_refs(
     discovery::InstallRef& install,
     const std::string& operation)
 {
-    auto loaded = context.instances().load(facman::core::InstanceId(request.instance_id));
+    auto parsed_id = facman::core::InstanceId::parse(request.instance_id);
+    if (!parsed_id) return refused(
+        safety_refusal(operation, parsed_id.error().code, "Instance id is not portable", parsed_id.error().message, false),
+        parsed_id.error().code, parsed_id.error().message);
+    auto loaded = context.instances().load(parsed_id.value());
     if (!loaded) return refused(
         safety_refusal(operation, "unknown_instance", "Instance is not registered", request.instance_id, true),
         "unknown_instance", "Instance is not registered");
@@ -71,4 +77,3 @@ ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunc
 }
 
 } // namespace facman::factorio::application::handlers
-

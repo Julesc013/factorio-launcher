@@ -17,7 +17,9 @@ namespace discovery = facman::factorio::discovery;
 namespace {
 bool load_install(ApplicationContext& context, const std::string& id, discovery::InstallRef& install)
 {
-    auto record = context.installs().load(facman::core::InstallId(id));
+    auto parsed_id = facman::core::InstallId::parse_legacy(id);
+    if (!parsed_id) return false;
+    auto record = context.installs().load(parsed_id.value());
     if (!record) return false;
     install.install_id = record.value().id.str();
     install.root = record.value().root;
@@ -64,7 +66,11 @@ ApplicationResult import_install(ApplicationContext& context, const ImportInstal
 {
     const std::string& root = request.path;
     const std::string& id = request.install_id;
-    auto target = context.layout().install_ref(facman::core::InstallId(id));
+    auto parsed_id = facman::core::InstallId::parse(id);
+    if (!parsed_id) return refused(
+        safety_refusal("installs.import", parsed_id.error().code, "Install id is not portable", parsed_id.error().message, false),
+        parsed_id.error().code, parsed_id.error().message);
+    auto target = context.layout().install_ref(parsed_id.value());
     if (!target) return refused(
         safety_refusal("installs.import", target.error().code, "Install id cannot be used as a managed path", target.error().message, false),
         target.error().code, target.error().message);
@@ -97,7 +103,7 @@ ApplicationResult import_install(ApplicationContext& context, const ImportInstal
             safety_refusal("installs.import", "recovery_write_refused", "Install journal preparation failed", session.detail(), true),
             "recovery_write_refused", session.detail());
     facman::workspace::InstallRecord record;
-    record.id = facman::core::InstallId(id);
+    record.id = parsed_id.take_value();
     auto created = context.installs().create(record, text);
     if (!created) {
         session.failed(created.error().message);

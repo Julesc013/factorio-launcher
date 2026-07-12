@@ -85,6 +85,13 @@ retryable = true
 message = "The identifier is not valid for persistent FacMan state."
 
 [[code]]
+id = "invalid_legacy_identifier"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A persisted legacy identifier contains a path, control, reserved-name, or length hazard."
+
+[[code]]
 id = "unsafe_managed_path"
 severity = "blocked"
 effect = "workspace_write"

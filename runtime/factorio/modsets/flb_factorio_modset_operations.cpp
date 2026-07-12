@@ -118,8 +118,10 @@ Refusal refuse(
 
 bool load_instance(const fs::path& workspace, const std::string& instance_id, Instance& instance)
 {
+    auto parsed_id = facman::core::InstanceId::parse(instance_id);
+    if (!parsed_id) return false;
     auto record = facman::workspace::InstanceRepository(facman::workspace::WorkspaceLayout(workspace)).load(
-        facman::core::InstanceId(instance_id));
+        parsed_id.value());
     if (!record) return false;
     instance.instance_id = record.value().id.str();
     instance.factorio_version = record.value().factorio_version;
@@ -129,15 +131,19 @@ bool load_instance(const fs::path& workspace, const std::string& instance_id, In
 
 fs::path instance_lock_path(const Instance& instance)
 {
+    auto parsed_id = facman::core::InstanceId::parse(instance.instance_id);
+    if (!parsed_id) return {};
     auto path = facman::workspace::WorkspaceLayout(instance.root.parent_path().parent_path()).instance_modset_lock(
-        facman::core::InstanceId(instance.instance_id));
+        parsed_id.value());
     return path ? path.value() : fs::path();
 }
 
 fs::path workspace_lock_path(const fs::path& workspace, const Instance& instance)
 {
+    auto parsed_id = facman::core::InstanceId::parse(instance.instance_id);
+    if (!parsed_id) return {};
     auto path = facman::workspace::ModsetRepository(facman::workspace::WorkspaceLayout(workspace)).canonical_lock(
-        facman::core::InstanceId(instance.instance_id));
+        parsed_id.value());
     return path ? path.value() : fs::path();
 }
 

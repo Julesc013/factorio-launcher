@@ -1,5 +1,20 @@
 # Compatibility policy
 
+## Stable identifier grammar
+
+New workspace, transaction, install, and instance identifiers are created only
+through `StrongId::parse`. The portable grammar is 1-64 lowercase ASCII letters
+or digits with single interior hyphens; leading, trailing, or repeated hyphens,
+path punctuation, Unicode, and Windows device names are refused on every OS.
+This makes case and reserved-name behavior identical on Windows, Linux, and
+macOS.
+
+`StrongId::parse_legacy` exists only for reading already-persisted R3.2-R3.4
+state. It preserves case and underscores but still rejects separators, dots,
+control characters, reserved device names, and values longer than 128 bytes.
+New writes never use the legacy-safe factory. Both factories return typed
+errors; no public string constructor can create a tagged ID.
+
 Compatibility is explicit and versioned. Public `include/flb/` headers are an
 experimental C ABI correctness floor, not a stable third-party promise. ABI
 version, layout, ownership, and exported symbols are tested; incompatible

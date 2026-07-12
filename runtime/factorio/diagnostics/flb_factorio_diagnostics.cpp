@@ -1358,8 +1358,12 @@ ExportOutcome export_bundle(
     }
 
     facman::workspace::WorkspaceLayout workspace_layout(workspace);
+    auto parsed_instance_id = facman::core::InstanceId::parse(request.instance_id);
+    if (!parsed_instance_id) {
+        return refuse(request, parsed_instance_id.error().code, "Diagnostic instance id is invalid", parsed_instance_id.error().message, false);
+    }
     auto instance_record = facman::workspace::InstanceRepository(workspace_layout).load(
-        facman::core::InstanceId(request.instance_id));
+        parsed_instance_id.value());
     if (!instance_record) {
         return refuse(
             request,
@@ -1512,7 +1516,7 @@ ExportOutcome export_bundle(
     }
 
     auto modset_result = facman::workspace::ModsetRepository(workspace_layout).canonical_lock(
-        facman::core::InstanceId(request.instance_id));
+        parsed_instance_id.value());
     const fs::path modset_path = modset_result ? modset_result.value() : fs::path();
     if (fs::is_regular_file(modset_path, error) && !error) {
         const fs::path relative = modset_path.lexically_relative(workspace);

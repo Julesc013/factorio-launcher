@@ -38,6 +38,16 @@ int main()
     facman::core::json::Writer writer;
     writer.write(object);
     if (writer.str() != "{\"schema\":\"fixture.writer.v1\",\"enabled\":true,\"items\":[\"first\",2]}") return 10;
+    using facman::core::InstanceId;
+    auto instance_id = InstanceId::parse("space-age-main");
+    if (!instance_id || instance_id.value().str() != "space-age-main") return 11;
+    for (const char* invalid : {"", "UPPER", "under_score", "double--dash", "-leading", "trailing-", "con", "com1", "../escape"}) {
+        auto rejected = InstanceId::parse(invalid);
+        if (rejected || rejected.error().code != "invalid_identifier") return 12;
+    }
+    if (InstanceId::parse(std::string(65, 'a'))) return 13;
+    auto legacy_id = InstanceId::parse_legacy("Legacy_ID");
+    if (!legacy_id || legacy_id.value().str() != "Legacy_ID" || InstanceId::parse_legacy("../escape")) return 14;
     std::cout << "fl-json-core-smoke: ok\n";
     return 0;
 }

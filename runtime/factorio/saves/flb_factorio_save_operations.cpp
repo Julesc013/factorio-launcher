@@ -155,8 +155,10 @@ Refusal refuse(
 
 bool load_instance(const fs::path& workspace, const std::string& instance_id, Instance& instance)
 {
+    auto parsed_id = facman::core::InstanceId::parse(instance_id);
+    if (!parsed_id) return false;
     auto record = facman::workspace::InstanceRepository(facman::workspace::WorkspaceLayout(workspace)).load(
-        facman::core::InstanceId(instance_id));
+        parsed_id.value());
     if (!record) return false;
     instance.instance_id = record.value().id.str();
     instance.display_name = record.value().display_name;
@@ -170,8 +172,10 @@ bool load_instance(const fs::path& workspace, const std::string& instance_id, In
 
 bool load_install_root(const fs::path& workspace, const std::string& install_id, fs::path& root)
 {
+    auto parsed_id = facman::core::InstallId::parse_legacy(install_id);
+    if (!parsed_id) return false;
     auto record = facman::workspace::InstallRepository(facman::workspace::WorkspaceLayout(workspace)).load(
-        facman::core::InstallId(install_id));
+        parsed_id.value());
     if (!record) return false;
     root = record.value().root;
     return !root.empty() && fs::is_directory(root / "data");

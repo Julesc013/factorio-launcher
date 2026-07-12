@@ -84,35 +84,35 @@ int prove_store(const fs::path& root)
     fs::create_directories(install_root / "data");
     InstallRepository installs(layout);
     InstallRecord install;
-    install.id = InstallId("fixture");
+    install.id = InstallId::parse("fixture").take_value();
     const std::string install_text = install_json("fixture", install_root);
     auto written = installs.create(install, install_text);
-    auto loaded = installs.load(InstallId("fixture"));
+    auto loaded = installs.load(InstallId::parse("fixture").value());
     if (!written || !loaded || loaded.value().root != install_root || loaded.value().legacy_path ||
         loaded.value().verification_status != "structural") return 12;
 
-    auto instance_path = layout.instance_manifest(InstanceId("main"));
+    auto instance_path = layout.instance_manifest(InstanceId::parse("main").value());
     if (!instance_path || !write_file(instance_path.value(), instance_json("main", "fixture"))) return 13;
     InstanceRepository instances(layout);
-    auto instance = instances.load(InstanceId("main"));
+    auto instance = instances.load(InstanceId::parse("main").value());
     if (!instance || instance.value().id.str() != "main" || instance.value().install_ref.str() != "fixture" ||
         instance.value().legacy_path) return 14;
 
-    auto legacy_instance_path = layout.legacy_instance_manifest(InstanceId("legacy-instance"));
+    auto legacy_instance_path = layout.legacy_instance_manifest(InstanceId::parse("legacy-instance").value());
     if (!legacy_instance_path || !write_file(
             legacy_instance_path.value(),
             "{\"instance_id\":\"legacy-instance\",\"install_ref\":\"fixture\",\"factorio_version\":\"2.0\"}")) return 15;
-    auto legacy_instance = instances.load(InstanceId("legacy-instance"));
+    auto legacy_instance = instances.load(InstanceId::parse("legacy-instance").value());
     if (!legacy_instance || !legacy_instance.value().legacy_path) return 16;
 
-    auto future_instance_path = layout.instance_manifest(InstanceId("future"));
+    auto future_instance_path = layout.instance_manifest(InstanceId::parse("future").value());
     if (!future_instance_path || !write_file(future_instance_path.value(), instance_json("future", "fixture", "factorio.instance.v2")) ||
-        instances.load(InstanceId("future"))) return 17;
+        instances.load(InstanceId::parse("future").value())) return 17;
 
-    auto legacy_install_path = layout.legacy_install_ref(InstallId("legacy-install"));
+    auto legacy_install_path = layout.legacy_install_ref(InstallId::parse("legacy-install").value());
     const std::string legacy_text = install_json("legacy-install", install_root);
     if (!legacy_install_path || !write_file(legacy_install_path.value(), legacy_text)) return 18;
-    auto legacy_install = installs.load(InstallId("legacy-install"));
+    auto legacy_install = installs.load(InstallId::parse("legacy-install").value());
     if (!legacy_install || !legacy_install.value().legacy_path) return 19;
     auto inspected = workspaces.inspect_migration();
     auto planned = workspaces.plan_migration();
@@ -125,12 +125,12 @@ int prove_store(const fs::path& root)
         report.find("canonicalize_legacy_instance_manifest") == std::string::npos) return 22;
 
     ModsetRepository modsets(layout);
-    auto local_lock = layout.instance_modset_lock(InstanceId("main"));
-    if (!local_lock || !write_file(local_lock.value(), "{\"schema\":\"factorio.modset_lock.v1\"}") || !modsets.load_lock(InstanceId("main"))) return 23;
+    auto local_lock = layout.instance_modset_lock(InstanceId::parse("main").value());
+    if (!local_lock || !write_file(local_lock.value(), "{\"schema\":\"factorio.modset_lock.v1\"}") || !modsets.load_lock(InstanceId::parse("main").value())) return 23;
     TransactionRepository transactions(layout);
-    auto journal = transactions.journal(TransactionId("tx-test"));
-    if (!journal || !write_file(journal.value(), "{\"schema\":\"facman.transaction.v1\"}") || !transactions.load_journal(TransactionId("tx-test"))) return 24;
-    if (layout.install_ref(InstallId("../escape")) || layout.diagnostic_output("../escape.zip")) return 25;
+    auto journal = transactions.journal(TransactionId::parse("tx-test").value());
+    if (!journal || !write_file(journal.value(), "{\"schema\":\"facman.transaction.v1\"}") || !transactions.load_journal(TransactionId::parse("tx-test").value())) return 24;
+    if (InstallId::parse("../escape") || layout.diagnostic_output("../escape.zip")) return 25;
     return 0;
 }
 

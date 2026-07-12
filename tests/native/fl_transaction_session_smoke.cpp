@@ -84,8 +84,10 @@ int prove_session_and_commit(const fs::path& workspace)
     if (!tx::StagedFileCommit::commit(staging, staged_file, target, detail) || !session.committed()) return 26;
     archive_status = facman::archive::cleanup_owned_staging_root(staging);
     if (!archive_status.ok() || !session.complete() || read_file(target) != "payload") return 27;
+    auto transaction_id = facman::core::TransactionId::parse(session.record().transaction_id);
+    if (!transaction_id) return 28;
     auto journal = facman::workspace::TransactionRepository(facman::workspace::WorkspaceLayout(workspace)).journal(
-        facman::core::TransactionId(session.record().transaction_id));
+        transaction_id.value());
     if (!journal || read_file(journal.value()).find("facman.transaction.v2") == std::string::npos ||
         read_file(journal.value()).find("\"expected_files\"") == std::string::npos) return 28;
     return 0;

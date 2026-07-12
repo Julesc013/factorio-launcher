@@ -21,7 +21,9 @@ namespace launch = facman::factorio::launch;
 namespace {
 bool load_install(ApplicationContext& context, const std::string& id, discovery::InstallRef& install)
 {
-    auto record = context.installs().load(facman::core::InstallId(id));
+    auto parsed_id = facman::core::InstallId::parse_legacy(id);
+    if (!parsed_id) return false;
+    auto record = context.installs().load(parsed_id.value());
     if (!record) return false;
     install.install_id = record.value().id.str();
     install.root = record.value().root;
@@ -72,10 +74,18 @@ ApplicationResult list_instances(ApplicationContext& context)
 
 ApplicationResult create_instance(ApplicationContext& context, const CreateInstanceRequest& request)
 {
+    auto instance_id = facman::core::InstanceId::parse(request.instance_id);
+    if (!instance_id) return refused(
+        safety_refusal("instances.create", instance_id.error().code, "Instance id is not portable", instance_id.error().message, false),
+        instance_id.error().code, instance_id.error().message);
+    auto install_id = facman::core::InstallId::parse_legacy(request.install_id);
+    if (!install_id) return refused(
+        safety_refusal("instances.create", install_id.error().code, "Install id is invalid", install_id.error().message, false),
+        install_id.error().code, install_id.error().message);
     facman::workspace::InstanceRecord instance;
     instance.display_name = request.display_name;
-    instance.id = facman::core::InstanceId(request.instance_id);
-    instance.install_ref = facman::core::InstallId(request.install_id);
+    instance.id = instance_id.take_value();
+    instance.install_ref = install_id.take_value();
     instance.template_id = request.template_id;
     discovery::InstallRef install;
     if (!load_install(context, instance.install_ref.str(), install)) return refused(

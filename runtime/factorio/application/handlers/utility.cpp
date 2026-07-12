@@ -70,7 +70,11 @@ std::string server_json(const std::string& id, const std::string& name, const st
 
 ApplicationResult server_create(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    auto instance = context.instances().load(facman::core::InstanceId(request.instance_id));
+    auto parsed_id = facman::core::InstanceId::parse(request.instance_id);
+    if (!parsed_id) return refused(
+        safety_refusal("servers.create", parsed_id.error().code, "Instance id is not portable", parsed_id.error().message, false),
+        parsed_id.error().code, parsed_id.error().message);
+    auto instance = context.instances().load(parsed_id.value());
     if (!instance) return refused(
         safety_refusal("servers.create", "unknown_instance", "Instance is not registered", request.instance_id, true),
         "unknown_instance", "Instance is not registered");

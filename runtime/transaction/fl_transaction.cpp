@@ -293,8 +293,10 @@ bool load_record(const fs::path& workspace, const std::string& id, Record& recor
 {
     std::string identifier_error;
     if (!facman::base::validate_identifier(id, identifier_error)) { detail = identifier_error; return false; }
+    auto transaction_id = facman::core::TransactionId::parse(id);
+    if (!transaction_id) { detail = transaction_id.error().message; return false; }
     auto text = facman::workspace::TransactionRepository(facman::workspace::WorkspaceLayout(workspace)).load_journal(
-        facman::core::TransactionId(id));
+        transaction_id.value());
     if (!text) { detail = text.error().code + ": " + text.error().message; return false; }
     facman::core::json::Limits limits;
     limits.maximum_bytes = 1024U * 1024U;
