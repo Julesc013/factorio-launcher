@@ -47,10 +47,19 @@ target_link_libraries(flb_factorio_instance_static PUBLIC
   facman_archive_static facman_base_static facman_transaction_static facman_workspace_static
   flb_factorio_launch_static flb_factorio_modsets_static)
 
+add_library(flb_factorio_snapshots_static snapshots/flb_factorio_snapshots.cpp)
+target_compile_features(flb_factorio_snapshots_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_snapshots_static PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/snapshots ${CMAKE_CURRENT_SOURCE_DIR}/launch)
+target_link_libraries(flb_factorio_snapshots_static PUBLIC
+  facman_archive_static facman_base_static facman_transaction_static facman_workspace_static
+  flb_factorio_launch_static)
+
 add_library(facman_factorio_model INTERFACE)
 target_link_libraries(facman_factorio_model INTERFACE
   flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_launch_static
-  flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static)
+  flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
+  flb_factorio_snapshots_static)
 add_library(facman::factorio_model ALIAS facman_factorio_model)
 
 add_library(flb_factorio_application_static STATIC
@@ -60,6 +69,7 @@ add_library(flb_factorio_application_static STATIC
   application/handlers/intelligence.cpp
   application/handlers/launch.cpp application/handlers/mods.cpp application/handlers/modsets.cpp
   application/handlers/preferences.cpp application/handlers/product.cpp application/handlers/recovery.cpp application/handlers/saves.cpp
+  application/handlers/snapshots.cpp
   application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
 target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_application_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application)
@@ -87,6 +97,7 @@ add_library(facman::binding ALIAS flb_factorio_static)
 foreach(target IN ITEMS
     flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static
     flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
+    flb_factorio_snapshots_static
     flb_factorio_application_static flb_factorio_static flb_factorio_shared)
   facman_apply_policies(${target})
 endforeach()

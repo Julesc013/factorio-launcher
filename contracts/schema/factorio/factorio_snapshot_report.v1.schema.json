@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_snapshot_report.v1.schema.json",
+  "title": "Factorio snapshot report",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.snapshot_report.v1"},
+    "command": {"enum": ["snapshots.create", "snapshots.inspect", "snapshots.verify", "snapshots.restore"]},
+    "status": {"enum": ["ok", "pass"]},
+    "snapshot_id": {"type": "string"},
+    "instance_id": {"type": "string"},
+    "path": {"type": "string"},
+    "file_count": {"type": "integer", "minimum": 0},
+    "archive_bytes": {"type": "integer", "minimum": 0},
+    "portable": {"const": true},
+    "deterministic": {"const": true},
+    "secret_content_included": {"const": false},
+    "selected_saves": {"type": "array", "items": {"type": "string"}},
+    "mutation_executed": {"type": "boolean"}
+  },
+  "required": ["schema", "command", "status", "snapshot_id", "instance_id", "path", "file_count", "archive_bytes", "portable", "deterministic", "secret_content_included", "selected_saves", "mutation_executed"]
+}

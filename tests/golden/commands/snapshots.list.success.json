@@ -1,0 +1,1 @@
+{"schema":"factorio.snapshots.v1","command":"snapshots.list","instance_id":"main","snapshots":[{"snapshot_id":"before-update","created_utc":"2026-07-12T00:00:00Z","size":1024,"sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],"mutation_executed":false}

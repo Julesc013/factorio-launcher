@@ -126,6 +126,13 @@ required_codes = [
   "instance_tree_budget_exceeded",
   "instance_tree_read_failed",
   "instance_write_failed",
+  "snapshot_target_exists",
+  "snapshot_id_invalid",
+  "snapshot_archive_invalid",
+  "snapshot_hash_closure_mismatch",
+  "snapshot_record_invalid",
+  "snapshot_install_incompatible",
+  "snapshot_transaction_recovery_required",
 ]
 
 [[code]]
@@ -1219,3 +1226,52 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = false
 message = "Migration apply is disabled until backup and transaction-journal execution has dedicated proof."
+
+[[code]]
+id = "snapshot_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested snapshot archive or record already exists."
+
+[[code]]
+id = "snapshot_id_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The snapshot identifier is not safe for persistent portable state."
+
+[[code]]
+id = "snapshot_archive_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The snapshot archive violates its format, integrity, or consumer-limit policy."
+
+[[code]]
+id = "snapshot_hash_closure_mismatch"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Snapshot entries do not match the manifest SHA-256 closure."
+
+[[code]]
+id = "snapshot_record_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The snapshot sidecar record is malformed or does not match its archive."
+
+[[code]]
+id = "snapshot_install_incompatible"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The restore workspace lacks a compatible registered Factorio install."
+
+[[code]]
+id = "snapshot_transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Snapshot mutation is blocked until the workspace transaction is recovered."

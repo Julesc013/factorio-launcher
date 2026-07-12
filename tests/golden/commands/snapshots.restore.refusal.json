@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"snapshots.restore","status":"refused","refusal":{"schema":"common.refusal.v1","code":"snapshot_install_incompatible","reason":"install is missing or incompatible","recoverable":true}}

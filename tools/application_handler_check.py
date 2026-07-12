@@ -35,6 +35,7 @@ def validate() -> list[str]:
         "mods",
         "modsets",
         "saves",
+        "snapshots",
         "diagnostics",
         "recovery",
         "setup",

@@ -35,6 +35,15 @@ PREFERENCE_REQUEST_FIELDS = [
     ("discovery_roots", "string_array", False),
 ]
 
+SNAPSHOT_RETENTION_REQUEST_FIELDS = [
+    ("instance_id", "identifier", True),
+    ("keep_last", "string", False),
+    ("keep_daily", "string", False),
+    ("keep_weekly", "string", False),
+    ("maximum_total_bytes", "string", False),
+    ("minimum_age_days", "string", False),
+]
+
 OUTPUTS = {
     "catalog_json": ROOT / "contracts/generated-index/command_catalog.v2.json",
     "command_header": ROOT / "runtime/core/generated/command_catalog.h",
@@ -77,6 +86,14 @@ REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
     "instances.rename": [("instance_id", "identifier", True), ("display_name", "string", True)],
     "instances.archive": [("instance_id", "identifier", True)],
     "instances.restore": [("archive_id", "string", True), ("new_instance_id", "identifier", False)],
+    "snapshots.create": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True), ("saves", "string_array", False)],
+    "snapshots.list": [("instance_id", "identifier", True)],
+    "snapshots.inspect": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True)],
+    "snapshots.verify": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True)],
+    "snapshots.diff": [("instance_id", "identifier", True), ("left_snapshot_id", "identifier", True), ("right_snapshot_id", "identifier", True)],
+    "snapshots.restore": [("snapshot_ref", "path", True), ("target_instance_id", "identifier", True)],
+    "snapshots.retention.plan": SNAPSHOT_RETENTION_REQUEST_FIELDS,
+    "snapshots.retention.apply": SNAPSHOT_RETENTION_REQUEST_FIELDS,
     "launch_plan.build": [("instance_id", "identifier", True)],
     "launch_plan.preflight": [("instance_id", "identifier", True)],
     "run.preview": [("instance_id", "identifier", True)],

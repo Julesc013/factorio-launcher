@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"snapshots.retention.apply","status":"refused","refusal":{"schema":"common.refusal.v1","code":"snapshot_transaction_recovery_required","reason":"workspace recovery is required","recoverable":false}}

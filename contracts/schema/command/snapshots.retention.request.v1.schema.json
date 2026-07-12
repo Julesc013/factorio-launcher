@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/command/snapshots.retention.request.v1.schema.json",
+  "title": "snapshot retention request",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "instance_id": {"type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "keep_last": {"type": "string", "pattern": "^[0-9]+$"},
+    "keep_daily": {"type": "string", "pattern": "^[0-9]+$"},
+    "keep_weekly": {"type": "string", "pattern": "^[0-9]+$"},
+    "maximum_total_bytes": {"type": "string", "pattern": "^[0-9]+$"},
+    "minimum_age_days": {"type": "string", "pattern": "^[0-9]+$"}
+  },
+  "required": ["instance_id"]
+}

@@ -1,4 +1,4 @@
-# generated source-sha256: 02ff62c3fa3077c37c71bcf54d1e4f55e20c6a8d68498426f1020c6d031c8a18
+# generated source-sha256: f0fab302a8d39cec282d9110591af52422d5e548cf99ccc1e5a9e20f27917058
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -57,6 +57,14 @@
 # path: servers start
 # path: servers stop
 # path: setup preview
+# path: snapshots create
+# path: snapshots diff
+# path: snapshots inspect
+# path: snapshots list
+# path: snapshots restore
+# path: snapshots retention apply
+# path: snapshots retention plan
+# path: snapshots verify
 # path: workspace migration apply
 # path: workspace migration inspect
 # path: workspace migration plan
@@ -109,12 +117,14 @@ complete -c facman -f -a rename
 complete -c facman -f -a repair
 complete -c facman -f -a reset
 complete -c facman -f -a restore
+complete -c facman -f -a retention
 complete -c facman -f -a run
 complete -c facman -f -a saves
 complete -c facman -f -a scan
 complete -c facman -f -a search
 complete -c facman -f -a servers
 complete -c facman -f -a setup
+complete -c facman -f -a snapshots
 complete -c facman -f -a start
 complete -c facman -f -a status
 complete -c facman -f -a stop

@@ -1,0 +1,22 @@
+{
+  "$id": "https://facman.invalid/schema/command/snapshots.restore.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "snapshot_ref": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "target_instance_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "snapshot_ref",
+    "target_instance_id"
+  ],
+  "title": "snapshots.restore request",
+  "type": "object"
+}

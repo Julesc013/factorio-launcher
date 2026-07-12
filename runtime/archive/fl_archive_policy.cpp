@@ -42,6 +42,16 @@ Limits InstanceTransferPolicy::limits()
     return limits;
 }
 
+Limits InstanceSnapshotPolicy::limits()
+{
+    Limits limits = InstanceTransferPolicy::limits();
+    limits.maximum_archive_bytes = 16ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_entry_count = 25000;
+    limits.maximum_total_expanded_bytes = 16ULL * 1024ULL * 1024ULL * 1024ULL;
+    limits.maximum_read_milliseconds = 180000;
+    return limits;
+}
+
 Limits DiagnosticBundlePolicy::limits()
 {
     Limits limits;

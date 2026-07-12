@@ -20,6 +20,7 @@
 #include "handlers/recovery.h"
 #include "handlers/saves.h"
 #include "handlers/setup.h"
+#include "handlers/snapshots.h"
 #include "handlers/unavailable.h"
 #include "handlers/utility.h"
 #include "fl_json_boundary.h"
@@ -30,7 +31,6 @@
 #include <new>
 #include <string>
 #include <variant>
-
 namespace facman::factorio::application {
 namespace {
 
@@ -52,7 +52,6 @@ int write_boundary_error(ulk_command_response_v1* response, const char* code, co
 }
 
 } // namespace
-
 class FactorioApplication {
 public:
     explicit FactorioApplication(std::string workspace_root)
@@ -85,7 +84,6 @@ public:
         }
         return write_response(execute(typed), response);
     }
-
 private:
     ApplicationResult execute(const ApplicationRequest& request)
     {
@@ -131,6 +129,10 @@ private:
         case CommandId::instances_inspect: case CommandId::instances_verify: case CommandId::instances_diff:
         case CommandId::instances_clone: case CommandId::instances_rename: case CommandId::instances_archive:
         case CommandId::instances_restore: return handlers::dispatch_instance_lifecycle(context_, request);
+        case CommandId::snapshots_create: case CommandId::snapshots_list: case CommandId::snapshots_inspect:
+        case CommandId::snapshots_verify: case CommandId::snapshots_diff: case CommandId::snapshots_restore:
+        case CommandId::snapshots_retention_plan: case CommandId::snapshots_retention_apply:
+            return handlers::dispatch_snapshots(context_, request);
         case CommandId::launch_plan_build: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "launch_plan.build");
         case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
         case CommandId::run_execute: {
@@ -184,7 +186,6 @@ private:
                 "Unsupported application command");
         }
     }
-
     int write_response(const ApplicationResult& result, ulk_command_response_v1* response)
     {
         response_json_ = response_envelope(result, current_command_);
@@ -207,7 +208,6 @@ private:
     std::string error_message_;
     std::mutex request_mutex_;
 };
-
 } // namespace facman::factorio::application
 
 extern "C" void* flb_factorio_application_create(const char* workspace_root)

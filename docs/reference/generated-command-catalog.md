@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `02ff62c3fa3077c37c71bcf54d1e4f55e20c6a8d68498426f1020c6d031c8a18`.
+Source digest: `f0fab302a8d39cec282d9110591af52422d5e548cf99ccc1e5a9e20f27917058`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -68,6 +68,14 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `servers.stop` | `servers.stop` | `servers_stop` | no | - | unavailable_until_isolation_proof | workspace_read, process_execute | `facman servers stop <server-id> --json` |
 | `setup.operation` | `setup.operation` | `legacy_setup_operation` | no | - | available | workspace_read, setup_preview | `internal canonical setup route` |
 | `setup.preview` | `setup.preview` | `setup_preview` | no | - | unavailable_until_gateway | workspace_read | `facman setup preview --json` |
+| `snapshots.create` | `snapshots.create` | `snapshots_create` | yes | - | available | workspace_read, workspace_write | `facman snapshots create <instance-id> <snapshot-id> [--save <name>] --json` |
+| `snapshots.diff` | `snapshots.diff` | `snapshots_diff` | no | - | available | workspace_read | `facman snapshots diff <instance-id> <left-id> <right-id> --json` |
+| `snapshots.inspect` | `snapshots.inspect` | `snapshots_inspect` | no | - | available | workspace_read | `facman snapshots inspect <instance-id> <snapshot-id> --json` |
+| `snapshots.list` | `snapshots.list` | `snapshots_list` | no | - | available | workspace_read | `facman snapshots list <instance-id> --json` |
+| `snapshots.restore` | `snapshots.restore` | `snapshots_restore` | yes | - | available | workspace_read, workspace_write | `facman snapshots restore <snapshot-path> <target-instance-id> --json` |
+| `snapshots.retention.apply` | `snapshots.retention.apply` | `snapshots_retention_apply` | yes | - | available | workspace_read, workspace_write | `facman snapshots retention apply <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json` |
+| `snapshots.retention.plan` | `snapshots.retention.plan` | `snapshots_retention_plan` | no | - | available | workspace_read | `facman snapshots retention plan <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json` |
+| `snapshots.verify` | `snapshots.verify` | `snapshots_verify` | no | - | available | workspace_read | `facman snapshots verify <instance-id> <snapshot-id> --json` |
 | `utility.operation` | `utility.operation` | `legacy_utility_operation` | yes | - | available | workspace_read, workspace_write | `internal canonical frontend utility route` |
 | `workspace.migration.apply` | `workspace.migration.apply` | `migration_apply` | yes | - | available | workspace_read, workspace_write | `facman workspace migration apply --json` |
 | `workspace.migration.inspect` | `workspace.migration.inspect` | `migration_inspect` | no | - | available | workspace_read | `facman workspace migration inspect --json` |

@@ -149,6 +149,28 @@ bool optional_unsigned_string(
     return true;
 }
 
+bool optional_unsigned_64_string(
+    const json::Value& object,
+    const char* key,
+    std::uint64_t& value,
+    std::string& detail)
+{
+    std::string text;
+    if (!optional_string(object, key, text, detail)) return false;
+    if (text.empty()) return true;
+    if (!std::all_of(text.begin(), text.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
+        detail = std::string("request payload field must be an unsigned integer string: ") + key;
+        return false;
+    }
+    try {
+        value = std::stoull(text);
+    } catch (...) {
+        detail = std::string("request payload field exceeds its numeric budget: ") + key;
+        return false;
+    }
+    return true;
+}
+
 const char* service_operation(CommandId command) noexcept
 {
     switch (command) {
@@ -431,6 +453,56 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         RestoreInstanceRequest typed;
         if (!required_string(payload, "archive_id", typed.archive_id, detail) ||
             !optional_string(payload, "new_instance_id", typed.new_instance_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_create: {
+        if (!validate_fields(payload, {"instance_id", "snapshot_id", "saves"}, detail)) return false;
+        CreateSnapshotRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "snapshot_id", typed.snapshot_id, detail) ||
+            !optional_string_array(payload, "saves", typed.saves, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_list: {
+        if (!validate_fields(payload, {"instance_id"}, detail)) return false;
+        ListSnapshotsRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_inspect:
+    case CommandId::snapshots_verify: {
+        if (!validate_fields(payload, {"instance_id", "snapshot_id"}, detail)) return false;
+        SnapshotRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "snapshot_id", typed.snapshot_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_diff: {
+        if (!validate_fields(payload, {"instance_id", "left_snapshot_id", "right_snapshot_id"}, detail)) return false;
+        DiffSnapshotRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "left_snapshot_id", typed.left_snapshot_id, detail) ||
+            !required_string(payload, "right_snapshot_id", typed.right_snapshot_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_restore: {
+        if (!validate_fields(payload, {"snapshot_ref", "target_instance_id"}, detail)) return false;
+        RestoreSnapshotRequest typed; std::string path;
+        if (!required_string(payload, "snapshot_ref", path, detail) ||
+            !required_string(payload, "target_instance_id", typed.target_instance_id, detail)) return false;
+        typed.snapshot_ref = path;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_retention_plan:
+    case CommandId::snapshots_retention_apply: {
+        if (!validate_fields(payload, {"instance_id", "keep_last", "keep_daily", "keep_weekly", "maximum_total_bytes", "minimum_age_days"}, detail)) return false;
+        SnapshotRetentionRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !optional_unsigned_string(payload, "keep_last", typed.keep_last, detail) ||
+            !optional_unsigned_string(payload, "keep_daily", typed.keep_daily, detail) ||
+            !optional_unsigned_string(payload, "keep_weekly", typed.keep_weekly, detail) ||
+            !optional_unsigned_64_string(payload, "maximum_total_bytes", typed.maximum_total_bytes, detail) ||
+            !optional_unsigned_string(payload, "minimum_age_days", typed.minimum_age_days, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::launch_plan_build:

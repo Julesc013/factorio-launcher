@@ -206,6 +206,7 @@ ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "modsets",
     "redaction",
     "saves",
+    "snapshots",
     "server",
 }
 

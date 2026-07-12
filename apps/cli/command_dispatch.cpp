@@ -456,6 +456,61 @@ int command_mods(const Options& options)
     return 2;
 }
 
+int command_snapshots(const Options& options)
+{
+    if (options.args.size() < 3) return 2;
+    const std::string action = options.args[1];
+    const bool as_json = flag(options.args, "--json");
+    if (action == "create" && options.args.size() >= 4) {
+        for (std::size_t index = 4; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (options.args[index] != "--save" || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        json::ArrayBuilder saves;
+        for (const std::string& value : option_values(options.args, "--save")) saves.add_string(value);
+        json::ObjectBuilder payload;
+        payload.add_string("instance_id", options.args[2]);
+        payload.add_string("snapshot_id", options.args[3]);
+        payload.add_array("saves", saves);
+        return emit_basic(call(options, "snapshots.create", payload.serialize(), false), as_json, "Snapshot created");
+    }
+    if (action == "list") return emit_basic(call(options, "snapshots.list", exact_fields_payload(
+        {{"instance_id", options.args[2]}})), as_json, "Snapshots listed");
+    if ((action == "inspect" || action == "verify") && options.args.size() >= 4) {
+        return emit_basic(call(options, "snapshots." + action, exact_fields_payload(
+            {{"instance_id", options.args[2]}, {"snapshot_id", options.args[3]}})), as_json, "Snapshot " + action + " completed");
+    }
+    if (action == "diff" && options.args.size() >= 5) {
+        return emit_basic(call(options, "snapshots.diff", exact_fields_payload({
+            {"instance_id", options.args[2]}, {"left_snapshot_id", options.args[3]},
+            {"right_snapshot_id", options.args[4]}})), as_json, "Snapshot diff completed");
+    }
+    if (action == "restore" && options.args.size() >= 4) {
+        return emit_basic(call(options, "snapshots.restore", exact_fields_payload({
+            {"snapshot_ref", options.args[2]}, {"target_instance_id", options.args[3]}}), false), as_json, "Snapshot restored");
+    }
+    if (action == "retention" && options.args.size() >= 4 &&
+        (options.args[2] == "plan" || options.args[2] == "apply")) {
+        const std::set<std::string> value_options = {
+            "--keep-last", "--keep-daily", "--keep-weekly", "--maximum-total-bytes", "--minimum-age-days"};
+        for (std::size_t index = 4; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (value_options.count(options.args[index]) == 0 || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        const std::string payload = fields_payload({
+            {"instance_id", options.args[3]}, {"keep_last", option(options.args, "--keep-last")},
+            {"keep_daily", option(options.args, "--keep-daily")}, {"keep_weekly", option(options.args, "--keep-weekly")},
+            {"maximum_total_bytes", option(options.args, "--maximum-total-bytes")},
+            {"minimum_age_days", option(options.args, "--minimum-age-days")}});
+        const bool apply = options.args[2] == "apply";
+        return emit_basic(call(options, "snapshots.retention." + options.args[2], payload, !apply), as_json,
+            apply ? "Snapshot retention applied" : "Snapshot retention planned");
+    }
+    return 2;
+}
+
 int command_modsets(const Options& options)
 {
     if (options.args.size() < 3) return 2;
@@ -667,6 +722,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     if (command == "doctor") return command_doctor(options);
     if (command == "installs") return command_installs(options);
     if (command == "instances") return command_instances(options);
+    if (command == "snapshots") return command_snapshots(options);
     if (command == "mods") return command_mods(options);
     if (command == "modsets") return command_modsets(options);
     if (command == "saves") return command_saves(options);
