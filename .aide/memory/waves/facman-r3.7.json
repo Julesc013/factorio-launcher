@@ -209,10 +209,40 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-LOCAL-MOD-INVENTORY-02"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "b93d7376c625d824b4a401a59e610ac92a734d28",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "4d977e8b2b40546ac51b1555bfde416844d940b7024747d922e6c36a4b1f5621",
+      "test_fingerprints": {
+        "tests/fuzz": "missing",
+        "tests/test_local_modset_solver.py": "dea4d35cb7422e3afbd0653144562a8a5696cd23c17e54f89bab1d263045303a"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-LOCAL-MODSET-SOLVER-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "8335fde1ba12aaacff3cd44e318834be6fb3518c",
+  "current_exact_revision": "b93d7376c625d824b4a401a59e610ac92a734d28",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -220,7 +250,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T16:46:28Z",
+  "updated_at": "2026-07-12T17:23:40Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -393,6 +423,37 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-LOCAL-MOD-INVENTORY-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T17:23:39Z",
+        "result": "PASS",
+        "source_fingerprint": "4d977e8b2b40546ac51b1555bfde416844d940b7024747d922e6c36a4b1f5621",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/fuzz": "missing",
+          "tests/test_local_modset_solver.py": "dea4d35cb7422e3afbd0653144562a8a5696cd23c17e54f89bab1d263045303a"
+        },
+        "test_results": {
+          "bounded_solver": "PASS",
+          "clean_repro": "PASS",
+          "deterministic_output": "PASS",
+          "no_network": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "transactional_apply": "PASS",
+          "transactional_rollback": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-LOCAL-MODSET-SOLVER-01"
       }
     ]
   },
@@ -851,6 +912,8 @@
         "deterministic-bounded-local-solver",
         "transactional-modset-rollback"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T17:23:40Z",
       "dependencies": [
         "FACMAN-LOCAL-MOD-INVENTORY-02"
       ],
@@ -860,14 +923,45 @@
         "external drift overwrite"
       ],
       "id": "FACMAN-LOCAL-MODSET-SOLVER-01",
-      "last_green_commit": null,
+      "last_green_commit": "b93d7376c625d824b4a401a59e610ac92a734d28",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T16:47:40Z",
+      "status": "closed",
       "stop_conditions": [
         "a budget can be exceeded",
         "same inputs differ"
       ],
-      "title": "Implement deterministic bounded local dependency planning"
+      "title": "Implement deterministic bounded local dependency planning",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T17:23:39Z",
+        "result": "PASS",
+        "source_fingerprint": "4d977e8b2b40546ac51b1555bfde416844d940b7024747d922e6c36a4b1f5621",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/fuzz": "missing",
+          "tests/test_local_modset_solver.py": "dea4d35cb7422e3afbd0653144562a8a5696cd23c17e54f89bab1d263045303a"
+        },
+        "test_results": {
+          "bounded_solver": "PASS",
+          "clean_repro": "PASS",
+          "deterministic_output": "PASS",
+          "no_network": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "transactional_apply": "PASS",
+          "transactional_rollback": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [

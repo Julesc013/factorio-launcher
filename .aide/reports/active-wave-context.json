@@ -1,15 +1,15 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "contracts/schema/modset/",
-      "contracts/command/modsets.*"
+      "factorio.save_ref.v1",
+      "contracts/command/saves.*"
     ],
     "affected_targets": [
       "flb_factorio_application_static"
     ],
     "affected_tests": [
-      "tests/test_local_modset_solver.py",
-      "tests/fuzz/"
+      "tests/test_save_index_retention.py",
+      "tests/test_save_transfer.py"
     ],
     "allowed_paths": [
       "runtime/",
@@ -20,34 +20,33 @@
     ],
     "blockers": [],
     "claim_impacts": [
-      "deterministic-bounded-local-solver",
-      "transactional-modset-rollback"
+      "bounded-structural-save-intelligence"
     ],
     "dependencies": [
-      "FACMAN-LOCAL-MOD-INVENTORY-02"
+      "FACMAN-INSTANCE-LIFECYCLE-02"
     ],
     "forbidden_paths": [
-      "network fetch",
-      "unbounded backtracking",
-      "external drift overwrite"
+      "save mutation",
+      "deep save claims",
+      "permanent deletion"
     ],
-    "id": "FACMAN-LOCAL-MODSET-SOLVER-01",
+    "id": "FACMAN-SAVE-INDEX-AND-RETENTION-02",
     "last_green_commit": null,
     "provider_revisions": {},
     "status": "pending",
     "stop_conditions": [
-      "a budget can be exceeded",
-      "same inputs differ"
+      "save drift is accepted",
+      "retention is irreversible"
     ],
-    "title": "Implement deterministic bounded local dependency planning"
+    "title": "Implement structural save intelligence and reversible retention"
   },
   "affected_contracts": [
-    "contracts/schema/modset/",
-    "contracts/command/modsets.*"
+    "factorio.save_ref.v1",
+    "contracts/command/saves.*"
   ],
   "affected_tests": [
-    "tests/test_local_modset_solver.py",
-    "tests/fuzz/"
+    "tests/test_save_index_retention.py",
+    "tests/test_save_transfer.py"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -57,11 +56,11 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "8335fde1ba12aaacff3cd44e318834be6fb3518c",
+  "current_exact_revision": "b93d7376c625d824b4a401a59e610ac92a734d28",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-LOCAL-MOD-INVENTORY-02",
-      "last_green_commit": "8335fde1ba12aaacff3cd44e318834be6fb3518c",
+      "id": "FACMAN-INSTANCE-LIFECYCLE-02",
+      "last_green_commit": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
       "status": "closed"
     }
   ],
