@@ -1,15 +1,16 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "contracts/schema/instance/",
-      "contracts/command/instances.*"
+      "factorio.instance_snapshot.v1",
+      "contracts/command/snapshots.*"
     ],
     "affected_targets": [
       "flb_factorio_application_static",
       "facman_client_static"
     ],
     "affected_tests": [
-      "tests/test_instance_lifecycle.py"
+      "tests/test_instance_snapshots.py",
+      "tests/test_archive_core.py"
     ],
     "allowed_paths": [
       "runtime/",
@@ -20,33 +21,33 @@
     ],
     "blockers": [],
     "claim_impacts": [
-      "reversible-instance-lifecycle"
+      "deterministic-secret-safe-snapshots"
     ],
     "dependencies": [
-      "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      "FACMAN-INSTANCE-LIFECYCLE-02"
     ],
     "forbidden_paths": [
-      "instances.purge",
-      "mutable instance IDs",
-      "unowned deletion"
+      "secret-bearing snapshots",
+      "machine-local paths",
+      "permanent deletion"
     ],
-    "id": "FACMAN-INSTANCE-LIFECYCLE-02",
+    "id": "FACMAN-INSTANCE-SNAPSHOT-01",
     "last_green_commit": null,
     "provider_revisions": {},
-    "started_at": "2026-07-12T14:16:11Z",
-    "status": "active",
+    "status": "pending",
     "stop_conditions": [
-      "no-clobber cannot be preserved",
-      "recovery is uncertain"
+      "self-verification fails",
+      "secret exclusion cannot fail closed"
     ],
-    "title": "Implement reversible instance inspection and lifecycle"
+    "title": "Implement deterministic portable instance snapshots"
   },
   "affected_contracts": [
-    "contracts/schema/instance/",
-    "contracts/command/instances.*"
+    "factorio.instance_snapshot.v1",
+    "contracts/command/snapshots.*"
   ],
   "affected_tests": [
-    "tests/test_instance_lifecycle.py"
+    "tests/test_instance_snapshots.py",
+    "tests/test_archive_core.py"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -56,11 +57,11 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
+  "current_exact_revision": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
-      "last_green_commit": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
+      "id": "FACMAN-INSTANCE-LIFECYCLE-02",
+      "last_green_commit": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
       "status": "closed"
     }
   ],

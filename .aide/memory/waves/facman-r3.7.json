@@ -81,10 +81,43 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-INSTANCE-SNAPSHOT-01",
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "8ed989f5841814b5a55eaa77cd688fee5498f33d00df42a5311ad71fe97515bc",
+      "test_fingerprints": {
+        "tests/test_instance_lifecycle.py": "125b70463950918c618de25b5786c1b52eb1acb58c1add0a48209ddd9dada903"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-INSTANCE-LIFECYCLE-02"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
+  "current_exact_revision": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -92,7 +125,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T14:16:11Z",
+  "updated_at": "2026-07-12T15:00:58Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -150,6 +183,34 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T15:00:58Z",
+        "result": "PASS",
+        "source_fingerprint": "8ed989f5841814b5a55eaa77cd688fee5498f33d00df42a5311ad71fe97515bc",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_instance_lifecycle.py": "125b70463950918c618de25b5786c1b52eb1acb58c1add0a48209ddd9dada903"
+        },
+        "test_results": {
+          "affected_release": "PASS",
+          "clean_repro": "PASS",
+          "fault_matrix": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "winforms": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-INSTANCE-LIFECYCLE-02"
       }
     ]
   },
@@ -318,6 +379,8 @@
       "claim_impacts": [
         "reversible-instance-lifecycle"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T15:00:58Z",
       "dependencies": [
         "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
       ],
@@ -327,15 +390,42 @@
         "unowned deletion"
       ],
       "id": "FACMAN-INSTANCE-LIFECYCLE-02",
-      "last_green_commit": null,
+      "last_green_commit": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
       "provider_revisions": {},
       "started_at": "2026-07-12T14:16:11Z",
-      "status": "active",
+      "status": "closed",
       "stop_conditions": [
         "no-clobber cannot be preserved",
         "recovery is uncertain"
       ],
-      "title": "Implement reversible instance inspection and lifecycle"
+      "title": "Implement reversible instance inspection and lifecycle",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T15:00:58Z",
+        "result": "PASS",
+        "source_fingerprint": "8ed989f5841814b5a55eaa77cd688fee5498f33d00df42a5311ad71fe97515bc",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_instance_lifecycle.py": "125b70463950918c618de25b5786c1b52eb1acb58c1add0a48209ddd9dada903"
+        },
+        "test_results": {
+          "affected_release": "PASS",
+          "clean_repro": "PASS",
+          "fault_matrix": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "winforms": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
