@@ -31,6 +31,9 @@ int main()
         std::make_unique<facman::client::DirectFlbTransport>(workspace));
     auto product = client.execute({"product.inspect", "{}", true});
     if (!product || !product.value().ok() || product.value().payload.find("\"product_id\":\"factorio\"") == std::string::npos) return 1;
+    auto direct_status = client.execute({"workspace.status", "{}", true});
+    if (!direct_status || !direct_status.value().ok() ||
+        direct_status.value().payload_string("command") != "workspace.status") return 13;
     auto unavailable = client.execute({"run.execute", "{}", false});
     if (!unavailable || unavailable.value().ok() || unavailable.value().error_code != "isolation_not_proven" ||
         unavailable.value().outcome_kind != facman::core::OutcomeKind::unavailable ||
@@ -68,6 +71,9 @@ int main()
         fs::path(FACMAN_TEST_CLI_PATH), workspace));
     auto cli_product = cli.execute({"product.inspect", "{}", true});
     if (!cli_product || !cli_product.value().ok() || cli_product.value().payload_string("product_id") != "factorio") return 9;
+    auto cli_status = cli.execute({"workspace.status", "{}", true});
+    if (!cli_status || !cli_status.value().ok() ||
+        cli_status.value().payload_string("command") != direct_status.value().payload_string("command")) return 14;
     facman::client::FacManClient missing_cli(std::make_unique<facman::client::CliProcessTransport>(
         workspace / "missing-facman"));
     auto missing_response = missing_cli.execute({"product.inspect", "{}", true});

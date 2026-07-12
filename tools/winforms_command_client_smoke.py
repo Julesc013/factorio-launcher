@@ -143,6 +143,7 @@ namespace FacMan.WinForms.CommandClientSmoke
                 fakeCli,
                 "@echo off\r\n" +
                 "set /p FACMAN_REQUEST=\r\n" +
+                "echo %FACMAN_REQUEST%>request.json\r\n" +
                 "echo {\"schema\":\"facman.transport_response.v1\",\"protocol_version\":1,\"request_id\":\"fake\",\"command\":\"product.inspect\",\"outcome\":\"ok\",\"payload\":{},\"error\":null,\"diagnostics\":[],\"effects\":[]}\r\n" +
                 "exit /b 0\r\n");
 
@@ -187,6 +188,20 @@ namespace FacMan.WinForms.CommandClientSmoke
                 });
             Require((string)payload["instance_id"] == "space-age-main", "generated payload should map instance id");
             Require((string)payload["output_path"] == "diagnostics.zip", "generated payload should map output path");
+
+            CommandResult applied = client.ExecuteAsync(
+                CommandCatalog.Find("installs.import"),
+                new Dictionary<string, string> {
+                    { "path", root },
+                    { "install_id", "fixture" }
+                },
+                root,
+                fakeCli,
+                CancellationToken.None).GetAwaiter().GetResult();
+            Require(applied.ExitCode == 0, "generated write command should reach the backend");
+            string request = File.ReadAllText(Path.Combine(root, "request.json"));
+            Require(request.Contains("\"command\":\"install_refs.import\""), "write command must use generated runtime id");
+            Require(request.Contains("\"dry_run\":false"), "write command must preserve generated apply semantics");
 
             return 0;
         }
