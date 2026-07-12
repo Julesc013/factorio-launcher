@@ -28,5 +28,13 @@ The ABI is experimental but has a correctness floor:
 - explicit calling-convention and visibility macros
 - borrowed response strings valid until the next context call
 - explicit ABI version queries
+- catch-all exception barriers at every exported C++ implementation boundary
+- fully initialized response structures on every writable error path
+- serialized execution per FLB context; independent contexts may run concurrently
+
+No C++ exception may cross the C ABI. The Factorio application owns mutable
+response storage, so calls sharing one context are mechanically serialized.
+Callers must copy borrowed response views before the next call on that context
+when they need a longer lifetime.
 
 There is no dynamic plugin loading or stable third-party compatibility promise.

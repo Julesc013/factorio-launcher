@@ -22,10 +22,34 @@
 #include "handlers/utility.h"
 
 #include <filesystem>
+#include <mutex>
+#include <new>
 #include <string>
 #include <variant>
 
 namespace facman::factorio::application {
+namespace {
+
+int write_boundary_error(ulk_command_response_v1* response, const char* code, const char* message) noexcept
+{
+    static const char payload[] =
+        "{\"schema\":\"ulk.command_response.v1\",\"status\":\"internal_error\",\"payload\":null,"
+        "\"error\":{\"code\":\"cxx_exception_contained\",\"message\":\"A C++ exception was contained at the FLB boundary\"}}";
+    if (response == nullptr || response->struct_size < sizeof(*response)) return ULK_STATUS_INVALID_ARGUMENT;
+    response->struct_size = sizeof(*response);
+    response->status = ULK_STATUS_ERROR;
+    response->json_payload.data = payload;
+    response->json_payload.size = sizeof(payload) - 1;
+    response->error.struct_size = sizeof(response->error);
+    response->error.code = ULK_STATUS_ERROR;
+    response->error.message.data = message;
+    response->error.message.size = message == nullptr ? 0 : std::char_traits<char>::length(message);
+    response->error.detail.data = code;
+    response->error.detail.size = code == nullptr ? 0 : std::char_traits<char>::length(code);
+    return ULK_STATUS_ERROR;
+}
+
+} // namespace
 
 class FactorioApplication {
 public:
@@ -36,6 +60,7 @@ public:
 
     int handle(const ulk_command_request_v1* request, ulk_command_response_v1* response)
     {
+        std::lock_guard<std::mutex> lock(request_mutex_);
         current_command_.assign(
             request->command_name.data,
             request->command_name.data + request->command_name.size);
@@ -136,6 +161,7 @@ private:
     std::string current_command_;
     std::string response_json_;
     std::string error_message_;
+    std::mutex request_mutex_;
 };
 
 } // namespace facman::factorio::application
@@ -152,7 +178,10 @@ extern "C" void* flb_factorio_application_create(const char* workspace_root)
 
 extern "C" void flb_factorio_application_destroy(void* application)
 {
-    delete static_cast<facman::factorio::application::FactorioApplication*>(application);
+    try {
+        delete static_cast<facman::factorio::application::FactorioApplication*>(application);
+    } catch (...) {
+    }
 }
 
 extern "C" int ULK_CALL flb_factorio_application_handle_v1(
@@ -160,6 +189,27 @@ extern "C" int ULK_CALL flb_factorio_application_handle_v1(
     const ulk_command_request_v1* request,
     ulk_command_response_v1* response)
 {
-    if (application == nullptr || request == nullptr || response == nullptr) return ULK_STATUS_INVALID_ARGUMENT;
-    return static_cast<facman::factorio::application::FactorioApplication*>(application)->handle(request, response);
+    if (response == nullptr || response->struct_size < sizeof(*response)) return ULK_STATUS_INVALID_ARGUMENT;
+    response->status = ULK_STATUS_INVALID_ARGUMENT;
+    response->json_payload = {};
+    response->error = {};
+    response->struct_size = sizeof(*response);
+    response->error.struct_size = sizeof(response->error);
+    response->error.code = ULK_STATUS_INVALID_ARGUMENT;
+    if (application == nullptr || request == nullptr || request->struct_size < sizeof(*request)) {
+        return ULK_STATUS_INVALID_ARGUMENT;
+    }
+    try {
+        return static_cast<facman::factorio::application::FactorioApplication*>(application)->handle(request, response);
+    } catch (const std::bad_alloc&) {
+        return facman::factorio::application::write_boundary_error(
+            response,
+            "allocation_failure",
+            "Memory allocation failed while handling the FLB command");
+    } catch (...) {
+        return facman::factorio::application::write_boundary_error(
+            response,
+            "cxx_exception_contained",
+            "A C++ exception was contained at the FLB boundary");
+    }
 }

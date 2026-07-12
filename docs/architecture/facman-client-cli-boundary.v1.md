@@ -23,9 +23,11 @@ Response-envelope decoding and JSON member access are owned by the client.
 `runtime/client/facman_client.h` defines the stable request, response, client,
 and transport interfaces.
 
-- `DirectFlbTransport` is the working in-process transport. It creates an FLB
-  context for the selected workspace and executes the canonical command through
-  the C ABI command client.
+- `DirectFlbTransport` is the working in-process transport. It creates one FLB
+  context for the selected workspace, registers the graph once, serializes
+  calls on that context, reuses it for the transport lifetime, and destroys it
+  once. Responses retain a parsed payload document so repeated accessors do not
+  reparse the same JSON.
 - `CliProcessTransport` is a compatibility declaration only. It returns
   `cli_process_transport_unavailable` because invoking the CLI from its own
   backend would be recursive and misleading.
@@ -36,7 +38,8 @@ Transport names describe implemented behavior; none claim JSON-RPC.
 
 ## Canonical grouped routes
 
-The provider command registry has a fixed capacity of 32 and is now full.
+The provider command registry uses allocator-backed geometric growth under an
+explicit storage budget; the former fixed capacity of 32 is removed.
 Frontend aliases whose behavior is related are normalized into two typed
 application routes:
 
@@ -46,8 +49,8 @@ application routes:
 
 The public aliases remain the compatibility surface. The grouped runtime IDs
 are internal catalog entries and are not emitted as CLI help or completions.
-Adding another registered runtime command requires an explicit provider-registry
-capacity change; it must not silently displace an existing command.
+The grouped routes remain deprecated compatibility paths while R3.5 replaces
+them with first-class catalog commands; they are not a capacity workaround.
 
 ## Optional Universal Setup
 

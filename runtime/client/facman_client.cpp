@@ -48,7 +48,13 @@ facman::core::Result<CommandResponse> decode_response(int status, std::string en
     response.status = status;
     response.envelope = std::move(envelope);
     const auto* payload = document.value().find("payload");
-    if (payload != nullptr && !payload->is_null()) response.payload = payload->serialize();
+    if (payload != nullptr && !payload->is_null()) {
+        response.payload = payload->serialize();
+        auto parsed_payload = facman::core::json::parse(response.payload, limits);
+        if (parsed_payload) {
+            response.parsed_payload = std::make_shared<facman::core::json::Value>(parsed_payload.take_value());
+        }
+    }
     const auto* error = document.value().find("error");
     if (error != nullptr && error->is_object()) {
         response.error_code = string_value(*error, "code");
@@ -66,35 +72,42 @@ std::string quote_json_string(const std::string& value)
 
 std::string CommandResponse::payload_string(const char* key) const
 {
-    auto document = facman::core::json::parse(payload);
-    return document && document.value().is_object()
-        ? string_value(document.value(), key)
+    return parsed_payload && parsed_payload->is_object()
+        ? string_value(*parsed_payload, key)
         : std::string();
 }
 
 std::string CommandResponse::payload_member_json(const char* key, const std::string& fallback) const
 {
-    auto document = facman::core::json::parse(payload);
-    if (!document || !document.value().is_object()) return fallback;
-    const auto* field = document.value().find(key);
+    if (!parsed_payload || !parsed_payload->is_object()) return fallback;
+    const auto* field = parsed_payload->find(key);
     return field == nullptr ? fallback : field->serialize();
 }
 
 DirectFlbTransport::DirectFlbTransport(std::filesystem::path workspace)
     : workspace_(std::move(workspace))
 {
+    const std::string workspace_text = workspace_.lexically_normal().string();
+    flb_config_v1 config {};
+    config.struct_size = sizeof(config);
+    config.workspace_root = view(workspace_text);
+    (void)flb_context_create_v1(&config, &context_);
+}
+
+DirectFlbTransport::~DirectFlbTransport()
+{
+    flb_context_destroy_v1(context_);
 }
 
 facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandRequest& request)
 {
     if (request.command.empty()) return failure("client_request_invalid", "command must not be empty");
-    const std::string workspace = workspace_.lexically_normal().string();
-    flb_config_v1 config {};
-    config.struct_size = sizeof(config);
-    config.workspace_root = view(workspace);
-    flb_context* context = nullptr;
-    if (flb_context_create_v1(&config, &context) != ULK_STATUS_OK || context == nullptr) {
-        return failure("client_context_create_failed", "Factorio binding context could not be created", workspace);
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (context_ == nullptr) {
+        return failure(
+            "client_context_create_failed",
+            "Factorio binding context could not be created",
+            workspace_.lexically_normal().string());
     }
     ulk_command_request_v1 native_request {};
     ulk_command_response_v1 native_response {};
@@ -103,14 +116,13 @@ facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandR
     native_request.json_payload = view(request.json_payload);
     native_request.dry_run = request.dry_run ? 1 : 0;
     native_response.struct_size = sizeof(native_response);
-    const int status = fl_command_client_execute_cabi_v1(context, &native_request, &native_response);
+    const int status = fl_command_client_execute_cabi_v1(context_, &native_request, &native_response);
     std::string envelope;
     if (native_response.json_payload.data != nullptr) {
         envelope.assign(
             native_response.json_payload.data,
             native_response.json_payload.data + native_response.json_payload.size);
     }
-    flb_context_destroy_v1(context);
     if (envelope.empty()) return failure("client_response_empty", "Factorio binding returned an empty response");
     return decode_response(status, std::move(envelope));
 }

@@ -5,9 +5,12 @@
 #define FACMAN_RUNTIME_CLIENT_FACMAN_CLIENT_H
 
 #include "fl_result.h"
+#include "fl_json.h"
+#include "flb/flb_api.h"
 
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <string>
 
 namespace facman::client {
@@ -24,6 +27,7 @@ struct CommandResponse {
     std::string payload;
     std::string error_code;
     std::string error_message;
+    std::shared_ptr<facman::core::json::Value> parsed_payload;
     bool ok() const noexcept { return status == 0; }
     std::string payload_string(const char* key) const;
     std::string payload_member_json(const char* key, const std::string& fallback = "null") const;
@@ -41,11 +45,14 @@ public:
 class DirectFlbTransport final : public Transport {
 public:
     explicit DirectFlbTransport(std::filesystem::path workspace);
+    ~DirectFlbTransport() override;
     facman::core::Result<CommandResponse> execute(const CommandRequest& request) override;
     const char* name() const noexcept override { return "direct-flb"; }
 
 private:
     std::filesystem::path workspace_;
+    flb_context* context_ = nullptr;
+    std::mutex mutex_;
 };
 
 class CliProcessTransport final : public Transport {
