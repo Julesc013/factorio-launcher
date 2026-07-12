@@ -183,6 +183,25 @@ bool decode_profile_patch(const json::Value& payload, profiles::Patch& patch, st
         optional_string_array(payload, "additional_arguments", patch.additional_arguments, detail);
 }
 
+bool decode_modset_solver(
+    const json::Value& payload,
+    ModsetSolverRequest& request,
+    std::string& detail)
+{
+    return required_string(payload, "instance_id", request.instance_id, detail) &&
+        optional_string_array(payload, "enabled_mods", request.enabled_mods, detail) &&
+        optional_string_array(payload, "disabled_mods", request.disabled_mods, detail) &&
+        optional_string_array(payload, "version_preferences", request.version_preferences, detail) &&
+        optional_string(payload, "transaction_id", request.transaction_id, detail) &&
+        optional_unsigned_string(payload, "maximum_packages", request.budgets.maximum_packages, detail) &&
+        optional_unsigned_string(payload, "maximum_versions_per_package", request.budgets.maximum_versions_per_package, detail) &&
+        optional_unsigned_string(payload, "maximum_graph_edges", request.budgets.maximum_graph_edges, detail) &&
+        optional_unsigned_string(payload, "maximum_solver_states", request.budgets.maximum_solver_states, detail) &&
+        optional_unsigned_string(payload, "maximum_backtracks", request.budgets.maximum_backtracks, detail) &&
+        optional_unsigned_string(payload, "maximum_elapsed_ms", request.budgets.maximum_elapsed_ms, detail) &&
+        optional_unsigned_string(payload, "maximum_explanation_nodes", request.budgets.maximum_explanation_nodes, detail);
+}
+
 const char* service_operation(CommandId command) noexcept
 {
     switch (command) {
@@ -305,8 +324,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "workspace", typed.workspace, detail)) return false;
         request.payload = std::move(typed); return true;
     }
-    case CommandId::launch_plan_explain:
-    case CommandId::modsets_explain: {
+    case CommandId::launch_plan_explain: {
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;
         std::string value;
         if (!required_string(payload, "instance_id", value, detail)) return false;
@@ -601,6 +619,18 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!validate_fields(payload, {"identity"}, detail)) return false;
         ModInventoryRequest typed;
         if (!required_string(payload, "identity", typed.identity, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::modsets_plan:
+    case CommandId::modsets_diff:
+    case CommandId::modsets_explain:
+    case CommandId::modsets_apply:
+    case CommandId::modsets_rollback: {
+        if (!validate_fields(payload, {"instance_id", "enabled_mods", "disabled_mods", "version_preferences",
+                "transaction_id", "maximum_packages", "maximum_versions_per_package", "maximum_graph_edges",
+                "maximum_solver_states", "maximum_backtracks", "maximum_elapsed_ms", "maximum_explanation_nodes"}, detail)) return false;
+        ModsetSolverRequest typed;
+        if (!decode_modset_solver(payload, typed, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::modsets_lock:

@@ -55,6 +55,20 @@ PROFILE_PATCH_FIELDS = [
     ("additional_arguments", "string_array", False),
 ]
 
+MODSET_SOLVER_FIELDS = [
+    ("instance_id", "identifier", True),
+    ("enabled_mods", "string_array", False),
+    ("disabled_mods", "string_array", False),
+    ("version_preferences", "string_array", False),
+    ("maximum_packages", "string", False),
+    ("maximum_versions_per_package", "string", False),
+    ("maximum_graph_edges", "string", False),
+    ("maximum_solver_states", "string", False),
+    ("maximum_backtracks", "string", False),
+    ("maximum_elapsed_ms", "string", False),
+    ("maximum_explanation_nodes", "string", False),
+]
+
 OUTPUTS = {
     "catalog_json": ROOT / "contracts/generated-index/command_catalog.v2.json",
     "command_header": ROOT / "runtime/core/generated/command_catalog.h",
@@ -84,7 +98,11 @@ REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
     "preferences.validate": PREFERENCE_REQUEST_FIELDS,
     "onboarding.plan": [("preferred_install", "identifier", False), ("instance_display_name", "string", False), ("template_id", "identifier", False), ("workspace", "path", False)],
     "launch_plan.explain": [("instance_id", "identifier", True)],
-    "modsets.explain": [("instance_id", "identifier", True)],
+    "modsets.plan": MODSET_SOLVER_FIELDS,
+    "modsets.diff": MODSET_SOLVER_FIELDS,
+    "modsets.explain": MODSET_SOLVER_FIELDS,
+    "modsets.apply": MODSET_SOLVER_FIELDS,
+    "modsets.rollback": [("instance_id", "identifier", True), ("transaction_id", "string", True)],
     "doctor.run": [("roots", "string_array", False)],
     "install_refs.scan": [("roots", "string_array", False)],
     "install_refs.import": [("path", "path", True), ("install_id", "identifier", True)],

@@ -218,6 +218,36 @@ std::string profile_payload(
     return output.serialize();
 }
 
+std::string modset_solver_payload(
+    const std::vector<std::string>& args,
+    const std::string& instance,
+    const std::string& transaction = {})
+{
+    json::ObjectBuilder output;
+    output.add_string("instance_id", instance);
+    if (!transaction.empty()) output.add_string("transaction_id", transaction);
+    for (const auto& field : std::vector<std::pair<std::string, std::vector<std::string>>> {
+             {"enabled_mods", option_values(args, "--enable")},
+             {"disabled_mods", option_values(args, "--disable")},
+             {"version_preferences", option_values(args, "--prefer")},
+         }) {
+        if (field.second.empty()) continue;
+        json::ArrayBuilder values;
+        for (const std::string& value : field.second) values.add_string(value);
+        output.add_array(field.first, values);
+    }
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+             {"maximum_packages", option(args, "--max-packages")},
+             {"maximum_versions_per_package", option(args, "--max-versions-per-package")},
+             {"maximum_graph_edges", option(args, "--max-graph-edges")},
+             {"maximum_solver_states", option(args, "--max-solver-states")},
+             {"maximum_backtracks", option(args, "--max-backtracks")},
+             {"maximum_elapsed_ms", option(args, "--max-elapsed-ms")},
+             {"maximum_explanation_nodes", option(args, "--max-explanation-nodes")},
+         }) if (!field.second.empty()) output.add_string(field.first, field.second);
+    return output.serialize();
+}
+
 std::string transport_response(
     const std::string& request_id,
     const std::string& command,
@@ -584,7 +614,14 @@ int command_modsets(const Options& options)
 {
     if (options.args.size() < 3) return 2;
     const std::string action = options.args[1], instance = options.args[2];
-    if (action == "explain") return emit_guidance(call(options, "modsets.explain", exact_fields_payload({{"instance_id", instance}})), flag(options.args, "--json"));
+    if (action == "plan" || action == "diff" || action == "explain" || action == "apply") {
+        return emit_basic(call(options, "modsets." + action, modset_solver_payload(options.args, instance), action != "apply"),
+            flag(options.args, "--json"), "Modset " + action + " completed");
+    }
+    if (action == "rollback" && options.args.size() >= 4) {
+        return emit_basic(call(options, "modsets.rollback", modset_solver_payload(options.args, instance, options.args[3]), false),
+            flag(options.args, "--json"), "Modset rollback completed");
+    }
     if (action == "lock" || action == "verify") return emit_basic(call(options, "modsets." + action, exact_fields_payload({{"instance_id", instance}}), action == "verify"), flag(options.args, "--json"), "Modset " + action + " completed");
     if (action == "export" && options.args.size() >= 4) {
         return emit_basic(

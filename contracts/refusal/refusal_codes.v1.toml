@@ -1379,3 +1379,101 @@ severity = "blocked"
 effect = "workspace_read"
 retryable = true
 message = "The requested local mod inventory identity matches multiple records."
+
+[[code]]
+id = "local_dependency_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "No compatible local artifact satisfies a required dependency."
+
+[[code]]
+id = "solver_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The local dependency solver exhausted an explicit resource budget."
+
+[[code]]
+id = "modset_external_drift"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Modset state changed or disagrees with its trusted local counterpart."
+
+[[code]]
+id = "modset_state_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Modset state could not be read as a bounded stable regular file."
+
+[[code]]
+id = "modset_version_preference_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A local solver version preference is malformed or duplicated."
+
+[[code]]
+id = "modset_request_conflict"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A modset request enables and disables the same package."
+
+[[code]]
+id = "modset_archive_changed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A selected local archive changed after dependency planning."
+
+[[code]]
+id = "modset_path_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "A modset activation path crosses a link or reparse boundary."
+
+[[code]]
+id = "modset_path_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Managed modset state paths could not be represented safely."
+
+[[code]]
+id = "modset_fault_injected"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A test-only modset activation fault was injected and rolled back."
+
+[[code]]
+id = "modset_result_invalid"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "A modset result could not be represented as canonical JSON."
+
+[[code]]
+id = "modset_transaction_id_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "Rollback requires a valid local activation transaction identifier."
+
+[[code]]
+id = "modset_history_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Modset activation history is incomplete or fails identity verification."
+
+[[code]]
+id = "modset_already_rolled_back"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The requested modset activation has already been rolled back."

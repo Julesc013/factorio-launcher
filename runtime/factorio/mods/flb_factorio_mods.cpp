@@ -1370,4 +1370,11 @@ facman::core::Result<std::string> inventory_explain(const fs::path& workspace, c
     return selected_inventory(workspace, request, "mods.explain", false);
 }
 
+facman::core::Result<std::vector<ModRef>> local_inventory(
+    const fs::path& workspace,
+    const std::vector<fs::path>& explicit_roots)
+{
+    return build_inventory(workspace, explicit_roots);
+}
+
 } // namespace facman::factorio::mods

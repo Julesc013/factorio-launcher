@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `b16cd1fe2f14263ad00523ab470debdc346e3c285afd1714699de867a9802742`.
+Source digest: `9f32d83518dbf08af67d4e3308b42deea291598d4ea9d196b901075d6e4f9570`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -48,9 +48,13 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `mods.search` | `mods.search` | `mods_search` | no | - | unavailable_until_gateway | network_read | `facman mods search <query> --json` |
 | `mods.update` | `mods.update` | `mods_update` | no | - | unavailable_until_gateway | network_read | `facman mods update --instance <id> --json` |
 | `mods.verify` | `mods.verify` | `mods_verify` | no | - | available | workspace_read | `facman mods verify <identity> --json` |
-| `modsets.explain` | `modsets.explain` | `modsets_explain` | no | - | available | workspace_read | `facman modsets explain <instance-id> --json` |
+| `modsets.apply` | `modsets.apply` | `modsets_apply` | yes | - | available | workspace_read, workspace_write | `facman modsets apply <instance-id> [solver options] --json` |
+| `modsets.diff` | `modsets.diff` | `modsets_diff` | no | - | available | workspace_read | `facman modsets diff <instance-id> [solver options] --json` |
+| `modsets.explain` | `modsets.explain` | `modsets_explain` | no | - | available | workspace_read | `facman modsets explain <instance-id> [solver options] --json` |
 | `modsets.export` | `modsets.export` | `modsets_export` | yes | - | available | workspace_read, workspace_write | `facman modsets export <instance-id> <pack.zip> --json` |
 | `modsets.lock` | `modsets.lock` | `modsets_lock` | yes | - | available | workspace_read, workspace_write | `facman modsets lock <instance-id> --json` |
+| `modsets.plan` | `modsets.plan` | `modsets_plan` | no | - | available | workspace_read | `facman modsets plan <instance-id> [solver options] --json` |
+| `modsets.rollback` | `modsets.rollback` | `modsets_rollback` | yes | - | available | workspace_read, workspace_write | `facman modsets rollback <instance-id> <transaction-id> --json` |
 | `modsets.verify` | `modsets.verify` | `modsets_verify` | no | - | available | workspace_read | `facman modsets verify <instance-id> --json` |
 | `onboarding.plan` | `onboarding.plan` | `onboarding_plan` | no | - | available | workspace_read | `facman onboarding plan --preferred-install <install-id> --name <display-name> --template <template-id> --json` |
 | `package.verify` | `package.verify` | `package_verify` | no | - | unavailable_until_gateway | setup_preview | `facman package verify --json` |

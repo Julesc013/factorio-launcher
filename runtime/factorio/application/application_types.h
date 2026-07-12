@@ -7,6 +7,7 @@
 #include "flb_factorio_diagnostics.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
+#include "flb_factorio_modset_solver.h"
 #include "flb_factorio_mods.h"
 #include "flb_factorio_save_operations.h"
 #include "fl_transaction.h"
@@ -76,6 +77,7 @@ using ImportModRequest = modsets::ImportRequest;
 using ModInventoryRequest = facman::factorio::mods::InventoryRequest;
 using ModsetInstanceRequest = modsets::InstanceRequest;
 using ExportModsetRequest = modsets::ExportRequest;
+using ModsetSolverRequest = facman::factorio::modsets::solver::Request;
 using ListSavesRequest = saves::InstanceRequest;
 using BackupSaveRequest = saves::BackupRequest;
 using CloneSaveRequest = saves::CloneRequest;
@@ -115,6 +117,7 @@ using ApplicationPayload = std::variant<
     ModInventoryRequest,
     ModsetInstanceRequest,
     ExportModsetRequest,
+    ModsetSolverRequest,
     ListSavesRequest,
     BackupSaveRequest,
     CloneSaveRequest,

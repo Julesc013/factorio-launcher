@@ -116,7 +116,6 @@ private:
         case CommandId::onboarding_plan: return handlers::onboarding_plan(context_, std::get<OnboardingPlanRequest>(request.payload));
         case CommandId::doctor_explain: return handlers::doctor_explain(context_);
         case CommandId::launch_plan_explain: return handlers::launch_plan_explain(context_, std::get<ExplainInstanceRequest>(request.payload));
-        case CommandId::modsets_explain: return handlers::modsets_explain(context_, std::get<ExplainInstanceRequest>(request.payload));
         case CommandId::doctor_run: return handlers::run_doctor(context_, std::get<DoctorRequest>(request.payload));
         case CommandId::install_list: return handlers::list_installs(context_);
         case CommandId::install_scan: return handlers::scan_installs(context_, std::get<ScanInstallRefsRequest>(request.payload));
@@ -170,6 +169,7 @@ private:
         case CommandId::modsets_lock: return handlers::lock_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
         case CommandId::modsets_verify: return handlers::verify_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
         case CommandId::modsets_export: return handlers::export_modset(context_, std::get<ExportModsetRequest>(request.payload));
+        case CommandId::modsets_plan: case CommandId::modsets_diff: case CommandId::modsets_explain: case CommandId::modsets_apply: case CommandId::modsets_rollback: return handlers::dispatch_modset_solver(context_, request);
         case CommandId::saves_list: return handlers::list_saves(context_, std::get<ListSavesRequest>(request.payload));
         case CommandId::saves_backup: return handlers::backup_save(context_, std::get<BackupSaveRequest>(request.payload));
         case CommandId::saves_clone: return handlers::clone_save(context_, std::get<CloneSaveRequest>(request.payload));

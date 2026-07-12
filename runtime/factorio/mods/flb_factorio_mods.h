@@ -83,6 +83,9 @@ facman::core::Result<std::string> inventory_index(const std::filesystem::path& w
 facman::core::Result<std::string> inventory_inspect(const std::filesystem::path& workspace, const InventoryRequest& request);
 facman::core::Result<std::string> inventory_verify(const std::filesystem::path& workspace, const InventoryRequest& request);
 facman::core::Result<std::string> inventory_explain(const std::filesystem::path& workspace, const InventoryRequest& request);
+facman::core::Result<std::vector<ModRef>> local_inventory(
+    const std::filesystem::path& workspace,
+    const std::vector<std::filesystem::path>& explicit_roots = {});
 
 } // namespace facman::factorio::mods
 

@@ -1,4 +1,4 @@
-# generated source-sha256: b16cd1fe2f14263ad00523ab470debdc346e3c285afd1714699de867a9802742
+# generated source-sha256: 9f32d83518dbf08af67d4e3308b42deea291598d4ea9d196b901075d6e4f9570
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -39,9 +39,13 @@
 # path: mods search
 # path: mods update
 # path: mods verify
+# path: modsets apply
+# path: modsets diff
 # path: modsets explain
 # path: modsets export
 # path: modsets lock
+# path: modsets plan
+# path: modsets rollback
 # path: modsets verify
 # path: onboarding plan
 # path: package verify
@@ -138,6 +142,7 @@ complete -c facman -f -a repair
 complete -c facman -f -a reset
 complete -c facman -f -a restore
 complete -c facman -f -a retention
+complete -c facman -f -a rollback
 complete -c facman -f -a run
 complete -c facman -f -a saves
 complete -c facman -f -a scan

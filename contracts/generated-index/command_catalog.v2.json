@@ -2998,7 +2998,309 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
-      "cli": "facman modsets explain <instance-id> --json",
+      "cli": "facman modsets apply <instance-id> [solver options] --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "modsets",
+          "apply"
+        ],
+        "positionals": [
+          {
+            "name": "instance-id",
+            "required": true
+          }
+        ],
+        "usage": "facman modsets apply <instance-id> [solver options] --json"
+      },
+      "command_id": "modsets.apply",
+      "contract_path": "contracts/command/factorio/modsets.apply.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "frontend_category": "modsets",
+      "golden_refusal": "tests/golden/commands/modsets.apply.refusal.json",
+      "golden_success": "tests/golden/commands/modsets.apply.success.json",
+      "localization_keys": [
+        "command.modsets.apply.title",
+        "command.modsets.apply.description"
+      ],
+      "mutates_workspace": true,
+      "native_id": "modsets_apply",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "modsets_apply",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "enabled_mods",
+          "repeatable": true,
+          "request_field": "enabled_mods",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "disabled_mods",
+          "repeatable": true,
+          "request_field": "disabled_mods",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "version_preferences",
+          "repeatable": true,
+          "request_field": "version_preferences",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "maximum_packages",
+          "repeatable": false,
+          "request_field": "maximum_packages",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_versions_per_package",
+          "repeatable": false,
+          "request_field": "maximum_versions_per_package",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_graph_edges",
+          "repeatable": false,
+          "request_field": "maximum_graph_edges",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_solver_states",
+          "repeatable": false,
+          "request_field": "maximum_solver_states",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_backtracks",
+          "repeatable": false,
+          "request_field": "maximum_backtracks",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_elapsed_ms",
+          "repeatable": false,
+          "request_field": "maximum_elapsed_ms",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_explanation_nodes",
+          "repeatable": false,
+          "request_field": "maximum_explanation_nodes",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "request_schema": "contracts/schema/command/modsets.apply.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_modset_plan.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "modsets.apply",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": true
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman modsets diff <instance-id> [solver options] --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "modsets",
+          "diff"
+        ],
+        "positionals": [
+          {
+            "name": "instance-id",
+            "required": true
+          }
+        ],
+        "usage": "facman modsets diff <instance-id> [solver options] --json"
+      },
+      "command_id": "modsets.diff",
+      "contract_path": "contracts/command/factorio/modsets.diff.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "modsets",
+      "golden_refusal": "tests/golden/commands/modsets.diff.refusal.json",
+      "golden_success": "tests/golden/commands/modsets.diff.success.json",
+      "localization_keys": [
+        "command.modsets.diff.title",
+        "command.modsets.diff.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "modsets_diff",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "modsets_diff",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "enabled_mods",
+          "repeatable": true,
+          "request_field": "enabled_mods",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "disabled_mods",
+          "repeatable": true,
+          "request_field": "disabled_mods",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "version_preferences",
+          "repeatable": true,
+          "request_field": "version_preferences",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "maximum_packages",
+          "repeatable": false,
+          "request_field": "maximum_packages",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_versions_per_package",
+          "repeatable": false,
+          "request_field": "maximum_versions_per_package",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_graph_edges",
+          "repeatable": false,
+          "request_field": "maximum_graph_edges",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_solver_states",
+          "repeatable": false,
+          "request_field": "maximum_solver_states",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_backtracks",
+          "repeatable": false,
+          "request_field": "maximum_backtracks",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_elapsed_ms",
+          "repeatable": false,
+          "request_field": "maximum_elapsed_ms",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_explanation_nodes",
+          "repeatable": false,
+          "request_field": "maximum_explanation_nodes",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "request_schema": "contracts/schema/command/modsets.diff.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_modset_plan.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "modsets.diff",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman modsets explain <instance-id> [solver options] --json",
       "cli_grammar": {
         "internal": false,
         "options": [
@@ -3018,7 +3320,7 @@
             "required": true
           }
         ],
-        "usage": "facman modsets explain <instance-id> --json"
+        "usage": "facman modsets explain <instance-id> [solver options] --json"
       },
       "command_id": "modsets.explain",
       "contract_path": "contracts/command/factorio/modsets.explain.v1.toml",
@@ -3050,13 +3352,93 @@
           "request_field": "instance_id",
           "required": true,
           "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "enabled_mods",
+          "repeatable": true,
+          "request_field": "enabled_mods",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "disabled_mods",
+          "repeatable": true,
+          "request_field": "disabled_mods",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "version_preferences",
+          "repeatable": true,
+          "request_field": "version_preferences",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "maximum_packages",
+          "repeatable": false,
+          "request_field": "maximum_packages",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_versions_per_package",
+          "repeatable": false,
+          "request_field": "maximum_versions_per_package",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_graph_edges",
+          "repeatable": false,
+          "request_field": "maximum_graph_edges",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_solver_states",
+          "repeatable": false,
+          "request_field": "maximum_solver_states",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_backtracks",
+          "repeatable": false,
+          "request_field": "maximum_backtracks",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_elapsed_ms",
+          "repeatable": false,
+          "request_field": "maximum_elapsed_ms",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_explanation_nodes",
+          "repeatable": false,
+          "request_field": "maximum_explanation_nodes",
+          "required": false,
+          "type": "string"
         }
       ],
       "request_schema": "contracts/schema/command/modsets.explain.request.v1.schema.json",
       "required_capabilities": [
         "workspace_read"
       ],
-      "response_schema": "contracts/schema/factorio/factorio_guidance_report.v1.schema.json",
+      "response_schema": "contracts/schema/factorio/factorio_modset_plan.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "modsets.explain",
@@ -3216,6 +3598,240 @@
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "persistent_local_write",
       "runtime_id": "modsets.lock",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": true
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman modsets plan <instance-id> [solver options] --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "modsets",
+          "plan"
+        ],
+        "positionals": [
+          {
+            "name": "instance-id",
+            "required": true
+          }
+        ],
+        "usage": "facman modsets plan <instance-id> [solver options] --json"
+      },
+      "command_id": "modsets.plan",
+      "contract_path": "contracts/command/factorio/modsets.plan.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "modsets",
+      "golden_refusal": "tests/golden/commands/modsets.plan.refusal.json",
+      "golden_success": "tests/golden/commands/modsets.plan.success.json",
+      "localization_keys": [
+        "command.modsets.plan.title",
+        "command.modsets.plan.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "modsets_plan",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "modsets_plan",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "enabled_mods",
+          "repeatable": true,
+          "request_field": "enabled_mods",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "disabled_mods",
+          "repeatable": true,
+          "request_field": "disabled_mods",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "version_preferences",
+          "repeatable": true,
+          "request_field": "version_preferences",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "maximum_packages",
+          "repeatable": false,
+          "request_field": "maximum_packages",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_versions_per_package",
+          "repeatable": false,
+          "request_field": "maximum_versions_per_package",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_graph_edges",
+          "repeatable": false,
+          "request_field": "maximum_graph_edges",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_solver_states",
+          "repeatable": false,
+          "request_field": "maximum_solver_states",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_backtracks",
+          "repeatable": false,
+          "request_field": "maximum_backtracks",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_elapsed_ms",
+          "repeatable": false,
+          "request_field": "maximum_elapsed_ms",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "maximum_explanation_nodes",
+          "repeatable": false,
+          "request_field": "maximum_explanation_nodes",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "request_schema": "contracts/schema/command/modsets.plan.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_modset_plan.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "modsets.plan",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman modsets rollback <instance-id> <transaction-id> --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "modsets",
+          "rollback"
+        ],
+        "positionals": [
+          {
+            "name": "instance-id",
+            "required": true
+          },
+          {
+            "name": "transaction-id",
+            "required": true
+          }
+        ],
+        "usage": "facman modsets rollback <instance-id> <transaction-id> --json"
+      },
+      "command_id": "modsets.rollback",
+      "contract_path": "contracts/command/factorio/modsets.rollback.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "executes_process": false,
+      "frontend_category": "modsets",
+      "golden_refusal": "tests/golden/commands/modsets.rollback.refusal.json",
+      "golden_success": "tests/golden/commands/modsets.rollback.success.json",
+      "localization_keys": [
+        "command.modsets.rollback.title",
+        "command.modsets.rollback.description"
+      ],
+      "mutates_workspace": true,
+      "native_id": "modsets_rollback",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "modsets_rollback",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "request_schema": "contracts/schema/command/modsets.rollback.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_modset_rollback.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "modsets.rollback",
       "schema": "facman.command.v2",
       "visibility": "public",
       "writes_state": true
@@ -7394,6 +8010,6 @@
   ],
   "owner": "factorio-launcher",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "b16cd1fe2f14263ad00523ab470debdc346e3c285afd1714699de867a9802742",
+  "source_digest": "9f32d83518dbf08af67d4e3308b42deea291598d4ea9d196b901075d6e4f9570",
   "version": "facman-0.1.0+dev.contract"
 }

@@ -1,5 +1,5 @@
 {
-  "$id": "https://facman.invalid/schema/command/modsets.explain.request.v1.schema.json",
+  "$id": "https://facman.invalid/schema/command/modsets.plan.request.v1.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
@@ -54,6 +54,6 @@
   "required": [
     "instance_id"
   ],
-  "title": "modsets.explain request",
+  "title": "modsets.plan request",
   "type": "object"
 }
