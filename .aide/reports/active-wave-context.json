@@ -1,54 +1,56 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "factorio.server_profile.v2",
-      "contracts/command/servers.*"
+      "contracts/generated-index/command_catalog.v2.json"
     ],
     "affected_targets": [
-      "flb_factorio_application_static"
+      "facman_tui",
+      "FacMan.WinForms",
+      "FacMan.AppKit"
     ],
     "affected_tests": [
-      "tests/test_server_planning.py"
+      "tests/test_tui_product.py",
+      "tests/test_frontend_contract.py"
     ],
     "allowed_paths": [
-      "runtime/",
+      "apps/",
+      "runtime/core/generated/",
+      "tools/codegen/",
       "contracts/",
       "tests/",
-      "tools/",
-      "docs/",
-      "examples/"
+      "docs/"
     ],
     "blockers": [],
     "claim_impacts": [
-      "functional-non-executing-server-planning"
+      "guided-operational-ux",
+      "generated-frontend-parity"
     ],
     "dependencies": [
-      "FACMAN-PROFILES-AND-TEMPLATES-02",
-      "FACMAN-SAVE-INDEX-AND-RETENTION-02"
+      "FACMAN-INSTANCE-SNAPSHOT-01",
+      "FACMAN-LOCAL-MODSET-SOLVER-01",
+      "FACMAN-SERVER-PLAN-02"
     ],
     "forbidden_paths": [
-      "server execution",
-      "network sockets",
-      "RCON",
-      "plaintext credentials"
+      "frontend backend logic",
+      "secret history",
+      "daemon promotion"
     ],
-    "id": "FACMAN-SERVER-PLAN-02",
+    "id": "FACMAN-OPERATIONAL-UX-03",
     "last_green_commit": null,
     "provider_revisions": {},
     "status": "pending",
     "stop_conditions": [
-      "a socket opens",
-      "a process starts",
-      "secrets enter exports"
+      "frontend invents grammar",
+      "accessibility regresses"
     ],
-    "title": "Implement reproducible headless server configuration planning"
+    "title": "Generate guided frontend forms and operational visualizations"
   },
   "affected_contracts": [
-    "factorio.server_profile.v2",
-    "contracts/command/servers.*"
+    "contracts/generated-index/command_catalog.v2.json"
   ],
   "affected_tests": [
-    "tests/test_server_planning.py"
+    "tests/test_tui_product.py",
+    "tests/test_frontend_contract.py"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -58,16 +60,21 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
+  "current_exact_revision": "578bfb57bf824ef8093f9caaac364d17639d84fa",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-PROFILES-AND-TEMPLATES-02",
-      "last_green_commit": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
+      "id": "FACMAN-INSTANCE-SNAPSHOT-01",
+      "last_green_commit": "9f4b3d351dfb23dc5252886ac77e8b83ff772599",
       "status": "closed"
     },
     {
-      "id": "FACMAN-SAVE-INDEX-AND-RETENTION-02",
-      "last_green_commit": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
+      "id": "FACMAN-LOCAL-MODSET-SOLVER-01",
+      "last_green_commit": "b93d7376c625d824b4a401a59e610ac92a734d28",
+      "status": "closed"
+    },
+    {
+      "id": "FACMAN-SERVER-PLAN-02",
+      "last_green_commit": "578bfb57bf824ef8093f9caaac364d17639d84fa",
       "status": "closed"
     }
   ],

@@ -268,10 +268,37 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-SAVE-INDEX-AND-RETENTION-02"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "578bfb57bf824ef8093f9caaac364d17639d84fa",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "36ed26410f2b6b71620adb332546e45248953dc53f53a90c7c29405b65d01701",
+      "test_fingerprints": {
+        "tests/test_server_planning.py": "missing"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-SERVER-PLAN-02"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
+  "current_exact_revision": "578bfb57bf824ef8093f9caaac364d17639d84fa",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -279,7 +306,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T17:45:17Z",
+  "updated_at": "2026-07-12T18:10:17Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -514,6 +541,37 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-SAVE-INDEX-AND-RETENTION-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T18:10:17Z",
+        "result": "PASS",
+        "source_fingerprint": "36ed26410f2b6b71620adb332546e45248953dc53f53a90c7c29405b65d01701",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_server_planning.py": "missing"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "no_firewall": "PASS",
+          "no_network_socket": "PASS",
+          "no_process": "PASS",
+          "release_full": "PASS",
+          "secret_free_export": "PASS",
+          "strict": "PASS",
+          "unavailable_execution": "PASS",
+          "useful_reproducible_plan": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-SERVER-PLAN-02"
       }
     ]
   },
@@ -1120,6 +1178,8 @@
       "claim_impacts": [
         "functional-non-executing-server-planning"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T18:10:17Z",
       "dependencies": [
         "FACMAN-PROFILES-AND-TEMPLATES-02",
         "FACMAN-SAVE-INDEX-AND-RETENTION-02"
@@ -1131,15 +1191,46 @@
         "plaintext credentials"
       ],
       "id": "FACMAN-SERVER-PLAN-02",
-      "last_green_commit": null,
+      "last_green_commit": "578bfb57bf824ef8093f9caaac364d17639d84fa",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T17:46:10Z",
+      "status": "closed",
       "stop_conditions": [
         "a socket opens",
         "a process starts",
         "secrets enter exports"
       ],
-      "title": "Implement reproducible headless server configuration planning"
+      "title": "Implement reproducible headless server configuration planning",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T18:10:17Z",
+        "result": "PASS",
+        "source_fingerprint": "36ed26410f2b6b71620adb332546e45248953dc53f53a90c7c29405b65d01701",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_server_planning.py": "missing"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "no_firewall": "PASS",
+          "no_network_socket": "PASS",
+          "no_process": "PASS",
+          "release_full": "PASS",
+          "secret_free_export": "PASS",
+          "strict": "PASS",
+          "unavailable_execution": "PASS",
+          "useful_reproducible_plan": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
