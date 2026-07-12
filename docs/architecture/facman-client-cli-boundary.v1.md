@@ -28,9 +28,13 @@ and transport interfaces.
   calls on that context, reuses it for the transport lifetime, and destroys it
   once. Responses retain a parsed payload document so repeated accessors do not
   reparse the same JSON.
-- `CliProcessTransport` is a compatibility declaration only. It returns
-  `cli_process_transport_unavailable` because invoking the CLI from its own
-  backend would be recursive and misleading.
+- `CliProcessTransport` is a working compatibility transport for external
+  clients. It invokes `facman rpc --stdio` with one bounded transport envelope,
+  concurrently drains bounded stdout and stderr, and accepts only the machine
+  response document on stdout. It is not used recursively by the CLI itself.
+  Windows assigns the suspended child to a kill-on-close Job Object before it
+  runs; POSIX places it in a dedicated process group. Cancellation, timeout, or
+  output overflow terminates that whole child tree.
 - `DaemonTransport` is an explicit unavailable interface. It returns
   `daemon_transport_unavailable` until a real daemon protocol is implemented.
 

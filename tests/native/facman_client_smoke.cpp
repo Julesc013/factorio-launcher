@@ -62,6 +62,51 @@ int main()
     invalid_timeout.timeout = std::chrono::milliseconds(0);
     auto timeout_response = client.execute(invalid_timeout);
     if (timeout_response || timeout_response.error().code != "client_timeout_invalid") return 8;
+    facman::client::FacManClient cli(std::make_unique<facman::client::CliProcessTransport>(
+        fs::path(FACMAN_TEST_CLI_PATH), workspace));
+    auto cli_product = cli.execute({"product.inspect", "{}", true});
+    if (!cli_product || !cli_product.value().ok() || cli_product.value().payload_string("product_id") != "factorio") return 9;
+    facman::client::FacManClient missing_cli(std::make_unique<facman::client::CliProcessTransport>(
+        workspace / "missing-facman"));
+    auto missing_response = missing_cli.execute({"product.inspect", "{}", true});
+    if (missing_response || missing_response.error().code != "cli_process_executable_missing") return 10;
+    const fs::path marker = workspace / "process-tree-survivor.txt";
+#ifdef _WIN32
+    _putenv_s("FACMAN_PROCESS_PROBE_MARKER", marker.string().c_str());
+#else
+    setenv("FACMAN_PROCESS_PROBE_MARKER", marker.string().c_str(), 1);
+#endif
+    facman::client::FacManClient timeout_cli(std::make_unique<facman::client::CliProcessTransport>(
+        fs::path(FACMAN_TEST_PROCESS_PROBE_PATH)));
+    facman::client::CommandRequest timeout_request {"product.inspect", "{}", true};
+    timeout_request.timeout = std::chrono::milliseconds(100);
+    auto process_timeout = timeout_cli.execute(timeout_request);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    if (process_timeout || process_timeout.error().code != "cli_process_timeout" || fs::exists(marker)) return 11;
+    const fs::path cancelled_marker = workspace / "cancelled-process-tree-survivor.txt";
+#ifdef _WIN32
+    _putenv_s("FACMAN_PROCESS_PROBE_MARKER", cancelled_marker.string().c_str());
+#else
+    setenv("FACMAN_PROCESS_PROBE_MARKER", cancelled_marker.string().c_str(), 1);
+#endif
+    auto process_cancellation = std::make_shared<facman::client::CancellationToken>();
+    facman::client::CommandRequest process_cancel_request {"product.inspect", "{}", true};
+    process_cancel_request.cancellation = process_cancellation;
+    process_cancel_request.timeout = std::chrono::seconds(5);
+    std::thread canceller([process_cancellation]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        process_cancellation->request_cancellation();
+    });
+    auto process_cancelled = timeout_cli.execute(process_cancel_request);
+    canceller.join();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    if (process_cancelled || process_cancelled.error().code != "client_operation_cancelled" ||
+        fs::exists(cancelled_marker)) return 12;
+#ifdef _WIN32
+    _putenv_s("FACMAN_PROCESS_PROBE_MARKER", "");
+#else
+    unsetenv("FACMAN_PROCESS_PROBE_MARKER");
+#endif
     facman::client::FacManClient daemon(std::make_unique<facman::client::DaemonTransport>());
     if (daemon.execute({"product.inspect", "{}", true})) return 3;
     return 0;

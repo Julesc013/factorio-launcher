@@ -3,15 +3,18 @@
 
 #include "facman_client.h"
 
+#include "facman_process.h"
 #include "fl_command_client_cabi.h"
 #include "fl_json.h"
 #include "fl_runtime_verify.h"
 #include "flb/flb_api.h"
 
 #include <cstring>
+#include <atomic>
 #include <utility>
 
 namespace facman::client {
+namespace json = facman::core::json;
 namespace {
 
 bool cancelled(const CommandRequest& request) noexcept
@@ -145,17 +148,53 @@ facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandR
     return response;
 }
 
-CliProcessTransport::CliProcessTransport(std::filesystem::path executable)
-    : executable_(std::move(executable))
+CliProcessTransport::CliProcessTransport(std::filesystem::path executable, std::filesystem::path workspace)
+    : executable_(std::move(executable)), workspace_(std::move(workspace))
 {
 }
 
-facman::core::Result<CommandResponse> CliProcessTransport::execute(const CommandRequest&)
+facman::core::Result<CommandResponse> CliProcessTransport::execute(const CommandRequest& request)
 {
-    return failure(
-        "cli_process_transport_unavailable",
-        "CLI process compatibility transport is declared but not enabled for backend recursion",
-        executable_.string());
+    if (request.command.empty()) return failure("client_request_invalid", "command must not be empty");
+    if (!std::filesystem::is_regular_file(executable_)) {
+        return failure("cli_process_executable_missing", "CLI process executable does not exist", executable_.string());
+    }
+    json::Limits limits;
+    limits.maximum_bytes = 1024U * 1024U;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 32768;
+    limits.maximum_string_bytes = 512U * 1024U;
+    auto payload = json::parse(request.json_payload.empty() ? "{}" : request.json_payload, limits);
+    if (!payload || !payload.value().is_object()) {
+        return failure("client_request_invalid", payload ? "command payload must be an object" : payload.error().message);
+    }
+    static std::atomic<std::uint64_t> next_request {1};
+    json::ObjectBuilder envelope;
+    envelope.add_string("schema", "facman.transport_request.v1");
+    envelope.add_string("request_id", "cli-" + std::to_string(next_request.fetch_add(1, std::memory_order_relaxed)));
+    (void)envelope.add_unsigned_integer("protocol_version", 1);
+    envelope.add_string("command", request.command);
+    envelope.add_value("payload", payload.value());
+    envelope.add_bool("dry_run", request.dry_run);
+    if (!workspace_.empty()) envelope.add_string("workspace", workspace_.lexically_normal().string());
+    progress(request, "starting_cli_process", 0, 3);
+    detail::ProcessRequest process;
+    process.executable = executable_;
+    process.standard_input = envelope.serialize();
+    process.timeout = request.timeout;
+    process.cancellation_requested = [&request]() { return cancelled(request); };
+    auto result = detail::run_cli_process(process);
+    if (result.cancelled) return failure("client_operation_cancelled", "CLI process command was cancelled");
+    if (result.timed_out) return failure("cli_process_timeout", "CLI process exceeded its timeout");
+    if (result.output_too_large) return failure("cli_process_output_too_large", "CLI process exceeded its output budget");
+    if (!result.error.empty()) return failure("cli_process_start_failed", result.error, executable_.string());
+    progress(request, "decoding_cli_response", 2, 3);
+    if (result.standard_output.empty()) {
+        return failure("cli_process_response_empty", result.standard_error.empty() ? "CLI process returned no machine response" : result.standard_error);
+    }
+    auto response = decode_response(result.exit_code, std::move(result.standard_output));
+    progress(request, "completed", 3, 3);
+    return response;
 }
 
 facman::core::Result<CommandResponse> DaemonTransport::execute(const CommandRequest&)

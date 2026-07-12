@@ -83,12 +83,13 @@ private:
 
 class CliProcessTransport final : public Transport {
 public:
-    explicit CliProcessTransport(std::filesystem::path executable);
+    explicit CliProcessTransport(std::filesystem::path executable, std::filesystem::path workspace = {});
     facman::core::Result<CommandResponse> execute(const CommandRequest& request) override;
     const char* name() const noexcept override { return "cli-process-compatibility"; }
 
 private:
     std::filesystem::path executable_;
+    std::filesystem::path workspace_;
 };
 
 class DaemonTransport final : public Transport {

@@ -8,7 +8,13 @@ target_include_directories(flaunch_client_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include)
 facman_apply_policies(flaunch_client_static)
 
-add_library(facman_client_static STATIC facman_client.cpp)
+set(FACMAN_CLIENT_SOURCES facman_client.cpp)
+if(WIN32)
+  list(APPEND FACMAN_CLIENT_SOURCES facman_process_windows.cpp)
+else()
+  list(APPEND FACMAN_CLIENT_SOURCES facman_process_posix.cpp)
+endif()
+add_library(facman_client_static STATIC ${FACMAN_CLIENT_SOURCES})
 target_compile_features(facman_client_static PUBLIC cxx_std_17)
 target_include_directories(facman_client_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(facman_client_static PUBLIC

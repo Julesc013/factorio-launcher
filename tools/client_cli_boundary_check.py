@@ -14,6 +14,8 @@ def validate() -> list[str]:
     problems: list[str] = []
     header = (ROOT / "runtime/client/facman_client.h").read_text(encoding="utf-8")
     source = (ROOT / "runtime/client/facman_client.cpp").read_text(encoding="utf-8")
+    process_source = (ROOT / "runtime/client/facman_process_windows.cpp").read_text(encoding="utf-8")
+    process_source += (ROOT / "runtime/client/facman_process_posix.cpp").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
     cmake = "\n".join(path.read_text(encoding="utf-8") for path in [
         ROOT / "CMakeLists.txt",
@@ -30,17 +32,22 @@ def validate() -> list[str]:
         "class CliProcessTransport",
         "class DaemonTransport",
         "class FacManClient",
+        "class CancellationToken",
+        "class ProgressSink",
     ):
         if anchor not in header:
             problems.append(f"client API is missing anchor: {anchor}")
     for anchor in (
         "fl_command_client_execute_cabi_v1(",
         "client_response_invalid",
-        "cli_process_transport_unavailable",
+        "cli_process_timeout",
         "daemon_transport_unavailable",
     ):
         if anchor not in source:
             problems.append(f"client implementation is missing anchor: {anchor}")
+    for anchor in ("JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE", "TerminateJobObject", "setpgid(", "kill(-child", "maximum_standard_output"):
+        if anchor not in process_source:
+            problems.append(f"CLI process transport is missing safety anchor: {anchor}")
 
     if "facman::client::FacManClient" not in cli or "call(options," not in cli:
         problems.append("CLI does not dispatch through FacManClient")
