@@ -75,10 +75,100 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01"
+    },
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "0cb1c1738b94a8d92c2ff4b509015fe1f80a528e",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-STATUS-ONBOARDING-EXPLAIN-01",
+        "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02",
+        "FACMAN-TUI-MINIMUM-PRODUCT-01",
+        "FACMAN-DESKTOP-FRONTEND-PARITY-02",
+        "FACMAN-END-TO-END-USER-JOURNEY-01",
+        "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "a42bcc144d0366f257ab45e041910c633bcc6d04f4d841875f4fefbe70ffd78b",
+      "test_fingerprints": {
+        "tests/native/flb_factorio_discovery_smoke.cpp": "cba00e203e89b714ee81ae09d80976e93c99339cf34ac4879233353eea288668",
+        "tests/test_discovery_golden.py": "missing"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-DISCOVERY-PROVIDERS-02"
+    },
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "0cb1c1738b94a8d92c2ff4b509015fe1f80a528e",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02",
+        "FACMAN-TUI-MINIMUM-PRODUCT-01",
+        "FACMAN-DESKTOP-FRONTEND-PARITY-02",
+        "FACMAN-END-TO-END-USER-JOURNEY-01",
+        "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "9e07972d76c8327b0fd168c838d46c7c47b37bc2b829a08526df066a0fa6761a",
+      "test_fingerprints": {
+        "tests/native/flb_command_bridge_smoke.c": "fe11c09b8bddf7308e3836652e1eee5cb4fef3759e05d9aab0e72c79be465398",
+        "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-STATUS-ONBOARDING-EXPLAIN-01"
+    },
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "49778550add01004b2b63d8326eafb8f07701ef4",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-TUI-MINIMUM-PRODUCT-01",
+        "FACMAN-DESKTOP-FRONTEND-PARITY-02",
+        "FACMAN-END-TO-END-USER-JOURNEY-01",
+        "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "4c2281db205bf3c2430733cb62afb671e178760834b49e77748fa0b07e58d6b2",
+      "test_fingerprints": {
+        "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+        "tests/test_generated_metadata.py": "ef421978499a261ab1e8d572946e3caf90dea7b0e2508c6f2c08f528a02c2098"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "1994a91b9eb4b02c29f4cc8ed84f7b0de84554a8",
+  "current_exact_revision": "49778550add01004b2b63d8326eafb8f07701ef4",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -86,7 +176,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.6 real-world product readiness",
-  "updated_at": "2026-07-12T10:14:20Z",
+  "updated_at": "2026-07-12T11:16:21Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -175,6 +265,130 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-DISCOVERY-PROVIDERS-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T10:55:47Z",
+        "result": "PASS",
+        "source_fingerprint": "a42bcc144d0366f257ab45e041910c633bcc6d04f4d841875f4fefbe70ffd78b",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/flb_factorio_discovery_smoke.cpp": "cba00e203e89b714ee81ae09d80976e93c99339cf34ac4879233353eea288668",
+          "tests/test_discovery_golden.py": "missing"
+        },
+        "test_results": {
+          "cross-target-native-fixture": "PASS",
+          "linux-target-ci": "PASS",
+          "macos-target-ci": "PASS",
+          "provider-contract-tests": "PASS",
+          "strict-check": "PASS",
+          "windows-provider": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-DISCOVERY-PROVIDERS-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T10:55:57Z",
+        "result": "PASS",
+        "source_fingerprint": "9e07972d76c8327b0fd168c838d46c7c47b37bc2b829a08526df066a0fa6761a",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/flb_command_bridge_smoke.c": "fe11c09b8bddf7308e3836652e1eee5cb4fef3759e05d9aab0e72c79be465398",
+          "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af"
+        },
+        "test_results": {
+          "explanation-evidence": "PASS",
+          "human-json-parity": "PASS",
+          "linux-target-ci": "PASS",
+          "macos-target-ci": "PASS",
+          "non-mutating-onboarding": "PASS",
+          "setup-off": "PASS",
+          "setup-on": "PASS",
+          "status-contracts": "PASS",
+          "strict-check": "PASS",
+          "windows-target-ci": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-STATUS-ONBOARDING-EXPLAIN-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T10:56:06Z",
+        "result": "FAIL",
+        "source_fingerprint": "0da18dd4bded316f66623d0227b3d40e8133ac1c0ccca5100f205c356b2816f5",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tests/test_generated_metadata.py": "ef421978499a261ab1e8d572946e3caf90dea7b0e2508c6f2c08f528a02c2098"
+        },
+        "test_results": {
+          "appkit-target-ci": "WARN",
+          "deterministic-generation": "PASS",
+          "diagnostics-routing": "PASS",
+          "localization-coverage": "PASS",
+          "native-catalog-parity": "PASS",
+          "strict-check": "PASS",
+          "winforms-client-smoke": "PASS",
+          "winforms-compile": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:16:13Z",
+        "result": "PASS",
+        "source_fingerprint": "4c2281db205bf3c2430733cb62afb671e178760834b49e77748fa0b07e58d6b2",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tests/test_generated_metadata.py": "ef421978499a261ab1e8d572946e3caf90dea7b0e2508c6f2c08f528a02c2098"
+        },
+        "test_results": {
+          "appkit-target-ci": "PASS",
+          "deterministic-generation": "PASS",
+          "diagnostics-routing": "PASS",
+          "localization-coverage": "PASS",
+          "native-catalog-parity": "PASS",
+          "strict-check": "PASS",
+          "winforms-client-smoke": "PASS",
+          "winforms-compile": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
       }
     ]
   },
@@ -345,13 +559,12 @@
         "tools/",
         ".github/"
       ],
-      "blockers": [
-        "validation result: linux-target-ci=WARN",
-        "validation result: macos-target-ci=WARN"
-      ],
+      "blockers": [],
       "claim_impacts": [
         "cross-platform-read-only-discovery"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T10:55:56Z",
       "dependencies": [
         "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01"
       ],
@@ -361,10 +574,10 @@
         "discovery writes"
       ],
       "id": "FACMAN-DISCOVERY-PROVIDERS-02",
-      "last_green_commit": null,
+      "last_green_commit": "0cb1c1738b94a8d92c2ff4b509015fe1f80a528e",
       "provider_revisions": {},
-      "started_at": "2026-07-12T10:03:56Z",
-      "status": "blocked",
+      "started_at": "2026-07-12T10:55:40Z",
+      "status": "closed",
       "stop_conditions": [
         "target proof requires unsafe traversal",
         "discovery mutates source or workspace"
@@ -376,9 +589,9 @@
           "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
           "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
         },
-        "recorded_at": "2026-07-12T10:14:20Z",
-        "result": "FAIL",
-        "source_fingerprint": "a64cfcb92d9d7e29862f5e7df53b0a938b5845902092ef02598146d80da95bb6",
+        "recorded_at": "2026-07-12T10:55:47Z",
+        "result": "PASS",
+        "source_fingerprint": "a42bcc144d0366f257ab45e041910c633bcc6d04f4d841875f4fefbe70ffd78b",
         "target_runner_evidence_inferred": false,
         "test_fingerprints": {
           "tests/native/flb_factorio_discovery_smoke.cpp": "cba00e203e89b714ee81ae09d80976e93c99339cf34ac4879233353eea288668",
@@ -386,8 +599,8 @@
         },
         "test_results": {
           "cross-target-native-fixture": "PASS",
-          "linux-target-ci": "WARN",
-          "macos-target-ci": "WARN",
+          "linux-target-ci": "PASS",
+          "macos-target-ci": "PASS",
           "provider-contract-tests": "PASS",
           "strict-check": "PASS",
           "windows-provider": "PASS"
@@ -424,6 +637,8 @@
       "claim_impacts": [
         "deterministic-product-intelligence"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T10:55:59Z",
       "dependencies": [
         "FACMAN-DISCOVERY-PROVIDERS-02"
       ],
@@ -432,14 +647,47 @@
         "onboarding mutation"
       ],
       "id": "FACMAN-STATUS-ONBOARDING-EXPLAIN-01",
-      "last_green_commit": null,
+      "last_green_commit": "0cb1c1738b94a8d92c2ff4b509015fe1f80a528e",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T10:55:56Z",
+      "status": "closed",
       "stop_conditions": [
         "a command hides mutation",
         "a report lacks observed evidence"
       ],
-      "title": "Add deterministic status onboarding and explanation commands"
+      "title": "Add deterministic status onboarding and explanation commands",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T10:55:57Z",
+        "result": "PASS",
+        "source_fingerprint": "9e07972d76c8327b0fd168c838d46c7c47b37bc2b829a08526df066a0fa6761a",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/flb_command_bridge_smoke.c": "fe11c09b8bddf7308e3836652e1eee5cb4fef3759e05d9aab0e72c79be465398",
+          "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af"
+        },
+        "test_results": {
+          "explanation-evidence": "PASS",
+          "human-json-parity": "PASS",
+          "linux-target-ci": "PASS",
+          "macos-target-ci": "PASS",
+          "non-mutating-onboarding": "PASS",
+          "setup-off": "PASS",
+          "setup-on": "PASS",
+          "status-contracts": "PASS",
+          "strict-check": "PASS",
+          "windows-target-ci": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
@@ -466,6 +714,8 @@
       "claim_impacts": [
         "frontend-command-law-parity"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T11:16:14Z",
       "dependencies": [
         "FACMAN-STATUS-ONBOARDING-EXPLAIN-01"
       ],
@@ -474,14 +724,45 @@
         "frontend backend logic"
       ],
       "id": "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02",
-      "last_green_commit": null,
+      "last_green_commit": "49778550add01004b2b63d8326eafb8f07701ef4",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T11:16:13Z",
+      "status": "closed",
       "stop_conditions": [
         "a frontend must invent command metadata",
         "generation is not deterministic"
       ],
-      "title": "Generate and consume frontend command models"
+      "title": "Generate and consume frontend command models",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:16:13Z",
+        "result": "PASS",
+        "source_fingerprint": "4c2281db205bf3c2430733cb62afb671e178760834b49e77748fa0b07e58d6b2",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tests/test_generated_metadata.py": "ef421978499a261ab1e8d572946e3caf90dea7b0e2508c6f2c08f528a02c2098"
+        },
+        "test_results": {
+          "appkit-target-ci": "PASS",
+          "deterministic-generation": "PASS",
+          "diagnostics-routing": "PASS",
+          "localization-coverage": "PASS",
+          "native-catalog-parity": "PASS",
+          "strict-check": "PASS",
+          "winforms-client-smoke": "PASS",
+          "winforms-compile": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
@@ -516,7 +797,8 @@
       "id": "FACMAN-TUI-MINIMUM-PRODUCT-01",
       "last_green_commit": null,
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T11:16:21Z",
+      "status": "active",
       "stop_conditions": [
         "an unreviewed runtime dependency is required",
         "package proof skips a required check"
