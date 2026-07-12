@@ -1,0 +1,27 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_diff.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "command": {"const": "instances.diff"},
+    "differences": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {"category": {"type": "string"}, "left": {"type": "string"}, "path": {"type": "string"}, "right": {"type": "string"}},
+        "required": ["path", "category", "left", "right"],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "left_instance_id": {"type": "string"},
+    "mutation_executed": {"const": false},
+    "right_ref": {"type": "string"},
+    "schema": {"const": "factorio.instance_diff.v1"},
+    "selected_settings_equal": {"additionalProperties": {"type": "boolean"}, "type": "object"},
+    "status": {"const": "ok"},
+    "volatile_content_ignored": {"const": true}
+  },
+  "required": ["schema", "command", "status", "left_instance_id", "right_ref", "selected_settings_equal", "differences", "volatile_content_ignored", "mutation_executed"],
+  "title": "Factorio instance diff",
+  "type": "object"
+}

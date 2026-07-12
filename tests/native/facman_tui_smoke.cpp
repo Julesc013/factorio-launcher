@@ -28,7 +28,8 @@ int main()
     std::error_code ignored;
     fs::remove_all(workspace, ignored);
     CommandClient client(workspace);
-    auto status = client.execute({"workspace.status", "{}", false});
+    auto status = client.execute({
+        "workspace.status", "{}", false, false, {}, std::chrono::minutes(5)});
     if (!status || !status.value().ok() ||
         status.value().payload.find("factorio.guidance_report.v1") == std::string::npos ||
         fs::exists(workspace)) return 4;
@@ -38,7 +39,8 @@ int main()
     if (facman::tui::render_response(output, error, "workspace.status", status, false) != 0 ||
         output.str().find("Outcome: ok") == std::string::npos) return 5;
 
-    auto unavailable = client.execute({"run.execute", "{\"instance_id\":\"space-age-main\"}", false});
+    auto unavailable = client.execute({
+        "run.execute", "{\"instance_id\":\"space-age-main\"}", false, false, {}, std::chrono::minutes(5)});
     if (!unavailable || unavailable.value().ok() || unavailable.value().outcome != "unavailable") return 6;
 
     std::ostringstream catalog;

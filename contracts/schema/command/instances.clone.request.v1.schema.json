@@ -1,0 +1,30 @@
+{
+  "$id": "https://facman.invalid/schema/command/instances.clone.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "destination_instance_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "install_ref": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "source_instance_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_instance_id",
+    "destination_instance_id"
+  ],
+  "title": "instances.clone request",
+  "type": "object"
+}

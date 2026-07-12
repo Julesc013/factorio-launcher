@@ -40,7 +40,7 @@ std::vector<int> version_parts(const std::string& version)
     return parts;
 }
 
-int compare_versions(const std::string& left, const std::string& right)
+int compare_versions_impl(const std::string& left, const std::string& right)
 {
     std::vector<int> left_parts = version_parts(left);
     std::vector<int> right_parts = version_parts(right);
@@ -63,7 +63,7 @@ bool operator_satisfied(const std::string& actual, const std::string& oper, cons
     if (oper.empty() || expected.empty()) {
         return true;
     }
-    int comparison = compare_versions(actual, expected);
+    int comparison = compare_versions_impl(actual, expected);
     if (oper == "=") {
         return comparison == 0;
     }
@@ -151,6 +151,19 @@ std::string factorio_minor_version(const std::string& version)
 bool factorio_versions_compatible(const std::string& mod_factorio_version, const std::string& instance_version)
 {
     return facman::factorio::mods::factorio_versions_compatible(mod_factorio_version, instance_version);
+}
+
+int compare_versions(const std::string& left, const std::string& right)
+{
+    return compare_versions_impl(left, right);
+}
+
+bool version_constraint_satisfied(
+    const std::string& actual,
+    const std::string& oper,
+    const std::string& expected)
+{
+    return operator_satisfied(actual, oper, expected);
 }
 
 std::vector<ModsetIssue> validate_modset(const std::vector<ModRef>& mods, const std::string& factorio_version)

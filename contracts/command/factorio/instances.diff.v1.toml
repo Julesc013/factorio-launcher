@@ -1,0 +1,13 @@
+command_id = "instances.diff"
+cli = "facman instances diff <left-instance-id> <right-instance-or-snapshot> --json"
+effects = ["workspace_read"]
+request_schema = "contracts/schema/command/instances.diff.request.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_instance_diff.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = true
+executes_process = false
+mutates_workspace = false
+golden_success = "tests/golden/commands/instances.diff.success.json"
+golden_refusal = "tests/golden/commands/instances.diff.refusal.json"

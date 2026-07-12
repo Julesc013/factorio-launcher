@@ -42,6 +42,10 @@ struct InstanceTransferPolicy {
     static Limits limits();
 };
 
+struct InstanceSnapshotPolicy {
+    static Limits limits();
+};
+
 struct DiagnosticBundlePolicy {
     static Limits limits();
 };

@@ -31,6 +31,9 @@ namespace FacMan.WinForms
             Height = 760;
             MinimumSize = new Size(900, 620);
             StartPosition = FormStartPosition.CenterScreen;
+            AutoScaleMode = AutoScaleMode.Dpi;
+            AccessibleName = "FacMan operations window";
+            AccessibleDescription = "Guided command forms generated from the FacMan command grammar.";
 
             BuildLayout();
             LoadDefaults();
@@ -63,9 +66,12 @@ namespace FacMan.WinForms
             AddDoctorTab(tabs);
             AddGeneratedCategoryTab(tabs, "Installs", "install_refs.", "installs.", "setup.");
             AddGeneratedCategoryTab(tabs, "Instances", "instance.");
+            AddGeneratedCategoryTab(tabs, "Snapshots", "snapshots.");
+            AddGeneratedCategoryTab(tabs, "Profiles", "profiles.", "templates.");
             AddGeneratedCategoryTab(tabs, "Launch Plan", "launch_plan.", "run.");
             AddGeneratedCategoryTab(tabs, "Mods", "mods.", "modsets.");
             AddGeneratedCategoryTab(tabs, "Saves", "saves.");
+            AddGeneratedCategoryTab(tabs, "Servers", "servers.");
             AddGeneratedCategoryTab(tabs, "Diagnostics", "diagnostics.", "dev.");
             AddGeneratedCategoryTab(tabs, "Recovery", "workspace.recovery.", "workspace.migration.");
             AddGeneratedCategoryTab(tabs, "Capabilities", "capabilities.", "workspace.");
@@ -78,10 +84,13 @@ namespace FacMan.WinForms
             resultBox.ReadOnly = true;
             resultBox.WordWrap = false;
             resultBox.Font = new Font(FontFamily.GenericMonospace, 9.0f);
+            resultBox.AccessibleName = "Command result";
+            resultBox.AccessibleDescription = "Structured command result, refusal, or operational visualization.";
             root.Controls.Add(resultBox, 0, 2);
 
             StatusStrip statusStrip = new StatusStrip();
             statusLabel = new ToolStripStatusLabel("Ready");
+            statusLabel.AccessibleName = "Command status";
             statusStrip.Items.Add(statusLabel);
             root.Controls.Add(statusStrip, 0, 3);
         }
@@ -109,6 +118,7 @@ namespace FacMan.WinForms
 
             cliPathBox = new TextBox();
             cliPathBox.Dock = DockStyle.Fill;
+            cliPathBox.AccessibleName = "FacMan CLI path";
             bar.Controls.Add(cliPathBox, 1, 0);
 
             Button browseButton = new Button();
@@ -130,6 +140,7 @@ namespace FacMan.WinForms
 
             workspaceBox = new TextBox();
             workspaceBox.Dock = DockStyle.Fill;
+            workspaceBox.AccessibleName = "Workspace path";
             bar.Controls.Add(workspaceBox, 1, 1);
 
             Label modeLabel = new Label();
@@ -139,6 +150,7 @@ namespace FacMan.WinForms
 
             Button cancelButton = new Button();
             cancelButton.Text = "Cancel";
+            cancelButton.AccessibleDescription = "Request cancellation of the active backend command.";
             cancelButton.Dock = DockStyle.Fill;
             cancelButton.Click += delegate { if (commandCancellation != null) commandCancellation.Cancel(); };
             bar.Controls.Add(cancelButton, 3, 1);
@@ -314,11 +326,21 @@ namespace FacMan.WinForms
             {
                 Label label = new Label();
                 label.Text = input.Label + (input.Required ? " *" : String.Empty);
+                label.AccessibleName = input.Label;
                 label.Dock = DockStyle.Fill;
                 label.TextAlign = ContentAlignment.MiddleLeft;
                 layout.Controls.Add(label, 0, row);
                 Control editor;
                 if (input.Type == "boolean") editor = new CheckBox();
+                else if (input.Choices.Count > 0)
+                {
+                    ComboBox choice = new ComboBox();
+                    choice.DropDownStyle = ComboBoxStyle.DropDownList;
+                    foreach (string value in input.Choices) choice.Items.Add(value);
+                    if (!input.Required) choice.Items.Insert(0, String.Empty);
+                    choice.SelectedIndex = 0;
+                    editor = choice;
+                }
                 else
                 {
                     TextBox text = new TextBox();
@@ -328,6 +350,8 @@ namespace FacMan.WinForms
                     editor = text;
                 }
                 editor.Dock = DockStyle.Fill;
+                editor.AccessibleName = input.Label;
+                editor.AccessibleDescription = (input.Required ? "Required " : "Optional ") + input.Type + " field.";
                 controls[input.Key] = editor;
                 layout.Controls.Add(editor, 1, row);
                 if (input.Type == "path")
@@ -383,7 +407,7 @@ namespace FacMan.WinForms
                     workspaceBox.Text,
                     cliPathBox.Text,
                     commandCancellation.Token);
-                RenderMessage(result.ToDisplayText());
+                RenderMessage(OperationalVisualization.Render(command, result));
                 statusLabel.Text = result.Success ? "Completed " + command.Id : "Completed with refusal or error: " + command.Id;
             }
             finally
@@ -411,11 +435,7 @@ namespace FacMan.WinForms
                 cliPathBox.Text = envCli;
             }
 
-            string workspace = Environment.GetEnvironmentVariable("FACMAN_WORKSPACE");
-            if (!String.IsNullOrWhiteSpace(workspace))
-            {
-                workspaceBox.Text = workspace;
-            }
+            workspaceBox.Text = String.Empty;
         }
 
         private void RenderMessage(string text)

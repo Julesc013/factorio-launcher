@@ -140,6 +140,29 @@ private:
 
 } // namespace
 
+struct Sha256Hasher::Impl {
+    Sha256 value;
+    bool finished = false;
+    std::string digest;
+};
+
+Sha256Hasher::Sha256Hasher() : impl_(std::make_unique<Impl>()) {}
+Sha256Hasher::Sha256Hasher(Sha256Hasher&&) noexcept = default;
+Sha256Hasher& Sha256Hasher::operator=(Sha256Hasher&&) noexcept = default;
+Sha256Hasher::~Sha256Hasher() = default;
+void Sha256Hasher::update(const unsigned char* data, std::size_t size)
+{
+    if (!impl_->finished && size != 0) impl_->value.update(data, size);
+}
+std::string Sha256Hasher::finish()
+{
+    if (!impl_->finished) {
+        impl_->digest = impl_->value.finish();
+        impl_->finished = true;
+    }
+    return impl_->digest;
+}
+
 std::string sha256_hex_file(const std::filesystem::path& path)
 {
     std::ifstream input(path, std::ios::binary);

@@ -187,6 +187,7 @@ ALLOWED_RUNTIME_ROOTS = {
     "factorio",
     "package",
     "platform",
+    "preferences",
     "transaction",
     "workspace",
 }
@@ -205,6 +206,8 @@ ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "modsets",
     "redaction",
     "saves",
+    "snapshots",
+    "profiles",
     "server",
 }
 

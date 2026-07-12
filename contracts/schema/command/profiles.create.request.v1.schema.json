@@ -1,0 +1,49 @@
+{
+  "$id": "https://facman.invalid/schema/command/profiles.create.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "additional_arguments": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    },
+    "audio": {
+      "type": "string"
+    },
+    "benchmark_ticks": {
+      "type": "string"
+    },
+    "graphics_quality": {
+      "type": "string"
+    },
+    "launch_mode": {
+      "type": "string"
+    },
+    "profile_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "selection": {
+      "type": "string"
+    },
+    "selection_mode": {
+      "type": "string"
+    },
+    "template_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "window_mode": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "profile_id"
+  ],
+  "title": "profiles.create request",
+  "type": "object"
+}

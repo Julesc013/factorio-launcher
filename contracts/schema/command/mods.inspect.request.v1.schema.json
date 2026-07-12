@@ -1,0 +1,16 @@
+{
+  "$id": "https://facman.invalid/schema/command/mods.inspect.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "identity": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "identity"
+  ],
+  "title": "mods.inspect request",
+  "type": "object"
+}

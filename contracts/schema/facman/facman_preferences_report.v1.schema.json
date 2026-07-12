@@ -1,0 +1,22 @@
+{
+  "$id": "https://facman.invalid/schema/facman/facman_preferences_report.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "backup": {"type": "string"},
+    "change_required": {"type": "boolean"},
+    "command": {"type": "string"},
+    "mutation_executed": {"type": "boolean"},
+    "operation": {"type": "string"},
+    "path": {"type": "string"},
+    "present": {"type": "boolean"},
+    "current": {"$ref": "facman_preferences.v1.schema.json"},
+    "proposed": {"$ref": "facman_preferences.v1.schema.json"},
+    "reset": {"type": "boolean"},
+    "schema": {"const": "facman.preferences_report.v1"},
+    "status": {"enum": ["ok", "warning", "refused"]}
+  },
+  "required": ["schema", "command", "operation", "status", "path", "present", "mutation_executed"],
+  "title": "FacMan preferences report",
+  "type": "object"
+}

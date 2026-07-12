@@ -1,0 +1,1 @@
+{"schema":"factorio.save_retention_report.v1","command":"saves.retention.plan","status":"ok","instance_id":"main","policy":{},"saves":[],"candidate_count":0,"trash_path":"","permanent_delete":false,"reversible":true,"save_content_modified":false,"mutation_executed":false}

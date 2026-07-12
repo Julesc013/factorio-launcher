@@ -67,6 +67,25 @@ class MachineTransportTests(unittest.TestCase):
         self.assertEqual(response["outcome"], "invalid_argument")
         self.assertEqual(response["error"]["code"], "transport_protocol_invalid")
 
+    def test_single_leading_utf8_bom_is_accepted_for_dotnet_clients(self) -> None:
+        request = {
+            "schema": "facman.transport_request.v1",
+            "protocol_version": 1,
+            "request_id": "dotnet-bom",
+            "command": "product.inspect",
+            "dry_run": True,
+            "payload": {},
+        }
+        completed = subprocess.run(
+            [str(facman_executable()), "rpc", "--stdio"], cwd=ROOT,
+            input=b"\xef\xbb\xbf" + json.dumps(request).encode("utf-8"), check=False,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr.decode("utf-8", errors="replace"))
+        response = json.loads(completed.stdout.decode("utf-8"))
+        self.assertEqual("dotnet-bom", response["request_id"])
+        self.assertEqual("ok", response["outcome"])
+
     def test_application_outcome_kind_survives_machine_transport(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman outcome ") as temporary:
             code, response, stderr = self.invoke(

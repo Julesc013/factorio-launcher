@@ -1,8 +1,8 @@
 command_id = "modsets.explain"
-cli = "facman modsets explain <instance-id> --json"
+cli = "facman modsets explain <instance-id> [solver options] --json"
 effects = ["workspace_read"]
 request_schema = "contracts/schema/command/modsets.explain.request.v1.schema.json"
-response_schema = "contracts/schema/factorio/factorio_guidance_report.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_modset_plan.v1.schema.json"
 result_schema = "contracts/result/result.v1.schema.json"
 refusal_schema = "contracts/refusal/refusal.v1.schema.json"
 diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"

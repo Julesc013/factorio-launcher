@@ -54,10 +54,10 @@ std::string string_value(const facman::core::json::Value& object, const char* ke
 facman::core::Result<CommandResponse> decode_response(int status, std::string envelope)
 {
     facman::core::json::Limits limits;
-    limits.maximum_bytes = 16U * 1024U * 1024U;
+    limits.maximum_bytes = 64U * 1024U * 1024U;
     limits.maximum_depth = 64;
-    limits.maximum_nodes = 250000;
-    limits.maximum_string_bytes = 8U * 1024U * 1024U;
+    limits.maximum_nodes = 1000000;
+    limits.maximum_string_bytes = 32U * 1024U * 1024U;
     auto document = facman::core::json::parse(envelope, limits);
     if (!document || !document.value().is_object()) {
         return failure("client_response_invalid", document ? "command response must be an object" : document.error().message);

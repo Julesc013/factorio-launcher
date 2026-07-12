@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"profiles.archive","status":"refused","refusal":{"schema":"common.refusal.v1","code":"profile_shipped_immutable","reason":"shipped profiles are immutable","recoverable":true}}

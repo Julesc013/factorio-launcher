@@ -36,12 +36,13 @@ def facman_executable() -> Path:
     raise unittest.SkipTest("native facman executable has not been built")
 
 
-def invoke(args: list[str]) -> tuple[int, str, str]:
+def invoke(args: list[str], env: dict[str, str] | None = None) -> tuple[int, str, str]:
     completed = subprocess.run(
         [str(facman_executable()), *args],
         cwd=ROOT,
         check=False,
         encoding="utf-8",
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )

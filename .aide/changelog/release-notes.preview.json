@@ -1,0 +1,740 @@
+{
+  "follow_up": [
+    {
+      "commit": "47bc5eff9a22",
+      "summary": "Commit this repair and rerun the authoritative matrix with `--require-clean`."
+    },
+    {
+      "commit": "d07aec528068",
+      "summary": "Verify and close WorkUnit 0, then implement the shared workspace resolver and non-secret preferences layer."
+    },
+    {
+      "commit": "a171ba92ad49",
+      "summary": "Start FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01 and implement shared path resolution first."
+    },
+    {
+      "commit": "e5da5d2584b2",
+      "summary": "Add schema-versioned non-secret preferences and allow the resolver to consume a reviewed preferred workspace after explicit environment precedence."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "Prove the exact commit in the clean three-repository workspace, close WU1 evidence, then begin transactional instance lifecycle operations."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "Prove the exact commit in the clean three-repository workspace, close WU1 evidence, then begin transactional instance lifecycle operations."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "Prove the exact commit in the clean three-repository workspace, close WU1 evidence, then begin transactional instance lifecycle operations."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "Prove the exact commit in the clean three-repository workspace, close WU1 evidence, then begin transactional instance lifecycle operations."
+    },
+    {
+      "commit": "a2cb04b258bd",
+      "summary": "Start FACMAN-INSTANCE-LIFECYCLE-02 and keep destructive behavior backup-first and transaction-journaled."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Prove this exact revision in the clean three-repository workspace, close WU2 evidence, and begin portable deterministic snapshots and retention policy."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Prove this exact revision in the clean three-repository workspace, close WU2 evidence, and begin portable deterministic snapshots and retention policy."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Prove this exact revision in the clean three-repository workspace, close WU2 evidence, and begin portable deterministic snapshots and retention policy."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Prove this exact revision in the clean three-repository workspace, close WU2 evidence, and begin portable deterministic snapshots and retention policy."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Prove this exact revision in the clean three-repository workspace, close WU2 evidence, and begin portable deterministic snapshots and retention policy."
+    },
+    {
+      "commit": "6af71551826f",
+      "summary": "Start portable deterministic snapshot create/list/inspect/verify/diff/restore and retention plan/apply work."
+    },
+    {
+      "commit": "9f4b3d351dfb",
+      "summary": "Run the clean three-repository repro matrix and attach its exact result to the workunit."
+    },
+    {
+      "commit": "9f4b3d351dfb",
+      "summary": "Run the clean three-repository repro matrix and attach its exact result to the workunit."
+    },
+    {
+      "commit": "62133fae53a1",
+      "summary": "Start FACMAN-PROFILES-AND-TEMPLATES-02 from the closed snapshot baseline."
+    },
+    {
+      "commit": "fc1cbf359418",
+      "summary": "Run the clean three-repository repro matrix and close the exact R3.7 profile/template workunit."
+    },
+    {
+      "commit": "fc1cbf359418",
+      "summary": "Run the clean three-repository repro matrix and close the exact R3.7 profile/template workunit."
+    },
+    {
+      "commit": "f40e9d31f940",
+      "summary": "Start FACMAN-LOCAL-MOD-INVENTORY-02 from the closed customization baseline."
+    },
+    {
+      "commit": "8335fde1ba12",
+      "summary": "Use these stable inventory identities as the evidence input for the deterministic modset solver workunit."
+    },
+    {
+      "commit": "05a93277d739",
+      "summary": "Start FACMAN-LOCAL-MODSET-SOLVER-01 using the committed inventory identities as local evidence."
+    },
+    {
+      "commit": "b93d7376c625",
+      "summary": "Reproduce this exact commit from a clean three-repository workspace and close FACMAN-LOCAL-MODSET-SOLVER-01."
+    },
+    {
+      "commit": "7ad66aea23d7",
+      "summary": "Start FACMAN-SAVE-INDEX-AND-RETENTION-02."
+    },
+    {
+      "commit": "2e9a66f8a4bd",
+      "summary": "Reproduce this exact commit from a clean three-repository workspace and close FACMAN-SAVE-INDEX-AND-RETENTION-02."
+    },
+    {
+      "commit": "b30e4a70272e",
+      "summary": "Start FACMAN-SERVER-PLAN-02."
+    },
+    {
+      "commit": "578bfb57bf82",
+      "summary": "Implement grammar-generated operational UX in the next R3.7 work unit."
+    },
+    {
+      "commit": "d90d461a99dd",
+      "summary": "Start FACMAN-OPERATIONAL-UX-03 from the generated command grammar."
+    },
+    {
+      "commit": "dedadfa2f95e",
+      "summary": "Prove the full reversible lifecycle across direct, stdio, CLI, TUI, desktop, and package transports in WU10."
+    },
+    {
+      "commit": "9af53a736f47",
+      "summary": "Execute FACMAN-R3.7-END-TO-END-LIFECYCLE-01 across supported transports and packages."
+    },
+    {
+      "commit": "9fea4325129c",
+      "summary": "Land the independent cross-transport journey and performance proof."
+    },
+    {
+      "commit": "625a964355d0",
+      "summary": "Reproduce both implementation and proof commits from a clean three-repository workspace."
+    },
+    {
+      "commit": "8556b05e033a",
+      "summary": "Rerun the complete clean three-repository reproduction from a fresh short build root."
+    },
+    {
+      "commit": "b6e8e6200b9e",
+      "summary": "Execute the R3.7 closeout target matrix and preserve human acceptance as a separate operator verdict."
+    },
+    {
+      "commit": "4d542308f806",
+      "summary": "Require the exact-sha GitHub Actions matrix to pass before freezing the R3.7 checkpoint."
+    },
+    {
+      "commit": "02398db38063",
+      "summary": "Require exact-head CI, CodeQL, package, sanitizer, fuzzer, coverage, and AppKit compile results to pass."
+    },
+    {
+      "commit": "681a614ea193",
+      "summary": "Require exact-head Linux, macOS, sanitizer, fuzzer, package, coverage, AppKit, and CodeQL lanes to pass before closeout."
+    },
+    {
+      "commit": "774628f442b0",
+      "summary": "Require exact-head hosted Linux, macOS, Windows, sanitizer, fuzzer, package, coverage, AppKit, and CodeQL completion."
+    },
+    {
+      "commit": "81abee2fb122",
+      "summary": "Require the exact workflow commit to pass Linux Debug/Release, sanitizers, fuzzers, coverage, packages, and all other target jobs."
+    }
+  ],
+  "highlights": [
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "ec77cc1f1000",
+      "subject": "feat(preferences): add non-secret transactional product settings",
+      "summary": "secret-like fields, unsafe paths, linked targets, future schemas, unavailable transports, and incomplete journal transitions fail closed."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "e3b010895909",
+      "subject": "feat(instances): add reversible transactional lifecycle",
+      "summary": "link/reparse crossings, multiply linked files, active run locks, uncertain transactions, hash drift, clobber targets, and malformed archives fail closed."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "9f4b3d351dfb",
+      "subject": "feat(snapshots): add portable instance lifecycle",
+      "summary": "exclude secrets and local paths and verify archive closure before restore."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "fc1cbf359418",
+      "subject": "feat(profiles): add declarative customization lifecycle",
+      "summary": "reserved Factorio arguments and all execution authority remain controlled outside customization documents."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "e5da5d2584b2",
+      "subject": "feat(workspace): centralize safe default resolution",
+      "summary": "shared cross-frontend workspace resolution with legacy preservation and structured refusal."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "ec77cc1f1000",
+      "subject": "feat(preferences): add non-secret transactional product settings",
+      "summary": "non-secret user preferences with reviewable plan/apply/reset commands and shared preferred-workspace resolution."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "e3b010895909",
+      "subject": "feat(instances): add reversible transactional lifecycle",
+      "summary": "reversible instance inspection, verification, diff, clone, display rename, owned-trash archive, and verified restore."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "9f4b3d351dfb",
+      "subject": "feat(snapshots): add portable instance lifecycle",
+      "summary": "portable instance snapshot management and reversible retention."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "fc1cbf359418",
+      "subject": "feat(profiles): add declarative customization lifecycle",
+      "summary": "declarative instance templates and portable launch-profile lifecycle management."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "8335fde1ba12",
+      "subject": "feat(mods): add stable local inventory",
+      "summary": "stable, local-only mod inventory and verification commands for R3.7."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "b93d7376c625",
+      "subject": "feat(modsets): add bounded local solver",
+      "summary": "deterministic bounded local dependency plans and transactional modset apply and rollback."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "2e9a66f8a4bd",
+      "subject": "feat(saves): add structural index and retention",
+      "summary": "bounded save indexing, sidecar association, drift detection, structural diff, and reversible retention."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "578bfb57bf82",
+      "subject": "feat(servers): add non-executing plan bundles",
+      "summary": "secret-free dedicated-server planning and portable export bundles."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "dedadfa2f95e",
+      "subject": "feat(frontends): generate guided operational forms",
+      "summary": "generated guided operational forms and cross-frontend result visualizations."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "625a964355d0",
+      "subject": "test(lifecycle): prove R3.7 cross-transport journey",
+      "summary": "Cross-transport lifecycle, adversarial, and release-scale R3.7 proof coverage."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "81abee2fb122",
+      "subject": "ci(linux): add explicit Release proof",
+      "summary": "Required Linux Release build and CTest evidence to the cross-platform closeout matrix."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "d07aec528068",
+      "subject": "chore(aide): establish the R3.7 authority and evidence graph",
+      "summary": "R3.7 now has target-local resumable governance and unambiguous baseline evidence."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "05a93277d739",
+      "subject": "chore(aide): close local mod inventory workunit",
+      "summary": "R3.7 wave state now records local mod inventory as closed and verified."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "7ad66aea23d7",
+      "subject": "chore(aide): close local modset solver workunit",
+      "summary": "R3.7 wave state now records the local modset solver as closed and verified."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "b30e4a70272e",
+      "subject": "chore(aide): close save intelligence workunit",
+      "summary": "R3.7 wave state now records structural save intelligence as closed and verified."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "d90d461a99dd",
+      "subject": "chore(aide): close server planning workunit",
+      "summary": "R3.7 wave state now records server planning as closed."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "9af53a736f47",
+      "subject": "chore(aide): close operational UX workunit",
+      "summary": "R3.7 wave state now records operational UX as closed."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "b6e8e6200b9e",
+      "subject": "chore(aide): close R3.7 lifecycle proof",
+      "summary": "R3.7 wave state now records WU10 as closed with advisory-only evidence."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "47bc5eff9a22",
+      "subject": "test(repro): bind package proof to the clean TUI build",
+      "summary": "clean workspace proof now packages only artifacts produced by its own TUI-enabled build."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "ec77cc1f1000",
+      "subject": "feat(preferences): add non-secret transactional product settings",
+      "summary": "affected-test module execution now exposes repository and tests helper import roots."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "e3b010895909",
+      "subject": "feat(instances): add reversible transactional lifecycle",
+      "summary": "affected native script tests now build real prerequisites and Python tests honor the requested Debug or Release artifact."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "9fea4325129c",
+      "subject": "fix(lifecycle): close cross-workunit integrity gaps",
+      "summary": "Cross-workunit lifecycle correctness and generated-client compatibility defects found by R3.7 end-to-end proof."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "8556b05e033a",
+      "subject": "test(transaction): clean native smoke workspace",
+      "summary": "Native transaction smoke no longer leaves an empty source-tree directory after passing."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "4d542308f806",
+      "subject": "fix(portability): satisfy GCC and AppleClang warnings",
+      "summary": "Linux and macOS warnings-as-errors portability failures in preferences and modset planning."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "02398db38063",
+      "subject": "fix(portability): initialize launch profile defaults",
+      "summary": "Linux and macOS launch-reference compilation no longer depends on omitted aggregate fields."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "681a614ea193",
+      "subject": "test(tui): initialize complete invocation shape",
+      "summary": "Cross-platform TUI smoke compilation now matches the complete generated-client invocation shape."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "774628f442b0",
+      "subject": "fix(profiles): archive directories atomically on POSIX",
+      "summary": "Profile archive now uses a directory-safe atomic no-clobber move on POSIX."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "e3b010895909",
+      "subject": "feat(instances): add reversible transactional lifecycle",
+      "summary": "define immutable IDs, volatile exclusions, archive metadata, recovery states, and the explicit absence of purge."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "ec77cc1f1000",
+      "subject": "feat(preferences): add non-secret transactional product settings",
+      "summary": "native transaction smoke, CLI read-only/secret rejection tests, contract goldens, schemas, frontend parity, full Release package proof."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "e3b010895909",
+      "subject": "feat(instances): add reversible transactional lifecycle",
+      "summary": "live schema validation, complete happy path, alternate-ID restore, run-lock refusal, and clone/archive/restore fault matrices."
+    }
+  ],
+  "preview_only": true,
+  "risk_summary": [
+    {
+      "commit": "47bc5eff9a22",
+      "summary": "The stronger matrix builds one additional frontend target; no product behavior, authority, or test requirement changes."
+    },
+    {
+      "commit": "d07aec528068",
+      "summary": "This commit changes development truth only; it does not enable execution, setup mutation, networking, credentials, signing, or publication."
+    },
+    {
+      "commit": "a171ba92ad49",
+      "summary": "Metadata only; H1 and all execution, network, setup, credential, signing, and publication quarantines remain unchanged."
+    },
+    {
+      "commit": "e5da5d2584b2",
+      "summary": "Users without an explicit workspace and without safe platform user paths now receive a refusal instead of a relative current-directory workspace; this is the intended safety correction."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "AppKit catalog generation is contract-checked on Windows but native AppKit compilation remains a macOS CI responsibility."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "AppKit catalog generation is contract-checked on Windows but native AppKit compilation remains a macOS CI responsibility."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "AppKit catalog generation is contract-checked on Windows but native AppKit compilation remains a macOS CI responsibility."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "AppKit catalog generation is contract-checked on Windows but native AppKit compilation remains a macOS CI responsibility."
+    },
+    {
+      "commit": "a2cb04b258bd",
+      "summary": "None; this commit records verified task state only."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Snapshot references in instances.diff remain explicitly unavailable until WU3 creates the portable snapshot contract."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Snapshot references in instances.diff remain explicitly unavailable until WU3 creates the portable snapshot contract."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Snapshot references in instances.diff remain explicitly unavailable until WU3 creates the portable snapshot contract."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Snapshot references in instances.diff remain explicitly unavailable until WU3 creates the portable snapshot contract."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "Snapshot references in instances.diff remain explicitly unavailable until WU3 creates the portable snapshot contract."
+    },
+    {
+      "commit": "6af71551826f",
+      "summary": "None; this commit records verified AIDE task state only."
+    },
+    {
+      "commit": "9f4b3d351dfb",
+      "summary": "Snapshot archives intentionally carry mod lock references only, never credentials or full secret-bearing configuration."
+    },
+    {
+      "commit": "9f4b3d351dfb",
+      "summary": "Snapshot archives intentionally carry mod lock references only, never credentials or full secret-bearing configuration."
+    },
+    {
+      "commit": "62133fae53a1",
+      "summary": "Human acceptance remains separate and no execution, publication, signing, or promotion authority was granted."
+    },
+    {
+      "commit": "fc1cbf359418",
+      "summary": "Headless and benchmark values are planning inputs only; this commit does not enable process execution."
+    },
+    {
+      "commit": "fc1cbf359418",
+      "summary": "Headless and benchmark values are planning inputs only; this commit does not enable process execution."
+    },
+    {
+      "commit": "f40e9d31f940",
+      "summary": "Process execution and human acceptance remain separate, unpromoted authorities."
+    },
+    {
+      "commit": "8335fde1ba12",
+      "summary": "Archive metadata parsing remains intentionally bounded and does not claim portal availability or installation readiness."
+    },
+    {
+      "commit": "05a93277d739",
+      "summary": "This records machine-verifiable evidence only and does not grant portal, publication, or human acceptance claims."
+    },
+    {
+      "commit": "b93d7376c625",
+      "summary": "Optional dependencies are not silently installed; they constrain the plan only when already requested or selected."
+    },
+    {
+      "commit": "7ad66aea23d7",
+      "summary": "This ledger records machine evidence only and does not grant real Factorio, setup, network, signing, publication, or human-acceptance authority."
+    },
+    {
+      "commit": "2e9a66f8a4bd",
+      "summary": "Deep Factorio save metadata remains explicitly unsupported."
+    },
+    {
+      "commit": "b30e4a70272e",
+      "summary": "This ledger records machine evidence only and does not claim deep save semantics, real Factorio execution, publication, or human acceptance."
+    },
+    {
+      "commit": "578bfb57bf82",
+      "summary": "LOW: execution remains unavailable and exports exclude saves unless explicitly requested."
+    },
+    {
+      "commit": "d90d461a99dd",
+      "summary": "LOW: this commit changes report-only AIDE state and no product behavior."
+    },
+    {
+      "commit": "dedadfa2f95e",
+      "summary": "LOW: frontend controls submit the same generated request fields and backend validation remains authoritative."
+    },
+    {
+      "commit": "9af53a736f47",
+      "summary": "LOW: this commit changes report-only AIDE state and no product behavior."
+    },
+    {
+      "commit": "9fea4325129c",
+      "summary": "Restore and retention paths perform additional validation and may refuse previously ambiguous or corrupted state."
+    },
+    {
+      "commit": "625a964355d0",
+      "summary": "The full-scale corpus is intentionally opt-in because it creates a large temporary fixture and takes roughly two minutes on the validated Windows host."
+    },
+    {
+      "commit": "8556b05e033a",
+      "summary": "Test-only path construction changed; transaction behavior and product runtime are unchanged."
+    },
+    {
+      "commit": "b6e8e6200b9e",
+      "summary": "No product behavior changes; this commit contains generated AIDE state only."
+    },
+    {
+      "commit": "4d542308f806",
+      "summary": "The solver construction and timeout acceptance behavior are unchanged."
+    },
+    {
+      "commit": "02398db38063",
+      "summary": "Values are identical to the existing field defaults; product behavior and ABI layout are unchanged."
+    },
+    {
+      "commit": "681a614ea193",
+      "summary": "Test-only initialization changed; TUI runtime behavior is unchanged."
+    },
+    {
+      "commit": "774628f442b0",
+      "summary": "The target remains same-filesystem owned trash; cross-volume directory moves still fail closed."
+    },
+    {
+      "commit": "81abee2fb122",
+      "summary": "Hosted Linux runtime increases because the native core is built once more in Release mode."
+    }
+  ],
+  "schema_version": "aide.release-notes-preview.v0",
+  "source_head": "81abee2fb1220d5f8620086f354621f7d58a2281",
+  "source_range": "29cf22fa..HEAD",
+  "validation_summary": [
+    {
+      "commit": "47bc5eff9a22",
+      "summary": "Focused repro tests, source-format check, and the complete three-repository build matrix: PASS."
+    },
+    {
+      "commit": "d07aec528068",
+      "summary": "Focused AIDE truth tests, strict policy, AIDE Lite self-test, project-state generation, source formatting, and diff checks: PASS."
+    },
+    {
+      "commit": "a171ba92ad49",
+      "summary": "AIDE wave verification and close checks: PASS."
+    },
+    {
+      "commit": "e5da5d2584b2",
+      "summary": "Native resolver, client, and TUI CTests: PASS (3/3)."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "`py -3 tools/dev.py test --affected --base e5da5d2 --build-root build/native-smoke --configuration Debug`: PASS (21 native, 89 selected Python, all selected validators)."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "`py -3 tools/dev.py test --affected --base e5da5d2 --build-root build/native-smoke --configuration Debug`: PASS (21 native, 89 selected Python, all selected validators)."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "`py -3 tools/dev.py test --affected --base e5da5d2 --build-root build/native-smoke --configuration Debug`: PASS (21 native, 89 selected Python, all selected validators)."
+    },
+    {
+      "commit": "ec77cc1f1000",
+      "summary": "`py -3 tools/dev.py test --affected --base e5da5d2 --build-root build/native-smoke --configuration Debug`: PASS (21 native, 89 selected Python, all selected validators)."
+    },
+    {
+      "commit": "a2cb04b258bd",
+      "summary": "`py -3 tools/repro_workspace_smoke.py --require-clean --build`: PASS across Universal Launcher, Universal Setup, and FacMan."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "`py -3 tools/dev.py test --affected --base a2cb04b --build-root build/native-smoke --configuration Release`: PASS (7 native, 74 Python, all selected validators)."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "`py -3 tools/dev.py test --affected --base a2cb04b --build-root build/native-smoke --configuration Release`: PASS (7 native, 74 Python, all selected validators)."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "`py -3 tools/dev.py test --affected --base a2cb04b --build-root build/native-smoke --configuration Release`: PASS (7 native, 74 Python, all selected validators)."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "`py -3 tools/dev.py test --affected --base a2cb04b --build-root build/native-smoke --configuration Release`: PASS (7 native, 74 Python, all selected validators)."
+    },
+    {
+      "commit": "e3b010895909",
+      "summary": "`py -3 tools/dev.py test --affected --base a2cb04b --build-root build/native-smoke --configuration Release`: PASS (7 native, 74 Python, all selected validators)."
+    },
+    {
+      "commit": "6af71551826f",
+      "summary": "`py -3 tools/repro_workspace_smoke.py --require-clean --build`: PASS across Universal Launcher, Universal Setup, and FacMan."
+    },
+    {
+      "commit": "9f4b3d351dfb",
+      "summary": "`py -3 tools/strict_check.py`: PASS."
+    },
+    {
+      "commit": "9f4b3d351dfb",
+      "summary": "`py -3 tools/strict_check.py`: PASS."
+    },
+    {
+      "commit": "62133fae53a1",
+      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
+    },
+    {
+      "commit": "fc1cbf359418",
+      "summary": "`py -3 tools/strict_check.py`: PASS."
+    },
+    {
+      "commit": "fc1cbf359418",
+      "summary": "`py -3 tools/strict_check.py`: PASS."
+    },
+    {
+      "commit": "f40e9d31f940",
+      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
+    },
+    {
+      "commit": "8335fde1ba12",
+      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release."
+    },
+    {
+      "commit": "05a93277d739",
+      "summary": "PASS: AIDE Lite wave verify."
+    },
+    {
+      "commit": "b93d7376c625",
+      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release."
+    },
+    {
+      "commit": "7ad66aea23d7",
+      "summary": "PASS: AIDE Lite wave verify."
+    },
+    {
+      "commit": "2e9a66f8a4bd",
+      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release."
+    },
+    {
+      "commit": "b30e4a70272e",
+      "summary": "PASS: AIDE Lite wave verify."
+    },
+    {
+      "commit": "578bfb57bf82",
+      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release"
+    },
+    {
+      "commit": "d90d461a99dd",
+      "summary": "PASS: py -3 .aide/scripts/aide_lite.py wave verify for nine WU8 gates."
+    },
+    {
+      "commit": "dedadfa2f95e",
+      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release."
+    },
+    {
+      "commit": "9af53a736f47",
+      "summary": "PASS: py -3 .aide/scripts/aide_lite.py wave verify."
+    },
+    {
+      "commit": "9fea4325129c",
+      "summary": "PASS: Release full suite, 21 native and 314 Python tests with one intentional opt-in skip."
+    },
+    {
+      "commit": "625a964355d0",
+      "summary": "PASS: Release full suite, 21 native and 314 Python tests with one intentional opt-in skip."
+    },
+    {
+      "commit": "8556b05e033a",
+      "summary": "PASS: Rebuilt the Release transaction-session smoke target."
+    },
+    {
+      "commit": "b6e8e6200b9e",
+      "summary": "PASS: Clean three-repository build, native, strict, AIDE, and Python matrix."
+    },
+    {
+      "commit": "4d542308f806",
+      "summary": "PASS: Five affected Release native tests."
+    },
+    {
+      "commit": "02398db38063",
+      "summary": "PASS: All affected product sources compile with GCC 15 warnings-as-errors."
+    },
+    {
+      "commit": "681a614ea193",
+      "summary": "PASS: GCC 15 warnings-as-errors compile and link."
+    },
+    {
+      "commit": "774628f442b0",
+      "summary": "PASS: Affected Release CTest 3/3."
+    },
+    {
+      "commit": "81abee2fb122",
+      "summary": "PASS: Workflow source-format tests 10/10."
+    }
+  ],
+  "warnings": []
+}

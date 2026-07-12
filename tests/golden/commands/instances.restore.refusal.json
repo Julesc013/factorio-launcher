@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"instances.restore","status":"refused","refusal":{"schema":"common.refusal.v1","code":"instance_archive_hash_mismatch","reason":"archive hash closure does not match","recoverable":false}}

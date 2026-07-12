@@ -15,4 +15,19 @@ Initial profiles:
 - safe-graphics
 - low-vram
 
-Every profile must support a dry-run launch plan.
+Every profile supports a dry-run launch plan. R3.7 stores workspace profiles as
+portable `factorio.launch_profile.v1` documents and layers them over the
+immutable shipped `vanilla` template, the instance profile selection, and
+typed instance-safe overrides. `profiles apply` always materializes the same
+effective-profile plan first, backs up the instance manifest, and keeps
+`run.execute` quarantined.
+
+Safe fields cover window/fullscreen preference, graphics quality, audio,
+instance-local save selection, headless or benchmark planning modes, bounded
+benchmark ticks, and an explicit argument allowlist. FacMan always owns
+`--config`, `--mod-directory`, the executable, working directory, and effective
+write-data controls. Profiles cannot contain commands, scripts, executable
+paths, setup mutations, network endpoints, credentials, or raw JSON fragments.
+
+`profiles archive` moves unused workspace profiles to FacMan-owned trash. It
+does not permanently delete profiles, and shipped profiles remain immutable.

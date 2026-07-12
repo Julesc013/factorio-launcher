@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"snapshots.create","status":"refused","refusal":{"schema":"common.refusal.v1","code":"snapshot_target_exists","reason":"snapshot target already exists","recoverable":true}}

@@ -58,6 +58,13 @@ class CliTests(unittest.TestCase):
             {"saves.list", "saves.backup", "saves.clone", "instance.export", "instance.import"}.issubset(commands)
         )
         self.assertTrue(
+            {
+                "instances.inspect", "instances.verify", "instances.diff", "instances.clone",
+                "instances.rename", "instances.archive", "instances.restore",
+            }.issubset(commands)
+        )
+        self.assertNotIn("instances.purge", commands)
+        self.assertTrue(
             {"workspace.recovery.inspect", "workspace.recovery.plan", "workspace.recovery.apply"}.issubset(commands)
         )
         self.assertTrue(

@@ -1,0 +1,13 @@
+command_id = "mods.verify"
+cli = "facman mods verify <identity> --json"
+effects = ["workspace_read"]
+request_schema = "contracts/schema/command/mods.verify.request.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_mod_inventory_record.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = true
+executes_process = false
+mutates_workspace = false
+golden_success = "tests/golden/commands/mods.verify.success.json"
+golden_refusal = "tests/golden/commands/mods.verify.refusal.json"

@@ -23,6 +23,19 @@ class TestArchitectureTests(unittest.TestCase):
         self.assertIn("fl_archive_core_smoke", first["native_targets"])
         self.assertIn("tests.test_archive_core", first["python_tests"])
 
+    def test_affected_python_runner_exposes_repo_and_test_helpers(self) -> None:
+        source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
+        self.assertIn('str(ROOT / "tests")', source)
+        self.assertIn("os.pathsep.join(python_paths)", source)
+
+    def test_script_backed_native_tests_build_their_real_prerequisite(self) -> None:
+        self.assertEqual("flb_factorio_shared", dev.NATIVE_BUILD_PREREQUISITES["facman_abi_symbol_smoke"])
+
+    def test_native_executable_honors_requested_configuration(self) -> None:
+        source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
+        self.assertIn('f"{configuration}/facman.exe"', source)
+        self.assertIn("native_executable(build_root, args.configuration)", source)
+
     def test_operator_category_cannot_be_automatically_passed(self) -> None:
         self.assertFalse(dev.load_impact()["operator"]["automated"])
 

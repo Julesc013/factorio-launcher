@@ -1,0 +1,59 @@
+{
+  "$id": "https://facman.invalid/schema/command/modsets.plan.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "disabled_mods": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    },
+    "enabled_mods": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    },
+    "instance_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "maximum_backtracks": {
+      "type": "string"
+    },
+    "maximum_elapsed_ms": {
+      "type": "string"
+    },
+    "maximum_explanation_nodes": {
+      "type": "string"
+    },
+    "maximum_graph_edges": {
+      "type": "string"
+    },
+    "maximum_packages": {
+      "type": "string"
+    },
+    "maximum_solver_states": {
+      "type": "string"
+    },
+    "maximum_versions_per_package": {
+      "type": "string"
+    },
+    "version_preferences": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    }
+  },
+  "required": [
+    "instance_id"
+  ],
+  "title": "modsets.plan request",
+  "type": "object"
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_snapshots.v1.schema.json",
+  "title": "Factorio snapshot list",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.snapshots.v1"},
+    "command": {"const": "snapshots.list"},
+    "instance_id": {"type": "string"},
+    "snapshots": {"type": "array", "items": {"type": "object", "additionalProperties": false, "properties": {"snapshot_id": {"type": "string"}, "created_utc": {"type": "string"}, "size": {"type": "integer", "minimum": 0}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}, "required": ["snapshot_id", "created_utc", "size", "sha256"]}},
+    "mutation_executed": {"const": false}
+  },
+  "required": ["schema", "command", "instance_id", "snapshots", "mutation_executed"]
+}

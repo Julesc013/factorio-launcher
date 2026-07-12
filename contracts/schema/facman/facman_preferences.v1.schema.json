@@ -1,0 +1,30 @@
+{
+  "$id": "https://facman.invalid/schema/facman/facman_preferences.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "backup_destination": {"type": "string"},
+    "backup_keep_last": {"maximum": 10000, "minimum": 0, "type": "integer"},
+    "command_timeout_seconds": {"maximum": 86400, "minimum": 0, "type": "integer"},
+    "default_instance_template": {"type": "string"},
+    "default_launch_profile": {"type": "string"},
+    "discovery_providers": {
+      "items": {"minLength": 1, "type": "string"},
+      "maxItems": 256,
+      "type": "array"
+    },
+    "discovery_roots": {
+      "items": {"minLength": 1, "type": "string"},
+      "maxItems": 256,
+      "type": "array"
+    },
+    "display_color_policy": {"enum": ["auto", "always", "never"]},
+    "preferred_transport": {"enum": ["direct", "process", "daemon"]},
+    "preferred_workspace": {"type": "string"},
+    "schema": {"const": "facman.preferences.v1"},
+    "tui_page_size": {"maximum": 1000, "minimum": 0, "type": "integer"}
+  },
+  "required": ["schema"],
+  "title": "FacMan non-secret preferences",
+  "type": "object"
+}

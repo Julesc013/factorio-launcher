@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"modsets.apply","status":"refused","refusal":{"schema":"common.refusal.v1","code":"modset_external_drift","reason":"modset state changed after planning","recoverable":true}}

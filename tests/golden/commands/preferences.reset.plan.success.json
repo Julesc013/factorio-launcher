@@ -1,0 +1,1 @@
+{"schema":"facman.preferences_report.v1","command":"preferences.reset.plan","operation":"preferences.reset.plan","status":"ok","path":"<config>/facman/preferences.v1.json","present":true,"mutation_executed":false,"reset":true,"change_required":true}

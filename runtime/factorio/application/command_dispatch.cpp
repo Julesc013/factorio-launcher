@@ -6,9 +6,12 @@
 #include "fl_json.h"
 #include "fl_file_io.h"
 
+#include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <filesystem>
 #include <set>
+#include <stdexcept>
 #include <utility>
 
 namespace facman::factorio::application {
@@ -120,6 +123,97 @@ bool optional_string_array(const json::Value& object, const char* key, std::vect
         values.push_back(text.take_value());
     }
     return true;
+}
+
+bool optional_unsigned_string(
+    const json::Value& object,
+    const char* key,
+    std::uint32_t& value,
+    std::string& detail)
+{
+    std::string text;
+    if (!optional_string(object, key, text, detail)) return false;
+    if (text.empty()) return true;
+    if (!std::all_of(text.begin(), text.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
+        detail = std::string("request payload field must be an unsigned integer string: ") + key;
+        return false;
+    }
+    try {
+        const unsigned long parsed = std::stoul(text);
+        if (parsed > 1000000UL) throw std::out_of_range("preference limit");
+        value = static_cast<std::uint32_t>(parsed);
+    } catch (...) {
+        detail = std::string("request payload field exceeds its numeric budget: ") + key;
+        return false;
+    }
+    return true;
+}
+
+bool optional_unsigned_64_string(
+    const json::Value& object,
+    const char* key,
+    std::uint64_t& value,
+    std::string& detail)
+{
+    std::string text;
+    if (!optional_string(object, key, text, detail)) return false;
+    if (text.empty()) return true;
+    if (!std::all_of(text.begin(), text.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
+        detail = std::string("request payload field must be an unsigned integer string: ") + key;
+        return false;
+    }
+    try {
+        value = std::stoull(text);
+    } catch (...) {
+        detail = std::string("request payload field exceeds its numeric budget: ") + key;
+        return false;
+    }
+    return true;
+}
+
+bool decode_profile_patch(const json::Value& payload, profiles::Patch& patch, std::string& detail)
+{
+    return optional_string(payload, "window_mode", patch.window_mode, detail) &&
+        optional_string(payload, "graphics_quality", patch.graphics_quality, detail) &&
+        optional_string(payload, "audio", patch.audio, detail) &&
+        optional_string(payload, "selection_mode", patch.selection_mode, detail) &&
+        optional_string(payload, "selection", patch.selection, detail) &&
+        optional_string(payload, "launch_mode", patch.launch_mode, detail) &&
+        optional_string(payload, "benchmark_ticks", patch.benchmark_ticks, detail) &&
+        optional_string_array(payload, "additional_arguments", patch.additional_arguments, detail);
+}
+
+bool decode_modset_solver(
+    const json::Value& payload,
+    ModsetSolverRequest& request,
+    std::string& detail)
+{
+    return required_string(payload, "instance_id", request.instance_id, detail) &&
+        optional_string_array(payload, "enabled_mods", request.enabled_mods, detail) &&
+        optional_string_array(payload, "disabled_mods", request.disabled_mods, detail) &&
+        optional_string_array(payload, "version_preferences", request.version_preferences, detail) &&
+        optional_string(payload, "transaction_id", request.transaction_id, detail) &&
+        optional_unsigned_string(payload, "maximum_packages", request.budgets.maximum_packages, detail) &&
+        optional_unsigned_string(payload, "maximum_versions_per_package", request.budgets.maximum_versions_per_package, detail) &&
+        optional_unsigned_string(payload, "maximum_graph_edges", request.budgets.maximum_graph_edges, detail) &&
+        optional_unsigned_string(payload, "maximum_solver_states", request.budgets.maximum_solver_states, detail) &&
+        optional_unsigned_string(payload, "maximum_backtracks", request.budgets.maximum_backtracks, detail) &&
+        optional_unsigned_string(payload, "maximum_elapsed_ms", request.budgets.maximum_elapsed_ms, detail) &&
+        optional_unsigned_string(payload, "maximum_explanation_nodes", request.budgets.maximum_explanation_nodes, detail);
+}
+
+bool decode_save_index(const json::Value& payload, SaveIndexRequest& request, std::string& detail)
+{
+    return required_string(payload, "instance_id", request.instance_id, detail) &&
+        optional_string(payload, "save", request.save, detail) &&
+        optional_string(payload, "other_save", request.other_save, detail) &&
+        optional_string(payload, "profile_id", request.profile_id, detail) &&
+        optional_string(payload, "source_operation", request.source_operation, detail) &&
+        optional_unsigned_string(payload, "keep_last", request.keep_last, detail) &&
+        optional_unsigned_string(payload, "keep_daily", request.keep_daily, detail) &&
+        optional_unsigned_string(payload, "keep_weekly", request.keep_weekly, detail) &&
+        optional_unsigned_64_string(payload, "maximum_total_bytes", request.maximum_total_bytes, detail) &&
+        optional_unsigned_string(payload, "minimum_age_days", request.minimum_age_days, detail);
 }
 
 const char* service_operation(CommandId command) noexcept
@@ -244,8 +338,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "workspace", typed.workspace, detail)) return false;
         request.payload = std::move(typed); return true;
     }
-    case CommandId::launch_plan_explain:
-    case CommandId::modsets_explain: {
+    case CommandId::launch_plan_explain: {
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;
         std::string value;
         if (!required_string(payload, "instance_id", value, detail)) return false;
@@ -259,6 +352,28 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!validate_fields(payload, {"roots"}, detail)) return false;
         DoctorRequest typed;
         if (!optional_string_array(payload, "roots", typed.roots, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::preferences_validate:
+    case CommandId::preferences_plan:
+    case CommandId::preferences_apply: {
+        if (!validate_fields(payload, {
+                "preferred_workspace", "preferred_transport", "default_instance_template",
+                "default_launch_profile", "display_color_policy", "tui_page_size",
+                "command_timeout_seconds", "backup_destination", "backup_keep_last",
+                "discovery_providers", "discovery_roots"}, detail)) return false;
+        PreferencesRequest typed;
+        if (!optional_string(payload, "preferred_workspace", typed.values.preferred_workspace, detail) ||
+            !optional_string(payload, "preferred_transport", typed.values.preferred_transport, detail) ||
+            !optional_string(payload, "default_instance_template", typed.values.default_instance_template, detail) ||
+            !optional_string(payload, "default_launch_profile", typed.values.default_launch_profile, detail) ||
+            !optional_string(payload, "display_color_policy", typed.values.display_color_policy, detail) ||
+            !optional_unsigned_string(payload, "tui_page_size", typed.values.tui_page_size, detail) ||
+            !optional_unsigned_string(payload, "command_timeout_seconds", typed.values.command_timeout_seconds, detail) ||
+            !optional_string(payload, "backup_destination", typed.values.backup_destination, detail) ||
+            !optional_unsigned_string(payload, "backup_keep_last", typed.values.backup_keep_last, detail) ||
+            !optional_string_array(payload, "discovery_providers", typed.values.discovery_providers, detail) ||
+            !optional_string_array(payload, "discovery_roots", typed.values.discovery_roots, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::legacy_setup_operation:
@@ -277,6 +392,27 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (normalized == CommandId::unsupported) { detail = "unsupported compatibility operation"; return false; }
         typed.operation = service_operation(normalized);
         request.command = normalized;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::servers_inspect:
+    case CommandId::servers_validate:
+    case CommandId::servers_plan:
+    case CommandId::servers_diff:
+    case CommandId::servers_export: {
+        if (!validate_fields(payload, {"server_id", "other_server_id", "save", "output_path", "include_save"}, detail)) return false;
+        ServerPlanRequest typed;
+        std::string output;
+        std::string include_save;
+        if (!required_string(payload, "server_id", typed.server_id, detail) ||
+            !optional_string(payload, "other_server_id", typed.other_server_id, detail) ||
+            !optional_string(payload, "save", typed.save, detail) ||
+            !optional_string(payload, "output_path", output, detail) ||
+            !optional_string(payload, "include_save", include_save, detail)) return false;
+        if (!output.empty()) typed.output_path = facman::platform::path_from_utf8(output);
+        if (!include_save.empty() && include_save != "true" && include_save != "false") {
+            detail = "include_save must be true or false"; return false;
+        }
+        typed.include_save = include_save == "true";
         request.payload = std::move(typed); return true;
     }
     case CommandId::package_verify:
@@ -342,6 +478,151 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "template_id", typed.template_id, detail)) return false;
         request.payload = std::move(typed); return true;
     }
+    case CommandId::instances_inspect:
+    case CommandId::instances_verify:
+    case CommandId::instances_archive: {
+        if (!validate_fields(payload, {"instance_id"}, detail)) return false;
+        InspectInstanceRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        if (command == CommandId::instances_archive) {
+            ArchiveInstanceRequest archive_request {typed.instance_id};
+            request.payload = std::move(archive_request);
+        } else request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::instances_diff: {
+        if (!validate_fields(payload, {"left_instance_id", "right_ref"}, detail)) return false;
+        DiffInstanceRequest typed;
+        if (!required_string(payload, "left_instance_id", typed.left_instance_id, detail) ||
+            !required_string(payload, "right_ref", typed.right_ref, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::instances_clone: {
+        if (!validate_fields(payload, {"source_instance_id", "destination_instance_id", "display_name", "install_ref"}, detail)) return false;
+        CloneInstanceRequest typed;
+        if (!required_string(payload, "source_instance_id", typed.source_instance_id, detail) ||
+            !required_string(payload, "destination_instance_id", typed.destination_instance_id, detail) ||
+            !optional_string(payload, "display_name", typed.display_name, detail) ||
+            !optional_string(payload, "install_ref", typed.install_ref, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::instances_rename: {
+        if (!validate_fields(payload, {"instance_id", "display_name"}, detail)) return false;
+        RenameInstanceRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "display_name", typed.display_name, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::instances_restore: {
+        if (!validate_fields(payload, {"archive_id", "new_instance_id"}, detail)) return false;
+        RestoreInstanceRequest typed;
+        if (!required_string(payload, "archive_id", typed.archive_id, detail) ||
+            !optional_string(payload, "new_instance_id", typed.new_instance_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_create: {
+        if (!validate_fields(payload, {"instance_id", "snapshot_id", "saves"}, detail)) return false;
+        CreateSnapshotRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "snapshot_id", typed.snapshot_id, detail) ||
+            !optional_string_array(payload, "saves", typed.saves, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_list: {
+        if (!validate_fields(payload, {"instance_id"}, detail)) return false;
+        ListSnapshotsRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_inspect:
+    case CommandId::snapshots_verify: {
+        if (!validate_fields(payload, {"instance_id", "snapshot_id"}, detail)) return false;
+        SnapshotRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "snapshot_id", typed.snapshot_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_diff: {
+        if (!validate_fields(payload, {"instance_id", "left_snapshot_id", "right_snapshot_id"}, detail)) return false;
+        DiffSnapshotRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "left_snapshot_id", typed.left_snapshot_id, detail) ||
+            !required_string(payload, "right_snapshot_id", typed.right_snapshot_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_restore: {
+        if (!validate_fields(payload, {"snapshot_ref", "target_instance_id"}, detail)) return false;
+        RestoreSnapshotRequest typed; std::string path;
+        if (!required_string(payload, "snapshot_ref", path, detail) ||
+            !required_string(payload, "target_instance_id", typed.target_instance_id, detail)) return false;
+        typed.snapshot_ref = path;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::snapshots_retention_plan:
+    case CommandId::snapshots_retention_apply: {
+        if (!validate_fields(payload, {"instance_id", "keep_last", "keep_daily", "keep_weekly", "maximum_total_bytes", "minimum_age_days"}, detail)) return false;
+        SnapshotRetentionRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !optional_unsigned_string(payload, "keep_last", typed.keep_last, detail) ||
+            !optional_unsigned_string(payload, "keep_daily", typed.keep_daily, detail) ||
+            !optional_unsigned_string(payload, "keep_weekly", typed.keep_weekly, detail) ||
+            !optional_unsigned_64_string(payload, "maximum_total_bytes", typed.maximum_total_bytes, detail) ||
+            !optional_unsigned_string(payload, "minimum_age_days", typed.minimum_age_days, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::templates_list:
+    case CommandId::profiles_list:
+        if (!validate_fields(payload, {}, detail)) return false;
+        request.payload = std::monostate {}; return true;
+    case CommandId::templates_inspect:
+    case CommandId::templates_validate: {
+        if (!validate_fields(payload, {"template_id"}, detail)) return false;
+        ProfileIdRequest typed;
+        if (!required_string(payload, "template_id", typed.id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_inspect:
+    case CommandId::profiles_archive: {
+        if (!validate_fields(payload, {"profile_id"}, detail)) return false;
+        ProfileIdRequest typed;
+        if (!required_string(payload, "profile_id", typed.id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_create: {
+        const std::set<std::string> allowed = {"profile_id", "template_id", "window_mode", "graphics_quality", "audio",
+            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments"};
+        if (!validate_fields(payload, allowed, detail)) return false;
+        CreateProfileRequest typed;
+        if (!required_string(payload, "profile_id", typed.profile_id, detail) ||
+            !optional_string(payload, "template_id", typed.template_id, detail) ||
+            !decode_profile_patch(payload, typed.values, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_clone: {
+        if (!validate_fields(payload, {"source_profile_id", "destination_profile_id"}, detail)) return false;
+        CloneProfileRequest typed;
+        if (!required_string(payload, "source_profile_id", typed.source_profile_id, detail) ||
+            !required_string(payload, "destination_profile_id", typed.destination_profile_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_diff: {
+        if (!validate_fields(payload, {"left_profile_id", "right_profile_id"}, detail)) return false;
+        DiffProfileRequest typed;
+        if (!required_string(payload, "left_profile_id", typed.left_profile_id, detail) ||
+            !required_string(payload, "right_profile_id", typed.right_profile_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_plan:
+    case CommandId::profiles_apply: {
+        const std::set<std::string> allowed = {"instance_id", "profile_id", "window_mode", "graphics_quality", "audio",
+            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments"};
+        if (!validate_fields(payload, allowed, detail)) return false;
+        EffectiveProfileRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "profile_id", typed.profile_id, detail) ||
+            !decode_profile_patch(payload, typed.overrides, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::launch_plan_build:
     case CommandId::launch_plan_preflight:
     case CommandId::run_preview: {
@@ -356,6 +637,37 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "source_path", path, detail) || !required_string(payload, "instance_id", typed.instance_id, detail)) return false;
         typed.source_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
+    case CommandId::mods_list:
+        if (!validate_fields(payload, {}, detail)) return false;
+        request.payload = std::monostate {}; return true;
+    case CommandId::mods_index: {
+        if (!validate_fields(payload, {"roots"}, detail)) return false;
+        std::vector<std::string> roots;
+        if (!optional_string_array(payload, "roots", roots, detail)) return false;
+        ModInventoryRequest typed;
+        for (const std::string& root : roots) typed.roots.push_back(facman::platform::path_from_utf8(root));
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::mods_inspect:
+    case CommandId::mods_verify:
+    case CommandId::mods_explain: {
+        if (!validate_fields(payload, {"identity"}, detail)) return false;
+        ModInventoryRequest typed;
+        if (!required_string(payload, "identity", typed.identity, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::modsets_plan:
+    case CommandId::modsets_diff:
+    case CommandId::modsets_explain:
+    case CommandId::modsets_apply:
+    case CommandId::modsets_rollback: {
+        if (!validate_fields(payload, {"instance_id", "enabled_mods", "disabled_mods", "version_preferences",
+                "transaction_id", "maximum_packages", "maximum_versions_per_package", "maximum_graph_edges",
+                "maximum_solver_states", "maximum_backtracks", "maximum_elapsed_ms", "maximum_explanation_nodes"}, detail)) return false;
+        ModsetSolverRequest typed;
+        if (!decode_modset_solver(payload, typed, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::modsets_lock:
     case CommandId::modsets_verify: {
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;
@@ -368,6 +680,19 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         ExportModsetRequest typed; std::string path;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) || !required_string(payload, "output_path", path, detail)) return false;
         typed.output_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
+    }
+    case CommandId::saves_index:
+    case CommandId::saves_inspect:
+    case CommandId::saves_verify:
+    case CommandId::saves_associate:
+    case CommandId::saves_diff:
+    case CommandId::saves_retention_plan:
+    case CommandId::saves_retention_apply: {
+        if (!validate_fields(payload, {"instance_id", "save", "other_save", "profile_id", "source_operation",
+                "keep_last", "keep_daily", "keep_weekly", "maximum_total_bytes", "minimum_age_days"}, detail)) return false;
+        SaveIndexRequest typed;
+        if (!decode_save_index(payload, typed, detail)) return false;
+        request.payload = std::move(typed); return true;
     }
     case CommandId::saves_list: {
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;
@@ -410,6 +735,9 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         typed.output_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
     case CommandId::recovery_inspect:
+    case CommandId::preferences_inspect:
+    case CommandId::preferences_reset_plan:
+    case CommandId::preferences_reset_apply:
     case CommandId::migration_inspect:
     case CommandId::migration_plan:
     case CommandId::migration_apply:

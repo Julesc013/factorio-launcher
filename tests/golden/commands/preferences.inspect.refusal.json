@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"preferences.inspect","status":"refused","refusal":{"schema":"common.refusal.v1","code":"preferences_version_unsupported","reason":"preferences version is unsupported","recoverable":false}}

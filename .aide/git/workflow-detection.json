@@ -1,0 +1,58 @@
+{
+  "branch_role_for_current_branch": "task",
+  "canonical_branch": "main",
+  "confidence": "high",
+  "current_branch": "task/r3.7-instance-content-lifecycle",
+  "current_commit": "b6e8e6200b9ef942b1a95fc39890636621358a62",
+  "detected_workflow": "trunk_with_dev_integration",
+  "generated_by": "aide-lite",
+  "integration_branch": "dev",
+  "integration_branch_detected": true,
+  "local_branches": [
+    "dev",
+    "evidence/r3.6-real-factorio-isolation-baseline",
+    "facman/appkit-shell-01",
+    "facman/winforms-shell-01",
+    "main",
+    "task/facman-r3-public-sync-closeout",
+    "task/facman-r3-truth-hardening",
+    "task/facman-safety-proof-gates",
+    "task/linux-pic-ci-fix",
+    "task/macos-runner-ci-fix",
+    "task/package-smoke-01",
+    "task/r3-final-evidence",
+    "task/r3-public-ci-closeout",
+    "task/r3.2-isolation-foundation",
+    "task/r3.3-data-integrity-recovery",
+    "task/r3.4-architecture-consolidation",
+    "task/r3.5-zero-exception-productization",
+    "task/r3.6-real-world-product-readiness",
+    "task/r3.7-instance-content-lifecycle",
+    "task/real-factorio-isolation-smoke-01"
+  ],
+  "non_mutating": true,
+  "recommended_next_action": "continue bounded task work, validate locally, and plan future landing to dev",
+  "remote_branches": [
+    "origin/dev",
+    "origin/evidence/r3.6-real-factorio-isolation-baseline",
+    "origin/main",
+    "origin/task/r3.2-isolation-foundation",
+    "origin/task/r3.3-data-integrity-recovery",
+    "origin/task/r3.5-zero-exception-productization",
+    "origin/task/r3.6-real-world-product-readiness",
+    "origin/task/r3.7-instance-content-lifecycle",
+    "origin/task/real-factorio-isolation-smoke-01"
+  ],
+  "remote_url_summary": "Julesc013/factorio-launcher",
+  "repo_id": "Julesc013/factorio-launcher",
+  "schema_version": "aide.git-workflow-detection.v0",
+  "tags_summary": {
+    "count": 2,
+    "tags": [
+      "facman-r2-hardening-2026-07-10",
+      "facman-r2-local-alpha-proof-0"
+    ]
+  },
+  "warnings": [],
+  "worktree_dirty": false
+}

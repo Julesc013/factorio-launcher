@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://facman.invalid/schema/factorio/factorio_launch_profile_diff.v1.schema.json","title":"Factorio launch profile diff","type":"object","additionalProperties":false,
+  "properties":{"schema":{"const":"factorio.launch_profile_diff.v1"},"command":{"const":"profiles.diff"},"left_profile_id":{"type":"string"},"right_profile_id":{"type":"string"},"differences":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"field":{"type":"string"},"left":{"type":"string"},"right":{"type":"string"}},"required":["field","left","right"]}},"mutation_executed":{"const":false}},
+  "required":["schema","command","left_profile_id","right_profile_id","differences","mutation_executed"]
+}

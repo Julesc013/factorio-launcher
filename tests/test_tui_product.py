@@ -17,10 +17,22 @@ def tui_executable() -> Path | None:
     configured = os.environ.get("FACMAN_TUI_EXE")
     candidates = [
         Path(configured) if configured else Path("__missing__"),
+        ROOT / "build/r37-ux/Release/facman-tui.exe",
         ROOT / "build/r36-tui/Debug/facman-tui.exe",
         ROOT / "build/native-smoke/Debug/facman-tui.exe",
         ROOT / "build/native-smoke/facman-tui",
         ROOT / "build/macos-native/facman-tui",
+    ]
+    return next((path for path in candidates if path.is_file()), None)
+
+
+def cli_executable() -> Path | None:
+    candidates = [
+        ROOT / "build/r37-ux/Release/facman.exe",
+        ROOT / "build/Release/facman.exe",
+        ROOT / "build/native-smoke/Debug/facman.exe",
+        ROOT / "build/native-smoke/facman",
+        ROOT / "build/macos-native/facman",
     ]
     return next((path for path in candidates if path.is_file()), None)
 
@@ -92,6 +104,53 @@ class TuiProductTests(unittest.TestCase):
             self.assertEqual(cancelled.returncode, 1)
             self.assertEqual(json.loads(cancelled.stdout)["outcome"], "cancelled")
             self.assertFalse(workspace.exists())
+
+    def test_generated_guided_forms_plain_mode_and_transport_refusal(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-tui-guided-") as temporary:
+            workspace = Path(temporary) / "guided workspace"
+            guided = self.invoke(
+                ["--workspace", str(workspace), "--interactive", "--plain", "--page-size", "5"],
+                stdin="/workspace.status\n1\n\nq\n",
+            )
+            self.assertEqual(guided.returncode, 0, guided.stderr)
+            self.assertIn("FacMan guided terminal", guided.stdout)
+            self.assertIn("Commands matching search", guided.stdout)
+            self.assertIn("Review", guided.stdout)
+            self.assertIn("Risk: read_only", guided.stdout)
+            self.assertIn("[progress]", guided.stdout)
+            self.assertNotIn("JSON payload", guided.stdout)
+            self.assertNotIn("\x1b[", guided.stdout)
+            self.assertFalse(workspace.exists())
+
+            cancelled_write = self.invoke(
+                ["--workspace", str(workspace), "--interactive", "--plain"],
+                stdin="/instances.rename\n1\nmain\nRenamed\nno\nq\n",
+            )
+            self.assertEqual(cancelled_write.returncode, 0, cancelled_write.stderr)
+            self.assertIn("Type APPLY to confirm this local write", cancelled_write.stdout)
+            self.assertIn("Command cancelled before dispatch", cancelled_write.stdout)
+            self.assertFalse(workspace.exists())
+
+            daemon = self.invoke(
+                ["--workspace", str(workspace), "--command", "workspace.status", "--transport", "daemon", "--json"]
+            )
+            self.assertEqual(daemon.returncode, 1)
+            refusal = json.loads(daemon.stdout)
+            self.assertEqual(refusal["code"], "daemon_transport_unavailable")
+
+            cli = cli_executable()
+            if cli is not None:
+                process = self.invoke(
+                    [
+                        "--workspace", str(workspace), "--command", "workspace.status",
+                        "--transport", "process", "--cli-path", str(cli), "--json",
+                    ]
+                )
+                self.assertEqual(process.returncode, 0, process.stderr)
+                self.assertEqual(json.loads(process.stdout)["observations"]["workspace"], str(workspace))
+
+            invalid = self.invoke(["--color", "sometimes", "--command", "workspace.status"])
+            self.assertEqual(invalid.returncode, 2)
 
 
 if __name__ == "__main__":

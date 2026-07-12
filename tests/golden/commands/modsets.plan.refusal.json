@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"modsets.plan","status":"refused","refusal":{"schema":"common.refusal.v1","code":"local_dependency_unavailable","reason":"required local artifact is unavailable","recoverable":true}}

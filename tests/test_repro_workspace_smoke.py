@@ -96,6 +96,33 @@ class ReproWorkspaceSmokeTests(unittest.TestCase):
         for repo in repos.values():
             self.assertFalse(build_root.is_relative_to(repo.resolve(strict=False)))
 
+    def test_validation_matrix_binds_package_proof_to_its_tui_build(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            repos = {
+                "factorio-launcher": make_repo(workspace / "factorio-launcher", "factorio-launcher"),
+                "universal-setup": make_repo(workspace / "universal-setup", "universal-setup"),
+                "universal-launcher": make_repo(workspace / "universal-launcher", "universal-launcher"),
+            }
+            build_root = workspace / "build"
+            build_dirs = {
+                name: repro_workspace_smoke.repo_build_dir(build_root, name)
+                for name in repro_workspace_smoke.REPO_NAMES
+            }
+
+            env = repro_workspace_smoke.validation_environment(repos, build_dirs)
+            command = repro_workspace_smoke.factorio_configure_command(
+                repos,
+                build_dirs["factorio-launcher"],
+            )
+
+        self.assertEqual(env["FACMAN_NATIVE_BUILD_ROOT"], str(build_dirs["factorio-launcher"]))
+        self.assertEqual(
+            Path(env["FACMAN_CLI_EXE"]),
+            repro_workspace_smoke.facman_executable(build_root),
+        )
+        self.assertIn("-DFACMAN_BUILD_TUI=ON", command)
+
 
 def make_repo(root: Path, name: str) -> Path:
     root.mkdir(parents=True)

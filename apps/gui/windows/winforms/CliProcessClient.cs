@@ -51,8 +51,11 @@ namespace FacMan.WinForms
                     request["command"] = command.BackendId;
                     request["dry_run"] = command.DryRunDefault;
                     request["payload"] = payload ?? new Dictionary<string, object>();
-                    await process.StandardInput.WriteAsync(serializer.Serialize(request)).ConfigureAwait(false);
-                    process.StandardInput.Close();
+                    byte[] requestBytes = new UTF8Encoding(false).GetBytes(serializer.Serialize(request));
+                    Stream standardInput = process.StandardInput.BaseStream;
+                    await standardInput.WriteAsync(
+                        requestBytes, 0, requestBytes.Length, cancellationToken).ConfigureAwait(false);
+                    standardInput.Close();
                     Task<string> stdoutTask = ReadBoundedAsync(process.StandardOutput, MaximumStdoutCharacters);
                     Task<string> stderrTask = ReadBoundedAsync(process.StandardError, MaximumStderrCharacters);
                     Task exitTask = Task.Run(delegate { process.WaitForExit(); });

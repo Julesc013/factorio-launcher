@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
-
 #include "flb_factorio_application.h"
-
 #include "application_context.h"
 #include "application_types.h"
 #include "command_dispatch.h"
@@ -16,20 +14,21 @@
 #include "handlers/mods.h"
 #include "handlers/modsets.h"
 #include "handlers/product.h"
+#include "handlers/preferences.h"
+#include "handlers/profiles.h"
 #include "handlers/recovery.h"
 #include "handlers/saves.h"
 #include "handlers/setup.h"
+#include "handlers/snapshots.h"
 #include "handlers/unavailable.h"
 #include "handlers/utility.h"
 #include "fl_json_boundary.h"
 #include "fl_file_io.h"
-
 #include <filesystem>
 #include <mutex>
 #include <new>
 #include <string>
 #include <variant>
-
 namespace facman::factorio::application {
 namespace {
 
@@ -51,7 +50,6 @@ int write_boundary_error(ulk_command_response_v1* response, const char* code, co
 }
 
 } // namespace
-
 class FactorioApplication {
 public:
     explicit FactorioApplication(std::string workspace_root)
@@ -84,7 +82,6 @@ public:
         }
         return write_response(execute(typed), response);
     }
-
 private:
     ApplicationResult execute(const ApplicationRequest& request)
     {
@@ -109,11 +106,16 @@ private:
         switch (request.command) {
         case CommandId::workspace_status: return handlers::workspace_status(context_);
         case CommandId::workspace_paths: return handlers::workspace_paths(context_);
+        case CommandId::preferences_inspect: return handlers::inspect_preferences(context_);
+        case CommandId::preferences_validate: return handlers::validate_preferences(context_, std::get<PreferencesRequest>(request.payload));
+        case CommandId::preferences_plan: return handlers::plan_preferences(context_, std::get<PreferencesRequest>(request.payload));
+        case CommandId::preferences_apply: return handlers::apply_preferences(context_, std::get<PreferencesRequest>(request.payload));
+        case CommandId::preferences_reset_plan: return handlers::plan_preferences_reset(context_);
+        case CommandId::preferences_reset_apply: return handlers::apply_preferences_reset(context_);
         case CommandId::capabilities_inspect: return handlers::capabilities_inspect(context_);
         case CommandId::onboarding_plan: return handlers::onboarding_plan(context_, std::get<OnboardingPlanRequest>(request.payload));
         case CommandId::doctor_explain: return handlers::doctor_explain(context_);
         case CommandId::launch_plan_explain: return handlers::launch_plan_explain(context_, std::get<ExplainInstanceRequest>(request.payload));
-        case CommandId::modsets_explain: return handlers::modsets_explain(context_, std::get<ExplainInstanceRequest>(request.payload));
         case CommandId::doctor_run: return handlers::run_doctor(context_, std::get<DoctorRequest>(request.payload));
         case CommandId::install_list: return handlers::list_installs(context_);
         case CommandId::install_scan: return handlers::scan_installs(context_, std::get<ScanInstallRefsRequest>(request.payload));
@@ -121,6 +123,17 @@ private:
         case CommandId::install_inspect: return handlers::inspect_install(context_, std::get<InspectInstallRefRequest>(request.payload));
         case CommandId::instance_list: return handlers::list_instances(context_);
         case CommandId::instance_create: return handlers::create_instance(context_, std::get<CreateInstanceRequest>(request.payload));
+        case CommandId::instances_inspect: case CommandId::instances_verify: case CommandId::instances_diff:
+        case CommandId::instances_clone: case CommandId::instances_rename: case CommandId::instances_archive:
+        case CommandId::instances_restore: return handlers::dispatch_instance_lifecycle(context_, request);
+        case CommandId::snapshots_create: case CommandId::snapshots_list: case CommandId::snapshots_inspect:
+        case CommandId::snapshots_verify: case CommandId::snapshots_diff: case CommandId::snapshots_restore:
+        case CommandId::snapshots_retention_plan: case CommandId::snapshots_retention_apply:
+            return handlers::dispatch_snapshots(context_, request);
+        case CommandId::templates_list: case CommandId::templates_inspect: case CommandId::templates_validate:
+        case CommandId::profiles_list: case CommandId::profiles_inspect: case CommandId::profiles_create:
+        case CommandId::profiles_clone: case CommandId::profiles_diff: case CommandId::profiles_plan: case CommandId::profiles_apply:
+        case CommandId::profiles_archive: return handlers::dispatch_profiles(context_, request);
         case CommandId::launch_plan_build: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "launch_plan.build");
         case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
         case CommandId::run_execute: {
@@ -136,28 +149,30 @@ private:
         case CommandId::installs_verify: return handlers::verify_install(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_repair: return handlers::repair_install(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_uninstall: return handlers::uninstall_install(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::mods_search:
-        case CommandId::mods_install:
+        case CommandId::mods_search: case CommandId::mods_install:
         case CommandId::mods_update: return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::servers_list: return handlers::list_servers(context_);
         case CommandId::servers_create: return handlers::create_server(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::servers_start:
-        case CommandId::servers_stop:
+        case CommandId::servers_inspect: case CommandId::servers_validate: case CommandId::servers_plan: case CommandId::servers_diff: case CommandId::servers_export: return handlers::dispatch_server_plan(context_, request);
+        case CommandId::servers_start: case CommandId::servers_stop:
         case CommandId::servers_rcon: return handlers::control_server(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::diagnostics_redact: return handlers::redact_diagnostics(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::dev_bug_report: return handlers::create_bug_report(context_);
-        case CommandId::dev_dump_data:
-        case CommandId::dev_dump_icons:
+        case CommandId::dev_dump_data: case CommandId::dev_dump_icons:
         case CommandId::dev_benchmark:
         case CommandId::dev_instrument_mod: return handlers::refuse_dev_execution(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::launch_plan_preflight: return handlers::preflight_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload));
         case CommandId::mods_import: return handlers::import_mod(context_, std::get<ImportModRequest>(request.payload));
+        case CommandId::mods_list: case CommandId::mods_inspect: case CommandId::mods_verify: case CommandId::mods_index: case CommandId::mods_explain: return handlers::dispatch_mod_inventory(context_, request);
         case CommandId::modsets_lock: return handlers::lock_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
         case CommandId::modsets_verify: return handlers::verify_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
         case CommandId::modsets_export: return handlers::export_modset(context_, std::get<ExportModsetRequest>(request.payload));
+        case CommandId::modsets_plan: case CommandId::modsets_diff: case CommandId::modsets_explain: case CommandId::modsets_apply: case CommandId::modsets_rollback: return handlers::dispatch_modset_solver(context_, request);
         case CommandId::saves_list: return handlers::list_saves(context_, std::get<ListSavesRequest>(request.payload));
         case CommandId::saves_backup: return handlers::backup_save(context_, std::get<BackupSaveRequest>(request.payload));
         case CommandId::saves_clone: return handlers::clone_save(context_, std::get<CloneSaveRequest>(request.payload));
+        case CommandId::saves_index: case CommandId::saves_inspect: case CommandId::saves_verify: case CommandId::saves_associate:
+        case CommandId::saves_diff: case CommandId::saves_retention_plan: case CommandId::saves_retention_apply: return handlers::dispatch_save_index(context_, request);
         case CommandId::instance_export: return handlers::export_instance(context_, std::get<ExportInstanceRequest>(request.payload));
         case CommandId::instance_import: return handlers::import_instance(context_, std::get<ImportInstanceRequest>(request.payload));
         case CommandId::recovery_inspect: return handlers::recovery_inspect(context_);
@@ -174,7 +189,6 @@ private:
                 "Unsupported application command");
         }
     }
-
     int write_response(const ApplicationResult& result, ulk_command_response_v1* response)
     {
         response_json_ = response_envelope(result, current_command_);
@@ -197,7 +211,6 @@ private:
     std::string error_message_;
     std::mutex request_mutex_;
 };
-
 } // namespace facman::factorio::application
 
 extern "C" void* flb_factorio_application_create(const char* workspace_root)
@@ -209,7 +222,6 @@ extern "C" void* flb_factorio_application_create(const char* workspace_root)
         return nullptr;
     }
 }
-
 extern "C" void flb_factorio_application_destroy(void* application)
 {
     try {
@@ -217,7 +229,6 @@ extern "C" void flb_factorio_application_destroy(void* application)
     } catch (...) {
     }
 }
-
 extern "C" int ULK_CALL flb_factorio_application_handle_v1(
     void* application,
     const ulk_command_request_v1* request,

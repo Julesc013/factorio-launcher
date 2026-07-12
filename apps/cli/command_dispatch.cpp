@@ -11,9 +11,10 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -25,30 +26,23 @@ constexpr std::size_t kTransportOutputLimit = 16U * 1024U * 1024U;
 
 struct Options {
     std::string workspace;
+    std::optional<facman::core::Error> workspace_error;
     std::vector<std::string> args;
 };
-
-std::string default_workspace()
-{
-    if (const char* value = std::getenv("FACMAN_WORKSPACE")) if (*value) return value;
-    if (const char* value = std::getenv("FACTORIO_LAUNCHER_WORKSPACE")) if (*value) return value;
-#ifdef _WIN32
-    const char* home = std::getenv("USERPROFILE");
-#else
-    const char* home = std::getenv("HOME");
-#endif
-    return home && *home ? std::string(home) + "/.facman/workspace" : "factorio_workspace";
-}
 
 Options parse_options(int argc, char** argv)
 {
     Options options;
-    options.workspace = default_workspace();
+    std::string explicit_workspace;
     for (int index = 1; index < argc; ++index) {
         const std::string value = argv[index];
-        if (value == "--workspace" && index + 1 < argc) options.workspace = argv[++index];
+        if (value == "--workspace" && index + 1 < argc) explicit_workspace = argv[++index];
         else options.args.push_back(value);
     }
+    auto resolution = facman::client::resolve_workspace(
+        facman::platform::path_from_utf8(explicit_workspace));
+    if (resolution) options.workspace = facman::platform::path_to_utf8(resolution.value().path);
+    else options.workspace_error = resolution.error();
     return options;
 }
 
@@ -88,6 +82,9 @@ facman::core::Result<facman::client::CommandResponse> call(
     const std::string& payload = "{}",
     bool dry_run = true)
 {
+    if (options.workspace_error) {
+        return facman::core::Result<facman::client::CommandResponse>::failure(*options.workspace_error);
+    }
     facman::client::FacManClient client(
         std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(options.workspace)));
     return client.execute({command, payload, dry_run});
@@ -172,6 +169,100 @@ std::string roots_payload(const std::vector<std::string>& roots)
     return output.serialize();
 }
 
+std::string preferences_payload(const std::vector<std::string>& args)
+{
+    json::ObjectBuilder output;
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+             {"preferred_workspace", option(args, "--preferred-workspace")},
+             {"preferred_transport", option(args, "--transport")},
+             {"default_instance_template", option(args, "--template")},
+             {"default_launch_profile", option(args, "--profile")},
+             {"display_color_policy", option(args, "--color")},
+             {"tui_page_size", option(args, "--page-size")},
+             {"command_timeout_seconds", option(args, "--timeout-seconds")},
+             {"backup_destination", option(args, "--backup-destination")},
+             {"backup_keep_last", option(args, "--backup-keep-last")},
+         }) {
+        if (!field.second.empty()) output.add_string(field.first, field.second);
+    }
+    for (const auto& array_field : std::vector<std::pair<std::string, std::vector<std::string>>> {
+             {"discovery_providers", option_values(args, "--discovery-provider")},
+             {"discovery_roots", option_values(args, "--discovery-root")},
+         }) {
+        if (array_field.second.empty()) continue;
+        json::ArrayBuilder values;
+        for (const std::string& value : array_field.second) values.add_string(value);
+        output.add_array(array_field.first, values);
+    }
+    return output.serialize();
+}
+
+std::string profile_payload(
+    const std::vector<std::string>& args,
+    const std::vector<std::pair<std::string, std::string>>& identity)
+{
+    json::ObjectBuilder output;
+    for (const auto& field : identity) output.add_string(field.first, field.second);
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+             {"template_id", option(args, "--template")}, {"window_mode", option(args, "--window-mode")},
+             {"graphics_quality", option(args, "--graphics-quality")}, {"audio", option(args, "--audio")},
+             {"selection_mode", option(args, "--selection-mode")}, {"selection", option(args, "--selection")},
+             {"launch_mode", option(args, "--launch-mode")}, {"benchmark_ticks", option(args, "--benchmark-ticks")},
+         }) if (!field.second.empty()) output.add_string(field.first, field.second);
+    const auto arguments = option_values(args, "--arg");
+    if (!arguments.empty()) {
+        json::ArrayBuilder values;
+        for (const std::string& value : arguments) values.add_string(value);
+        output.add_array("additional_arguments", values);
+    }
+    return output.serialize();
+}
+
+std::string modset_solver_payload(
+    const std::vector<std::string>& args,
+    const std::string& instance,
+    const std::string& transaction = {})
+{
+    json::ObjectBuilder output;
+    output.add_string("instance_id", instance);
+    if (!transaction.empty()) output.add_string("transaction_id", transaction);
+    for (const auto& field : std::vector<std::pair<std::string, std::vector<std::string>>> {
+             {"enabled_mods", option_values(args, "--enable")},
+             {"disabled_mods", option_values(args, "--disable")},
+             {"version_preferences", option_values(args, "--prefer")},
+         }) {
+        if (field.second.empty()) continue;
+        json::ArrayBuilder values;
+        for (const std::string& value : field.second) values.add_string(value);
+        output.add_array(field.first, values);
+    }
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+             {"maximum_packages", option(args, "--max-packages")},
+             {"maximum_versions_per_package", option(args, "--max-versions-per-package")},
+             {"maximum_graph_edges", option(args, "--max-graph-edges")},
+             {"maximum_solver_states", option(args, "--max-solver-states")},
+             {"maximum_backtracks", option(args, "--max-backtracks")},
+             {"maximum_elapsed_ms", option(args, "--max-elapsed-ms")},
+             {"maximum_explanation_nodes", option(args, "--max-explanation-nodes")},
+         }) if (!field.second.empty()) output.add_string(field.first, field.second);
+    return output.serialize();
+}
+
+std::string save_index_payload(
+    const std::vector<std::string>& args,
+    const std::vector<std::pair<std::string, std::string>>& identity)
+{
+    json::ObjectBuilder output;
+    for (const auto& field : identity) output.add_string(field.first, field.second);
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+             {"profile_id", option(args, "--profile")}, {"source_operation", option(args, "--source-operation")},
+             {"keep_last", option(args, "--keep-last")}, {"keep_daily", option(args, "--keep-daily")},
+             {"keep_weekly", option(args, "--keep-weekly")}, {"maximum_total_bytes", option(args, "--max-total-bytes")},
+             {"minimum_age_days", option(args, "--min-age-days")},
+         }) if (!field.second.empty()) output.add_string(field.first, field.second);
+    return output.serialize();
+}
+
 std::string transport_response(
     const std::string& request_id,
     const std::string& command,
@@ -231,6 +322,10 @@ int command_rpc(const Options& options)
     input.resize(kTransportInputLimit + 1);
     std::cin.read(input.data(), static_cast<std::streamsize>(input.size()));
     input.resize(static_cast<std::size_t>(std::cin.gcount()));
+    if (input.size() >= 3U && static_cast<unsigned char>(input[0]) == 0xEFU &&
+        static_cast<unsigned char>(input[1]) == 0xBBU && static_cast<unsigned char>(input[2]) == 0xBFU) {
+        input.erase(0, 3);
+    }
     if (input.size() > kTransportInputLimit) {
         return transport_refusal("", "", "transport_input_too_large", "Transport request exceeds the input budget");
     }
@@ -256,6 +351,13 @@ int command_rpc(const Options& options)
         return transport_refusal(request_id, command, "transport_protocol_invalid", "Transport request does not satisfy protocol v1");
     }
     const std::string requested_workspace = json_string_field(request, "workspace");
+    if (requested_workspace.empty() && options.workspace_error) {
+        return transport_refusal(
+            request_id,
+            command,
+            options.workspace_error->code,
+            options.workspace_error->message);
+    }
     const std::string workspace = requested_workspace.empty() ? options.workspace : requested_workspace;
     facman::client::FacManClient client(
         std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(workspace)));
@@ -360,6 +462,52 @@ int command_instances(const Options& options)
             {"template_id", option(options.args, "--template", "vanilla")}});
         return emit_basic(call(options, "instance.create", payload, false), flag(options.args, "--json"), "Created instance " + id);
     }
+    const std::string action = options.args[1];
+    if ((action == "inspect" || action == "verify" || action == "archive") && options.args.size() >= 3) {
+        for (std::size_t index = 3; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;
+        return emit_basic(
+            call(options, "instances." + action, exact_fields_payload({{"instance_id", options.args[2]}}), action != "archive"),
+            flag(options.args, "--json"), "Instance " + action + " completed");
+    }
+    if (action == "diff" && options.args.size() >= 4) {
+        for (std::size_t index = 4; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;
+        return emit_basic(call(options, "instances.diff", exact_fields_payload({
+            {"left_instance_id", options.args[2]}, {"right_ref", options.args[3]}})),
+            flag(options.args, "--json"), "Instance diff completed");
+    }
+    if (action == "clone" && options.args.size() >= 4) {
+        for (std::size_t index = 4; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if ((options.args[index] != "--name" && options.args[index] != "--install") || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        return emit_basic(call(options, "instances.clone", fields_payload({
+            {"source_instance_id", options.args[2]}, {"destination_instance_id", options.args[3]},
+            {"display_name", option(options.args, "--name")}, {"install_ref", option(options.args, "--install")}}), false),
+            flag(options.args, "--json"), "Instance clone completed");
+    }
+    if (action == "rename" && options.args.size() >= 3) {
+        const std::string name = option(options.args, "--name");
+        if (name.empty()) return 2;
+        for (std::size_t index = 3; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (options.args[index] != "--name" || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        return emit_basic(call(options, "instances.rename", exact_fields_payload({
+            {"instance_id", options.args[2]}, {"display_name", name}}), false),
+            flag(options.args, "--json"), "Instance display name updated");
+    }
+    if (action == "restore" && options.args.size() >= 3) {
+        for (std::size_t index = 3; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (options.args[index] != "--new-id" || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        return emit_basic(call(options, "instances.restore", fields_payload({
+            {"archive_id", options.args[2]}, {"new_instance_id", option(options.args, "--new-id")}}), false),
+            flag(options.args, "--json"), "Instance restored");
+    }
     return 2;
 }
 
@@ -367,6 +515,17 @@ int command_mods(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
+    if (action == "list") return emit_basic(call(options, "mods.list"), flag(options.args, "--json"), "Local mods listed");
+    if (action == "index") {
+        json::ArrayBuilder roots;
+        for (const std::string& root : option_values(options.args, "--root")) roots.add_string(root);
+        json::ObjectBuilder payload;
+        payload.add_array("roots", roots);
+        return emit_basic(call(options, "mods.index", payload.serialize()), flag(options.args, "--json"), "Local mods indexed");
+    }
+    if ((action == "inspect" || action == "verify" || action == "explain") && options.args.size() >= 3) return emit_basic(
+        call(options, "mods." + action, exact_fields_payload({{"identity", options.args[2]}})),
+        flag(options.args, "--json"), "Local mod " + action + " completed");
     if (action == "import" && options.args.size() >= 3) {
         const std::string instance = option(options.args, "--instance");
         return emit_basic(call(options, "mods.import", exact_fields_payload({{"source_path", options.args[2]}, {"instance_id", instance}}), false), flag(options.args, "--json"), "Mod imported");
@@ -378,11 +537,110 @@ int command_mods(const Options& options)
     return 2;
 }
 
+int command_snapshots(const Options& options)
+{
+    if (options.args.size() < 3) return 2;
+    const std::string action = options.args[1];
+    const bool as_json = flag(options.args, "--json");
+    if (action == "create" && options.args.size() >= 4) {
+        for (std::size_t index = 4; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (options.args[index] != "--save" || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        json::ArrayBuilder saves;
+        for (const std::string& value : option_values(options.args, "--save")) saves.add_string(value);
+        json::ObjectBuilder payload;
+        payload.add_string("instance_id", options.args[2]);
+        payload.add_string("snapshot_id", options.args[3]);
+        payload.add_array("saves", saves);
+        return emit_basic(call(options, "snapshots.create", payload.serialize(), false), as_json, "Snapshot created");
+    }
+    if (action == "list") return emit_basic(call(options, "snapshots.list", exact_fields_payload(
+        {{"instance_id", options.args[2]}})), as_json, "Snapshots listed");
+    if ((action == "inspect" || action == "verify") && options.args.size() >= 4) {
+        return emit_basic(call(options, "snapshots." + action, exact_fields_payload(
+            {{"instance_id", options.args[2]}, {"snapshot_id", options.args[3]}})), as_json, "Snapshot " + action + " completed");
+    }
+    if (action == "diff" && options.args.size() >= 5) {
+        return emit_basic(call(options, "snapshots.diff", exact_fields_payload({
+            {"instance_id", options.args[2]}, {"left_snapshot_id", options.args[3]},
+            {"right_snapshot_id", options.args[4]}})), as_json, "Snapshot diff completed");
+    }
+    if (action == "restore" && options.args.size() >= 4) {
+        return emit_basic(call(options, "snapshots.restore", exact_fields_payload({
+            {"snapshot_ref", options.args[2]}, {"target_instance_id", options.args[3]}}), false), as_json, "Snapshot restored");
+    }
+    if (action == "retention" && options.args.size() >= 4 &&
+        (options.args[2] == "plan" || options.args[2] == "apply")) {
+        const std::set<std::string> value_options = {
+            "--keep-last", "--keep-daily", "--keep-weekly", "--maximum-total-bytes", "--minimum-age-days"};
+        for (std::size_t index = 4; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (value_options.count(options.args[index]) == 0 || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        const std::string payload = fields_payload({
+            {"instance_id", options.args[3]}, {"keep_last", option(options.args, "--keep-last")},
+            {"keep_daily", option(options.args, "--keep-daily")}, {"keep_weekly", option(options.args, "--keep-weekly")},
+            {"maximum_total_bytes", option(options.args, "--maximum-total-bytes")},
+            {"minimum_age_days", option(options.args, "--minimum-age-days")}});
+        const bool apply = options.args[2] == "apply";
+        return emit_basic(call(options, "snapshots.retention." + options.args[2], payload, !apply), as_json,
+            apply ? "Snapshot retention applied" : "Snapshot retention planned");
+    }
+    return 2;
+}
+
+int command_templates(const Options& options)
+{
+    if (options.args.size() < 2) return 2;
+    const std::string action = options.args[1];
+    if (action == "list") return emit_basic(call(options, "templates.list"), flag(options.args, "--json"), "Templates listed");
+    if ((action == "inspect" || action == "validate") && options.args.size() >= 3) return emit_basic(
+        call(options, "templates." + action, exact_fields_payload({{"template_id", options.args[2]}})),
+        flag(options.args, "--json"), "Template " + action + " completed");
+    return 2;
+}
+
+int command_profiles(const Options& options)
+{
+    if (options.args.size() < 2) return 2;
+    const std::string action = options.args[1];
+    const bool as_json = flag(options.args, "--json");
+    if (action == "list") return emit_basic(call(options, "profiles.list"), as_json, "Profiles listed");
+    if ((action == "inspect" || action == "archive") && options.args.size() >= 3) return emit_basic(
+        call(options, "profiles." + action, exact_fields_payload({{"profile_id", options.args[2]}}), action != "archive"),
+        as_json, "Profile " + action + " completed");
+    if (action == "create" && options.args.size() >= 3) return emit_basic(
+        call(options, "profiles.create", profile_payload(options.args, {{"profile_id", options.args[2]}}), false),
+        as_json, "Profile created");
+    if ((action == "clone" || action == "diff") && options.args.size() >= 4) {
+        const auto fields = action == "clone"
+            ? std::vector<std::pair<std::string, std::string>> {{"source_profile_id", options.args[2]}, {"destination_profile_id", options.args[3]}}
+            : std::vector<std::pair<std::string, std::string>> {{"left_profile_id", options.args[2]}, {"right_profile_id", options.args[3]}};
+        return emit_basic(call(options, "profiles." + action, exact_fields_payload(fields), action == "diff"), as_json,
+            "Profile " + action + " completed");
+    }
+    if ((action == "plan" || action == "apply") && options.args.size() >= 4) return emit_basic(
+        call(options, "profiles." + action, profile_payload(options.args,
+            {{"instance_id", options.args[2]}, {"profile_id", options.args[3]}}), action == "plan"),
+        as_json, "Profile " + action + " completed");
+    return 2;
+}
+
 int command_modsets(const Options& options)
 {
     if (options.args.size() < 3) return 2;
     const std::string action = options.args[1], instance = options.args[2];
-    if (action == "explain") return emit_guidance(call(options, "modsets.explain", exact_fields_payload({{"instance_id", instance}})), flag(options.args, "--json"));
+    if (action == "plan" || action == "diff" || action == "explain" || action == "apply") {
+        return emit_basic(call(options, "modsets." + action, modset_solver_payload(options.args, instance), action != "apply"),
+            flag(options.args, "--json"), "Modset " + action + " completed");
+    }
+    if (action == "rollback" && options.args.size() >= 4) {
+        return emit_basic(call(options, "modsets.rollback", modset_solver_payload(options.args, instance, options.args[3]), false),
+            flag(options.args, "--json"), "Modset rollback completed");
+    }
     if (action == "lock" || action == "verify") return emit_basic(call(options, "modsets." + action, exact_fields_payload({{"instance_id", instance}}), action == "verify"), flag(options.args, "--json"), "Modset " + action + " completed");
     if (action == "export" && options.args.size() >= 4) {
         return emit_basic(
@@ -397,6 +655,22 @@ int command_saves(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
+    const std::string instance = option(options.args, "--instance");
+    if (action == "index") return emit_basic(call(options, "saves.index", save_index_payload(
+        options.args, {{"instance_id", instance}})), flag(options.args, "--json"), "Saves indexed");
+    if ((action == "inspect" || action == "verify" || action == "associate") && options.args.size() >= 3) {
+        return emit_basic(call(options, "saves." + action, save_index_payload(options.args,
+            {{"instance_id", instance}, {"save", options.args[2]}}), action != "associate"),
+            flag(options.args, "--json"), "Save " + action + " completed");
+    }
+    if (action == "diff" && options.args.size() >= 4) return emit_basic(call(options, "saves.diff", save_index_payload(
+        options.args, {{"instance_id", instance}, {"save", options.args[2]}, {"other_save", options.args[3]}})),
+        flag(options.args, "--json"), "Save diff completed");
+    if (action == "retention" && options.args.size() >= 3 && (options.args[2] == "plan" || options.args[2] == "apply")) {
+        const bool apply = options.args[2] == "apply";
+        return emit_basic(call(options, "saves.retention." + options.args[2], save_index_payload(
+            options.args, {{"instance_id", instance}}), !apply), flag(options.args, "--json"), "Save retention completed");
+    }
     if (action == "list") return emit_basic(call(options, "saves.list", exact_fields_payload({{"instance_id", option(options.args, "--instance")}})), flag(options.args, "--json"), "Saves listed");
     if (action == "backup" && options.args.size() >= 3) {
         const std::string payload = exact_fields_payload({{"instance_id", option(options.args, "--instance")},
@@ -468,6 +742,16 @@ int command_servers(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
+    if ((action == "inspect" || action == "validate" || action == "plan") && options.args.size() >= 3) {
+        return emit_basic(call(options, "servers." + action, fields_payload({{"server_id", options.args[2]},
+            {"save", option(options.args, "--save")}})), flag(options.args, "--json"), "Server " + action + " completed");
+    }
+    if (action == "diff" && options.args.size() >= 4) return emit_basic(call(options, "servers.diff", fields_payload(
+        {{"server_id", options.args[2]}, {"other_server_id", options.args[3]}})), flag(options.args, "--json"), "Server diff completed");
+    if (action == "export" && options.args.size() >= 4) return emit_basic(call(options, "servers.export", fields_payload(
+        {{"server_id", options.args[2]}, {"output_path", options.args[3]}, {"save", option(options.args, "--save")},
+         {"include_save", flag(options.args, "--include-save") ? "true" : "false"}}), false),
+        flag(options.args, "--json"), "Server plan exported");
     std::vector<std::pair<std::string, std::string>> fields;
     if (action == "create" && options.args.size() >= 3) fields = {{"name", options.args[2]}, {"id", option(options.args, "--id")}, {"instance_id", option(options.args, "--instance")}};
     else if (action == "start" || action == "stop" || action == "rcon") { if (options.args.size() < 3) return 2; fields = {{"id", options.args[2]}}; }
@@ -494,6 +778,45 @@ int command_workspace(const Options& options)
     std::string payload = "{}";
     if (family == "recovery" && action != "inspect") { if (options.args.size() < 4) return 2; payload = exact_fields_payload({{"transaction_id", options.args[3]}}); }
     return emit_basic(call(options, command, payload, action != "apply"), flag(options.args, "--json"), "Workspace operation completed");
+}
+
+int command_preferences(const Options& options)
+{
+    if (options.args.size() < 2) return 2;
+    const bool as_json = flag(options.args, "--json");
+    if (options.args[1] == "reset") {
+        if (options.args.size() < 3 || (options.args[2] != "plan" && options.args[2] != "apply")) return 2;
+        for (std::size_t index = 3; index < options.args.size(); ++index) {
+            if (options.args[index] != "--json") return 2;
+        }
+        const bool apply = options.args[2] == "apply";
+        return emit_basic(
+            call(options, "preferences.reset." + options.args[2], "{}", !apply),
+            as_json,
+            apply ? "Preferences reset" : "Preferences reset plan created");
+    }
+    const std::string action = options.args[1];
+    if (action != "inspect" && action != "validate" && action != "plan" && action != "apply") return 2;
+    if (action == "inspect") {
+        for (std::size_t index = 2; index < options.args.size(); ++index) {
+            if (options.args[index] != "--json") return 2;
+        }
+    }
+    const std::set<std::string> value_options = {
+        "--preferred-workspace", "--transport", "--template", "--profile", "--color",
+        "--page-size", "--timeout-seconds", "--backup-destination", "--backup-keep-last",
+        "--discovery-provider", "--discovery-root",
+    };
+    for (std::size_t index = 2; index < options.args.size(); ++index) {
+        if (options.args[index] == "--json") continue;
+        if (value_options.count(options.args[index]) == 0 || index + 1 >= options.args.size()) return 2;
+        ++index;
+    }
+    const std::string payload = action == "inspect" ? "{}" : preferences_payload(options.args);
+    return emit_basic(
+        call(options, "preferences." + action, payload, action != "apply"),
+        as_json,
+        "Preferences " + action + " completed");
 }
 
 int command_capabilities(const Options& options)
@@ -550,6 +873,9 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     if (command == "doctor") return command_doctor(options);
     if (command == "installs") return command_installs(options);
     if (command == "instances") return command_instances(options);
+    if (command == "snapshots") return command_snapshots(options);
+    if (command == "templates") return command_templates(options);
+    if (command == "profiles") return command_profiles(options);
     if (command == "mods") return command_mods(options);
     if (command == "modsets") return command_modsets(options);
     if (command == "saves") return command_saves(options);
@@ -560,6 +886,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     if (command == "servers") return command_servers(options);
     if (command == "dev") return command_dev(options);
     if (command == "workspace") return command_workspace(options);
+    if (command == "preferences") return command_preferences(options);
     if (command == "capabilities") return command_capabilities(options);
     if (command == "onboarding") return command_onboarding(options);
     if (command == "package") return command_package(options);

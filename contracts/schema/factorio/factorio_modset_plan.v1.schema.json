@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_modset_plan.v1.schema.json",
+  "title": "Deterministic Local Modset Plan",
+  "type": "object",
+  "required": ["schema", "command", "status", "instance_id", "plan_id", "current_state_sha256", "desired_mods", "changes", "explanation", "budget_usage", "local_artifacts_only", "portal_access", "mutation_executed"],
+  "properties": {
+    "schema": { "enum": ["factorio.modset_plan.v1", "factorio.modset_apply.v1"] },
+    "command": { "enum": ["modsets.plan", "modsets.diff", "modsets.explain", "modsets.apply"] },
+    "status": { "enum": ["ok", "applied"] },
+    "instance_id": { "type": "string" },
+    "factorio_version": { "type": "string" },
+    "plan_id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "current_state_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "desired_mods": { "type": "array", "items": { "type": "object" } },
+    "changes": { "type": "array", "items": { "type": "object" } },
+    "explanation": { "type": "array", "items": { "type": "string" } },
+    "budget_usage": { "type": "object" },
+    "local_artifacts_only": { "const": true },
+    "portal_access": { "const": false },
+    "mutation_executed": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

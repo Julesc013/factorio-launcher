@@ -411,6 +411,12 @@ std::vector<std::string> build_launch_args(const InstanceLaunchRef& instance)
     args.push_back(path_string(instance.local_data_root / "config" / "config.ini"));
     args.push_back("--mod-directory");
     args.push_back(path_string(instance.local_data_root / "mods"));
+    for (std::string argument : instance.profile_arguments) {
+        const std::string token = "$FACMAN_INSTANCE_ROOT";
+        const std::size_t position = argument.find(token);
+        if (position != std::string::npos) argument.replace(position, token.size(), path_string(instance.local_data_root));
+        args.push_back(std::move(argument));
+    }
     return args;
 }
 
@@ -423,7 +429,7 @@ LaunchPlanResult build_launch_plan(
     result.command = command;
     result.instance_id = instance.instance_id;
     result.profile_id = instance.profile_id.empty() ? "gui" : instance.profile_id;
-    result.mode = "gui";
+    result.mode = instance.launch_mode.empty() ? "gui" : instance.launch_mode;
     result.executable = install.executable;
     result.app_dir = install.root;
     result.args = build_launch_args(instance);

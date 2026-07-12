@@ -1,0 +1,13 @@
+command_id = "servers.export"
+cli = "facman servers export <server-id> <bundle.zip> [--save <save>] [--include-save] --json"
+effects = ["workspace_read", "workspace_write"]
+request_schema = "contracts/schema/command/servers.export.request.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_server_export.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = true
+executes_process = false
+mutates_workspace = true
+golden_success = "tests/golden/commands/servers.export.success.json"
+golden_refusal = "tests/golden/commands/servers.export.refusal.json"

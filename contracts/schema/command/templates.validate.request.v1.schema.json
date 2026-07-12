@@ -1,0 +1,17 @@
+{
+  "$id": "https://facman.invalid/schema/command/templates.validate.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "template_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "template_id"
+  ],
+  "title": "templates.validate request",
+  "type": "object"
+}

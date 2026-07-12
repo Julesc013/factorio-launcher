@@ -1,0 +1,32 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://facman.invalid/schema/factorio/factorio_launch_profile.v1.schema.json",
+  "title":"Portable Factorio launch profile",
+  "type":"object",
+  "additionalProperties":false,
+  "properties":{
+    "schema":{"const":"factorio.launch_profile.v1"},
+    "profile_id":{"type":"string","minLength":1,"pattern":"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "template_id":{"const":"vanilla"},
+    "settings":{
+      "type":"object","additionalProperties":false,
+      "properties":{
+        "window_mode":{"enum":["windowed","fullscreen"]},
+        "graphics_quality":{"enum":["low","medium","high"]},
+        "audio":{"enum":["enabled","disabled"]},
+        "selection_mode":{"enum":["none","load-save","benchmark-save"]},
+        "selection":{"type":["string","null"]},
+        "launch_mode":{"enum":["gui","headless-plan","benchmark-preview"]},
+        "benchmark_ticks":{"type":"integer","minimum":0,"maximum":100000000},
+        "additional_arguments":{"type":"array","maxItems":32,"items":{"enum":["--disable-audio","--force-opengl","--force-d3d","--low-vram","--no-log-rotation"]}}
+      },
+      "required":["window_mode","graphics_quality","audio","selection_mode","selection","launch_mode","benchmark_ticks","additional_arguments"]
+    },
+    "portability":{
+      "type":"object","additionalProperties":false,
+      "properties":{"machine_local_paths":{"const":false},"credentials":{"const":false},"scripts":{"const":false}},
+      "required":["machine_local_paths","credentials","scripts"]
+    }
+  },
+  "required":["schema","profile_id","template_id","settings","portability"]
+}

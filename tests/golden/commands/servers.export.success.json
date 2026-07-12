@@ -1,0 +1,1 @@
+{"schema":"factorio.server_export.v1","command":"servers.export","status":"ok","server_id":"main","path":"server.zip","contains_save":false,"contains_secrets":false,"contains_factorio_binary":false,"contains_execution_scripts":false,"process_started":false,"network_socket_opened":false,"firewall_changed":false,"mutation_executed":true}

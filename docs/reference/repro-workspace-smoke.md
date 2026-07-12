@@ -46,6 +46,11 @@ Use the full build mode for publication or branch handoff proof:
 py -3 tools/repro_workspace_smoke.py --build
 ```
 
+The build matrix binds package tests to its own out-of-tree native build and
+explicitly enables the target-specific TUI. It never borrows artifacts from a
+checkout-local build directory, so missing frontend components fail the proof
+instead of being hidden by stale developer outputs.
+
 Full build mode uses out-of-tree build directories under a temp
 `facman-repro-smoke` root keyed by the resolved checkout paths. That avoids stale
 `CMakeCache.txt` failures when repositories are moved between parent folders.

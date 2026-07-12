@@ -5,6 +5,7 @@
 
 #include "command_result.h"
 #include "flb_factorio_discovery.h"
+#include "flb_factorio_profiles.h"
 
 namespace facman::factorio::application::handlers {
 namespace discovery = facman::factorio::discovery;
@@ -56,7 +57,13 @@ ApplicationResult preview_launch(ApplicationContext& context, const BuildLaunchP
     discovery::InstallRef install;
     ApplicationResult loaded = load_refs(context, request, instance, install, "launch_plan.preview");
     if (loaded.status != ULK_STATUS_OK) return loaded;
-    launch::InstanceLaunchRef instance_ref {instance.id.str(), instance.profile, instance.root};
+    auto effective = profiles::effective_profile_for_instance(context.workspace(), instance.id.str(), instance.profile);
+    if (!effective) return refused(
+        safety_refusal(command, effective.error().code, "Effective profile is invalid", effective.error().message, true),
+        effective.error().code, effective.error().message);
+    launch::InstanceLaunchRef instance_ref {
+        instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
+        effective.value().launch_arguments};
     launch::InstallLaunchRef install_ref {install.root, install.executable, install.ownership};
     ApplicationResult result;
     result.output = launch::build_launch_plan(instance_ref, install_ref, command);
@@ -69,7 +76,13 @@ ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunc
     discovery::InstallRef install;
     ApplicationResult loaded = load_refs(context, request, instance, install, "launch_plan.preflight");
     if (loaded.status != ULK_STATUS_OK) return loaded;
-    launch::InstanceLaunchRef instance_ref {instance.id.str(), instance.profile, instance.root};
+    auto effective = profiles::effective_profile_for_instance(context.workspace(), instance.id.str(), instance.profile);
+    if (!effective) return refused(
+        safety_refusal("launch_plan.preflight", effective.error().code, "Effective profile is invalid", effective.error().message, true),
+        effective.error().code, effective.error().message);
+    launch::InstanceLaunchRef instance_ref {
+        instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
+        effective.value().launch_arguments};
     launch::InstallLaunchRef install_ref {install.root, install.executable, install.ownership};
     ApplicationResult result;
     result.output = launch::preflight_launch(instance_ref, install_ref, "launch_plan.preflight");
