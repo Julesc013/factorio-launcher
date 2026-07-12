@@ -248,17 +248,27 @@ fs::path unique_staging(const fs::path& parent, const std::string& prefix)
 
 bool stream_copy(const fs::path& source, const fs::path& destination)
 {
-    std::ifstream input(source, std::ios::binary);
-    std::ofstream output(destination, std::ios::binary | std::ios::out);
-    if (!input || !output) return false;
+    facman::platform::StableInputFile input;
+    if (!input.open_no_follow(source).ok()) return false;
+    facman::platform::DurableOutputFile output;
+    if (!output.create_exclusive(destination, input.size()).ok()) return false;
     std::array<char, 64 * 1024> buffer {};
-    while (input) {
-        input.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-        const std::streamsize count = input.gcount();
-        if (count > 0) output.write(buffer.data(), count);
+    std::uint64_t offset = 0;
+    while (offset < input.size()) {
+        const std::size_t requested = static_cast<std::size_t>(
+            std::min<std::uint64_t>(buffer.size(), input.size() - offset));
+        const std::size_t count = input.read_at(offset, buffer.data(), requested);
+        if (count == 0 || output.write_at(offset, buffer.data(), count) != count) {
+            output.close_without_flush();
+            return false;
+        }
+        offset += count;
     }
-    output.flush();
-    return input.eof() && static_cast<bool>(output);
+    if (!input.revalidate().ok()) {
+        output.close_without_flush();
+        return false;
+    }
+    return output.flush_file_and_parent().ok();
 }
 
 } // namespace

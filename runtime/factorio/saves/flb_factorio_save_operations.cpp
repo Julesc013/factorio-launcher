@@ -6,6 +6,7 @@
 #include "fl_archive.h"
 #include "fl_archive_platform.h"
 #include "fl_path_safety.h"
+#include "fl_file_io.h"
 #include "fl_sha256.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modsets.h"
@@ -270,6 +271,32 @@ bool stable_copy(const fs::path& source, const fs::path& destination, StableCopy
             source, destination, digest.value(), result.size, result.detail)) return false;
     result.sha1 = facman::factorio::modsets::sha1_hex_file(destination);
     return !result.sha1.empty();
+}
+
+bool rewrite_text_durable(const fs::path& destination, const std::string& text, std::string& detail)
+{
+    const fs::path temporary = unique_staging(destination.parent_path(), ".facman-rewrite-");
+    if (temporary.empty()) { detail = "could not allocate a rewrite staging path"; return false; }
+    facman::platform::DurableOutputFile output;
+    auto status = output.create_exclusive(temporary, text.size());
+    if (!status.ok()) { detail = status.detail; return false; }
+    if (output.write_at(0, text.data(), text.size()) != text.size()) {
+        output.close_without_flush();
+        detail = "short durable rewrite";
+        return false;
+    }
+    status = output.flush_file_and_parent();
+    if (status.ok()) status = facman::platform::replace_existing_durable(temporary, destination);
+    if (!status.ok()) {
+        facman::platform::StableInputFile created;
+        if (created.open_no_follow(temporary).ok()) {
+            (void)facman::platform::remove_exact_object(temporary, created.identity());
+        }
+        detail = status.detail;
+        return false;
+    }
+    detail.clear();
+    return true;
 }
 
 bool recognized_factorio_save(const facman::archive::Plan& plan)
@@ -720,13 +747,10 @@ ExportOutcome export_instance(const fs::path& workspace, const ExportRequest& re
             if (root.second == "mods/" && entry.path().extension() == ".json") {
                 std::string portable = read_text(file.source);
                 replace_all(portable, path_string(instance.root), "$FACMAN_INSTANCE_ROOT");
-                std::ofstream rewritten(file.source, std::ios::binary | std::ios::trunc);
-                rewritten << portable;
-                rewritten.flush();
-                rewritten.close();
-                if (rewritten.fail()) {
+                std::string rewrite_detail;
+                if (!rewrite_text_durable(file.source, portable, rewrite_detail)) {
                     (void)facman::archive::cleanup_owned_staging_root(payload_root);
-                    return refuse(command, request.instance_id, "", "persistent_write_refused", "Portable mod metadata rewrite failed", file.path);
+                    return refuse(command, request.instance_id, "", "persistent_write_refused", "Portable mod metadata rewrite failed", file.path + ": " + rewrite_detail);
                 }
                 file.size = fs::file_size(file.source);
                 file.sha256 = facman::base::sha256_hex_file(file.source);
