@@ -250,8 +250,7 @@ facman::core::Result<void> validate(const Preferences& preferences)
         return facman::core::Result<void>::failure({
             "preferences_page_size_invalid", "TUI page size must be between 5 and 1000", "tui_page_size"});
     }
-    if (preferences.command_timeout_seconds > 86400U ||
-        (preferences.command_timeout_seconds != 0U && preferences.command_timeout_seconds < 1U)) {
+    if (preferences.command_timeout_seconds > 86400U) {
         return facman::core::Result<void>::failure({
             "preferences_timeout_invalid", "Command timeout must be between 1 and 86400 seconds", "command_timeout_seconds"});
     }

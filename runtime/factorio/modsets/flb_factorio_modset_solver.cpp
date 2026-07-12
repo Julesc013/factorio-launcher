@@ -169,6 +169,14 @@ bool contains(const std::vector<std::string>& values, const std::string& value)
 }
 
 struct Engine {
+    Engine(
+        const Request& request_value,
+        const std::string& factorio_version_value,
+        const std::map<std::string, CurrentEntry>& current_value)
+        : request(request_value), factorio_version(factorio_version_value), current(current_value)
+    {
+    }
+
     const Request& request;
     const std::string& factorio_version;
     const std::map<std::string, CurrentEntry>& current;
@@ -329,7 +337,7 @@ facman::core::Result<ResolvedPlan> resolve_plan(const fs::path& workspace, const
     if (!inventory) return failure<ResolvedPlan>(inventory.error().code, inventory.error().message, fs::u8path(inventory.error().path));
     auto preferred = preferences(request);
     if (!preferred) return failure<ResolvedPlan>(preferred.error().code, preferred.error().message);
-    Engine engine {request, instance.value().record.factorio_version, current};
+    Engine engine(request, instance.value().record.factorio_version, current);
     engine.preferences = preferred.take_value();
     engine.disabled.insert(request.disabled_mods.begin(), request.disabled_mods.end());
     for (const std::string& enabled : request.enabled_mods) if (engine.disabled.count(enabled) != 0) {
