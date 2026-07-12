@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -70,8 +69,6 @@ std::vector<std::string> option_values(const std::vector<std::string>& args, con
     return output;
 }
 
-std::string q(const std::string& value) { return facman::client::quote_json_string(value); }
-
 std::string slugify(const std::string& value)
 {
     std::string output;
@@ -98,8 +95,14 @@ facman::core::Result<facman::client::CommandResponse> call(
 int emit_json(const facman::core::Result<facman::client::CommandResponse>& response)
 {
     if (!response) {
-        std::cout << "{\"schema\":\"facman.client_refusal.v1\",\"status\":\"refused\",\"refusal\":{\"code\":"
-            << q(response.error().code) << ",\"reason\":" << q(response.error().message) << "}}\n";
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", response.error().code);
+        refusal.add_string("reason", response.error().message);
+        json::ObjectBuilder output;
+        output.add_string("schema", "facman.client_refusal.v1");
+        output.add_string("status", "refused");
+        output.add_object("refusal", refusal);
+        std::cout << output.serialize() << '\n';
         return 1;
     }
     std::cout << (response.value().payload.empty() ? response.value().envelope : response.value().payload) << '\n';
@@ -119,6 +122,22 @@ std::string fields_payload(const std::vector<std::pair<std::string, std::string>
 {
     json::ObjectBuilder output;
     for (const auto& field : fields) if (!field.second.empty()) output.add_string(field.first, field.second);
+    return output.serialize();
+}
+
+std::string exact_fields_payload(const std::vector<std::pair<std::string, std::string>>& fields)
+{
+    json::ObjectBuilder output;
+    for (const auto& field : fields) output.add_string(field.first, field.second);
+    return output.serialize();
+}
+
+std::string roots_payload(const std::vector<std::string>& roots)
+{
+    json::ArrayBuilder values;
+    for (const std::string& root : roots) values.add_string(root);
+    json::ObjectBuilder output;
+    output.add_array("roots", values);
     return output.serialize();
 }
 
@@ -228,14 +247,11 @@ int command_doctor(const Options& options)
     if (!bundle.empty()) {
         const std::string instance = option(options.args, "--instance");
         if (instance.empty()) { std::cerr << "doctor --diagnostic-bundle requires --instance\n"; return 2; }
-        return emit_basic(call(options, "diagnostics.export", "{\"instance_id\":" + q(instance) + ",\"output_path\":" + q(bundle) + "}", false), flag(options.args, "--json"), "Diagnostic bundle exported");
+        return emit_basic(call(options, "diagnostics.export", exact_fields_payload({{"instance_id", instance}, {"output_path", bundle}}), false), flag(options.args, "--json"), "Diagnostic bundle exported");
     }
     std::vector<std::string> roots = option_values(options.args, "--path");
     const auto search = option_values(options.args, "--search-root"); roots.insert(roots.end(), search.begin(), search.end());
-    std::ostringstream payload; payload << "{\"roots\":[";
-    for (std::size_t index = 0; index < roots.size(); ++index) { if (index) payload << ','; payload << q(roots[index]); }
-    payload << "]}";
-    auto response = call(options, "doctor.run", payload.str());
+    auto response = call(options, "doctor.run", roots_payload(roots));
     if (flag(options.args, "--json")) return emit_json(response);
     if (!response || !response.value().ok()) return 1;
     const std::string status = response.value().payload_string("status");
@@ -259,20 +275,17 @@ int command_installs(const Options& options)
     if (action == "scan") {
         std::vector<std::string> roots = option_values(options.args, "--path");
         for (const char* name : {"--search-root", "--roots"}) { const auto more = option_values(options.args, name); roots.insert(roots.end(), more.begin(), more.end()); }
-        std::ostringstream payload; payload << "{\"roots\":[";
-        for (std::size_t index = 0; index < roots.size(); ++index) { if (index) payload << ','; payload << q(roots[index]); }
-        payload << "]}";
-        return emit_basic(call(options, "install_refs.scan", payload.str()), flag(options.args, "--json"), "Install scan completed");
+        return emit_basic(call(options, "install_refs.scan", roots_payload(roots)), flag(options.args, "--json"), "Install scan completed");
     }
     if (action == "import" && options.args.size() >= 3) {
         const std::string id = option(options.args, "--id", slugify(options.args[2]));
-        auto response = call(options, "install_refs.import", "{\"path\":" + q(options.args[2]) + ",\"install_id\":" + q(id) + "}", false);
+        auto response = call(options, "install_refs.import", exact_fields_payload({{"path", options.args[2]}, {"install_id", id}}), false);
         if (flag(options.args, "--json")) return emit_json(response);
         if (!response || !response.value().ok()) return 1;
         std::cout << "Registered " << id << " at " << response.value().payload_string("root") << '\n';
         return 0;
     }
-    if (action == "inspect" && options.args.size() >= 3) return emit_basic(call(options, "install_refs.inspect", "{\"install_id\":" + q(options.args[2]) + "}"), flag(options.args, "--json"), "Install inspected");
+    if (action == "inspect" && options.args.size() >= 3) return emit_basic(call(options, "install_refs.inspect", exact_fields_payload({{"install_id", options.args[2]}})), flag(options.args, "--json"), "Install inspected");
     if (action == "install-version" && options.args.size() >= 3) {
         const std::string archive = option(options.args, "--archive");
         return emit_basic(
@@ -302,8 +315,9 @@ int command_instances(const Options& options)
         const std::string install = option(options.args, "--install");
         if (install.empty()) return 2;
         const std::string id = option(options.args, "--id", slugify(options.args[2]));
-        const std::string payload = "{\"display_name\":" + q(options.args[2]) + ",\"instance_id\":" + q(id) +
-            ",\"install_id\":" + q(install) + ",\"template_id\":" + q(option(options.args, "--template", "vanilla")) + "}";
+        const std::string payload = exact_fields_payload({
+            {"display_name", options.args[2]}, {"instance_id", id}, {"install_id", install},
+            {"template_id", option(options.args, "--template", "vanilla")}});
         return emit_basic(call(options, "instance.create", payload, false), flag(options.args, "--json"), "Created instance " + id);
     }
     return 2;
@@ -315,7 +329,7 @@ int command_mods(const Options& options)
     const std::string action = options.args[1];
     if (action == "import" && options.args.size() >= 3) {
         const std::string instance = option(options.args, "--instance");
-        return emit_basic(call(options, "mods.import", "{\"source_path\":" + q(options.args[2]) + ",\"instance_id\":" + q(instance) + "}", false), flag(options.args, "--json"), "Mod imported");
+        return emit_basic(call(options, "mods.import", exact_fields_payload({{"source_path", options.args[2]}, {"instance_id", instance}}), false), flag(options.args, "--json"), "Mod imported");
     }
     if (action == "search" || action == "install" || action == "update") {
         const std::string query = options.args.size() >= 3 && action != "update" ? options.args[2] : "";
@@ -328,11 +342,10 @@ int command_modsets(const Options& options)
 {
     if (options.args.size() < 3) return 2;
     const std::string action = options.args[1], instance = options.args[2];
-    if (action == "lock" || action == "verify") return emit_basic(call(options, "modsets." + action, "{\"instance_id\":" + q(instance) + "}", action == "verify"), flag(options.args, "--json"), "Modset " + action + " completed");
+    if (action == "lock" || action == "verify") return emit_basic(call(options, "modsets." + action, exact_fields_payload({{"instance_id", instance}}), action == "verify"), flag(options.args, "--json"), "Modset " + action + " completed");
     if (action == "export" && options.args.size() >= 4) {
         return emit_basic(
-            call(options, "modsets.export", "{\"instance_id\":" + q(instance) +
-                ",\"output_path\":" + q(options.args[3]) + "}", false),
+            call(options, "modsets.export", exact_fields_payload({{"instance_id", instance}, {"output_path", options.args[3]}}), false),
             flag(options.args, "--json"),
             "Modset exported");
     }
@@ -343,20 +356,18 @@ int command_saves(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
-    if (action == "list") return emit_basic(call(options, "saves.list", "{\"instance_id\":" + q(option(options.args, "--instance")) + "}"), flag(options.args, "--json"), "Saves listed");
+    if (action == "list") return emit_basic(call(options, "saves.list", exact_fields_payload({{"instance_id", option(options.args, "--instance")}})), flag(options.args, "--json"), "Saves listed");
     if (action == "backup" && options.args.size() >= 3) {
-        const std::string payload = "{\"instance_id\":" + q(option(options.args, "--instance")) +
-            ",\"save\":" + q(options.args[2]) +
-            ",\"output_path\":" + q(option(options.args, "--to")) + "}";
+        const std::string payload = exact_fields_payload({{"instance_id", option(options.args, "--instance")},
+            {"save", options.args[2]}, {"output_path", option(options.args, "--to")}});
         return emit_basic(
             call(options, "saves.backup", payload, false),
             flag(options.args, "--json"),
             "Save backed up");
     }
     if (action == "clone" && options.args.size() >= 3) {
-        const std::string payload = "{\"source_instance_id\":" + q(option(options.args, "--instance")) +
-            ",\"target_instance_id\":" + q(option(options.args, "--to-instance")) +
-            ",\"save\":" + q(options.args[2]) + "}";
+        const std::string payload = exact_fields_payload({{"source_instance_id", option(options.args, "--instance")},
+            {"target_instance_id", option(options.args, "--to-instance")}, {"save", options.args[2]}});
         return emit_basic(
             call(options, "saves.clone", payload, false),
             flag(options.args, "--json"),
@@ -378,7 +389,7 @@ int command_diagnostics(const Options& options)
     }
     if (options.args[1] == "export") {
         const std::string instance = option(options.args, "--instance"), output = option(options.args, "--out");
-        return emit_basic(call(options, "diagnostics.export", "{\"instance_id\":" + q(instance) + ",\"output_path\":" + q(output) + "}", false), flag(options.args, "--json"), "Diagnostic bundle exported");
+        return emit_basic(call(options, "diagnostics.export", exact_fields_payload({{"instance_id", instance}, {"output_path", output}}), false), flag(options.args, "--json"), "Diagnostic bundle exported");
     }
     return 2;
 }
@@ -389,9 +400,9 @@ int command_launch(const Options& options, bool run)
     if (!run && options.args[0] == "launch" && options.args.size() > 2 && options.args[1] == "plan") id_index = 2;
     if (options.args.size() <= id_index) return 2;
     const std::string instance = options.args[id_index];
-    if (run && flag(options.args, "--execute")) return emit_basic(call(options, "run.execute", "{\"instance_id\":" + q(instance) + "}", false), flag(options.args, "--json"), "");
+    if (run && flag(options.args, "--execute")) return emit_basic(call(options, "run.execute", exact_fields_payload({{"instance_id", instance}}), false), flag(options.args, "--json"), "");
     const std::string command = run ? "run.preview" : flag(options.args, "--preflight") ? "launch_plan.preflight" : "launch_plan.build";
-    auto response = call(options, command, "{\"instance_id\":" + q(instance) + "}");
+    auto response = call(options, command, exact_fields_payload({{"instance_id", instance}}));
     if (flag(options.args, "--json")) return emit_json(response);
     if (!response || !response.value().ok()) return 1;
     if (run) {
@@ -405,8 +416,8 @@ int command_launch(const Options& options, bool run)
 int command_transfer(const Options& options, bool exporting)
 {
     if (options.args.size() < (exporting ? 4U : 3U) || options.args[1] != "instance") return 2;
-    if (exporting) return emit_basic(call(options, "instance.export", "{\"instance_id\":" + q(options.args[2]) + ",\"output_path\":" + q(options.args[3]) + "}", false), flag(options.args, "--json"), "Instance exported");
-    return emit_basic(call(options, "instance.import", "{\"source_path\":" + q(options.args[2]) + ",\"instance_id\":" + q(option(options.args, "--id")) + "}", false), flag(options.args, "--json"), "Instance imported");
+    if (exporting) return emit_basic(call(options, "instance.export", exact_fields_payload({{"instance_id", options.args[2]}, {"output_path", options.args[3]}}), false), flag(options.args, "--json"), "Instance exported");
+    return emit_basic(call(options, "instance.import", exact_fields_payload({{"source_path", options.args[2]}, {"instance_id", option(options.args, "--id")}}), false), flag(options.args, "--json"), "Instance imported");
 }
 
 int command_servers(const Options& options)
@@ -434,7 +445,7 @@ int command_workspace(const Options& options)
     if (family != "recovery" && family != "migration") return 2;
     std::string command = "workspace." + family + "." + action;
     std::string payload = "{}";
-    if (family == "recovery" && action != "inspect") { if (options.args.size() < 4) return 2; payload = "{\"transaction_id\":" + q(options.args[3]) + "}"; }
+    if (family == "recovery" && action != "inspect") { if (options.args.size() < 4) return 2; payload = exact_fields_payload({{"transaction_id", options.args[3]}}); }
     return emit_basic(call(options, command, payload, action != "apply"), flag(options.args, "--json"), "Workspace operation completed");
 }
 

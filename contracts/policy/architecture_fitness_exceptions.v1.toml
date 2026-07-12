@@ -5,7 +5,6 @@ policy = "exact_known_set_no_silent_growth"
 [checks]
 apps_boundary = []
 manual_json = [
-  "apps/cli/command_dispatch.cpp",
 ]
 critical_io = []
 generated_catalog = []
