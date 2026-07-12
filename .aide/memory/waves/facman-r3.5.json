@@ -135,10 +135,43 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-JSON-OUTCOME-CODECS-01"
+    },
+    {
+      "blockers": [
+        "Linux and macOS target-runner proof requires the corresponding native runners.",
+        "Remote CodeQL execution begins only after this task branch is pushed."
+      ],
+      "clean_status": true,
+      "commit_sha": "edcf10ca4584fe3dedc7cec07fa9c70890d2a059",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.4-TARGET-PROMOTION-01",
+        "FACMAN-COMMAND-CATALOG-V2-01",
+        "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01",
+        "FACMAN-ABI-CLIENT-SESSION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01",
+        "FACMAN-MACHINE-TRANSPORT-01",
+        "FACMAN-CONFORMANCE-COMPAT-SECURITY-01",
+        "FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "2e70ceb5cae06f94e9087c76bde7be7c297d33e531797dd3e0146c75e5a267d6",
+      "test_fingerprints": {
+        "tests/test_architecture_fitness.py": "bd8add9a5e1809f7a275135f746fec2432e8254a2a5dc1d3a30a22327a521a1b",
+        "tools/manual_json_check.py": "4c995aea7559a22f2e1221e15653e296906ac75f7e539b56a092cbdf0c8e0649"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-WORKSPACE-DOMAIN-STORES-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "588290d9740f8001fda5c52775c9f32506025d98",
+  "current_exact_revision": "edcf10ca4584fe3dedc7cec07fa9c70890d2a059",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -146,7 +179,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "FacMan R3.5 zero-exception productization",
-  "updated_at": "2026-07-12T06:30:04Z",
+  "updated_at": "2026-07-12T06:30:48Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -204,6 +237,34 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-JSON-OUTCOME-CODECS-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:30:44Z",
+        "result": "PASS",
+        "source_fingerprint": "2e70ceb5cae06f94e9087c76bde7be7c297d33e531797dd3e0146c75e5a267d6",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_architecture_fitness.py": "bd8add9a5e1809f7a275135f746fec2432e8254a2a5dc1d3a30a22327a521a1b",
+          "tools/manual_json_check.py": "4c995aea7559a22f2e1221e15653e296906ac75f7e539b56a092cbdf0c8e0649"
+        },
+        "test_results": {
+          "critical_io_zero": "PASS",
+          "legacy_read_tests": "PASS",
+          "strict_check": "PASS",
+          "strong_id_check": "PASS",
+          "workspace_store_smoke": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-WORKSPACE-DOMAIN-STORES-01"
       }
     ],
     "promotion_uses_cache_alone": false,
@@ -443,15 +504,14 @@
         "runtime/core/fl_identity*",
         "runtime/application/workspace*"
       ],
-      "blockers": [
-        "Two critical stream I/O exceptions remain.",
-        "Strong-ID constructors are still publicly callable."
-      ],
+      "blockers": [],
       "claim_impacts": [
         "critical-io-zero",
         "portable-id-validity",
         "legacy-state-readability"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T06:30:48Z",
       "dependencies": [
         "FACMAN-JSON-OUTCOME-CODECS-01"
       ],
@@ -459,15 +519,43 @@
         "runtime/core/archive/"
       ],
       "id": "FACMAN-WORKSPACE-DOMAIN-STORES-01",
-      "last_green_commit": null,
+      "last_green_commit": "edcf10ca4584fe3dedc7cec07fa9c70890d2a059",
       "progress_commits": [],
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T06:30:39Z",
+      "status": "closed",
       "stop_conditions": [
         "R3.2, R3.3 or R3.4 state becomes unreadable",
         "A destructive migration is introduced"
       ],
-      "title": "Workspace and domain stores"
+      "title": "Workspace and domain stores",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:30:44Z",
+        "result": "PASS",
+        "source_fingerprint": "2e70ceb5cae06f94e9087c76bde7be7c297d33e531797dd3e0146c75e5a267d6",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_architecture_fitness.py": "bd8add9a5e1809f7a275135f746fec2432e8254a2a5dc1d3a30a22327a521a1b",
+          "tools/manual_json_check.py": "4c995aea7559a22f2e1221e15653e296906ac75f7e539b56a092cbdf0c8e0649"
+        },
+        "test_results": {
+          "critical_io_zero": "PASS",
+          "legacy_read_tests": "PASS",
+          "strict_check": "PASS",
+          "strong_id_check": "PASS",
+          "workspace_store_smoke": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [

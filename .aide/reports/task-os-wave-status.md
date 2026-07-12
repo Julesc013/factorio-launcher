@@ -2,7 +2,7 @@
 
 - wave_id: facman-r3.5
 - status: active
-- current_exact_revision: 588290d9740f8001fda5c52775c9f32506025d98
+- current_exact_revision: edcf10ca4584fe3dedc7cec07fa9c70890d2a059
 - mode: report_only
 - task_execution: false
 - repair_execution: false
@@ -19,7 +19,7 @@
 - `FACMAN-R3.5-TRUTH-FITNESS-01`: closed (last_green_commit: 940b4616fa2a7a2727e7fd257e460a85dadc5888)
 - `FACMAN-ULK-DYNAMIC-REGISTRY-01`: closed (last_green_commit: 674a72e65733587022d4a5adf178b2484f13673d)
 - `FACMAN-JSON-OUTCOME-CODECS-01`: closed (last_green_commit: 588290d9740f8001fda5c52775c9f32506025d98)
-- `FACMAN-WORKSPACE-DOMAIN-STORES-01`: pending (last_green_commit: none)
+- `FACMAN-WORKSPACE-DOMAIN-STORES-01`: closed (last_green_commit: edcf10ca4584fe3dedc7cec07fa9c70890d2a059)
 - `FACMAN-COMMAND-CATALOG-V2-01`: pending (last_green_commit: none)
 - `FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01`: pending (last_green_commit: none)
 - `FACMAN-ABI-CLIENT-SESSION-01`: pending (last_green_commit: none)
