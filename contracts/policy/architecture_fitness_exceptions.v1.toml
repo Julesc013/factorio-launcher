@@ -1,11 +1,19 @@
 schema = "facman.architecture_fitness_exceptions.v1"
-baseline_revision = "eca688f"
+baseline_revision = "c8c39fc"
 policy = "exact_known_set_no_silent_growth"
 
 [checks]
 apps_boundary = []
 manual_json = [
+  "apps/cli/command_dispatch.cpp",
   "runtime/factorio/application/command_result.cpp",
+  "runtime/factorio/application/handlers/doctor.cpp",
+  "runtime/factorio/application/handlers/installs.cpp",
+  "runtime/factorio/application/handlers/instances.cpp",
+  "runtime/factorio/application/handlers/product.cpp",
+  "runtime/factorio/application/handlers/setup.cpp",
+  "runtime/factorio/application/handlers/utility.cpp",
+  "runtime/factorio/binding/flb_api.c",
   "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp",
   "runtime/factorio/discovery/flb_factorio_discovery.cpp",
   "runtime/factorio/launch/flb_factorio_launch_plan.cpp",
@@ -13,6 +21,8 @@ manual_json = [
   "runtime/factorio/modsets/flb_factorio_modset_operations.cpp",
   "runtime/factorio/modsets/flb_factorio_modsets.cpp",
   "runtime/factorio/saves/flb_factorio_save_operations.cpp",
+  "runtime/transaction/fl_transaction.cpp",
+  "runtime/workspace/fl_workspace_store.cpp",
 ]
 critical_io = [
   "runtime/factorio/modsets/flb_factorio_modset_operations.cpp",
@@ -22,3 +32,9 @@ generated_catalog = []
 version_truth = []
 target_dependency = []
 aide_queue_state = []
+registry_capacity = []
+availability_parity = []
+generic_operation = [
+  "setup.operation",
+  "utility.operation",
+]

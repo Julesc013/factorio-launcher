@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -12,16 +13,27 @@ if str(ROOT) not in sys.path:
 
 from tools import architecture_fitness
 
-MARKERS = ("json_escape(", "json_string_value(", 'find("\\\"" + key', "parse_json_")
+MARKERS = (
+    "json_escape(",
+    "json_string_value(",
+    'find("\\\"" + key',
+    "parse_json_",
+)
+JSON_KEY_LITERAL = re.compile(r'\\\"[A-Za-z0-9_.-]+\\\"\s*:')
+REPEATED_ESCAPE_HELPER = re.compile(r"(?:json|escape)[A-Za-z0-9_]*\s*\([^)]*\)[\s\S]{0,2000}\\\\")
 
 
 def detect() -> set[str]:
     violations: set[str] = set()
-    for path in architecture_fitness.first_party_sources("runtime"):
+    for path in architecture_fitness.first_party_sources("runtime", "apps"):
         if "/core/json/" in f"/{architecture_fitness.relative(path)}/":
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        if any(marker in text for marker in MARKERS):
+        if (
+            any(marker in text for marker in MARKERS)
+            or JSON_KEY_LITERAL.search(text)
+            or REPEATED_ESCAPE_HELPER.search(text)
+        ):
             violations.add(architecture_fitness.relative(path))
     return violations
 
