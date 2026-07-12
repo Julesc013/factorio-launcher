@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `e55dac3077bd787721bc24bfe39cbcb02445f8f12ff5d6a5078b5ada62884504`.
+Source digest: `b16cd1fe2f14263ad00523ab470debdc346e3c285afd1714699de867a9802742`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -39,10 +39,15 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `launch.plan` | `launch_plan.build` | `launch_plan_build` | no | launch-plan.build | available | workspace_read | `facman launch plan <instance-id> --json` |
 | `launch_plan.explain` | `launch_plan.explain` | `launch_plan_explain` | no | launch-plan.explain | available | workspace_read | `facman launch explain <instance-id> --json` |
 | `launch_plan.preflight` | `launch_plan.preflight` | `launch_plan_preflight` | no | launch-plan.preflight | available | workspace_read | `facman launch plan <instance-id> --preflight --json` |
+| `mods.explain` | `mods.explain` | `mods_explain` | no | - | available | workspace_read | `facman mods explain <identity> --json` |
 | `mods.import` | `mods.import` | `mods_import` | yes | - | available | workspace_read, workspace_write | `facman mods import <mod.zip> --instance <instance-id> --json` |
+| `mods.index` | `mods.index` | `mods_index` | no | - | available | workspace_read | `facman mods index [--root <directory>] --json` |
+| `mods.inspect` | `mods.inspect` | `mods_inspect` | no | - | available | workspace_read | `facman mods inspect <identity> --json` |
 | `mods.install` | `mods.install` | `mods_install` | no | - | unavailable_until_gateway | network_read | `facman mods install <name> --instance <id> --json` |
+| `mods.list` | `mods.list` | `mods_list` | no | - | available | workspace_read | `facman mods list --json` |
 | `mods.search` | `mods.search` | `mods_search` | no | - | unavailable_until_gateway | network_read | `facman mods search <query> --json` |
 | `mods.update` | `mods.update` | `mods_update` | no | - | unavailable_until_gateway | network_read | `facman mods update --instance <id> --json` |
+| `mods.verify` | `mods.verify` | `mods_verify` | no | - | available | workspace_read | `facman mods verify <identity> --json` |
 | `modsets.explain` | `modsets.explain` | `modsets_explain` | no | - | available | workspace_read | `facman modsets explain <instance-id> --json` |
 | `modsets.export` | `modsets.export` | `modsets_export` | yes | - | available | workspace_read, workspace_write | `facman modsets export <instance-id> <pack.zip> --json` |
 | `modsets.lock` | `modsets.lock` | `modsets_lock` | yes | - | available | workspace_read, workspace_write | `facman modsets lock <instance-id> --json` |

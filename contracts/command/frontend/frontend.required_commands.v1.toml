@@ -24,6 +24,11 @@ optional = [
   "diagnostics.redact",
   "dev.bug_report",
   "mods.import",
+  "mods.list",
+  "mods.index",
+  "mods.inspect",
+  "mods.verify",
+  "mods.explain",
   "modsets.lock",
   "modsets.verify",
   "modsets.export",
@@ -307,6 +312,36 @@ backend_id = "profiles.archive"
 cli = "facman profiles archive <profile-id> --json"
 
 [[commands]]
+id = "mods.list"
+phase = "optional"
+backend_id = "mods.list"
+cli = "facman mods list --json"
+
+[[commands]]
+id = "mods.index"
+phase = "optional"
+backend_id = "mods.index"
+cli = "facman mods index [--root <directory>] --json"
+
+[[commands]]
+id = "mods.inspect"
+phase = "optional"
+backend_id = "mods.inspect"
+cli = "facman mods inspect <identity> --json"
+
+[[commands]]
+id = "mods.verify"
+phase = "optional"
+backend_id = "mods.verify"
+cli = "facman mods verify <identity> --json"
+
+[[commands]]
+id = "mods.explain"
+phase = "optional"
+backend_id = "mods.explain"
+cli = "facman mods explain <identity> --json"
+
+[[commands]]
 id = "launch_plan.build"
 phase = "required"
 backend_id = "launch_plan.build"
@@ -572,6 +607,11 @@ transport = "direct_c_abi_or_cli_json"
 default_refusal = "frontend_command_not_enabled"
 default_reason = "CLI route is intentionally deferred for this frontend contract phase."
 [frontends.commands]
+"mods.list" = "implemented"
+"mods.index" = "implemented"
+"mods.inspect" = "implemented"
+"mods.verify" = "implemented"
+"mods.explain" = "implemented"
 "templates.list" = "implemented"
 "templates.inspect" = "implemented"
 "templates.validate" = "implemented"
@@ -660,6 +700,11 @@ transport = "command_client"
 default_refusal = "tui_command_unavailable"
 default_reason = "The functional TUI renders generated availability and backend refusal reasons."
 [frontends.commands]
+"mods.list" = "implemented"
+"mods.index" = "implemented"
+"mods.inspect" = "implemented"
+"mods.verify" = "implemented"
+"mods.explain" = "implemented"
 "templates.list" = "implemented"
 "templates.inspect" = "implemented"
 "templates.validate" = "implemented"
@@ -748,6 +793,11 @@ transport = "json_rpc"
 default_refusal = "daemon_route_not_implemented"
 default_reason = "Daemon command hosting is scaffolded and must not invent frontend behavior."
 [frontends.commands]
+"mods.list" = "stubbed_with_refusal"
+"mods.index" = "stubbed_with_refusal"
+"mods.inspect" = "stubbed_with_refusal"
+"mods.verify" = "stubbed_with_refusal"
+"mods.explain" = "stubbed_with_refusal"
 "templates.list" = "stubbed_with_refusal"
 "templates.inspect" = "stubbed_with_refusal"
 "templates.validate" = "stubbed_with_refusal"
@@ -836,6 +886,11 @@ transport = "cli_json_command_client"
 default_refusal = "winforms_command_deferred"
 default_reason = "WinForms renders generated fields for backend-live commands and generated reasons for unavailable commands."
 [frontends.commands]
+"mods.list" = "implemented"
+"mods.index" = "implemented"
+"mods.inspect" = "implemented"
+"mods.verify" = "implemented"
+"mods.explain" = "implemented"
 "templates.list" = "implemented"
 "templates.inspect" = "implemented"
 "templates.validate" = "implemented"
@@ -924,6 +979,11 @@ transport = "command_client_or_daemon"
 default_refusal = "winui_shell_not_implemented"
 default_reason = "WinUI lane is reserved for modern Windows after WinForms/AppKit shell proof."
 [frontends.commands]
+"mods.list" = "not_supported_with_reason"
+"mods.index" = "not_supported_with_reason"
+"mods.inspect" = "not_supported_with_reason"
+"mods.verify" = "not_supported_with_reason"
+"mods.explain" = "not_supported_with_reason"
 "templates.list" = "not_supported_with_reason"
 "templates.inspect" = "not_supported_with_reason"
 "templates.validate" = "not_supported_with_reason"
@@ -1012,6 +1072,11 @@ transport = "cli_json_command_client"
 default_refusal = "appkit_command_deferred"
 default_reason = "AppKit renders generated fields for backend-live commands and generated reasons for unavailable commands."
 [frontends.commands]
+"mods.list" = "implemented"
+"mods.index" = "implemented"
+"mods.inspect" = "implemented"
+"mods.verify" = "implemented"
+"mods.explain" = "implemented"
 "templates.list" = "implemented"
 "templates.inspect" = "implemented"
 "templates.validate" = "implemented"
@@ -1100,6 +1165,11 @@ transport = "command_client_or_daemon"
 default_refusal = "swiftui_shell_not_implemented"
 default_reason = "SwiftUI lane is reserved for modern macOS after AppKit shell proof."
 [frontends.commands]
+"mods.list" = "not_supported_with_reason"
+"mods.index" = "not_supported_with_reason"
+"mods.inspect" = "not_supported_with_reason"
+"mods.verify" = "not_supported_with_reason"
+"mods.explain" = "not_supported_with_reason"
 "templates.list" = "not_supported_with_reason"
 "templates.inspect" = "not_supported_with_reason"
 "templates.validate" = "not_supported_with_reason"
@@ -1188,6 +1258,11 @@ transport = "command_client_or_daemon"
 default_refusal = "gtk_shell_not_implemented"
 default_reason = "GTK lane is scaffolded and must wait for frontend contract proof."
 [frontends.commands]
+"mods.list" = "stubbed_with_refusal"
+"mods.index" = "stubbed_with_refusal"
+"mods.inspect" = "stubbed_with_refusal"
+"mods.verify" = "stubbed_with_refusal"
+"mods.explain" = "stubbed_with_refusal"
 "templates.list" = "stubbed_with_refusal"
 "templates.inspect" = "stubbed_with_refusal"
 "templates.validate" = "stubbed_with_refusal"
@@ -1276,6 +1351,11 @@ transport = "command_client_or_daemon"
 default_refusal = "qt_shell_not_implemented"
 default_reason = "Qt lane is scaffolded and must wait for frontend contract proof."
 [frontends.commands]
+"mods.list" = "stubbed_with_refusal"
+"mods.index" = "stubbed_with_refusal"
+"mods.inspect" = "stubbed_with_refusal"
+"mods.verify" = "stubbed_with_refusal"
+"mods.explain" = "stubbed_with_refusal"
 "templates.list" = "stubbed_with_refusal"
 "templates.inspect" = "stubbed_with_refusal"
 "templates.validate" = "stubbed_with_refusal"

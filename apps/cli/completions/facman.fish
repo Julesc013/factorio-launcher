@@ -1,4 +1,4 @@
-# generated source-sha256: e55dac3077bd787721bc24bfe39cbcb02445f8f12ff5d6a5078b5ada62884504
+# generated source-sha256: b16cd1fe2f14263ad00523ab470debdc346e3c285afd1714699de867a9802742
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -30,10 +30,15 @@
 # path: instances verify
 # path: launch explain
 # path: launch plan
+# path: mods explain
 # path: mods import
+# path: mods index [--root <directory>]
+# path: mods inspect
 # path: mods install
+# path: mods list
 # path: mods search
 # path: mods update
+# path: mods verify
 # path: modsets explain
 # path: modsets export
 # path: modsets lock
@@ -84,6 +89,8 @@
 # path: workspace recovery inspect
 # path: workspace recovery plan
 # path: workspace status
+complete -c facman -f -a <directory>]
+complete -c facman -f -a [--root
 complete -c facman -f -a apply
 complete -c facman -f -a archive
 complete -c facman -f -a backup
@@ -101,6 +108,7 @@ complete -c facman -f -a dump-icons
 complete -c facman -f -a explain
 complete -c facman -f -a export
 complete -c facman -f -a import
+complete -c facman -f -a index
 complete -c facman -f -a inspect
 complete -c facman -f -a install
 complete -c facman -f -a install-version

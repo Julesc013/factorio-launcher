@@ -9,5 +9,6 @@
 
 namespace facman::factorio::application::handlers {
 ApplicationResult import_mod(ApplicationContext& context, const ImportModRequest& request);
+ApplicationResult dispatch_mod_inventory(ApplicationContext& context, const ApplicationRequest& request);
 }
 #endif

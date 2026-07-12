@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"mods.explain","status":"refused","refusal":{"schema":"common.refusal.v1","code":"inventory_identity_ambiguous","reason":"inventory identity is ambiguous","recoverable":true}}

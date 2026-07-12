@@ -46,6 +46,7 @@ Product:
 - [Install Discovery](product/install_discovery.md)
 - [Instance Model](product/instance_model.md)
 - [Launch Profiles](product/launch_profiles.md)
+- [Local Mod Inventory](product/local_mod_inventory.md)
 - [Modder Tools](product/modder_tools.md)
 - [Modset Lockfile](product/modset_lockfile.md)
 - [Save Manager](product/save_manager.md)

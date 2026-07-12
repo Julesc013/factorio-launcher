@@ -1,0 +1,12 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://facman.invalid/schema/factorio/factorio_mod_inventory_record.v1.schema.json",
+  "title":"Factorio local mod inventory record",
+  "type":"object","additionalProperties":false,
+  "properties":{
+    "schema":{"const":"factorio.mod_inventory_record.v1"},"command":{"enum":["mods.inspect","mods.verify","mods.explain"]},
+    "status":{"enum":["ok","pass"]},"record":{"type":"object"},"stable_identity_verified":{"type":"boolean"},
+    "portal_access":{"const":false},"source_mutation":{"const":false},"mutation_executed":{"const":false}
+  },
+  "required":["schema","command","status","record","stable_identity_verified","portal_access","source_mutation","mutation_executed"]
+}

@@ -584,6 +584,25 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "source_path", path, detail) || !required_string(payload, "instance_id", typed.instance_id, detail)) return false;
         typed.source_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
+    case CommandId::mods_list:
+        if (!validate_fields(payload, {}, detail)) return false;
+        request.payload = std::monostate {}; return true;
+    case CommandId::mods_index: {
+        if (!validate_fields(payload, {"roots"}, detail)) return false;
+        std::vector<std::string> roots;
+        if (!optional_string_array(payload, "roots", roots, detail)) return false;
+        ModInventoryRequest typed;
+        for (const std::string& root : roots) typed.roots.push_back(facman::platform::path_from_utf8(root));
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::mods_inspect:
+    case CommandId::mods_verify:
+    case CommandId::mods_explain: {
+        if (!validate_fields(payload, {"identity"}, detail)) return false;
+        ModInventoryRequest typed;
+        if (!required_string(payload, "identity", typed.identity, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::modsets_lock:
     case CommandId::modsets_verify: {
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;

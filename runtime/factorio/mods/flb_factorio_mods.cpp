@@ -5,7 +5,10 @@
 
 #include "fl_archive.h"
 #include "fl_json.h"
+#include "fl_file_io.h"
+#include "fl_path_safety.h"
 #include "fl_sha256.h"
+#include "fl_workspace_store.h"
 
 #include <algorithm>
 #include <array>
@@ -14,7 +17,9 @@
 #include <fstream>
 #include <iomanip>
 #include <map>
+#include <set>
 #include <sstream>
+#include <system_error>
 
 namespace facman::factorio::mods {
 
@@ -793,6 +798,9 @@ ModRef inspect_mod_zip(const fs::path& path)
             archive_status.code + ": " + archive_status.detail);
         return mod;
     }
+    mod.archive_size = archive_plan.archive_size;
+    mod.archive_policy_result = "pass";
+    for (const facman::archive::Entry& entry : archive_plan.entries) mod.expanded_size += entry.expanded_size;
 
     const facman::archive::Entry* info_entry = nullptr;
     for (const facman::archive::Entry& entry : archive_plan.entries) {
@@ -924,6 +932,9 @@ ModRef inspect_mod_zip(const fs::path& path)
             mod.dependencies.push_back(dependency);
         } else if (dependency.kind == "incompatible") {
             mod.incompatibilities.push_back(dependency);
+        } else if (dependency.kind == "hidden_optional") {
+            mod.hidden_optional_dependencies.push_back(dependency);
+            mod.optional_dependencies.push_back(dependency);
         } else {
             mod.optional_dependencies.push_back(dependency);
         }
@@ -977,6 +988,49 @@ json::ObjectBuilder mod_ref_builder(const ModRef& mod)
     return output;
 }
 
+json::ObjectBuilder inventory_mod_ref_builder(const ModRef& mod)
+{
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.mod_inventory_item.v1");
+    output.add_string("name", mod.name);
+    output.add_string("title", mod.title);
+    output.add_string("version", mod.version);
+    output.add_string("factorio_version", mod.factorio_version);
+    output.add_string("author", mod.author);
+    output.add_string("description", mod.description);
+    output.add_string("file_name", mod.file_name);
+    output.add_string("source_path", path_string(mod.file_path));
+    output.add_string("sha1", mod.sha1);
+    output.add_string("sha256", mod.sha256);
+    output.add_string("source", mod.source);
+    output.add_string("metadata_source", mod.metadata_source);
+    output.add_bool("enabled", mod.enabled);
+    output.add_string("validation_status", mod.validation_status);
+    output.add_array("dependencies", dependency_array_builder(mod.dependencies));
+    output.add_array("optional_dependencies", dependency_array_builder(mod.optional_dependencies));
+    output.add_array("hidden_optional_dependencies", dependency_array_builder(mod.hidden_optional_dependencies));
+    output.add_array("incompatibilities", dependency_array_builder(mod.incompatibilities));
+    (void)output.add_unsigned_integer("archive_size", mod.archive_size);
+    (void)output.add_unsigned_integer("expanded_size", mod.expanded_size);
+    output.add_string("archive_policy_result", mod.archive_policy_result);
+    json::ArrayBuilder instance_references;
+    for (const std::string& value : mod.instance_references) instance_references.add_string(value);
+    output.add_array("instance_references", instance_references);
+    json::ArrayBuilder lock_references;
+    for (const std::string& value : mod.lock_references) lock_references.add_string(value);
+    output.add_array("lock_references", lock_references);
+    output.add_bool("virtual_package", mod.virtual_package);
+    if (!mod.valid) {
+        json::ObjectBuilder refusal;
+        refusal.add_string("schema", "common.refusal.v1");
+        refusal.add_string("code", mod.refusal_code);
+        refusal.add_string("reason", mod.refusal_reason);
+        refusal.add_bool("recoverable", refusal_retryable(mod.refusal_code));
+        output.add_object("refusal", refusal);
+    }
+    return output;
+}
+
 std::string mod_ref_json(const ModRef& mod)
 {
     return mod_ref_builder(mod).serialize();
@@ -1015,25 +1069,36 @@ std::string mod_refusal_json(
 
 std::string sha1_hex_file(const fs::path& path)
 {
-    std::ifstream input(path, std::ios::binary);
-    if (!input) return "";
+    facman::platform::StableInputFile input;
+    if (!input.open_no_follow(path).ok() || !input.identity().regular_file || input.identity().link_count != 1U) return "";
     StreamingSha1 hash;
     std::array<unsigned char, 64 * 1024> buffer {};
-    while (input) {
-        input.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
-        const std::streamsize count = input.gcount();
-        if (count > 0) hash.update(buffer.data(), static_cast<std::size_t>(count));
+    std::uint64_t offset = 0;
+    while (offset < input.size()) {
+        const std::size_t count = input.read_at(offset, buffer.data(), static_cast<std::size_t>(
+            std::min<std::uint64_t>(buffer.size(), input.size() - offset)));
+        if (count == 0) return "";
+        hash.update(buffer.data(), count);
+        offset += count;
     }
-    return input.eof() ? hash.finish() : "";
+    return input.revalidate().ok() ? hash.finish() : "";
 }
 
 std::string sha256_hex_file(const fs::path& path)
 {
-    try {
-        return facman::base::sha256_hex_file(path);
-    } catch (...) {
-        return "";
+    facman::platform::StableInputFile input;
+    if (!input.open_no_follow(path).ok() || !input.identity().regular_file || input.identity().link_count != 1U) return "";
+    facman::base::Sha256Hasher hash;
+    std::array<unsigned char, 64 * 1024> buffer {};
+    std::uint64_t offset = 0;
+    while (offset < input.size()) {
+        const std::size_t count = input.read_at(offset, buffer.data(), static_cast<std::size_t>(
+            std::min<std::uint64_t>(buffer.size(), input.size() - offset)));
+        if (count == 0) return "";
+        hash.update(buffer.data(), count);
+        offset += count;
     }
+    return input.revalidate().ok() ? hash.finish() : "";
 }
 
 std::string factorio_minor_version(const std::string& version)
@@ -1055,6 +1120,254 @@ bool factorio_versions_compatible(const std::string& mod_factorio_version, const
         return true;
     }
     return mod_factorio_version == factorio_minor_version(instance_version);
+}
+
+namespace {
+
+facman::core::Result<std::string> inventory_failure(
+    const std::string& code,
+    const std::string& message,
+    const fs::path& path = {})
+{
+    return facman::core::Result<std::string>::failure(
+        {code, message, facman::platform::path_to_utf8(path), facman::core::OutcomeKind::refused});
+}
+
+std::string stable_small_text(const fs::path& path, std::uint64_t maximum = 1024U * 1024U)
+{
+    facman::platform::StableInputFile input;
+    if (!input.open_no_follow(path).ok() || !input.identity().regular_file ||
+        input.identity().link_count != 1U || input.size() > maximum) return {};
+    std::string text(static_cast<std::size_t>(input.size()), '\0');
+    std::uint64_t offset = 0;
+    while (offset < input.size()) {
+        const std::size_t count = input.read_at(offset, text.data() + offset, text.size() - static_cast<std::size_t>(offset));
+        if (count == 0) return {};
+        offset += count;
+    }
+    return input.revalidate().ok() ? text : std::string {};
+}
+
+ModRef builtin_package(const facman::workspace::InstallRecord& install, const fs::path& data_root)
+{
+    ModRef mod;
+    mod.file_path = data_root;
+    mod.file_name = data_root.filename().string();
+    mod.source = "install-data:" + install.id.str();
+    mod.metadata_source = "builtin_info_json";
+    mod.virtual_package = true;
+    mod.enabled = true;
+    mod.valid = true;
+    mod.validation_status = "virtual";
+    mod.archive_policy_result = "virtual_not_archive";
+    const std::string text = stable_small_text(data_root / "info.json");
+    auto document = json::parse(text);
+    if (!document || !document.value().is_object()) {
+        mark_refused(mod, "builtin_metadata_invalid", "Built-in package info.json is malformed", path_string(data_root));
+        return mod;
+    }
+    auto field = [&](const char* key) {
+        const json::Value* value = document.value().find(key);
+        if (value == nullptr) return std::string {};
+        auto string = value->string_value();
+        return string ? string.take_value() : std::string {};
+    };
+    mod.name = field("name");
+    mod.title = field("title");
+    mod.version = field("version");
+    mod.factorio_version = field("factorio_version");
+    mod.author = field("author");
+    mod.description = field("description");
+    if (mod.name.empty()) mod.name = data_root.filename().string();
+    if (mod.title.empty()) mod.title = mod.name;
+    if (mod.version.empty()) mod.version = install.version;
+    if (mod.factorio_version.empty()) mod.factorio_version = factorio_minor_version(install.version);
+    mod.instance_references.push_back("install:" + install.id.str());
+    return mod;
+}
+
+void add_archive(std::vector<ModRef>& output, const fs::path& path, const std::string& instance_id)
+{
+    ModRef mod = inspect_mod_zip(path);
+    if (!instance_id.empty()) mod.instance_references.push_back(instance_id);
+    auto duplicate = std::find_if(output.begin(), output.end(), [&](const ModRef& existing) {
+        return !mod.sha256.empty() && existing.sha256 == mod.sha256;
+    });
+    if (duplicate == output.end()) {
+        output.push_back(std::move(mod));
+        return;
+    }
+    duplicate->instance_references.insert(
+        duplicate->instance_references.end(), mod.instance_references.begin(), mod.instance_references.end());
+    std::sort(duplicate->instance_references.begin(), duplicate->instance_references.end());
+    duplicate->instance_references.erase(
+        std::unique(duplicate->instance_references.begin(), duplicate->instance_references.end()),
+        duplicate->instance_references.end());
+    if (path_string(mod.file_path) < path_string(duplicate->file_path)) duplicate->file_path = mod.file_path;
+}
+
+facman::core::Result<std::vector<ModRef>> build_inventory(
+    const fs::path& workspace,
+    const std::vector<fs::path>& explicit_roots)
+{
+    std::vector<ModRef> output;
+    facman::workspace::WorkspaceLayout layout(workspace);
+    facman::workspace::InstanceRepository instances(layout);
+    auto instance_records = instances.list();
+    if (!instance_records) return facman::core::Result<std::vector<ModRef>>::failure(instance_records.error());
+    std::set<std::string> scanned;
+    auto scan = [&](const fs::path& root, const std::string& instance_id) -> facman::core::Result<void> {
+        const std::string normalized = path_string(root.lexically_normal());
+        if (!scanned.insert(normalized).second) return facman::core::Result<void>::success();
+        std::error_code error;
+        if (!fs::exists(root, error) && !error) return facman::core::Result<void>::success();
+        std::string link_detail;
+        if (error || !fs::is_directory(root, error) || facman::base::path_crosses_link_or_reparse_point(root, link_detail)) {
+            return facman::core::Result<void>::failure(
+                {"inventory_root_unsafe", error ? error.message() : link_detail, normalized});
+        }
+        std::vector<fs::path> archives;
+        for (fs::directory_iterator item(root, error), end; item != end && !error; item.increment(error)) {
+            if (item->is_regular_file(error) && item->path().extension() == ".zip") archives.push_back(item->path());
+        }
+        if (error) return facman::core::Result<void>::failure({"inventory_root_read_failed", error.message(), normalized});
+        std::sort(archives.begin(), archives.end());
+        for (const fs::path& archive : archives) add_archive(output, archive, instance_id);
+        return facman::core::Result<void>::success();
+    };
+    for (const auto& instance : instance_records.value()) {
+        auto status = scan(instance.root / "mods", instance.id.str());
+        if (!status) return facman::core::Result<std::vector<ModRef>>::failure(status.error());
+    }
+    for (const fs::path& root : explicit_roots) {
+        if (!root.is_absolute()) return facman::core::Result<std::vector<ModRef>>::failure(
+            {"inventory_root_unsafe", "Explicit inventory roots must be absolute", path_string(root)});
+        auto status = scan(root, "explicit:" + path_string(root));
+        if (!status) return facman::core::Result<std::vector<ModRef>>::failure(status.error());
+    }
+    facman::workspace::InstallRepository installs(layout);
+    auto install_records = installs.list();
+    if (!install_records) return facman::core::Result<std::vector<ModRef>>::failure(install_records.error());
+    for (const auto& install : install_records.value()) {
+        const fs::path data = install.root / "data";
+        std::error_code error;
+        if (!fs::is_directory(data, error) || error) continue;
+        std::vector<fs::path> packages;
+        for (fs::directory_iterator item(data, error), end; item != end && !error; item.increment(error)) {
+            if (item->is_directory(error) && fs::is_regular_file(item->path() / "info.json", error) && !error) {
+                packages.push_back(item->path());
+            }
+        }
+        if (error) return facman::core::Result<std::vector<ModRef>>::failure(
+            {"builtin_metadata_read_failed", error.message(), path_string(data)});
+        std::sort(packages.begin(), packages.end());
+        for (const fs::path& package : packages) output.push_back(builtin_package(install, package));
+    }
+    for (ModRef& mod : output) {
+        if (mod.virtual_package) continue;
+        for (const auto& instance : instance_records.value()) {
+            for (const fs::path& lock : {
+                    instance.root / "mods" / "modset-lock.v1.json",
+                    workspace / "modsets" / instance.id.str() / "modset-lock.v1.json"}) {
+                const std::string text = stable_small_text(lock, 16U * 1024U * 1024U);
+                if (!text.empty() && ((!mod.sha256.empty() && text.find(mod.sha256) != std::string::npos) ||
+                    text.find(mod.file_name) != std::string::npos)) mod.lock_references.push_back(
+                        instance.id.str() + ":" + path_string(lock.lexically_relative(workspace)));
+            }
+        }
+        std::sort(mod.lock_references.begin(), mod.lock_references.end());
+        mod.lock_references.erase(std::unique(mod.lock_references.begin(), mod.lock_references.end()), mod.lock_references.end());
+    }
+    std::sort(output.begin(), output.end(), [](const ModRef& left, const ModRef& right) {
+        if (left.name != right.name) return left.name < right.name;
+        if (left.version != right.version) return left.version < right.version;
+        if (left.virtual_package != right.virtual_package) return left.virtual_package;
+        return path_string(left.file_path) < path_string(right.file_path);
+    });
+    return facman::core::Result<std::vector<ModRef>>::success(std::move(output));
+}
+
+std::string inventory_json(const std::string& command, const std::vector<ModRef>& records, bool explicit_roots)
+{
+    json::ArrayBuilder items;
+    for (const ModRef& mod : records) items.add_object(inventory_mod_ref_builder(mod));
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.mod_inventory.v1");
+    output.add_string("command", command);
+    output.add_string("status", "ok");
+    output.add_array("records", items);
+    (void)output.add_unsigned_integer("record_count", records.size());
+    output.add_bool("managed_roots_complete", true);
+    output.add_bool("explicit_roots_included", explicit_roots);
+    output.add_bool("recursive_scan", false);
+    output.add_bool("portal_access", false);
+    output.add_bool("source_mutation", false);
+    output.add_bool("mutation_executed", false);
+    return output.serialize();
+}
+
+facman::core::Result<std::string> selected_inventory(
+    const fs::path& workspace,
+    const InventoryRequest& request,
+    const std::string& command,
+    bool verify)
+{
+    if (request.identity.empty()) return inventory_failure("inventory_identity_required", "Inventory identity is required");
+    auto records = build_inventory(workspace, request.roots);
+    if (!records) return inventory_failure(records.error().code, records.error().message, fs::u8path(records.error().path));
+    std::vector<ModRef> matches;
+    for (const ModRef& mod : records.value()) if (
+        request.identity == mod.sha256 || request.identity == mod.file_name || request.identity == mod.name ||
+        request.identity == mod.name + "@" + mod.version) matches.push_back(mod);
+    if (matches.empty()) return inventory_failure("inventory_record_not_found", "Inventory record was not found");
+    if (matches.size() != 1U) return inventory_failure("inventory_identity_ambiguous", "Inventory identity matches multiple records");
+    ModRef record = matches.front();
+    if (verify && !record.virtual_package) {
+        ModRef current = inspect_mod_zip(record.file_path);
+        if (!current.valid || current.sha256 != record.sha256 || current.sha1 != record.sha1) return inventory_failure(
+            "inventory_identity_changed", "Inventory archive identity changed during verification", record.file_path);
+    }
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.mod_inventory_record.v1");
+    output.add_string("command", command);
+    output.add_string("status", verify ? "pass" : "ok");
+    output.add_object("record", inventory_mod_ref_builder(record));
+    output.add_bool("stable_identity_verified", verify || record.virtual_package);
+    output.add_bool("portal_access", false);
+    output.add_bool("source_mutation", false);
+    output.add_bool("mutation_executed", false);
+    return facman::core::Result<std::string>::success(output.serialize());
+}
+
+} // namespace
+
+facman::core::Result<std::string> inventory_list(const fs::path& workspace)
+{
+    auto records = build_inventory(workspace, {});
+    if (!records) return inventory_failure(records.error().code, records.error().message, fs::u8path(records.error().path));
+    return facman::core::Result<std::string>::success(inventory_json("mods.list", records.value(), false));
+}
+
+facman::core::Result<std::string> inventory_index(const fs::path& workspace, const InventoryRequest& request)
+{
+    auto records = build_inventory(workspace, request.roots);
+    if (!records) return inventory_failure(records.error().code, records.error().message, fs::u8path(records.error().path));
+    return facman::core::Result<std::string>::success(inventory_json("mods.index", records.value(), !request.roots.empty()));
+}
+
+facman::core::Result<std::string> inventory_inspect(const fs::path& workspace, const InventoryRequest& request)
+{
+    return selected_inventory(workspace, request, "mods.inspect", false);
+}
+
+facman::core::Result<std::string> inventory_verify(const fs::path& workspace, const InventoryRequest& request)
+{
+    return selected_inventory(workspace, request, "mods.verify", true);
+}
+
+facman::core::Result<std::string> inventory_explain(const fs::path& workspace, const InventoryRequest& request)
+{
+    return selected_inventory(workspace, request, "mods.explain", false);
 }
 
 } // namespace facman::factorio::mods

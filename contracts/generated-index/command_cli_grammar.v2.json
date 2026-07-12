@@ -1753,6 +1753,58 @@
         "internal": false,
         "options": [
           {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "explain"
+        ],
+        "positionals": [
+          {
+            "name": "identity",
+            "required": true
+          }
+        ],
+        "usage": "facman mods explain <identity> --json"
+      },
+      "command_id": "mods.explain",
+      "deprecation": "active",
+      "frontend_category": "mods",
+      "localization_keys": [
+        "command.mods.explain.title",
+        "command.mods.explain.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "mods_explain",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "identity",
+          "repeatable": false,
+          "request_field": "identity",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "mods.explain",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
             "name": "--instance",
             "repeatable": false,
             "value": "instance-id"
@@ -1808,6 +1860,107 @@
       ],
       "risk_tier": "persistent_local_write",
       "runtime_id": "mods.import",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "index",
+          "[--root",
+          "<directory>]"
+        ],
+        "positionals": [],
+        "usage": "facman mods index [--root <directory>] --json"
+      },
+      "command_id": "mods.index",
+      "deprecation": "active",
+      "frontend_category": "mods",
+      "localization_keys": [
+        "command.mods.index.title",
+        "command.mods.index.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "mods_index",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "roots",
+          "repeatable": true,
+          "request_field": "roots",
+          "required": false,
+          "type": "string_array"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "mods.index",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "inspect"
+        ],
+        "positionals": [
+          {
+            "name": "identity",
+            "required": true
+          }
+        ],
+        "usage": "facman mods inspect <identity> --json"
+      },
+      "command_id": "mods.inspect",
+      "deprecation": "active",
+      "frontend_category": "mods",
+      "localization_keys": [
+        "command.mods.inspect.title",
+        "command.mods.inspect.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "mods_inspect",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "identity",
+          "repeatable": false,
+          "request_field": "identity",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "mods.inspect",
       "schema": "facman.command.v2",
       "visibility": "public"
     },
@@ -1873,6 +2026,44 @@
       ],
       "risk_tier": "read_only",
       "runtime_id": "mods.install",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "list"
+        ],
+        "positionals": [],
+        "usage": "facman mods list --json"
+      },
+      "command_id": "mods.list",
+      "deprecation": "active",
+      "frontend_category": "mods",
+      "localization_keys": [
+        "command.mods.list.title",
+        "command.mods.list.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "mods_list",
+      "request_fields": [],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "mods.list",
       "schema": "facman.command.v2",
       "visibility": "public"
     },
@@ -1977,6 +2168,58 @@
       ],
       "risk_tier": "read_only",
       "runtime_id": "mods.update",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "verify"
+        ],
+        "positionals": [
+          {
+            "name": "identity",
+            "required": true
+          }
+        ],
+        "usage": "facman mods verify <identity> --json"
+      },
+      "command_id": "mods.verify",
+      "deprecation": "active",
+      "frontend_category": "mods",
+      "localization_keys": [
+        "command.mods.verify.title",
+        "command.mods.verify.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "mods_verify",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "identity",
+          "repeatable": false,
+          "request_field": "identity",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "mods.verify",
       "schema": "facman.command.v2",
       "visibility": "public"
     },
@@ -5402,5 +5645,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "e55dac3077bd787721bc24bfe39cbcb02445f8f12ff5d6a5078b5ada62884504"
+  "source_digest": "b16cd1fe2f14263ad00523ab470debdc346e3c285afd1714699de867a9802742"
 }

@@ -7,6 +7,7 @@
 #include "flb_factorio_diagnostics.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
+#include "flb_factorio_mods.h"
 #include "flb_factorio_save_operations.h"
 #include "fl_transaction.h"
 #include "fl_identity.h"
@@ -72,6 +73,7 @@ struct ServiceOperationRequest {
 };
 
 using ImportModRequest = modsets::ImportRequest;
+using ModInventoryRequest = facman::factorio::mods::InventoryRequest;
 using ModsetInstanceRequest = modsets::InstanceRequest;
 using ExportModsetRequest = modsets::ExportRequest;
 using ListSavesRequest = saves::InstanceRequest;
@@ -110,6 +112,7 @@ using ApplicationPayload = std::variant<
     OnboardingPlanRequest,
     ExplainInstanceRequest,
     ImportModRequest,
+    ModInventoryRequest,
     ModsetInstanceRequest,
     ExportModsetRequest,
     ListSavesRequest,

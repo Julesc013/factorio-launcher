@@ -141,6 +141,11 @@ required_codes = [
   "profile_selection_invalid",
   "profile_transaction_recovery_required",
   "profile_shipped_immutable",
+  "inventory_root_read_failed",
+  "inventory_root_unsafe",
+  "inventory_record_not_found",
+  "inventory_identity_changed",
+  "inventory_identity_ambiguous",
 ]
 
 [[code]]
@@ -1339,3 +1344,38 @@ severity = "blocked"
 effect = "none"
 retryable = false
 message = "Shipped profiles are immutable and cannot be archived."
+
+[[code]]
+id = "inventory_root_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A managed local mod inventory root could not be read safely."
+
+[[code]]
+id = "inventory_root_unsafe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "An explicit local mod inventory root is relative, linked, or not a directory."
+
+[[code]]
+id = "inventory_record_not_found"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested local mod inventory identity was not found."
+
+[[code]]
+id = "inventory_identity_changed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The local mod archive identity changed during verification."
+
+[[code]]
+id = "inventory_identity_ambiguous"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested local mod inventory identity matches multiple records."

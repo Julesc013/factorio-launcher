@@ -1,6 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
-
 #include "flb_factorio_application.h"
 #include "application_context.h"
 #include "application_types.h"
@@ -167,6 +166,7 @@ private:
         case CommandId::dev_instrument_mod: return handlers::refuse_dev_execution(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::launch_plan_preflight: return handlers::preflight_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload));
         case CommandId::mods_import: return handlers::import_mod(context_, std::get<ImportModRequest>(request.payload));
+        case CommandId::mods_list: case CommandId::mods_inspect: case CommandId::mods_verify: case CommandId::mods_index: case CommandId::mods_explain: return handlers::dispatch_mod_inventory(context_, request);
         case CommandId::modsets_lock: return handlers::lock_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
         case CommandId::modsets_verify: return handlers::verify_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
         case CommandId::modsets_export: return handlers::export_modset(context_, std::get<ExportModsetRequest>(request.payload));

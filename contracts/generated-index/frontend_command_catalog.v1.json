@@ -2356,6 +2356,76 @@
       "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
+      "cli": "facman mods explain <identity> --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "explain"
+        ],
+        "positionals": [
+          {
+            "name": "identity",
+            "required": true
+          }
+        ],
+        "usage": "facman mods explain <identity> --json"
+      },
+      "command_id": "mods.explain",
+      "contract_path": "contracts/command/factorio/mods.explain.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "mods",
+      "golden_refusal": "tests/golden/commands/mods.explain.refusal.json",
+      "golden_success": "tests/golden/commands/mods.explain.success.json",
+      "localization_keys": [
+        "command.mods.explain.title",
+        "command.mods.explain.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "mods_explain",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "mods_explain",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "identity",
+          "repeatable": false,
+          "request_field": "identity",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "request_schema": "contracts/schema/command/mods.explain.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_mod_inventory_record.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "mods.explain",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
       "cli": "facman mods import <mod.zip> --instance <instance-id> --json",
       "cli_grammar": {
         "internal": false,
@@ -2439,6 +2509,143 @@
     },
     {
       "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman mods index [--root <directory>] --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "index",
+          "[--root",
+          "<directory>]"
+        ],
+        "positionals": [],
+        "usage": "facman mods index [--root <directory>] --json"
+      },
+      "command_id": "mods.index",
+      "contract_path": "contracts/command/factorio/mods.index.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "mods",
+      "golden_refusal": "tests/golden/commands/mods.index.refusal.json",
+      "golden_success": "tests/golden/commands/mods.index.success.json",
+      "localization_keys": [
+        "command.mods.index.title",
+        "command.mods.index.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "mods_index",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "mods_index",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "roots",
+          "repeatable": true,
+          "request_field": "roots",
+          "required": false,
+          "type": "string_array"
+        }
+      ],
+      "request_schema": "contracts/schema/command/mods.index.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_mod_inventory.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "mods.index",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman mods inspect <identity> --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "inspect"
+        ],
+        "positionals": [
+          {
+            "name": "identity",
+            "required": true
+          }
+        ],
+        "usage": "facman mods inspect <identity> --json"
+      },
+      "command_id": "mods.inspect",
+      "contract_path": "contracts/command/factorio/mods.inspect.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "mods",
+      "golden_refusal": "tests/golden/commands/mods.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/mods.inspect.success.json",
+      "localization_keys": [
+        "command.mods.inspect.title",
+        "command.mods.inspect.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "mods_inspect",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "mods_inspect",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "identity",
+          "repeatable": false,
+          "request_field": "identity",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "request_schema": "contracts/schema/command/mods.inspect.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_mod_inventory_record.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "mods.inspect",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
       "availability": "unavailable_until_gateway",
       "availability_refusal_code": "network_forbidden",
       "binding": "flb.factorio",
@@ -2516,6 +2723,62 @@
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "mods.install",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman mods list --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "list"
+        ],
+        "positionals": [],
+        "usage": "facman mods list --json"
+      },
+      "command_id": "mods.list",
+      "contract_path": "contracts/command/factorio/mods.list.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "mods",
+      "golden_refusal": "tests/golden/commands/mods.list.refusal.json",
+      "golden_success": "tests/golden/commands/mods.list.success.json",
+      "localization_keys": [
+        "command.mods.list.title",
+        "command.mods.list.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "mods_list",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "mods_list",
+      "request_fields": [],
+      "request_schema": "contracts/schema/command/mods.list.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_mod_inventory.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "mods.list",
       "schema": "facman.command.v2",
       "visibility": "public",
       "writes_state": false
@@ -2656,6 +2919,76 @@
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "mods.update",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman mods verify <identity> --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "mods",
+          "verify"
+        ],
+        "positionals": [
+          {
+            "name": "identity",
+            "required": true
+          }
+        ],
+        "usage": "facman mods verify <identity> --json"
+      },
+      "command_id": "mods.verify",
+      "contract_path": "contracts/command/factorio/mods.verify.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "mods",
+      "golden_refusal": "tests/golden/commands/mods.verify.refusal.json",
+      "golden_success": "tests/golden/commands/mods.verify.success.json",
+      "localization_keys": [
+        "command.mods.verify.title",
+        "command.mods.verify.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "mods_verify",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "mods_verify",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "identity",
+          "repeatable": false,
+          "request_field": "identity",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "request_schema": "contracts/schema/command/mods.verify.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_mod_inventory_record.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "mods.verify",
       "schema": "facman.command.v2",
       "visibility": "public",
       "writes_state": false
@@ -6831,5 +7164,5 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "e55dac3077bd787721bc24bfe39cbcb02445f8f12ff5d6a5078b5ada62884504"
+  "source_digest": "b16cd1fe2f14263ad00523ab470debdc346e3c285afd1714699de867a9802742"
 }

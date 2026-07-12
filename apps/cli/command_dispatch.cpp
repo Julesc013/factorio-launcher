@@ -466,6 +466,17 @@ int command_mods(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
+    if (action == "list") return emit_basic(call(options, "mods.list"), flag(options.args, "--json"), "Local mods listed");
+    if (action == "index") {
+        json::ArrayBuilder roots;
+        for (const std::string& root : option_values(options.args, "--root")) roots.add_string(root);
+        json::ObjectBuilder payload;
+        payload.add_array("roots", roots);
+        return emit_basic(call(options, "mods.index", payload.serialize()), flag(options.args, "--json"), "Local mods indexed");
+    }
+    if ((action == "inspect" || action == "verify" || action == "explain") && options.args.size() >= 3) return emit_basic(
+        call(options, "mods." + action, exact_fields_payload({{"identity", options.args[2]}})),
+        flag(options.args, "--json"), "Local mod " + action + " completed");
     if (action == "import" && options.args.size() >= 3) {
         const std::string instance = option(options.args, "--instance");
         return emit_basic(call(options, "mods.import", exact_fields_payload({{"source_path", options.args[2]}, {"instance_id", instance}}), false), flag(options.args, "--json"), "Mod imported");
