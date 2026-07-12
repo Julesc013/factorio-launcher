@@ -15,10 +15,17 @@ class SetupPackageRoutingTests(unittest.TestCase):
         setup = (
             ROOT / "runtime" / "factorio" / "application" / "handlers" / "setup.cpp"
         ).read_text(encoding="utf-8")
+        gateway = (
+            ROOT / "runtime" / "factorio" / "application" / "setup_gateway.cpp"
+        ).read_text(encoding="utf-8")
         self.assertIn('call(options, "setup.operation", operation_payload("package.verify"))', cli)
         self.assertNotIn("usk/usk_api.h", cli)
-        self.assertIn('setup_execute("package.verify"', setup)
-        self.assertIn("usk.package_verify_request.v1", setup)
+        self.assertNotIn("usk/usk_api.h", setup)
+        self.assertIn("context.setup().verify_package", setup)
+        self.assertIn('execute_setup("package.verify"', gateway)
+        self.assertIn("usk.package_verify_request.v1", gateway)
+        self.assertIn("request.version", gateway)
+        self.assertIn("request.archive.string()", gateway)
 
     def test_workspace_lock_pins_integrated_universal_revisions(self) -> None:
         lock = (ROOT / "release" / "index" / "workspace_lock.v1.toml").read_text(

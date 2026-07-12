@@ -63,11 +63,22 @@ def detect_generic_operations() -> set[str]:
     return registered & {"setup.operation", "utility.operation"}
 
 
+def detect_setup_provider_boundary() -> set[str]:
+    violations: set[str] = set()
+    handlers = ROOT / "runtime/factorio/application/handlers"
+    for path in sorted(handlers.glob("*.cpp")):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if "usk/usk_api.h" in text or "usk_command_execute_v1" in text:
+            violations.add(architecture_fitness.relative(path))
+    return violations
+
+
 def main() -> int:
     statuses = [
         architecture_fitness.run("registry_capacity", detect_registry_capacity),
         architecture_fitness.run("availability_parity", detect_availability_parity),
         architecture_fitness.run("generic_operation", detect_generic_operations),
+        architecture_fitness.run("setup_provider_boundary", detect_setup_provider_boundary),
     ]
     return 1 if any(status != 0 for status in statuses) else 0
 

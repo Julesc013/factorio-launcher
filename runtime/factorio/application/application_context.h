@@ -6,6 +6,7 @@
 
 #include "fl_system_services.h"
 #include "fl_workspace_store.h"
+#include "setup_gateway.h"
 
 #include <filesystem>
 
@@ -27,6 +28,7 @@ public:
     facman::workspace::WorkspaceRepository& workspace_repository() noexcept { return workspace_repository_; }
     facman::core::Clock& clock() noexcept { return clock_; }
     facman::core::IdGenerator& ids() noexcept { return ids_; }
+    SetupGateway& setup() noexcept { return *setup_; }
 
 private:
     std::filesystem::path workspace_;
@@ -38,6 +40,7 @@ private:
     facman::workspace::WorkspaceRepository workspace_repository_;
     facman::platform::RealClock clock_;
     facman::platform::RandomIdGenerator ids_;
+    std::unique_ptr<SetupGateway> setup_;
 };
 
 } // namespace facman::factorio::application

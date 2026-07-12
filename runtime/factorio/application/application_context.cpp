@@ -14,9 +14,9 @@ ApplicationContext::ApplicationContext(std::filesystem::path workspace)
       instances_(layout_),
       modsets_(layout_),
       transactions_(layout_),
-      workspace_repository_(layout_)
+      workspace_repository_(layout_),
+      setup_(make_setup_gateway())
 {
 }
 
 } // namespace facman::factorio::application
-

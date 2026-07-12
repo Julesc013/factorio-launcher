@@ -11,7 +11,6 @@ manual_json = [
   "runtime/factorio/application/handlers/installs.cpp",
   "runtime/factorio/application/handlers/instances.cpp",
   "runtime/factorio/application/handlers/product.cpp",
-  "runtime/factorio/application/handlers/setup.cpp",
   "runtime/factorio/application/handlers/utility.cpp",
   "runtime/factorio/binding/flb_api.c",
   "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp",
@@ -38,3 +37,4 @@ generic_operation = [
   "setup.operation",
   "utility.operation",
 ]
+setup_provider_boundary = []

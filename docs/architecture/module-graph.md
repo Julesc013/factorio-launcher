@@ -13,7 +13,11 @@ runtime/client
 runtime/factorio/application
   -> runtime/factorio model modules
   -> runtime/workspace, transaction, archive, platform
-  -> Universal Setup only for setup-authoritative operations
+  -> typed SetupGateway only for setup-authoritative operations
+
+runtime/factorio/application/setup_gateway
+  -> Universal Setup when FACMAN_WITH_SETUP is enabled
+  -> unavailable typed results when setup support is disabled
 
 runtime/factorio/binding
   -> runtime/factorio/application
@@ -29,3 +33,8 @@ The enforced target aliases are documented in
 Universal Setup mutates installed state, Universal Launcher orchestrates
 product-neutral runnable state, FacMan interprets Factorio, and frontends only
 present client operations.
+
+Handlers never include or call Universal Setup directly. The gateway passes the
+actual package target metadata and install-plan version/archive inputs to the
+provider. A provider response that does not demonstrate evaluation of those
+inputs is reported as unavailable, never relabeled as a FacMan plan.
