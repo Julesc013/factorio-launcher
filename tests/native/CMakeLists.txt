@@ -54,6 +54,7 @@ target_link_libraries(fl_json_fuzz PRIVATE facman_core_static)
 facman_apply_policies(fl_json_fuzz)
 
 facman_native_test(flb_command_bridge_smoke flb_command_bridge_smoke.c "contract;integration")
+target_compile_definitions(flb_command_bridge_smoke PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_command_bridge_smoke PRIVATE flaunch_client_static flb_factorio_static)
 facman_native_test(fl_path_safety_smoke fl_path_safety_smoke.cpp "filesystem;fast-unit")
 target_compile_features(fl_path_safety_smoke PRIVATE cxx_std_17)

@@ -102,7 +102,10 @@ class MacosPackageProofContractTests(unittest.TestCase):
         self.assertIn(
             '{"macos_portable_cli_x64", "macos", "x64", "static_first"}', setup
         )
-        self.assertIn('setup_execute("package.verify"', setup)
+        gateway = (
+            ROOT / "runtime" / "factorio" / "application" / "setup_gateway.cpp"
+        ).read_text(encoding="utf-8")
+        self.assertIn('execute_setup("package.verify"', gateway)
 
 
 if __name__ == "__main__":

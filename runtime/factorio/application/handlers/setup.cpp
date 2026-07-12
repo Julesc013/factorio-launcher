@@ -52,16 +52,40 @@ ApplicationResult verify_package_impl(ApplicationContext& context, const Service
 {
     const fs::path root = request.path.empty() ? fs::path(fl_runtime_package_root()) : fs::path(request.path);
     const std::string manifest = read_text(root / "manifest" / "package.v1.toml");
+    struct ExpectedProfile { const char* id; const char* os; const char* arch; const char* linkage; };
+    static const ExpectedProfile profiles[] = {
+        {"windows_portable_cli_x64", "windows", "x64", "static_first"},
+        {"linux_portable_cli_x64", "linux", "x64", "static_first"},
+        {"macos_portable_cli_x64", "macos", "x64", "static_first"},
+        {"windows_legacy_winforms_x64", "windows", "x64", "compatibility_bundle"},
+        {"macos_legacy_appkit_x64", "macos", "x64", "compatibility_bundle"},
+        {"linux_x11_gtk_x64", "linux", "x64", "compatibility_bundle"},
+        {"portable_cli_x64", "portable", "x64", "static_first_with_reference_components"},
+        {"portable_tui_x64", "portable", "x64", "static_first_with_reference_components"},
+    };
+    const std::string profile = toml_value(manifest, "profile_id");
+    const ExpectedProfile* expected = nullptr;
+    for (const ExpectedProfile& candidate : profiles) {
+        if (profile == candidate.id) expected = &candidate;
+    }
+    if (expected == nullptr) {
+        return refused(
+            safety_refusal("package.verify", "package_profile_unsupported", "Unknown built package profile", profile, false),
+            "package_profile_unsupported",
+            "Unknown built package profile");
+    }
     PackageVerifyRequest verify_request;
     verify_request.package_root = root;
-    verify_request.target_os = toml_value(manifest, "target_os");
-    verify_request.target_arch = toml_value(manifest, "target_arch");
-    verify_request.linkage_model = toml_value(manifest, "linkage_model");
-    if (verify_request.target_os.empty() || verify_request.target_arch.empty() || verify_request.linkage_model.empty()) {
+    verify_request.target_os = expected->os;
+    verify_request.target_arch = expected->arch;
+    verify_request.linkage_model = expected->linkage;
+    if (toml_value(manifest, "target_os") != verify_request.target_os ||
+        toml_value(manifest, "target_arch") != verify_request.target_arch ||
+        toml_value(manifest, "linkage_model") != verify_request.linkage_model) {
         return refused(
-            safety_refusal("package.verify", "package_manifest_invalid", "Package manifest lacks target metadata", root.string(), false),
+            safety_refusal("package.verify", "package_manifest_invalid", "Package manifest target metadata contradicts its profile", root.string(), false),
             "package_manifest_invalid",
-            "Package manifest lacks target metadata");
+            "Package manifest target metadata contradicts its profile");
     }
     auto verification = context.setup().verify_package(verify_request);
     if (!verification) return unavailable(context, "package.verify", verification.error().code, verification.error().message);
@@ -97,6 +121,7 @@ ApplicationResult verify_package(ApplicationContext& context, const ServiceOpera
 #if FACMAN_WITH_SETUP
     return verify_package_impl(context, request);
 #else
+    (void)request;
     return unavailable(context, "package.verify", "setup_unavailable", "Universal Setup support is disabled in this build");
 #endif
 }
@@ -108,6 +133,7 @@ ApplicationResult verify_install(ApplicationContext& context, const ServiceOpera
     if (!provider) return unavailable(context, "installs.verify", provider.error().code, provider.error().message);
     return unavailable(context, "installs.verify", provider.value().code, provider.value().reason);
 #else
+    (void)request;
     return unavailable(context, "installs.verify", "setup_unavailable", "Universal Setup support is disabled in this build");
 #endif
 }
@@ -147,6 +173,7 @@ ApplicationResult managed_install_policy(
     result.output = output.serialize();
     return result;
 #else
+    (void)request;
     return unavailable(context, operation, "setup_unavailable", "Universal Setup support is disabled in this build");
 #endif
 }
@@ -179,6 +206,7 @@ ApplicationResult install_version(ApplicationContext& context, const ServiceOper
     }
     return unavailable(context, "installs.install_version", "setup_mutation_not_implemented", "Setup mutation remains unavailable");
 #else
+    (void)request;
     return unavailable(context, "installs.install_version", "setup_unavailable", "Universal Setup support is disabled in this build");
 #endif
 }

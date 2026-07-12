@@ -26,8 +26,11 @@ public:
     {
         if (!active_) return;
         if (sigismember(&previous_, SIGPIPE) == 0) {
-            timespec immediate {0, 0};
-            (void)sigtimedwait(&set_, nullptr, &immediate);
+            sigset_t pending {};
+            if (sigpending(&pending) == 0 && sigismember(&pending, SIGPIPE) == 1) {
+                int received = 0;
+                (void)sigwait(&set_, &received);
+            }
         }
         (void)pthread_sigmask(SIG_SETMASK, &previous_, nullptr);
     }

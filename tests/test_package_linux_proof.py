@@ -89,7 +89,10 @@ class LinuxPackageProofContractTests(unittest.TestCase):
             '{"linux_portable_cli_x64", "linux", "x64", "static_first"}',
             setup,
         )
-        self.assertIn('setup_execute("package.verify"', setup)
+        gateway = (
+            ROOT / "runtime" / "factorio" / "application" / "setup_gateway.cpp"
+        ).read_text(encoding="utf-8")
+        self.assertIn('execute_setup("package.verify"', gateway)
 
 
 if __name__ == "__main__":
