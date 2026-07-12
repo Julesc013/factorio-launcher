@@ -16,7 +16,10 @@ if(MSVC)
   # C4996 rejects portable C/POSIX APIs such as getenv in favor of MSVC-only
   # replacements. Keep the cross-platform API and enforce every other /W4
   # diagnostic through /WX in CI.
-  target_compile_options(facman_warnings INTERFACE /W4 /wd4996)
+  # /FS serializes compiler PDB writes for multi-source targets. Without it,
+  # parallel MSBuild can fail nondeterministically with C1041 while several
+  # cl.exe processes update the target program database.
+  target_compile_options(facman_warnings INTERFACE /W4 /wd4996 /FS)
   target_compile_options(facman_hardening INTERFACE /guard:cf)
   target_link_options(facman_hardening INTERFACE /guard:cf /DYNAMICBASE)
   if(FACMAN_WARNINGS_AS_ERRORS)
