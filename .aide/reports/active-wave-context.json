@@ -1,77 +1,10 @@
 {
-  "active_workunit": {
-    "affected_contracts": [
-      "runtime/core/generated/command_catalog.json"
-    ],
-    "affected_targets": [
-      "facman_tui"
-    ],
-    "affected_tests": [
-      "tests/native/facman_tui_smoke.cpp",
-      "tests/package_runtime/"
-    ],
-    "allowed_paths": [
-      "apps/tui/",
-      "release/profiles/",
-      "runtime/client/",
-      "tests/",
-      "tools/",
-      ".github/"
-    ],
-    "blockers": [],
-    "claim_impacts": [
-      "functional-second-frontend"
-    ],
-    "dependencies": [
-      "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
-    ],
-    "forbidden_paths": [
-      "new terminal dependencies",
-      "run.execute promotion"
-    ],
-    "id": "FACMAN-TUI-MINIMUM-PRODUCT-01",
-    "last_green_commit": null,
-    "provider_revisions": {},
-    "started_at": "2026-07-12T11:16:21Z",
-    "status": "active",
-    "stop_conditions": [
-      "an unreviewed runtime dependency is required",
-      "package proof skips a required check"
-    ],
-    "title": "Replace the TUI scaffold with a functional client"
-  },
-  "affected_contracts": [
-    "runtime/core/generated/command_catalog.json"
-  ],
-  "affected_tests": [
-    "tests/native/facman_tui_smoke.cpp",
-    "tests/package_runtime/"
-  ],
-  "architecture_invariants": [
-    "R3.5 is the architecture endpoint; this wave must deliver product value without another broad redesign.",
-    "Universal Setup owns installed-state mutation and Universal Launcher owns product-neutral orchestration.",
-    "Frontends consume generated command law and contain no Factorio backend behavior.",
-    "AIDE makes no provider, model or network call.",
-    "Human Factorio gates remain explicit operator decisions and cannot be inferred from automated proof."
-  ],
-  "current_exact_revision": "49778550add01004b2b63d8326eafb8f07701ef4",
-  "direct_dependency_summaries": [
-    {
-      "id": "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02",
-      "last_green_commit": "49778550add01004b2b63d8326eafb8f07701ef4",
-      "status": "closed"
-    }
-  ],
-  "history_included": false,
+  "active_workunit": null,
   "open_blockers": [
     "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
     "Release, signing, publication and Safe beta promotion are outside this wave."
   ],
-  "provider_revisions": {
-    "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
-    "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
-  },
   "schema_version": "aide.wave-context.v1",
   "wave_id": "facman-r3.6",
-  "wave_status": "active"
+  "wave_status": "complete"
 }

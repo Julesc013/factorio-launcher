@@ -165,18 +165,123 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
+    },
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "c2ff6a9d25c74184173c37a540e381ad473134d5",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-DESKTOP-FRONTEND-PARITY-02",
+        "FACMAN-END-TO-END-USER-JOURNEY-01",
+        "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "b551c4dcf403d654f9f08f1eb75994c43d75ce50ade365baf658e5af08751a53",
+      "test_fingerprints": {
+        "tests/native/facman_tui_smoke.cpp": "cc63a9256a978d722060884b9262dfe3404b09a9b9d8189c4b13a7c3b6cd794d",
+        "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-TUI-MINIMUM-PRODUCT-01"
+    },
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "c2ff6a9d25c74184173c37a540e381ad473134d5",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-END-TO-END-USER-JOURNEY-01",
+        "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "31de826079bf8ebf9a8178452e541c6a6fe69c4c892f65bdabf6b9c36020940d",
+      "test_fingerprints": {
+        "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+        "tools/winforms_command_client_smoke.py": "5f7f2f3495afa062840138cffe2ccc41a45edb79a33b5b07c22baaa50fe326fd"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-DESKTOP-FRONTEND-PARITY-02"
+    },
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "c2ff6a9d25c74184173c37a540e381ad473134d5",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "6f830c146789198790ac348ccce413036bebff2eb56bdec78bf919a8969ed274",
+      "test_fingerprints": {
+        "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+        "tests/test_end_to_end_user_journey.py": "5cf599adb23e9090db61f93c9d341929fe91a8067bab67c780c1d63f82a1b10e"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-END-TO-END-USER-JOURNEY-01"
+    },
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "c2ff6a9d25c74184173c37a540e381ad473134d5",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [],
+      "source_fingerprint": "24920c25e9f3dce7b262fc474388c5cd699aeaa1661083a01b49523ed73d362d",
+      "test_fingerprints": {
+        "py -3 .aide/scripts/aide_lite.py test": "missing",
+        "py -3 tools/dev.py verify-all": "missing"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "49778550add01004b2b63d8326eafb8f07701ef4",
+  "current_exact_revision": "c2ff6a9d25c74184173c37a540e381ad473134d5",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
   },
   "schema_version": "aide.wave.v1",
-  "status": "active",
+  "status": "complete",
   "title": "R3.6 real-world product readiness",
-  "updated_at": "2026-07-12T11:16:21Z",
+  "updated_at": "2026-07-12T11:55:21Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -389,6 +494,130 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:54:57Z",
+        "result": "PASS",
+        "source_fingerprint": "b551c4dcf403d654f9f08f1eb75994c43d75ce50ade365baf658e5af08751a53",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/facman_tui_smoke.cpp": "cc63a9256a978d722060884b9262dfe3404b09a9b9d8189c4b13a7c3b6cd794d",
+          "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc"
+        },
+        "test_results": {
+          "linux-target-ci": "PASS",
+          "macos-target-ci": "PASS",
+          "native-smoke": "PASS",
+          "strict-check": "PASS",
+          "target-package-smoke": "PASS",
+          "windows-target-ci": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-TUI-MINIMUM-PRODUCT-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:55:09Z",
+        "result": "PASS",
+        "source_fingerprint": "31de826079bf8ebf9a8178452e541c6a6fe69c4c892f65bdabf6b9c36020940d",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tools/winforms_command_client_smoke.py": "5f7f2f3495afa062840138cffe2ccc41a45edb79a33b5b07c22baaa50fe326fd"
+        },
+        "test_results": {
+          "appkit-target-compile": "PASS",
+          "cancellation-and-bounds": "PASS",
+          "generated-forms": "PASS",
+          "strict-check": "PASS",
+          "winforms-build": "PASS",
+          "winforms-client-smoke": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-DESKTOP-FRONTEND-PARITY-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:55:10Z",
+        "result": "PASS",
+        "source_fingerprint": "6f830c146789198790ac348ccce413036bebff2eb56bdec78bf919a8969ed274",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+          "tests/test_end_to_end_user_journey.py": "5cf599adb23e9090db61f93c9d341929fe91a8067bab67c780c1d63f82a1b10e"
+        },
+        "test_results": {
+          "cli": "PASS",
+          "desktop-clients": "PASS",
+          "direct-client": "PASS",
+          "fixture-integrity": "PASS",
+          "hermetic-journey": "PASS",
+          "stdio-client": "PASS",
+          "target-packages": "PASS",
+          "tui": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-END-TO-END-USER-JOURNEY-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:55:21Z",
+        "result": "PASS",
+        "source_fingerprint": "24920c25e9f3dce7b262fc474388c5cd699aeaa1661083a01b49523ed73d362d",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "py -3 .aide/scripts/aide_lite.py test": "missing",
+          "py -3 tools/dev.py verify-all": "missing"
+        },
+        "test_results": {
+          "code-security": "PASS",
+          "exact-head-ci": "PASS",
+          "human-gates-unpassed": "PASS",
+          "linux-sanitizer-fuzz-coverage": "PASS",
+          "macos-native-package": "PASS",
+          "portable-python-273": "PASS",
+          "reproducible-windows-packages": "PASS",
+          "security-policy": "PASS",
+          "setup-off": "PASS",
+          "standalone-ulk-usk": "PASS",
+          "strict-check": "PASS",
+          "windows-debug-release": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
       }
     ]
   },
@@ -787,6 +1016,8 @@
       "claim_impacts": [
         "functional-second-frontend"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T11:54:57Z",
       "dependencies": [
         "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
       ],
@@ -795,15 +1026,43 @@
         "run.execute promotion"
       ],
       "id": "FACMAN-TUI-MINIMUM-PRODUCT-01",
-      "last_green_commit": null,
+      "last_green_commit": "c2ff6a9d25c74184173c37a540e381ad473134d5",
       "provider_revisions": {},
       "started_at": "2026-07-12T11:16:21Z",
-      "status": "active",
+      "status": "closed",
       "stop_conditions": [
         "an unreviewed runtime dependency is required",
         "package proof skips a required check"
       ],
-      "title": "Replace the TUI scaffold with a functional client"
+      "title": "Replace the TUI scaffold with a functional client",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:54:57Z",
+        "result": "PASS",
+        "source_fingerprint": "b551c4dcf403d654f9f08f1eb75994c43d75ce50ade365baf658e5af08751a53",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/facman_tui_smoke.cpp": "cc63a9256a978d722060884b9262dfe3404b09a9b9d8189c4b13a7c3b6cd794d",
+          "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc"
+        },
+        "test_results": {
+          "linux-target-ci": "PASS",
+          "macos-target-ci": "PASS",
+          "native-smoke": "PASS",
+          "strict-check": "PASS",
+          "target-package-smoke": "PASS",
+          "windows-target-ci": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
@@ -828,6 +1087,8 @@
       "claim_impacts": [
         "desktop-command-client-parity"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T11:55:09Z",
       "dependencies": [
         "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
       ],
@@ -836,14 +1097,43 @@
         "AppKit runtime promotion from compile proof"
       ],
       "id": "FACMAN-DESKTOP-FRONTEND-PARITY-02",
-      "last_green_commit": null,
+      "last_green_commit": "c2ff6a9d25c74184173c37a540e381ad473134d5",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T11:54:58Z",
+      "status": "closed",
       "stop_conditions": [
         "UI-thread blocking is required",
         "runtime proof is unavailable for a runtime claim"
       ],
-      "title": "Bring desktop command clients to generated parity"
+      "title": "Bring desktop command clients to generated parity",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:55:09Z",
+        "result": "PASS",
+        "source_fingerprint": "31de826079bf8ebf9a8178452e541c6a6fe69c4c892f65bdabf6b9c36020940d",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tools/winforms_command_client_smoke.py": "5f7f2f3495afa062840138cffe2ccc41a45edb79a33b5b07c22baaa50fe326fd"
+        },
+        "test_results": {
+          "appkit-target-compile": "PASS",
+          "cancellation-and-bounds": "PASS",
+          "generated-forms": "PASS",
+          "strict-check": "PASS",
+          "winforms-build": "PASS",
+          "winforms-client-smoke": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
@@ -870,6 +1160,8 @@
       "claim_impacts": [
         "non-execution-product-journey"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T11:55:11Z",
       "dependencies": [
         "FACMAN-TUI-MINIMUM-PRODUCT-01",
         "FACMAN-DESKTOP-FRONTEND-PARITY-02"
@@ -879,14 +1171,45 @@
         "writes outside disposable workspaces"
       ],
       "id": "FACMAN-END-TO-END-USER-JOURNEY-01",
-      "last_green_commit": null,
+      "last_green_commit": "c2ff6a9d25c74184173c37a540e381ad473134d5",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T11:55:10Z",
+      "status": "closed",
       "stop_conditions": [
         "semantic results diverge across transports",
         "a security refusal must be weakened"
       ],
-      "title": "Prove the complete hermetic non-execution journey"
+      "title": "Prove the complete hermetic non-execution journey",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:55:10Z",
+        "result": "PASS",
+        "source_fingerprint": "6f830c146789198790ac348ccce413036bebff2eb56bdec78bf919a8969ed274",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+          "tests/test_end_to_end_user_journey.py": "5cf599adb23e9090db61f93c9d341929fe91a8067bab67c780c1d63f82a1b10e"
+        },
+        "test_results": {
+          "cli": "PASS",
+          "desktop-clients": "PASS",
+          "direct-client": "PASS",
+          "fixture-integrity": "PASS",
+          "hermetic-journey": "PASS",
+          "stdio-client": "PASS",
+          "target-packages": "PASS",
+          "tui": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
@@ -912,6 +1235,8 @@
       "claim_impacts": [
         "r3.6-product-readiness"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T11:55:21Z",
       "dependencies": [
         "FACMAN-END-TO-END-USER-JOURNEY-01"
       ],
@@ -921,14 +1246,49 @@
         "release publication"
       ],
       "id": "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01",
-      "last_green_commit": null,
+      "last_green_commit": "c2ff6a9d25c74184173c37a540e381ad473134d5",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T11:55:11Z",
+      "status": "closed",
       "stop_conditions": [
         "any mandatory autonomous criterion is not green",
         "target evidence is stale"
       ],
-      "title": "Close R3.6 autonomous product readiness"
+      "title": "Close R3.6 autonomous product readiness",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T11:55:21Z",
+        "result": "PASS",
+        "source_fingerprint": "24920c25e9f3dce7b262fc474388c5cd699aeaa1661083a01b49523ed73d362d",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "py -3 .aide/scripts/aide_lite.py test": "missing",
+          "py -3 tools/dev.py verify-all": "missing"
+        },
+        "test_results": {
+          "code-security": "PASS",
+          "exact-head-ci": "PASS",
+          "human-gates-unpassed": "PASS",
+          "linux-sanitizer-fuzz-coverage": "PASS",
+          "macos-native-package": "PASS",
+          "portable-python-273": "PASS",
+          "reproducible-windows-packages": "PASS",
+          "security-policy": "PASS",
+          "setup-off": "PASS",
+          "standalone-ulk-usk": "PASS",
+          "strict-check": "PASS",
+          "windows-debug-release": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     }
   ]
 }
