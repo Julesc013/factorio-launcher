@@ -239,10 +239,39 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-LOCAL-MODSET-SOLVER-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "7a6890f837689f241d86f6bc32a195ef74a677224d81d620eda23c06b3bed2a4",
+      "test_fingerprints": {
+        "tests/test_save_index_retention.py": "28a7e29b55ea9cd6ee7314631e2fac3a07cf2ac1505e598934706d18b53a8e5a",
+        "tests/test_save_transfer.py": "2bfc741d9e8ca7c7837e5df5e98ebc44de64eb8fc9c383f637ae5b69558704c8"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-SAVE-INDEX-AND-RETENTION-02"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "b93d7376c625d824b4a401a59e610ac92a734d28",
+  "current_exact_revision": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -250,7 +279,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T17:23:40Z",
+  "updated_at": "2026-07-12T17:45:17Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -454,6 +483,37 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-LOCAL-MODSET-SOLVER-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T17:45:16Z",
+        "result": "PASS",
+        "source_fingerprint": "7a6890f837689f241d86f6bc32a195ef74a677224d81d620eda23c06b3bed2a4",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_save_index_retention.py": "28a7e29b55ea9cd6ee7314631e2fac3a07cf2ac1505e598934706d18b53a8e5a",
+          "tests/test_save_transfer.py": "2bfc741d9e8ca7c7837e5df5e98ebc44de64eb8fc9c383f637ae5b69558704c8"
+        },
+        "test_results": {
+          "bounded_stable_index": "PASS",
+          "clean_repro": "PASS",
+          "deep_metadata_unsupported": "PASS",
+          "no_save_mutation": "PASS",
+          "release_full": "PASS",
+          "reversible_retention": "PASS",
+          "sidecar_drift": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-SAVE-INDEX-AND-RETENTION-02"
       }
     ]
   },
@@ -986,6 +1046,8 @@
       "claim_impacts": [
         "bounded-structural-save-intelligence"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T17:45:17Z",
       "dependencies": [
         "FACMAN-INSTANCE-LIFECYCLE-02"
       ],
@@ -995,14 +1057,45 @@
         "permanent deletion"
       ],
       "id": "FACMAN-SAVE-INDEX-AND-RETENTION-02",
-      "last_green_commit": null,
+      "last_green_commit": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T17:24:40Z",
+      "status": "closed",
       "stop_conditions": [
         "save drift is accepted",
         "retention is irreversible"
       ],
-      "title": "Implement structural save intelligence and reversible retention"
+      "title": "Implement structural save intelligence and reversible retention",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T17:45:16Z",
+        "result": "PASS",
+        "source_fingerprint": "7a6890f837689f241d86f6bc32a195ef74a677224d81d620eda23c06b3bed2a4",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_save_index_retention.py": "28a7e29b55ea9cd6ee7314631e2fac3a07cf2ac1505e598934706d18b53a8e5a",
+          "tests/test_save_transfer.py": "2bfc741d9e8ca7c7837e5df5e98ebc44de64eb8fc9c383f637ae5b69558704c8"
+        },
+        "test_results": {
+          "bounded_stable_index": "PASS",
+          "clean_repro": "PASS",
+          "deep_metadata_unsupported": "PASS",
+          "no_save_mutation": "PASS",
+          "release_full": "PASS",
+          "reversible_retention": "PASS",
+          "sidecar_drift": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [

@@ -1,52 +1,54 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "factorio.save_ref.v1",
-      "contracts/command/saves.*"
+      "factorio.server_profile.v2",
+      "contracts/command/servers.*"
     ],
     "affected_targets": [
       "flb_factorio_application_static"
     ],
     "affected_tests": [
-      "tests/test_save_index_retention.py",
-      "tests/test_save_transfer.py"
+      "tests/test_server_planning.py"
     ],
     "allowed_paths": [
       "runtime/",
       "contracts/",
       "tests/",
       "tools/",
-      "docs/"
+      "docs/",
+      "examples/"
     ],
     "blockers": [],
     "claim_impacts": [
-      "bounded-structural-save-intelligence"
+      "functional-non-executing-server-planning"
     ],
     "dependencies": [
-      "FACMAN-INSTANCE-LIFECYCLE-02"
+      "FACMAN-PROFILES-AND-TEMPLATES-02",
+      "FACMAN-SAVE-INDEX-AND-RETENTION-02"
     ],
     "forbidden_paths": [
-      "save mutation",
-      "deep save claims",
-      "permanent deletion"
+      "server execution",
+      "network sockets",
+      "RCON",
+      "plaintext credentials"
     ],
-    "id": "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+    "id": "FACMAN-SERVER-PLAN-02",
     "last_green_commit": null,
     "provider_revisions": {},
     "status": "pending",
     "stop_conditions": [
-      "save drift is accepted",
-      "retention is irreversible"
+      "a socket opens",
+      "a process starts",
+      "secrets enter exports"
     ],
-    "title": "Implement structural save intelligence and reversible retention"
+    "title": "Implement reproducible headless server configuration planning"
   },
   "affected_contracts": [
-    "factorio.save_ref.v1",
-    "contracts/command/saves.*"
+    "factorio.server_profile.v2",
+    "contracts/command/servers.*"
   ],
   "affected_tests": [
-    "tests/test_save_index_retention.py",
-    "tests/test_save_transfer.py"
+    "tests/test_server_planning.py"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -56,11 +58,16 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "b93d7376c625d824b4a401a59e610ac92a734d28",
+  "current_exact_revision": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-INSTANCE-LIFECYCLE-02",
-      "last_green_commit": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
+      "id": "FACMAN-PROFILES-AND-TEMPLATES-02",
+      "last_green_commit": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
+      "status": "closed"
+    },
+    {
+      "id": "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+      "last_green_commit": "2e9a66f8a4bdf5107882c5f54b102be63bfa9a64",
       "status": "closed"
     }
   ],
