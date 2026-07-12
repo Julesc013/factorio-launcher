@@ -130,7 +130,7 @@ jobs:
           ctest --test-dir build/coverage --output-on-failure
       - name: Generate and enforce critical-module coverage evidence
         run: |
-          gcovr --root . --filter 'runtime/(archive|base|transaction|workspace)/' --json-pretty build/coverage/critical-coverage.json
+          gcovr --root . --filter 'runtime/(archive|base|transaction|workspace)/' --json-pretty --output build/coverage/critical-coverage.json
           python tools/coverage_policy_check.py --report build/coverage/critical-coverage.json
       - name: Preserve coverage evidence
         uses: actions/upload-artifact@v4

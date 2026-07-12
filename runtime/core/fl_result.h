@@ -25,6 +25,16 @@ enum class OutcomeKind {
 };
 
 struct Error {
+    Error(
+        std::string code_value,
+        std::string message_value,
+        std::string path_value,
+        OutcomeKind kind_value = OutcomeKind::internal_error)
+        : code(std::move(code_value)),
+          message(std::move(message_value)),
+          path(std::move(path_value)),
+          kind(kind_value) {}
+
     std::string code;
     std::string message;
     std::string path;

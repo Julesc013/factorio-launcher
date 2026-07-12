@@ -54,6 +54,10 @@ std::string document_string(const std::string& text, const std::string& key)
     auto document = parse_document(text);
     if (!document || !document.value().is_object()) return {};
     const json::Value* value = document.value().find(key);
+    if (value == nullptr) {
+        const json::Value* expected = document.value().find("expected");
+        if (expected != nullptr && expected->is_object()) value = expected->find(key);
+    }
     if (value == nullptr) return {};
     auto result = value->string_value();
     return result ? result.take_value() : std::string {};
@@ -65,6 +69,10 @@ std::vector<std::string> document_strings(const std::string& text, const std::st
     auto document = parse_document(text);
     if (!document || !document.value().is_object()) return output;
     const json::Value* values = document.value().find(key);
+    if (values == nullptr) {
+        const json::Value* expected = document.value().find("expected");
+        if (expected != nullptr && expected->is_object()) values = expected->find(key);
+    }
     if (values == nullptr || !values->is_array()) return output;
     for (std::size_t index = 0; index < values->size(); ++index) {
         const json::Value* value = values->at(index);
