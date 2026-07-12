@@ -402,12 +402,18 @@
       "renderer": "diagnostics_export",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "output_path",
+          "repeatable": false,
+          "request_field": "output_path",
           "required": true,
           "type": "path"
         }
@@ -476,7 +482,10 @@
       "renderer": "diagnostics_redact",
       "request_fields": [
         {
+          "default": null,
           "name": "path",
+          "repeatable": false,
+          "request_field": "path",
           "required": true,
           "type": "path"
         }
@@ -593,7 +602,10 @@
       "renderer": "doctor_run",
       "request_fields": [
         {
+          "default": null,
           "name": "roots",
+          "repeatable": true,
+          "request_field": "roots",
           "required": false,
           "type": "string_array"
         }
@@ -773,12 +785,18 @@
       "renderer": "install_import",
       "request_fields": [
         {
+          "default": null,
           "name": "path",
+          "repeatable": false,
+          "request_field": "path",
           "required": true,
           "type": "path"
         },
         {
+          "default": null,
           "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
           "required": true,
           "type": "identifier"
         }
@@ -848,7 +866,10 @@
       "renderer": "install_inspect",
       "request_fields": [
         {
+          "default": null,
           "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
           "required": true,
           "type": "identifier"
         }
@@ -922,12 +943,18 @@
       "renderer": "installs_install_version",
       "request_fields": [
         {
+          "default": null,
           "name": "version",
+          "repeatable": false,
+          "request_field": "version",
           "required": true,
           "type": "string"
         },
         {
+          "default": null,
           "name": "archive",
+          "repeatable": false,
+          "request_field": "archive",
           "required": false,
           "type": "path"
         }
@@ -995,7 +1022,10 @@
       "renderer": "installs_repair",
       "request_fields": [
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": true,
           "type": "identifier"
         }
@@ -1060,7 +1090,10 @@
       "renderer": "install_scan",
       "request_fields": [
         {
+          "default": null,
           "name": "roots",
+          "repeatable": true,
+          "request_field": "roots",
           "required": false,
           "type": "string_array"
         }
@@ -1128,7 +1161,10 @@
       "renderer": "installs_uninstall",
       "request_fields": [
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": true,
           "type": "identifier"
         }
@@ -1196,7 +1232,10 @@
       "renderer": "installs_verify",
       "request_fields": [
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": true,
           "type": "identifier"
         }
@@ -1268,12 +1307,18 @@
       "renderer": "instance_export",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "output_path",
+          "repeatable": false,
+          "request_field": "output_path",
           "required": true,
           "type": "path"
         }
@@ -1342,12 +1387,18 @@
       "renderer": "instance_import",
       "request_fields": [
         {
+          "default": null,
           "name": "source_path",
+          "repeatable": false,
+          "request_field": "source_path",
           "required": true,
           "type": "path"
         },
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": false,
           "type": "identifier"
         }
@@ -1477,22 +1528,34 @@
       "renderer": "instance_create",
       "request_fields": [
         {
+          "default": null,
           "name": "display_name",
+          "repeatable": false,
+          "request_field": "display_name",
           "required": true,
           "type": "string"
         },
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
           "required": true,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "template_id",
+          "repeatable": false,
+          "request_field": "template_id",
           "required": false,
           "type": "identifier"
         }
@@ -1562,7 +1625,10 @@
       "renderer": "launch_plan_build",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -1631,7 +1697,10 @@
       "renderer": "launch_plan_explain",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -1705,7 +1774,10 @@
       "renderer": "launch_plan_preflight",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -1778,12 +1850,18 @@
       "renderer": "mods_import",
       "request_fields": [
         {
+          "default": null,
           "name": "source_path",
+          "repeatable": false,
+          "request_field": "source_path",
           "required": true,
           "type": "path"
         },
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -1856,12 +1934,18 @@
       "renderer": "mods_install",
       "request_fields": [
         {
+          "default": null,
           "name": "query",
+          "repeatable": false,
+          "request_field": "query",
           "required": false,
           "type": "string"
         },
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": false,
           "type": "identifier"
         }
@@ -1928,7 +2012,10 @@
       "renderer": "mods_search",
       "request_fields": [
         {
+          "default": null,
           "name": "query",
+          "repeatable": false,
+          "request_field": "query",
           "required": false,
           "type": "string"
         }
@@ -1995,7 +2082,10 @@
       "renderer": "mods_update",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": false,
           "type": "identifier"
         }
@@ -2062,7 +2152,10 @@
       "renderer": "modsets_explain",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -2134,12 +2227,18 @@
       "renderer": "modsets_export",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "output_path",
+          "repeatable": false,
+          "request_field": "output_path",
           "required": true,
           "type": "path"
         }
@@ -2208,7 +2307,10 @@
       "renderer": "modsets_lock",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -2276,7 +2378,10 @@
       "renderer": "modsets_verify",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -2353,22 +2458,34 @@
       "renderer": "onboarding_plan",
       "request_fields": [
         {
+          "default": null,
           "name": "preferred_install",
+          "repeatable": false,
+          "request_field": "preferred_install",
           "required": false,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "instance_display_name",
+          "repeatable": false,
+          "request_field": "instance_display_name",
           "required": false,
           "type": "string"
         },
         {
+          "default": null,
           "name": "template_id",
+          "repeatable": false,
+          "request_field": "template_id",
           "required": false,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "workspace",
+          "repeatable": false,
+          "request_field": "workspace",
           "required": false,
           "type": "path"
         }
@@ -2430,7 +2547,10 @@
       "renderer": "package_verify",
       "request_fields": [
         {
+          "default": null,
           "name": "path",
+          "repeatable": false,
+          "request_field": "path",
           "required": false,
           "type": "path"
         }
@@ -2557,7 +2677,10 @@
       "renderer": "run_execute",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": false,
           "type": "identifier"
         }
@@ -2623,7 +2746,10 @@
       "renderer": "run_preview",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -2696,17 +2822,26 @@
       "renderer": "saves_backup",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "save",
+          "repeatable": false,
+          "request_field": "save",
           "required": true,
           "type": "string"
         },
         {
+          "default": null,
           "name": "output_path",
+          "repeatable": false,
+          "request_field": "output_path",
           "required": false,
           "type": "path"
         }
@@ -2785,17 +2920,26 @@
       "renderer": "saves_clone",
       "request_fields": [
         {
+          "default": null,
           "name": "source_instance_id",
+          "repeatable": false,
+          "request_field": "source_instance_id",
           "required": true,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "target_instance_id",
+          "repeatable": false,
+          "request_field": "target_instance_id",
           "required": true,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "save",
+          "repeatable": false,
+          "request_field": "save",
           "required": true,
           "type": "string"
         }
@@ -2863,7 +3007,10 @@
       "renderer": "saves_list",
       "request_fields": [
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -2937,17 +3084,26 @@
       "renderer": "servers_create",
       "request_fields": [
         {
+          "default": null,
           "name": "name",
+          "repeatable": false,
+          "request_field": "name",
           "required": true,
           "type": "string"
         },
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": false,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": true,
           "type": "identifier"
         }
@@ -3073,7 +3229,10 @@
       "renderer": "servers_rcon",
       "request_fields": [
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": true,
           "type": "identifier"
         }
@@ -3142,7 +3301,10 @@
       "renderer": "servers_start",
       "request_fields": [
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": true,
           "type": "identifier"
         }
@@ -3211,7 +3373,10 @@
       "renderer": "servers_stop",
       "request_fields": [
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": true,
           "type": "identifier"
         }
@@ -3266,42 +3431,66 @@
       "renderer": "legacy_setup_operation",
       "request_fields": [
         {
+          "default": null,
           "name": "operation",
+          "repeatable": false,
+          "request_field": "operation",
           "required": true,
           "type": "string"
         },
         {
+          "default": null,
           "name": "name",
+          "repeatable": false,
+          "request_field": "name",
           "required": false,
           "type": "string"
         },
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": false,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": false,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "path",
+          "repeatable": false,
+          "request_field": "path",
           "required": false,
           "type": "path"
         },
         {
+          "default": null,
           "name": "query",
+          "repeatable": false,
+          "request_field": "query",
           "required": false,
           "type": "string"
         },
         {
+          "default": null,
           "name": "version",
+          "repeatable": false,
+          "request_field": "version",
           "required": false,
           "type": "string"
         },
         {
+          "default": null,
           "name": "archive",
+          "repeatable": false,
+          "request_field": "archive",
           "required": false,
           "type": "path"
         }
@@ -3412,42 +3601,66 @@
       "renderer": "legacy_utility_operation",
       "request_fields": [
         {
+          "default": null,
           "name": "operation",
+          "repeatable": false,
+          "request_field": "operation",
           "required": true,
           "type": "string"
         },
         {
+          "default": null,
           "name": "name",
+          "repeatable": false,
+          "request_field": "name",
           "required": false,
           "type": "string"
         },
         {
+          "default": null,
           "name": "id",
+          "repeatable": false,
+          "request_field": "id",
           "required": false,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
           "required": false,
           "type": "identifier"
         },
         {
+          "default": null,
           "name": "path",
+          "repeatable": false,
+          "request_field": "path",
           "required": false,
           "type": "path"
         },
         {
+          "default": null,
           "name": "query",
+          "repeatable": false,
+          "request_field": "query",
           "required": false,
           "type": "string"
         },
         {
+          "default": null,
           "name": "version",
+          "repeatable": false,
+          "request_field": "version",
           "required": false,
           "type": "string"
         },
         {
+          "default": null,
           "name": "archive",
+          "repeatable": false,
+          "request_field": "archive",
           "required": false,
           "type": "path"
         }
@@ -3746,7 +3959,10 @@
       "renderer": "recovery_apply",
       "request_fields": [
         {
+          "default": null,
           "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
           "required": true,
           "type": "identifier"
         }
@@ -3872,7 +4088,10 @@
       "renderer": "recovery_plan",
       "request_fields": [
         {
+          "default": null,
           "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
           "required": true,
           "type": "identifier"
         }
@@ -3948,6 +4167,6 @@
   ],
   "owner": "factorio-launcher",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "19dc76b416b24f6eba5cbd3a8c40a46e4af6ce2a194414c0f4ea314b02030b8a",
+  "source_digest": "99c9089598f5491d889a18e78d89ab726548b8c14e2d21c2270cdbd3d8e26bb0",
   "version": "facman-0.1.0+dev.contract"
 }

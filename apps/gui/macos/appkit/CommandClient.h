@@ -18,6 +18,15 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
 @property(nonatomic, copy, readonly) NSString *summary;
 @property(nonatomic, copy, readonly) NSString *deferredReason;
 @property(nonatomic, assign, readonly) FacManCommandStatus status;
+@property(nonatomic, copy, readonly) NSString *labelKey;
+@property(nonatomic, copy, readonly) NSString *descriptionKey;
+@property(nonatomic, copy, readonly) NSString *availability;
+@property(nonatomic, copy, readonly) NSString *riskTier;
+@property(nonatomic, copy, readonly) NSString *effects;
+@property(nonatomic, copy, readonly) NSString *inputDefinitions;
+@property(nonatomic, copy, readonly) NSString *positionals;
+@property(nonatomic, copy, readonly) NSString *options;
+@property(nonatomic, copy, readonly) NSString *renderer;
 
 - (instancetype)initWithCommandId:(NSString *)commandId
                         backendId:(NSString *)backendId
@@ -25,7 +34,16 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
                             label:(NSString *)label
                           summary:(NSString *)summary
                    deferredReason:(NSString *)deferredReason
-                            status:(FacManCommandStatus)status;
+                            status:(FacManCommandStatus)status
+                          labelKey:(NSString *)labelKey
+                    descriptionKey:(NSString *)descriptionKey
+                      availability:(NSString *)availability
+                          riskTier:(NSString *)riskTier
+                           effects:(NSString *)effects
+                  inputDefinitions:(NSString *)inputDefinitions
+                       positionals:(NSString *)positionals
+                           options:(NSString *)options
+                          renderer:(NSString *)renderer;
 
 @end
 

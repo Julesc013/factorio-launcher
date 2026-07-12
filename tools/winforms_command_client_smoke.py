@@ -55,6 +55,7 @@ def write_project(tmp_path: Path) -> Path:
     project = tmp_path / "WinFormsCommandClientSmoke.csproj"
     sources = [
         WINFORMS_ROOT / "CommandModels.cs",
+        WINFORMS_ROOT / "GeneratedCommandCatalog.cs",
         WINFORMS_ROOT / "CommandCatalog.cs",
         WINFORMS_ROOT / "CommandClient.cs",
         WINFORMS_ROOT / "CliProcessClient.cs",
@@ -155,6 +156,8 @@ namespace FacMan.WinForms.CommandClientSmoke
             Require(success.ExitCode == 0, "product.inspect should exit successfully");
             Require(success.Stdout.Contains("facman.transport_response.v1"), "product.inspect should render fake backend stdout");
             Require(!success.Refused, "product.inspect should not be a frontend refusal");
+            Require(CommandCatalog.All().Count >= 56, "generated catalog should expose every registered command");
+            Require(CommandCatalog.Find("diagnostics.export").BackendId == "diagnostics.export", "diagnostics export must not be misrouted");
 
             CommandResult missingInput = client.ExecuteAsync(
                 CommandCatalog.Find("installs.import"),
@@ -174,6 +177,16 @@ namespace FacMan.WinForms.CommandClientSmoke
             Require(deferred.Refused, "deferred command should refuse");
             Require(deferred.RefusalCode == "winforms_command_deferred", "deferred refusal code should match");
             Require(deferred.Stdout.Contains("common.refusal.v1"), "deferred command should render structured refusal");
+
+            CommandDefinition diagnostics = CommandCatalog.Find("diagnostics.export");
+            IDictionary<string, object> payload = GeneratedCommandCatalog.BuildPayload(
+                diagnostics,
+                new Dictionary<string, string> {
+                    { "instance_id", "space-age-main" },
+                    { "output_path", "diagnostics.zip" }
+                });
+            Require((string)payload["instance_id"] == "space-age-main", "generated payload should map instance id");
+            Require((string)payload["output_path"] == "diagnostics.zip", "generated payload should map output path");
 
             return 0;
         }

@@ -49,8 +49,8 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [content addSubview:bar];
     [self addLabel:@"CLI path" toView:bar frame:NSMakeRect(12, 42, 72, 20)];
     self.cliPathField = [self addTextFieldToView:bar key:nil frame:NSMakeRect(88, 38, width - 360, 24) placeholder:@""];
-    [self addButton:@"Help" commandId:@"help" toView:bar frame:NSMakeRect(width - 250, 36, 104, 28)];
-    [self addButton:@"Version" commandId:@"version" toView:bar frame:NSMakeRect(width - 136, 36, 104, 28)];
+    [self addButton:@"Status" commandId:@"workspace.status" toView:bar frame:NSMakeRect(width - 250, 36, 104, 28)];
+    [self addButton:@"Product" commandId:@"product.inspect" toView:bar frame:NSMakeRect(width - 136, 36, 104, 28)];
 
     [self addLabel:@"Workspace" toView:bar frame:NSMakeRect(12, 12, 72, 20)];
     self.workspaceField = [self addTextFieldToView:bar key:nil frame:NSMakeRect(88, 8, width - 360, 24) placeholder:@""];
@@ -95,17 +95,17 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [catalog setString:text];
     [view addSubview:catalog];
     [self addButton:@"Product Inspect" commandId:@"product.inspect" toView:view frame:NSMakeRect(16, 26, 142, 32)];
-    [self addButton:@"Command Graph" commandId:@"command_graph.inspect" toView:view frame:NSMakeRect(168, 26, 142, 32)];
-    [self addButton:@"Diagnostics" commandId:@"diagnostics.export" toView:view frame:NSMakeRect(320, 26, 142, 32)];
+    [self addButton:@"Capabilities" commandId:@"capabilities.inspect" toView:view frame:NSMakeRect(168, 26, 142, 32)];
+    [self addButton:@"Workspace" commandId:@"workspace.status" toView:view frame:NSMakeRect(320, 26, 142, 32)];
 }
 
 - (void)addDoctorTab:(NSTabView *)tabs
 {
     NSView *view = [self addTab:@"Doctor" toTabs:tabs];
     [self addLabel:@"Workspace checks" toView:view frame:NSMakeRect(16, 366, 420, 24)];
-    [self addButton:@"Run Doctor" commandId:@"doctor" toView:view frame:NSMakeRect(16, 320, 142, 32)];
+    [self addButton:@"Run Doctor" commandId:@"doctor.run" toView:view frame:NSMakeRect(16, 320, 142, 32)];
     [self addButton:@"Inspect Product" commandId:@"product.inspect" toView:view frame:NSMakeRect(168, 320, 142, 32)];
-    [self addButton:@"Command Graph" commandId:@"command_graph.inspect" toView:view frame:NSMakeRect(320, 320, 142, 32)];
+    [self addButton:@"Explain Doctor" commandId:@"doctor.explain" toView:view frame:NSMakeRect(320, 320, 142, 32)];
 }
 
 - (void)addInstallsTab:(NSTabView *)tabs
@@ -134,11 +134,13 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [self addLabel:@"Instance commands" toView:view frame:NSMakeRect(16, 366, 420, 24)];
     [self addButton:@"List" commandId:@"instances.list" toView:view frame:NSMakeRect(16, 320, 132, 30)];
     [self addLabel:@"Instance name" toView:view frame:NSMakeRect(16, 280, 120, 20)];
-    [self addTextFieldToView:view key:@"instances.create.instanceName" frame:NSMakeRect(150, 278, 300, 24) placeholder:@"Space Age Main"];
+    [self addTextFieldToView:view key:@"instances.create.display_name" frame:NSMakeRect(150, 278, 300, 24) placeholder:@"Space Age Main"];
+    [self addLabel:@"Instance id" toView:view frame:NSMakeRect(470, 280, 90, 20)];
+    [self addTextFieldToView:view key:@"instances.create.instance_id" frame:NSMakeRect(560, 278, 220, 24) placeholder:@"space-age-main"];
     [self addLabel:@"Install id" toView:view frame:NSMakeRect(16, 244, 120, 20)];
-    [self addTextFieldToView:view key:@"instances.create.installId" frame:NSMakeRect(150, 242, 220, 24) placeholder:@"fixture"];
+    [self addTextFieldToView:view key:@"instances.create.install_id" frame:NSMakeRect(150, 242, 220, 24) placeholder:@"fixture"];
     [self addLabel:@"Template id" toView:view frame:NSMakeRect(16, 208, 120, 20)];
-    [self addTextFieldToView:view key:@"instances.create.templateId" frame:NSMakeRect(150, 206, 220, 24) placeholder:@"vanilla"];
+    [self addTextFieldToView:view key:@"instances.create.template_id" frame:NSMakeRect(150, 206, 220, 24) placeholder:@"vanilla"];
     [self addButton:@"Create" commandId:@"instances.create" toView:view frame:NSMakeRect(470, 240, 132, 30)];
 }
 
@@ -158,7 +160,11 @@ static NSString *FacManStatusText(FacManCommandStatus status);
 {
     NSView *view = [self addTab:@"Diagnostics" toTabs:tabs];
     [self addLabel:@"Diagnostics and deferred package commands" toView:view frame:NSMakeRect(16, 366, 420, 24)];
-    [self addButton:@"Export Diagnostics" commandId:@"diagnostics.export" toView:view frame:NSMakeRect(16, 320, 160, 30)];
+    [self addLabel:@"Instance id" toView:view frame:NSMakeRect(16, 322, 90, 20)];
+    [self addTextFieldToView:view key:@"diagnostics.export.instance_id" frame:NSMakeRect(110, 320, 220, 24) placeholder:@"space-age-main"];
+    [self addLabel:@"Output" toView:view frame:NSMakeRect(350, 322, 60, 20)];
+    [self addTextFieldToView:view key:@"diagnostics.export.output_path" frame:NSMakeRect(410, 320, 300, 24) placeholder:@"diagnostics.zip"];
+    [self addButton:@"Export Diagnostics" commandId:@"diagnostics.export" toView:view frame:NSMakeRect(730, 318, 160, 30)];
     [self addDeferredButton:@"modsets.lock" toView:view frame:NSMakeRect(16, 270, 160, 30)];
     [self addDeferredButton:@"saves.backup" toView:view frame:NSMakeRect(186, 270, 160, 30)];
     [self addDeferredButton:@"instance.export" toView:view frame:NSMakeRect(356, 270, 160, 30)];
@@ -179,8 +185,8 @@ static NSString *FacManStatusText(FacManCommandStatus status);
         @"modset resolution, save/export/import behavior, server execution, developer execution, "
         @"credential storage, or direct Factorio launch behavior in Objective-C."];
     [view addSubview:info];
-    [self addButton:@"Run Help" commandId:@"help" toView:view frame:NSMakeRect(16, 80, 132, 30)];
-    [self addButton:@"Run Version" commandId:@"version" toView:view frame:NSMakeRect(158, 80, 132, 30)];
+    [self addButton:@"Workspace Paths" commandId:@"workspace.paths" toView:view frame:NSMakeRect(16, 80, 132, 30)];
+    [self addButton:@"Capabilities" commandId:@"capabilities.inspect" toView:view frame:NSMakeRect(158, 80, 132, 30)];
 }
 
 - (NSView *)addTab:(NSString *)title toTabs:(NSTabView *)tabs
@@ -256,20 +262,24 @@ static NSString *FacManStatusText(FacManCommandStatus status);
 {
     NSMutableDictionary<NSString *, NSString *> *inputs = [NSMutableDictionary dictionary];
     if ([commandId isEqualToString:@"installs.scan"]) {
-        [self copyInput:@"installs.scan.scanPath" toKey:@"scanPath" into:inputs];
+        [self copyInput:@"installs.scan.scanPath" toKey:@"roots" into:inputs];
     } else if ([commandId isEqualToString:@"installs.import"]) {
-        [self copyInput:@"installs.import.installPath" toKey:@"installPath" into:inputs];
-        [self copyInput:@"installs.import.installId" toKey:@"installId" into:inputs];
+        [self copyInput:@"installs.import.installPath" toKey:@"path" into:inputs];
+        [self copyInput:@"installs.import.installId" toKey:@"install_id" into:inputs];
     } else if ([commandId isEqualToString:@"installs.inspect"]) {
-        [self copyInput:@"installs.inspect.installId" toKey:@"installId" into:inputs];
+        [self copyInput:@"installs.inspect.installId" toKey:@"install_id" into:inputs];
     } else if ([commandId isEqualToString:@"instances.create"]) {
-        [self copyInput:@"instances.create.instanceName" toKey:@"instanceName" into:inputs];
-        [self copyInput:@"instances.create.installId" toKey:@"installId" into:inputs];
-        [self copyInput:@"instances.create.templateId" toKey:@"templateId" into:inputs];
+        [self copyInput:@"instances.create.display_name" toKey:@"display_name" into:inputs];
+        [self copyInput:@"instances.create.instance_id" toKey:@"instance_id" into:inputs];
+        [self copyInput:@"instances.create.install_id" toKey:@"install_id" into:inputs];
+        [self copyInput:@"instances.create.template_id" toKey:@"template_id" into:inputs];
     } else if ([commandId isEqualToString:@"launch_plan.build"] ||
                [commandId isEqualToString:@"launch_plan.preflight"] ||
                [commandId isEqualToString:@"run.preview"]) {
-        [self copyInput:@"launch.instanceId" toKey:@"instanceId" into:inputs];
+        [self copyInput:@"launch.instanceId" toKey:@"instance_id" into:inputs];
+    } else if ([commandId isEqualToString:@"diagnostics.export"]) {
+        [self copyInput:@"diagnostics.export.instance_id" toKey:@"instance_id" into:inputs];
+        [self copyInput:@"diagnostics.export.output_path" toKey:@"output_path" into:inputs];
     }
     return inputs;
 }

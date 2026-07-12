@@ -16,16 +16,31 @@ namespace FacMan.WinForms
 
     public sealed class CommandInput
     {
-        public CommandInput(string key, string label, bool required)
+        public CommandInput(
+            string key,
+            string label,
+            bool required,
+            string type,
+            bool repeatable,
+            string requestField,
+            string defaultValue)
         {
             Key = key;
             Label = label;
             Required = required;
+            Type = type;
+            Repeatable = repeatable;
+            RequestField = requestField;
+            DefaultValue = defaultValue;
         }
 
         public string Key { get; private set; }
         public string Label { get; private set; }
         public bool Required { get; private set; }
+        public string Type { get; private set; }
+        public bool Repeatable { get; private set; }
+        public string RequestField { get; private set; }
+        public string DefaultValue { get; private set; }
     }
 
     public delegate IList<string> CommandArgumentBuilder(IDictionary<string, string> inputs);
@@ -40,8 +55,15 @@ namespace FacMan.WinForms
             CommandStatus status,
             string description,
             string deferredReason,
+            string labelKey,
+            string descriptionKey,
+            string availability,
+            string riskTier,
+            IEnumerable<string> effects,
             IEnumerable<CommandInput> inputs,
-            CommandArgumentBuilder argumentBuilder)
+            string positionalsJson,
+            string optionsJson,
+            string renderer)
         {
             Id = id;
             Screen = screen;
@@ -50,8 +72,15 @@ namespace FacMan.WinForms
             Status = status;
             Description = description;
             DeferredReason = deferredReason;
+            LabelKey = labelKey;
+            DescriptionKey = descriptionKey;
+            Availability = availability;
+            RiskTier = riskTier;
+            Effects = new List<string>(effects).AsReadOnly();
             Inputs = new List<CommandInput>(inputs).AsReadOnly();
-            ArgumentBuilder = argumentBuilder;
+            PositionalsJson = positionalsJson;
+            OptionsJson = optionsJson;
+            Renderer = renderer;
         }
 
         public string Id { get; private set; }
@@ -61,8 +90,15 @@ namespace FacMan.WinForms
         public CommandStatus Status { get; private set; }
         public string Description { get; private set; }
         public string DeferredReason { get; private set; }
+        public string LabelKey { get; private set; }
+        public string DescriptionKey { get; private set; }
+        public string Availability { get; private set; }
+        public string RiskTier { get; private set; }
+        public IList<string> Effects { get; private set; }
         public IList<CommandInput> Inputs { get; private set; }
-        public CommandArgumentBuilder ArgumentBuilder { get; private set; }
+        public string PositionalsJson { get; private set; }
+        public string OptionsJson { get; private set; }
+        public string Renderer { get; private set; }
     }
 
     public sealed class CommandResult

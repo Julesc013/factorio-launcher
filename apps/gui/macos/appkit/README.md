@@ -19,16 +19,11 @@ Required screens:
 - Diagnostics
 - Settings/About
 
-Required commands route through the shared command-client path and render the
-returned output. Deferred commands remain visible only as disabled/refused
-states with reasons:
-
-- `run.execute`
-- `modsets.lock`
-- `saves.backup`
-- `instance.export`
-- `instance.import`
-- `setup.preview`
+Commands and payload fields come from `FacManGeneratedCommandCatalog`; the
+Objective-C++ command client contains no hand-maintained catalog or argument
+switch. Backend-live commands route through the shared bounded stdio transport,
+while unavailable commands remain visible with generated reasons. The AppKit
+claim remains compile-only until an actual bundle runtime proof exists.
 
 The AppKit shell must not own Factorio discovery, setup mutation, Mod Portal
 network behavior, server or developer execution, modset resolution, save

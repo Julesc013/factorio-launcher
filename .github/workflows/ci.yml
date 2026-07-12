@@ -296,6 +296,11 @@ jobs:
             -framework Cocoa \
             -c apps/gui/macos/appkit/CommandClient.mm \
             -o build/appkit-smoke/CommandClient.o
+          clang -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
+            -Iapps/gui/macos/appkit \
+            -framework Cocoa \
+            -c apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m \
+            -o build/appkit-smoke/FacManGeneratedCommandCatalog.o
           clang++ -std=c++17 -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
             -Iapps/gui/macos/appkit \
             -framework Cocoa \

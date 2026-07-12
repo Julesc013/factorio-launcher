@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import json
 import sys
 import tomllib
 from pathlib import Path
@@ -11,6 +12,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 STRINGS = ROOT / "content" / "factorio" / "strings" / "en-US.toml"
+CATALOG = ROOT / "contracts" / "generated-index" / "frontend_command_catalog.v1.json"
 THEMES = [
     ROOT / "content" / "factorio" / "ui" / "themes" / "default.toml",
     ROOT / "content" / "factorio" / "ui" / "themes" / "high_contrast.toml",
@@ -80,6 +82,23 @@ def validate_strings() -> list[str]:
     missing = sorted(REQUIRED_STRINGS - set(strings))
     if missing:
         problems.append(f"{STRINGS.relative_to(ROOT)}: missing strings {missing}")
+    try:
+        catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return problems + [f"{CATALOG.relative_to(ROOT)}: {exc}"]
+    expected_command_keys = {
+        str(key)
+        for command in catalog.get("commands", [])
+        for key in command.get("localization_keys", [])
+    }
+    missing_command_keys = sorted(expected_command_keys - set(strings))
+    if missing_command_keys:
+        problems.append(f"{STRINGS.relative_to(ROOT)}: missing generated command strings {missing_command_keys}")
+    unused_command_keys = sorted(
+        key for key in strings if key.startswith("command.") and key not in expected_command_keys
+    )
+    if unused_command_keys:
+        problems.append(f"{STRINGS.relative_to(ROOT)}: unused generated command strings {unused_command_keys}")
     return problems
 
 

@@ -40,6 +40,9 @@ LONG_LINE_ALLOWLIST_PREFIXES = {
 
 LONG_LINE_ALLOWLIST_FILES = {
     "runtime/factorio/binding/flb_api.c",
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs",
+    "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m",
+    "apps/tui/generated_command_catalog.hpp",
 }
 
 # Source-pinned third-party files retain upstream formatting. Their integrity

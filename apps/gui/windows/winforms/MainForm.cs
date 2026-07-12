@@ -114,9 +114,9 @@ namespace FacMan.WinForms
             bar.Controls.Add(browseButton, 4, 0);
 
             Button helpButton = new Button();
-            helpButton.Text = "Help";
+            helpButton.Text = "Status";
             helpButton.Dock = DockStyle.Fill;
-            helpButton.Click += delegate { RunCommand("help", EmptyInputs()); };
+            helpButton.Click += delegate { RunCommand("workspace.status", EmptyInputs()); };
             bar.Controls.Add(helpButton, 5, 0);
 
             Label workspaceLabel = new Label();
@@ -139,15 +139,15 @@ namespace FacMan.WinForms
             bar.Controls.Add(modeValue, 3, 1);
 
             Button versionButton = new Button();
-            versionButton.Text = "Version";
+            versionButton.Text = "Product";
             versionButton.Dock = DockStyle.Fill;
-            versionButton.Click += delegate { RunCommand("version", EmptyInputs()); };
+            versionButton.Click += delegate { RunCommand("product.inspect", EmptyInputs()); };
             bar.Controls.Add(versionButton, 4, 1);
 
             Button doctorButton = new Button();
             doctorButton.Text = "Doctor";
             doctorButton.Dock = DockStyle.Fill;
-            doctorButton.Click += delegate { RunCommand("doctor", EmptyInputs()); };
+            doctorButton.Click += delegate { RunCommand("doctor.run", EmptyInputs()); };
             bar.Controls.Add(doctorButton, 5, 1);
 
             return bar;
@@ -189,8 +189,8 @@ namespace FacMan.WinForms
             actions.Dock = DockStyle.Fill;
             actions.FlowDirection = FlowDirection.LeftToRight;
             actions.Controls.Add(CommandButton("Product Inspect", "product.inspect", EmptyInputs));
-            actions.Controls.Add(CommandButton("Command Graph", "command_graph.inspect", EmptyInputs));
-            actions.Controls.Add(CommandButton("Diagnostics", "diagnostics.export", EmptyInputs));
+            actions.Controls.Add(CommandButton("Capabilities", "capabilities.inspect", EmptyInputs));
+            actions.Controls.Add(CommandButton("Workspace Status", "workspace.status", EmptyInputs));
             layout.Controls.Add(actions, 0, 2);
         }
 
@@ -200,9 +200,9 @@ namespace FacMan.WinForms
             FlowLayoutPanel panel = CreateFlowPanel();
             page.Controls.Add(panel);
             panel.Controls.Add(SectionTitle("Workspace checks"));
-            panel.Controls.Add(CommandButton("Run Doctor", "doctor", EmptyInputs));
+            panel.Controls.Add(CommandButton("Run Doctor", "doctor.run", EmptyInputs));
             panel.Controls.Add(CommandButton("Inspect Product", "product.inspect", EmptyInputs));
-            panel.Controls.Add(CommandButton("Inspect Command Graph", "command_graph.inspect", EmptyInputs));
+            panel.Controls.Add(CommandButton("Explain Doctor", "doctor.explain", EmptyInputs));
         }
 
         private void AddInstallsTab(TabControl tabs)
@@ -214,20 +214,20 @@ namespace FacMan.WinForms
             TextBox scanPath = AddTextInput(form, "Scan root", "Optional folder to scan");
             AddCommandRow(form, "installs.scan", "Scan", delegate
             {
-                return Inputs("scanPath", scanPath.Text);
+                return Inputs("roots", scanPath.Text);
             });
 
             TextBox installPath = AddTextInput(form, "Install path", "Existing Factorio folder");
             TextBox installId = AddTextInput(form, "Install id", "fixture");
             AddCommandRow(form, "installs.import", "Import", delegate
             {
-                return Inputs("installPath", installPath.Text, "installId", installId.Text);
+                return Inputs("path", installPath.Text, "install_id", installId.Text);
             });
 
             TextBox inspectId = AddTextInput(form, "Inspect id", "fixture");
             AddCommandRow(form, "installs.inspect", "Inspect", delegate
             {
-                return Inputs("installId", inspectId.Text);
+                return Inputs("install_id", inspectId.Text);
             });
 
             AddDeferredRow(form, "setup.preview");
@@ -242,11 +242,12 @@ namespace FacMan.WinForms
             AddCommandRow(form, "instances.list", "List", EmptyInputs);
 
             TextBox instanceName = AddTextInput(form, "Instance name", "Space Age Main");
+            TextBox instanceId = AddTextInput(form, "Instance id", "space-age-main");
             TextBox installId = AddTextInput(form, "Install id", "fixture");
             TextBox templateId = AddTextInput(form, "Template id", "vanilla");
             AddCommandRow(form, "instances.create", "Create", delegate
             {
-                return Inputs("instanceName", instanceName.Text, "installId", installId.Text, "templateId", templateId.Text);
+                return Inputs("display_name", instanceName.Text, "instance_id", instanceId.Text, "install_id", installId.Text, "template_id", templateId.Text);
             });
         }
 
@@ -259,15 +260,15 @@ namespace FacMan.WinForms
             TextBox instanceId = AddTextInput(form, "Instance id", "space-age-main");
             AddCommandRow(form, "launch_plan.build", "Build Plan", delegate
             {
-                return Inputs("instanceId", instanceId.Text);
+                return Inputs("instance_id", instanceId.Text);
             });
             AddCommandRow(form, "launch_plan.preflight", "Preflight", delegate
             {
-                return Inputs("instanceId", instanceId.Text);
+                return Inputs("instance_id", instanceId.Text);
             });
             AddCommandRow(form, "run.preview", "Preview Run", delegate
             {
-                return Inputs("instanceId", instanceId.Text);
+                return Inputs("instance_id", instanceId.Text);
             });
             AddDeferredRow(form, "run.execute");
         }
@@ -278,7 +279,12 @@ namespace FacMan.WinForms
             TableLayoutPanel form = CreateFormPanel();
             page.Controls.Add(form);
 
-            AddCommandRow(form, "diagnostics.export", "Export Diagnostics", EmptyInputs);
+            TextBox instanceId = AddTextInput(form, "Instance id", "space-age-main");
+            TextBox outputPath = AddTextInput(form, "Output bundle", "diagnostics.zip");
+            AddCommandRow(form, "diagnostics.export", "Export Diagnostics", delegate
+            {
+                return Inputs("instance_id", instanceId.Text, "output_path", outputPath.Text);
+            });
             AddDeferredRow(form, "modsets.lock");
             AddDeferredRow(form, "saves.backup");
             AddDeferredRow(form, "instance.export");
@@ -310,8 +316,8 @@ namespace FacMan.WinForms
                 "Set FACMAN_CLI or use the CLI path field above to point at a built facman executable.";
             panel.Controls.Add(info);
 
-            panel.Controls.Add(CommandButton("Run Help", "help", EmptyInputs));
-            panel.Controls.Add(CommandButton("Run Version", "version", EmptyInputs));
+            panel.Controls.Add(CommandButton("Workspace Paths", "workspace.paths", EmptyInputs));
+            panel.Controls.Add(CommandButton("Capabilities", "capabilities.inspect", EmptyInputs));
         }
 
         private void AddCommandRow(TableLayoutPanel form, string commandId, string buttonText, Func<Dictionary<string, string>> inputProvider)

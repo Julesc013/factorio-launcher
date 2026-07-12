@@ -27,7 +27,13 @@ def detect() -> set[str]:
     violations: set[str] = set()
     for path in architecture_fitness.first_party_sources("runtime", "apps"):
         relative = architecture_fitness.relative(path)
-        if "/core/json/" in f"/{relative}/" or "/generated/" in f"/{relative}/":
+        if (
+            "/core/json/" in f"/{relative}/"
+            or "/generated/" in f"/{relative}/"
+            or path.name.startswith("Generated")
+            or path.name.startswith("FacManGenerated")
+            or path.name.startswith("generated_")
+        ):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         if (

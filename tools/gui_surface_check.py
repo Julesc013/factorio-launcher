@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import sys
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +67,11 @@ WINFORMS_REQUIRED_SCREENS = {
 }
 
 APPKIT_REQUIRED_SCREENS = WINFORMS_REQUIRED_SCREENS
+GENERATED_CATALOG = ROOT / "contracts" / "generated-index" / "frontend_command_catalog.v1.json"
+
+
+def generated_commands() -> list[dict[str, object]]:
+    return list(json.loads(GENERATED_CATALOG.read_text(encoding="utf-8")).get("commands", []))
 
 
 def main() -> int:
@@ -108,11 +114,12 @@ def check_winforms_shell() -> list[str]:
     root = GUI_ROOT / "windows" / "winforms"
     project = root / "FacMan.WinForms.csproj"
     catalog = root / "CommandCatalog.cs"
+    generated = root / "GeneratedCommandCatalog.cs"
     form = root / "MainForm.cs"
     models = root / "CommandModels.cs"
     client = root / "CommandClient.cs"
     transport = root / "CliProcessClient.cs"
-    for path in [project, catalog, form, models, client, transport]:
+    for path in [project, catalog, generated, form, models, client, transport]:
         if not path.is_file():
             problems.append(f"WinForms shell missing {path.relative_to(ROOT)}")
             return problems
@@ -120,17 +127,21 @@ def check_winforms_shell() -> list[str]:
     project_text = project.read_text(encoding="utf-8", errors="ignore")
     if "<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>" not in project_text:
         problems.append("WinForms shell must stay on .NET Framework 4.8")
-    for source_name in ["CommandCatalog.cs", "CommandModels.cs", "CommandClient.cs", "CliProcessClient.cs", "MainForm.cs"]:
+    for source_name in ["CommandCatalog.cs", "GeneratedCommandCatalog.cs", "CommandModels.cs", "CommandClient.cs", "CliProcessClient.cs", "MainForm.cs"]:
         if f'<Compile Include="{source_name}" />' not in project_text:
             problems.append(f"WinForms project does not compile {source_name}")
 
     catalog_text = catalog.read_text(encoding="utf-8", errors="ignore")
-    for command_id in sorted(WINFORMS_REQUIRED_COMMANDS | WINFORMS_DEFERRED_COMMANDS):
-        if f'"{command_id}"' not in catalog_text:
-            problems.append(f"WinForms command catalog missing {command_id}")
-    for command_id in sorted(WINFORMS_DEFERRED_COMMANDS):
-        if f'Deferred("{command_id}"' not in catalog_text:
-            problems.append(f"WinForms deferred command is not registered as deferred: {command_id}")
+    generated_text = generated.read_text(encoding="utf-8", errors="ignore")
+    if "GeneratedCommandCatalog.All()" not in catalog_text or "commands.Add" in catalog_text:
+        problems.append("WinForms catalog adapter must consume the generated catalog without manual records")
+    for command in generated_commands():
+        command_id = str(command["command_id"])
+        runtime_id = str(command["runtime_id"])
+        if f'"{command_id}"' not in generated_text or f'"{runtime_id}"' not in generated_text:
+            problems.append(f"WinForms generated command catalog missing {command_id} -> {runtime_id}")
+    if '"diagnostics.run"' in generated_text:
+        problems.append("WinForms generated catalog misroutes diagnostics.export")
 
     form_text = form.read_text(encoding="utf-8", errors="ignore")
     for screen in sorted(WINFORMS_REQUIRED_SCREENS):
@@ -139,7 +150,7 @@ def check_winforms_shell() -> list[str]:
 
     combined = "\n".join(
         path.read_text(encoding="utf-8", errors="ignore")
-        for path in [models, catalog, client, transport, form]
+        for path in [models, catalog, generated, client, transport, form]
     )
     for marker in [
         "common.refusal.v1",
@@ -163,6 +174,8 @@ def check_appkit_shell() -> list[str]:
         root / "CliProcessClient.mm",
         root / "MainWindowController.h",
         root / "MainWindowController.m",
+        root / "FacManGeneratedCommandCatalog.h",
+        root / "FacManGeneratedCommandCatalog.m",
     ]
     for path in required_files:
         if not path.is_file():
@@ -170,12 +183,16 @@ def check_appkit_shell() -> list[str]:
             return problems
 
     catalog_text = (root / "CommandClient.mm").read_text(encoding="utf-8", errors="ignore")
-    for command_id in sorted(WINFORMS_REQUIRED_COMMANDS | WINFORMS_DEFERRED_COMMANDS):
-        if f'@"{command_id}"' not in catalog_text:
-            problems.append(f"AppKit command catalog missing {command_id}")
-    for command_id in sorted(WINFORMS_DEFERRED_COMMANDS):
-        if f'FacManDeferred(@"{command_id}"' not in catalog_text:
-            problems.append(f"AppKit deferred command is not registered as deferred: {command_id}")
+    generated_text = (root / "FacManGeneratedCommandCatalog.m").read_text(encoding="utf-8", errors="ignore")
+    if "FacManGeneratedCommandCatalog()" not in catalog_text or "FacManImplemented(" in catalog_text:
+        problems.append("AppKit command client must consume the generated catalog without manual records")
+    for command in generated_commands():
+        command_id = str(command["command_id"])
+        runtime_id = str(command["runtime_id"])
+        if f'@"{command_id}"' not in generated_text or f'@"{runtime_id}"' not in generated_text:
+            problems.append(f"AppKit generated command catalog missing {command_id} -> {runtime_id}")
+    if '@"diagnostics.run"' in generated_text:
+        problems.append("AppKit generated catalog misroutes diagnostics.export")
 
     form_text = (root / "MainWindowController.m").read_text(encoding="utf-8", errors="ignore")
     for screen in sorted(APPKIT_REQUIRED_SCREENS):

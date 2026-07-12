@@ -48,10 +48,30 @@ launch_plan.preflight
 run.preview
 ```
 
-Frontend IDs need not be registry IDs. The contract's `backend_id` is the
-canonical value passed to Universal Launcher after parser normalization; for
-example `instances.list` maps to `instance.list` and diagnostics report UI maps
-to `diagnostics.run`.
+Frontend IDs need not be registry IDs. The generated record's `runtime_id` is
+the canonical value passed to Universal Launcher after parser normalization;
+for example `instances.list` maps to `instance.list`. `diagnostics.export`
+maps to its own runtime route and requires generated `instance_id` and
+`output_path` fields; it is not the read-only `diagnostics.run` report route.
+
+## Generated Native Catalogs
+
+`tools/codegen/generate_metadata.py` emits the catalog consumed by each native
+frontend:
+
+```text
+apps/gui/windows/winforms/GeneratedCommandCatalog.cs
+apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h
+apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m
+apps/tui/generated_command_catalog.hpp
+```
+
+Each record carries contract/runtime identity, category, localization keys,
+availability and refusal reason, risk/effects, CLI grammar, typed request-field
+mapping, repeatability/default metadata, and renderer identity. WinForms and
+AppKit keep stable adapter names, but those adapters contain no command list or
+per-command payload switch. Adding a registered contract therefore does not
+require a catalog edit in any of those frontends.
 
 ## Optional Commands
 

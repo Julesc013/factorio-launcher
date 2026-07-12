@@ -24,6 +24,7 @@
     <Compile Include="MainForm.cs" />
     <Compile Include="CommandModels.cs" />
     <Compile Include="CommandCatalog.cs" />
+    <Compile Include="GeneratedCommandCatalog.cs" />
     <Compile Include="CommandClient.cs" />
     <Compile Include="CliProcessClient.cs" />
   </ItemGroup>
