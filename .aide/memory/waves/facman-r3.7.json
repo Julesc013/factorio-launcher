@@ -147,10 +147,41 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-INSTANCE-SNAPSHOT-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "645a331a4c54ff5f0d1959d9f71285dd8418a1376bd6b76eb573717a361803fa",
+      "test_fingerprints": {
+        "tests/test_profiles_templates.py": "6b1e8b1b3db9b928e53f1114d6af68051873c9c3ffa977d80a18f0ae9d358be8"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-PROFILES-AND-TEMPLATES-02"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "9f4b3d351dfb23dc5252886ac77e8b83ff772599",
+  "current_exact_revision": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -158,7 +189,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T15:47:51Z",
+  "updated_at": "2026-07-12T16:19:46Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -273,6 +304,34 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-INSTANCE-SNAPSHOT-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T16:19:45Z",
+        "result": "PASS",
+        "source_fingerprint": "645a331a4c54ff5f0d1959d9f71285dd8418a1376bd6b76eb573717a361803fa",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_profiles_templates.py": "6b1e8b1b3db9b928e53f1114d6af68051873c9c3ffa977d80a18f0ae9d358be8"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "plan_apply_layering": "PASS",
+          "release_full": "PASS",
+          "reserved_argument_boundary": "PASS",
+          "strict": "PASS",
+          "vanilla_compatibility": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-PROFILES-AND-TEMPLATES-02"
       }
     ]
   },
@@ -586,6 +645,8 @@
       "claim_impacts": [
         "portable-safe-customization"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T16:19:46Z",
       "dependencies": [
         "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
       ],
@@ -595,14 +656,42 @@
         "reserved argument override"
       ],
       "id": "FACMAN-PROFILES-AND-TEMPLATES-02",
-      "last_green_commit": null,
+      "last_green_commit": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T15:48:55Z",
+      "status": "closed",
       "stop_conditions": [
         "customization gains execution authority",
         "vanilla instances break"
       ],
-      "title": "Implement declarative templates and launch profiles"
+      "title": "Implement declarative templates and launch profiles",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T16:19:45Z",
+        "result": "PASS",
+        "source_fingerprint": "645a331a4c54ff5f0d1959d9f71285dd8418a1376bd6b76eb573717a361803fa",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_profiles_templates.py": "6b1e8b1b3db9b928e53f1114d6af68051873c9c3ffa977d80a18f0ae9d358be8"
+        },
+        "test_results": {
+          "clean_repro": "PASS",
+          "plan_apply_layering": "PASS",
+          "release_full": "PASS",
+          "reserved_argument_boundary": "PASS",
+          "strict": "PASS",
+          "vanilla_compatibility": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [

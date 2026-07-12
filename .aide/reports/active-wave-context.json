@@ -1,19 +1,18 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "factorio.instance_template.v1",
-      "factorio.launch_profile.v1"
+      "contracts/schema/mod/",
+      "contracts/command/mods.*"
     ],
     "affected_targets": [
-      "flb_factorio_application_static",
-      "facman_client_static"
+      "flb_factorio_application_static"
     ],
     "affected_tests": [
-      "tests/test_profiles_templates.py"
+      "tests/test_local_mod_inventory.py",
+      "tests/test_modzip_depth.py"
     ],
     "allowed_paths": [
       "runtime/",
-      "content/",
       "contracts/",
       "tests/",
       "tools/",
@@ -21,32 +20,33 @@
     ],
     "blockers": [],
     "claim_impacts": [
-      "portable-safe-customization"
+      "complete-managed-local-mod-inventory"
     ],
     "dependencies": [
       "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
     ],
     "forbidden_paths": [
-      "scripts",
-      "arbitrary executables",
-      "reserved argument override"
+      "Mod Portal access",
+      "arbitrary scans",
+      "source mutation"
     ],
-    "id": "FACMAN-PROFILES-AND-TEMPLATES-02",
+    "id": "FACMAN-LOCAL-MOD-INVENTORY-02",
     "last_green_commit": null,
     "provider_revisions": {},
     "status": "pending",
     "stop_conditions": [
-      "customization gains execution authority",
-      "vanilla instances break"
+      "stable reads fail",
+      "archive budgets are bypassed"
     ],
-    "title": "Implement declarative templates and launch profiles"
+    "title": "Index bounded local mod inventory"
   },
   "affected_contracts": [
-    "factorio.instance_template.v1",
-    "factorio.launch_profile.v1"
+    "contracts/schema/mod/",
+    "contracts/command/mods.*"
   ],
   "affected_tests": [
-    "tests/test_profiles_templates.py"
+    "tests/test_local_mod_inventory.py",
+    "tests/test_modzip_depth.py"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -56,7 +56,7 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "9f4b3d351dfb23dc5252886ac77e8b83ff772599",
+  "current_exact_revision": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
   "direct_dependency_summaries": [
     {
       "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",

@@ -2,7 +2,7 @@
 
 - wave_id: facman-r3.7
 - status: active
-- current_exact_revision: 9f4b3d351dfb23dc5252886ac77e8b83ff772599
+- current_exact_revision: fc1cbf359418002970acc22cdcbc7aa4d316eb2b
 - mode: report_only
 - task_execution: false
 - repair_execution: false
@@ -19,7 +19,7 @@
 - `FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01`: closed (last_green_commit: ec77cc1f10006c96e66d1011c69bc7bcde6de5a1)
 - `FACMAN-INSTANCE-LIFECYCLE-02`: closed (last_green_commit: e3b0108959093ea06986f2ad579a217b2f2ab55d)
 - `FACMAN-INSTANCE-SNAPSHOT-01`: closed (last_green_commit: 9f4b3d351dfb23dc5252886ac77e8b83ff772599)
-- `FACMAN-PROFILES-AND-TEMPLATES-02`: pending (last_green_commit: none)
+- `FACMAN-PROFILES-AND-TEMPLATES-02`: closed (last_green_commit: fc1cbf359418002970acc22cdcbc7aa4d316eb2b)
 - `FACMAN-LOCAL-MOD-INVENTORY-02`: pending (last_green_commit: none)
 - `FACMAN-LOCAL-MODSET-SOLVER-01`: pending (last_green_commit: none)
 - `FACMAN-SAVE-INDEX-AND-RETENTION-02`: pending (last_green_commit: none)
