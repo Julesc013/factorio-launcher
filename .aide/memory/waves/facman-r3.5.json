@@ -232,10 +232,40 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01"
+    },
+    {
+      "blockers": [
+        "Linux and macOS target-runner proof requires the corresponding native runners.",
+        "Remote CodeQL execution begins only after this task branch is pushed."
+      ],
+      "clean_status": true,
+      "commit_sha": "28b9008f9e055c339e1e247fcf70c9f64fe5f3b6",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.4-TARGET-PROMOTION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01",
+        "FACMAN-MACHINE-TRANSPORT-01",
+        "FACMAN-CONFORMANCE-COMPAT-SECURITY-01",
+        "FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "a4351b4b7cf64d50ac6981f88a56fd3e34a5ed03648fa6924d4c391a51543576",
+      "test_fingerprints": {
+        "tests/test_machine_transport.py": "927e7f02b37d1c2acc107c4055725dfe84c97bbc525163d02f4484c8da8fedf1",
+        "tools/frontend_transport_truth_check.py": "3eb2a70cd1a952904197e886e7dff827117a7b0ec08e1c8f4a15acc490b93480"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-ABI-CLIENT-SESSION-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "cf96c61095e128cca7b9b46810a79f944c3ffe8e",
+  "current_exact_revision": "28b9008f9e055c339e1e247fcf70c9f64fe5f3b6",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -243,7 +273,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "FacMan R3.5 zero-exception productization",
-  "updated_at": "2026-07-12T06:38:10Z",
+  "updated_at": "2026-07-12T06:40:24Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -388,6 +418,35 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:40:24Z",
+        "result": "PASS",
+        "source_fingerprint": "a4351b4b7cf64d50ac6981f88a56fd3e34a5ed03648fa6924d4c391a51543576",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_machine_transport.py": "927e7f02b37d1c2acc107c4055725dfe84c97bbc525163d02f4484c8da8fedf1",
+          "tools/frontend_transport_truth_check.py": "3eb2a70cd1a952904197e886e7dff827117a7b0ec08e1c8f4a15acc490b93480"
+        },
+        "test_results": {
+          "abi_layout": "PASS",
+          "abi_symbols": "PASS",
+          "bridge_smoke": "PASS",
+          "cancellation_progress": "PASS",
+          "client_smoke": "PASS",
+          "strict_check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-ABI-CLIENT-SESSION-01"
       }
     ],
     "promotion_uses_cache_alone": false,
@@ -854,14 +913,14 @@
         "runtime/client/",
         "include/facman/"
       ],
-      "blockers": [
-        "CancellationToken and ProgressSink are not wired for current long-running operations."
-      ],
+      "blockers": [],
       "claim_impacts": [
         "c-abi-exception-containment",
         "context-thread-safety",
         "client-session-reuse"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T06:40:24Z",
       "dependencies": [
         "FACMAN-JSON-OUTCOME-CODECS-01",
         "FACMAN-COMMAND-CATALOG-V2-01"
@@ -870,17 +929,46 @@
         "include/facman/flb_api.h ABI layout changes"
       ],
       "id": "FACMAN-ABI-CLIENT-SESSION-01",
-      "last_green_commit": null,
+      "last_green_commit": "28b9008f9e055c339e1e247fcf70c9f64fe5f3b6",
       "progress_commits": [
         "48f301bc0766688f71ef7936fa6202c518d66435"
       ],
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T06:40:23Z",
+      "status": "closed",
       "stop_conditions": [
         "A C++ exception crosses the C ABI",
         "A v1 symbol or layout changes"
       ],
-      "title": "ABI containment and reusable client sessions"
+      "title": "ABI containment and reusable client sessions",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:40:24Z",
+        "result": "PASS",
+        "source_fingerprint": "a4351b4b7cf64d50ac6981f88a56fd3e34a5ed03648fa6924d4c391a51543576",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_machine_transport.py": "927e7f02b37d1c2acc107c4055725dfe84c97bbc525163d02f4484c8da8fedf1",
+          "tools/frontend_transport_truth_check.py": "3eb2a70cd1a952904197e886e7dff827117a7b0ec08e1c8f4a15acc490b93480"
+        },
+        "test_results": {
+          "abi_layout": "PASS",
+          "abi_symbols": "PASS",
+          "bridge_smoke": "PASS",
+          "cancellation_progress": "PASS",
+          "client_smoke": "PASS",
+          "strict_check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
