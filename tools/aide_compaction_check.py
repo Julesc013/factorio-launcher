@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import sys
@@ -25,6 +26,13 @@ REQUIRED_DOCS = (
 )
 
 
+def archived_evidence_sha256(path: Path) -> str:
+    data = path.read_bytes()
+    if path.suffix.lower() in {".json", ".md", ".toml", ".txt", ".yaml", ".yml"}:
+        data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def validate_history() -> list[str]:
     problems = []
     history = ROOT / ".aide" / "history"
@@ -39,9 +47,33 @@ def validate_history() -> list[str]:
                 path = task_root / relative
                 if not path.is_file():
                     problems.append(f"missing archived evidence: {path.relative_to(ROOT)}")
-                elif hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+                elif archived_evidence_sha256(path) != expected:
                     problems.append(f"archived evidence hash drift: {path.relative_to(ROOT)}")
     return problems
+
+
+def repair_history_indexes() -> list[Path]:
+    changed: list[Path] = []
+    history = ROOT / ".aide" / "history"
+    for index_path in sorted(history.glob("*/index.json")):
+        data = json.loads(index_path.read_text(encoding="utf-8"))
+        checkpoint = index_path.parent
+        updated = False
+        for task in data.get("tasks", []):
+            task_root = checkpoint / task["task_id"]
+            for relative, expected in list(task.get("files", {}).items()):
+                path = task_root / relative
+                if not path.is_file():
+                    continue
+                actual = archived_evidence_sha256(path)
+                if actual != expected:
+                    task["files"][relative] = actual
+                    updated = True
+        if updated or data.get("hash_canonicalization") != "text_lf_v1":
+            data["hash_canonicalization"] = "text_lf_v1"
+            index_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+            changed.append(index_path)
+    return changed
 
 
 def validate() -> list[str]:
@@ -76,7 +108,13 @@ def validate() -> list[str]:
     return problems
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Validate immutable AIDE history compaction indexes.")
+    parser.add_argument("--repair-indexes", action="store_true", help="Recompute index hashes without changing archived records.")
+    args = parser.parse_args(argv)
+    if args.repair_indexes:
+        changed = repair_history_indexes()
+        print(f"aide-compaction-check: repaired {len(changed)} history indexes")
     problems = validate()
     if problems:
         for problem in problems:

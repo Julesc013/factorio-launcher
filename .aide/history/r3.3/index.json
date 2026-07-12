@@ -1,5 +1,6 @@
 {
   "checkpoint": "r3.3",
+  "hash_canonicalization": "text_lf_v1",
   "immutable_task_records": true,
   "schema": "aide.history_index.v1",
   "tasks": [
@@ -14,8 +15,8 @@
         "evidence/macos-repair-verification.json": "3d3bf4c169fb62021eb65281b1043b4440e31e9ed3ac090a8cb74dc1ec44d5df",
         "evidence/remaining-risks.md": "b949155c25abc6eccc44ff8449fa5c959818c82511bb91802aca93d091169491",
         "evidence/validation.md": "12a2dc938a3c0dda684c87c277a10d8fced2556e96c9ec24cfaa4b50ba7e5100",
-        "status.yaml": "5ec50eb85dd807b0f2674e1fab4342ba79ff76db5dbd8be55398edfeaf37034e",
-        "task.yaml": "010f53c90b7eecc07eb0c8caf9ea2cccdb727182098cc685bacb38ab06e76a23"
+        "status.yaml": "183467b0d7ab40c62127fb929c3fe3906ef14a60d4b83d917bdf7415075dc9e1",
+        "task.yaml": "7e1a7f1a4a40751df804917f04f0fdae16f1d558e87478671871a2aca253cddc"
       },
       "task_id": "FACMAN-ARCHIVE-CORE-03"
     },
@@ -26,8 +27,8 @@
         "evidence/ci-repair-verification.json": "24da08342006f3f13abed0e3150827a98bb2e54041a54e429e140e3e80a7f1e3",
         "evidence/remaining-risks.md": "e5150fdd2671919995a8052cc855c097a3d29b45b8910ffad0344757cb54e989",
         "evidence/validation.md": "dea355e3c681a49a228572dfac98ee362550a3dacbe54ea8014090988b6d0ee2",
-        "status.yaml": "ebb61d6fda573814b99f6eed0e19282c429bb7bf279d892a929193963e0d83f8",
-        "task.yaml": "31bee34a98fe28676effac6ae0022c304c68cafdf71d03941aa92c0fe81d652e"
+        "status.yaml": "bc3d43365a00c68a066e0987e8ffa1ed4933fddeb9101932cd24dbc0350499e7",
+        "task.yaml": "c7264330087235f390bac3f2f92e47252f0d2f6d7c11d4a723c2f57bc4c0f204"
       },
       "task_id": "FACMAN-ARCHIVE-DEPENDENCY-ADMISSION-01"
     },
@@ -40,8 +41,8 @@
         "evidence/local-verification.json": "5b922a371e39df16c9eab92f220c12a9dde04b911ac36750bde7ab3f5ae2d433",
         "evidence/remaining-risks.md": "56a81c8a77fa7baf1dc990553b9a557a5353690da39f7aeb13a7bf6e7117e4e3",
         "evidence/validation.md": "c92134785c1fdc54c5667cc2316c9351c83d388adca21b420b7a3e8a391376e8",
-        "status.yaml": "0b1d01c4f606cd25b5ece94bb7176ed63eb333cc6ab9ae855f5219cdbefcb6f8",
-        "task.yaml": "3e207a110aa622e45d793547f19f2f875bdf3ed136717ac4b5ecef6a542884be"
+        "status.yaml": "3dd719f401f407b4419864b7578d0a8a3cd57d6b6b06bc8f45ff8e26b0fef495",
+        "task.yaml": "ecbc42dd4af8e8aee3bcf1f231fe4a316eab2587823364f64a82671978202f25"
       },
       "task_id": "FACMAN-DIAGNOSTIC-EXPORT-SAFETY-04"
     },
@@ -54,8 +55,8 @@
         "evidence/local-verification.json": "7d53fb8fb5f2c2593b7abb8853eb0b0340fad91188082451fe08820b9a219262",
         "evidence/remaining-risks.md": "d273bfacb76b3040b7a6284787a8e4af11eaa3b19cc44eeee14a55ff2600da0e",
         "evidence/validation.md": "6bf02e11e843642f9ed33a339d13f781d8f4ae8ad576d5e30ea15e693fb473e5",
-        "status.yaml": "11a680ffb094402cd6bd4da280bd7f970a8879cf61f7e9c2781c60a72a87f17e",
-        "task.yaml": "9ed799af12847bee6f7e88305280b4b2e6a0998ee1a79e137375023f229026db"
+        "status.yaml": "19a5a2ddcc79a104cf1cddab5d7eb88956c93660e20dcf11f8d9198ab1d93e3d",
+        "task.yaml": "2d7d46d7cf3d4e2dc524a55d70293214338588cd1c01c4d2cdefe13188e71915"
       },
       "task_id": "FACMAN-LINUX-CLI-PACKAGE-PROOF-03"
     },
@@ -68,8 +69,8 @@
         "evidence/local-verification.json": "9228ef69aa14d24f40c4529051481bcbba61afbe8d255c99ec470b230e1262f0",
         "evidence/remaining-risks.md": "9adf479f74f6ee8d3d62b28bad946e90b2af5c884987e683fc82f1fa76f1b319",
         "evidence/validation.md": "98f9c6c1d8d005079bb6cf64637e772a3802a60cff2ea2c76d7f54ff80dab22b",
-        "status.yaml": "c0e0c94882bf8369e09439d92c723dfc59bd09c060ade449d1ecdbccb29db9fd",
-        "task.yaml": "1067455d5d468395f9c912cac5d01a724cf58577a911b2ed9da0dc7a75ef3b7e"
+        "status.yaml": "8c3a80b6c7ef574b04dd6bd5e55fd15e7ece0f7f19b6d97a66c2a1eb2c80589c",
+        "task.yaml": "966b89b4a07a5add104a12ea48263780eb3865c35bad759621942bdd5b4c8959"
       },
       "task_id": "FACMAN-LOCAL-FILESYSTEM-LOCK-HARDEN-03"
     },
@@ -90,8 +91,8 @@
         "evidence/validation.md": "843661231283056c60b4b4f1853d20a9a18012132a65270baedbe60e19bf5894",
         "evidence/workflow-repair-review-pack.md": "f9d217ea105c5541c2aabad512cabe073098efc0fd88c147d69a34f571320035",
         "evidence/workflow-repair-verification.json": "ada41f493638bfdd1a148301a1f6ac9c08c95af25c38473b69e63df1cf276d5d",
-        "status.yaml": "55fbcc031dc9356568431ec1742291be5aeb6246af620d3e191f449aff668b19",
-        "task.yaml": "ccf37897e5e42d7b24c56d323c12abd342532e4c106d8e83f6498eeeaeaba639"
+        "status.yaml": "d6f1ab4e47e73ae93670b37d89da06b107996ea8d57b8a99f71716d364d95ea5",
+        "task.yaml": "c4d0b15c50668727db0a3117eb7fa83314fca2493232cf99f93cbfa4e0c14076"
       },
       "task_id": "FACMAN-MACOS-NATIVE-CLI-PROOF-01"
     },
@@ -104,8 +105,8 @@
         "evidence/local-verification.json": "92161758733622730249f396f7d6d8fb995677ffaf6235c5ca574367182853fe",
         "evidence/remaining-risks.md": "7821e264e7b7f9c52241929c01259e38bcdcdc08f90546c70ae19accccb51f45",
         "evidence/validation.md": "8092233c5a5f06c3e42d1d39189292fa5e2cc296601efb796c0e31be8ff6823f",
-        "status.yaml": "34056b8c83ee79dc120c5db55ffefe72ee7a37509bf0866a91a9a123f26c2d6a",
-        "task.yaml": "5cb9f87e4276eb6acb5754eed8cf1a18075504d8565078f6f9b7952c9789ec22"
+        "status.yaml": "e2711235610def2b2b7fb3f00152487f4b5e80c3ff4dfb51d53e127b5a6a6981",
+        "task.yaml": "f678b73e90bdd8a365bb5500ead8501dafccbe764655d41ddee2012e3c9a3275"
       },
       "task_id": "FACMAN-MODSET-ARCHIVE-ROUTE-03"
     },
@@ -114,8 +115,8 @@
         "evidence/changed-files.md": "12dd8275d2b3fbf7250835a016ad45994a42846e1c97aa4a4b261d3a5d6d57a9",
         "evidence/remaining-risks.md": "cd1737030bc39f83f628ab0ffd1fd883f27035f694fdaa602103fb333051a38e",
         "evidence/validation.md": "a41500f92f6be5a0f75a312e02e89dfe5363804f49bf11a8a5e98b3ded6c7047",
-        "status.yaml": "eea8f7b14a1273ea43ac6e4afe9186df05eec35028e7ded5b317f99522203d81",
-        "task.yaml": "a7faab88515ea29bef85945be29350957dc531dbcb9158e19e33d9e629a8279e"
+        "status.yaml": "a941d1ba37f8fe08573209c0661da569d560bb07fc8431750db804c85100ea14",
+        "task.yaml": "898d93bde8f94ed68129ab46a0ad5cbc457180b2d27baee187a399d1d0d9d694"
       },
       "task_id": "FACMAN-R3.3-BASELINE-AND-AIDE-QUEUE-REPAIR-01"
     },
@@ -127,8 +128,8 @@
         "evidence/local-verification.json": "84b43d9862652d96d4ef26b2b7e0a563e7db932247da4cf0f1d84fd57f2cf3be",
         "evidence/remaining-risks.md": "2495e66b60439620738c2c725eee77af1f420a0ca01bbbbb17625f20d08f1d7f",
         "evidence/validation.md": "63203b7233b5e5ee6db4ca7f79e26be7213b81777b478f643a3104cb1c312093",
-        "status.yaml": "90041699501d4721c1461ac9da84beb3b670c08fb76d8d090e79d14643b09fc3",
-        "task.yaml": "8abea7e4db3d1279e6af2ee1119c2080fde49e6cc38dc4bfde2425776fe1c816"
+        "status.yaml": "9b7f099768290639a3cf69131254b52f4d46e111a84c11145f4590cff2fee52d",
+        "task.yaml": "78c2f15970ea91a461a521208e1fec30a4501f366e57aeb176d5ead9f2c2f897"
       },
       "task_id": "FACMAN-R3.3-PROOF-CLOSEOUT-01"
     },
@@ -139,8 +140,8 @@
         "evidence/review-pack.md": "4cac639561270583c92eb4b5a24943931514a6f6c437846f3d2f7c70445f4e5b",
         "evidence/validation.md": "f461ad2580fbd410d830e4dd6d50e702ff0baa908dff79d3dc3d59a5e2d29518",
         "evidence/verification.json": "2657f093a2136460edff5546ccdeaf647bc55a6adf0cffcd393ae91baaf7afb9",
-        "status.yaml": "d7d81e0b68a7ec6ea33c870fb5de08d5137e7309e34d723579a382c3ffbfcf9e",
-        "task.yaml": "3e09e6d0a1f05209ed1470910edcf3b101a35b6a51994e50e9914d2578625646"
+        "status.yaml": "63d7f809d4827a86d99fe0cb04f596918d25d916db82b93e91e62d7b6548456e",
+        "task.yaml": "9f1e56c84aead58341b1cbb9dd7091435089c3364021fc44f3bc4dc73fb82f2a"
       },
       "task_id": "FACMAN-R3.3-STRETCH-PROOF-CLOSEOUT-01"
     },
@@ -153,8 +154,8 @@
         "evidence/local-verification.json": "99e52bd93073151099dccb53a9e65b6d6b20b92a736c00abec51dde6debed213",
         "evidence/remaining-risks.md": "e73d43e844e2ab2d1c22d0c878731aeeb760e023d7fa43ccbcc34efd5915b3da",
         "evidence/validation.md": "19bd3034ac525d3072c67c700c466d691db230ee8862794fdb87e577deca89a0",
-        "status.yaml": "c620db2f6e46f73076dac3187e37cfb8c1e9374385530ceefc0adba6b9d38c77",
-        "task.yaml": "53cce6f01f19f5806944590dfff8ebdb4382f839e67d4c395b3ab030adbcc7fd"
+        "status.yaml": "72c4e67ac9485b791e7ed0d432fb4654f00db0da9316e1b6cb68d93056056bbf",
+        "task.yaml": "3c7a64b1106743dce60deb1feda3dc32dc35a92f1ad3701a69abba9313f609ed"
       },
       "task_id": "FACMAN-SAVE-AND-INSTANCE-TRANSFER-ROUTE-03"
     },
@@ -167,8 +168,8 @@
         "evidence/local-verification.json": "9342fe80df723784ed3e1c0da53400cbab583290e5976607ba1f200ae150304c",
         "evidence/remaining-risks.md": "61467a4394d514721e02e38e0044dd98ef635d6b1a2e8ecb2dde63e6a1aba6e0",
         "evidence/validation.md": "0d12ea584189100b87c1cbae49f252dd697a225bbce67f3d502600bf5b70d529",
-        "status.yaml": "124b543234a62af0b933e0a736dc47d36a6707af900320df6b4bd9cd403e667c",
-        "task.yaml": "b41d4f4fbd852db60528eff6f7e41a31a04428588c00b2caf15eadb637b81d3b"
+        "status.yaml": "6a7fb41603c1df115f649b0a2af813814e908c3e87c73ad606da743cee272046",
+        "task.yaml": "dd6b05fd8e23d8eac7541e4f24b0b20781d09f73c92162f5d2add09c1bbe9a88"
       },
       "task_id": "FACMAN-SBOM-AND-PROVENANCE-01"
     },
@@ -181,8 +182,8 @@
         "evidence/local-verification.json": "85adde805bc26eded07798929786d6ee550f0ecceebe7e5a0a462162079e6f4b",
         "evidence/remaining-risks.md": "fe9769ab12f723ba564a70c74b01a0b81556374ea97624ad974f5d7251074660",
         "evidence/validation.md": "ef2f8f6a22074d2d1805aaeb402ab88156e6f6e10a630419f8bdc3262efa7f9d",
-        "status.yaml": "e9dc03dffa83b874e08060a9261ee677f8909659b216667c911e04e6cf276960",
-        "task.yaml": "8af0d0aaa788c1a29e574fc6978473dcedee7010fa0b0928fb4e060964fd208e"
+        "status.yaml": "ee9ce03f962c658293e54acade49a75e9181f2bc5e04aa3d8fdff764ae6ed8e8",
+        "task.yaml": "4afc234df2e26f534e65f97a8676e67d0470a5da7406fb2d6a96501c3aa18dea"
       },
       "task_id": "FACMAN-WORKSPACE-TRANSACTION-RECOVERY-03"
     }

@@ -1,5 +1,6 @@
 {
   "checkpoint": "r3.4",
+  "hash_canonicalization": "text_lf_v1",
   "immutable_task_records": true,
   "schema": "aide.history_index.v1",
   "tasks": [
@@ -8,16 +9,16 @@
         "evidence/changed-files.md": "8c637ccf90f93a65254bca46feabc4543662c50d864eca9f866a8678e2a11ec4",
         "evidence/remaining-risks.md": "d59a9ed86948e8a05cbd724552b0ce68547ee66bf420eb78293a89eaa2c67c37",
         "evidence/validation.md": "d08c8668607035a70cc6d84a9c1f1273a918733b1c4cda4c7df398251f6f769d",
-        "status.yaml": "52dc12a93438ddf8d4759f030df56571e6de527734e9041cc6a5a9592be81e6c",
-        "task.yaml": "ba0e94db942fe981fd8b53d271bf8f17cf993df2a79cd845b0520b3991a0af2e"
+        "status.yaml": "c52d9e2b92dd38208626ef60f7ab530b9026f7612fb9d81105494b2792bf2eeb",
+        "task.yaml": "ef279d3663686fc779f22c52e6228c5adf60a05d8a47c1ad017275db3fe23b82"
       },
       "task_id": "FACMAN-AIDE-EVIDENCE-AND-DOCS-COMPACTION-01"
     },
     {
       "files": {
         "evidence/validation.md": "30120912f09d37e169177ecf1cf8fed6de48b555422bd88ead6ea81f32bc2ce7",
-        "status.yaml": "cb64c04d0ad02514841440f4d4b5314ebc404c8f998deafecd480431a03892a2",
-        "task.yaml": "cb2a0054b72f3244709cdd4a441f37be50cd548512154c2cd2dfd0aa5ba5d1c0"
+        "status.yaml": "e69653e2a798d6d8c313e3c685e278c8feaa2a81c4f9ffa469f7f5d07ad25a21",
+        "task.yaml": "ec03c681d13826eae7072f6d56b3b4401e72ba730865b9ab8b6b026ad985a56d"
       },
       "task_id": "FACMAN-COMPLIANCE-AND-SUPPLY-CHAIN-01"
     },
@@ -26,8 +27,8 @@
         "evidence/changed-files.md": "9de5b18bb1734cb7de9514ff447e501730b1b13663e1d5880dbd14c8c0484366",
         "evidence/remaining-risks.md": "3de75aadaa6c0c2b4ee9ad635267703106c64225e0e8f4e38484833d1bb01164",
         "evidence/validation.md": "3f749ff542bc37e9467da634fbd6232aef5074dd21c0349e741ffe03411976d9",
-        "status.yaml": "09cad6ee4ba5509ed128ee51ab7d69d7317e186c29f36808d969d023b38dd657",
-        "task.yaml": "04fe1db120a6261abe01b4e717e2431051b2cb33fd4bfc03636702085ed33a30"
+        "status.yaml": "4ad059a2e7726342fc7a15378854b758f11563a5ca231fcf4aac317e4f94fa3d",
+        "task.yaml": "253dddac050a0f4494a496708b05e2eeb0f5cf32b2a067144783440eb1e5b842"
       },
       "task_id": "FACMAN-R3.4-ARCHITECTURE-CLOSEOUT-01"
     }
