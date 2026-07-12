@@ -38,3 +38,10 @@ Handlers never include or call Universal Setup directly. The gateway passes the
 actual package target metadata and install-plan version/archive inputs to the
 provider. A provider response that does not demonstrate evaluation of those
 inputs is reported as unavailable, never relabeled as a FacMan plan.
+
+Platform guarantees are selected explicitly. Secure randomness is implemented
+by `BCryptGenRandom` on Windows, `getrandom` on Linux, and `arc4random_buf` on
+macOS; unsupported targets fail configuration instead of falling through a
+generic Unix branch. Durable operations return a `DurabilityLevel` so callers
+can distinguish file-and-directory flush proof from a documented platform
+limit.

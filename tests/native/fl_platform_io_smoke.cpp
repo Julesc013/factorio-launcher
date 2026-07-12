@@ -22,8 +22,10 @@ int main()
     auto status = output.create_exclusive(staging, 1024);
     const std::string payload = "durable payload";
     if (!status.ok() || output.write_at(0, payload.data(), payload.size()) != payload.size()) return 2;
-    if (!output.flush_file_and_parent().ok()) return 3;
-    if (!facman::platform::commit_no_replace(staging, destination).ok()) return 4;
+    status = output.flush_file_and_parent();
+    if (!status.ok() || status.durability == facman::platform::DurabilityLevel::none) return 3;
+    status = facman::platform::commit_no_replace(staging, destination);
+    if (!status.ok() || status.durability == facman::platform::DurabilityLevel::none) return 4;
     facman::platform::StableInputFile input;
     if (!input.open_no_follow(destination).ok() || input.size() != payload.size()) return 5;
     std::string read(payload.size(), '\0');

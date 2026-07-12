@@ -64,7 +64,9 @@ IoStatus flush_directory(const std::filesystem::path& directory)
     const int result = ::fsync(handle);
     const int error = errno;
     ::close(handle);
-    return result == 0 ? IoStatus::success() : IoStatus::failure("directory_flush_failed", std::strerror(error));
+    return result == 0
+        ? IoStatus::success(DurabilityLevel::file_and_directory_flushed)
+        : IoStatus::failure("directory_flush_failed", std::strerror(error));
 }
 #endif
 
@@ -223,7 +225,7 @@ IoStatus DurableOutputFile::flush_file_and_parent()
     if (!FlushFileBuffers(impl_->handle)) return IoStatus::failure("output_flush_failed", windows_error("FlushFileBuffers"));
     if (!CloseHandle(impl_->handle)) return IoStatus::failure("output_close_failed", windows_error("CloseHandle"));
     impl_->handle = kInvalidHandle;
-    return IoStatus::success();
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
 #else
     if (::fsync(impl_->handle) != 0) return IoStatus::failure("output_flush_failed", std::strerror(errno));
     if (::close(impl_->handle) != 0) return IoStatus::failure("output_close_failed", std::strerror(errno));
@@ -249,14 +251,14 @@ IoStatus commit_no_replace(const std::filesystem::path& source, const std::files
     if (!MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_WRITE_THROUGH)) {
         return IoStatus::failure("commit_no_replace_failed", windows_error("MoveFileExW"));
     }
-    return IoStatus::success();
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
 #else
     if (::link(source.c_str(), destination.c_str()) != 0) return IoStatus::failure("commit_no_replace_failed", std::strerror(errno));
     if (::unlink(source.c_str()) != 0) return IoStatus::failure("commit_source_remove_failed", std::strerror(errno));
     IoStatus source_flush = flush_directory(source.parent_path());
     if (!source_flush.ok()) return source_flush;
     if (destination.parent_path() != source.parent_path()) return flush_directory(destination.parent_path());
-    return IoStatus::success();
+    return source_flush;
 #endif
 }
 
@@ -266,7 +268,7 @@ IoStatus replace_existing_durable(const std::filesystem::path& source, const std
     if (!MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
         return IoStatus::failure("replace_existing_failed", windows_error("MoveFileExW"));
     }
-    return IoStatus::success();
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
 #else
     if (::rename(source.c_str(), destination.c_str()) != 0) {
         return IoStatus::failure("replace_existing_failed", std::strerror(errno));
@@ -274,7 +276,7 @@ IoStatus replace_existing_durable(const std::filesystem::path& source, const std
     IoStatus source_flush = flush_directory(source.parent_path());
     if (!source_flush.ok()) return source_flush;
     if (destination.parent_path() != source.parent_path()) return flush_directory(destination.parent_path());
-    return IoStatus::success();
+    return source_flush;
 #endif
 }
 
@@ -290,7 +292,7 @@ IoStatus remove_exact_object(const std::filesystem::path& path, const FileIdenti
     if (::unlink(path.c_str()) != 0) return IoStatus::failure("remove_failed", std::strerror(errno));
     return flush_directory(path.parent_path());
 #endif
-    return IoStatus::success();
+    return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
 }
 
 std::filesystem::path path_from_utf8(const std::string& value) { return std::filesystem::u8path(value); }

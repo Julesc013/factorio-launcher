@@ -2,23 +2,18 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_system_services.h"
+#include "fl_random.h"
 
 #include <array>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-#include <stdexcept>
-
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <bcrypt.h>
-#else
-#include <cerrno>
-#include <sys/random.h>
 #endif
 
 namespace facman::platform {
@@ -40,19 +35,7 @@ std::string RealClock::now_utc() const
 std::string RandomIdGenerator::next(const std::string& prefix)
 {
     std::array<unsigned char, 16> bytes {};
-#ifdef _WIN32
-    const NTSTATUS result = BCryptGenRandom(
-        nullptr, bytes.data(), static_cast<ULONG>(bytes.size()), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
-    if (result != 0) throw std::runtime_error("BCryptGenRandom failed");
-#else
-    std::size_t offset = 0;
-    while (offset < bytes.size()) {
-        const ssize_t count = ::getrandom(bytes.data() + offset, bytes.size() - offset, 0);
-        if (count < 0 && errno == EINTR) continue;
-        if (count <= 0) throw std::runtime_error("getrandom failed");
-        offset += static_cast<std::size_t>(count);
-    }
-#endif
+    fill_secure_random(bytes.data(), bytes.size());
     std::ostringstream output;
     output << prefix << '-';
     for (unsigned char byte : bytes) {

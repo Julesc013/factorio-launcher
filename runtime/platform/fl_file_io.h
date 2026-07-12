@@ -12,11 +12,23 @@
 
 namespace facman::platform {
 
+enum class DurabilityLevel {
+    none,
+    file_flushed,
+    file_and_directory_flushed,
+    best_effort_platform_limit,
+    unsupported_filesystem,
+};
+
 struct IoStatus {
     std::string code;
     std::string detail;
+    DurabilityLevel durability = DurabilityLevel::none;
     bool ok() const noexcept { return code.empty(); }
-    static IoStatus success() { return {}; }
+    static IoStatus success(DurabilityLevel durability = DurabilityLevel::none)
+    {
+        return {"", "", durability};
+    }
     static IoStatus failure(std::string code, std::string detail)
     {
         return {std::move(code), std::move(detail)};
