@@ -1,57 +1,54 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      ".aide/memory/waves/facman-r3.5.json"
+      "contracts/release/support-matrix.v1.json"
     ],
     "affected_targets": [
-      "aide-lite"
+      "linux-x64",
+      "macos-x64",
+      "windows-x64"
     ],
     "affected_tests": [
-      ".aide/scripts/tests/test_r35_wave_autonomy.py",
-      ".aide/scripts/tests/test_x_os_01_task_os_commands.py"
+      "tools/linux_package_proof.py",
+      "tools/macos_package_proof.py",
+      "tools/required_package_proof.py"
     ],
     "allowed_paths": [
-      ".aide/scripts/aide_lite.py",
-      ".aide/scripts/tests/",
-      ".aide/memory/waves/",
-      ".aide/reports/"
+      "artifacts/",
+      "docs/verification/",
+      "tools/package/"
     ],
-    "blockers": [],
+    "blockers": [
+      "Native Linux and macOS runners have not executed the final revision."
+    ],
     "claim_impacts": [
-      "resumable-wave-state",
-      "advisory-validation-cache",
-      "compact-active-context"
+      "linux-package-proof",
+      "macos-package-proof",
+      "cross-platform-promotion"
     ],
-    "dependencies": [
-      "FACMAN-R3.5-TRUTH-FITNESS-01",
-      "FACMAN-ULK-DYNAMIC-REGISTRY-01"
-    ],
+    "dependencies": [],
     "forbidden_paths": [
-      ".aide.local/",
-      "provider calls",
-      "model calls",
-      "network calls",
-      "automatic claim promotion"
+      "vendor/",
+      "third_party/"
     ],
-    "id": "FACMAN-AIDE-WAVE-AUTONOMY-02",
+    "id": "FACMAN-R3.4-TARGET-PROMOTION-01",
     "last_green_commit": null,
     "progress_commits": [],
     "provider_revisions": {},
-    "started_at": "2026-07-12T00:00:00Z",
-    "status": "active",
+    "status": "pending",
     "stop_conditions": [
-      "Wave state cannot resume from a green commit",
-      "Cached proof can promote a claim",
-      "Closed history enters active context"
+      "A target lane fails",
+      "A runner is unavailable"
     ],
-    "title": "AIDE resumable wave autonomy"
+    "title": "Fresh native target promotion baseline"
   },
   "affected_contracts": [
-    ".aide/memory/waves/facman-r3.5.json"
+    "contracts/release/support-matrix.v1.json"
   ],
   "affected_tests": [
-    ".aide/scripts/tests/test_r35_wave_autonomy.py",
-    ".aide/scripts/tests/test_x_os_01_task_os_commands.py"
+    "tools/linux_package_proof.py",
+    "tools/macos_package_proof.py",
+    "tools/required_package_proof.py"
   ],
   "architecture_invariants": [
     "Preserve the R3.4 repository split, root grammar and application boundary.",
@@ -61,23 +58,13 @@
     "Target-runner evidence is never inferred from local validation.",
     "Human gates remain explicit human decisions."
   ],
-  "current_exact_revision": "a3fd3dd559cb3b43c2bdd1749a7a8fb59c1a8a95",
-  "direct_dependency_summaries": [
-    {
-      "id": "FACMAN-R3.5-TRUTH-FITNESS-01",
-      "last_green_commit": "940b4616fa2a7a2727e7fd257e460a85dadc5888",
-      "status": "closed"
-    },
-    {
-      "id": "FACMAN-ULK-DYNAMIC-REGISTRY-01",
-      "last_green_commit": "674a72e65733587022d4a5adf178b2484f13673d",
-      "status": "closed"
-    }
-  ],
+  "current_exact_revision": "b5011c541a6e97543f193c35ef427ca93e280628",
+  "direct_dependency_summaries": [],
   "history_included": false,
   "open_blockers": [
     "Linux and macOS target-runner proof requires the corresponding native runners.",
-    "Remote CodeQL execution begins only after this task branch is pushed."
+    "Remote CodeQL execution begins only after this task branch is pushed.",
+    "Native Linux and macOS runners have not executed the final revision."
   ],
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",

@@ -66,10 +66,45 @@
         "recording": "commit-validation"
       },
       "workunit": "FACMAN-ULK-DYNAMIC-REGISTRY-01"
+    },
+    {
+      "blockers": [
+        "Linux and macOS target-runner proof requires the corresponding native runners.",
+        "Remote CodeQL execution begins only after this task branch is pushed."
+      ],
+      "clean_status": true,
+      "commit_sha": "b5011c541a6e97543f193c35ef427ca93e280628",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.4-TARGET-PROMOTION-01",
+        "FACMAN-JSON-OUTCOME-CODECS-01",
+        "FACMAN-WORKSPACE-DOMAIN-STORES-01",
+        "FACMAN-COMMAND-CATALOG-V2-01",
+        "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01",
+        "FACMAN-ABI-CLIENT-SESSION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01",
+        "FACMAN-MACHINE-TRANSPORT-01",
+        "FACMAN-CONFORMANCE-COMPAT-SECURITY-01",
+        "FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "aceee3217754eac65a32e51493ecf99a5912f6c56e768bc90795bdcad9e4d409",
+      "test_fingerprints": {
+        ".aide/scripts/tests/test_r35_wave_autonomy.py": "d1393c59b19c0880d0199710db21b2f9ca323cdb8e218a13b6016b9de8bae5f3",
+        ".aide/scripts/tests/test_x_os_01_task_os_commands.py": "f43af8d8097c981abf34693e1c706d6150e98cdd9070e70376b8287f83663e56"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-AIDE-WAVE-AUTONOMY-02"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "a3fd3dd559cb3b43c2bdd1749a7a8fb59c1a8a95",
+  "current_exact_revision": "b5011c541a6e97543f193c35ef427ca93e280628",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -77,239 +112,700 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "FacMan R3.5 zero-exception productization",
-  "updated_at": "2026-07-12T00:00:00Z",
+  "updated_at": "2026-07-12T05:25:00Z",
   "validation_cache": {
     "advisory_only": true,
-    "entries": [],
+    "entries": [
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T05:25:00Z",
+        "result": "PASS",
+        "source_fingerprint": "aceee3217754eac65a32e51493ecf99a5912f6c56e768bc90795bdcad9e4d409",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          ".aide/scripts/tests/test_r35_wave_autonomy.py": "d1393c59b19c0880d0199710db21b2f9ca323cdb8e218a13b6016b9de8bae5f3",
+          ".aide/scripts/tests/test_x_os_01_task_os_commands.py": "f43af8d8097c981abf34693e1c706d6150e98cdd9070e70376b8287f83663e56"
+        },
+        "test_results": {
+          "aide-lite-portable-suite": "PASS",
+          "diff-check": "PASS",
+          "r35-wave-autonomy": "PASS",
+          "wave-status-next-resume": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-AIDE-WAVE-AUTONOMY-02"
+      }
+    ],
     "promotion_uses_cache_alone": false,
     "target_runner_evidence_inferred": false
   },
   "wave_id": "facman-r3.5",
   "workunits": [
     {
-      "affected_contracts": ["contracts/release/support-matrix.v1.json"],
-      "affected_targets": ["linux-x64", "macos-x64", "windows-x64"],
-      "affected_tests": ["tools/linux_package_proof.py", "tools/macos_package_proof.py", "tools/required_package_proof.py"],
-      "allowed_paths": ["artifacts/", "docs/verification/", "tools/package/"],
-      "blockers": ["Native Linux and macOS runners have not executed the final revision."],
-      "claim_impacts": ["linux-package-proof", "macos-package-proof", "cross-platform-promotion"],
+      "affected_contracts": [
+        "contracts/release/support-matrix.v1.json"
+      ],
+      "affected_targets": [
+        "linux-x64",
+        "macos-x64",
+        "windows-x64"
+      ],
+      "affected_tests": [
+        "tools/linux_package_proof.py",
+        "tools/macos_package_proof.py",
+        "tools/required_package_proof.py"
+      ],
+      "allowed_paths": [
+        "artifacts/",
+        "docs/verification/",
+        "tools/package/"
+      ],
+      "blockers": [
+        "Native Linux and macOS runners have not executed the final revision."
+      ],
+      "claim_impacts": [
+        "linux-package-proof",
+        "macos-package-proof",
+        "cross-platform-promotion"
+      ],
       "dependencies": [],
-      "forbidden_paths": ["vendor/", "third_party/"],
+      "forbidden_paths": [
+        "vendor/",
+        "third_party/"
+      ],
       "id": "FACMAN-R3.4-TARGET-PROMOTION-01",
       "last_green_commit": null,
       "progress_commits": [],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["A target lane fails", "A runner is unavailable"],
+      "stop_conditions": [
+        "A target lane fails",
+        "A runner is unavailable"
+      ],
       "title": "Fresh native target promotion baseline"
     },
     {
-      "affected_contracts": ["contracts/policy/architecture_fitness_exceptions.v1.toml"],
-      "affected_targets": ["facman-architecture"],
-      "affected_tests": ["tests/test_architecture_fitness.py", "tests/test_test_architecture.py", "tools/command_truth_check.py"],
-      "allowed_paths": ["tools/architecture_fitness.py", "tools/manual_json_check.py", "tools/command_truth_check.py", "contracts/policy/"],
+      "affected_contracts": [
+        "contracts/policy/architecture_fitness_exceptions.v1.toml"
+      ],
+      "affected_targets": [
+        "facman-architecture"
+      ],
+      "affected_tests": [
+        "tests/test_architecture_fitness.py",
+        "tests/test_test_architecture.py",
+        "tools/command_truth_check.py"
+      ],
+      "allowed_paths": [
+        "tools/architecture_fitness.py",
+        "tools/manual_json_check.py",
+        "tools/command_truth_check.py",
+        "contracts/policy/"
+      ],
       "blockers": [],
-      "claim_impacts": ["architecture-exception-baseline", "runtime-availability-truth"],
+      "claim_impacts": [
+        "architecture-exception-baseline",
+        "runtime-availability-truth"
+      ],
       "clean_status": true,
       "closed_at": "2026-07-12T00:00:00Z",
       "dependencies": [],
-      "forbidden_paths": ["vendor/", "third_party/"],
+      "forbidden_paths": [
+        "vendor/",
+        "third_party/"
+      ],
       "id": "FACMAN-R3.5-TRUTH-FITNESS-01",
       "last_green_commit": "940b4616fa2a7a2727e7fd257e460a85dadc5888",
-      "progress_commits": ["674a72e65733587022d4a5adf178b2484f13673d", "940b4616fa2a7a2727e7fd257e460a85dadc5888"],
+      "progress_commits": [
+        "674a72e65733587022d4a5adf178b2484f13673d",
+        "940b4616fa2a7a2727e7fd257e460a85dadc5888"
+      ],
       "provider_revisions": {},
       "status": "closed",
-      "stop_conditions": ["A detected exception is hidden instead of baselined", "Availability metadata differs from runtime behavior"],
+      "stop_conditions": [
+        "A detected exception is hidden instead of baselined",
+        "Availability metadata differs from runtime behavior"
+      ],
       "title": "Truth and architecture fitness"
     },
     {
-      "affected_contracts": ["dependencies/dependency-lock.v1.json", "contracts/release/sbom.spdx.json"],
-      "affected_targets": ["universal-launcher-kit", "facman-flb"],
-      "affected_tests": ["tests/test_dependency_lock.py", "tools/command_truth_check.py"],
-      "allowed_paths": ["workspace/", "dependencies/", "contracts/release/", "runtime/binding/"],
+      "affected_contracts": [
+        "dependencies/dependency-lock.v1.json",
+        "contracts/release/sbom.spdx.json"
+      ],
+      "affected_targets": [
+        "universal-launcher-kit",
+        "facman-flb"
+      ],
+      "affected_tests": [
+        "tests/test_dependency_lock.py",
+        "tools/command_truth_check.py"
+      ],
+      "allowed_paths": [
+        "workspace/",
+        "dependencies/",
+        "contracts/release/",
+        "runtime/binding/"
+      ],
       "blockers": [],
-      "claim_impacts": ["provider-capacity", "provider-pin"],
+      "claim_impacts": [
+        "provider-capacity",
+        "provider-pin"
+      ],
       "clean_status": true,
       "closed_at": "2026-07-12T00:00:00Z",
-      "dependencies": ["FACMAN-R3.5-TRUTH-FITNESS-01"],
-      "forbidden_paths": ["D:/Projects/Universal Launcher/universal-launcher/.git/refs/heads/main"],
+      "dependencies": [
+        "FACMAN-R3.5-TRUTH-FITNESS-01"
+      ],
+      "forbidden_paths": [
+        "D:/Projects/Universal Launcher/universal-launcher/.git/refs/heads/main"
+      ],
       "id": "FACMAN-ULK-DYNAMIC-REGISTRY-01",
       "last_green_commit": "674a72e65733587022d4a5adf178b2484f13673d",
-      "progress_commits": ["de6c7c6cfa80c524296066bd6bb90a70ba02b760", "674a72e65733587022d4a5adf178b2484f13673d"],
-      "provider_revisions": {"universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760"},
+      "progress_commits": [
+        "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "674a72e65733587022d4a5adf178b2484f13673d"
+      ],
+      "provider_revisions": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760"
+      },
       "status": "closed",
-      "stop_conditions": ["Provider ABI changes", "More than 32 registrations fail", "Provider task revision is not pushed"],
+      "stop_conditions": [
+        "Provider ABI changes",
+        "More than 32 registrations fail",
+        "Provider task revision is not pushed"
+      ],
       "title": "Universal Launcher Kit dynamic registry"
     },
     {
-      "affected_contracts": ["contracts/schema/common/", "contracts/schema/factorio/"],
-      "affected_targets": ["facman-json", "facman-domain"],
-      "affected_tests": ["tools/manual_json_check.py", "tests/test_architecture_fitness.py"],
-      "allowed_paths": ["runtime/core/json*", "runtime/application/", "runtime/domain/", "runtime/binding/", "apps/cli/"],
-      "blockers": ["Seventeen first-party manual JSON exceptions remain."],
-      "claim_impacts": ["manual-json-zero", "typed-outcomes", "codec-ownership"],
-      "dependencies": ["FACMAN-R3.5-TRUTH-FITNESS-01", "FACMAN-ULK-DYNAMIC-REGISTRY-01"],
-      "forbidden_paths": ["vendor/", "third_party/"],
+      "affected_contracts": [
+        "contracts/schema/common/",
+        "contracts/schema/factorio/"
+      ],
+      "affected_targets": [
+        "facman-json",
+        "facman-domain"
+      ],
+      "affected_tests": [
+        "tools/manual_json_check.py",
+        "tests/test_architecture_fitness.py"
+      ],
+      "allowed_paths": [
+        "runtime/core/json*",
+        "runtime/application/",
+        "runtime/domain/",
+        "runtime/binding/",
+        "apps/cli/"
+      ],
+      "blockers": [
+        "Seventeen first-party manual JSON exceptions remain."
+      ],
+      "claim_impacts": [
+        "manual-json-zero",
+        "typed-outcomes",
+        "codec-ownership"
+      ],
+      "dependencies": [
+        "FACMAN-R3.5-TRUTH-FITNESS-01",
+        "FACMAN-ULK-DYNAMIC-REGISTRY-01"
+      ],
+      "forbidden_paths": [
+        "vendor/",
+        "third_party/"
+      ],
       "id": "FACMAN-JSON-OUTCOME-CODECS-01",
       "last_green_commit": null,
-      "progress_commits": ["bdd3f926d8242248961ef509491fc95cc3a21962"],
+      "progress_commits": [
+        "bdd3f926d8242248961ef509491fc95cc3a21962"
+      ],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["Manual JSON exception count increases", "A domain module exposes raw JSON"],
+      "stop_conditions": [
+        "Manual JSON exception count increases",
+        "A domain module exposes raw JSON"
+      ],
       "title": "JSON, outcome and typed codecs"
     },
     {
-      "affected_contracts": ["contracts/schema/facman/", "contracts/schema/factorio/"],
-      "affected_targets": ["facman-domain", "facman-workspace"],
-      "affected_tests": ["tests/test_architecture_fitness.py", "tools/manual_json_check.py"],
-      "allowed_paths": ["runtime/domain/", "runtime/core/io*", "runtime/core/fl_identity*", "runtime/application/workspace*"],
-      "blockers": ["Two critical stream I/O exceptions remain.", "Strong-ID constructors are still publicly callable."],
-      "claim_impacts": ["critical-io-zero", "portable-id-validity", "legacy-state-readability"],
-      "dependencies": ["FACMAN-JSON-OUTCOME-CODECS-01"],
-      "forbidden_paths": ["runtime/core/archive/"],
+      "affected_contracts": [
+        "contracts/schema/facman/",
+        "contracts/schema/factorio/"
+      ],
+      "affected_targets": [
+        "facman-domain",
+        "facman-workspace"
+      ],
+      "affected_tests": [
+        "tests/test_architecture_fitness.py",
+        "tools/manual_json_check.py"
+      ],
+      "allowed_paths": [
+        "runtime/domain/",
+        "runtime/core/io*",
+        "runtime/core/fl_identity*",
+        "runtime/application/workspace*"
+      ],
+      "blockers": [
+        "Two critical stream I/O exceptions remain.",
+        "Strong-ID constructors are still publicly callable."
+      ],
+      "claim_impacts": [
+        "critical-io-zero",
+        "portable-id-validity",
+        "legacy-state-readability"
+      ],
+      "dependencies": [
+        "FACMAN-JSON-OUTCOME-CODECS-01"
+      ],
+      "forbidden_paths": [
+        "runtime/core/archive/"
+      ],
       "id": "FACMAN-WORKSPACE-DOMAIN-STORES-01",
       "last_green_commit": null,
       "progress_commits": [],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["R3.2, R3.3 or R3.4 state becomes unreadable", "A destructive migration is introduced"],
+      "stop_conditions": [
+        "R3.2, R3.3 or R3.4 state becomes unreadable",
+        "A destructive migration is introduced"
+      ],
       "title": "Workspace and domain stores"
     },
     {
-      "affected_contracts": ["contracts/command/"],
-      "affected_targets": ["facman-command-catalog", "facman-cli", "facman-frontends"],
-      "affected_tests": ["tests/test_command_contracts.py", "tools/command_contract_check.py", "tools/command_truth_check.py"],
-      "allowed_paths": ["contracts/command/", "tools/generate_commands.py", "generated/", "apps/cli/", "apps/winforms/", "apps/appkit/"],
-      "blockers": ["Command IDs, grammar and write policy are not yet fully generated."],
-      "claim_impacts": ["command-catalog-v2", "generated-command-truth"],
-      "dependencies": ["FACMAN-ULK-DYNAMIC-REGISTRY-01", "FACMAN-JSON-OUTCOME-CODECS-01"],
-      "forbidden_paths": ["vendor/", "third_party/"],
+      "affected_contracts": [
+        "contracts/command/"
+      ],
+      "affected_targets": [
+        "facman-command-catalog",
+        "facman-cli",
+        "facman-frontends"
+      ],
+      "affected_tests": [
+        "tests/test_command_contracts.py",
+        "tools/command_contract_check.py",
+        "tools/command_truth_check.py"
+      ],
+      "allowed_paths": [
+        "contracts/command/",
+        "tools/generate_commands.py",
+        "generated/",
+        "apps/cli/",
+        "apps/winforms/",
+        "apps/appkit/"
+      ],
+      "blockers": [
+        "Command IDs, grammar and write policy are not yet fully generated."
+      ],
+      "claim_impacts": [
+        "command-catalog-v2",
+        "generated-command-truth"
+      ],
+      "dependencies": [
+        "FACMAN-ULK-DYNAMIC-REGISTRY-01",
+        "FACMAN-JSON-OUTCOME-CODECS-01"
+      ],
+      "forbidden_paths": [
+        "vendor/",
+        "third_party/"
+      ],
       "id": "FACMAN-COMMAND-CATALOG-V2-01",
       "last_green_commit": null,
-      "progress_commits": ["674a72e65733587022d4a5adf178b2484f13673d"],
+      "progress_commits": [
+        "674a72e65733587022d4a5adf178b2484f13673d"
+      ],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["Generated metadata drifts", "An alias enters the runtime registry"],
+      "stop_conditions": [
+        "Generated metadata drifts",
+        "An alias enters the runtime registry"
+      ],
       "title": "Generated command catalog v2"
     },
     {
-      "affected_contracts": ["contracts/command/", "contracts/schema/command/"],
-      "affected_targets": ["facman-application", "facman-setup"],
-      "affected_tests": ["tests/test_command_contracts.py", "tools/command_truth_check.py"],
-      "allowed_paths": ["contracts/command/", "runtime/application/handlers/", "runtime/application/setup_gateway*", "apps/cli/"],
-      "blockers": ["Generic utility.operation and setup.operation remain registered authoritative routes."],
-      "claim_impacts": ["first-class-command-coverage", "generic-router-retirement", "setup-input-truth"],
-      "dependencies": ["FACMAN-COMMAND-CATALOG-V2-01"],
-      "forbidden_paths": ["vendor/UniversalSetupKit/"],
+      "affected_contracts": [
+        "contracts/command/",
+        "contracts/schema/command/"
+      ],
+      "affected_targets": [
+        "facman-application",
+        "facman-setup"
+      ],
+      "affected_tests": [
+        "tests/test_command_contracts.py",
+        "tools/command_truth_check.py"
+      ],
+      "allowed_paths": [
+        "contracts/command/",
+        "runtime/application/handlers/",
+        "runtime/application/setup_gateway*",
+        "apps/cli/"
+      ],
+      "blockers": [
+        "Generic utility.operation and setup.operation remain registered authoritative routes."
+      ],
+      "claim_impacts": [
+        "first-class-command-coverage",
+        "generic-router-retirement",
+        "setup-input-truth"
+      ],
+      "dependencies": [
+        "FACMAN-COMMAND-CATALOG-V2-01"
+      ],
+      "forbidden_paths": [
+        "vendor/UniversalSetupKit/"
+      ],
       "id": "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01",
       "last_green_commit": null,
-      "progress_commits": ["0b7cf3fcab88fdc70a857905c24f7c45be3186eb"],
-      "provider_revisions": {"universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"},
+      "progress_commits": [
+        "0b7cf3fcab88fdc70a857905c24f7c45be3186eb"
+      ],
+      "provider_revisions": {
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
       "status": "pending",
-      "stop_conditions": ["A generic multiplexer remains authoritative", "USK is claimed to evaluate inputs it did not inspect"],
+      "stop_conditions": [
+        "A generic multiplexer remains authoritative",
+        "USK is claimed to evaluate inputs it did not inspect"
+      ],
       "title": "First-class capability routes"
     },
     {
-      "affected_contracts": ["include/facman/flb_api.h"],
-      "affected_targets": ["facman-flb", "facman-client"],
-      "affected_tests": ["tests/test_machine_transport.py", "tools/frontend_transport_truth_check.py"],
-      "allowed_paths": ["runtime/binding/", "runtime/client/", "include/facman/"],
-      "blockers": ["CancellationToken and ProgressSink are not wired for current long-running operations."],
-      "claim_impacts": ["c-abi-exception-containment", "context-thread-safety", "client-session-reuse"],
-      "dependencies": ["FACMAN-JSON-OUTCOME-CODECS-01", "FACMAN-COMMAND-CATALOG-V2-01"],
-      "forbidden_paths": ["include/facman/flb_api.h ABI layout changes"],
+      "affected_contracts": [
+        "include/facman/flb_api.h"
+      ],
+      "affected_targets": [
+        "facman-flb",
+        "facman-client"
+      ],
+      "affected_tests": [
+        "tests/test_machine_transport.py",
+        "tools/frontend_transport_truth_check.py"
+      ],
+      "allowed_paths": [
+        "runtime/binding/",
+        "runtime/client/",
+        "include/facman/"
+      ],
+      "blockers": [
+        "CancellationToken and ProgressSink are not wired for current long-running operations."
+      ],
+      "claim_impacts": [
+        "c-abi-exception-containment",
+        "context-thread-safety",
+        "client-session-reuse"
+      ],
+      "dependencies": [
+        "FACMAN-JSON-OUTCOME-CODECS-01",
+        "FACMAN-COMMAND-CATALOG-V2-01"
+      ],
+      "forbidden_paths": [
+        "include/facman/flb_api.h ABI layout changes"
+      ],
       "id": "FACMAN-ABI-CLIENT-SESSION-01",
       "last_green_commit": null,
-      "progress_commits": ["48f301bc0766688f71ef7936fa6202c518d66435"],
+      "progress_commits": [
+        "48f301bc0766688f71ef7936fa6202c518d66435"
+      ],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["A C++ exception crosses the C ABI", "A v1 symbol or layout changes"],
+      "stop_conditions": [
+        "A C++ exception crosses the C ABI",
+        "A v1 symbol or layout changes"
+      ],
       "title": "ABI containment and reusable client sessions"
     },
     {
-      "affected_contracts": ["contracts/release/support-matrix.v1.json"],
-      "affected_targets": ["windows-x64", "linux-x64", "macos-x64"],
-      "affected_tests": ["tools/linux_package_proof.py", "tools/macos_package_proof.py", "tools/required_package_proof.py"],
-      "allowed_paths": ["runtime/platform/", "runtime/core/io*", "runtime/core/fl_identity*", "CMakeLists.txt"],
-      "blockers": ["Linux and macOS native proof has not run.", "Platform user paths and portable reserved-name policy remain incomplete."],
-      "claim_impacts": ["secure-randomness", "durability-level", "platform-portability"],
-      "dependencies": ["FACMAN-WORKSPACE-DOMAIN-STORES-01", "FACMAN-ABI-CLIENT-SESSION-01"],
-      "forbidden_paths": ["shared-filesystem-atomicity claims"],
+      "affected_contracts": [
+        "contracts/release/support-matrix.v1.json"
+      ],
+      "affected_targets": [
+        "windows-x64",
+        "linux-x64",
+        "macos-x64"
+      ],
+      "affected_tests": [
+        "tools/linux_package_proof.py",
+        "tools/macos_package_proof.py",
+        "tools/required_package_proof.py"
+      ],
+      "allowed_paths": [
+        "runtime/platform/",
+        "runtime/core/io*",
+        "runtime/core/fl_identity*",
+        "CMakeLists.txt"
+      ],
+      "blockers": [
+        "Linux and macOS native proof has not run.",
+        "Platform user paths and portable reserved-name policy remain incomplete."
+      ],
+      "claim_impacts": [
+        "secure-randomness",
+        "durability-level",
+        "platform-portability"
+      ],
+      "dependencies": [
+        "FACMAN-WORKSPACE-DOMAIN-STORES-01",
+        "FACMAN-ABI-CLIENT-SESSION-01"
+      ],
+      "forbidden_paths": [
+        "shared-filesystem-atomicity claims"
+      ],
       "id": "FACMAN-PLATFORM-PORTABILITY-01",
       "last_green_commit": null,
-      "progress_commits": ["195377a67cfa924983830e0149d645d837d08203"],
+      "progress_commits": [
+        "195377a67cfa924983830e0149d645d837d08203"
+      ],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["Secure randomness falls back to a weak source", "Target-specific code leaks into shared compilation"],
+      "stop_conditions": [
+        "Secure randomness falls back to a weak source",
+        "Target-specific code leaks into shared compilation"
+      ],
       "title": "Platform portability"
     },
     {
-      "affected_contracts": ["contracts/schema/transport/"],
-      "affected_targets": ["facman-cli", "facman-winforms", "facman-appkit"],
-      "affected_tests": ["tests/test_machine_transport.py", "tests/test_frontend_contract.py", "tests/test_frontend_parity.py"],
-      "allowed_paths": ["apps/cli/", "apps/winforms/", "apps/appkit/", "runtime/client/", "contracts/schema/transport/"],
-      "blockers": ["CliProcessTransport, cancellation timeout and process-tree termination are incomplete.", "AppKit has not compiled on a native macOS runner."],
-      "claim_impacts": ["bounded-machine-transport", "frontend-protocol-parity"],
-      "dependencies": ["FACMAN-COMMAND-CATALOG-V2-01", "FACMAN-ABI-CLIENT-SESSION-01", "FACMAN-PLATFORM-PORTABILITY-01"],
-      "forbidden_paths": ["daemon enablement"],
+      "affected_contracts": [
+        "contracts/schema/transport/"
+      ],
+      "affected_targets": [
+        "facman-cli",
+        "facman-winforms",
+        "facman-appkit"
+      ],
+      "affected_tests": [
+        "tests/test_machine_transport.py",
+        "tests/test_frontend_contract.py",
+        "tests/test_frontend_parity.py"
+      ],
+      "allowed_paths": [
+        "apps/cli/",
+        "apps/winforms/",
+        "apps/appkit/",
+        "runtime/client/",
+        "contracts/schema/transport/"
+      ],
+      "blockers": [
+        "CliProcessTransport, cancellation timeout and process-tree termination are incomplete.",
+        "AppKit has not compiled on a native macOS runner."
+      ],
+      "claim_impacts": [
+        "bounded-machine-transport",
+        "frontend-protocol-parity"
+      ],
+      "dependencies": [
+        "FACMAN-COMMAND-CATALOG-V2-01",
+        "FACMAN-ABI-CLIENT-SESSION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01"
+      ],
+      "forbidden_paths": [
+        "daemon enablement"
+      ],
       "id": "FACMAN-MACHINE-TRANSPORT-01",
       "last_green_commit": null,
-      "progress_commits": ["f4e7eb66f9151cc8c84e8b49142e1563d0c7ca55"],
+      "progress_commits": [
+        "f4e7eb66f9151cc8c84e8b49142e1563d0c7ca55"
+      ],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["Human text appears on machine stdout", "Transport bounds are removed", "DaemonTransport is exposed as available"],
+      "stop_conditions": [
+        "Human text appears on machine stdout",
+        "Transport bounds are removed",
+        "DaemonTransport is exposed as available"
+      ],
       "title": "Bounded machine transport"
     },
     {
-      "affected_contracts": ["contracts/policy/live_schema_subset.v1.toml", ".github/workflows/codeql.yml"],
-      "affected_targets": ["schema-conformance", "compatibility", "security"],
-      "affected_tests": ["tests/test_schema_tools.py", "tests/test_code_security.py", "tools/security_policy_check.py"],
-      "allowed_paths": ["contracts/", "tests/fixtures/", "tools/", ".github/workflows/"],
-      "blockers": ["Full standards-schema dependency, compatibility corpus, fuzz matrix and benchmarks remain incomplete.", "CodeQL has not executed remotely."],
-      "claim_impacts": ["full-schema-conformance", "backward-compatibility", "security-analysis"],
-      "dependencies": ["FACMAN-R3.4-TARGET-PROMOTION-01", "FACMAN-JSON-OUTCOME-CODECS-01", "FACMAN-WORKSPACE-DOMAIN-STORES-01", "FACMAN-COMMAND-CATALOG-V2-01", "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01", "FACMAN-ABI-CLIENT-SESSION-01", "FACMAN-PLATFORM-PORTABILITY-01", "FACMAN-MACHINE-TRANSPORT-01"],
-      "forbidden_paths": ["security-policy workflow conflation"],
+      "affected_contracts": [
+        "contracts/policy/live_schema_subset.v1.toml",
+        ".github/workflows/codeql.yml"
+      ],
+      "affected_targets": [
+        "schema-conformance",
+        "compatibility",
+        "security"
+      ],
+      "affected_tests": [
+        "tests/test_schema_tools.py",
+        "tests/test_code_security.py",
+        "tools/security_policy_check.py"
+      ],
+      "allowed_paths": [
+        "contracts/",
+        "tests/fixtures/",
+        "tools/",
+        ".github/workflows/"
+      ],
+      "blockers": [
+        "Full standards-schema dependency, compatibility corpus, fuzz matrix and benchmarks remain incomplete.",
+        "CodeQL has not executed remotely."
+      ],
+      "claim_impacts": [
+        "full-schema-conformance",
+        "backward-compatibility",
+        "security-analysis"
+      ],
+      "dependencies": [
+        "FACMAN-R3.4-TARGET-PROMOTION-01",
+        "FACMAN-JSON-OUTCOME-CODECS-01",
+        "FACMAN-WORKSPACE-DOMAIN-STORES-01",
+        "FACMAN-COMMAND-CATALOG-V2-01",
+        "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01",
+        "FACMAN-ABI-CLIENT-SESSION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01",
+        "FACMAN-MACHINE-TRANSPORT-01"
+      ],
+      "forbidden_paths": [
+        "security-policy workflow conflation"
+      ],
       "id": "FACMAN-CONFORMANCE-COMPAT-SECURITY-01",
       "last_green_commit": null,
-      "progress_commits": ["a3fd3dd559cb3b43c2bdd1749a7a8fb59c1a8a95"],
+      "progress_commits": [
+        "a3fd3dd559cb3b43c2bdd1749a7a8fb59c1a8a95"
+      ],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["A schema keyword is accepted without validation", "Remote analysis is inferred from local checks", "A material benchmark regression is unexplained"],
+      "stop_conditions": [
+        "A schema keyword is accepted without validation",
+        "Remote analysis is inferred from local checks",
+        "A material benchmark regression is unexplained"
+      ],
       "title": "Conformance, compatibility and security"
     },
     {
-      "affected_contracts": [".aide/memory/waves/facman-r3.5.json"],
-      "affected_targets": ["aide-lite"],
-      "affected_tests": [".aide/scripts/tests/test_r35_wave_autonomy.py", ".aide/scripts/tests/test_x_os_01_task_os_commands.py"],
-      "allowed_paths": [".aide/scripts/aide_lite.py", ".aide/scripts/tests/", ".aide/memory/waves/", ".aide/reports/"],
+      "affected_contracts": [
+        ".aide/memory/waves/facman-r3.5.json"
+      ],
+      "affected_targets": [
+        "aide-lite"
+      ],
+      "affected_tests": [
+        ".aide/scripts/tests/test_r35_wave_autonomy.py",
+        ".aide/scripts/tests/test_x_os_01_task_os_commands.py"
+      ],
+      "allowed_paths": [
+        ".aide/scripts/aide_lite.py",
+        ".aide/scripts/tests/",
+        ".aide/memory/waves/",
+        ".aide/reports/"
+      ],
       "blockers": [],
-      "claim_impacts": ["resumable-wave-state", "advisory-validation-cache", "compact-active-context"],
-      "dependencies": ["FACMAN-R3.5-TRUTH-FITNESS-01", "FACMAN-ULK-DYNAMIC-REGISTRY-01"],
-      "forbidden_paths": [".aide.local/", "provider calls", "model calls", "network calls", "automatic claim promotion"],
+      "claim_impacts": [
+        "resumable-wave-state",
+        "advisory-validation-cache",
+        "compact-active-context"
+      ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T05:25:00Z",
+      "dependencies": [
+        "FACMAN-R3.5-TRUTH-FITNESS-01",
+        "FACMAN-ULK-DYNAMIC-REGISTRY-01"
+      ],
+      "forbidden_paths": [
+        ".aide.local/",
+        "provider calls",
+        "model calls",
+        "network calls",
+        "automatic claim promotion"
+      ],
       "id": "FACMAN-AIDE-WAVE-AUTONOMY-02",
-      "last_green_commit": null,
+      "last_green_commit": "b5011c541a6e97543f193c35ef427ca93e280628",
       "progress_commits": [],
       "provider_revisions": {},
       "started_at": "2026-07-12T00:00:00Z",
-      "status": "active",
-      "stop_conditions": ["Wave state cannot resume from a green commit", "Cached proof can promote a claim", "Closed history enters active context"],
-      "title": "AIDE resumable wave autonomy"
+      "status": "closed",
+      "stop_conditions": [
+        "Wave state cannot resume from a green commit",
+        "Cached proof can promote a claim",
+        "Closed history enters active context"
+      ],
+      "title": "AIDE resumable wave autonomy",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T05:25:00Z",
+        "result": "PASS",
+        "source_fingerprint": "aceee3217754eac65a32e51493ecf99a5912f6c56e768bc90795bdcad9e4d409",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          ".aide/scripts/tests/test_r35_wave_autonomy.py": "d1393c59b19c0880d0199710db21b2f9ca323cdb8e218a13b6016b9de8bae5f3",
+          ".aide/scripts/tests/test_x_os_01_task_os_commands.py": "f43af8d8097c981abf34693e1c706d6150e98cdd9070e70376b8287f83663e56"
+        },
+        "test_results": {
+          "aide-lite-portable-suite": "PASS",
+          "diff-check": "PASS",
+          "r35-wave-autonomy": "PASS",
+          "wave-status-next-resume": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
-      "affected_contracts": ["contracts/release/support-matrix.v1.json", "contracts/policy/architecture_fitness_exceptions.v1.toml"],
-      "affected_targets": ["all"],
-      "affected_tests": ["tools/strict_check.py", ".aide/scripts/aide_lite.py"],
-      "allowed_paths": ["docs/", "artifacts/", ".aide/memory/", ".aide/reports/"],
-      "blockers": ["All mandatory predecessors must close truthfully."],
-      "claim_impacts": ["r3.5-closeout"],
-      "dependencies": ["FACMAN-R3.4-TARGET-PROMOTION-01", "FACMAN-R3.5-TRUTH-FITNESS-01", "FACMAN-ULK-DYNAMIC-REGISTRY-01", "FACMAN-JSON-OUTCOME-CODECS-01", "FACMAN-WORKSPACE-DOMAIN-STORES-01", "FACMAN-COMMAND-CATALOG-V2-01", "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01", "FACMAN-ABI-CLIENT-SESSION-01", "FACMAN-PLATFORM-PORTABILITY-01", "FACMAN-MACHINE-TRANSPORT-01", "FACMAN-CONFORMANCE-COMPAT-SECURITY-01", "FACMAN-AIDE-WAVE-AUTONOMY-02"],
-      "forbidden_paths": ["optional stretch work before mandatory green", "human-gate promotion"],
+      "affected_contracts": [
+        "contracts/release/support-matrix.v1.json",
+        "contracts/policy/architecture_fitness_exceptions.v1.toml"
+      ],
+      "affected_targets": [
+        "all"
+      ],
+      "affected_tests": [
+        "tools/strict_check.py",
+        ".aide/scripts/aide_lite.py"
+      ],
+      "allowed_paths": [
+        "docs/",
+        "artifacts/",
+        ".aide/memory/",
+        ".aide/reports/"
+      ],
+      "blockers": [
+        "All mandatory predecessors must close truthfully."
+      ],
+      "claim_impacts": [
+        "r3.5-closeout"
+      ],
+      "dependencies": [
+        "FACMAN-R3.4-TARGET-PROMOTION-01",
+        "FACMAN-R3.5-TRUTH-FITNESS-01",
+        "FACMAN-ULK-DYNAMIC-REGISTRY-01",
+        "FACMAN-JSON-OUTCOME-CODECS-01",
+        "FACMAN-WORKSPACE-DOMAIN-STORES-01",
+        "FACMAN-COMMAND-CATALOG-V2-01",
+        "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01",
+        "FACMAN-ABI-CLIENT-SESSION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01",
+        "FACMAN-MACHINE-TRANSPORT-01",
+        "FACMAN-CONFORMANCE-COMPAT-SECURITY-01",
+        "FACMAN-AIDE-WAVE-AUTONOMY-02"
+      ],
+      "forbidden_paths": [
+        "optional stretch work before mandatory green",
+        "human-gate promotion"
+      ],
       "id": "FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01",
       "last_green_commit": null,
       "progress_commits": [],
       "provider_revisions": {},
       "status": "pending",
-      "stop_conditions": ["Any mandatory criterion is not green", "Any target evidence is stale", "A human-gated capability is promoted"],
+      "stop_conditions": [
+        "Any mandatory criterion is not green",
+        "Any target evidence is stale",
+        "A human-gated capability is promoted"
+      ],
       "title": "R3.5 zero-exception closeout"
     }
   ]

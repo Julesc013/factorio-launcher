@@ -2,7 +2,7 @@
 
 - wave_id: facman-r3.5
 - status: active
-- current_exact_revision: a3fd3dd559cb3b43c2bdd1749a7a8fb59c1a8a95
+- current_exact_revision: b5011c541a6e97543f193c35ef427ca93e280628
 - mode: report_only
 - task_execution: false
 - repair_execution: false
@@ -26,7 +26,7 @@
 - `FACMAN-PLATFORM-PORTABILITY-01`: pending (last_green_commit: none)
 - `FACMAN-MACHINE-TRANSPORT-01`: pending (last_green_commit: none)
 - `FACMAN-CONFORMANCE-COMPAT-SECURITY-01`: pending (last_green_commit: none)
-- `FACMAN-AIDE-WAVE-AUTONOMY-02`: active (last_green_commit: none)
+- `FACMAN-AIDE-WAVE-AUTONOMY-02`: closed (last_green_commit: b5011c541a6e97543f193c35ef427ca93e280628)
 - `FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01`: pending (last_green_commit: none)
 
 ## Active Context
