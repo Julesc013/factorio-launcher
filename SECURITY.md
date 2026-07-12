@@ -39,3 +39,13 @@ FacMan has no stable release. Only the current default branch and an explicitly
 named package-preview candidate receive security triage. Historical R2/R3
 checkpoints and unsigned proof artifacts are evidence, not supported releases.
 See `docs/release/SUPPORT_POLICY.md` for platform and version scope.
+
+## Evidence boundaries
+
+The `security-policy` workflow validates repository policy and must not be
+described as source-code vulnerability analysis. The separate `code-security`
+workflow runs CodeQL v4 for the built C/C++ graph, Python, and the WinForms C#
+client. Sanitizers, fuzzing, compiler hardening inspection, dependency/license
+review, and secret-scanning settings remain separate evidence with separate
+availability and results. A configured workflow is not a green analysis result
+until GitHub Actions executes it for the exact revision.

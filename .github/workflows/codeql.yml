@@ -1,0 +1,63 @@
+name: code-security
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  c-cpp:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Clone locked universal repositories
+        run: |
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+          python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: c-cpp
+          build-mode: manual
+      - name: Build generated C and C++ graph
+        run: |
+          cmake -S . -B build/codeql -DCMAKE_BUILD_TYPE=Debug -DFACMAN_BUILD_CLI=ON
+          cmake --build build/codeql --parallel
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:c-cpp
+
+  python:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: python
+          build-mode: none
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:python
+
+  csharp:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v6
+      - uses: microsoft/setup-msbuild@v3
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: csharp
+          build-mode: manual
+      - name: Build WinForms client
+        run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Debug
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:csharp
