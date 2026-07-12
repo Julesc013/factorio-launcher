@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ctypes
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -17,9 +18,25 @@ REQUIRED_EXPORTS = (
 )
 
 
-def validate(path: Path) -> list[str]:
+def validate_symbol_table(path: Path) -> list[str]:
+    completed = subprocess.run(
+        ["nm", "-D", "--defined-only", str(path)],
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if completed.returncode != 0:
+        return [f"could not inspect shared library symbols: {completed.stderr.strip()}"]
+    present = {line.split()[-1] for line in completed.stdout.splitlines() if line.split()}
+    return [f"missing public ABI export: {name}" for name in REQUIRED_EXPORTS if name not in present]
+
+
+def validate(path: Path, symbols_only: bool = False) -> list[str]:
     if not path.is_file():
         return [f"shared library does not exist: {path}"]
+    if symbols_only:
+        return validate_symbol_table(path)
     cookie = None
     if os.name == "nt":
         cookie = os.add_dll_directory(str(path.parent))
@@ -44,8 +61,9 @@ def validate(path: Path) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Verify the FacMan binding ABI symbol floor.")
     parser.add_argument("--library", required=True, type=Path)
+    parser.add_argument("--symbols-only", action="store_true")
     args = parser.parse_args()
-    problems = validate(args.library.resolve())
+    problems = validate(args.library.resolve(), symbols_only=args.symbols_only)
     if problems:
         for problem in problems:
             print(f"abi-symbol-check: {problem}", file=sys.stderr)

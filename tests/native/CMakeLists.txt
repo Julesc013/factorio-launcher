@@ -85,9 +85,13 @@ target_compile_features(facman_abi_layout_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_abi_layout_smoke PRIVATE flb_factorio_static facman_client_static)
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
+set(FACMAN_ABI_SYMBOL_ARGS)
+if(FACMAN_ENABLE_SANITIZERS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  list(APPEND FACMAN_ABI_SYMBOL_ARGS --symbols-only)
+endif()
 add_test(NAME facman_abi_symbol_smoke
   COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/abi_symbol_check.py
-    --library $<TARGET_FILE:flb_factorio_shared>)
+    --library $<TARGET_FILE:flb_factorio_shared> ${FACMAN_ABI_SYMBOL_ARGS})
 set_tests_properties(facman_abi_symbol_smoke PROPERTIES LABELS "contract;platform")
 
 facman_add_libfuzzer(fl_archive_libfuzzer fl_archive_libfuzzer.cpp)
