@@ -11,7 +11,11 @@
       "type": "array",
       "items": { "type": "object" }
     },
-    "read_only": { "type": "boolean" }
+    "read_only": { "type": "boolean" },
+    "budgets": {
+      "type": "object",
+      "required": ["maximum_provider_roots", "maximum_candidates", "maximum_directory_entries_per_root", "maximum_metadata_bytes", "maximum_depth", "maximum_elapsed_milliseconds"]
+    }
   },
   "additionalProperties": true
 }

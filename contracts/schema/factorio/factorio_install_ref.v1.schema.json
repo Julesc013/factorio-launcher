@@ -6,6 +6,7 @@
   "required": ["install_id", "product_id", "source", "ownership", "executable", "app_dir", "verification"],
   "properties": {
     "install_id": { "type": "string" },
+    "provider_id": { "type": "string" },
     "product_id": { "const": "factorio" },
     "source": { "type": "string" },
     "ownership": { "enum": ["managed", "foreign", "foreign_owned", "imported", "portable"] },
@@ -15,6 +16,8 @@
     "executable": { "type": "string" },
     "app_dir": { "type": "string" },
     "capabilities": { "type": "array", "items": { "type": "string" } },
+    "diagnostic_code": { "type": "string" },
+    "evidence": { "type": "array", "items": { "type": "string" } },
     "verification": { "type": "object" }
   },
   "additionalProperties": true

@@ -1,70 +1,69 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "contracts/schema/",
-      "contracts/refusal/"
+      "contracts/schema/install/"
     ],
     "affected_targets": [
-      "facman_client_static",
-      "flb_factorio_application_static",
-      "facman_cli"
+      "flb_factorio_discovery_static"
     ],
     "affected_tests": [
-      "tests/native/facman_client_smoke.cpp",
-      "tests/test_machine_transport.py"
+      "tests/native/flb_factorio_discovery_smoke.cpp",
+      "tests/test_discovery_golden.py"
     ],
     "allowed_paths": [
-      "runtime/",
-      "include/",
+      "runtime/factorio/discovery/",
+      "runtime/factorio/CMakeLists.txt",
       "contracts/",
       "tests/",
       "tools/",
-      "apps/"
+      ".github/"
     ],
-    "blockers": [],
+    "blockers": [
+      "validation result: linux-target-ci=WARN",
+      "validation result: macos-target-ci=WARN"
+    ],
     "claim_impacts": [
-      "outcome-fidelity",
-      "unicode-boundaries",
-      "setup-plan-truth"
+      "cross-platform-read-only-discovery"
     ],
     "dependencies": [
-      "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01"
+      "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01"
     ],
     "forbidden_paths": [
-      "public ABI breaks",
-      "capability promotion"
+      "recursive home scans",
+      "package manager execution",
+      "discovery writes"
     ],
-    "id": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01",
+    "id": "FACMAN-DISCOVERY-PROVIDERS-02",
     "last_green_commit": null,
     "provider_revisions": {},
-    "started_at": "2026-07-12T09:40:54Z",
-    "status": "verified",
+    "started_at": "2026-07-12T10:03:56Z",
+    "status": "blocked",
     "stop_conditions": [
-      "persisted state becomes unreadable",
-      "a public ABI break is required"
+      "target proof requires unsafe traversal",
+      "discovery mutates source or workspace"
     ],
-    "title": "Close residual boundary correctness gaps",
+    "title": "Implement bounded native discovery providers",
     "verification": {
       "promotion_eligible": false,
       "provider_revisions": {
         "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
         "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
       },
-      "recorded_at": "2026-07-12T10:02:54Z",
-      "result": "PASS",
-      "source_fingerprint": "e0335ae675d84c536afa8a3a0b0fc1b97fbccfc17b3b95d83126287892dc0e9c",
+      "recorded_at": "2026-07-12T10:14:20Z",
+      "result": "FAIL",
+      "source_fingerprint": "a64cfcb92d9d7e29862f5e7df53b0a938b5845902092ef02598146d80da95bb6",
       "target_runner_evidence_inferred": false,
       "test_fingerprints": {
-        "tests/native/facman_client_smoke.cpp": "1da7a6a3a26eb0da3549856212934d805eb79b1e6324cb5377dd2ff65caf2e67",
-        "tests/test_machine_transport.py": "1d0156571225b8fc137f1dac4dc85cdbeb868fd6f1b378b301a3deae5bcd7186"
+        "tests/native/flb_factorio_discovery_smoke.cpp": "cba00e203e89b714ee81ae09d80976e93c99339cf34ac4879233353eea288668",
+        "tests/test_discovery_golden.py": "missing"
       },
       "test_results": {
-        "machine-outcome": "PASS",
-        "native-boundary-smokes": "PASS",
-        "schema-122": "PASS",
-        "setup-off": "PASS",
-        "setup-on": "PASS",
-        "strict-check": "PASS"
+        "cross-target-native-fixture": "PASS",
+        "linux-target-ci": "WARN",
+        "macos-target-ci": "WARN",
+        "provider-contract-tests": "PASS",
+        "strict-check": "PASS",
+        "windows-provider": "PASS"
       },
       "toolchain_identity": {
         "implementation": "cpython",
@@ -74,12 +73,11 @@
     }
   },
   "affected_contracts": [
-    "contracts/schema/",
-    "contracts/refusal/"
+    "contracts/schema/install/"
   ],
   "affected_tests": [
-    "tests/native/facman_client_smoke.cpp",
-    "tests/test_machine_transport.py"
+    "tests/native/flb_factorio_discovery_smoke.cpp",
+    "tests/test_discovery_golden.py"
   ],
   "architecture_invariants": [
     "R3.5 is the architecture endpoint; this wave must deliver product value without another broad redesign.",
@@ -88,18 +86,20 @@
     "AIDE makes no provider, model or network call.",
     "Human Factorio gates remain explicit operator decisions and cannot be inferred from automated proof."
   ],
-  "current_exact_revision": "bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8",
+  "current_exact_revision": "1994a91b9eb4b02c29f4cc8ed84f7b0de84554a8",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01",
-      "last_green_commit": "bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8",
+      "id": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01",
+      "last_green_commit": "1994a91b9eb4b02c29f4cc8ed84f7b0de84554a8",
       "status": "closed"
     }
   ],
   "history_included": false,
   "open_blockers": [
     "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
-    "Release, signing, publication and Safe beta promotion are outside this wave."
+    "Release, signing, publication and Safe beta promotion are outside this wave.",
+    "validation result: linux-target-ci=WARN",
+    "validation result: macos-target-ci=WARN"
   ],
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",

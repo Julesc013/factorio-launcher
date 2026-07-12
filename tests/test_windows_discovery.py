@@ -84,6 +84,8 @@ class WindowsDiscoveryProviderTests(unittest.TestCase):
             self.assertEqual(first["invalid_count"], 1)
             self.assertEqual([item["root"] for item in first["installs"]], sorted(item["root"] for item in first["installs"]))
             self.assertTrue(all(item["source"] == "steam" for item in first["installs"]))
+            self.assertTrue(all(item["provider_id"] == "windows.steam" for item in first["installs"]))
+            self.assertTrue(all("libraryfolders.vdf" in item["evidence"] for item in first["installs"]))
             self.assertTrue(all(item["ownership"] == "foreign_owned" for item in first["installs"]))
             self.assertEqual(len({item["install_id"] for item in first["installs"]}), 2)
             self.assertTrue(all(item["safe_actions"] == {"repair": False, "uninstall": False} for item in first["installs"]))

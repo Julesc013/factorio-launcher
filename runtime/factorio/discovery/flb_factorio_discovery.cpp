@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_discovery.h"
+#include "discovery_service.h"
 
 #include "fl_file_io.h"
 #include "fl_json.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cctype>
 #include <cstdlib>
 #include <set>
@@ -155,45 +157,6 @@ std::string lower_path(const fs::path& path)
     return lower;
 }
 
-std::string infer_source(const fs::path& root)
-{
-    std::string lower = lower_path(root);
-    if (lower.find("steamapps") != std::string::npos || lower.find("steam") != std::string::npos) {
-        return "steam";
-    }
-    if (lower.find("portable") != std::string::npos) {
-        return "portable";
-    }
-    if (lower.find("standalone") != std::string::npos) {
-        return "standalone";
-    }
-    if (lower.find("tarball") != std::string::npos) {
-        return "tarball";
-    }
-    if (lower.find("package") != std::string::npos) {
-        return "os_package";
-    }
-    if (lower.find("headless") != std::string::npos) {
-        return "headless";
-    }
-    if (lower.find(".app") != std::string::npos || lower.find("contents/macos") != std::string::npos) {
-        return "app_bundle";
-    }
-    return "manual";
-}
-
-std::string infer_ownership(const fs::path& root)
-{
-    std::string source = infer_source(root);
-    if (source == "steam" || source == "os_package" || source == "standalone") {
-        return "foreign_owned";
-    }
-    if (source == "portable" || source == "tarball") {
-        return "portable";
-    }
-    return "imported";
-}
-
 std::string infer_platform(const fs::path& root, const fs::path& executable)
 {
     std::string executable_text = path_string(executable);
@@ -312,239 +275,30 @@ bool path_crosses_link_or_reparse_point(const fs::path& path)
 
 struct SearchRoot {
     fs::path path;
-    std::string source_hint;
-    std::string ownership_hint;
+    std::string provider_id;
+    std::string source;
+    std::string ownership;
+    std::vector<std::string> evidence;
 };
-
-void append_search_root(
-    std::vector<SearchRoot>& roots,
-    const fs::path& path,
-    const std::string& source_hint = {},
-    const std::string& ownership_hint = {})
-{
-    std::string key = comparison_key(path);
-    for (const SearchRoot& existing : roots) {
-        if (comparison_key(existing.path) == key) return;
-    }
-    roots.push_back({fs::absolute(path).lexically_normal(), source_hint, ownership_hint});
-}
-
-std::vector<fs::path> path_list_environment(const char* name)
-{
-    std::vector<fs::path> paths;
-#ifdef _WIN32
-    std::wstring wide_name;
-    for (const unsigned char ch : std::string(name)) wide_name.push_back(static_cast<wchar_t>(ch));
-    const wchar_t* value = _wgetenv(wide_name.c_str());
-    if (value == nullptr || *value == L'\0') {
-        return paths;
-    }
-    std::wstring text = value;
-    std::size_t start = 0;
-    for (;;) {
-        std::size_t end = text.find(L';', start);
-        std::wstring item = text.substr(start, end == std::wstring::npos ? std::wstring::npos : end - start);
-        if (!item.empty()) {
-            append_unique_path(paths, fs::path(item));
-        }
-        if (end == std::wstring::npos) break;
-        start = end + 1;
-    }
-#else
-    const char* value = std::getenv(name);
-    if (value == nullptr || *value == '\0') return paths;
-    std::string text = value;
-    std::size_t start = 0;
-    for (;;) {
-        std::size_t end = text.find(':', start);
-        std::string item = text.substr(start, end == std::string::npos ? std::string::npos : end - start);
-        if (!item.empty()) append_unique_path(paths, facman::platform::path_from_utf8(item));
-        if (end == std::string::npos) break;
-        start = end + 1;
-    }
-#endif
-    return paths;
-}
-
-#ifdef _WIN32
-class VdfTokenReader {
-public:
-    explicit VdfTokenReader(const std::string& text) : text_(text) {}
-
-    std::vector<std::string> strings()
-    {
-        std::vector<std::string> tokens;
-        while (position_ < text_.size() && tokens.size() < 65536) {
-            skip_whitespace_and_comments();
-            if (position_ >= text_.size()) break;
-            char ch = text_[position_];
-            if (ch == '{' || ch == '}') {
-                ++position_;
-                continue;
-            }
-            if (ch != '"') {
-                while (position_ < text_.size() &&
-                    !std::isspace(static_cast<unsigned char>(text_[position_])) &&
-                    text_[position_] != '{' && text_[position_] != '}') ++position_;
-                continue;
-            }
-            std::string token;
-            if (!parse_string(token)) return {};
-            tokens.push_back(std::move(token));
-        }
-        return tokens;
-    }
-
-private:
-    void skip_whitespace_and_comments()
-    {
-        for (;;) {
-            while (position_ < text_.size() &&
-                std::isspace(static_cast<unsigned char>(text_[position_]))) ++position_;
-            if (position_ + 1 < text_.size() && text_[position_] == '/' && text_[position_ + 1] == '/') {
-                position_ += 2;
-                while (position_ < text_.size() && text_[position_] != '\n') ++position_;
-                continue;
-            }
-            break;
-        }
-    }
-
-    bool parse_string(std::string& output)
-    {
-        if (text_[position_++] != '"') return false;
-        while (position_ < text_.size()) {
-            char ch = text_[position_++];
-            if (ch == '"') return true;
-            if (static_cast<unsigned char>(ch) < 0x20) return false;
-            if (ch != '\\') {
-                output.push_back(ch);
-                continue;
-            }
-            if (position_ >= text_.size()) return false;
-            char escaped = text_[position_++];
-            if (escaped == '\\' || escaped == '"') output.push_back(escaped);
-            else if (escaped == 'n') output.push_back('\n');
-            else if (escaped == 't') output.push_back('\t');
-            else return false;
-        }
-        return false;
-    }
-
-    const std::string& text_;
-    std::size_t position_ = 0;
-};
-
-bool numeric_token(const std::string& value)
-{
-    return !value.empty() && std::all_of(value.begin(), value.end(), [](unsigned char ch) {
-        return std::isdigit(ch) != 0;
-    });
-}
-
-std::vector<fs::path> steam_libraries(const fs::path& steam_root)
-{
-    std::vector<fs::path> libraries;
-    append_unique_path(libraries, steam_root);
-    fs::path vdf = steam_root / "steamapps" / "libraryfolders.vdf";
-    std::error_code size_error;
-    if (!fs::is_regular_file(vdf) || fs::file_size(vdf, size_error) > 2 * 1024 * 1024 || size_error) {
-        return libraries;
-    }
-    const std::string contents = read_text(vdf);
-    VdfTokenReader reader(contents);
-    const std::vector<std::string> tokens = reader.strings();
-    for (std::size_t index = 0; index + 1 < tokens.size(); ++index) {
-        if (tokens[index] != "path" && !numeric_token(tokens[index])) continue;
-        fs::path candidate = fs::u8path(tokens[index + 1]);
-        if (candidate.is_absolute() || candidate.has_root_name()) append_unique_path(libraries, candidate);
-    }
-    return libraries;
-}
-
-std::string registry_string(HKEY root, const wchar_t* subkey, const wchar_t* name)
-{
-    DWORD type = 0;
-    DWORD bytes = 0;
-    if (RegGetValueW(root, subkey, name, RRF_RT_REG_SZ, &type, nullptr, &bytes) != ERROR_SUCCESS || bytes < 2) {
-        return {};
-    }
-    std::wstring value(bytes / sizeof(wchar_t), L'\0');
-    if (RegGetValueW(root, subkey, name, RRF_RT_REG_SZ, &type, value.data(), &bytes) != ERROR_SUCCESS) {
-        return {};
-    }
-    while (!value.empty() && value.back() == L'\0') value.pop_back();
-    return facman::platform::path_to_utf8(fs::path(value));
-}
-#endif
 
 std::vector<SearchRoot> discovery_search_roots(const std::vector<fs::path>& explicit_roots)
 {
+    std::vector<internal::SearchRoot> provider_roots;
+    internal::add_explicit_provider_roots(provider_roots, explicit_roots);
+    if (provider_roots.empty()) {
+        internal::add_windows_provider_roots(provider_roots);
+        internal::add_linux_provider_roots(provider_roots);
+        internal::add_macos_provider_roots(provider_roots);
+    }
     std::vector<SearchRoot> roots;
-    for (const fs::path& path : explicit_roots) append_search_root(roots, path);
-    for (const fs::path& path : path_list_environment("FACMAN_DISCOVERY_ROOTS")) append_search_root(roots, path);
-
-    if (!roots.empty()) {
-        return roots;
+    for (auto& root : provider_roots) {
+        roots.push_back({
+            std::move(root.path),
+            std::move(root.provider_id),
+            std::move(root.source),
+            std::move(root.ownership),
+            std::move(root.evidence)});
     }
-
-    const bool disable_defaults = std::getenv("FACMAN_DISCOVERY_DISABLE_DEFAULTS") != nullptr;
-
-#ifdef _WIN32
-    std::vector<fs::path> steam_roots = path_list_environment("FACMAN_STEAM_ROOTS");
-    if (!disable_defaults) {
-        const std::string user_steam = registry_string(HKEY_CURRENT_USER, L"Software\\Valve\\Steam", L"SteamPath");
-        const std::string machine_steam = registry_string(
-            HKEY_LOCAL_MACHINE,
-            L"SOFTWARE\\WOW6432Node\\Valve\\Steam",
-            L"InstallPath");
-        if (!user_steam.empty()) append_unique_path(steam_roots, fs::u8path(user_steam));
-        if (!machine_steam.empty()) append_unique_path(steam_roots, fs::u8path(machine_steam));
-    }
-    const char* program_files = std::getenv("ProgramFiles");
-    const char* program_files_x86 = std::getenv("ProgramFiles(x86)");
-    const char* local_app_data = std::getenv("LOCALAPPDATA");
-    if (!disable_defaults && program_files_x86 && *program_files_x86) {
-        append_unique_path(steam_roots, fs::path(program_files_x86) / "Steam");
-    }
-    for (const fs::path& steam_root : steam_roots) {
-        for (const fs::path& library : steam_libraries(steam_root)) {
-            append_search_root(
-                roots,
-                library / "steamapps" / "common" / "Factorio",
-                "steam",
-                "foreign_owned");
-        }
-    }
-    for (const fs::path& standalone : path_list_environment("FACMAN_STANDALONE_ROOTS")) {
-        append_search_root(roots, standalone, "standalone", "foreign_owned");
-    }
-    if (!disable_defaults && program_files && *program_files) {
-        append_search_root(roots, fs::path(program_files) / "Factorio", "standalone", "foreign_owned");
-    }
-    if (!disable_defaults && local_app_data && *local_app_data) {
-        append_search_root(
-            roots,
-            fs::path(local_app_data) / "Programs" / "Factorio",
-            "standalone",
-            "foreign_owned");
-    }
-#else
-    if (!disable_defaults) {
-        const char* home = std::getenv("HOME");
-        if (home && *home) {
-            append_search_root(roots, fs::path(home) / "factorio");
-            append_search_root(
-                roots,
-                fs::path(home) / ".local" / "share" / "Steam" / "steamapps" / "common" / "Factorio",
-                "steam",
-                "foreign_owned");
-            append_search_root(roots, fs::path(home) / "Applications" / "factorio.app", "app_bundle", "foreign_owned");
-        }
-        append_search_root(roots, "/opt/factorio", "os_package", "foreign_owned");
-        append_search_root(roots, "/Applications/factorio.app", "app_bundle", "foreign_owned");
-    }
-#endif
     std::sort(roots.begin(), roots.end(), [](const SearchRoot& left, const SearchRoot& right) {
         return comparison_key(left.path) < comparison_key(right.path);
     });
@@ -553,6 +307,7 @@ std::vector<SearchRoot> discovery_search_roots(const std::vector<fs::path>& expl
 
 std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
 {
+    constexpr std::size_t kMaximumDirectoryEntries = 4096U;
     std::vector<fs::path> candidates;
     std::vector<fs::path> fixture_children;
     bool root_is_fixture = fs::is_regular_file(root / "fixture.manifest.v1.json");
@@ -564,10 +319,13 @@ std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
 
     if (fs::is_directory(root)) {
         std::vector<fs::path> children;
-        for (const fs::directory_entry& entry : fs::directory_iterator(root)) {
-            if (entry.is_directory()) {
-                children.push_back(entry.path());
-            }
+        std::error_code error;
+        std::size_t entries = 0;
+        for (fs::directory_iterator iterator(root, fs::directory_options::none, error), end;
+             !error && iterator != end && entries < kMaximumDirectoryEntries;
+             iterator.increment(error), ++entries) {
+            const fs::file_status status = iterator->symlink_status(error);
+            if (!error && fs::is_directory(status)) children.push_back(iterator->path());
         }
         std::sort(children.begin(), children.end());
         for (const fs::path& child : children) {
@@ -590,10 +348,13 @@ std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
 
     if (fs::is_directory(root)) {
         std::vector<fs::path> children;
-        for (const fs::directory_entry& entry : fs::directory_iterator(root)) {
-            if (entry.is_directory()) {
-                children.push_back(entry.path());
-            }
+        std::error_code error;
+        std::size_t entries = 0;
+        for (fs::directory_iterator iterator(root, fs::directory_options::none, error), end;
+             !error && iterator != end && entries < kMaximumDirectoryEntries;
+             iterator.increment(error), ++entries) {
+            const fs::file_status status = iterator->symlink_status(error);
+            if (!error && fs::is_directory(status)) children.push_back(iterator->path());
         }
         std::sort(children.begin(), children.end());
         for (const fs::path& child : children) {
@@ -623,8 +384,10 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
         install.candidate_id = fixture_id;
     }
     install.version = detect_version(install.root);
-    install.ownership = infer_ownership(install.root);
-    install.source = infer_source(install.root);
+    install.provider_id = "direct.inspect";
+    install.ownership = "imported";
+    install.source = "manual";
+    install.evidence = {"direct_inspection"};
     install.verification_status = "invalid";
 
     const fs::path candidates[] = {
@@ -679,11 +442,19 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
 
 std::vector<InstallRef> scan_install_candidates(const std::vector<fs::path>& explicit_roots)
 {
+    constexpr std::size_t kMaximumProviderRoots = 256U;
+    constexpr std::size_t kMaximumCandidates = 1024U;
+    constexpr auto kMaximumElapsed = std::chrono::seconds(2);
+    const auto deadline = std::chrono::steady_clock::now() + kMaximumElapsed;
     std::vector<InstallRef> installs;
     std::vector<fs::path> seen;
     std::set<std::string> install_ids;
+    std::size_t provider_count = 0;
+    std::size_t candidate_count = 0;
     for (const SearchRoot& search : discovery_search_roots(explicit_roots)) {
+        if (++provider_count > kMaximumProviderRoots || std::chrono::steady_clock::now() >= deadline) break;
         for (const fs::path& candidate : discovery_candidates_for_root(search.path)) {
+            if (++candidate_count > kMaximumCandidates || std::chrono::steady_clock::now() >= deadline) break;
             fs::path normalized = fs::absolute(candidate).lexically_normal();
             bool duplicate = false;
             for (const fs::path& existing : seen) {
@@ -701,7 +472,7 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<fs::path>& exp
             }
             if (path_crosses_link_or_reparse_point(normalized)) continue;
             std::string id = slugify(
-                (search.source_hint.empty() ? std::string() : search.source_hint + "-") +
+                (search.source.empty() ? std::string() : search.source + "-") +
                 normalized.filename().u8string());
             std::string unique_id = id;
             for (std::size_t suffix = 2; install_ids.count(unique_id) != 0; ++suffix) {
@@ -709,8 +480,11 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<fs::path>& exp
             }
             install_ids.insert(unique_id);
             InstallRef install = inspect_install(normalized, unique_id);
-            if (!search.source_hint.empty()) install.source = search.source_hint;
-            if (!search.ownership_hint.empty()) install.ownership = search.ownership_hint;
+            install.provider_id = search.provider_id;
+            const bool explicit_provider = search.provider_id.rfind("explicit.", 0) == 0;
+            if (!explicit_provider && !search.source.empty()) install.source = search.source;
+            if (!explicit_provider && !search.ownership.empty()) install.ownership = search.ownership;
+            install.evidence = search.evidence;
             installs.push_back(std::move(install));
         }
     }
@@ -732,6 +506,7 @@ json::ObjectBuilder install_ref_builder(const InstallRef& install)
     output.add_string("schema", "factorio.install_ref.v1");
     output.add_string("install_id", install.install_id);
     output.add_string("candidate_id", install.candidate_id.empty() ? install.install_id : install.candidate_id);
+    output.add_string("provider_id", install.provider_id.empty() ? "unknown" : install.provider_id);
     output.add_string("product_id", "factorio");
     output.add_string("display_name", "Factorio " + install.install_id);
     output.add_string("root", path_string(install.root));
@@ -744,6 +519,8 @@ json::ObjectBuilder install_ref_builder(const InstallRef& install)
     output.add_array("capabilities", string_array_builder(install.capabilities));
     output.add_string("executable_path_kind", install.executable_path_kind);
     output.add_string("app_dir_kind", install.app_dir_kind);
+    output.add_string("diagnostic_code", install.diagnostic_code);
+    output.add_array("evidence", string_array_builder(install.evidence));
     output.add_bool("setup_mutation_allowed", install.setup_mutation_allowed);
     output.add_object("verification", verification);
     if (!install.diagnostic_code.empty()) {
@@ -794,6 +571,14 @@ std::string discovery_report_json(const std::vector<InstallRef>& installs)
     output.add_string("schema", "factorio.discovery_report.v1");
     output.add_string("command", "installs.scan");
     output.add_bool("read_only", true);
+    json::ObjectBuilder budgets;
+    (void)budgets.add_unsigned_integer("maximum_provider_roots", 256U);
+    (void)budgets.add_unsigned_integer("maximum_candidates", 1024U);
+    (void)budgets.add_unsigned_integer("maximum_directory_entries_per_root", 4096U);
+    (void)budgets.add_unsigned_integer("maximum_metadata_bytes", 2U * 1024U * 1024U);
+    (void)budgets.add_unsigned_integer("maximum_depth", 2U);
+    (void)budgets.add_unsigned_integer("maximum_elapsed_milliseconds", 2000U);
+    output.add_object("budgets", budgets);
     (void)output.add_unsigned_integer("candidate_count", installs.size());
     (void)output.add_unsigned_integer("structural_count", structural_count);
     (void)output.add_unsigned_integer("invalid_count", invalid_count);

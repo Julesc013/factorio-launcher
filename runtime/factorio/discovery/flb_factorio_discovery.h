@@ -13,6 +13,7 @@ namespace facman::factorio::discovery {
 struct InstallRef {
     std::string install_id;
     std::string candidate_id;
+    std::string provider_id;
     std::filesystem::path root;
     std::filesystem::path executable;
     std::string version;
@@ -24,6 +25,7 @@ struct InstallRef {
     std::string diagnostic_code;
     std::string executable_path_kind;
     std::string app_dir_kind;
+    std::vector<std::string> evidence;
     bool setup_mutation_allowed = false;
 };
 

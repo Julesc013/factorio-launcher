@@ -43,10 +43,42 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01"
+    },
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "1994a91b9eb4b02c29f4cc8ed84f7b0de84554a8",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-DISCOVERY-PROVIDERS-02",
+        "FACMAN-STATUS-ONBOARDING-EXPLAIN-01",
+        "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02",
+        "FACMAN-TUI-MINIMUM-PRODUCT-01",
+        "FACMAN-DESKTOP-FRONTEND-PARITY-02",
+        "FACMAN-END-TO-END-USER-JOURNEY-01",
+        "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "e0335ae675d84c536afa8a3a0b0fc1b97fbccfc17b3b95d83126287892dc0e9c",
+      "test_fingerprints": {
+        "tests/native/facman_client_smoke.cpp": "1da7a6a3a26eb0da3549856212934d805eb79b1e6324cb5377dd2ff65caf2e67",
+        "tests/test_machine_transport.py": "1d0156571225b8fc137f1dac4dc85cdbeb868fd6f1b378b301a3deae5bcd7186"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8",
+  "current_exact_revision": "1994a91b9eb4b02c29f4cc8ed84f7b0de84554a8",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -54,7 +86,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.6 real-world product readiness",
-  "updated_at": "2026-07-12T10:02:54Z",
+  "updated_at": "2026-07-12T10:14:20Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -114,6 +146,35 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T10:14:20Z",
+        "result": "FAIL",
+        "source_fingerprint": "a64cfcb92d9d7e29862f5e7df53b0a938b5845902092ef02598146d80da95bb6",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/flb_factorio_discovery_smoke.cpp": "cba00e203e89b714ee81ae09d80976e93c99339cf34ac4879233353eea288668",
+          "tests/test_discovery_golden.py": "missing"
+        },
+        "test_results": {
+          "cross-target-native-fixture": "PASS",
+          "linux-target-ci": "WARN",
+          "macos-target-ci": "WARN",
+          "provider-contract-tests": "PASS",
+          "strict-check": "PASS",
+          "windows-provider": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-DISCOVERY-PROVIDERS-02"
       }
     ]
   },
@@ -217,6 +278,8 @@
         "unicode-boundaries",
         "setup-plan-truth"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T10:03:56Z",
       "dependencies": [
         "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01"
       ],
@@ -225,10 +288,10 @@
         "capability promotion"
       ],
       "id": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01",
-      "last_green_commit": null,
+      "last_green_commit": "1994a91b9eb4b02c29f4cc8ed84f7b0de84554a8",
       "provider_revisions": {},
       "started_at": "2026-07-12T09:40:54Z",
-      "status": "verified",
+      "status": "closed",
       "stop_conditions": [
         "persisted state becomes unreadable",
         "a public ABI break is required"
@@ -282,7 +345,10 @@
         "tools/",
         ".github/"
       ],
-      "blockers": [],
+      "blockers": [
+        "validation result: linux-target-ci=WARN",
+        "validation result: macos-target-ci=WARN"
+      ],
       "claim_impacts": [
         "cross-platform-read-only-discovery"
       ],
@@ -297,12 +363,41 @@
       "id": "FACMAN-DISCOVERY-PROVIDERS-02",
       "last_green_commit": null,
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T10:03:56Z",
+      "status": "blocked",
       "stop_conditions": [
         "target proof requires unsafe traversal",
         "discovery mutates source or workspace"
       ],
-      "title": "Implement bounded native discovery providers"
+      "title": "Implement bounded native discovery providers",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T10:14:20Z",
+        "result": "FAIL",
+        "source_fingerprint": "a64cfcb92d9d7e29862f5e7df53b0a938b5845902092ef02598146d80da95bb6",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/flb_factorio_discovery_smoke.cpp": "cba00e203e89b714ee81ae09d80976e93c99339cf34ac4879233353eea288668",
+          "tests/test_discovery_golden.py": "missing"
+        },
+        "test_results": {
+          "cross-target-native-fixture": "PASS",
+          "linux-target-ci": "WARN",
+          "macos-target-ci": "WARN",
+          "provider-contract-tests": "PASS",
+          "strict-check": "PASS",
+          "windows-provider": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [

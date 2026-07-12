@@ -6,7 +6,10 @@ target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
 target_link_libraries(flb_factorio_launch_static PUBLIC facman_base_static facman_core_static)
 
-add_library(flb_factorio_discovery_static STATIC discovery/flb_factorio_discovery.cpp)
+add_library(flb_factorio_discovery_static STATIC
+  discovery/discovery_service.cpp discovery/flb_factorio_discovery.cpp
+  discovery/provider_explicit.cpp discovery/provider_linux.cpp discovery/provider_macos.cpp
+  discovery/provider_windows.cpp discovery/steam_vdf.cpp)
 target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_discovery_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/discovery)
 target_link_libraries(flb_factorio_discovery_static PUBLIC facman_core_static facman_platform_static)

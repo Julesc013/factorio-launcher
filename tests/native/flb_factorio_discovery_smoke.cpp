@@ -22,6 +22,15 @@ void set_environment(const char* name, const std::string& value)
 #endif
 }
 
+void unset_environment(const char* name)
+{
+#ifdef _WIN32
+    _putenv_s(name, "");
+#else
+    unsetenv(name);
+#endif
+}
+
 void make_fixture(const fs::path& root, const char* id)
 {
     fs::create_directories(root / "data" / "base");
@@ -31,6 +40,18 @@ void make_fixture(const fs::path& root, const char* id)
         << "{\"fixture_id\":\"" << id << "\",\"source\":\"fixture\",\"ownership\":\"fixture_owned\"}";
     std::ofstream(root / "bin" / "x64" / "factorio.stub", std::ios::binary) << "fixture";
 }
+
+#if defined(__APPLE__)
+void make_app_fixture(const fs::path& root, const char* id)
+{
+    fs::create_directories(root / "Contents" / "Resources" / "data" / "base");
+    fs::create_directories(root / "Contents" / "MacOS");
+    std::ofstream(root / "Contents" / "Resources" / "data" / "base" / "info.json", std::ios::binary) << "{\"version\":\"2.0.77\"}";
+    std::ofstream(root / "fixture.manifest.v1.json", std::ios::binary)
+        << "{\"fixture_id\":\"" << id << "\",\"source\":\"app_bundle\",\"ownership\":\"foreign_owned\"}";
+    std::ofstream(root / "Contents" / "MacOS" / "factorio.stub", std::ios::binary) << "fixture";
+}
+#endif
 }
 
 int main()
@@ -57,5 +78,52 @@ int main()
         return 1;
     }
     if (installs[0].verification_status != "structural" || installs[1].verification_status != "structural") return 2;
+    for (const auto& install : installs) {
+        if (install.provider_id != "explicit.environment" || install.evidence.empty()) return 3;
+    }
+
+#if defined(__linux__)
+    const fs::path native_base = fs::temp_directory_path() / "facman-linux-provider-smoke";
+    fs::remove_all(native_base, cleanup_error);
+    const fs::path home = native_base / "home";
+    const fs::path steam = home / ".local" / "share" / "Steam";
+    const fs::path library = native_base / "steam-library";
+    make_fixture(home / "factorio", "linux-home");
+    make_fixture(library / "steamapps" / "common" / "Factorio", "linux-steam");
+    fs::create_directories(steam / "steamapps");
+    std::ofstream(steam / "steamapps" / "libraryfolders.vdf", std::ios::binary)
+        << "\"libraryfolders\" { \"1\" { \"path\" \""
+        << facman::platform::path_to_utf8(library) << "\" } }";
+    unset_environment("FACMAN_DISCOVERY_ROOTS");
+    unset_environment("FACMAN_DISCOVERY_DISABLE_DEFAULTS");
+    unset_environment("FACMAN_STANDALONE_ROOTS");
+    set_environment("HOME", facman::platform::path_to_utf8(home));
+    const auto native_installs = facman::factorio::discovery::scan_install_candidates({});
+    fs::remove_all(native_base, cleanup_error);
+    if (native_installs.size() != 2) return 4;
+    if (native_installs[0].provider_id.rfind("linux.", 0) != 0 ||
+        native_installs[1].provider_id.rfind("linux.", 0) != 0) return 5;
+#elif defined(__APPLE__)
+    const fs::path native_base = fs::temp_directory_path() / "facman-macos-provider-smoke";
+    fs::remove_all(native_base, cleanup_error);
+    const fs::path home = native_base / "home";
+    const fs::path steam = home / "Library" / "Application Support" / "Steam";
+    const fs::path library = native_base / "steam-library";
+    make_app_fixture(home / "Applications" / "Factorio.app", "macos-home");
+    make_app_fixture(library / "steamapps" / "common" / "Factorio" / "Factorio.app", "macos-steam");
+    fs::create_directories(steam / "steamapps");
+    std::ofstream(steam / "steamapps" / "libraryfolders.vdf", std::ios::binary)
+        << "\"libraryfolders\" { \"1\" { \"path\" \""
+        << facman::platform::path_to_utf8(library) << "\" } }";
+    unset_environment("FACMAN_DISCOVERY_ROOTS");
+    unset_environment("FACMAN_DISCOVERY_DISABLE_DEFAULTS");
+    unset_environment("FACMAN_STANDALONE_ROOTS");
+    set_environment("HOME", facman::platform::path_to_utf8(home));
+    const auto native_installs = facman::factorio::discovery::scan_install_candidates({});
+    fs::remove_all(native_base, cleanup_error);
+    if (native_installs.size() != 2) return 6;
+    if (native_installs[0].provider_id.rfind("macos.", 0) != 0 ||
+        native_installs[1].provider_id.rfind("macos.", 0) != 0) return 7;
+#endif
     return 0;
 }
