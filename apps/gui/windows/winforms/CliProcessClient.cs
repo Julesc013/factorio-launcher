@@ -49,7 +49,7 @@ namespace FacMan.WinForms
                     request["request_id"] = Guid.NewGuid().ToString("D");
                     request["workspace"] = String.IsNullOrWhiteSpace(workspace) ? String.Empty : workspace.Trim();
                     request["command"] = command.BackendId;
-                    request["dry_run"] = true;
+                    request["dry_run"] = command.DryRunDefault;
                     request["payload"] = payload ?? new Dictionary<string, object>();
                     await process.StandardInput.WriteAsync(serializer.Serialize(request)).ConfigureAwait(false);
                     process.StandardInput.Close();

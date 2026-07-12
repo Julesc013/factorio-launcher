@@ -16,4 +16,6 @@ typedef void (^FacManCliProcessCompletion)(FacManCommandResult *result);
               cliPath:(NSString *)cliPath
            completion:(FacManCliProcessCompletion)completion;
 
+- (void)cancelCurrentCommand;
+
 @end

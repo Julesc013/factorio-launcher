@@ -91,9 +91,9 @@ workspace.recovery.plan
 workspace.recovery.apply
 ```
 
-Optional commands are implemented by the CLI but are not required in the first
-GUI shell milestone. This is a frontend scope distinction, not a backend
-availability claim.
+Optional commands are implemented by the CLI, TUI, WinForms, and AppKit command
+surfaces. This is a frontend exposure classification, not a weaker backend
+availability or proof claim.
 
 ## Unavailable Commands
 
@@ -107,17 +107,17 @@ the catalog must never be read as implementation or promotion.
 
 ## WinForms Shell Milestone
 
-`FACMAN-WINFORMS-SHELL-01` is the first GUI shell that moves required commands
-from placeholder status to a concrete frontend surface. The implementation is
-still deliberately thin:
+`FACMAN-DESKTOP-FRONTEND-PARITY-02` moves required and optional non-execution
+commands to a generated concrete WinForms surface. The implementation remains
+deliberately thin:
 
 - command behavior is reached through the command-client path, not implemented
   in C#;
-- screens collect only the arguments needed by existing command IDs;
+- generic forms collect arguments from generated field descriptors;
 - raw backend output is rendered as command results instead of reinterpreted as
   GUI-owned state;
-- deferred commands are visible only as disabled/refused items with structured
-  reasons;
+- unavailable commands are visible only as disabled/refused items with
+  structured reasons;
 - setup mutation, Mod Portal network behavior, server execution, developer
   execution, discovery logic, modset resolution, save backup/export, and import
   implementation remain outside the WinForms lane.
@@ -130,11 +130,12 @@ credentials, launches Factorio directly, or replaces CLI/TUI/daemon parity.
 
 ## AppKit Shell Milestone
 
-`FACMAN-APPKIT-SHELL-01` applies the same proof to the first macOS native GUI
-lane. The AppKit shell should match WinForms for command/result/refusal parity,
-not visual parity. It may use Objective-C or Objective-C++ to call the same
-command-client path, render the required command IDs, and keep deferred command
-IDs disabled or refused with reasons.
+`FACMAN-DESKTOP-FRONTEND-PARITY-02` applies the same proof to the macOS native
+GUI lane. The AppKit shell matches WinForms for generated command/result/refusal
+parity, not visual parity. Objective-C and Objective-C++ call the same bounded
+command-client path, build request forms from generated descriptors, support
+cancellation, and keep unavailable command IDs disabled or refused with
+reasons.
 
 The AppKit lane has the same ownership boundary as WinForms: no Factorio
 discovery logic, no setup mutation, no Mod Portal network behavior, no server or

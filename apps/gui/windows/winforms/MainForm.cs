@@ -61,10 +61,14 @@ namespace FacMan.WinForms
 
             AddDashboardTab(tabs);
             AddDoctorTab(tabs);
-            AddInstallsTab(tabs);
-            AddInstancesTab(tabs);
-            AddLaunchPlanTab(tabs);
-            AddDiagnosticsTab(tabs);
+            AddGeneratedCategoryTab(tabs, "Installs", "install_refs.", "installs.", "setup.");
+            AddGeneratedCategoryTab(tabs, "Instances", "instance.");
+            AddGeneratedCategoryTab(tabs, "Launch Plan", "launch_plan.", "run.");
+            AddGeneratedCategoryTab(tabs, "Mods", "mods.", "modsets.");
+            AddGeneratedCategoryTab(tabs, "Saves", "saves.");
+            AddGeneratedCategoryTab(tabs, "Diagnostics", "diagnostics.", "dev.");
+            AddGeneratedCategoryTab(tabs, "Recovery", "workspace.recovery.", "workspace.migration.");
+            AddGeneratedCategoryTab(tabs, "Capabilities", "capabilities.", "workspace.");
             AddSettingsTab(tabs);
 
             resultBox = new TextBox();
@@ -116,7 +120,7 @@ namespace FacMan.WinForms
             Button helpButton = new Button();
             helpButton.Text = "Status";
             helpButton.Dock = DockStyle.Fill;
-            helpButton.Click += delegate { RunCommand("workspace.status", EmptyInputs()); };
+            helpButton.Click += delegate { RunGeneratedCommand("workspace.status"); };
             bar.Controls.Add(helpButton, 5, 0);
 
             Label workspaceLabel = new Label();
@@ -129,25 +133,26 @@ namespace FacMan.WinForms
             bar.Controls.Add(workspaceBox, 1, 1);
 
             Label modeLabel = new Label();
-            modeLabel.Text = "Transport";
+            modeLabel.Text = "CLI JSON";
             modeLabel.TextAlign = ContentAlignment.MiddleLeft;
             bar.Controls.Add(modeLabel, 2, 1);
 
-            Label modeValue = new Label();
-            modeValue.Text = "CLI JSON";
-            modeValue.TextAlign = ContentAlignment.MiddleLeft;
-            bar.Controls.Add(modeValue, 3, 1);
+            Button cancelButton = new Button();
+            cancelButton.Text = "Cancel";
+            cancelButton.Dock = DockStyle.Fill;
+            cancelButton.Click += delegate { if (commandCancellation != null) commandCancellation.Cancel(); };
+            bar.Controls.Add(cancelButton, 3, 1);
 
             Button versionButton = new Button();
             versionButton.Text = "Product";
             versionButton.Dock = DockStyle.Fill;
-            versionButton.Click += delegate { RunCommand("product.inspect", EmptyInputs()); };
+            versionButton.Click += delegate { RunGeneratedCommand("product.inspect"); };
             bar.Controls.Add(versionButton, 4, 1);
 
             Button doctorButton = new Button();
             doctorButton.Text = "Doctor";
             doctorButton.Dock = DockStyle.Fill;
-            doctorButton.Click += delegate { RunCommand("doctor.run", EmptyInputs()); };
+            doctorButton.Click += delegate { RunGeneratedCommand("doctor.run"); };
             bar.Controls.Add(doctorButton, 5, 1);
 
             return bar;
@@ -188,9 +193,9 @@ namespace FacMan.WinForms
             FlowLayoutPanel actions = new FlowLayoutPanel();
             actions.Dock = DockStyle.Fill;
             actions.FlowDirection = FlowDirection.LeftToRight;
-            actions.Controls.Add(CommandButton("Product Inspect", "product.inspect", EmptyInputs));
-            actions.Controls.Add(CommandButton("Capabilities", "capabilities.inspect", EmptyInputs));
-            actions.Controls.Add(CommandButton("Workspace Status", "workspace.status", EmptyInputs));
+            actions.Controls.Add(CommandButton("Product Inspect", "product.inspect"));
+            actions.Controls.Add(CommandButton("Capabilities", "capabilities.inspect"));
+            actions.Controls.Add(CommandButton("Workspace Status", "workspace.status"));
             layout.Controls.Add(actions, 0, 2);
         }
 
@@ -200,95 +205,39 @@ namespace FacMan.WinForms
             FlowLayoutPanel panel = CreateFlowPanel();
             page.Controls.Add(panel);
             panel.Controls.Add(SectionTitle("Workspace checks"));
-            panel.Controls.Add(CommandButton("Run Doctor", "doctor.run", EmptyInputs));
-            panel.Controls.Add(CommandButton("Inspect Product", "product.inspect", EmptyInputs));
-            panel.Controls.Add(CommandButton("Explain Doctor", "doctor.explain", EmptyInputs));
+            panel.Controls.Add(CommandButton("Run Doctor", "doctor.run"));
+            panel.Controls.Add(CommandButton("Inspect Product", "product.inspect"));
+            panel.Controls.Add(CommandButton("Explain Doctor", "doctor.explain"));
         }
 
-        private void AddInstallsTab(TabControl tabs)
+        private void AddGeneratedCategoryTab(TabControl tabs, string title, params string[] prefixes)
         {
-            TabPage page = CreateTab(tabs, "Installs");
+            TabPage page = CreateTab(tabs, title);
             TableLayoutPanel form = CreateFormPanel();
             page.Controls.Add(form);
-
-            TextBox scanPath = AddTextInput(form, "Scan root", "Optional folder to scan");
-            AddCommandRow(form, "installs.scan", "Scan", delegate
+            foreach (CommandDefinition command in commandCatalog)
             {
-                return Inputs("roots", scanPath.Text);
-            });
-
-            TextBox installPath = AddTextInput(form, "Install path", "Existing Factorio folder");
-            TextBox installId = AddTextInput(form, "Install id", "fixture");
-            AddCommandRow(form, "installs.import", "Import", delegate
-            {
-                return Inputs("path", installPath.Text, "install_id", installId.Text);
-            });
-
-            TextBox inspectId = AddTextInput(form, "Inspect id", "fixture");
-            AddCommandRow(form, "installs.inspect", "Inspect", delegate
-            {
-                return Inputs("install_id", inspectId.Text);
-            });
-
-            AddDeferredRow(form, "setup.preview");
-        }
-
-        private void AddInstancesTab(TabControl tabs)
-        {
-            TabPage page = CreateTab(tabs, "Instances");
-            TableLayoutPanel form = CreateFormPanel();
-            page.Controls.Add(form);
-
-            AddCommandRow(form, "instances.list", "List", EmptyInputs);
-
-            TextBox instanceName = AddTextInput(form, "Instance name", "Space Age Main");
-            TextBox instanceId = AddTextInput(form, "Instance id", "space-age-main");
-            TextBox installId = AddTextInput(form, "Install id", "fixture");
-            TextBox templateId = AddTextInput(form, "Template id", "vanilla");
-            AddCommandRow(form, "instances.create", "Create", delegate
-            {
-                return Inputs("display_name", instanceName.Text, "instance_id", instanceId.Text, "install_id", installId.Text, "template_id", templateId.Text);
-            });
-        }
-
-        private void AddLaunchPlanTab(TabControl tabs)
-        {
-            TabPage page = CreateTab(tabs, "Launch Plan");
-            TableLayoutPanel form = CreateFormPanel();
-            page.Controls.Add(form);
-
-            TextBox instanceId = AddTextInput(form, "Instance id", "space-age-main");
-            AddCommandRow(form, "launch_plan.build", "Build Plan", delegate
-            {
-                return Inputs("instance_id", instanceId.Text);
-            });
-            AddCommandRow(form, "launch_plan.preflight", "Preflight", delegate
-            {
-                return Inputs("instance_id", instanceId.Text);
-            });
-            AddCommandRow(form, "run.preview", "Preview Run", delegate
-            {
-                return Inputs("instance_id", instanceId.Text);
-            });
-            AddDeferredRow(form, "run.execute");
-        }
-
-        private void AddDiagnosticsTab(TabControl tabs)
-        {
-            TabPage page = CreateTab(tabs, "Diagnostics");
-            TableLayoutPanel form = CreateFormPanel();
-            page.Controls.Add(form);
-
-            TextBox instanceId = AddTextInput(form, "Instance id", "space-age-main");
-            TextBox outputPath = AddTextInput(form, "Output bundle", "diagnostics.zip");
-            AddCommandRow(form, "diagnostics.export", "Export Diagnostics", delegate
-            {
-                return Inputs("instance_id", instanceId.Text, "output_path", outputPath.Text);
-            });
-            AddDeferredRow(form, "modsets.lock");
-            AddDeferredRow(form, "saves.backup");
-            AddDeferredRow(form, "instance.export");
-            AddDeferredRow(form, "instance.import");
+                bool included = false;
+                foreach (string prefix in prefixes)
+                    if (command.BackendId.StartsWith(prefix, StringComparison.Ordinal)) included = true;
+                if (!included) continue;
+                int row = form.RowCount++;
+                form.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
+                Label label = new Label();
+                label.Text = command.Label + "\r\n" + command.BackendId;
+                label.Dock = DockStyle.Fill;
+                label.TextAlign = ContentAlignment.MiddleLeft;
+                form.Controls.Add(label, 0, row);
+                Label detail = new Label();
+                detail.Text = command.Availability + " | " + command.RiskTier +
+                    (String.IsNullOrWhiteSpace(command.DeferredReason) ? String.Empty : " | " + command.DeferredReason);
+                detail.Dock = DockStyle.Fill;
+                detail.TextAlign = ContentAlignment.MiddleLeft;
+                form.Controls.Add(detail, 1, row);
+                Button button = CommandButton(command.Status == CommandStatus.Implemented ? "Open" : "Explain", command.Id);
+                button.Dock = DockStyle.Fill;
+                form.Controls.Add(button, 2, row);
+            }
         }
 
         private void AddSettingsTab(TabControl tabs)
@@ -316,83 +265,11 @@ namespace FacMan.WinForms
                 "Set FACMAN_CLI or use the CLI path field above to point at a built facman executable.";
             panel.Controls.Add(info);
 
-            panel.Controls.Add(CommandButton("Workspace Paths", "workspace.paths", EmptyInputs));
-            panel.Controls.Add(CommandButton("Capabilities", "capabilities.inspect", EmptyInputs));
+            panel.Controls.Add(CommandButton("Workspace Paths", "workspace.paths"));
+            panel.Controls.Add(CommandButton("Capabilities", "capabilities.inspect"));
         }
 
-        private void AddCommandRow(TableLayoutPanel form, string commandId, string buttonText, Func<Dictionary<string, string>> inputProvider)
-        {
-            int row = form.RowCount++;
-            form.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
-
-            CommandDefinition command = CommandCatalog.Find(commandId);
-            Label label = new Label();
-            label.Text = command.Id;
-            label.Dock = DockStyle.Fill;
-            label.TextAlign = ContentAlignment.MiddleLeft;
-            form.Controls.Add(label, 0, row);
-
-            Label description = new Label();
-            description.Text = command.Description;
-            description.Dock = DockStyle.Fill;
-            description.TextAlign = ContentAlignment.MiddleLeft;
-            form.Controls.Add(description, 1, row);
-
-            Button button = CommandButton(buttonText, commandId, inputProvider);
-            button.Dock = DockStyle.Fill;
-            form.Controls.Add(button, 2, row);
-        }
-
-        private void AddDeferredRow(TableLayoutPanel form, string commandId)
-        {
-            int row = form.RowCount++;
-            form.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
-
-            CommandDefinition command = CommandCatalog.Find(commandId);
-            Label label = new Label();
-            label.Text = command.Id;
-            label.Dock = DockStyle.Fill;
-            label.TextAlign = ContentAlignment.MiddleLeft;
-            form.Controls.Add(label, 0, row);
-
-            Label reason = new Label();
-            reason.Text = command.DeferredReason;
-            reason.Dock = DockStyle.Fill;
-            reason.TextAlign = ContentAlignment.MiddleLeft;
-            form.Controls.Add(reason, 1, row);
-
-            Button button = new Button();
-            button.Text = "Deferred";
-            button.Enabled = false;
-            button.Dock = DockStyle.Fill;
-            toolTip.SetToolTip(button, command.DeferredReason);
-            form.Controls.Add(button, 2, row);
-        }
-
-        private TextBox AddTextInput(TableLayoutPanel form, string labelText, string placeholder)
-        {
-            int row = form.RowCount++;
-            form.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
-
-            Label label = new Label();
-            label.Text = labelText;
-            label.Dock = DockStyle.Fill;
-            label.TextAlign = ContentAlignment.MiddleLeft;
-            form.Controls.Add(label, 0, row);
-
-            TextBox textBox = new TextBox();
-            textBox.Dock = DockStyle.Fill;
-            textBox.Text = placeholder;
-            form.Controls.Add(textBox, 1, row);
-
-            Label filler = new Label();
-            filler.Text = String.Empty;
-            form.Controls.Add(filler, 2, row);
-
-            return textBox;
-        }
-
-        private Button CommandButton(string text, string commandId, Func<Dictionary<string, string>> inputProvider)
+        private Button CommandButton(string text, string commandId)
         {
             CommandDefinition command = CommandCatalog.Find(commandId);
             Button button = new Button();
@@ -400,12 +277,95 @@ namespace FacMan.WinForms
             button.Width = 150;
             button.Height = 32;
             button.Tag = commandId;
-            toolTip.SetToolTip(button, command.Id + " -> " + command.BackendId);
-            button.Click += delegate
-            {
-                RunCommand(commandId, inputProvider());
-            };
+            toolTip.SetToolTip(button, command.Id + " -> " + command.BackendId + " | " + command.RiskTier);
+            button.Click += delegate { RunGeneratedCommand(commandId); };
             return button;
+        }
+
+        private void RunGeneratedCommand(string commandId)
+        {
+            CommandDefinition command = CommandCatalog.Find(commandId);
+            Dictionary<string, string> inputs;
+            if (!CollectGeneratedInputs(command, out inputs)) return;
+            RunCommand(commandId, inputs);
+        }
+
+        private bool CollectGeneratedInputs(CommandDefinition command, out Dictionary<string, string> inputs)
+        {
+            inputs = new Dictionary<string, string>();
+            if (command.Status != CommandStatus.Implemented || command.Inputs.Count == 0) return true;
+            Form dialog = new Form();
+            dialog.Text = command.Label + " | " + command.RiskTier;
+            dialog.Width = 660;
+            dialog.Height = Math.Min(700, 160 + command.Inputs.Count * 64);
+            dialog.StartPosition = FormStartPosition.CenterParent;
+            TableLayoutPanel layout = new TableLayoutPanel();
+            layout.Dock = DockStyle.Fill;
+            layout.Padding = new Padding(12);
+            layout.ColumnCount = 3;
+            layout.RowCount = command.Inputs.Count + 2;
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
+            dialog.Controls.Add(layout);
+            Dictionary<string, Control> controls = new Dictionary<string, Control>();
+            int row = 0;
+            foreach (CommandInput input in command.Inputs)
+            {
+                Label label = new Label();
+                label.Text = input.Label + (input.Required ? " *" : String.Empty);
+                label.Dock = DockStyle.Fill;
+                label.TextAlign = ContentAlignment.MiddleLeft;
+                layout.Controls.Add(label, 0, row);
+                Control editor;
+                if (input.Type == "boolean") editor = new CheckBox();
+                else
+                {
+                    TextBox text = new TextBox();
+                    text.Dock = DockStyle.Fill;
+                    text.Text = input.DefaultValue ?? String.Empty;
+                    text.Multiline = input.Repeatable;
+                    editor = text;
+                }
+                editor.Dock = DockStyle.Fill;
+                controls[input.Key] = editor;
+                layout.Controls.Add(editor, 1, row);
+                if (input.Type == "path")
+                {
+                    Button browse = new Button();
+                    browse.Text = "Browse";
+                    browse.Click += delegate
+                    {
+                        SaveFileDialog chooser = new SaveFileDialog();
+                        chooser.CheckFileExists = false;
+                        if (chooser.ShowDialog(dialog) == DialogResult.OK) ((TextBox)editor).Text = chooser.FileName;
+                    };
+                    layout.Controls.Add(browse, 2, row);
+                }
+                row++;
+            }
+            Label policy = new Label();
+            policy.Text = "Availability: " + command.Availability + " | Effects: " + String.Join(", ", command.Effects);
+            policy.Dock = DockStyle.Fill;
+            layout.SetColumnSpan(policy, 2);
+            layout.Controls.Add(policy, 0, row);
+            FlowLayoutPanel actions = new FlowLayoutPanel();
+            actions.FlowDirection = FlowDirection.RightToLeft;
+            Button ok = new Button();
+            ok.Text = command.DryRunDefault ? "Run" : "Apply";
+            ok.DialogResult = DialogResult.OK;
+            Button cancel = new Button(); cancel.Text = "Cancel"; cancel.DialogResult = DialogResult.Cancel;
+            actions.Controls.Add(ok); actions.Controls.Add(cancel);
+            layout.Controls.Add(actions, 1, row + 1);
+            dialog.AcceptButton = ok;
+            dialog.CancelButton = cancel;
+            if (dialog.ShowDialog(this) != DialogResult.OK) return false;
+            foreach (CommandInput input in command.Inputs)
+            {
+                CheckBox check = controls[input.Key] as CheckBox;
+                inputs[input.Key] = check == null ? controls[input.Key].Text : (check.Checked ? "true" : "false");
+            }
+            return true;
         }
 
         private async void RunCommand(string commandId, Dictionary<string, string> inputs)
@@ -518,21 +478,6 @@ namespace FacMan.WinForms
             label.Height = 34;
             label.TextAlign = ContentAlignment.MiddleLeft;
             return label;
-        }
-
-        private static Dictionary<string, string> EmptyInputs()
-        {
-            return new Dictionary<string, string>();
-        }
-
-        private static Dictionary<string, string> Inputs(params string[] keyValues)
-        {
-            Dictionary<string, string> inputs = new Dictionary<string, string>();
-            for (int index = 0; index + 1 < keyValues.Length; index += 2)
-            {
-                inputs[keyValues[index]] = keyValues[index + 1];
-            }
-            return inputs;
         }
 
         private static string StatusText(CommandStatus status)

@@ -39,6 +39,10 @@ class GeneratedFrontendCatalogTests(unittest.TestCase):
         winforms_catalog = (ROOT / "apps/gui/windows/winforms/CommandCatalog.cs").read_text(encoding="utf-8")
         winforms_client = (ROOT / "apps/gui/windows/winforms/CommandClient.cs").read_text(encoding="utf-8")
         appkit_client = (ROOT / "apps/gui/macos/appkit/CommandClient.mm").read_text(encoding="utf-8")
+        winforms_transport = (ROOT / "apps/gui/windows/winforms/CliProcessClient.cs").read_text(encoding="utf-8")
+        appkit_transport = (ROOT / "apps/gui/macos/appkit/CliProcessClient.mm").read_text(encoding="utf-8")
+        winforms_form = (ROOT / "apps/gui/windows/winforms/MainForm.cs").read_text(encoding="utf-8")
+        appkit_form = (ROOT / "apps/gui/macos/appkit/MainWindowController.m").read_text(encoding="utf-8")
         self.assertIn("GeneratedCommandCatalog.All()", winforms_catalog)
         self.assertNotIn("commands.Add", winforms_catalog)
         self.assertIn("GeneratedCommandCatalog.BuildPayload", winforms_client)
@@ -47,6 +51,12 @@ class GeneratedFrontendCatalogTests(unittest.TestCase):
         self.assertIn("FacManGeneratedPayload", appkit_client)
         self.assertNotIn("FacManPayloadForCommand", appkit_client)
         self.assertNotIn("FacManArgumentsForCommand", appkit_client)
+        self.assertIn("CollectGeneratedInputs", winforms_form)
+        self.assertNotIn("Inputs(params", winforms_form)
+        self.assertIn("generatedInputsForCommand:", appkit_form)
+        self.assertNotIn("inputsForCommandId:", appkit_form)
+        self.assertIn('request["dry_run"] = command.DryRunDefault', winforms_transport)
+        self.assertIn('@"dry_run": @(command.dryRunDefault)', appkit_transport)
 
     def test_diagnostics_export_and_localization_are_truthful(self) -> None:
         catalog = json.loads(

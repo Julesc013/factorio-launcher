@@ -16,7 +16,29 @@ static FacManCommandResult *FacManDecodeResult(
     NSString *stdoutText,
     NSString *stderrText);
 
+@interface FacManCliProcessClient ()
+@property(nonatomic, strong) NSTask *activeTask;
+@property(nonatomic, strong) NSMutableSet<NSTask *> *cancelledTasks;
+@end
+
 @implementation FacManCliProcessClient
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) _cancelledTasks = [NSMutableSet set];
+    return self;
+}
+
+- (void)cancelCurrentCommand
+{
+    NSTask *task = nil;
+    @synchronized(self) {
+        task = self.activeTask;
+        if (task != nil) [self.cancelledTasks addObject:task];
+    }
+    if ([task isRunning]) [task terminate];
+}
 
 - (void)invokeCommand:(FacManCommandDefinition *)command
               payload:(NSDictionary<NSString *, id> *)payload
@@ -24,6 +46,7 @@ static FacManCommandResult *FacManDecodeResult(
               cliPath:(NSString *)cliPath
            completion:(FacManCliProcessCompletion)completion
 {
+    [self cancelCurrentCommand];
     NSString *executable = [self resolveExecutable:cliPath];
     if ([executable length] == 0) {
         completion([FacManCommandResult refusalWithCommandId:command.commandId
@@ -67,13 +90,14 @@ static FacManCommandResult *FacManDecodeResult(
             dispatch_group_leave(group);
         }];
         [task launch];
+        @synchronized(self) { self.activeTask = task; }
         NSDictionary *request = @{
             @"schema": @"facman.transport_request.v1",
             @"protocol_version": @1,
             @"request_id": [[NSUUID UUID] UUIDString],
             @"workspace": trimmedWorkspace ?: @"",
             @"command": command.backendId,
-            @"dry_run": @YES,
+            @"dry_run": @(command.dryRunDefault),
             @"payload": payload ?: @{}
         };
         NSData *requestData = [NSJSONSerialization dataWithJSONObject:request options:0 error:nil];
@@ -91,6 +115,19 @@ static FacManCommandResult *FacManDecodeResult(
             });
 
         dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+            BOOL cancelled = NO;
+            @synchronized(self) {
+                cancelled = [self.cancelledTasks containsObject:task];
+                [self.cancelledTasks removeObject:task];
+                if (self.activeTask == task) self.activeTask = nil;
+            }
+            if (cancelled) {
+                completion([FacManCommandResult refusalWithCommandId:command.commandId
+                                                           backendId:command.backendId
+                                                        refusalCode:@"frontend_backend_cancelled"
+                                                      refusalReason:@"The backend command was cancelled."]);
+                return;
+            }
             if (timedOut) {
                 completion([FacManCommandResult refusalWithCommandId:command.commandId
                                                            backendId:command.backendId

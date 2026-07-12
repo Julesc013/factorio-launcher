@@ -144,6 +144,11 @@ def check_winforms_shell() -> list[str]:
         problems.append("WinForms generated catalog misroutes diagnostics.export")
 
     form_text = form.read_text(encoding="utf-8", errors="ignore")
+    if "CollectGeneratedInputs(" not in form_text or "AddGeneratedCategoryTab(" not in form_text:
+        problems.append("WinForms shell does not render generated command fields/categories")
+    for manual in ("Inputs(params", "AddTextInput(", "inputProvider"):
+        if manual in form_text:
+            problems.append(f"WinForms shell retains manual command form mapping: {manual}")
     for screen in sorted(WINFORMS_REQUIRED_SCREENS):
         if f'"{screen}"' not in form_text:
             problems.append(f"WinForms shell missing screen {screen}")
@@ -195,6 +200,11 @@ def check_appkit_shell() -> list[str]:
         problems.append("AppKit generated catalog misroutes diagnostics.export")
 
     form_text = (root / "MainWindowController.m").read_text(encoding="utf-8", errors="ignore")
+    if "generatedInputsForCommand:" not in form_text or "addGeneratedCommandsToView:" not in form_text:
+        problems.append("AppKit shell does not render generated command fields/categories")
+    for manual in ("inputsForCommandId:", "copyInput:"):
+        if manual in form_text:
+            problems.append(f"AppKit shell retains manual command form mapping: {manual}")
     for screen in sorted(APPKIT_REQUIRED_SCREENS):
         if f'@"{screen}"' not in form_text:
             problems.append(f"AppKit shell missing screen {screen}")

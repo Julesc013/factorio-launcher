@@ -20,6 +20,7 @@ static NSString *FacManJsonEscape(NSString *value);
                     descriptionKey:(NSString *)descriptionKey
                       availability:(NSString *)availability
                           riskTier:(NSString *)riskTier
+                    dryRunDefault:(BOOL)dryRunDefault
                            effects:(NSString *)effects
                   inputDefinitions:(NSString *)inputDefinitions
                        positionals:(NSString *)positionals
@@ -39,6 +40,7 @@ static NSString *FacManJsonEscape(NSString *value);
         _descriptionKey = [descriptionKey copy];
         _availability = [availability copy];
         _riskTier = [riskTier copy];
+        _dryRunDefault = dryRunDefault;
         _effects = [effects copy];
         _inputDefinitions = [inputDefinitions copy];
         _positionals = [positionals copy];
@@ -121,7 +123,18 @@ static NSString *FacManJsonEscape(NSString *value);
 
 @end
 
+@interface FacManCommandClient ()
+@property(nonatomic, strong) FacManCliProcessClient *transport;
+@end
+
 @implementation FacManCommandClient
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) _transport = [[FacManCliProcessClient alloc] init];
+    return self;
+}
 
 + (NSArray<FacManCommandDefinition *> *)catalog
 {
@@ -170,12 +183,16 @@ static NSString *FacManJsonEscape(NSString *value);
         return;
     }
 
-    FacManCliProcessClient *transport = [[FacManCliProcessClient alloc] init];
-    [transport invokeCommand:command
+    [self.transport invokeCommand:command
                      payload:payload
                    workspace:workspace
                      cliPath:cliPath
                   completion:completion];
+}
+
+- (void)cancelCurrentCommand
+{
+    [self.transport cancelCurrentCommand];
 }
 
 @end

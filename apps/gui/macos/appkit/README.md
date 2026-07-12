@@ -6,8 +6,8 @@ Implementation files live under `apps/gui/macos/appkit/`.
 
 ## FACMAN-APPKIT-SHELL-01
 
-The first AppKit shell mirrors the WinForms proof at the command/result/refusal
-level. It is not a visual parity target yet.
+The AppKit shell mirrors the WinForms proof at the command/result/refusal
+level. It is not a visual parity target.
 
 Required screens:
 
@@ -19,10 +19,16 @@ Required screens:
 - Diagnostics
 - Settings/About
 
+The generated command palette and category tabs expose every implemented
+required and optional non-execution workflow. Request forms are built from the
+generated field descriptors, including paths, booleans, defaults, and
+repeatable values; no per-command input map remains in Objective-C.
+
 Commands and payload fields come from `FacManGeneratedCommandCatalog`; the
 Objective-C++ command client contains no hand-maintained catalog or argument
 switch. Backend-live commands route through the shared bounded stdio transport,
 while unavailable commands remain visible with generated reasons. The AppKit
+transport supports cancellation, bounded output, and timeouts. The AppKit
 claim remains compile-only until an actual bundle runtime proof exists.
 
 The AppKit shell must not own Factorio discovery, setup mutation, Mod Portal

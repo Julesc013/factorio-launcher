@@ -132,8 +132,8 @@ def validate_golden() -> list[str]:
         problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell proof frontends changed")
     if shell.get("required_status") != "implemented":
         problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell required status must be implemented")
-    if shell.get("optional_status") != "not_supported_with_reason":
-        problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell optional status must be not_supported_with_reason")
+    if shell.get("optional_status") != "implemented":
+        problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell optional status must be implemented")
     if shell.get("unavailable_status") != "not_supported_with_reason":
         problems.append(f"{GOLDEN.relative_to(ROOT)}: native shell unavailable status must be not_supported_with_reason")
     return problems

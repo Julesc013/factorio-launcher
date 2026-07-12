@@ -22,6 +22,7 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
 @property(nonatomic, copy, readonly) NSString *descriptionKey;
 @property(nonatomic, copy, readonly) NSString *availability;
 @property(nonatomic, copy, readonly) NSString *riskTier;
+@property(nonatomic, assign, readonly) BOOL dryRunDefault;
 @property(nonatomic, copy, readonly) NSString *effects;
 @property(nonatomic, copy, readonly) NSString *inputDefinitions;
 @property(nonatomic, copy, readonly) NSString *positionals;
@@ -39,6 +40,7 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
                     descriptionKey:(NSString *)descriptionKey
                       availability:(NSString *)availability
                           riskTier:(NSString *)riskTier
+                    dryRunDefault:(BOOL)dryRunDefault
                            effects:(NSString *)effects
                   inputDefinitions:(NSString *)inputDefinitions
                        positionals:(NSString *)positionals
@@ -88,5 +90,7 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
                workspace:(NSString *)workspace
                  cliPath:(NSString *)cliPath
               completion:(void (^)(FacManCommandResult *result))completion;
+
+- (void)cancelCurrentCommand;
 
 @end

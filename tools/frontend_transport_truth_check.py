@@ -70,6 +70,8 @@ def validate() -> list[str]:
         "dispatch_after(",
         "NSJSONSerialization",
         "frontend_backend_timeout",
+        "frontend_backend_cancelled",
+        "cancelCurrentCommand",
     ):
         if anchor not in appkit_transport:
             problems.append(f"AppKit CLI process transport missing: {anchor}")
@@ -79,6 +81,8 @@ def validate() -> list[str]:
         problems.append("AppKit machine transport retains CLI argument reconstruction")
     if "completion:^(FacManCommandResult *result)" not in appkit_window:
         problems.append("AppKit window does not render command completion asynchronously")
+    if "cancelCommand:" not in appkit_window:
+        problems.append("AppKit window does not expose command cancellation")
 
     cmake = (ROOT / "cmake/FacManOptions.cmake").read_text(encoding="utf-8")
     apps_cmake = (ROOT / "apps/CMakeLists.txt").read_text(encoding="utf-8")

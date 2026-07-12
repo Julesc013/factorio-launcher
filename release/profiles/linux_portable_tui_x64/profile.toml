@@ -60,5 +60,10 @@ devtool_execution = false
 auto_update = false
 
 [unsupported]
-features = ["gui_frontend", "daemon_frontend", "dynamic_component_loading", "mod_portal_download", "network_download", "setup_mutation", "server_execution", "devtool_execution", "auto_update", "universal_linux_distribution_support", "completely_static_binary"]
+features = [
+  "gui_frontend", "daemon_frontend", "dynamic_component_loading",
+  "mod_portal_download", "network_download", "setup_mutation",
+  "server_execution", "devtool_execution", "auto_update",
+  "universal_linux_distribution_support", "completely_static_binary",
+]
 commands = ["run.execute", "mods.search", "mods.install", "servers.start", "servers.stop", "servers.rcon"]

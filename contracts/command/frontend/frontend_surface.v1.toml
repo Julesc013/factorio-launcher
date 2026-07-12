@@ -19,7 +19,7 @@ status_values = [
 id = "native_shell_proof"
 frontends = ["windows.winforms", "macos.appkit"]
 required_status = "implemented"
-optional_status = "not_supported_with_reason"
+optional_status = "implemented"
 unavailable_status = "not_supported_with_reason"
 claim = "First native GUI shells must match command/result/refusal coverage, not visual design."
 

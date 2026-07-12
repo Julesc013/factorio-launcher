@@ -59,6 +59,7 @@ namespace FacMan.WinForms
             string descriptionKey,
             string availability,
             string riskTier,
+            bool dryRunDefault,
             IEnumerable<string> effects,
             IEnumerable<CommandInput> inputs,
             string positionalsJson,
@@ -76,6 +77,7 @@ namespace FacMan.WinForms
             DescriptionKey = descriptionKey;
             Availability = availability;
             RiskTier = riskTier;
+            DryRunDefault = dryRunDefault;
             Effects = new List<string>(effects).AsReadOnly();
             Inputs = new List<CommandInput>(inputs).AsReadOnly();
             PositionalsJson = positionalsJson;
@@ -94,6 +96,7 @@ namespace FacMan.WinForms
         public string DescriptionKey { get; private set; }
         public string Availability { get; private set; }
         public string RiskTier { get; private set; }
+        public bool DryRunDefault { get; private set; }
         public IList<string> Effects { get; private set; }
         public IList<CommandInput> Inputs { get; private set; }
         public string PositionalsJson { get; private set; }

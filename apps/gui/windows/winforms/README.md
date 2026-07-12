@@ -9,7 +9,8 @@ This is the legacy Windows GUI lane. Modern Windows UI work belongs in
 
 ## FACMAN-WINFORMS-SHELL-01
 
-The shell presents its primary workflows through tabs for:
+The shell presents the complete generated non-execution command surface through
+category tabs for:
 
 - Dashboard
 - Doctor
@@ -17,6 +18,10 @@ The shell presents its primary workflows through tabs for:
 - Instances
 - Launch Plan
 - Diagnostics
+- Mods
+- Saves
+- Recovery
+- Capabilities
 - Settings/About
 
 The shell uses the generated C# command catalog and generic request mapper over
@@ -26,6 +31,11 @@ the returned stdout, stderr, exit code, or structured refusal. It does not
 discover Factorio installs in C#, resolve modsets in C#, store credentials,
 download from the Mod Portal, mutate setup-managed installs, execute servers,
 run developer tools, or launch Factorio directly.
+
+Request forms are generated at runtime from the catalog field descriptors,
+including paths, booleans, defaults, and repeatable values. The shell has no
+per-command argument switch. Long-running backend requests can be cancelled;
+transport timeout and output limits remain enforced by the shared client.
 
 Unavailable commands remain visible with generated availability, refusal,
 risk, and effect metadata. `run.execute` remains human-gated.

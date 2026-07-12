@@ -10,6 +10,7 @@
 @property(nonatomic, strong) NSTextField *workspaceField;
 @property(nonatomic, strong) NSTextView *resultView;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSTextField *> *inputFields;
+@property(nonatomic, strong) NSPopUpButton *commandPopup;
 @end
 
 static NSString *FacManStatusText(FacManCommandStatus status);
@@ -54,7 +55,12 @@ static NSString *FacManStatusText(FacManCommandStatus status);
 
     [self addLabel:@"Workspace" toView:bar frame:NSMakeRect(12, 12, 72, 20)];
     self.workspaceField = [self addTextFieldToView:bar key:nil frame:NSMakeRect(88, 8, width - 360, 24) placeholder:@""];
-    [self addLabel:@"Transport: CLI JSON" toView:bar frame:NSMakeRect(width - 250, 10, 218, 20)];
+    [self addLabel:@"Transport: CLI JSON" toView:bar frame:NSMakeRect(width - 250, 10, 110, 20)];
+    NSButton *cancel = [[NSButton alloc] initWithFrame:NSMakeRect(width - 132, 6, 100, 28)];
+    [cancel setTitle:@"Cancel"];
+    [cancel setTarget:self];
+    [cancel setAction:@selector(cancelCommand:)];
+    [bar addSubview:cancel];
 
     NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(0, 220, width, height - 292)];
     [tabs setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
@@ -64,7 +70,11 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     [self addInstallsTab:tabs];
     [self addInstancesTab:tabs];
     [self addLaunchPlanTab:tabs];
+    [self addGeneratedTab:@"Mods" prefixes:@[ @"mods.", @"modsets." ] toTabs:tabs];
+    [self addGeneratedTab:@"Saves" prefixes:@[ @"saves." ] toTabs:tabs];
     [self addDiagnosticsTab:tabs];
+    [self addGeneratedTab:@"Recovery" prefixes:@[ @"workspace.recovery.", @"workspace.migration." ] toTabs:tabs];
+    [self addGeneratedTab:@"Capabilities" prefixes:@[ @"capabilities.", @"workspace." ] toTabs:tabs];
     [self addSettingsTab:tabs];
 
     NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, width, 220)];
@@ -94,9 +104,17 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     }
     [catalog setString:text];
     [view addSubview:catalog];
-    [self addButton:@"Product Inspect" commandId:@"product.inspect" toView:view frame:NSMakeRect(16, 26, 142, 32)];
-    [self addButton:@"Capabilities" commandId:@"capabilities.inspect" toView:view frame:NSMakeRect(168, 26, 142, 32)];
-    [self addButton:@"Workspace" commandId:@"workspace.status" toView:view frame:NSMakeRect(320, 26, 142, 32)];
+    self.commandPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(16, 28, 360, 28) pullsDown:NO];
+    for (FacManCommandDefinition *command in [FacManCommandClient catalog]) {
+        [self.commandPopup addItemWithTitle:command.commandId];
+        [[self.commandPopup lastItem] setRepresentedObject:command.commandId];
+    }
+    [view addSubview:self.commandPopup];
+    NSButton *open = [[NSButton alloc] initWithFrame:NSMakeRect(388, 26, 142, 32)];
+    [open setTitle:@"Open Command"];
+    [open setTarget:self];
+    [open setAction:@selector(runSelectedCommand:)];
+    [view addSubview:open];
 }
 
 - (void)addDoctorTab:(NSTabView *)tabs
@@ -111,64 +129,46 @@ static NSString *FacManStatusText(FacManCommandStatus status);
 - (void)addInstallsTab:(NSTabView *)tabs
 {
     NSView *view = [self addTab:@"Installs" toTabs:tabs];
-    [self addLabel:@"Install commands" toView:view frame:NSMakeRect(16, 366, 420, 24)];
-    [self addTextFieldToView:view key:@"installs.scan.scanPath" frame:NSMakeRect(150, 320, 520, 24) placeholder:@"Optional scan root"];
-    [self addLabel:@"Scan root" toView:view frame:NSMakeRect(16, 322, 120, 20)];
-    [self addButton:@"Scan" commandId:@"installs.scan" toView:view frame:NSMakeRect(690, 318, 132, 30)];
-
-    [self addLabel:@"Install path" toView:view frame:NSMakeRect(16, 282, 120, 20)];
-    [self addTextFieldToView:view key:@"installs.import.installPath" frame:NSMakeRect(150, 280, 520, 24) placeholder:@"Existing Factorio folder"];
-    [self addLabel:@"Install id" toView:view frame:NSMakeRect(16, 246, 120, 20)];
-    [self addTextFieldToView:view key:@"installs.import.installId" frame:NSMakeRect(150, 244, 220, 24) placeholder:@"fixture"];
-    [self addButton:@"Import" commandId:@"installs.import" toView:view frame:NSMakeRect(690, 264, 132, 30)];
-
-    [self addLabel:@"Inspect id" toView:view frame:NSMakeRect(16, 204, 120, 20)];
-    [self addTextFieldToView:view key:@"installs.inspect.installId" frame:NSMakeRect(150, 202, 220, 24) placeholder:@"fixture"];
-    [self addButton:@"Inspect" commandId:@"installs.inspect" toView:view frame:NSMakeRect(690, 200, 132, 30)];
-    [self addDeferredButton:@"setup.preview" toView:view frame:NSMakeRect(16, 148, 160, 30)];
+    [self addGeneratedCommandsToView:view prefixes:@[ @"install_refs.", @"installs.", @"setup." ]];
 }
 
 - (void)addInstancesTab:(NSTabView *)tabs
 {
     NSView *view = [self addTab:@"Instances" toTabs:tabs];
-    [self addLabel:@"Instance commands" toView:view frame:NSMakeRect(16, 366, 420, 24)];
-    [self addButton:@"List" commandId:@"instances.list" toView:view frame:NSMakeRect(16, 320, 132, 30)];
-    [self addLabel:@"Instance name" toView:view frame:NSMakeRect(16, 280, 120, 20)];
-    [self addTextFieldToView:view key:@"instances.create.display_name" frame:NSMakeRect(150, 278, 300, 24) placeholder:@"Space Age Main"];
-    [self addLabel:@"Instance id" toView:view frame:NSMakeRect(470, 280, 90, 20)];
-    [self addTextFieldToView:view key:@"instances.create.instance_id" frame:NSMakeRect(560, 278, 220, 24) placeholder:@"space-age-main"];
-    [self addLabel:@"Install id" toView:view frame:NSMakeRect(16, 244, 120, 20)];
-    [self addTextFieldToView:view key:@"instances.create.install_id" frame:NSMakeRect(150, 242, 220, 24) placeholder:@"fixture"];
-    [self addLabel:@"Template id" toView:view frame:NSMakeRect(16, 208, 120, 20)];
-    [self addTextFieldToView:view key:@"instances.create.template_id" frame:NSMakeRect(150, 206, 220, 24) placeholder:@"vanilla"];
-    [self addButton:@"Create" commandId:@"instances.create" toView:view frame:NSMakeRect(470, 240, 132, 30)];
+    [self addGeneratedCommandsToView:view prefixes:@[ @"instance." ]];
 }
 
 - (void)addLaunchPlanTab:(NSTabView *)tabs
 {
     NSView *view = [self addTab:@"Launch Plan" toTabs:tabs];
-    [self addLabel:@"Launch plan commands" toView:view frame:NSMakeRect(16, 366, 420, 24)];
-    [self addLabel:@"Instance id" toView:view frame:NSMakeRect(16, 322, 120, 20)];
-    [self addTextFieldToView:view key:@"launch.instanceId" frame:NSMakeRect(150, 320, 260, 24) placeholder:@"space-age-main"];
-    [self addButton:@"Build Plan" commandId:@"launch_plan.build" toView:view frame:NSMakeRect(430, 318, 132, 30)];
-    [self addButton:@"Preview Run" commandId:@"run.preview" toView:view frame:NSMakeRect(572, 318, 132, 30)];
-    [self addButton:@"Preflight" commandId:@"launch_plan.preflight" toView:view frame:NSMakeRect(430, 270, 132, 30)];
-    [self addDeferredButton:@"run.execute" toView:view frame:NSMakeRect(16, 220, 160, 30)];
+    [self addGeneratedCommandsToView:view prefixes:@[ @"launch_plan.", @"run." ]];
 }
 
 - (void)addDiagnosticsTab:(NSTabView *)tabs
 {
     NSView *view = [self addTab:@"Diagnostics" toTabs:tabs];
-    [self addLabel:@"Diagnostics and deferred package commands" toView:view frame:NSMakeRect(16, 366, 420, 24)];
-    [self addLabel:@"Instance id" toView:view frame:NSMakeRect(16, 322, 90, 20)];
-    [self addTextFieldToView:view key:@"diagnostics.export.instance_id" frame:NSMakeRect(110, 320, 220, 24) placeholder:@"space-age-main"];
-    [self addLabel:@"Output" toView:view frame:NSMakeRect(350, 322, 60, 20)];
-    [self addTextFieldToView:view key:@"diagnostics.export.output_path" frame:NSMakeRect(410, 320, 300, 24) placeholder:@"diagnostics.zip"];
-    [self addButton:@"Export Diagnostics" commandId:@"diagnostics.export" toView:view frame:NSMakeRect(730, 318, 160, 30)];
-    [self addDeferredButton:@"modsets.lock" toView:view frame:NSMakeRect(16, 270, 160, 30)];
-    [self addDeferredButton:@"saves.backup" toView:view frame:NSMakeRect(186, 270, 160, 30)];
-    [self addDeferredButton:@"instance.export" toView:view frame:NSMakeRect(356, 270, 160, 30)];
-    [self addDeferredButton:@"instance.import" toView:view frame:NSMakeRect(526, 270, 160, 30)];
+    [self addGeneratedCommandsToView:view prefixes:@[ @"diagnostics.", @"dev." ]];
+}
+
+- (void)addGeneratedTab:(NSString *)title prefixes:(NSArray<NSString *> *)prefixes toTabs:(NSTabView *)tabs
+{
+    NSView *view = [self addTab:title toTabs:tabs];
+    [self addGeneratedCommandsToView:view prefixes:prefixes];
+}
+
+- (void)addGeneratedCommandsToView:(NSView *)view prefixes:(NSArray<NSString *> *)prefixes
+{
+    NSInteger index = 0;
+    for (FacManCommandDefinition *command in [FacManCommandClient catalog]) {
+        BOOL included = NO;
+        for (NSString *prefix in prefixes) if ([command.backendId hasPrefix:prefix]) included = YES;
+        if (!included) continue;
+        NSInteger column = index % 3;
+        NSInteger row = index / 3;
+        NSRect frame = NSMakeRect(16 + column * 320, 350 - row * 48, 300, 34);
+        [self addButton:command.label commandId:command.commandId toView:view frame:frame];
+        index++;
+    }
 }
 
 - (void)addSettingsTab:(NSTabView *)tabs
@@ -245,51 +245,107 @@ static NSString *FacManStatusText(FacManCommandStatus status);
 - (void)runCommand:(id)sender
 {
     NSString *commandId = [sender identifier];
-    NSDictionary<NSString *, NSString *> *inputs = [self inputsForCommandId:commandId];
+    [self runCommandId:commandId sender:sender];
+}
+
+- (void)runSelectedCommand:(id)sender
+{
+    (void)sender;
+    NSString *commandId = [[self.commandPopup selectedItem] representedObject];
+    [self runCommandId:commandId sender:nil];
+}
+
+- (void)cancelCommand:(id)sender
+{
+    (void)sender;
+    [self.commandClient cancelCurrentCommand];
+    [self renderText:@"Cancellation requested."];
+}
+
+- (void)runCommandId:(NSString *)commandId sender:(id)sender
+{
+    FacManCommandDefinition *command = [FacManCommandClient definitionForCommandId:commandId];
+    BOOL cancelled = NO;
+    NSDictionary<NSString *, NSString *> *inputs = [self generatedInputsForCommand:command cancelled:&cancelled];
+    if (cancelled) return;
     [self renderText:[NSString stringWithFormat:@"Running %@...", commandId]];
-    [sender setEnabled:NO];
+    if (sender != nil) [sender setEnabled:NO];
     [self.commandClient executeCommandId:commandId
                                   inputs:inputs
                                workspace:[self.workspaceField stringValue]
                                  cliPath:[self.cliPathField stringValue]
                               completion:^(FacManCommandResult *result) {
                                   [self renderText:[result displayText]];
-                                  [sender setEnabled:YES];
+                                  if (sender != nil) [sender setEnabled:YES];
                               }];
 }
 
-- (NSDictionary<NSString *, NSString *> *)inputsForCommandId:(NSString *)commandId
+- (NSDictionary<NSString *, NSString *> *)generatedInputsForCommand:(FacManCommandDefinition *)command
+                                                         cancelled:(BOOL *)cancelled
 {
+    if (cancelled != NULL) *cancelled = NO;
+    if (command == nil || command.status != FacManCommandStatusImplemented) return @{};
+    NSData *data = [command.inputDefinitions dataUsingEncoding:NSUTF8StringEncoding];
+    NSArray<NSDictionary *> *fields = data == nil ? @[] : [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    if ([fields count] == 0) return @{};
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert setMessageText:command.label];
+    [alert setInformativeText:[NSString stringWithFormat:@"Availability: %@ | Risk: %@ | Effects: %@",
+        command.availability, command.riskTier, command.effects]];
+    [alert addButtonWithTitle:(command.dryRunDefault ? @"Run" : @"Apply")];
+    [alert addButtonWithTitle:@"Cancel"];
+    CGFloat height = MAX(60.0, [fields count] * 42.0);
+    NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 520, height)];
+    NSMutableDictionary<NSString *, NSControl *> *controls = [NSMutableDictionary dictionary];
+    NSInteger index = 0;
+    for (NSDictionary *field in fields) {
+        NSString *key = [field objectForKey:@"key"];
+        BOOL required = [[field objectForKey:@"required"] boolValue];
+        CGFloat y = height - 34 - index * 42;
+        [self addLabel:[key stringByAppendingString:(required ? @" *" : @"")]
+                 toView:form
+                  frame:NSMakeRect(0, y + 2, 150, 22)];
+        NSString *type = [field objectForKey:@"type"];
+        NSControl *control = nil;
+        if ([type isEqualToString:@"boolean"]) {
+            NSButton *toggle = [[NSButton alloc] initWithFrame:NSMakeRect(160, y, 330, 24)];
+            [toggle setButtonType:NSSwitchButton];
+            [toggle setTitle:@"Enabled"];
+            control = toggle;
+        } else if ([type isEqualToString:@"path"]) {
+            NSPathControl *path = [[NSPathControl alloc] initWithFrame:NSMakeRect(160, y, 350, 26)];
+            [path setPathStyle:NSPathStyleStandard];
+            control = path;
+        } else {
+            NSTextField *text = [[NSTextField alloc] initWithFrame:NSMakeRect(160, y, 350, 24)];
+            NSString *defaultValue = [field objectForKey:@"default"];
+            if ([defaultValue isKindOfClass:[NSString class]]) [text setStringValue:defaultValue];
+            control = text;
+        }
+        [form addSubview:control];
+        [controls setObject:control forKey:key];
+        index++;
+    }
+    [alert setAccessoryView:form];
+    if ([alert runModal] != NSAlertFirstButtonReturn) {
+        if (cancelled != NULL) *cancelled = YES;
+        return @{};
+    }
     NSMutableDictionary<NSString *, NSString *> *inputs = [NSMutableDictionary dictionary];
-    if ([commandId isEqualToString:@"installs.scan"]) {
-        [self copyInput:@"installs.scan.scanPath" toKey:@"roots" into:inputs];
-    } else if ([commandId isEqualToString:@"installs.import"]) {
-        [self copyInput:@"installs.import.installPath" toKey:@"path" into:inputs];
-        [self copyInput:@"installs.import.installId" toKey:@"install_id" into:inputs];
-    } else if ([commandId isEqualToString:@"installs.inspect"]) {
-        [self copyInput:@"installs.inspect.installId" toKey:@"install_id" into:inputs];
-    } else if ([commandId isEqualToString:@"instances.create"]) {
-        [self copyInput:@"instances.create.display_name" toKey:@"display_name" into:inputs];
-        [self copyInput:@"instances.create.instance_id" toKey:@"instance_id" into:inputs];
-        [self copyInput:@"instances.create.install_id" toKey:@"install_id" into:inputs];
-        [self copyInput:@"instances.create.template_id" toKey:@"template_id" into:inputs];
-    } else if ([commandId isEqualToString:@"launch_plan.build"] ||
-               [commandId isEqualToString:@"launch_plan.preflight"] ||
-               [commandId isEqualToString:@"run.preview"]) {
-        [self copyInput:@"launch.instanceId" toKey:@"instance_id" into:inputs];
-    } else if ([commandId isEqualToString:@"diagnostics.export"]) {
-        [self copyInput:@"diagnostics.export.instance_id" toKey:@"instance_id" into:inputs];
-        [self copyInput:@"diagnostics.export.output_path" toKey:@"output_path" into:inputs];
+    for (NSDictionary *field in fields) {
+        NSString *key = [field objectForKey:@"key"];
+        NSControl *control = [controls objectForKey:key];
+        NSString *value = @"";
+        if ([control isKindOfClass:[NSPathControl class]]) {
+            value = [[(NSPathControl *)control URL] path] ?: @"";
+        } else if ([control isKindOfClass:[NSButton class]]) {
+            value = [(NSButton *)control state] == NSControlStateValueOn ? @"true" : @"false";
+        } else if ([control isKindOfClass:[NSTextField class]]) {
+            value = [(NSTextField *)control stringValue];
+        }
+        [inputs setObject:value forKey:key];
     }
     return inputs;
-}
-
-- (void)copyInput:(NSString *)fieldKey toKey:(NSString *)inputKey into:(NSMutableDictionary<NSString *, NSString *> *)inputs
-{
-    NSTextField *field = [self.inputFields objectForKey:fieldKey];
-    if (field != nil) {
-        [inputs setObject:[field stringValue] forKey:inputKey];
-    }
 }
 
 - (void)loadDefaults
