@@ -7,7 +7,6 @@ apps_boundary = []
 manual_json = [
   "apps/cli/command_dispatch.cpp",
   "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp",
-  "runtime/factorio/saves/flb_factorio_save_operations.cpp",
 ]
 critical_io = []
 generated_catalog = []

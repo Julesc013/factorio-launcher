@@ -7,6 +7,7 @@
 #include "fl_archive_platform.h"
 #include "fl_path_safety.h"
 #include "fl_file_io.h"
+#include "fl_json.h"
 #include "fl_sha256.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modsets.h"
@@ -27,6 +28,7 @@
 namespace facman::factorio::saves::operations {
 namespace fs = std::filesystem;
 namespace tx = facman::transaction;
+namespace json = facman::core::json;
 namespace {
 
 struct Instance {
@@ -46,29 +48,6 @@ struct ExportFile {
     std::string sha256;
 };
 
-std::string json_escape(const std::string& value)
-{
-    std::ostringstream out;
-    for (unsigned char character : value) {
-        switch (character) {
-        case '\\': out << "\\\\"; break;
-        case '"': out << "\\\""; break;
-        case '\n': out << "\\n"; break;
-        case '\r': out << "\\r"; break;
-        case '\t': out << "\\t"; break;
-        default:
-            if (character < 0x20) {
-                const char* hex = "0123456789abcdef";
-                out << "\\u00" << hex[(character >> 4) & 0x0f] << hex[character & 0x0f];
-            } else {
-                out << static_cast<char>(character);
-            }
-        }
-    }
-    return out.str();
-}
-
-std::string quote(const std::string& value) { return "\"" + json_escape(value) + "\""; }
 std::string path_string(const fs::path& path) { return path.lexically_normal().generic_string(); }
 
 void replace_all(std::string& text, const std::string& from, const std::string& to)
@@ -89,34 +68,22 @@ std::string read_text(const fs::path& path)
     return output.str();
 }
 
-std::string json_string_value(const std::string& text, const std::string& key)
+facman::core::Result<json::Value> decode_document(const std::string& text, std::size_t maximum_bytes = 4U * 1024U * 1024U)
 {
-    const std::string marker = "\"" + key + "\"";
-    std::size_t position = text.find(marker);
-    if (position == std::string::npos) return "";
-    position = text.find(':', position + marker.size());
-    if (position == std::string::npos) return "";
-    position = text.find('"', position + 1);
-    if (position == std::string::npos) return "";
-    std::string value;
-    bool escaped = false;
-    for (++position; position < text.size(); ++position) {
-        const char character = text[position];
-        if (escaped) {
-            if (character == 'n') value.push_back('\n');
-            else if (character == 'r') value.push_back('\r');
-            else if (character == 't') value.push_back('\t');
-            else value.push_back(character);
-            escaped = false;
-        } else if (character == '\\') {
-            escaped = true;
-        } else if (character == '"') {
-            break;
-        } else {
-            value.push_back(character);
-        }
-    }
-    return value;
+    json::Limits limits;
+    limits.maximum_bytes = maximum_bytes;
+    limits.maximum_depth = 24;
+    limits.maximum_nodes = 100000;
+    limits.maximum_string_bytes = 1024U * 1024U;
+    return json::parse(text, limits);
+}
+
+std::string document_string(const json::Value& document, const char* key)
+{
+    const json::Value* value = document.find(key);
+    if (value == nullptr) return {};
+    auto result = value->string_value();
+    return result ? result.take_value() : std::string {};
 }
 
 std::string utc_now()
@@ -380,43 +347,41 @@ bool save_locked(const Instance& instance)
     return fs::exists(instance.root / "locks" / "save.write.lock");
 }
 
-std::string save_ref_json(const SaveRef& save)
+json::ObjectBuilder save_ref_builder(const SaveRef& save)
 {
-    std::ostringstream out;
-    out << "{\"name\":" << quote(save.name)
-        << ",\"file_name\":" << quote(save.file_name)
-        << ",\"path\":" << quote(path_string(save.path))
-        << ",\"size\":" << save.size
-        << ",\"archive_structurally_valid\":" << (save.archive_structurally_valid ? "true" : "false")
-        << ",\"factorio_save_recognized\":" << (save.factorio_save_recognized ? "true" : "false")
-        << ",\"deep_save_semantics_inspected\":" << (save.deep_save_semantics_inspected ? "true" : "false")
-        << "}";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("name", save.name);
+    output.add_string("file_name", save.file_name);
+    output.add_string("path", path_string(save.path));
+    (void)output.add_unsigned_integer("size", save.size);
+    output.add_bool("archive_structurally_valid", save.archive_structurally_valid);
+    output.add_bool("factorio_save_recognized", save.factorio_save_recognized);
+    output.add_bool("deep_save_semantics_inspected", save.deep_save_semantics_inspected);
+    return output;
+}
+
+std::string instance_json(const Instance& instance, const std::string& local_data_root)
+{
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.instance.v1");
+    output.add_string("instance_id", instance.instance_id);
+    output.add_string("display_name", instance.display_name);
+    output.add_string("install_ref", instance.install_ref);
+    output.add_string("factorio_version", instance.factorio_version);
+    output.add_string("local_data_root", local_data_root);
+    output.add_string("profile", instance.profile);
+    output.add_string("template", instance.template_id);
+    return output.serialize() + "\n";
 }
 
 std::string portable_instance_json(const Instance& instance)
 {
-    std::ostringstream out;
-    out << "{\n"
-        << "  \"schema\": \"factorio.instance.v1\",\n"
-        << "  \"instance_id\": " << quote(instance.instance_id) << ",\n"
-        << "  \"display_name\": " << quote(instance.display_name) << ",\n"
-        << "  \"install_ref\": " << quote(instance.install_ref) << ",\n"
-        << "  \"factorio_version\": " << quote(instance.factorio_version) << ",\n"
-        << "  \"local_data_root\": \"$FACMAN_INSTANCE_ROOT\",\n"
-        << "  \"profile\": " << quote(instance.profile) << ",\n"
-        << "  \"template\": " << quote(instance.template_id) << "\n"
-        << "}\n";
-    return out.str();
+    return instance_json(instance, "$FACMAN_INSTANCE_ROOT");
 }
 
 std::string local_instance_json(const Instance& instance)
 {
-    std::string text = portable_instance_json(instance);
-    const std::string token = "$FACMAN_INSTANCE_ROOT";
-    const std::size_t position = text.find(token);
-    if (position != std::string::npos) text.replace(position, token.size(), path_string(instance.root));
-    return text;
+    return instance_json(instance, path_string(instance.root));
 }
 
 std::string portable_config()
@@ -457,23 +422,25 @@ bool write_generated(const fs::path& root, const std::string& relative, const st
 
 std::string export_manifest(const Instance& instance, const std::vector<ExportFile>& files)
 {
-    std::ostringstream out;
-    out << "{\n"
-        << "  \"schema\": \"factorio.instance_export_manifest.v2\",\n"
-        << "  \"instance_id\": " << quote(instance.instance_id) << ",\n"
-        << "  \"portable\": true,\n"
-        << "  \"deep_save_semantics_inspected\": false,\n"
-        << "  \"redactions\": [\"local_data_root\", \"config.ini paths and secrets\"],\n"
-        << "  \"file_hashes\": [";
-    for (std::size_t index = 0; index < files.size(); ++index) {
-        if (index) out << ',';
-        out << "\n    {\"path\":" << quote(files[index].path)
-            << ",\"size\":" << files[index].size
-            << ",\"sha256\":" << quote(files[index].sha256) << "}";
+    json::ArrayBuilder redactions;
+    redactions.add_string("local_data_root");
+    redactions.add_string("config.ini paths and secrets");
+    json::ArrayBuilder hashes;
+    for (const ExportFile& file : files) {
+        json::ObjectBuilder entry;
+        entry.add_string("path", file.path);
+        (void)entry.add_unsigned_integer("size", file.size);
+        entry.add_string("sha256", file.sha256);
+        hashes.add_object(entry);
     }
-    if (!files.empty()) out << "\n  ";
-    out << "]\n}\n";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.instance_export_manifest.v2");
+    output.add_string("instance_id", instance.instance_id);
+    output.add_bool("portable", true);
+    output.add_bool("deep_save_semantics_inspected", false);
+    output.add_array("redactions", redactions);
+    output.add_array("file_hashes", hashes);
+    return output.serialize() + "\n";
 }
 
 bool stream_plan_entry(
@@ -502,16 +469,16 @@ bool stream_plan_entry(
 std::map<std::string, std::string> manifest_hashes(const std::string& text)
 {
     std::map<std::string, std::string> hashes;
-    std::size_t position = text.find("\"file_hashes\"");
-    while (position != std::string::npos) {
-        const std::size_t path_position = text.find("\"path\"", position);
-        if (path_position == std::string::npos) break;
-        const std::size_t hash_position = text.find("\"sha256\"", path_position);
-        if (hash_position == std::string::npos) break;
-        const std::string path = json_string_value(text.substr(path_position), "path");
-        const std::string hash = json_string_value(text.substr(hash_position), "sha256");
+    auto document = decode_document(text);
+    if (!document || !document.value().is_object()) return hashes;
+    const json::Value* entries = document.value().find("file_hashes");
+    if (entries == nullptr || !entries->is_array()) return hashes;
+    for (std::size_t index = 0; index < entries->size(); ++index) {
+        const json::Value* entry = entries->at(index);
+        if (entry == nullptr || !entry->is_object()) return {};
+        const std::string path = document_string(*entry, "path");
+        const std::string hash = document_string(*entry, "sha256");
         if (path.empty() || hash.size() != 64 || !hashes.emplace(path, hash).second) return {};
-        position = hash_position + 8;
     }
     return hashes;
 }
@@ -829,8 +796,14 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
     std::string manifest_text;
     std::string instance_text;
     if (!stream_plan_entry(plan, "manifest/export.v1.json", manifest_text, 4 * 1024 * 1024) ||
-        !stream_plan_entry(plan, "instance.v1.json", instance_text, 1024 * 1024) ||
-        json_string_value(manifest_text, "schema") != "factorio.instance_export_manifest.v2") {
+        !stream_plan_entry(plan, "instance.v1.json", instance_text, 1024 * 1024)) {
+        return refuse(command, request.instance_id_override, "", "instance_import_manifest_invalid", "Instance pack manifest is missing or unsupported", path_string(request.source_path));
+    }
+    auto manifest_document = decode_document(manifest_text);
+    auto instance_document = decode_document(instance_text, 1024U * 1024U);
+    if (!manifest_document || !manifest_document.value().is_object() ||
+        document_string(manifest_document.value(), "schema") != "factorio.instance_export_manifest.v2" ||
+        !instance_document || !instance_document.value().is_object()) {
         return refuse(command, request.instance_id_override, "", "instance_import_manifest_invalid", "Instance pack manifest is missing or unsupported", path_string(request.source_path));
     }
     if (fault_requested("after_manifest_read")) {
@@ -838,13 +811,13 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
     }
     Instance instance;
     instance.instance_id = request.instance_id_override.empty()
-        ? json_string_value(instance_text, "instance_id")
+        ? document_string(instance_document.value(), "instance_id")
         : request.instance_id_override;
-    instance.display_name = json_string_value(instance_text, "display_name");
-    instance.install_ref = json_string_value(instance_text, "install_ref");
-    instance.factorio_version = json_string_value(instance_text, "factorio_version");
-    instance.profile = json_string_value(instance_text, "profile");
-    instance.template_id = json_string_value(instance_text, "template");
+    instance.display_name = document_string(instance_document.value(), "display_name");
+    instance.install_ref = document_string(instance_document.value(), "install_ref");
+    instance.factorio_version = document_string(instance_document.value(), "factorio_version");
+    instance.profile = document_string(instance_document.value(), "profile");
+    instance.template_id = document_string(instance_document.value(), "template");
     const facman::base::ManagedPathResult target =
         facman::base::managed_directory(workspace, "instances", instance.instance_id);
     if (!target.ok() || instance.instance_id.empty()) {
@@ -979,90 +952,106 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
 
 std::string to_json(const ListResult& value)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.saves.v1\",\n  \"command\": \"saves.list\",\n"
-        << "  \"instance_id\": " << quote(value.instance_id) << ",\n  \"saves\": [";
-    for (std::size_t index = 0; index < value.saves.size(); ++index) {
-        if (index) out << ',';
-        out << save_ref_json(value.saves[index]);
-    }
-    out << "]\n}";
-    return out.str();
+    json::ArrayBuilder saves;
+    for (const SaveRef& save : value.saves) saves.add_object(save_ref_builder(save));
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.saves.v1");
+    output.add_string("command", "saves.list");
+    output.add_string("instance_id", value.instance_id);
+    output.add_array("saves", saves);
+    return output.serialize();
 }
 
 std::string to_json(const BackupResult& value)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.save_backup.v1\",\n  \"command\": \"saves.backup\",\n"
-        << "  \"instance_id\": " << quote(value.instance_id) << ",\n"
-        << "  \"save\": " << quote(value.save.file_name) << ",\n"
-        << "  \"source_path\": " << quote(path_string(value.save.path)) << ",\n"
-        << "  \"destination_path\": " << quote(path_string(value.destination_path)) << ",\n"
-        << "  \"path\": " << quote(path_string(value.destination_path)) << ",\n"
-        << "  \"manifest_path\": " << quote(path_string(value.manifest_path)) << ",\n"
-        << "  \"created_at\": " << quote(value.created_at) << ",\n"
-        << "  \"sha1\": " << quote(value.sha1) << ",\n  \"sha256\": " << quote(value.sha256) << ",\n"
-        << "  \"archive_structurally_valid\": true,\n  \"factorio_save_recognized\": true,\n"
-        << "  \"deep_save_semantics_inspected\": false\n}";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.save_backup.v1");
+    output.add_string("command", "saves.backup");
+    output.add_string("instance_id", value.instance_id);
+    output.add_string("save", value.save.file_name);
+    output.add_string("source_path", path_string(value.save.path));
+    output.add_string("destination_path", path_string(value.destination_path));
+    output.add_string("path", path_string(value.destination_path));
+    output.add_string("manifest_path", path_string(value.manifest_path));
+    output.add_string("created_at", value.created_at);
+    output.add_string("sha1", value.sha1);
+    output.add_string("sha256", value.sha256);
+    output.add_bool("archive_structurally_valid", true);
+    output.add_bool("factorio_save_recognized", true);
+    output.add_bool("deep_save_semantics_inspected", false);
+    return output.serialize();
 }
 
 std::string to_json(const CloneResult& value)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.save_clone.v1\",\n  \"command\": \"saves.clone\",\n"
-        << "  \"source_instance_id\": " << quote(value.source_instance_id) << ",\n"
-        << "  \"target_instance_id\": " << quote(value.target_instance_id) << ",\n"
-        << "  \"save\": " << quote(value.save.file_name) << ",\n"
-        << "  \"source_path\": " << quote(path_string(value.save.path)) << ",\n"
-        << "  \"destination_path\": " << quote(path_string(value.destination_path)) << ",\n"
-        << "  \"path\": " << quote(path_string(value.destination_path)) << ",\n"
-        << "  \"created_at\": " << quote(value.created_at) << ",\n"
-        << "  \"sha1\": " << quote(value.sha1) << ",\n  \"sha256\": " << quote(value.sha256) << ",\n"
-        << "  \"archive_structurally_valid\": true,\n  \"factorio_save_recognized\": true,\n"
-        << "  \"deep_save_semantics_inspected\": false\n}";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.save_clone.v1");
+    output.add_string("command", "saves.clone");
+    output.add_string("source_instance_id", value.source_instance_id);
+    output.add_string("target_instance_id", value.target_instance_id);
+    output.add_string("save", value.save.file_name);
+    output.add_string("source_path", path_string(value.save.path));
+    output.add_string("destination_path", path_string(value.destination_path));
+    output.add_string("path", path_string(value.destination_path));
+    output.add_string("created_at", value.created_at);
+    output.add_string("sha1", value.sha1);
+    output.add_string("sha256", value.sha256);
+    output.add_bool("archive_structurally_valid", true);
+    output.add_bool("factorio_save_recognized", true);
+    output.add_bool("deep_save_semantics_inspected", false);
+    return output.serialize();
 }
 
 std::string to_json(const ExportResult& value)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.instance_export.v1\",\n  \"command\": \"instance.export\",\n"
-        << "  \"instance_id\": " << quote(value.instance_id) << ",\n"
-        << "  \"path\": " << quote(path_string(value.output_path)) << ",\n"
-        << "  \"files\": " << value.files << ",\n"
-        << "  \"redactions\": [\"local_data_root\", \"config.ini paths and secrets\"],\n"
-        << "  \"file_hash_closure\": true,\n  \"deep_save_semantics_inspected\": false\n}";
-    return out.str();
+    json::ArrayBuilder redactions;
+    redactions.add_string("local_data_root");
+    redactions.add_string("config.ini paths and secrets");
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.instance_export.v1");
+    output.add_string("command", "instance.export");
+    output.add_string("instance_id", value.instance_id);
+    output.add_string("path", path_string(value.output_path));
+    (void)output.add_unsigned_integer("files", value.files);
+    output.add_array("redactions", redactions);
+    output.add_bool("file_hash_closure", true);
+    output.add_bool("deep_save_semantics_inspected", false);
+    return output.serialize();
 }
 
 std::string to_json(const ImportResult& value)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.instance_import.v1\",\n  \"command\": \"instance.import\",\n"
-        << "  \"instance_id\": " << quote(value.instance_id) << ",\n"
-        << "  \"path\": " << quote(path_string(value.destination_path)) << ",\n"
-        << "  \"files\": " << value.files << "\n}";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.instance_import.v1");
+    output.add_string("command", "instance.import");
+    output.add_string("instance_id", value.instance_id);
+    output.add_string("path", path_string(value.destination_path));
+    (void)output.add_unsigned_integer("files", value.files);
+    return output.serialize();
 }
 
 std::string to_json(const Refusal& value)
 {
     const bool save_command = value.command.rfind("saves.", 0) == 0;
-    std::ostringstream out;
-    out << "{\n  \"schema\": " << quote(save_command ? "factorio.save_refusal.v1" : "factorio.instance_transfer_refusal.v1") << ",\n"
-        << "  \"command\": " << quote(value.command) << ",\n  \"status\": \"refused\",\n"
-        << "  \"instance_id\": " << quote(value.instance_id) << ",\n";
-    if (save_command) out << "  \"save\": " << quote(value.save) << ",\n";
-    out << "  \"refusal\": {\n    \"schema\": \"common.refusal.v1\",\n"
-        << "    \"code\": " << quote(value.code) << ",\n    \"reason\": " << quote(value.reason) << ",\n"
-        << "    \"recoverable\": " << (value.recoverable ? "true" : "false") << ",\n"
-        << "    \"retryable\": " << (value.recoverable ? "true" : "false") << ",\n"
-        << "    \"severity\": \"blocked\"\n  },\n"
-        << "  \"details\": {\"detail\": " << quote(value.detail) << "}";
-    if (save_command) out << ",\n  \"suggested_next_command\": " << quote(value.suggested_next_command);
-    out << "\n}";
-    return out.str();
+    json::ObjectBuilder refusal;
+    refusal.add_string("schema", "common.refusal.v1");
+    refusal.add_string("code", value.code);
+    refusal.add_string("reason", value.reason);
+    refusal.add_bool("recoverable", value.recoverable);
+    refusal.add_bool("retryable", value.recoverable);
+    refusal.add_string("severity", "blocked");
+    json::ObjectBuilder details;
+    details.add_string("detail", value.detail);
+    json::ObjectBuilder output;
+    output.add_string("schema", save_command ? "factorio.save_refusal.v1" : "factorio.instance_transfer_refusal.v1");
+    output.add_string("command", value.command);
+    output.add_string("status", "refused");
+    output.add_string("instance_id", value.instance_id);
+    if (save_command) output.add_string("save", value.save);
+    output.add_object("refusal", refusal);
+    output.add_object("details", details);
+    if (save_command) output.add_string("suggested_next_command", value.suggested_next_command);
+    return output.serialize();
 }
 
 } // namespace facman::factorio::saves::operations
