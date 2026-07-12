@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"servers.diff","status":"refused","refusal":{"schema":"common.refusal.v1","code":"unknown_server","reason":"both servers are required","recoverable":true}}

@@ -394,6 +394,27 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         request.command = normalized;
         request.payload = std::move(typed); return true;
     }
+    case CommandId::servers_inspect:
+    case CommandId::servers_validate:
+    case CommandId::servers_plan:
+    case CommandId::servers_diff:
+    case CommandId::servers_export: {
+        if (!validate_fields(payload, {"server_id", "other_server_id", "save", "output_path", "include_save"}, detail)) return false;
+        ServerPlanRequest typed;
+        std::string output;
+        std::string include_save;
+        if (!required_string(payload, "server_id", typed.server_id, detail) ||
+            !optional_string(payload, "other_server_id", typed.other_server_id, detail) ||
+            !optional_string(payload, "save", typed.save, detail) ||
+            !optional_string(payload, "output_path", output, detail) ||
+            !optional_string(payload, "include_save", include_save, detail)) return false;
+        if (!output.empty()) typed.output_path = facman::platform::path_from_utf8(output);
+        if (!include_save.empty() && include_save != "true" && include_save != "false") {
+            detail = "include_save must be true or false"; return false;
+        }
+        typed.include_save = include_save == "true";
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::package_verify:
     case CommandId::installs_install_version:
     case CommandId::installs_verify:

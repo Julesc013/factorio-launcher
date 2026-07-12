@@ -1,0 +1,20 @@
+{
+  "$id": "https://facman.invalid/schema/command/servers.validate.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "save": {
+      "type": "string"
+    },
+    "server_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "server_id"
+  ],
+  "title": "servers.validate request",
+  "type": "object"
+}

@@ -12,6 +12,7 @@ ApplicationResult refuse_mod_portal(ApplicationContext& context, const ServiceOp
 ApplicationResult create_server(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult list_servers(ApplicationContext& context);
 ApplicationResult control_server(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult dispatch_server_plan(ApplicationContext& context, const ApplicationRequest& request);
 ApplicationResult redact_diagnostics(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult create_bug_report(ApplicationContext& context);
 ApplicationResult refuse_dev_execution(ApplicationContext& context, const ServiceOperationRequest& request);

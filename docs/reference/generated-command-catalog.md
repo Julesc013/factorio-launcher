@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `fc7205e6aa4a933cf17f4f580a7f566a1f501b9ba993652a040f843b2a692528`.
+Source digest: `1a4b50f74dce35289fdd9c0ed6ea7fc5b3b3b63421c7e0403d06f0949ec7ff15`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -86,10 +86,15 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `saves.retention.plan` | `saves.retention.plan` | `saves_retention_plan` | no | - | available | workspace_read | `facman saves retention plan --instance <instance-id> [retention options] --json` |
 | `saves.verify` | `saves.verify` | `saves_verify` | no | - | available | workspace_read | `facman saves verify <save> --instance <instance-id> --json` |
 | `servers.create` | `servers.create` | `servers_create` | yes | - | implemented | workspace_read, workspace_write | `facman servers create <name> --instance <id> --json` |
+| `servers.diff` | `servers.diff` | `servers_diff` | no | - | available | workspace_read | `facman servers diff <left-server-id> <right-server-id> --json` |
+| `servers.export` | `servers.export` | `servers_export` | yes | - | available | workspace_read, workspace_write | `facman servers export <server-id> <bundle.zip> [--save <save>] [--include-save] --json` |
+| `servers.inspect` | `servers.inspect` | `servers_inspect` | no | - | available | workspace_read | `facman servers inspect <server-id> --json` |
 | `servers.list` | `servers.list` | `servers_list` | no | - | implemented | workspace_read | `facman servers list --json` |
+| `servers.plan` | `servers.plan` | `servers_plan` | no | - | available | workspace_read | `facman servers plan <server-id> [--save <save>] --json` |
 | `servers.rcon` | `servers.rcon` | `servers_rcon` | no | - | unavailable_until_isolation_proof | workspace_read, process_execute | `facman servers rcon <server-id> --json` |
 | `servers.start` | `servers.start` | `servers_start` | no | - | unavailable_until_isolation_proof | workspace_read, process_execute | `facman servers start <server-id> --json` |
 | `servers.stop` | `servers.stop` | `servers_stop` | no | - | unavailable_until_isolation_proof | workspace_read, process_execute | `facman servers stop <server-id> --json` |
+| `servers.validate` | `servers.validate` | `servers_validate` | no | - | available | workspace_read | `facman servers validate <server-id> [--save <save>] --json` |
 | `setup.operation` | `setup.operation` | `legacy_setup_operation` | no | - | available | workspace_read, setup_preview | `internal canonical setup route` |
 | `setup.preview` | `setup.preview` | `setup_preview` | no | - | unavailable_until_gateway | workspace_read | `facman setup preview --json` |
 | `snapshots.create` | `snapshots.create` | `snapshots_create` | yes | - | available | workspace_read, workspace_write | `facman snapshots create <instance-id> <snapshot-id> [--save <name>] --json` |

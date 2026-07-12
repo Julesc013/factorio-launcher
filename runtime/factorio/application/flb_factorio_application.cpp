@@ -153,8 +153,8 @@ private:
         case CommandId::mods_update: return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::servers_list: return handlers::list_servers(context_);
         case CommandId::servers_create: return handlers::create_server(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::servers_start:
-        case CommandId::servers_stop:
+        case CommandId::servers_inspect: case CommandId::servers_validate: case CommandId::servers_plan: case CommandId::servers_diff: case CommandId::servers_export: return handlers::dispatch_server_plan(context_, request);
+        case CommandId::servers_start: case CommandId::servers_stop:
         case CommandId::servers_rcon: return handlers::control_server(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::diagnostics_redact: return handlers::redact_diagnostics(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::dev_bug_report: return handlers::create_bug_report(context_);

@@ -64,12 +64,21 @@ target_include_directories(flb_factorio_profiles_static PUBLIC ${CMAKE_CURRENT_S
 target_link_libraries(flb_factorio_profiles_static PUBLIC
   facman_base_static facman_transaction_static facman_workspace_static)
 
+add_library(flb_factorio_server_static server/flb_factorio_server_plan.cpp)
+target_compile_features(flb_factorio_server_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_server_static PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/server ${CMAKE_CURRENT_SOURCE_DIR}/saves ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
+target_link_libraries(flb_factorio_server_static PUBLIC
+  facman_archive_static facman_base_static facman_transaction_static facman_workspace_static
+  flb_factorio_saves_static flb_factorio_modsets_static)
+
 add_library(facman_factorio_model INTERFACE)
 target_link_libraries(facman_factorio_model INTERFACE
   flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_launch_static
   flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
   flb_factorio_snapshots_static)
 target_link_libraries(facman_factorio_model INTERFACE flb_factorio_profiles_static)
+target_link_libraries(facman_factorio_model INTERFACE flb_factorio_server_static)
 add_library(facman::factorio_model ALIAS facman_factorio_model)
 
 add_library(flb_factorio_application_static STATIC
@@ -110,6 +119,7 @@ foreach(target IN ITEMS
     flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
     flb_factorio_snapshots_static
     flb_factorio_profiles_static
+    flb_factorio_server_static
     flb_factorio_application_static flb_factorio_static flb_factorio_shared)
   facman_apply_policies(${target})
 endforeach()

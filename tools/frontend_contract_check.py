@@ -93,6 +93,11 @@ EXPECTED_OPTIONAL = {
     "workspace.recovery.plan",
     "workspace.recovery.apply",
     "servers.create",
+    "servers.inspect",
+    "servers.validate",
+    "servers.plan",
+    "servers.diff",
+    "servers.export",
     "servers.list",
 }
 

@@ -738,6 +738,16 @@ int command_servers(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
+    if ((action == "inspect" || action == "validate" || action == "plan") && options.args.size() >= 3) {
+        return emit_basic(call(options, "servers." + action, fields_payload({{"server_id", options.args[2]},
+            {"save", option(options.args, "--save")}})), flag(options.args, "--json"), "Server " + action + " completed");
+    }
+    if (action == "diff" && options.args.size() >= 4) return emit_basic(call(options, "servers.diff", fields_payload(
+        {{"server_id", options.args[2]}, {"other_server_id", options.args[3]}})), flag(options.args, "--json"), "Server diff completed");
+    if (action == "export" && options.args.size() >= 4) return emit_basic(call(options, "servers.export", fields_payload(
+        {{"server_id", options.args[2]}, {"output_path", options.args[3]}, {"save", option(options.args, "--save")},
+         {"include_save", flag(options.args, "--include-save") ? "true" : "false"}}), false),
+        flag(options.args, "--json"), "Server plan exported");
     std::vector<std::pair<std::string, std::string>> fields;
     if (action == "create" && options.args.size() >= 3) fields = {{"name", options.args[2]}, {"id", option(options.args, "--id")}, {"instance_id", option(options.args, "--instance")}};
     else if (action == "start" || action == "stop" || action == "rcon") { if (options.args.size() < 3) return 2; fields = {{"id", options.args[2]}}; }

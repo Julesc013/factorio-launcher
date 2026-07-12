@@ -18,6 +18,7 @@
 #include "flb_factorio_instance_lifecycle.h"
 #include "flb_factorio_snapshots.h"
 #include "flb_factorio_profiles.h"
+#include "flb_factorio_server_plan.h"
 
 #include "ulk/ulk_command.h"
 
@@ -103,6 +104,7 @@ using CreateProfileRequest = profiles::CreateRequest;
 using CloneProfileRequest = profiles::CloneRequest;
 using DiffProfileRequest = profiles::DiffRequest;
 using EffectiveProfileRequest = profiles::EffectiveRequest;
+using ServerPlanRequest = facman::factorio::server::Request;
 
 using ApplicationPayload = std::variant<
     std::monostate,
@@ -145,6 +147,7 @@ using ApplicationPayload = std::variant<
     CloneProfileRequest,
     DiffProfileRequest,
     EffectiveProfileRequest,
+    ServerPlanRequest,
     ServiceOperationRequest,
     ExportDiagnosticRequest>;
 

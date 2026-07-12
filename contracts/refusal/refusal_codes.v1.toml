@@ -1561,3 +1561,94 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = true
 message = "Save retention could not prepare owned reversible trash."
+
+[[code]]
+id = "server_profile_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A server profile could not be read through a bounded stable handle."
+
+[[code]]
+id = "server_profile_drift"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A server profile changed during validation."
+
+[[code]]
+id = "server_profile_secret_refused"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A server profile contains a plaintext sensitive field instead of a credential reference."
+
+[[code]]
+id = "server_profile_schema_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The server profile schema is unsupported."
+
+[[code]]
+id = "server_profile_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The server profile identity or instance reference is invalid."
+
+[[code]]
+id = "server_settings_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The server port, player limit, visibility, or autosave policy is invalid."
+
+[[code]]
+id = "server_save_required"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "Server planning requires an explicit structurally valid save selection."
+
+[[code]]
+id = "server_save_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The selected server save is missing or structurally invalid."
+
+[[code]]
+id = "server_modset_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The server instance modset does not verify."
+
+[[code]]
+id = "server_export_target_invalid"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The server plan export target is missing, occupied, or unsafe."
+
+[[code]]
+id = "server_export_write_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The server plan bundle could not be staged or committed."
+
+[[code]]
+id = "server_export_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The server plan export transaction failed before commit."
+
+[[code]]
+id = "server_export_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The server plan bundle committed but transaction recovery is required."
