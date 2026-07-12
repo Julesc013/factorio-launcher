@@ -3,6 +3,8 @@
 
 #include "flb_factorio_discovery.h"
 
+#include "fl_json.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -20,6 +22,7 @@
 namespace facman::factorio::discovery {
 
 namespace fs = std::filesystem;
+namespace json = facman::core::json;
 
 namespace {
 
@@ -36,94 +39,41 @@ std::string read_text(const fs::path& path)
     return out.str();
 }
 
-std::string json_string_value(const std::string& text, const std::string& key)
+facman::core::Result<json::Value> parse_document(const std::string& text)
 {
-    std::string marker = "\"" + key + "\"";
-    std::size_t position = text.find(marker);
-    if (position == std::string::npos) {
-        return "";
-    }
-    position = text.find(':', position + marker.size());
-    if (position == std::string::npos) {
-        return "";
-    }
-    position = text.find('"', position + 1);
-    if (position == std::string::npos) {
-        return "";
-    }
-    ++position;
-
-    std::ostringstream value;
-    bool escaped = false;
-    for (; position < text.size(); ++position) {
-        char ch = text[position];
-        if (escaped) {
-            switch (ch) {
-            case 'n':
-                value << '\n';
-                break;
-            case 'r':
-                value << '\r';
-                break;
-            case 't':
-                value << '\t';
-                break;
-            case '\\':
-            case '"':
-            case '/':
-                value << ch;
-                break;
-            default:
-                value << ch;
-                break;
-            }
-            escaped = false;
-            continue;
-        }
-        if (ch == '\\') {
-            escaped = true;
-            continue;
-        }
-        if (ch == '"') {
-            break;
-        }
-        value << ch;
-    }
-    return value.str();
+    json::Limits limits;
+    limits.maximum_bytes = 1024U * 1024U;
+    limits.maximum_depth = 16;
+    limits.maximum_nodes = 4096;
+    limits.maximum_string_bytes = 256U * 1024U;
+    return json::parse(text, limits);
 }
 
-std::vector<std::string> json_string_array_values(const std::string& text, const std::string& key)
+std::string document_string(const std::string& text, const std::string& key)
 {
-    std::vector<std::string> values;
-    std::string marker = "\"" + key + "\"";
-    std::size_t position = text.find(marker);
-    if (position == std::string::npos) {
-        return values;
-    }
-    position = text.find('[', position + marker.size());
-    if (position == std::string::npos) {
-        return values;
-    }
-    std::size_t end = text.find(']', position + 1);
-    if (end == std::string::npos) {
-        return values;
-    }
+    auto document = parse_document(text);
+    if (!document || !document.value().is_object()) return {};
+    const json::Value* value = document.value().find(key);
+    if (value == nullptr) return {};
+    auto result = value->string_value();
+    return result ? result.take_value() : std::string {};
+}
 
-    std::string array_text = text.substr(position + 1, end - position - 1);
-    std::size_t cursor = 0;
-    while (cursor < array_text.size()) {
-        std::size_t quote_start = array_text.find('"', cursor);
-        if (quote_start == std::string::npos) {
-            break;
-        }
-        std::size_t quote_end = array_text.find('"', quote_start + 1);
-        if (quote_end == std::string::npos) {
-            break;
-        }
-        values.push_back(array_text.substr(quote_start + 1, quote_end - quote_start - 1));
-        cursor = quote_end + 1;
+std::vector<std::string> document_strings(const std::string& text, const std::string& key)
+{
+    std::vector<std::string> output;
+    auto document = parse_document(text);
+    if (!document || !document.value().is_object()) return output;
+    const json::Value* values = document.value().find(key);
+    if (values == nullptr || !values->is_array()) return output;
+    for (std::size_t index = 0; index < values->size(); ++index) {
+        const json::Value* value = values->at(index);
+        if (value == nullptr) return {};
+        auto item = value->string_value();
+        if (!item) return {};
+        output.push_back(item.take_value());
     }
-    return values;
+    return output;
 }
 
 std::string slugify(const std::string& text)
@@ -151,49 +101,11 @@ std::string slugify(const std::string& text)
     return out.empty() ? "install" : out;
 }
 
-std::string json_escape(const std::string& value)
+json::ArrayBuilder string_array_builder(const std::vector<std::string>& values)
 {
-    std::ostringstream out;
-    for (char ch : value) {
-        switch (ch) {
-        case '\\':
-            out << "\\\\";
-            break;
-        case '"':
-            out << "\\\"";
-            break;
-        case '\b':
-            out << "\\b";
-            break;
-        case '\f':
-            out << "\\f";
-            break;
-        case '\n':
-            out << "\\n";
-            break;
-        case '\r':
-            out << "\\r";
-            break;
-        case '\t':
-            out << "\\t";
-            break;
-        default:
-            if (static_cast<unsigned char>(ch) < 0x20) {
-                out << "\\u00";
-                const char* hex = "0123456789abcdef";
-                out << hex[(ch >> 4) & 0x0f] << hex[ch & 0x0f];
-            } else {
-                out << ch;
-            }
-            break;
-        }
-    }
-    return out.str();
-}
-
-std::string quote(const std::string& value)
-{
-    return "\"" + json_escape(value) + "\"";
+    json::ArrayBuilder output;
+    for (const std::string& value : values) output.add_string(value);
+    return output;
 }
 
 std::string detect_version(const fs::path& root)
@@ -214,7 +126,7 @@ std::string detect_version(const fs::path& root)
     if (!fs::is_regular_file(info)) {
         return "unknown";
     }
-    std::string version = json_string_value(read_text(info), "version");
+    std::string version = document_string(read_text(info), "version");
     return version.empty() ? "unknown" : version;
 }
 
@@ -331,22 +243,8 @@ std::string non_empty_or(const std::string& value, const std::string& fallback)
 
 bool manifest_expected_structural(const std::string& manifest_text)
 {
-    std::string status = json_string_value(manifest_text, "validation_status");
+    std::string status = document_string(manifest_text, "validation_status");
     return status.empty() || status == "structural";
-}
-
-std::string capabilities_json(const std::vector<std::string>& capabilities)
-{
-    std::ostringstream out;
-    out << "[";
-    for (std::size_t index = 0; index < capabilities.size(); ++index) {
-        if (index) {
-            out << ",";
-        }
-        out << quote(capabilities[index]);
-    }
-    out << "]";
-    return out.str();
 }
 
 void append_unique_path(std::vector<fs::path>& paths, const fs::path& candidate)
@@ -702,7 +600,7 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
     install.root = fs::absolute(root).lexically_normal();
     fs::path fixture_manifest = fixture_manifest_path(install.root);
     std::string fixture_text = fs::is_regular_file(fixture_manifest) ? read_text(fixture_manifest) : "";
-    std::string fixture_id = json_string_value(fixture_text, "fixture_id");
+    std::string fixture_id = document_string(fixture_text, "fixture_id");
     if (!fixture_id.empty()) {
         install.candidate_id = fixture_id;
     }
@@ -741,19 +639,19 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
     install.app_dir_kind = app_dir_kind(install.root);
 
     if (!fixture_text.empty()) {
-        std::vector<std::string> manifest_capabilities = json_string_array_values(fixture_text, "capabilities");
-        install.source = non_empty_or(json_string_value(fixture_text, "source"), install.source);
-        install.ownership = non_empty_or(json_string_value(fixture_text, "ownership"), install.ownership);
-        install.platform = non_empty_or(json_string_value(fixture_text, "platform"), install.platform);
+        std::vector<std::string> manifest_capabilities = document_strings(fixture_text, "capabilities");
+        install.source = non_empty_or(document_string(fixture_text, "source"), install.source);
+        install.ownership = non_empty_or(document_string(fixture_text, "ownership"), install.ownership);
+        install.platform = non_empty_or(document_string(fixture_text, "platform"), install.platform);
         if (!manifest_capabilities.empty()) {
             install.capabilities = manifest_capabilities;
         }
         if (!manifest_expected_structural(fixture_text)) {
             install.verification_status = "invalid";
             install.capabilities.clear();
-            install.source = non_empty_or(json_string_value(fixture_text, "source"), "invalid");
+            install.source = non_empty_or(document_string(fixture_text, "source"), "invalid");
         }
-        install.diagnostic_code = json_string_value(fixture_text, "diagnostic_code");
+        install.diagnostic_code = document_string(fixture_text, "diagnostic_code");
     }
     if (install.verification_status == "invalid" && install.diagnostic_code.empty()) {
         install.diagnostic_code = "invalid_factorio_install";
@@ -804,52 +702,60 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<fs::path>& exp
     return installs;
 }
 
+json::ObjectBuilder install_ref_builder(const InstallRef& install)
+{
+    json::ObjectBuilder verification;
+    verification.add_string("status", install.verification_status);
+    verification.add_array("problems", json::ArrayBuilder {});
+    if (!install.diagnostic_code.empty()) {
+        verification.add_string("diagnostic_code", install.diagnostic_code);
+    }
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.install_ref.v1");
+    output.add_string("install_id", install.install_id);
+    output.add_string("candidate_id", install.candidate_id.empty() ? install.install_id : install.candidate_id);
+    output.add_string("product_id", "factorio");
+    output.add_string("display_name", "Factorio " + install.install_id);
+    output.add_string("root", path_string(install.root));
+    output.add_string("app_dir", path_string(install.root));
+    output.add_string("executable", path_string(install.executable));
+    output.add_string("version", install.version);
+    output.add_string("ownership", install.ownership);
+    output.add_string("source", install.source);
+    output.add_string("platform", install.platform);
+    output.add_array("capabilities", string_array_builder(install.capabilities));
+    output.add_string("executable_path_kind", install.executable_path_kind);
+    output.add_string("app_dir_kind", install.app_dir_kind);
+    output.add_bool("setup_mutation_allowed", install.setup_mutation_allowed);
+    output.add_object("verification", verification);
+    if (!install.diagnostic_code.empty()) {
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", install.diagnostic_code);
+        refusal.add_string("severity", "blocked");
+        refusal.add_bool("retryable", true);
+        output.add_object("refusal", refusal);
+    }
+    json::ObjectBuilder discovery;
+    discovery.add_bool("read_only", true);
+    discovery.add_string("source_family", install.source);
+    output.add_object("discovery", discovery);
+    json::ObjectBuilder safe_actions;
+    safe_actions.add_bool("repair", false);
+    safe_actions.add_bool("uninstall", false);
+    output.add_object("safe_actions", safe_actions);
+    return output;
+}
+
 std::string install_ref_json(const InstallRef& install)
 {
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.install_ref.v1\",\n";
-    out << "  \"install_id\": " << quote(install.install_id) << ",\n";
-    out << "  \"candidate_id\": " << quote(install.candidate_id.empty() ? install.install_id : install.candidate_id) << ",\n";
-    out << "  \"product_id\": \"factorio\",\n";
-    out << "  \"display_name\": " << quote("Factorio " + install.install_id) << ",\n";
-    out << "  \"root\": " << quote(path_string(install.root)) << ",\n";
-    out << "  \"app_dir\": " << quote(path_string(install.root)) << ",\n";
-    out << "  \"executable\": " << quote(path_string(install.executable)) << ",\n";
-    out << "  \"version\": " << quote(install.version) << ",\n";
-    out << "  \"ownership\": " << quote(install.ownership) << ",\n";
-    out << "  \"source\": " << quote(install.source) << ",\n";
-    out << "  \"platform\": " << quote(install.platform) << ",\n";
-    out << "  \"capabilities\": " << capabilities_json(install.capabilities) << ",\n";
-    out << "  \"executable_path_kind\": " << quote(install.executable_path_kind) << ",\n";
-    out << "  \"app_dir_kind\": " << quote(install.app_dir_kind) << ",\n";
-    out << "  \"setup_mutation_allowed\": " << (install.setup_mutation_allowed ? "true" : "false") << ",\n";
-    out << "  \"verification\": {\"status\": " << quote(install.verification_status) << ", \"problems\": []";
-    if (!install.diagnostic_code.empty()) {
-        out << ", \"diagnostic_code\": " << quote(install.diagnostic_code);
-    }
-    out << "},\n";
-    if (!install.diagnostic_code.empty()) {
-        out << "  \"refusal\": {\"code\": " << quote(install.diagnostic_code) << ", \"severity\": \"blocked\", \"retryable\": true},\n";
-    }
-    out << "  \"discovery\": {\"read_only\": true, \"source_family\": " << quote(install.source) << "},\n";
-    out << "  \"safe_actions\": {\"repair\": false, \"uninstall\": false}\n";
-    out << "}\n";
-    return out.str();
+    return install_ref_builder(install).serialize() + "\n";
 }
 
 std::string install_refs_json(const std::vector<InstallRef>& installs)
 {
-    std::ostringstream out;
-    out << "[";
-    for (std::size_t index = 0; index < installs.size(); ++index) {
-        if (index) {
-            out << ",";
-        }
-        out << install_ref_json(installs[index]);
-    }
-    out << "]\n";
-    return out.str();
+    json::ArrayBuilder output;
+    for (const InstallRef& install : installs) output.add_object(install_ref_builder(install));
+    return output.serialize() + "\n";
 }
 
 std::string discovery_report_json(const std::vector<InstallRef>& installs)
@@ -864,17 +770,17 @@ std::string discovery_report_json(const std::vector<InstallRef>& installs)
         }
     }
 
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.discovery_report.v1\",\n";
-    out << "  \"command\": \"installs.scan\",\n";
-    out << "  \"read_only\": true,\n";
-    out << "  \"candidate_count\": " << installs.size() << ",\n";
-    out << "  \"structural_count\": " << structural_count << ",\n";
-    out << "  \"invalid_count\": " << invalid_count << ",\n";
-    out << "  \"installs\": " << install_refs_json(installs);
-    out << "}\n";
-    return out.str();
+    json::ArrayBuilder install_values;
+    for (const InstallRef& install : installs) install_values.add_object(install_ref_builder(install));
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.discovery_report.v1");
+    output.add_string("command", "installs.scan");
+    output.add_bool("read_only", true);
+    (void)output.add_unsigned_integer("candidate_count", installs.size());
+    (void)output.add_unsigned_integer("structural_count", structural_count);
+    (void)output.add_unsigned_integer("invalid_count", invalid_count);
+    output.add_array("installs", install_values);
+    return output.serialize() + "\n";
 }
 
 bool install_owned_by_setup(const InstallRef& install)
