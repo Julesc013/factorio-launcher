@@ -3,6 +3,7 @@
 
 #include "fl_file_io.h"
 #include "fl_system_services.h"
+#include "fl_user_paths.h"
 
 #include <filesystem>
 #include <iostream>
@@ -38,6 +39,10 @@ int main()
     if (first == second || first.rfind("tx-", 0) != 0 || first.size() != 35) return 9;
     facman::core::FixedClock fixed("2000-01-01T00:00:00Z");
     if (fixed.now_utc() != "2000-01-01T00:00:00Z") return 10;
+    auto paths = facman::platform::user_paths();
+    if (!paths || !paths.value().home.is_absolute() || !paths.value().data.is_absolute() ||
+        !paths.value().config.is_absolute() || !paths.value().cache.is_absolute() ||
+        !paths.value().state.is_absolute()) return 11;
     fs::remove(root, error);
     std::cout << "fl-platform-io-smoke: ok\n";
     return 0;
