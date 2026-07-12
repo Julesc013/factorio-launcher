@@ -17,6 +17,7 @@ ApplicationResult modset_result(const Outcome& outcome)
     if (std::holds_alternative<modsets::Refusal>(outcome)) {
         const auto& refusal = std::get<modsets::Refusal>(outcome);
         result.status = ULK_STATUS_ERROR;
+        result.outcome_kind = facman::core::OutcomeKind::refused;
         result.output = refusal;
         result.error_code = refusal.code;
         result.error_message = refusal.reason;
@@ -31,6 +32,7 @@ ApplicationResult save_result(const Outcome& outcome)
     if (std::holds_alternative<saves::Refusal>(outcome)) {
         const auto& refusal = std::get<saves::Refusal>(outcome);
         result.status = ULK_STATUS_ERROR;
+        result.outcome_kind = facman::core::OutcomeKind::refused;
         result.output = refusal;
         result.error_code = refusal.code;
         result.error_message = refusal.reason;
@@ -130,10 +132,15 @@ std::string safety_refusal(
     return output.serialize();
 }
 
-ApplicationResult refused(const std::string& payload, const std::string& code, const std::string& message)
+ApplicationResult refused(
+    const std::string& payload,
+    const std::string& code,
+    const std::string& message,
+    facman::core::OutcomeKind outcome_kind)
 {
     ApplicationResult result;
     result.status = ULK_STATUS_ERROR;
+    result.outcome_kind = outcome_kind;
     result.output = payload;
     result.error_code = code;
     result.error_message = message;
@@ -148,6 +155,7 @@ ApplicationResult from_modset_outcome(const modsets::VerifyOutcome& outcome)
     if (std::holds_alternative<modsets::VerifyResult>(outcome) &&
         !std::get<modsets::VerifyResult>(outcome).problems.empty()) {
         result.status = ULK_STATUS_ERROR;
+        result.outcome_kind = facman::core::OutcomeKind::conflict;
         result.error_code = "modset_verification_failed";
         result.error_message = "Locked modset verification failed";
     }
@@ -166,6 +174,9 @@ ApplicationResult from_recovery_outcome(const transactions::Outcome& outcome)
     if (std::holds_alternative<transactions::Refusal>(outcome)) {
         const auto& refusal = std::get<transactions::Refusal>(outcome);
         result.status = ULK_STATUS_ERROR;
+        result.outcome_kind = refusal.code == "recovery_required"
+            ? facman::core::OutcomeKind::recovery_required
+            : facman::core::OutcomeKind::refused;
         result.output = refusal;
         result.error_code = refusal.code;
         result.error_message = refusal.reason;
@@ -179,6 +190,7 @@ ApplicationResult from_diagnostic_outcome(const diagnostics::ExportOutcome& outc
     if (std::holds_alternative<diagnostics::Refusal>(outcome)) {
         const auto& refusal = std::get<diagnostics::Refusal>(outcome);
         result.status = ULK_STATUS_ERROR;
+        result.outcome_kind = facman::core::OutcomeKind::refused;
         result.output = refusal;
         result.error_code = refusal.code;
         result.error_message = refusal.reason;
@@ -192,6 +204,7 @@ std::string response_envelope(const ApplicationResult& result, const std::string
     facman::core::json::ObjectBuilder envelope;
     envelope.add_string("schema", "ulk.command_response.v1");
     envelope.add_string("status", result.status == ULK_STATUS_OK ? "ok" : "refused");
+    envelope.add_string("outcome", facman::core::outcome_kind_name(result.outcome_kind));
     auto parsed_payload = payload.empty() ? facman::core::Result<facman::core::json::Value>::failure({"empty", "", ""})
                                           : decode_json_value(payload);
     if (parsed_payload) envelope.add_value("payload", parsed_payload.value());

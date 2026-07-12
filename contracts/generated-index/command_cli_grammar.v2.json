@@ -536,7 +536,7 @@
       "aliases": [
         "installs.install-version"
       ],
-      "availability_refusal_code": "setup_plan_inputs_not_evaluated",
+      "availability_refusal_code": "setup_plan_inputs_not_confirmed",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,

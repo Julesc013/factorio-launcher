@@ -9,7 +9,7 @@ target_link_libraries(flb_factorio_launch_static PUBLIC facman_base_static facma
 add_library(flb_factorio_discovery_static STATIC discovery/flb_factorio_discovery.cpp)
 target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_discovery_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/discovery)
-target_link_libraries(flb_factorio_discovery_static PUBLIC facman_core_static)
+target_link_libraries(flb_factorio_discovery_static PUBLIC facman_core_static facman_platform_static)
 if(WIN32)
   target_link_libraries(flb_factorio_discovery_static PUBLIC Advapi32)
 endif()

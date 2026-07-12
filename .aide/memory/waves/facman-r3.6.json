@@ -10,9 +10,43 @@
     "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
     "Release, signing, publication and Safe beta promotion are outside this wave."
   ],
-  "checkpoints": [],
+  "checkpoints": [
+    {
+      "blockers": [
+        "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+        "Release, signing, publication and Safe beta promotion are outside this wave."
+      ],
+      "clean_status": true,
+      "commit_sha": "bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01",
+        "FACMAN-DISCOVERY-PROVIDERS-02",
+        "FACMAN-STATUS-ONBOARDING-EXPLAIN-01",
+        "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02",
+        "FACMAN-TUI-MINIMUM-PRODUCT-01",
+        "FACMAN-DESKTOP-FRONTEND-PARITY-02",
+        "FACMAN-END-TO-END-USER-JOURNEY-01",
+        "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "680565391f0bb57fdf826168c49501f33c305c4181c355b5da6c13801b1aef8a",
+      "test_fingerprints": {
+        "tests/test_aide_compaction.py": "4c1e3b69ba977a504b9edc58a8f801dd2e7b66aee272d1d53040f3f6001d7dad",
+        "tests/test_aide_target_truth.py": "f9f4ffa11214a9b528ca4e6c71eeb5859b5ee138adb239cd5dc379e53dec63d5"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01"
+    }
+  ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
+  "current_exact_revision": "bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -20,7 +54,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.6 real-world product readiness",
-  "updated_at": "2026-07-12T09:40:25Z",
+  "updated_at": "2026-07-12T10:02:54Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -51,6 +85,35 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T10:02:54Z",
+        "result": "PASS",
+        "source_fingerprint": "e0335ae675d84c536afa8a3a0b0fc1b97fbccfc17b3b95d83126287892dc0e9c",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/facman_client_smoke.cpp": "1da7a6a3a26eb0da3549856212934d805eb79b1e6324cb5377dd2ff65caf2e67",
+          "tests/test_machine_transport.py": "1d0156571225b8fc137f1dac4dc85cdbeb868fd6f1b378b301a3deae5bcd7186"
+        },
+        "test_results": {
+          "machine-outcome": "PASS",
+          "native-boundary-smokes": "PASS",
+          "schema-122": "PASS",
+          "setup-off": "PASS",
+          "setup-on": "PASS",
+          "strict-check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01"
       }
     ]
   },
@@ -80,6 +143,8 @@
       "claim_impacts": [
         "r3.5-current-truth"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T09:40:53Z",
       "dependencies": [],
       "forbidden_paths": [
         ".git",
@@ -87,10 +152,10 @@
         "protected branches without a validated helper plan"
       ],
       "id": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01",
-      "last_green_commit": null,
+      "last_green_commit": "bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8",
       "provider_revisions": {},
       "started_at": "2026-07-12T09:37:12Z",
-      "status": "verified",
+      "status": "closed",
       "stop_conditions": [
         "baseline revision mismatch",
         "provider revision mismatch"
@@ -162,12 +227,41 @@
       "id": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01",
       "last_green_commit": null,
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T09:40:54Z",
+      "status": "verified",
       "stop_conditions": [
         "persisted state becomes unreadable",
         "a public ABI break is required"
       ],
-      "title": "Close residual boundary correctness gaps"
+      "title": "Close residual boundary correctness gaps",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T10:02:54Z",
+        "result": "PASS",
+        "source_fingerprint": "e0335ae675d84c536afa8a3a0b0fc1b97fbccfc17b3b95d83126287892dc0e9c",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/native/facman_client_smoke.cpp": "1da7a6a3a26eb0da3549856212934d805eb79b1e6324cb5377dd2ff65caf2e67",
+          "tests/test_machine_transport.py": "1d0156571225b8fc137f1dac4dc85cdbeb868fd6f1b378b301a3deae5bcd7186"
+        },
+        "test_results": {
+          "machine-outcome": "PASS",
+          "native-boundary-smokes": "PASS",
+          "schema-122": "PASS",
+          "setup-off": "PASS",
+          "setup-on": "PASS",
+          "strict-check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [

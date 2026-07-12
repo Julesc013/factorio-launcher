@@ -12,6 +12,10 @@ ApplicationResult unavailable(
     const std::string& code,
     const std::string& reason)
 {
-    return refused(safety_refusal(command, code, reason, "capability remains quarantined", false), code, reason);
+    return refused(
+        safety_refusal(command, code, reason, "capability remains quarantined", false),
+        code,
+        reason,
+        facman::core::OutcomeKind::unavailable);
 }
 }

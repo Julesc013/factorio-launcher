@@ -63,6 +63,17 @@ def target_platforms() -> list[dict[str, str]]:
     return result
 
 
+def command_law() -> dict[str, Any]:
+    catalog = json.loads((ROOT / "contracts" / "generated-index" / "command_catalog.v2.json").read_text(encoding="utf-8"))
+    commands = catalog.get("commands", [])
+    return {
+        "contracts": len(commands),
+        "registered_routes": sum(1 for command in commands if command.get("registered")),
+        "schemas": len(list((ROOT / "contracts" / "schema").rglob("*.schema.json"))),
+        "catalog_digest": str(catalog.get("source_digest", "")),
+    }
+
+
 def collect() -> dict[str, Any]:
     pins = provider_pins()
     return {
@@ -79,12 +90,7 @@ def collect() -> dict[str, Any]:
             "revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
             "status": "complete",
         },
-        "command_law": {
-            "contracts": 51,
-            "registered_routes": 49,
-            "schemas": 122,
-            "catalog_digest": "7377e13d2a054d1752b9b914e3f366c1d67fd971eeefe210b8b42defc15214b9",
-        },
+        "command_law": command_law(),
         "machine_protocol": {
             "transport": "bounded newline-delimited JSON over stdio",
             "status": "implemented",

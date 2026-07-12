@@ -75,7 +75,8 @@ namespace FacMan.WinForms
             string stderr,
             bool refused,
             string refusalCode,
-            string refusalReason)
+            string refusalReason,
+            string outcome = null)
         {
             CommandId = commandId;
             BackendId = backendId;
@@ -85,6 +86,7 @@ namespace FacMan.WinForms
             Refused = refused;
             RefusalCode = refusalCode ?? String.Empty;
             RefusalReason = refusalReason ?? String.Empty;
+            Outcome = String.IsNullOrWhiteSpace(outcome) ? (refused ? "refused" : "ok") : outcome;
             CompletedAt = DateTime.Now;
         }
 
@@ -96,6 +98,7 @@ namespace FacMan.WinForms
         public bool Refused { get; private set; }
         public string RefusalCode { get; private set; }
         public string RefusalReason { get; private set; }
+        public string Outcome { get; private set; }
         public DateTime CompletedAt { get; private set; }
 
         public bool Success
@@ -126,6 +129,7 @@ namespace FacMan.WinForms
             builder.AppendLine("Command: " + CommandId);
             builder.AppendLine("Backend: " + BackendId);
             builder.AppendLine("Exit code: " + ExitCode.ToString());
+            builder.AppendLine("Outcome: " + Outcome);
             builder.AppendLine("Completed: " + CompletedAt.ToString("u"));
             if (Refused)
             {

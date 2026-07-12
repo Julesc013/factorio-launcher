@@ -64,7 +64,26 @@ class MachineTransportTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(stderr, "")
         self.assertEqual(response["request_id"], "bad-version")
+        self.assertEqual(response["outcome"], "invalid_argument")
         self.assertEqual(response["error"]["code"], "transport_protocol_invalid")
+
+    def test_application_outcome_kind_survives_machine_transport(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman outcome ") as temporary:
+            code, response, stderr = self.invoke(
+                {
+                    "schema": "facman.transport_request.v1",
+                    "protocol_version": 1,
+                    "request_id": "unavailable-run",
+                    "workspace": temporary,
+                    "command": "run.execute",
+                    "dry_run": False,
+                    "payload": {"instance_id": "space-age-main"},
+                }
+            )
+            self.assertEqual(code, 1)
+            self.assertEqual(stderr, "")
+            self.assertEqual(response["outcome"], "unavailable")
+            self.assertEqual(response["error"]["code"], "isolation_not_proven")
 
     def test_input_budget_is_enforced(self) -> None:
         code, response, _ = self.invoke(" " * (1024 * 1024 + 1))

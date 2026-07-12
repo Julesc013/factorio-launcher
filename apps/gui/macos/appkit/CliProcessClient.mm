@@ -182,5 +182,6 @@ static FacManCommandResult *FacManDecodeResult(
                                                stderrText:stderrText
                                                   refused:refused
                                                refusalCode:FacManDictionaryText(error, @"code")
-                                             refusalReason:FacManDictionaryText(error, @"message")];
+                                             refusalReason:FacManDictionaryText(error, @"message")
+                                                   outcome:FacManDictionaryText(document, @"outcome")];
 }

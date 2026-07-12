@@ -32,7 +32,9 @@ int main()
     auto product = client.execute({"product.inspect", "{}", true});
     if (!product || !product.value().ok() || product.value().payload.find("\"product_id\":\"factorio\"") == std::string::npos) return 1;
     auto unavailable = client.execute({"run.execute", "{}", false});
-    if (!unavailable || unavailable.value().ok() || unavailable.value().error_code != "isolation_not_proven") return 2;
+    if (!unavailable || unavailable.value().ok() || unavailable.value().error_code != "isolation_not_proven" ||
+        unavailable.value().outcome_kind != facman::core::OutcomeKind::unavailable ||
+        unavailable.value().outcome != "unavailable") return 2;
     if (product.value().payload_string("product_id") != "factorio" ||
         product.value().payload_string("product_id") != "factorio") return 4;
     std::atomic<int> failures {0};

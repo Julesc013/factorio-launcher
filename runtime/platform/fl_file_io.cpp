@@ -134,12 +134,12 @@ std::size_t StableInputFile::read_at(std::uint64_t offset, void* buffer, std::si
     if (!open() || offset >= impl_->identity.size) return 0;
     size = static_cast<std::size_t>(std::min<std::uint64_t>(size, impl_->identity.size - offset));
 #ifdef _WIN32
-    OVERLAPPED operation {};
-    operation.Offset = static_cast<DWORD>(offset);
-    operation.OffsetHigh = static_cast<DWORD>(offset >> 32);
+    LARGE_INTEGER position {};
+    position.QuadPart = static_cast<LONGLONG>(offset);
+    if (!SetFilePointerEx(impl_->handle, position, nullptr, FILE_BEGIN)) return 0;
     DWORD read = 0;
     const DWORD requested = static_cast<DWORD>(std::min<std::size_t>(size, std::numeric_limits<DWORD>::max()));
-    if (!ReadFile(impl_->handle, buffer, requested, &read, &operation)) return 0;
+    if (!ReadFile(impl_->handle, buffer, requested, &read, nullptr)) return 0;
     return read;
 #else
     const ssize_t count = ::pread(impl_->handle, buffer, size, static_cast<off_t>(offset));

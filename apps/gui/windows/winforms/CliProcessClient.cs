@@ -145,7 +145,8 @@ namespace FacMan.WinForms
                     stderr,
                     refused,
                     Text(detail, "code"),
-                    Text(detail, detail == refusal ? "reason" : "message"));
+                    Text(detail, detail == refusal ? "reason" : "message"),
+                    Text(envelope, "outcome"));
             }
             catch (Exception ex)
             {

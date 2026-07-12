@@ -2,7 +2,7 @@
 
 - wave_id: facman-r3.6
 - status: active
-- current_exact_revision: 966387280db4eb544e37f1f337c8bcf5d7cec3f4
+- current_exact_revision: bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8
 - mode: report_only
 - task_execution: false
 - repair_execution: false
@@ -15,8 +15,8 @@
 
 ## WorkUnits
 
-- `FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01`: verified (last_green_commit: none)
-- `FACMAN-R3.6-RESIDUAL-CORRECTNESS-01`: pending (last_green_commit: none)
+- `FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01`: closed (last_green_commit: bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8)
+- `FACMAN-R3.6-RESIDUAL-CORRECTNESS-01`: verified (last_green_commit: none)
 - `FACMAN-DISCOVERY-PROVIDERS-02`: pending (last_green_commit: none)
 - `FACMAN-STATUS-ONBOARDING-EXPLAIN-01`: pending (last_green_commit: none)
 - `FACMAN-FRONTEND-CATALOG-CONSUMPTION-02`: pending (last_green_commit: none)

@@ -34,7 +34,7 @@ struct InstallPlanRequest {
 };
 
 struct InstallPlan {
-    bool inputs_evaluated = false;
+    bool inputs_confirmed = false;
     std::string provider_response;
 };
 

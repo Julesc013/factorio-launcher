@@ -4,6 +4,7 @@
 #include "setup_gateway.h"
 
 #include "fl_json.h"
+#include "fl_file_io.h"
 
 #ifndef FACMAN_WITH_SETUP
 #define FACMAN_WITH_SETUP 0
@@ -99,7 +100,7 @@ public:
     {
         facman::core::json::ObjectBuilder payload;
         payload.add_string("schema", "usk.package_verify_request.v1");
-        payload.add_string("package_root", request.package_root.string());
+        payload.add_string("package_root", facman::platform::path_to_utf8(request.package_root));
         payload.add_string("expected_target_os", request.target_os);
         payload.add_string("expected_target_arch", request.target_arch);
         payload.add_string("expected_linkage_model", request.linkage_model);
@@ -155,14 +156,31 @@ public:
         facman::core::json::ObjectBuilder payload;
         payload.add_string("schema", "facman.install_plan_request.v1");
         payload.add_string("version", request.version);
-        payload.add_string("archive", request.archive.string());
-        payload.add_string("target", request.target.string());
+        payload.add_string("archive", facman::platform::path_to_utf8(request.archive));
+        payload.add_string("target", facman::platform::path_to_utf8(request.target));
         auto response = execute_setup("install_local.plan", payload.serialize());
         if (!response) return facman::core::Result<InstallPlan>::failure(response.error());
         InstallPlan plan;
         plan.provider_response = response.take_value();
-        plan.inputs_evaluated = plan.provider_response.find(request.version) != std::string::npos &&
-            plan.provider_response.find(request.archive.string()) != std::string::npos;
+        auto document = facman::core::json::parse(plan.provider_response);
+        const auto* report = document && document.value().is_object()
+            ? document.value().find("payload")
+            : nullptr;
+        const auto* evaluated = report != nullptr && report->is_object()
+            ? report->find("evaluated_inputs")
+            : nullptr;
+        const auto* mutation = report != nullptr && report->is_object()
+            ? report->find("mutation_executed")
+            : nullptr;
+        plan.inputs_confirmed =
+            document && string_field(document.value(), "status") == "ok" &&
+            report != nullptr && report->is_object() &&
+            string_field(*report, "schema") == "usk.install_plan.v1" &&
+            evaluated != nullptr && evaluated->is_object() &&
+            string_field(*evaluated, "requested_version") == request.version &&
+            string_field(*evaluated, "source_archive") == facman::platform::path_to_utf8(request.archive) &&
+            string_field(*evaluated, "target") == facman::platform::path_to_utf8(request.target) &&
+            mutation != nullptr && mutation->bool_value() && !mutation->bool_value().value();
         return facman::core::Result<InstallPlan>::success(std::move(plan));
     }
 

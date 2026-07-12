@@ -9,6 +9,8 @@
 #include "flb_factorio_modset_operations.h"
 #include "flb_factorio_save_operations.h"
 #include "fl_transaction.h"
+#include "fl_identity.h"
+#include "fl_result.h"
 
 #include "ulk/ulk_command.h"
 
@@ -40,6 +42,7 @@ struct CreateInstanceRequest {
     std::string template_id = "vanilla";
 };
 struct BuildLaunchPlanRequest { std::string instance_id; };
+struct ExecuteRunRequest { facman::core::InstanceId instance_id; };
 struct RecoveryRequest { std::string transaction_id; };
 struct ServiceOperationRequest {
     std::string operation;
@@ -70,6 +73,7 @@ using ApplicationPayload = std::variant<
     InspectInstallRefRequest,
     CreateInstanceRequest,
     BuildLaunchPlanRequest,
+    ExecuteRunRequest,
     ImportModRequest,
     ModsetInstanceRequest,
     ExportModsetRequest,
@@ -111,6 +115,7 @@ using ApplicationOutput = std::variant<
 
 struct ApplicationResult {
     int status = ULK_STATUS_OK;
+    facman::core::OutcomeKind outcome_kind = facman::core::OutcomeKind::ok;
     ApplicationOutput output;
     std::string error_code;
     std::string error_message;

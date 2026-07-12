@@ -56,6 +56,8 @@ struct CommandRequest {
 
 struct CommandResponse {
     int status = 0;
+    facman::core::OutcomeKind outcome_kind = facman::core::OutcomeKind::internal_error;
+    std::string outcome = "internal_error";
     std::string envelope;
     std::string payload;
     std::string error_code;

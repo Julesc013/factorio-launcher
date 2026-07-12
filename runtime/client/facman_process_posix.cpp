@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_process.h"
+#include "fl_file_io.h"
 
 #include <atomic>
 #include <cerrno>
@@ -77,7 +78,7 @@ ProcessResult run_cli_process(const ProcessRequest& request)
         dup2(output[1], STDOUT_FILENO);
         dup2(error[1], STDERR_FILENO);
         close_fd(input[0]); close_fd(input[1]); close_fd(output[0]); close_fd(output[1]); close_fd(error[0]); close_fd(error[1]);
-        const std::string executable = request.executable.string();
+        const std::string executable = facman::platform::path_to_utf8(request.executable);
         execl(executable.c_str(), executable.c_str(), "rpc", "--stdio", static_cast<char*>(nullptr));
         _exit(127);
     }

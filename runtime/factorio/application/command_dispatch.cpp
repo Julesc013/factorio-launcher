@@ -4,6 +4,7 @@
 #include "command_dispatch.h"
 
 #include "fl_json.h"
+#include "fl_file_io.h"
 
 #include <cctype>
 #include <filesystem>
@@ -279,7 +280,17 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     }
     case CommandId::run_execute:
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;
-        request.payload = std::monostate {}; return true;
+        {
+            ExecuteRunRequest typed;
+            std::string instance_id;
+            if (!optional_string(payload, "instance_id", instance_id, detail)) return false;
+            if (!instance_id.empty()) {
+                auto parsed = facman::core::InstanceId::parse_legacy(instance_id);
+                if (!parsed) { detail = parsed.error().message; return false; }
+                typed.instance_id = parsed.take_value();
+            }
+            request.payload = std::move(typed); return true;
+        }
     case CommandId::install_scan: {
         if (!validate_fields(payload, {"roots"}, detail)) return false;
         ScanInstallRefsRequest typed;
@@ -319,7 +330,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!validate_fields(payload, {"source_path", "instance_id"}, detail)) return false;
         ImportModRequest typed; std::string path;
         if (!required_string(payload, "source_path", path, detail) || !required_string(payload, "instance_id", typed.instance_id, detail)) return false;
-        typed.source_path = fs::path(path); request.payload = std::move(typed); return true;
+        typed.source_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
     case CommandId::modsets_lock:
     case CommandId::modsets_verify: {
@@ -332,7 +343,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!validate_fields(payload, {"instance_id", "output_path"}, detail)) return false;
         ExportModsetRequest typed; std::string path;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) || !required_string(payload, "output_path", path, detail)) return false;
-        typed.output_path = fs::path(path); request.payload = std::move(typed); return true;
+        typed.output_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
     case CommandId::saves_list: {
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;
@@ -345,7 +356,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         BackupSaveRequest typed; std::string output;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) || !required_string(payload, "save", typed.save, detail) ||
             !optional_string(payload, "output_path", output, detail)) return false;
-        if (!output.empty()) typed.output_path = fs::path(output);
+        if (!output.empty()) typed.output_path = facman::platform::path_from_utf8(output);
         request.payload = std::move(typed); return true;
     }
     case CommandId::saves_clone: {
@@ -360,19 +371,19 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!validate_fields(payload, {"instance_id", "output_path"}, detail)) return false;
         ExportInstanceRequest typed; std::string path;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) || !required_string(payload, "output_path", path, detail)) return false;
-        typed.output_path = fs::path(path); request.payload = std::move(typed); return true;
+        typed.output_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
     case CommandId::instance_import: {
         if (!validate_fields(payload, {"source_path", "instance_id"}, detail)) return false;
         ImportInstanceRequest typed; std::string path;
         if (!required_string(payload, "source_path", path, detail) || !optional_string(payload, "instance_id", typed.instance_id_override, detail)) return false;
-        typed.source_path = fs::path(path); request.payload = std::move(typed); return true;
+        typed.source_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
     case CommandId::diagnostics_export: {
         if (!validate_fields(payload, {"instance_id", "output_path"}, detail)) return false;
         ExportDiagnosticRequest typed; std::string path;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) || !required_string(payload, "output_path", path, detail)) return false;
-        typed.output_path = fs::path(path); request.payload = std::move(typed); return true;
+        typed.output_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
     case CommandId::recovery_inspect:
     case CommandId::migration_inspect:

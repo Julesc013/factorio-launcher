@@ -6,6 +6,7 @@
 #include "facman_process.h"
 #include "fl_command_client_cabi.h"
 #include "fl_json.h"
+#include "fl_file_io.h"
 #include "fl_runtime_verify.h"
 #include "flb/flb_api.h"
 
@@ -27,10 +28,14 @@ void progress(const CommandRequest& request, const char* stage, std::uint64_t co
     if (request.progress) request.progress->report({stage, completed, total});
 }
 
-facman::core::Result<CommandResponse> failure(std::string code, std::string message, std::string path = {})
+facman::core::Result<CommandResponse> failure(
+    std::string code,
+    std::string message,
+    std::string path = {},
+    facman::core::OutcomeKind kind = facman::core::OutcomeKind::internal_error)
 {
     return facman::core::Result<CommandResponse>::failure(
-        {std::move(code), std::move(message), std::move(path)});
+        {std::move(code), std::move(message), std::move(path), kind});
 }
 
 ulk_string_view view(const std::string& text)
@@ -60,6 +65,9 @@ facman::core::Result<CommandResponse> decode_response(int status, std::string en
     CommandResponse response;
     response.status = status;
     response.envelope = std::move(envelope);
+    response.outcome = string_value(document.value(), "outcome");
+    if (response.outcome.empty()) response.outcome = status == 0 ? "ok" : "refused";
+    response.outcome_kind = facman::core::outcome_kind_from_name(response.outcome);
     const auto* payload = document.value().find("payload");
     if (payload != nullptr && !payload->is_null()) {
         response.payload = payload->serialize();
@@ -100,7 +108,7 @@ std::string CommandResponse::payload_member_json(const char* key, const std::str
 DirectFlbTransport::DirectFlbTransport(std::filesystem::path workspace)
     : workspace_(std::move(workspace))
 {
-    const std::string workspace_text = workspace_.lexically_normal().string();
+    const std::string workspace_text = facman::platform::path_to_utf8(workspace_.lexically_normal());
     flb_config_v1 config {};
     config.struct_size = sizeof(config);
     config.workspace_root = view(workspace_text);
@@ -115,15 +123,15 @@ DirectFlbTransport::~DirectFlbTransport()
 facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandRequest& request)
 {
     if (request.command.empty()) return failure("client_request_invalid", "command must not be empty");
-    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled before dispatch");
+    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled before dispatch", {}, facman::core::OutcomeKind::cancelled);
     progress(request, "waiting_for_direct_transport", 0, 3);
     std::lock_guard<std::mutex> lock(mutex_);
-    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled while waiting for transport");
+    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled while waiting for transport", {}, facman::core::OutcomeKind::cancelled);
     if (context_ == nullptr) {
         return failure(
             "client_context_create_failed",
             "Factorio binding context could not be created",
-            workspace_.lexically_normal().string());
+            facman::platform::path_to_utf8(workspace_.lexically_normal()));
     }
     ulk_command_request_v1 native_request {};
     ulk_command_response_v1 native_response {};
@@ -134,7 +142,7 @@ facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandR
     native_response.struct_size = sizeof(native_response);
     progress(request, "executing_direct_transport", 1, 3);
     const int status = fl_command_client_execute_cabi_v1(context_, &native_request, &native_response);
-    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled during dispatch");
+    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled during dispatch", {}, facman::core::OutcomeKind::cancelled);
     std::string envelope;
     if (native_response.json_payload.data != nullptr) {
         envelope.assign(
@@ -157,7 +165,7 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
 {
     if (request.command.empty()) return failure("client_request_invalid", "command must not be empty");
     if (!std::filesystem::is_regular_file(executable_)) {
-        return failure("cli_process_executable_missing", "CLI process executable does not exist", executable_.string());
+        return failure("cli_process_executable_missing", "CLI process executable does not exist", facman::platform::path_to_utf8(executable_), facman::core::OutcomeKind::not_found);
     }
     json::Limits limits;
     limits.maximum_bytes = 1024U * 1024U;
@@ -176,7 +184,7 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
     envelope.add_string("command", request.command);
     envelope.add_value("payload", payload.value());
     envelope.add_bool("dry_run", request.dry_run);
-    if (!workspace_.empty()) envelope.add_string("workspace", workspace_.lexically_normal().string());
+    if (!workspace_.empty()) envelope.add_string("workspace", facman::platform::path_to_utf8(workspace_.lexically_normal()));
     progress(request, "starting_cli_process", 0, 3);
     detail::ProcessRequest process;
     process.executable = executable_;
@@ -184,10 +192,10 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
     process.timeout = request.timeout;
     process.cancellation_requested = [&request]() { return cancelled(request); };
     auto result = detail::run_cli_process(process);
-    if (result.cancelled) return failure("client_operation_cancelled", "CLI process command was cancelled");
-    if (result.timed_out) return failure("cli_process_timeout", "CLI process exceeded its timeout");
+    if (result.cancelled) return failure("client_operation_cancelled", "CLI process command was cancelled", {}, facman::core::OutcomeKind::cancelled);
+    if (result.timed_out) return failure("cli_process_timeout", "CLI process exceeded its timeout", {}, facman::core::OutcomeKind::timeout);
     if (result.output_too_large) return failure("cli_process_output_too_large", "CLI process exceeded its output budget");
-    if (!result.error.empty()) return failure("cli_process_start_failed", result.error, executable_.string());
+    if (!result.error.empty()) return failure("cli_process_start_failed", result.error, facman::platform::path_to_utf8(executable_));
     progress(request, "decoding_cli_response", 2, 3);
     if (result.standard_output.empty()) {
         return failure("cli_process_response_empty", result.standard_error.empty() ? "CLI process returned no machine response" : result.standard_error);
@@ -199,7 +207,7 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
 
 facman::core::Result<CommandResponse> DaemonTransport::execute(const CommandRequest&)
 {
-    return failure("daemon_transport_unavailable", "Daemon transport is not implemented");
+    return failure("daemon_transport_unavailable", "Daemon transport is not implemented", {}, facman::core::OutcomeKind::unavailable);
 }
 
 FacManClient::FacManClient(std::unique_ptr<Transport> transport) : transport_(std::move(transport)) {}
@@ -207,7 +215,7 @@ FacManClient::FacManClient(std::unique_ptr<Transport> transport) : transport_(st
 facman::core::Result<CommandResponse> FacManClient::execute(const CommandRequest& request)
 {
     if (!transport_) return failure("client_transport_missing", "FacMan client transport is not configured");
-    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled before transport selection");
+    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled before transport selection", {}, facman::core::OutcomeKind::cancelled);
     if (request.timeout.count() <= 0) return failure("client_timeout_invalid", "command timeout must be positive");
     return transport_->execute(request);
 }

@@ -758,7 +758,7 @@
         "installs.install-version"
       ],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_plan_inputs_not_evaluated",
+      "availability_refusal_code": "setup_plan_inputs_not_confirmed",
       "binding": "flb.factorio",
       "cli": "facman installs install-version <version> --archive <path> --json",
       "cli_grammar": {

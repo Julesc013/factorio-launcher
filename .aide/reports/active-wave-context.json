@@ -1,64 +1,70 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "release/index/workspace_lock.v1.toml",
-      "runtime/core/generated/command_catalog.json"
+      "contracts/schema/",
+      "contracts/refusal/"
     ],
     "affected_targets": [
-      "project-state",
-      "aide-lite"
+      "facman_client_static",
+      "flb_factorio_application_static",
+      "facman_cli"
     ],
     "affected_tests": [
-      "tests/test_aide_compaction.py",
-      "tests/test_aide_target_truth.py"
+      "tests/native/facman_client_smoke.cpp",
+      "tests/test_machine_transport.py"
     ],
     "allowed_paths": [
-      ".aide/",
-      "README.md",
-      "docs/",
+      "runtime/",
+      "include/",
+      "contracts/",
       "tests/",
-      "tools/"
+      "tools/",
+      "apps/"
     ],
     "blockers": [],
     "claim_impacts": [
-      "r3.5-current-truth"
+      "outcome-fidelity",
+      "unicode-boundaries",
+      "setup-plan-truth"
     ],
-    "dependencies": [],
+    "dependencies": [
+      "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01"
+    ],
     "forbidden_paths": [
-      ".git",
-      ".aide.local",
-      "protected branches without a validated helper plan"
+      "public ABI breaks",
+      "capability promotion"
     ],
-    "id": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01",
+    "id": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01",
     "last_green_commit": null,
     "provider_revisions": {},
-    "started_at": "2026-07-12T09:37:12Z",
+    "started_at": "2026-07-12T09:40:54Z",
     "status": "verified",
     "stop_conditions": [
-      "baseline revision mismatch",
-      "provider revision mismatch"
+      "persisted state becomes unreadable",
+      "a public ABI break is required"
     ],
-    "title": "Reconcile R3.5 integration and current truth",
+    "title": "Close residual boundary correctness gaps",
     "verification": {
       "promotion_eligible": false,
       "provider_revisions": {
         "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
         "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
       },
-      "recorded_at": "2026-07-12T09:40:25Z",
+      "recorded_at": "2026-07-12T10:02:54Z",
       "result": "PASS",
-      "source_fingerprint": "680565391f0bb57fdf826168c49501f33c305c4181c355b5da6c13801b1aef8a",
+      "source_fingerprint": "e0335ae675d84c536afa8a3a0b0fc1b97fbccfc17b3b95d83126287892dc0e9c",
       "target_runner_evidence_inferred": false,
       "test_fingerprints": {
-        "tests/test_aide_compaction.py": "4c1e3b69ba977a504b9edc58a8f801dd2e7b66aee272d1d53040f3f6001d7dad",
-        "tests/test_aide_target_truth.py": "f9f4ffa11214a9b528ca4e6c71eeb5859b5ee138adb239cd5dc379e53dec63d5"
+        "tests/native/facman_client_smoke.cpp": "1da7a6a3a26eb0da3549856212934d805eb79b1e6324cb5377dd2ff65caf2e67",
+        "tests/test_machine_transport.py": "1d0156571225b8fc137f1dac4dc85cdbeb868fd6f1b378b301a3deae5bcd7186"
       },
       "test_results": {
-        "aide-compaction": "PASS",
-        "aide-target-truth": "PASS",
-        "architecture-fitness": "PASS",
-        "project-state": "PASS",
-        "provider-revisions": "PASS"
+        "machine-outcome": "PASS",
+        "native-boundary-smokes": "PASS",
+        "schema-122": "PASS",
+        "setup-off": "PASS",
+        "setup-on": "PASS",
+        "strict-check": "PASS"
       },
       "toolchain_identity": {
         "implementation": "cpython",
@@ -68,12 +74,12 @@
     }
   },
   "affected_contracts": [
-    "release/index/workspace_lock.v1.toml",
-    "runtime/core/generated/command_catalog.json"
+    "contracts/schema/",
+    "contracts/refusal/"
   ],
   "affected_tests": [
-    "tests/test_aide_compaction.py",
-    "tests/test_aide_target_truth.py"
+    "tests/native/facman_client_smoke.cpp",
+    "tests/test_machine_transport.py"
   ],
   "architecture_invariants": [
     "R3.5 is the architecture endpoint; this wave must deliver product value without another broad redesign.",
@@ -82,8 +88,14 @@
     "AIDE makes no provider, model or network call.",
     "Human Factorio gates remain explicit operator decisions and cannot be inferred from automated proof."
   ],
-  "current_exact_revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
-  "direct_dependency_summaries": [],
+  "current_exact_revision": "bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8",
+  "direct_dependency_summaries": [
+    {
+      "id": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01",
+      "last_green_commit": "bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8",
+      "status": "closed"
+    }
+  ],
   "history_included": false,
   "open_blockers": [
     "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",

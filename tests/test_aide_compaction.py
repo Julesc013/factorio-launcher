@@ -42,10 +42,10 @@ class AideCompactionTests(unittest.TestCase):
             "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
-        self.assertEqual(
-            "7377e13d2a054d1752b9b914e3f366c1d67fd971eeefe210b8b42defc15214b9",
-            data["command_law"]["catalog_digest"],
+        catalog = json.loads(
+            (project_state.ROOT / "contracts/generated-index/command_catalog.v2.json").read_text(encoding="utf-8")
         )
+        self.assertEqual(catalog["source_digest"], data["command_law"]["catalog_digest"])
 
     def test_lifecycle_transitions_and_hashes_archived_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -21,6 +21,7 @@
 #include "handlers/unavailable.h"
 #include "handlers/utility.h"
 #include "fl_json_boundary.h"
+#include "fl_file_io.h"
 
 #include <filesystem>
 #include <mutex>
@@ -53,7 +54,9 @@ int write_boundary_error(ulk_command_response_v1* response, const char* code, co
 class FactorioApplication {
 public:
     explicit FactorioApplication(std::string workspace_root)
-        : context_(workspace_root.empty() ? std::filesystem::path() : std::filesystem::path(workspace_root))
+        : context_(workspace_root.empty()
+              ? std::filesystem::path()
+              : facman::platform::path_from_utf8(workspace_root))
     {
     }
 
@@ -74,7 +77,8 @@ public:
                 refused(
                     safety_refusal("command.execute", "invalid_request", "Command request payload is invalid", decode_error, false),
                     "invalid_request",
-                    decode_error),
+                    decode_error,
+                    facman::core::OutcomeKind::invalid_argument),
                 response);
         }
         return write_response(execute(typed), response);
@@ -111,7 +115,13 @@ private:
         case CommandId::instance_create: return handlers::create_instance(context_, std::get<CreateInstanceRequest>(request.payload));
         case CommandId::launch_plan_build: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "launch_plan.build");
         case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
-        case CommandId::run_execute: return handlers::unavailable(context_, "run.execute", "isolation_not_proven", "real Factorio write isolation has not been proven");
+        case CommandId::run_execute: {
+            const auto& execute = std::get<ExecuteRunRequest>(request.payload);
+            const std::string detail = execute.instance_id.empty()
+                ? "real Factorio write isolation has not been proven"
+                : "real Factorio write isolation has not been proven for instance " + execute.instance_id.str();
+            return handlers::unavailable(context_, "run.execute", "isolation_not_proven", detail);
+        }
         case CommandId::setup_preview: return handlers::preview_setup(context_);
         case CommandId::package_verify: return handlers::verify_package(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_install_version: return handlers::install_version(context_, std::get<ServiceOperationRequest>(request.payload));

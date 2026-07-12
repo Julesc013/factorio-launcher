@@ -5,6 +5,7 @@
 
 #include "facman_client.h"
 #include "fl_json.h"
+#include "fl_file_io.h"
 #include "version.h"
 #include "generated/command_help.inc"
 
@@ -88,7 +89,7 @@ facman::core::Result<facman::client::CommandResponse> call(
     bool dry_run = true)
 {
     facman::client::FacManClient client(
-        std::make_unique<facman::client::DirectFlbTransport>(options.workspace));
+        std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(options.workspace)));
     return client.execute({command, payload, dry_run});
 }
 
@@ -151,7 +152,9 @@ std::string transport_response(
     output.add_string("request_id", request_id);
     output.add_unsigned_integer("protocol_version", 1);
     output.add_string("command", command);
-    output.add_string("outcome", response && response.value().ok() ? "ok" : "refused");
+    output.add_string(
+        "outcome",
+        response ? response.value().outcome : facman::core::outcome_kind_name(response.error().kind));
     if (response && response.value().parsed_payload) output.add_value("payload", *response.value().parsed_payload);
     else output.add_null("payload");
     if (response && response.value().ok()) {
@@ -175,7 +178,10 @@ int transport_refusal(
     const std::string& code,
     const std::string& message)
 {
-    auto failure = facman::core::Result<facman::client::CommandResponse>::failure({code, message, "$"});
+    facman::core::OutcomeKind kind = code == "transport_protocol_invalid" || code == "transport_request_invalid"
+        ? facman::core::OutcomeKind::invalid_argument
+        : facman::core::OutcomeKind::refused;
+    auto failure = facman::core::Result<facman::client::CommandResponse>::failure({code, message, "$", kind});
     std::cout << transport_response(request_id, command, failure) << '\n';
     return 1;
 }
@@ -221,7 +227,8 @@ int command_rpc(const Options& options)
     }
     const std::string requested_workspace = json_string_field(request, "workspace");
     const std::string workspace = requested_workspace.empty() ? options.workspace : requested_workspace;
-    facman::client::FacManClient client(std::make_unique<facman::client::DirectFlbTransport>(workspace));
+    facman::client::FacManClient client(
+        std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(workspace)));
     auto response = client.execute({command, payload->serialize(), dry_run->bool_value().value()});
     std::string output = transport_response(request_id, command, response);
     if (output.size() > kTransportOutputLimit) {

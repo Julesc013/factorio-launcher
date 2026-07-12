@@ -50,6 +50,7 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
                           refused:(BOOL)refused
                       refusalCode:(NSString *)refusalCode
                     refusalReason:(NSString *)refusalReason
+                          outcome:(NSString *)outcome
 {
     self = [super init];
     if (self) {
@@ -61,6 +62,7 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
         _refused = refused;
         _refusalCode = [refusalCode copy] ?: @"";
         _refusalReason = [refusalReason copy] ?: @"";
+        _outcome = [outcome copy] ?: (refused ? @"refused" : @"ok");
     }
     return self;
 }
@@ -83,7 +85,8 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
                                                stderrText:@""
                                                   refused:YES
                                               refusalCode:refusalCode
-                                            refusalReason:refusalReason];
+                                            refusalReason:refusalReason
+                                                  outcome:@"refused"];
 }
 
 - (NSString *)displayText
@@ -92,6 +95,7 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
     [text appendFormat:@"Command: %@\n", self.commandId];
     [text appendFormat:@"Backend: %@\n", self.backendId];
     [text appendFormat:@"Exit code: %ld\n", (long)self.exitCode];
+    [text appendFormat:@"Outcome: %@\n", self.outcome];
     if (self.refused) {
         [text appendFormat:@"Refusal: %@\n", self.refusalCode];
         [text appendFormat:@"Reason: %@\n", self.refusalReason];

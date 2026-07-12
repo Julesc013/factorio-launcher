@@ -4,7 +4,7 @@
   "status": "refused",
   "refusal": {
     "schema": "common.refusal.v1",
-    "code": "setup_plan_inputs_not_evaluated",
+    "code": "setup_plan_inputs_not_confirmed",
     "reason": "Universal Setup did not evaluate the requested version and archive",
     "recoverable": true
   }

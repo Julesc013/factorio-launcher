@@ -24,6 +24,37 @@ enum class OutcomeKind {
     internal_error,
 };
 
+inline const char* outcome_kind_name(OutcomeKind kind) noexcept
+{
+    switch (kind) {
+    case OutcomeKind::ok: return "ok";
+    case OutcomeKind::refused: return "refused";
+    case OutcomeKind::invalid_argument: return "invalid_argument";
+    case OutcomeKind::unavailable: return "unavailable";
+    case OutcomeKind::not_found: return "not_found";
+    case OutcomeKind::conflict: return "conflict";
+    case OutcomeKind::cancelled: return "cancelled";
+    case OutcomeKind::timeout: return "timeout";
+    case OutcomeKind::recovery_required: return "recovery_required";
+    case OutcomeKind::internal_error: return "internal_error";
+    }
+    return "internal_error";
+}
+
+inline OutcomeKind outcome_kind_from_name(const std::string& value) noexcept
+{
+    if (value == "ok") return OutcomeKind::ok;
+    if (value == "refused") return OutcomeKind::refused;
+    if (value == "invalid_argument") return OutcomeKind::invalid_argument;
+    if (value == "unavailable") return OutcomeKind::unavailable;
+    if (value == "not_found") return OutcomeKind::not_found;
+    if (value == "conflict") return OutcomeKind::conflict;
+    if (value == "cancelled") return OutcomeKind::cancelled;
+    if (value == "timeout") return OutcomeKind::timeout;
+    if (value == "recovery_required") return OutcomeKind::recovery_required;
+    return OutcomeKind::internal_error;
+}
+
 struct Error {
     Error(
         std::string code_value,

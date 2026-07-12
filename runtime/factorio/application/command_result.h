@@ -28,7 +28,11 @@ std::string safety_refusal(
     const std::string& reason,
     const std::string& detail,
     bool recoverable);
-ApplicationResult refused(const std::string& payload, const std::string& code, const std::string& message);
+ApplicationResult refused(
+    const std::string& payload,
+    const std::string& code,
+    const std::string& message,
+    facman::core::OutcomeKind outcome_kind = facman::core::OutcomeKind::refused);
 ApplicationResult from_modset_outcome(const modsets::ImportOutcome& outcome);
 ApplicationResult from_modset_outcome(const modsets::LockOutcome& outcome);
 ApplicationResult from_modset_outcome(const modsets::VerifyOutcome& outcome);

@@ -39,6 +39,7 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
 @property(nonatomic, assign, readonly) BOOL refused;
 @property(nonatomic, copy, readonly) NSString *refusalCode;
 @property(nonatomic, copy, readonly) NSString *refusalReason;
+@property(nonatomic, copy, readonly) NSString *outcome;
 
 - (instancetype)initWithCommandId:(NSString *)commandId
                         backendId:(NSString *)backendId
@@ -47,7 +48,8 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
                        stderrText:(NSString *)stderrText
                           refused:(BOOL)refused
                       refusalCode:(NSString *)refusalCode
-                    refusalReason:(NSString *)refusalReason;
+                    refusalReason:(NSString *)refusalReason
+                          outcome:(NSString *)outcome;
 
 + (instancetype)refusalWithCommandId:(NSString *)commandId
                             backendId:(NSString *)backendId

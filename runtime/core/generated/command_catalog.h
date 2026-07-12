@@ -398,7 +398,7 @@ static const facman_generated_command_descriptor facman_generated_registered_com
         "{\"path\":[\"installs\",\"install-version\"],\"positionals\":[{\"name\":\"version\",\"required\":true}],\"options\":[{\"name\":\"--archive\",\"value\":\"path\",\"repeatable\":false},{\"name\":\"--json\",\"value\":null,\"repeatable\":false}],\"usage\":\"facman installs install-version <version> --archive <path> --json\",\"internal\":false}",
         "public",
         "active",
-        "setup_plan_inputs_not_evaluated",
+        "setup_plan_inputs_not_confirmed",
         "read_only",
         "installs_install_version",
         "installs",

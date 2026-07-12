@@ -3,14 +3,13 @@
 
 #include "flb_factorio_discovery.h"
 
+#include "fl_file_io.h"
 #include "fl_json.h"
 
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
-#include <fstream>
 #include <set>
-#include <sstream>
 
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -28,15 +27,24 @@ namespace {
 
 std::string path_string(const fs::path& path)
 {
-    return path.lexically_normal().u8string();
+    return facman::platform::path_to_utf8(path.lexically_normal());
 }
 
-std::string read_text(const fs::path& path)
+std::string read_text(const fs::path& path, std::uint64_t maximum_bytes = 2U * 1024U * 1024U)
 {
-    std::ifstream in(path, std::ios::binary);
-    std::ostringstream out;
-    out << in.rdbuf();
-    return out.str();
+    facman::platform::StableInputFile input;
+    if (!input.open_no_follow(path).ok() || input.size() > maximum_bytes) return {};
+    std::string text(static_cast<std::size_t>(input.size()), '\0');
+    std::uint64_t offset = 0;
+    while (offset < input.size()) {
+        const std::size_t count = input.read_at(
+            offset,
+            text.data() + static_cast<std::size_t>(offset),
+            static_cast<std::size_t>(input.size() - offset));
+        if (count == 0) return {};
+        offset += count;
+    }
+    return input.revalidate().ok() ? text : std::string {};
 }
 
 facman::core::Result<json::Value> parse_document(const std::string& text)
@@ -268,7 +276,7 @@ void append_unique_path(std::vector<fs::path>& paths, const fs::path& candidate)
 
 std::string comparison_key(const fs::path& path)
 {
-    std::string key = fs::absolute(path).lexically_normal().u8string();
+    std::string key = facman::platform::path_to_utf8(fs::absolute(path).lexically_normal());
 #ifdef _WIN32
     std::transform(key.begin(), key.end(), key.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
@@ -348,9 +356,9 @@ std::vector<fs::path> path_list_environment(const char* name)
     std::string text = value;
     std::size_t start = 0;
     for (;;) {
-        std::size_t end = text.find(';', start);
+        std::size_t end = text.find(':', start);
         std::string item = text.substr(start, end == std::string::npos ? std::string::npos : end - start);
-        if (!item.empty()) append_unique_path(paths, fs::u8path(item));
+        if (!item.empty()) append_unique_path(paths, facman::platform::path_from_utf8(item));
         if (end == std::string::npos) break;
         start = end + 1;
     }
@@ -466,7 +474,7 @@ std::string registry_string(HKEY root, const wchar_t* subkey, const wchar_t* nam
         return {};
     }
     while (!value.empty() && value.back() == L'\0') value.pop_back();
-    return fs::path(value).u8string();
+    return facman::platform::path_to_utf8(fs::path(value));
 }
 #endif
 

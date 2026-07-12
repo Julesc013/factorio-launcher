@@ -340,7 +340,7 @@ class CliTests(unittest.TestCase):
             install_plan = json.loads(stdout)
             self.assertEqual(install_plan["status"], "refused")
             self.assertEqual(install_plan["operation"], "installs.install_version")
-            self.assertEqual(install_plan["refusal"]["code"], "setup_plan_inputs_not_evaluated")
+            self.assertEqual(install_plan["refusal"]["code"], "setup_plan_inputs_not_confirmed")
 
             code, _stdout, stderr = invoke(
                 ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]

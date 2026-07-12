@@ -50,7 +50,9 @@ std::string toml_value(const std::string& text, const std::string& key)
 
 ApplicationResult verify_package_impl(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-    const fs::path root = request.path.empty() ? fs::path(fl_runtime_package_root()) : fs::path(request.path);
+    const fs::path root = request.path.empty()
+        ? facman::platform::path_from_utf8(fl_runtime_package_root())
+        : facman::platform::path_from_utf8(request.path);
     const std::string manifest = read_text(root / "manifest" / "package.v1.toml");
     struct ExpectedProfile { const char* id; const char* os; const char* arch; const char* linkage; };
     static const ExpectedProfile profiles[] = {
@@ -186,15 +188,15 @@ ApplicationResult install_version(ApplicationContext& context, const ServiceOper
 #if FACMAN_WITH_SETUP
     InstallPlanRequest plan_request;
     plan_request.version = request.version;
-    plan_request.archive = request.archive;
+    plan_request.archive = facman::platform::path_from_utf8(request.archive);
     auto plan = context.setup().plan_install(plan_request);
     if (!plan) return unavailable(context, "installs.install_version", plan.error().code, plan.error().message);
-    if (!plan.value().inputs_evaluated) {
+    if (!plan.value().inputs_confirmed) {
         return unavailable(
             context,
             "installs.install_version",
-            "setup_plan_inputs_not_evaluated",
-            "Universal Setup did not evaluate the requested version and archive");
+            "setup_plan_inputs_not_confirmed",
+            "Universal Setup did not return a typed confirmation for the requested version, archive, and target");
     }
     return unavailable(context, "installs.install_version", "setup_mutation_not_implemented", "Setup mutation remains unavailable");
 #else

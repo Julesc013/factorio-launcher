@@ -219,7 +219,7 @@ int main(void)
         run_refusal(context, "utility.operation", 0, "{\"operation\":\"mods.search\",\"query\":\"space\"}", "network_forbidden") != 0 ||
         run_refusal(context, "setup.operation", 1, "{\"operation\":\"installs.install-version\",\"version\":\"2.0.77\",\"archive\":\"fixture.zip\"}",
 #if FACMAN_WITH_SETUP
-            "setup_plan_inputs_not_evaluated"
+            "setup_plan_inputs_not_confirmed"
 #else
             "setup_unavailable"
 #endif
