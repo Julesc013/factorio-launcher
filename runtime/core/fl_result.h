@@ -5,15 +5,54 @@
 #define FACMAN_CORE_RESULT_H
 
 #include <string>
+#include <optional>
 #include <utility>
 #include <variant>
 
 namespace facman::core {
 
+enum class OutcomeKind {
+    ok,
+    refused,
+    invalid_argument,
+    unavailable,
+    not_found,
+    conflict,
+    cancelled,
+    timeout,
+    recovery_required,
+    internal_error,
+};
+
 struct Error {
     std::string code;
     std::string message;
     std::string path;
+    OutcomeKind kind = OutcomeKind::internal_error;
+    std::string detail;
+    std::string operation;
+    std::string severity = "error";
+    bool recoverable = false;
+    bool retryable = false;
+};
+
+template <typename T>
+class Result;
+
+template <>
+class Result<void> {
+public:
+    static Result success() { return Result(); }
+    static Result failure(Error error) { return Result(std::move(error)); }
+
+    bool ok() const noexcept { return !error_.has_value(); }
+    explicit operator bool() const noexcept { return ok(); }
+    const Error& error() const { return *error_; }
+
+private:
+    Result() = default;
+    explicit Result(Error error) : error_(std::move(error)) {}
+    std::optional<Error> error_;
 };
 
 template <typename T>

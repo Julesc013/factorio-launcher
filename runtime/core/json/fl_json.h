@@ -9,7 +9,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace facman::core::json {
@@ -43,14 +45,65 @@ public:
     Result<std::string> string_value() const;
     Result<bool> bool_value() const;
     Result<double> number_value() const;
+    Result<std::int64_t> signed_integer_value() const;
+    Result<std::uint64_t> unsigned_integer_value() const;
     std::vector<std::string> object_keys() const;
 
 private:
     struct Impl;
-    explicit Value(std::unique_ptr<Impl> impl);
+    explicit Value(std::unique_ptr<Impl> impl, std::string path = "$");
     std::unique_ptr<Impl> impl_;
-    mutable std::unique_ptr<Value> borrowed_;
+    std::string path_ = "$";
+    mutable std::mutex children_mutex_;
+    mutable std::vector<std::unique_ptr<Value>> children_;
     friend Result<Value> parse(const std::string&, const Limits&);
+};
+
+class ArrayBuilder;
+
+class ObjectBuilder {
+public:
+    bool add_null(std::string key);
+    bool add_bool(std::string key, bool value);
+    bool add_string(std::string key, std::string value);
+    Result<void> add_signed_integer(std::string key, std::int64_t value);
+    Result<void> add_unsigned_integer(std::string key, std::uint64_t value);
+    bool add_value(std::string key, const Value& value);
+    bool add_object(std::string key, const ObjectBuilder& value);
+    bool add_array(std::string key, const ArrayBuilder& value);
+    std::string serialize() const;
+
+private:
+    bool add_serialized(std::string key, std::string value);
+    std::vector<std::pair<std::string, std::string>> fields_;
+};
+
+class ArrayBuilder {
+public:
+    void add_null();
+    void add_bool(bool value);
+    void add_string(std::string value);
+    Result<void> add_signed_integer(std::int64_t value);
+    Result<void> add_unsigned_integer(std::uint64_t value);
+    void add_value(const Value& value);
+    void add_object(const ObjectBuilder& value);
+    void add_array(const ArrayBuilder& value);
+    std::string serialize() const;
+
+private:
+    std::vector<std::string> values_;
+};
+
+class Writer {
+public:
+    void write(const Value& value);
+    void write(const ObjectBuilder& value);
+    void write(const ArrayBuilder& value);
+    const std::string& str() const noexcept;
+    std::string take();
+
+private:
+    std::string output_;
 };
 
 Result<Value> parse(const std::string& text, const Limits& limits = {});
