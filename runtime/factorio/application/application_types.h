@@ -14,6 +14,7 @@
 #include "fl_preferences.h"
 #include "flb_factorio_instance_lifecycle.h"
 #include "flb_factorio_snapshots.h"
+#include "flb_factorio_profiles.h"
 
 #include "ulk/ulk_command.h"
 
@@ -31,6 +32,7 @@ namespace transactions = facman::transaction;
 namespace preferences = facman::preferences;
 namespace instance_lifecycle = facman::factorio::instance;
 namespace snapshots = facman::factorio::snapshots;
+namespace profiles = facman::factorio::profiles;
 
 enum class CommandId {
 #include "generated/command_ids.inc"
@@ -90,6 +92,11 @@ using SnapshotRequest = snapshots::SnapshotRequest;
 using DiffSnapshotRequest = snapshots::DiffRequest;
 using RestoreSnapshotRequest = snapshots::RestoreRequest;
 using SnapshotRetentionRequest = snapshots::RetentionRequest;
+using ProfileIdRequest = profiles::IdRequest;
+using CreateProfileRequest = profiles::CreateRequest;
+using CloneProfileRequest = profiles::CloneRequest;
+using DiffProfileRequest = profiles::DiffRequest;
+using EffectiveProfileRequest = profiles::EffectiveRequest;
 
 using ApplicationPayload = std::variant<
     std::monostate,
@@ -124,6 +131,11 @@ using ApplicationPayload = std::variant<
     DiffSnapshotRequest,
     RestoreSnapshotRequest,
     SnapshotRetentionRequest,
+    ProfileIdRequest,
+    CreateProfileRequest,
+    CloneProfileRequest,
+    DiffProfileRequest,
+    EffectiveProfileRequest,
     ServiceOperationRequest,
     ExportDiagnosticRequest>;
 

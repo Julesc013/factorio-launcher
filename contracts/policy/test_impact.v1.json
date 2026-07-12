@@ -27,7 +27,7 @@
   "category_python": {
     "fast-unit": ["tests.test_json_contract_subset", "tests.test_schema_tools"],
     "contract": ["tests.test_command_contracts", "tests.test_contract_truth", "tests.test_refusal_contract"],
-    "integration": ["tests.test_cli", "tests.test_vertical_slice", "tests.test_recovery"],
+    "integration": ["tests.test_cli", "tests.test_vertical_slice", "tests.test_recovery", "tests.test_profiles_templates"],
     "filesystem": ["tests.test_workspace_store", "tests.test_safety_boundaries", "tests.test_diagnostic_export"],
     "archive": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth", "tests.test_instance_snapshots"],
     "transaction": ["tests.test_recovery", "tests.test_save_transfer"],
@@ -89,8 +89,8 @@
     {
       "paths": ["runtime/factorio/"],
       "native_targets": ["flb_command_bridge_smoke", "facman_diagnostic_traversal_smoke", "facman_isolation_lock_smoke"],
-      "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_instance_lifecycle", "tests.test_instance_snapshots", "tests.test_save_transfer", "tests.test_vertical_slice"],
-      "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py", "tools/instance_lifecycle_check.py", "tools/snapshot_lifecycle_check.py"],
+      "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_instance_lifecycle", "tests.test_instance_snapshots", "tests.test_profiles_templates", "tests.test_save_transfer", "tests.test_vertical_slice"],
+      "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py", "tools/instance_lifecycle_check.py", "tools/snapshot_lifecycle_check.py", "tools/profile_template_check.py"],
       "package_profiles": []
     },
     {

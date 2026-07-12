@@ -207,6 +207,7 @@ ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "redaction",
     "saves",
     "snapshots",
+    "profiles",
     "server",
 }
 

@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"profiles.create","status":"refused","refusal":{"schema":"common.refusal.v1","code":"profile_arguments_invalid","reason":"argument is reserved or not allowlisted","recoverable":true}}

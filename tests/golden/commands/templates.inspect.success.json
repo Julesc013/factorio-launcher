@@ -1,0 +1,1 @@
+{"schema":"factorio.instance_template.v1","command":"templates.inspect","template_id":"vanilla","display_name_default":"Vanilla instance","directory_policy":{"config":"instance-local"},"content_policy":{"mods":"instance-local-lockfile"},"launch_mode":"gui","safe_settings":{},"forbidden_capabilities":{"shell_commands":true,"credentials":true},"mutation_executed":false}

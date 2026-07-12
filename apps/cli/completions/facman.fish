@@ -1,4 +1,4 @@
-# generated source-sha256: f0fab302a8d39cec282d9110591af52422d5e548cf99ccc1e5a9e20f27917058
+# generated source-sha256: e55dac3077bd787721bc24bfe39cbcb02445f8f12ff5d6a5078b5ada62884504
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -47,6 +47,14 @@
 # path: preferences reset plan
 # path: preferences validate
 # path: product inspect
+# path: profiles apply
+# path: profiles archive
+# path: profiles clone
+# path: profiles create
+# path: profiles diff
+# path: profiles inspect
+# path: profiles list
+# path: profiles plan
 # path: run
 # path: saves backup
 # path: saves clone
@@ -65,6 +73,9 @@
 # path: snapshots retention apply
 # path: snapshots retention plan
 # path: snapshots verify
+# path: templates inspect
+# path: templates list
+# path: templates validate
 # path: workspace migration apply
 # path: workspace migration inspect
 # path: workspace migration plan
@@ -110,6 +121,7 @@ complete -c facman -f -a plan
 complete -c facman -f -a preferences
 complete -c facman -f -a preview
 complete -c facman -f -a product
+complete -c facman -f -a profiles
 complete -c facman -f -a rcon
 complete -c facman -f -a recovery
 complete -c facman -f -a redact
@@ -128,6 +140,7 @@ complete -c facman -f -a snapshots
 complete -c facman -f -a start
 complete -c facman -f -a status
 complete -c facman -f -a stop
+complete -c facman -f -a templates
 complete -c facman -f -a uninstall
 complete -c facman -f -a update
 complete -c facman -f -a validate

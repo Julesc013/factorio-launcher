@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_application.h"
-
 #include "application_context.h"
 #include "application_types.h"
 #include "command_dispatch.h"
@@ -17,6 +16,7 @@
 #include "handlers/modsets.h"
 #include "handlers/product.h"
 #include "handlers/preferences.h"
+#include "handlers/profiles.h"
 #include "handlers/recovery.h"
 #include "handlers/saves.h"
 #include "handlers/setup.h"
@@ -25,7 +25,6 @@
 #include "handlers/utility.h"
 #include "fl_json_boundary.h"
 #include "fl_file_io.h"
-
 #include <filesystem>
 #include <mutex>
 #include <new>
@@ -133,6 +132,10 @@ private:
         case CommandId::snapshots_verify: case CommandId::snapshots_diff: case CommandId::snapshots_restore:
         case CommandId::snapshots_retention_plan: case CommandId::snapshots_retention_apply:
             return handlers::dispatch_snapshots(context_, request);
+        case CommandId::templates_list: case CommandId::templates_inspect: case CommandId::templates_validate:
+        case CommandId::profiles_list: case CommandId::profiles_inspect: case CommandId::profiles_create:
+        case CommandId::profiles_clone: case CommandId::profiles_diff: case CommandId::profiles_plan: case CommandId::profiles_apply:
+        case CommandId::profiles_archive: return handlers::dispatch_profiles(context_, request);
         case CommandId::launch_plan_build: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "launch_plan.build");
         case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
         case CommandId::run_execute: {
@@ -219,7 +222,6 @@ extern "C" void* flb_factorio_application_create(const char* workspace_root)
         return nullptr;
     }
 }
-
 extern "C" void flb_factorio_application_destroy(void* application)
 {
     try {
@@ -227,7 +229,6 @@ extern "C" void flb_factorio_application_destroy(void* application)
     } catch (...) {
     }
 }
-
 extern "C" int ULK_CALL flb_factorio_application_handle_v1(
     void* application,
     const ulk_command_request_v1* request,

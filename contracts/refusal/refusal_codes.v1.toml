@@ -133,6 +133,14 @@ required_codes = [
   "snapshot_record_invalid",
   "snapshot_install_incompatible",
   "snapshot_transaction_recovery_required",
+  "unknown_template",
+  "unknown_profile",
+  "profile_list_failed",
+  "profile_arguments_invalid",
+  "profile_target_exists",
+  "profile_selection_invalid",
+  "profile_transaction_recovery_required",
+  "profile_shipped_immutable",
 ]
 
 [[code]]
@@ -1275,3 +1283,59 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = false
 message = "Snapshot mutation is blocked until the workspace transaction is recovered."
+
+[[code]]
+id = "unknown_template"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested instance template is not shipped."
+
+[[code]]
+id = "unknown_profile"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested launch profile is not registered."
+
+[[code]]
+id = "profile_list_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The launch profile catalog could not be read safely."
+
+[[code]]
+id = "profile_arguments_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A profile argument is duplicate, reserved, or outside the explicit allowlist."
+
+[[code]]
+id = "profile_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The launch profile destination already exists."
+
+[[code]]
+id = "profile_selection_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "Profile save selection is not a safe instance-local archive name."
+
+[[code]]
+id = "profile_transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Profile mutation is blocked until the workspace transaction is recovered."
+
+[[code]]
+id = "profile_shipped_immutable"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "Shipped profiles are immutable and cannot be archived."

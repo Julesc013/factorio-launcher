@@ -47,6 +47,17 @@ optional = [
   "snapshots.restore",
   "snapshots.retention.plan",
   "snapshots.retention.apply",
+  "templates.list",
+  "templates.inspect",
+  "templates.validate",
+  "profiles.list",
+  "profiles.inspect",
+  "profiles.create",
+  "profiles.clone",
+  "profiles.diff",
+  "profiles.plan",
+  "profiles.apply",
+  "profiles.archive",
   "preferences.apply",
   "preferences.inspect",
   "preferences.plan",
@@ -228,6 +239,72 @@ id = "snapshots.retention.apply"
 phase = "optional"
 backend_id = "snapshots.retention.apply"
 cli = "facman snapshots retention apply <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json"
+
+[[commands]]
+id = "templates.list"
+phase = "optional"
+backend_id = "templates.list"
+cli = "facman templates list --json"
+
+[[commands]]
+id = "templates.inspect"
+phase = "optional"
+backend_id = "templates.inspect"
+cli = "facman templates inspect <template-id> --json"
+
+[[commands]]
+id = "templates.validate"
+phase = "optional"
+backend_id = "templates.validate"
+cli = "facman templates validate <template-id> --json"
+
+[[commands]]
+id = "profiles.list"
+phase = "optional"
+backend_id = "profiles.list"
+cli = "facman profiles list --json"
+
+[[commands]]
+id = "profiles.inspect"
+phase = "optional"
+backend_id = "profiles.inspect"
+cli = "facman profiles inspect <profile-id> --json"
+
+[[commands]]
+id = "profiles.create"
+phase = "optional"
+backend_id = "profiles.create"
+cli = "facman profiles create <profile-id> --json"
+
+[[commands]]
+id = "profiles.clone"
+phase = "optional"
+backend_id = "profiles.clone"
+cli = "facman profiles clone <source-id> <destination-id> --json"
+
+[[commands]]
+id = "profiles.diff"
+phase = "optional"
+backend_id = "profiles.diff"
+cli = "facman profiles diff <left-id> <right-id> --json"
+
+[[commands]]
+id = "profiles.plan"
+phase = "optional"
+backend_id = "profiles.plan"
+cli = "facman profiles plan <instance-id> <profile-id> --json"
+
+[[commands]]
+id = "profiles.apply"
+phase = "optional"
+backend_id = "profiles.apply"
+cli = "facman profiles apply <instance-id> <profile-id> --json"
+
+[[commands]]
+id = "profiles.archive"
+phase = "optional"
+backend_id = "profiles.archive"
+cli = "facman profiles archive <profile-id> --json"
 
 [[commands]]
 id = "launch_plan.build"
@@ -495,6 +572,17 @@ transport = "direct_c_abi_or_cli_json"
 default_refusal = "frontend_command_not_enabled"
 default_reason = "CLI route is intentionally deferred for this frontend contract phase."
 [frontends.commands]
+"templates.list" = "implemented"
+"templates.inspect" = "implemented"
+"templates.validate" = "implemented"
+"profiles.list" = "implemented"
+"profiles.inspect" = "implemented"
+"profiles.create" = "implemented"
+"profiles.clone" = "implemented"
+"profiles.diff" = "implemented"
+"profiles.plan" = "implemented"
+"profiles.apply" = "implemented"
+"profiles.archive" = "implemented"
 help = "implemented"
 "preferences.apply" = "implemented"
 "preferences.inspect" = "implemented"
@@ -572,6 +660,17 @@ transport = "command_client"
 default_refusal = "tui_command_unavailable"
 default_reason = "The functional TUI renders generated availability and backend refusal reasons."
 [frontends.commands]
+"templates.list" = "implemented"
+"templates.inspect" = "implemented"
+"templates.validate" = "implemented"
+"profiles.list" = "implemented"
+"profiles.inspect" = "implemented"
+"profiles.create" = "implemented"
+"profiles.clone" = "implemented"
+"profiles.diff" = "implemented"
+"profiles.plan" = "implemented"
+"profiles.apply" = "implemented"
+"profiles.archive" = "implemented"
 "snapshots.create" = "implemented"
 "snapshots.list" = "implemented"
 "snapshots.inspect" = "implemented"
@@ -649,6 +748,17 @@ transport = "json_rpc"
 default_refusal = "daemon_route_not_implemented"
 default_reason = "Daemon command hosting is scaffolded and must not invent frontend behavior."
 [frontends.commands]
+"templates.list" = "stubbed_with_refusal"
+"templates.inspect" = "stubbed_with_refusal"
+"templates.validate" = "stubbed_with_refusal"
+"profiles.list" = "stubbed_with_refusal"
+"profiles.inspect" = "stubbed_with_refusal"
+"profiles.create" = "stubbed_with_refusal"
+"profiles.clone" = "stubbed_with_refusal"
+"profiles.diff" = "stubbed_with_refusal"
+"profiles.plan" = "stubbed_with_refusal"
+"profiles.apply" = "stubbed_with_refusal"
+"profiles.archive" = "stubbed_with_refusal"
 help = "stubbed_with_refusal"
 "preferences.apply" = "not_supported_with_reason"
 "preferences.inspect" = "not_supported_with_reason"
@@ -726,6 +836,17 @@ transport = "cli_json_command_client"
 default_refusal = "winforms_command_deferred"
 default_reason = "WinForms renders generated fields for backend-live commands and generated reasons for unavailable commands."
 [frontends.commands]
+"templates.list" = "implemented"
+"templates.inspect" = "implemented"
+"templates.validate" = "implemented"
+"profiles.list" = "implemented"
+"profiles.inspect" = "implemented"
+"profiles.create" = "implemented"
+"profiles.clone" = "implemented"
+"profiles.diff" = "implemented"
+"profiles.plan" = "implemented"
+"profiles.apply" = "implemented"
+"profiles.archive" = "implemented"
 "snapshots.create" = "implemented"
 "snapshots.list" = "implemented"
 "snapshots.inspect" = "implemented"
@@ -803,6 +924,17 @@ transport = "command_client_or_daemon"
 default_refusal = "winui_shell_not_implemented"
 default_reason = "WinUI lane is reserved for modern Windows after WinForms/AppKit shell proof."
 [frontends.commands]
+"templates.list" = "not_supported_with_reason"
+"templates.inspect" = "not_supported_with_reason"
+"templates.validate" = "not_supported_with_reason"
+"profiles.list" = "not_supported_with_reason"
+"profiles.inspect" = "not_supported_with_reason"
+"profiles.create" = "not_supported_with_reason"
+"profiles.clone" = "not_supported_with_reason"
+"profiles.diff" = "not_supported_with_reason"
+"profiles.plan" = "not_supported_with_reason"
+"profiles.apply" = "not_supported_with_reason"
+"profiles.archive" = "not_supported_with_reason"
 help = "not_supported_with_reason"
 "preferences.apply" = "not_supported_with_reason"
 "preferences.inspect" = "not_supported_with_reason"
@@ -880,6 +1012,17 @@ transport = "cli_json_command_client"
 default_refusal = "appkit_command_deferred"
 default_reason = "AppKit renders generated fields for backend-live commands and generated reasons for unavailable commands."
 [frontends.commands]
+"templates.list" = "implemented"
+"templates.inspect" = "implemented"
+"templates.validate" = "implemented"
+"profiles.list" = "implemented"
+"profiles.inspect" = "implemented"
+"profiles.create" = "implemented"
+"profiles.clone" = "implemented"
+"profiles.diff" = "implemented"
+"profiles.plan" = "implemented"
+"profiles.apply" = "implemented"
+"profiles.archive" = "implemented"
 "snapshots.create" = "implemented"
 "snapshots.list" = "implemented"
 "snapshots.inspect" = "implemented"
@@ -957,6 +1100,17 @@ transport = "command_client_or_daemon"
 default_refusal = "swiftui_shell_not_implemented"
 default_reason = "SwiftUI lane is reserved for modern macOS after AppKit shell proof."
 [frontends.commands]
+"templates.list" = "not_supported_with_reason"
+"templates.inspect" = "not_supported_with_reason"
+"templates.validate" = "not_supported_with_reason"
+"profiles.list" = "not_supported_with_reason"
+"profiles.inspect" = "not_supported_with_reason"
+"profiles.create" = "not_supported_with_reason"
+"profiles.clone" = "not_supported_with_reason"
+"profiles.diff" = "not_supported_with_reason"
+"profiles.plan" = "not_supported_with_reason"
+"profiles.apply" = "not_supported_with_reason"
+"profiles.archive" = "not_supported_with_reason"
 "snapshots.create" = "not_supported_with_reason"
 "snapshots.list" = "not_supported_with_reason"
 "snapshots.inspect" = "not_supported_with_reason"
@@ -1034,6 +1188,17 @@ transport = "command_client_or_daemon"
 default_refusal = "gtk_shell_not_implemented"
 default_reason = "GTK lane is scaffolded and must wait for frontend contract proof."
 [frontends.commands]
+"templates.list" = "stubbed_with_refusal"
+"templates.inspect" = "stubbed_with_refusal"
+"templates.validate" = "stubbed_with_refusal"
+"profiles.list" = "stubbed_with_refusal"
+"profiles.inspect" = "stubbed_with_refusal"
+"profiles.create" = "stubbed_with_refusal"
+"profiles.clone" = "stubbed_with_refusal"
+"profiles.diff" = "stubbed_with_refusal"
+"profiles.plan" = "stubbed_with_refusal"
+"profiles.apply" = "stubbed_with_refusal"
+"profiles.archive" = "stubbed_with_refusal"
 "snapshots.create" = "stubbed_with_refusal"
 "snapshots.list" = "stubbed_with_refusal"
 "snapshots.inspect" = "stubbed_with_refusal"
@@ -1111,6 +1276,17 @@ transport = "command_client_or_daemon"
 default_refusal = "qt_shell_not_implemented"
 default_reason = "Qt lane is scaffolded and must wait for frontend contract proof."
 [frontends.commands]
+"templates.list" = "stubbed_with_refusal"
+"templates.inspect" = "stubbed_with_refusal"
+"templates.validate" = "stubbed_with_refusal"
+"profiles.list" = "stubbed_with_refusal"
+"profiles.inspect" = "stubbed_with_refusal"
+"profiles.create" = "stubbed_with_refusal"
+"profiles.clone" = "stubbed_with_refusal"
+"profiles.diff" = "stubbed_with_refusal"
+"profiles.plan" = "stubbed_with_refusal"
+"profiles.apply" = "stubbed_with_refusal"
+"profiles.archive" = "stubbed_with_refusal"
 "snapshots.create" = "stubbed_with_refusal"
 "snapshots.list" = "stubbed_with_refusal"
 "snapshots.inspect" = "stubbed_with_refusal"

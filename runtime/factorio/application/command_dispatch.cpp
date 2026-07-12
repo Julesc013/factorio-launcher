@@ -171,6 +171,18 @@ bool optional_unsigned_64_string(
     return true;
 }
 
+bool decode_profile_patch(const json::Value& payload, profiles::Patch& patch, std::string& detail)
+{
+    return optional_string(payload, "window_mode", patch.window_mode, detail) &&
+        optional_string(payload, "graphics_quality", patch.graphics_quality, detail) &&
+        optional_string(payload, "audio", patch.audio, detail) &&
+        optional_string(payload, "selection_mode", patch.selection_mode, detail) &&
+        optional_string(payload, "selection", patch.selection, detail) &&
+        optional_string(payload, "launch_mode", patch.launch_mode, detail) &&
+        optional_string(payload, "benchmark_ticks", patch.benchmark_ticks, detail) &&
+        optional_string_array(payload, "additional_arguments", patch.additional_arguments, detail);
+}
+
 const char* service_operation(CommandId command) noexcept
 {
     switch (command) {
@@ -503,6 +515,59 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_unsigned_string(payload, "keep_weekly", typed.keep_weekly, detail) ||
             !optional_unsigned_64_string(payload, "maximum_total_bytes", typed.maximum_total_bytes, detail) ||
             !optional_unsigned_string(payload, "minimum_age_days", typed.minimum_age_days, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::templates_list:
+    case CommandId::profiles_list:
+        if (!validate_fields(payload, {}, detail)) return false;
+        request.payload = std::monostate {}; return true;
+    case CommandId::templates_inspect:
+    case CommandId::templates_validate: {
+        if (!validate_fields(payload, {"template_id"}, detail)) return false;
+        ProfileIdRequest typed;
+        if (!required_string(payload, "template_id", typed.id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_inspect:
+    case CommandId::profiles_archive: {
+        if (!validate_fields(payload, {"profile_id"}, detail)) return false;
+        ProfileIdRequest typed;
+        if (!required_string(payload, "profile_id", typed.id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_create: {
+        const std::set<std::string> allowed = {"profile_id", "template_id", "window_mode", "graphics_quality", "audio",
+            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments"};
+        if (!validate_fields(payload, allowed, detail)) return false;
+        CreateProfileRequest typed;
+        if (!required_string(payload, "profile_id", typed.profile_id, detail) ||
+            !optional_string(payload, "template_id", typed.template_id, detail) ||
+            !decode_profile_patch(payload, typed.values, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_clone: {
+        if (!validate_fields(payload, {"source_profile_id", "destination_profile_id"}, detail)) return false;
+        CloneProfileRequest typed;
+        if (!required_string(payload, "source_profile_id", typed.source_profile_id, detail) ||
+            !required_string(payload, "destination_profile_id", typed.destination_profile_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_diff: {
+        if (!validate_fields(payload, {"left_profile_id", "right_profile_id"}, detail)) return false;
+        DiffProfileRequest typed;
+        if (!required_string(payload, "left_profile_id", typed.left_profile_id, detail) ||
+            !required_string(payload, "right_profile_id", typed.right_profile_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::profiles_plan:
+    case CommandId::profiles_apply: {
+        const std::set<std::string> allowed = {"instance_id", "profile_id", "window_mode", "graphics_quality", "audio",
+            "selection_mode", "selection", "launch_mode", "benchmark_ticks", "additional_arguments"};
+        if (!validate_fields(payload, allowed, detail)) return false;
+        EffectiveProfileRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "profile_id", typed.profile_id, detail) ||
+            !decode_profile_patch(payload, typed.overrides, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::launch_plan_build:

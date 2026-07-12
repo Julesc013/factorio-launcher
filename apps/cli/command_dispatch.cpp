@@ -197,6 +197,27 @@ std::string preferences_payload(const std::vector<std::string>& args)
     return output.serialize();
 }
 
+std::string profile_payload(
+    const std::vector<std::string>& args,
+    const std::vector<std::pair<std::string, std::string>>& identity)
+{
+    json::ObjectBuilder output;
+    for (const auto& field : identity) output.add_string(field.first, field.second);
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+             {"template_id", option(args, "--template")}, {"window_mode", option(args, "--window-mode")},
+             {"graphics_quality", option(args, "--graphics-quality")}, {"audio", option(args, "--audio")},
+             {"selection_mode", option(args, "--selection-mode")}, {"selection", option(args, "--selection")},
+             {"launch_mode", option(args, "--launch-mode")}, {"benchmark_ticks", option(args, "--benchmark-ticks")},
+         }) if (!field.second.empty()) output.add_string(field.first, field.second);
+    const auto arguments = option_values(args, "--arg");
+    if (!arguments.empty()) {
+        json::ArrayBuilder values;
+        for (const std::string& value : arguments) values.add_string(value);
+        output.add_array("additional_arguments", values);
+    }
+    return output.serialize();
+}
+
 std::string transport_response(
     const std::string& request_id,
     const std::string& command,
@@ -511,6 +532,43 @@ int command_snapshots(const Options& options)
     return 2;
 }
 
+int command_templates(const Options& options)
+{
+    if (options.args.size() < 2) return 2;
+    const std::string action = options.args[1];
+    if (action == "list") return emit_basic(call(options, "templates.list"), flag(options.args, "--json"), "Templates listed");
+    if ((action == "inspect" || action == "validate") && options.args.size() >= 3) return emit_basic(
+        call(options, "templates." + action, exact_fields_payload({{"template_id", options.args[2]}})),
+        flag(options.args, "--json"), "Template " + action + " completed");
+    return 2;
+}
+
+int command_profiles(const Options& options)
+{
+    if (options.args.size() < 2) return 2;
+    const std::string action = options.args[1];
+    const bool as_json = flag(options.args, "--json");
+    if (action == "list") return emit_basic(call(options, "profiles.list"), as_json, "Profiles listed");
+    if ((action == "inspect" || action == "archive") && options.args.size() >= 3) return emit_basic(
+        call(options, "profiles." + action, exact_fields_payload({{"profile_id", options.args[2]}}), action != "archive"),
+        as_json, "Profile " + action + " completed");
+    if (action == "create" && options.args.size() >= 3) return emit_basic(
+        call(options, "profiles.create", profile_payload(options.args, {{"profile_id", options.args[2]}}), false),
+        as_json, "Profile created");
+    if ((action == "clone" || action == "diff") && options.args.size() >= 4) {
+        const auto fields = action == "clone"
+            ? std::vector<std::pair<std::string, std::string>> {{"source_profile_id", options.args[2]}, {"destination_profile_id", options.args[3]}}
+            : std::vector<std::pair<std::string, std::string>> {{"left_profile_id", options.args[2]}, {"right_profile_id", options.args[3]}};
+        return emit_basic(call(options, "profiles." + action, exact_fields_payload(fields), action == "diff"), as_json,
+            "Profile " + action + " completed");
+    }
+    if ((action == "plan" || action == "apply") && options.args.size() >= 4) return emit_basic(
+        call(options, "profiles." + action, profile_payload(options.args,
+            {{"instance_id", options.args[2]}, {"profile_id", options.args[3]}}), action == "plan"),
+        as_json, "Profile " + action + " completed");
+    return 2;
+}
+
 int command_modsets(const Options& options)
 {
     if (options.args.size() < 3) return 2;
@@ -723,6 +781,8 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     if (command == "installs") return command_installs(options);
     if (command == "instances") return command_instances(options);
     if (command == "snapshots") return command_snapshots(options);
+    if (command == "templates") return command_templates(options);
+    if (command == "profiles") return command_profiles(options);
     if (command == "mods") return command_mods(options);
     if (command == "modsets") return command_modsets(options);
     if (command == "saves") return command_saves(options);

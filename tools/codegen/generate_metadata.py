@@ -44,6 +44,17 @@ SNAPSHOT_RETENTION_REQUEST_FIELDS = [
     ("minimum_age_days", "string", False),
 ]
 
+PROFILE_PATCH_FIELDS = [
+    ("window_mode", "enum", False),
+    ("graphics_quality", "enum", False),
+    ("audio", "enum", False),
+    ("selection_mode", "enum", False),
+    ("selection", "string", False),
+    ("launch_mode", "enum", False),
+    ("benchmark_ticks", "string", False),
+    ("additional_arguments", "string_array", False),
+]
+
 OUTPUTS = {
     "catalog_json": ROOT / "contracts/generated-index/command_catalog.v2.json",
     "command_header": ROOT / "runtime/core/generated/command_catalog.h",
@@ -94,6 +105,17 @@ REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
     "snapshots.restore": [("snapshot_ref", "path", True), ("target_instance_id", "identifier", True)],
     "snapshots.retention.plan": SNAPSHOT_RETENTION_REQUEST_FIELDS,
     "snapshots.retention.apply": SNAPSHOT_RETENTION_REQUEST_FIELDS,
+    "templates.list": [],
+    "templates.inspect": [("template_id", "identifier", True)],
+    "templates.validate": [("template_id", "identifier", True)],
+    "profiles.list": [],
+    "profiles.inspect": [("profile_id", "identifier", True)],
+    "profiles.create": [("profile_id", "identifier", True), ("template_id", "identifier", False), *PROFILE_PATCH_FIELDS],
+    "profiles.clone": [("source_profile_id", "identifier", True), ("destination_profile_id", "identifier", True)],
+    "profiles.diff": [("left_profile_id", "identifier", True), ("right_profile_id", "identifier", True)],
+    "profiles.plan": [("instance_id", "identifier", True), ("profile_id", "identifier", True), *PROFILE_PATCH_FIELDS],
+    "profiles.apply": [("instance_id", "identifier", True), ("profile_id", "identifier", True), *PROFILE_PATCH_FIELDS],
+    "profiles.archive": [("profile_id", "identifier", True)],
     "launch_plan.build": [("instance_id", "identifier", True)],
     "launch_plan.preflight": [("instance_id", "identifier", True)],
     "run.preview": [("instance_id", "identifier", True)],

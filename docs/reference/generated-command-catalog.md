@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `f0fab302a8d39cec282d9110591af52422d5e548cf99ccc1e5a9e20f27917058`.
+Source digest: `e55dac3077bd787721bc24bfe39cbcb02445f8f12ff5d6a5078b5ada62884504`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -56,6 +56,14 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `preferences.reset.plan` | `preferences.reset.plan` | `preferences_reset_plan` | no | - | available | workspace_read | `facman preferences reset plan --json` |
 | `preferences.validate` | `preferences.validate` | `preferences_validate` | no | - | available | workspace_read | `facman preferences validate --json` |
 | `product.inspect` | `product.inspect` | `product_inspect` | no | - | available | none | `facman product inspect --json` |
+| `profiles.apply` | `profiles.apply` | `profiles_apply` | yes | - | available | workspace_read, workspace_write | `facman profiles apply <instance-id> <profile-id> [profile options] --json` |
+| `profiles.archive` | `profiles.archive` | `profiles_archive` | yes | - | available | workspace_read, workspace_write | `facman profiles archive <profile-id> --json` |
+| `profiles.clone` | `profiles.clone` | `profiles_clone` | yes | - | available | workspace_read, workspace_write | `facman profiles clone <source-id> <destination-id> --json` |
+| `profiles.create` | `profiles.create` | `profiles_create` | yes | - | available | workspace_read, workspace_write | `facman profiles create <profile-id> [profile options] --json` |
+| `profiles.diff` | `profiles.diff` | `profiles_diff` | no | - | available | workspace_read | `facman profiles diff <left-id> <right-id> --json` |
+| `profiles.inspect` | `profiles.inspect` | `profiles_inspect` | no | - | available | workspace_read | `facman profiles inspect <profile-id> --json` |
+| `profiles.list` | `profiles.list` | `profiles_list` | no | - | available | workspace_read | `facman profiles list --json` |
+| `profiles.plan` | `profiles.plan` | `profiles_plan` | no | - | available | workspace_read | `facman profiles plan <instance-id> <profile-id> [profile options] --json` |
 | `run.execute` | `run.execute` | `run_execute` | no | - | unavailable_until_isolation_proof | workspace_read | `facman run <instance-id> --execute --json` |
 | `run.preview` | `run.preview` | `run_preview` | no | - | available | workspace_read | `facman run <instance-id> --json` |
 | `saves.backup` | `saves.backup` | `saves_backup` | yes | - | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> --json` |
@@ -76,6 +84,9 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `snapshots.retention.apply` | `snapshots.retention.apply` | `snapshots_retention_apply` | yes | - | available | workspace_read, workspace_write | `facman snapshots retention apply <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json` |
 | `snapshots.retention.plan` | `snapshots.retention.plan` | `snapshots_retention_plan` | no | - | available | workspace_read | `facman snapshots retention plan <instance-id> [--keep-last <count>] [--keep-daily <count>] [--keep-weekly <count>] [--maximum-total-bytes <bytes>] [--minimum-age-days <days>] --json` |
 | `snapshots.verify` | `snapshots.verify` | `snapshots_verify` | no | - | available | workspace_read | `facman snapshots verify <instance-id> <snapshot-id> --json` |
+| `templates.inspect` | `templates.inspect` | `templates_inspect` | no | - | available | workspace_read | `facman templates inspect <template-id> --json` |
+| `templates.list` | `templates.list` | `templates_list` | no | - | available | workspace_read | `facman templates list --json` |
+| `templates.validate` | `templates.validate` | `templates_validate` | no | - | available | workspace_read | `facman templates validate <template-id> --json` |
 | `utility.operation` | `utility.operation` | `legacy_utility_operation` | yes | - | available | workspace_read, workspace_write | `internal canonical frontend utility route` |
 | `workspace.migration.apply` | `workspace.migration.apply` | `migration_apply` | yes | - | available | workspace_read, workspace_write | `facman workspace migration apply --json` |
 | `workspace.migration.inspect` | `workspace.migration.inspect` | `migration_inspect` | no | - | available | workspace_read | `facman workspace migration inspect --json` |
