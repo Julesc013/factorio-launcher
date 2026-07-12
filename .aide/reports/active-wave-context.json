@@ -1,15 +1,15 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "contracts/schema/mod/",
-      "contracts/command/mods.*"
+      "contracts/schema/modset/",
+      "contracts/command/modsets.*"
     ],
     "affected_targets": [
       "flb_factorio_application_static"
     ],
     "affected_tests": [
-      "tests/test_local_mod_inventory.py",
-      "tests/test_modzip_depth.py"
+      "tests/test_local_modset_solver.py",
+      "tests/fuzz/"
     ],
     "allowed_paths": [
       "runtime/",
@@ -20,33 +20,34 @@
     ],
     "blockers": [],
     "claim_impacts": [
-      "complete-managed-local-mod-inventory"
+      "deterministic-bounded-local-solver",
+      "transactional-modset-rollback"
     ],
     "dependencies": [
-      "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      "FACMAN-LOCAL-MOD-INVENTORY-02"
     ],
     "forbidden_paths": [
-      "Mod Portal access",
-      "arbitrary scans",
-      "source mutation"
+      "network fetch",
+      "unbounded backtracking",
+      "external drift overwrite"
     ],
-    "id": "FACMAN-LOCAL-MOD-INVENTORY-02",
+    "id": "FACMAN-LOCAL-MODSET-SOLVER-01",
     "last_green_commit": null,
     "provider_revisions": {},
     "status": "pending",
     "stop_conditions": [
-      "stable reads fail",
-      "archive budgets are bypassed"
+      "a budget can be exceeded",
+      "same inputs differ"
     ],
-    "title": "Index bounded local mod inventory"
+    "title": "Implement deterministic bounded local dependency planning"
   },
   "affected_contracts": [
-    "contracts/schema/mod/",
-    "contracts/command/mods.*"
+    "contracts/schema/modset/",
+    "contracts/command/modsets.*"
   ],
   "affected_tests": [
-    "tests/test_local_mod_inventory.py",
-    "tests/test_modzip_depth.py"
+    "tests/test_local_modset_solver.py",
+    "tests/fuzz/"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -56,11 +57,11 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "fc1cbf359418002970acc22cdcbc7aa4d316eb2b",
+  "current_exact_revision": "8335fde1ba12aaacff3cd44e318834be6fb3518c",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
-      "last_green_commit": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
+      "id": "FACMAN-LOCAL-MOD-INVENTORY-02",
+      "last_green_commit": "8335fde1ba12aaacff3cd44e318834be6fb3518c",
       "status": "closed"
     }
   ],
