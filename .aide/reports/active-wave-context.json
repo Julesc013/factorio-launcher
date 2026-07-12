@@ -1,19 +1,19 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "factorio.instance_snapshot.v1",
-      "contracts/command/snapshots.*"
+      "factorio.instance_template.v1",
+      "factorio.launch_profile.v1"
     ],
     "affected_targets": [
       "flb_factorio_application_static",
       "facman_client_static"
     ],
     "affected_tests": [
-      "tests/test_instance_snapshots.py",
-      "tests/test_archive_core.py"
+      "tests/test_profiles_templates.py"
     ],
     "allowed_paths": [
       "runtime/",
+      "content/",
       "contracts/",
       "tests/",
       "tools/",
@@ -21,33 +21,32 @@
     ],
     "blockers": [],
     "claim_impacts": [
-      "deterministic-secret-safe-snapshots"
+      "portable-safe-customization"
     ],
     "dependencies": [
-      "FACMAN-INSTANCE-LIFECYCLE-02"
+      "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
     ],
     "forbidden_paths": [
-      "secret-bearing snapshots",
-      "machine-local paths",
-      "permanent deletion"
+      "scripts",
+      "arbitrary executables",
+      "reserved argument override"
     ],
-    "id": "FACMAN-INSTANCE-SNAPSHOT-01",
+    "id": "FACMAN-PROFILES-AND-TEMPLATES-02",
     "last_green_commit": null,
     "provider_revisions": {},
     "status": "pending",
     "stop_conditions": [
-      "self-verification fails",
-      "secret exclusion cannot fail closed"
+      "customization gains execution authority",
+      "vanilla instances break"
     ],
-    "title": "Implement deterministic portable instance snapshots"
+    "title": "Implement declarative templates and launch profiles"
   },
   "affected_contracts": [
-    "factorio.instance_snapshot.v1",
-    "contracts/command/snapshots.*"
+    "factorio.instance_template.v1",
+    "factorio.launch_profile.v1"
   ],
   "affected_tests": [
-    "tests/test_instance_snapshots.py",
-    "tests/test_archive_core.py"
+    "tests/test_profiles_templates.py"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -57,11 +56,11 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
+  "current_exact_revision": "9f4b3d351dfb23dc5252886ac77e8b83ff772599",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-INSTANCE-LIFECYCLE-02",
-      "last_green_commit": "e3b0108959093ea06986f2ad579a217b2f2ab55d",
+      "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
+      "last_green_commit": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
       "status": "closed"
     }
   ],
