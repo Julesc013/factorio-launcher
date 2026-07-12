@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_save_intelligence.v1.schema.json",
+  "title": "Bounded Structural Save Intelligence",
+  "type": "object",
+  "required": ["schema", "command", "status", "instance_id", "saves", "save_count", "deep_factorio_save_metadata", "save_content_modified", "mutation_executed"],
+  "properties": {
+    "schema": { "const": "factorio.save_intelligence.v1" },
+    "command": { "enum": ["saves.index", "saves.inspect", "saves.verify", "saves.associate"] },
+    "status": { "enum": ["ok", "pass", "drifted", "associated"] },
+    "instance_id": { "type": "string" },
+    "saves": { "type": "array", "items": { "$ref": "#/$defs/save" } },
+    "save_count": { "type": "integer", "minimum": 0 },
+    "deep_factorio_save_metadata": { "const": "unsupported" },
+    "save_content_modified": { "const": false },
+    "mutation_executed": { "type": "boolean" }
+  },
+  "$defs": {
+    "save": {
+      "type": "object",
+      "required": ["path", "filename", "stable_file_identity", "size", "mtime", "sha256", "archive_structure", "factorio_save_recognized", "deep_factorio_save_metadata", "backup_sidecar_status", "association"],
+      "properties": {
+        "path": { "type": "string" }, "filename": { "type": "string" }, "stable_file_identity": { "type": "string" },
+        "size": { "type": "integer", "minimum": 0 }, "mtime": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "archive_structure": { "type": "object" }, "factorio_save_recognized": { "type": "boolean" },
+        "deep_factorio_save_metadata": { "const": "unsupported" }, "backup_sidecar_status": { "enum": ["present", "absent", "unreadable"] }, "association": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

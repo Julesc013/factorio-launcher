@@ -1,0 +1,13 @@
+command_id = "saves.verify"
+cli = "facman saves verify <save> --instance <instance-id> --json"
+effects = ["workspace_read"]
+request_schema = "contracts/schema/command/saves.verify.request.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_save_intelligence.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = true
+executes_process = false
+mutates_workspace = false
+golden_success = "tests/golden/commands/saves.verify.success.json"
+golden_refusal = "tests/golden/commands/saves.verify.refusal.json"

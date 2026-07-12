@@ -1,4 +1,4 @@
-# generated source-sha256: 9f32d83518dbf08af67d4e3308b42deea291598d4ea9d196b901075d6e4f9570
+# generated source-sha256: fc7205e6aa4a933cf17f4f580a7f566a1f501b9ba993652a040f843b2a692528
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -65,9 +65,16 @@
 # path: profiles list
 # path: profiles plan
 # path: run
+# path: saves associate
 # path: saves backup
 # path: saves clone
+# path: saves diff
+# path: saves index
+# path: saves inspect
 # path: saves list
+# path: saves retention apply
+# path: saves retention plan
+# path: saves verify
 # path: servers create
 # path: servers list
 # path: servers rcon
@@ -97,6 +104,7 @@ complete -c facman -f -a <directory>]
 complete -c facman -f -a [--root
 complete -c facman -f -a apply
 complete -c facman -f -a archive
+complete -c facman -f -a associate
 complete -c facman -f -a backup
 complete -c facman -f -a benchmark
 complete -c facman -f -a bug-report

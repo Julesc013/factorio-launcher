@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"saves.retention.plan","status":"refused","refusal":{"schema":"common.refusal.v1","code":"save_index_budget_exceeded","reason":"save index budget exceeded","recoverable":true}}

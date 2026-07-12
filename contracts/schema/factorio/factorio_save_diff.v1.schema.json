@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_save_diff.v1.schema.json",
+  "title": "Structural Save Diff",
+  "type": "object",
+  "required": ["schema", "command", "status", "instance_id", "left", "right", "differences", "deep_factorio_save_metadata", "save_content_modified", "mutation_executed"],
+  "properties": {
+    "schema": { "const": "factorio.save_diff.v1" }, "command": { "const": "saves.diff" }, "status": { "const": "ok" },
+    "instance_id": { "type": "string" }, "left": { "type": "object" }, "right": { "type": "object" },
+    "differences": { "type": "array", "items": { "type": "object" } },
+    "deep_factorio_save_metadata": { "const": "unsupported" }, "save_content_modified": { "const": false },
+    "mutation_executed": { "const": false }
+  },
+  "additionalProperties": false
+}

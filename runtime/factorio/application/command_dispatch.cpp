@@ -202,6 +202,20 @@ bool decode_modset_solver(
         optional_unsigned_string(payload, "maximum_explanation_nodes", request.budgets.maximum_explanation_nodes, detail);
 }
 
+bool decode_save_index(const json::Value& payload, SaveIndexRequest& request, std::string& detail)
+{
+    return required_string(payload, "instance_id", request.instance_id, detail) &&
+        optional_string(payload, "save", request.save, detail) &&
+        optional_string(payload, "other_save", request.other_save, detail) &&
+        optional_string(payload, "profile_id", request.profile_id, detail) &&
+        optional_string(payload, "source_operation", request.source_operation, detail) &&
+        optional_unsigned_string(payload, "keep_last", request.keep_last, detail) &&
+        optional_unsigned_string(payload, "keep_daily", request.keep_daily, detail) &&
+        optional_unsigned_string(payload, "keep_weekly", request.keep_weekly, detail) &&
+        optional_unsigned_64_string(payload, "maximum_total_bytes", request.maximum_total_bytes, detail) &&
+        optional_unsigned_string(payload, "minimum_age_days", request.minimum_age_days, detail);
+}
+
 const char* service_operation(CommandId command) noexcept
 {
     switch (command) {
@@ -645,6 +659,19 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         ExportModsetRequest typed; std::string path;
         if (!required_string(payload, "instance_id", typed.instance_id, detail) || !required_string(payload, "output_path", path, detail)) return false;
         typed.output_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
+    }
+    case CommandId::saves_index:
+    case CommandId::saves_inspect:
+    case CommandId::saves_verify:
+    case CommandId::saves_associate:
+    case CommandId::saves_diff:
+    case CommandId::saves_retention_plan:
+    case CommandId::saves_retention_apply: {
+        if (!validate_fields(payload, {"instance_id", "save", "other_save", "profile_id", "source_operation",
+                "keep_last", "keep_daily", "keep_weekly", "maximum_total_bytes", "minimum_age_days"}, detail)) return false;
+        SaveIndexRequest typed;
+        if (!decode_save_index(payload, typed, detail)) return false;
+        request.payload = std::move(typed); return true;
     }
     case CommandId::saves_list: {
         if (!validate_fields(payload, {"instance_id"}, detail)) return false;

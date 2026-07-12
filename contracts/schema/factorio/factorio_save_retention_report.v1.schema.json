@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_save_retention_report.v1.schema.json",
+  "title": "Reversible Save Retention Report",
+  "type": "object",
+  "required": ["schema", "command", "status", "instance_id", "policy", "saves", "candidate_count", "trash_path", "permanent_delete", "reversible", "save_content_modified", "mutation_executed"],
+  "properties": {
+    "schema": { "const": "factorio.save_retention_report.v1" },
+    "command": { "enum": ["saves.retention.plan", "saves.retention.apply"] }, "status": { "const": "ok" },
+    "instance_id": { "type": "string" }, "policy": { "type": "object" }, "saves": { "type": "array" },
+    "candidate_count": { "type": "integer", "minimum": 0 }, "trash_path": { "type": "string" },
+    "permanent_delete": { "const": false }, "reversible": { "const": true }, "save_content_modified": { "const": false },
+    "mutation_executed": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

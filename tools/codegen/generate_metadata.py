@@ -69,6 +69,15 @@ MODSET_SOLVER_FIELDS = [
     ("maximum_explanation_nodes", "string", False),
 ]
 
+SAVE_RETENTION_FIELDS = [
+    ("instance_id", "identifier", True),
+    ("keep_last", "string", False),
+    ("keep_daily", "string", False),
+    ("keep_weekly", "string", False),
+    ("maximum_total_bytes", "string", False),
+    ("minimum_age_days", "string", False),
+]
+
 OUTPUTS = {
     "catalog_json": ROOT / "contracts/generated-index/command_catalog.v2.json",
     "command_header": ROOT / "runtime/core/generated/command_catalog.h",
@@ -148,6 +157,13 @@ REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
     "modsets.verify": [("instance_id", "identifier", True)],
     "modsets.export": [("instance_id", "identifier", True), ("output_path", "path", True)],
     "saves.list": [("instance_id", "identifier", True)],
+    "saves.index": [("instance_id", "identifier", True)],
+    "saves.inspect": [("instance_id", "identifier", True), ("save", "string", True)],
+    "saves.verify": [("instance_id", "identifier", True), ("save", "string", True)],
+    "saves.associate": [("instance_id", "identifier", True), ("save", "string", True), ("profile_id", "identifier", False), ("source_operation", "string", False)],
+    "saves.diff": [("instance_id", "identifier", True), ("save", "string", True), ("other_save", "string", True)],
+    "saves.retention.plan": SAVE_RETENTION_FIELDS,
+    "saves.retention.apply": SAVE_RETENTION_FIELDS,
     "saves.backup": [("instance_id", "identifier", True), ("save", "string", True), ("output_path", "path", False)],
     "saves.clone": [("source_instance_id", "identifier", True), ("target_instance_id", "identifier", True), ("save", "string", True)],
     "instance.export": [("instance_id", "identifier", True), ("output_path", "path", True)],

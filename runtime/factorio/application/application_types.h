@@ -10,6 +10,7 @@
 #include "flb_factorio_modset_solver.h"
 #include "flb_factorio_mods.h"
 #include "flb_factorio_save_operations.h"
+#include "flb_factorio_save_index.h"
 #include "fl_transaction.h"
 #include "fl_identity.h"
 #include "fl_result.h"
@@ -79,6 +80,7 @@ using ModsetInstanceRequest = modsets::InstanceRequest;
 using ExportModsetRequest = modsets::ExportRequest;
 using ModsetSolverRequest = facman::factorio::modsets::solver::Request;
 using ListSavesRequest = saves::InstanceRequest;
+using SaveIndexRequest = facman::factorio::saves::index::Request;
 using BackupSaveRequest = saves::BackupRequest;
 using CloneSaveRequest = saves::CloneRequest;
 using ExportInstanceRequest = saves::ExportRequest;
@@ -119,6 +121,7 @@ using ApplicationPayload = std::variant<
     ExportModsetRequest,
     ModsetSolverRequest,
     ListSavesRequest,
+    SaveIndexRequest,
     BackupSaveRequest,
     CloneSaveRequest,
     ExportInstanceRequest,

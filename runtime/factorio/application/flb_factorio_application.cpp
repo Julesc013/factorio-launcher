@@ -149,8 +149,7 @@ private:
         case CommandId::installs_verify: return handlers::verify_install(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_repair: return handlers::repair_install(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_uninstall: return handlers::uninstall_install(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::mods_search:
-        case CommandId::mods_install:
+        case CommandId::mods_search: case CommandId::mods_install:
         case CommandId::mods_update: return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::servers_list: return handlers::list_servers(context_);
         case CommandId::servers_create: return handlers::create_server(context_, std::get<ServiceOperationRequest>(request.payload));
@@ -159,8 +158,7 @@ private:
         case CommandId::servers_rcon: return handlers::control_server(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::diagnostics_redact: return handlers::redact_diagnostics(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::dev_bug_report: return handlers::create_bug_report(context_);
-        case CommandId::dev_dump_data:
-        case CommandId::dev_dump_icons:
+        case CommandId::dev_dump_data: case CommandId::dev_dump_icons:
         case CommandId::dev_benchmark:
         case CommandId::dev_instrument_mod: return handlers::refuse_dev_execution(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::launch_plan_preflight: return handlers::preflight_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload));
@@ -173,6 +171,8 @@ private:
         case CommandId::saves_list: return handlers::list_saves(context_, std::get<ListSavesRequest>(request.payload));
         case CommandId::saves_backup: return handlers::backup_save(context_, std::get<BackupSaveRequest>(request.payload));
         case CommandId::saves_clone: return handlers::clone_save(context_, std::get<CloneSaveRequest>(request.payload));
+        case CommandId::saves_index: case CommandId::saves_inspect: case CommandId::saves_verify: case CommandId::saves_associate:
+        case CommandId::saves_diff: case CommandId::saves_retention_plan: case CommandId::saves_retention_apply: return handlers::dispatch_save_index(context_, request);
         case CommandId::instance_export: return handlers::export_instance(context_, std::get<ExportInstanceRequest>(request.payload));
         case CommandId::instance_import: return handlers::import_instance(context_, std::get<ImportInstanceRequest>(request.payload));
         case CommandId::recovery_inspect: return handlers::recovery_inspect(context_);

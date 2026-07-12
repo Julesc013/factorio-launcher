@@ -1477,3 +1477,87 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = false
 message = "The requested modset activation has already been rolled back."
+
+[[code]]
+id = "save_stable_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A save could not be read through a stable bounded no-follow handle."
+
+[[code]]
+id = "save_sidecar_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A save association sidecar could not be read safely."
+
+[[code]]
+id = "save_sidecar_drift"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "A save association sidecar changed during verification."
+
+[[code]]
+id = "save_archive_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "A save archive exceeds its structural member budget."
+
+[[code]]
+id = "save_root_unsafe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The managed save root crosses a link or reparse boundary."
+
+[[code]]
+id = "save_index_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The direct managed save index could not be enumerated."
+
+[[code]]
+id = "save_index_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The managed save count exceeds its explicit index budget."
+
+[[code]]
+id = "save_association_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "A save association already exists and will not be silently overwritten."
+
+[[code]]
+id = "save_association_write_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A save association sidecar could not be committed durably."
+
+[[code]]
+id = "save_transaction_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A save metadata or retention transaction could not advance safely."
+
+[[code]]
+id = "save_transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Save metadata or retention work is blocked until transaction recovery."
+
+[[code]]
+id = "save_retention_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "Save retention could not prepare owned reversible trash."

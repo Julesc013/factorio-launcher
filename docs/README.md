@@ -48,6 +48,7 @@ Product:
 - [Launch Profiles](product/launch_profiles.md)
 - [Local Mod Inventory](product/local_mod_inventory.md)
 - [Local Modset Solver](product/local_modset_solver.md)
+- [Structural Save Intelligence](product/save_intelligence.md)
 - [Modder Tools](product/modder_tools.md)
 - [Modset Lockfile](product/modset_lockfile.md)
 - [Save Manager](product/save_manager.md)

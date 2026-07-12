@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"saves.verify","status":"refused","refusal":{"schema":"common.refusal.v1","code":"save_source_changed","reason":"save changed during verification","recoverable":true}}

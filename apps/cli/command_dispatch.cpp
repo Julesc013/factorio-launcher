@@ -248,6 +248,21 @@ std::string modset_solver_payload(
     return output.serialize();
 }
 
+std::string save_index_payload(
+    const std::vector<std::string>& args,
+    const std::vector<std::pair<std::string, std::string>>& identity)
+{
+    json::ObjectBuilder output;
+    for (const auto& field : identity) output.add_string(field.first, field.second);
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+             {"profile_id", option(args, "--profile")}, {"source_operation", option(args, "--source-operation")},
+             {"keep_last", option(args, "--keep-last")}, {"keep_daily", option(args, "--keep-daily")},
+             {"keep_weekly", option(args, "--keep-weekly")}, {"maximum_total_bytes", option(args, "--max-total-bytes")},
+             {"minimum_age_days", option(args, "--min-age-days")},
+         }) if (!field.second.empty()) output.add_string(field.first, field.second);
+    return output.serialize();
+}
+
 std::string transport_response(
     const std::string& request_id,
     const std::string& command,
@@ -636,6 +651,22 @@ int command_saves(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
+    const std::string instance = option(options.args, "--instance");
+    if (action == "index") return emit_basic(call(options, "saves.index", save_index_payload(
+        options.args, {{"instance_id", instance}})), flag(options.args, "--json"), "Saves indexed");
+    if ((action == "inspect" || action == "verify" || action == "associate") && options.args.size() >= 3) {
+        return emit_basic(call(options, "saves." + action, save_index_payload(options.args,
+            {{"instance_id", instance}, {"save", options.args[2]}}), action != "associate"),
+            flag(options.args, "--json"), "Save " + action + " completed");
+    }
+    if (action == "diff" && options.args.size() >= 4) return emit_basic(call(options, "saves.diff", save_index_payload(
+        options.args, {{"instance_id", instance}, {"save", options.args[2]}, {"other_save", options.args[3]}})),
+        flag(options.args, "--json"), "Save diff completed");
+    if (action == "retention" && options.args.size() >= 3 && (options.args[2] == "plan" || options.args[2] == "apply")) {
+        const bool apply = options.args[2] == "apply";
+        return emit_basic(call(options, "saves.retention." + options.args[2], save_index_payload(
+            options.args, {{"instance_id", instance}}), !apply), flag(options.args, "--json"), "Save retention completed");
+    }
     if (action == "list") return emit_basic(call(options, "saves.list", exact_fields_payload({{"instance_id", option(options.args, "--instance")}})), flag(options.args, "--json"), "Saves listed");
     if (action == "backup" && options.args.size() >= 3) {
         const std::string payload = exact_fields_payload({{"instance_id", option(options.args, "--instance")},

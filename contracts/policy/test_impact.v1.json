@@ -89,8 +89,8 @@
     {
       "paths": ["runtime/factorio/"],
       "native_targets": ["flb_command_bridge_smoke", "facman_diagnostic_traversal_smoke", "facman_isolation_lock_smoke"],
-      "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_instance_lifecycle", "tests.test_instance_snapshots", "tests.test_local_mod_inventory", "tests.test_local_modset_solver", "tests.test_profiles_templates", "tests.test_save_transfer", "tests.test_vertical_slice"],
-      "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py", "tools/instance_lifecycle_check.py", "tools/snapshot_lifecycle_check.py", "tools/profile_template_check.py", "tools/mod_inventory_check.py", "tools/modset_solver_check.py"],
+      "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_instance_lifecycle", "tests.test_instance_snapshots", "tests.test_local_mod_inventory", "tests.test_local_modset_solver", "tests.test_profiles_templates", "tests.test_save_index_retention", "tests.test_save_transfer", "tests.test_vertical_slice"],
+      "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py", "tools/instance_lifecycle_check.py", "tools/snapshot_lifecycle_check.py", "tools/profile_template_check.py", "tools/mod_inventory_check.py", "tools/modset_solver_check.py", "tools/save_index_check.py"],
       "package_profiles": []
     },
     {

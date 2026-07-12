@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `9f32d83518dbf08af67d4e3308b42deea291598d4ea9d196b901075d6e4f9570`.
+Source digest: `fc7205e6aa4a933cf17f4f580a7f566a1f501b9ba993652a040f843b2a692528`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -75,9 +75,16 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `profiles.plan` | `profiles.plan` | `profiles_plan` | no | - | available | workspace_read | `facman profiles plan <instance-id> <profile-id> [profile options] --json` |
 | `run.execute` | `run.execute` | `run_execute` | no | - | unavailable_until_isolation_proof | workspace_read | `facman run <instance-id> --execute --json` |
 | `run.preview` | `run.preview` | `run_preview` | no | - | available | workspace_read | `facman run <instance-id> --json` |
+| `saves.associate` | `saves.associate` | `saves_associate` | yes | - | available | workspace_read, workspace_write | `facman saves associate <save> --instance <instance-id> [--profile <id>] --json` |
 | `saves.backup` | `saves.backup` | `saves_backup` | yes | - | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> --json` |
 | `saves.clone` | `saves.clone` | `saves_clone` | yes | - | available | workspace_read, workspace_write | `facman saves clone <save> --instance <source-id> --to-instance <target-id> --json` |
+| `saves.diff` | `saves.diff` | `saves_diff` | no | - | available | workspace_read | `facman saves diff <left-save> <right-save> --instance <instance-id> --json` |
+| `saves.index` | `saves.index` | `saves_index` | no | - | available | workspace_read | `facman saves index --instance <instance-id> --json` |
+| `saves.inspect` | `saves.inspect` | `saves_inspect` | no | - | available | workspace_read | `facman saves inspect <save> --instance <instance-id> --json` |
 | `saves.list` | `saves.list` | `saves_list` | no | - | available | workspace_read | `facman saves list --instance <instance-id> --json` |
+| `saves.retention.apply` | `saves.retention.apply` | `saves_retention_apply` | yes | - | available | workspace_read, workspace_write | `facman saves retention apply --instance <instance-id> [retention options] --json` |
+| `saves.retention.plan` | `saves.retention.plan` | `saves_retention_plan` | no | - | available | workspace_read | `facman saves retention plan --instance <instance-id> [retention options] --json` |
+| `saves.verify` | `saves.verify` | `saves_verify` | no | - | available | workspace_read | `facman saves verify <save> --instance <instance-id> --json` |
 | `servers.create` | `servers.create` | `servers_create` | yes | - | implemented | workspace_read, workspace_write | `facman servers create <name> --instance <id> --json` |
 | `servers.list` | `servers.list` | `servers_list` | no | - | implemented | workspace_read | `facman servers list --json` |
 | `servers.rcon` | `servers.rcon` | `servers_rcon` | no | - | unavailable_until_isolation_proof | workspace_read, process_execute | `facman servers rcon <server-id> --json` |
