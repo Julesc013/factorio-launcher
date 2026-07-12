@@ -1,8 +1,8 @@
 # AIDE Wave Status
 
 - wave_id: facman-r3.5
-- status: active
-- current_exact_revision: a4f28b8155ed3f79ea217c37886c4c73618d9d0a
+- status: complete
+- current_exact_revision: a051a17804ef7239ec39cee5592eedc7ff7fc78d
 - mode: report_only
 - task_execution: false
 - repair_execution: false
@@ -27,7 +27,7 @@
 - `FACMAN-MACHINE-TRANSPORT-01`: closed (last_green_commit: a4f28b8155ed3f79ea217c37886c4c73618d9d0a)
 - `FACMAN-CONFORMANCE-COMPAT-SECURITY-01`: closed (last_green_commit: a4f28b8155ed3f79ea217c37886c4c73618d9d0a)
 - `FACMAN-AIDE-WAVE-AUTONOMY-02`: closed (last_green_commit: b5011c541a6e97543f193c35ef427ca93e280628)
-- `FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01`: verified (last_green_commit: none)
+- `FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01`: closed (last_green_commit: a051a17804ef7239ec39cee5592eedc7ff7fc78d)
 
 ## Active Context
 
