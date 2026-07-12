@@ -11,6 +11,8 @@ jobs:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/native-smoke/facman
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
