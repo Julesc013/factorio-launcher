@@ -14,6 +14,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 
 namespace facman::client {
 
@@ -39,6 +40,12 @@ public:
 };
 
 struct CommandRequest {
+    CommandRequest() = default;
+    CommandRequest(std::string command_value, std::string payload_value, bool dry_run_value)
+        : command(std::move(command_value)),
+          json_payload(std::move(payload_value)),
+          dry_run(dry_run_value) {}
+
     std::string command;
     std::string json_payload = "{}";
     bool dry_run = true;
