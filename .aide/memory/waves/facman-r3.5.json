@@ -101,10 +101,44 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-AIDE-WAVE-AUTONOMY-02"
+    },
+    {
+      "blockers": [
+        "Linux and macOS target-runner proof requires the corresponding native runners.",
+        "Remote CodeQL execution begins only after this task branch is pushed."
+      ],
+      "clean_status": true,
+      "commit_sha": "588290d9740f8001fda5c52775c9f32506025d98",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.4-TARGET-PROMOTION-01",
+        "FACMAN-WORKSPACE-DOMAIN-STORES-01",
+        "FACMAN-COMMAND-CATALOG-V2-01",
+        "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01",
+        "FACMAN-ABI-CLIENT-SESSION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01",
+        "FACMAN-MACHINE-TRANSPORT-01",
+        "FACMAN-CONFORMANCE-COMPAT-SECURITY-01",
+        "FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "099254fb194ac8ca09c7fb0e057f458218add769fb577795cf43f502f2985fb9",
+      "test_fingerprints": {
+        "tests/test_architecture_fitness.py": "bd8add9a5e1809f7a275135f746fec2432e8254a2a5dc1d3a30a22327a521a1b",
+        "tools/manual_json_check.py": "4c995aea7559a22f2e1221e15653e296906ac75f7e539b56a092cbdf0c8e0649"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-JSON-OUTCOME-CODECS-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "b5011c541a6e97543f193c35ef427ca93e280628",
+  "current_exact_revision": "588290d9740f8001fda5c52775c9f32506025d98",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -112,7 +146,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "FacMan R3.5 zero-exception productization",
-  "updated_at": "2026-07-12T05:25:00Z",
+  "updated_at": "2026-07-12T06:30:04Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -142,6 +176,34 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-AIDE-WAVE-AUTONOMY-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:29:59Z",
+        "result": "PASS",
+        "source_fingerprint": "099254fb194ac8ca09c7fb0e057f458218add769fb577795cf43f502f2985fb9",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_architecture_fitness.py": "bd8add9a5e1809f7a275135f746fec2432e8254a2a5dc1d3a30a22327a521a1b",
+          "tools/manual_json_check.py": "4c995aea7559a22f2e1221e15653e296906ac75f7e539b56a092cbdf0c8e0649"
+        },
+        "test_results": {
+          "cli_golden_12_of_12": "PASS",
+          "debug_build": "PASS",
+          "manual_json_zero": "PASS",
+          "native_ctest_16_of_16": "PASS",
+          "strict_check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-JSON-OUTCOME-CODECS-01"
       }
     ],
     "promotion_uses_cache_alone": false,
@@ -305,14 +367,14 @@
         "runtime/binding/",
         "apps/cli/"
       ],
-      "blockers": [
-        "Seventeen first-party manual JSON exceptions remain."
-      ],
+      "blockers": [],
       "claim_impacts": [
         "manual-json-zero",
         "typed-outcomes",
         "codec-ownership"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T06:30:04Z",
       "dependencies": [
         "FACMAN-R3.5-TRUTH-FITNESS-01",
         "FACMAN-ULK-DYNAMIC-REGISTRY-01"
@@ -322,17 +384,45 @@
         "third_party/"
       ],
       "id": "FACMAN-JSON-OUTCOME-CODECS-01",
-      "last_green_commit": null,
+      "last_green_commit": "588290d9740f8001fda5c52775c9f32506025d98",
       "progress_commits": [
         "bdd3f926d8242248961ef509491fc95cc3a21962"
       ],
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T06:29:45Z",
+      "status": "closed",
       "stop_conditions": [
         "Manual JSON exception count increases",
         "A domain module exposes raw JSON"
       ],
-      "title": "JSON, outcome and typed codecs"
+      "title": "JSON, outcome and typed codecs",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:29:59Z",
+        "result": "PASS",
+        "source_fingerprint": "099254fb194ac8ca09c7fb0e057f458218add769fb577795cf43f502f2985fb9",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_architecture_fitness.py": "bd8add9a5e1809f7a275135f746fec2432e8254a2a5dc1d3a30a22327a521a1b",
+          "tools/manual_json_check.py": "4c995aea7559a22f2e1221e15653e296906ac75f7e539b56a092cbdf0c8e0649"
+        },
+        "test_results": {
+          "cli_golden_12_of_12": "PASS",
+          "debug_build": "PASS",
+          "manual_json_zero": "PASS",
+          "native_ctest_16_of_16": "PASS",
+          "strict_check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [

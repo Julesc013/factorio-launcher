@@ -58,7 +58,7 @@
     "Target-runner evidence is never inferred from local validation.",
     "Human gates remain explicit human decisions."
   ],
-  "current_exact_revision": "b5011c541a6e97543f193c35ef427ca93e280628",
+  "current_exact_revision": "588290d9740f8001fda5c52775c9f32506025d98",
   "direct_dependency_summaries": [],
   "history_included": false,
   "open_blockers": [
