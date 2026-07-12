@@ -19,6 +19,7 @@ def main() -> int:
     cli = cli_path.read_text(encoding="utf-8")
     application = application_path.read_text(encoding="utf-8")
     application += (ROOT / "runtime/factorio/application/command_dispatch.cpp").read_text(encoding="utf-8")
+    application += (ROOT / "runtime/factorio/application/generated/command_lookup.inc").read_text(encoding="utf-8")
     application += (ROOT / "runtime/factorio/application/handlers/diagnostics.cpp").read_text(encoding="utf-8")
     binding = binding_path.read_text(encoding="utf-8")
     binding += (ROOT / "runtime/core/generated/command_catalog.h").read_text(encoding="utf-8")

@@ -20,6 +20,7 @@ def validate() -> list[str]:
         encoding="utf-8"
     )
     application += (ROOT / "runtime/factorio/application/command_dispatch.cpp").read_text(encoding="utf-8")
+    application += (ROOT / "runtime/factorio/application/generated/command_lookup.inc").read_text(encoding="utf-8")
     application += (ROOT / "runtime/factorio/application/handlers/recovery.cpp").read_text(encoding="utf-8")
     consumers = {
         "application": (ROOT / "runtime/factorio/application/handlers/instances.cpp").read_text(encoding="utf-8") +

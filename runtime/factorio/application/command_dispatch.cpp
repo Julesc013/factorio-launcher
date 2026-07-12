@@ -124,50 +124,15 @@ bool optional_string_array(const json::Value& object, const char* key, std::vect
 const char* service_operation(CommandId command) noexcept
 {
     switch (command) {
-    case CommandId::package_verify: return "package.verify";
-    case CommandId::installs_install_version: return "installs.install_version";
-    case CommandId::installs_verify: return "installs.verify";
-    case CommandId::installs_repair: return "installs.repair";
-    case CommandId::installs_uninstall: return "installs.uninstall";
-    case CommandId::mods_search: return "mods.search";
-    case CommandId::mods_install: return "mods.install";
-    case CommandId::mods_update: return "mods.update";
-    case CommandId::servers_list: return "servers.list";
-    case CommandId::servers_create: return "servers.create";
-    case CommandId::servers_start: return "servers.start";
-    case CommandId::servers_stop: return "servers.stop";
-    case CommandId::servers_rcon: return "servers.rcon";
-    case CommandId::diagnostics_redact: return "diagnostics.redact";
-    case CommandId::dev_bug_report: return "dev.bug_report";
-    case CommandId::dev_dump_data: return "dev.dump_data";
-    case CommandId::dev_dump_icons: return "dev.dump_icons";
-    case CommandId::dev_benchmark: return "dev.benchmark";
-    case CommandId::dev_instrument_mod: return "dev.instrument_mod";
+#include "generated/command_names.inc"
     default: return "";
     }
 }
 
 CommandId service_command(const std::string& operation) noexcept
 {
-    if (operation == "package.verify") return CommandId::package_verify;
-    if (operation == "installs.install_version" || operation == "installs.install-version") return CommandId::installs_install_version;
-    if (operation == "installs.verify") return CommandId::installs_verify;
-    if (operation == "installs.repair") return CommandId::installs_repair;
-    if (operation == "installs.uninstall") return CommandId::installs_uninstall;
-    if (operation == "mods.search") return CommandId::mods_search;
-    if (operation == "mods.install") return CommandId::mods_install;
-    if (operation == "mods.update") return CommandId::mods_update;
-    if (operation == "servers.list") return CommandId::servers_list;
-    if (operation == "servers.create") return CommandId::servers_create;
-    if (operation == "servers.start") return CommandId::servers_start;
-    if (operation == "servers.stop") return CommandId::servers_stop;
-    if (operation == "servers.rcon") return CommandId::servers_rcon;
-    if (operation == "diagnostics.redact") return CommandId::diagnostics_redact;
-    if (operation == "dev.bug_report" || operation == "dev.bug-report") return CommandId::dev_bug_report;
-    if (operation == "dev.dump_data" || operation == "dev.dump-data") return CommandId::dev_dump_data;
-    if (operation == "dev.dump_icons" || operation == "dev.dump-icons") return CommandId::dev_dump_icons;
-    if (operation == "dev.benchmark") return CommandId::dev_benchmark;
-    if (operation == "dev.instrument_mod" || operation == "dev.instrument-mod") return CommandId::dev_instrument_mod;
+    const std::string& value = operation;
+#include "generated/command_lookup.inc"
     return CommandId::unsupported;
 }
 
@@ -229,68 +194,16 @@ bool decode_service_request(
 CommandId command_id(ulk_string_view command)
 {
     const std::string value(command.data, command.data + command.size);
-    if (value == "product.inspect" || value == "factorio.product.inspect") return CommandId::product_inspect;
-    if (value == "doctor.run") return CommandId::doctor_run;
-    if (value == "install_refs.list") return CommandId::install_list;
-    if (value == "install_refs.scan") return CommandId::install_scan;
-    if (value == "install_refs.import") return CommandId::install_import;
-    if (value == "install_refs.inspect") return CommandId::install_inspect;
-    if (value == "instance.list") return CommandId::instance_list;
-    if (value == "instance.create") return CommandId::instance_create;
-    if (value == "launch_plan.build") return CommandId::launch_plan_build;
-    if (value == "launch_plan.preflight") return CommandId::launch_plan_preflight;
-    if (value == "run.preview") return CommandId::run_preview;
-    if (value == "run.execute") return CommandId::run_execute;
-    if (value == "setup.preview") return CommandId::setup_preview;
-    if (value == "package.verify") return CommandId::package_verify;
-    if (value == "installs.install_version") return CommandId::installs_install_version;
-    if (value == "installs.verify") return CommandId::installs_verify;
-    if (value == "installs.repair") return CommandId::installs_repair;
-    if (value == "installs.uninstall") return CommandId::installs_uninstall;
-    if (value == "mods.search") return CommandId::mods_search;
-    if (value == "mods.install") return CommandId::mods_install;
-    if (value == "mods.update") return CommandId::mods_update;
-    if (value == "servers.list") return CommandId::servers_list;
-    if (value == "servers.create") return CommandId::servers_create;
-    if (value == "servers.start") return CommandId::servers_start;
-    if (value == "servers.stop") return CommandId::servers_stop;
-    if (value == "servers.rcon") return CommandId::servers_rcon;
-    if (value == "diagnostics.redact") return CommandId::diagnostics_redact;
-    if (value == "dev.bug_report") return CommandId::dev_bug_report;
-    if (value == "dev.dump_data") return CommandId::dev_dump_data;
-    if (value == "dev.dump_icons") return CommandId::dev_dump_icons;
-    if (value == "dev.benchmark") return CommandId::dev_benchmark;
-    if (value == "dev.instrument_mod") return CommandId::dev_instrument_mod;
-    if (value == "setup.operation") return CommandId::legacy_setup_operation;
-    if (value == "utility.operation") return CommandId::legacy_utility_operation;
-    if (value == "mods.import") return CommandId::mods_import;
-    if (value == "modsets.lock") return CommandId::modsets_lock;
-    if (value == "modsets.verify") return CommandId::modsets_verify;
-    if (value == "modsets.export") return CommandId::modsets_export;
-    if (value == "saves.list") return CommandId::saves_list;
-    if (value == "saves.backup") return CommandId::saves_backup;
-    if (value == "saves.clone") return CommandId::saves_clone;
-    if (value == "instance.export") return CommandId::instance_export;
-    if (value == "instance.import") return CommandId::instance_import;
-    if (value == "workspace.recovery.inspect") return CommandId::recovery_inspect;
-    if (value == "workspace.recovery.plan") return CommandId::recovery_plan;
-    if (value == "workspace.recovery.apply") return CommandId::recovery_apply;
-    if (value == "workspace.migration.inspect") return CommandId::migration_inspect;
-    if (value == "workspace.migration.plan") return CommandId::migration_plan;
-    if (value == "workspace.migration.apply") return CommandId::migration_apply;
-    if (value == "diagnostics.export") return CommandId::diagnostics_export;
+#include "generated/command_lookup.inc"
     return CommandId::unsupported;
 }
 
 bool writes_persistent_state(CommandId command) noexcept
 {
-    return command == CommandId::install_import || command == CommandId::instance_create ||
-        command == CommandId::mods_import || command == CommandId::modsets_lock ||
-        command == CommandId::modsets_export || command == CommandId::saves_backup ||
-        command == CommandId::saves_clone || command == CommandId::instance_export ||
-        command == CommandId::instance_import || command == CommandId::recovery_apply ||
-        command == CommandId::migration_apply || command == CommandId::diagnostics_export ||
-        command == CommandId::servers_create;
+    switch (command) {
+#include "generated/command_writes.inc"
+    default: return false;
+    }
 }
 
 bool decode_request(CommandId command, const std::string& text, bool dry_run, ApplicationRequest& request, std::string& detail)
