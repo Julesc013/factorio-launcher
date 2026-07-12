@@ -5,6 +5,7 @@
 #define FACMAN_FACTORIO_COMMAND_RESULT_H
 
 #include "application_types.h"
+#include "fl_json.h"
 
 #include <cstddef>
 #include <string>
@@ -18,6 +19,7 @@ struct SetupVerificationSummary {
 };
 
 std::string json_quote(const std::string& value);
+facman::core::Result<facman::core::json::Value> decode_json_value(const std::string& document);
 std::string decode_json_string_field(const std::string& document, const char* key);
 SetupVerificationSummary decode_setup_verification(const std::string& envelope);
 std::string safety_refusal(

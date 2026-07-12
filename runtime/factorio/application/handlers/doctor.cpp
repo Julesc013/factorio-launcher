@@ -4,10 +4,11 @@
 #include "handlers/doctor.h"
 
 #include "command_result.h"
+#include "fl_json.h"
 #include "flb_factorio_discovery.h"
 
 #include <filesystem>
-#include <sstream>
+#include <utility>
 #include <vector>
 
 namespace facman::factorio::application::handlers {
@@ -29,33 +30,62 @@ ApplicationResult run_doctor(ApplicationContext& context, const DoctorRequest& r
     bool invalid_candidates = false;
     for (const auto& install : discovered) if (install.verification_status == "invalid") invalid_candidates = true;
     const bool warning = installs.value().empty() || incomplete != 0 || invalid_candidates;
-    std::ostringstream out;
-    out << "{\"schema\":\"factorio.diagnostic_report.v1\",\"command\":\"doctor.run\","
-        << "\"status\":\"" << (warning ? "warning" : "ok") << "\",\"workspace\":" << json_quote(context.workspace().string())
-        << ",\"registered_installs\":" << installs.value().size() << ",\"instances\":" << instances.value().size()
-        << ",\"incomplete_transactions\":" << incomplete << ",\"problems\":[";
-    bool comma = false;
-    if (installs.value().empty()) { out << json_quote("no install references registered yet"); comma = true; }
-    if (invalid_candidates) { if (comma) out << ','; out << json_quote("invalid Factorio install candidates found"); comma = true; }
-    if (incomplete != 0) { if (comma) out << ','; out << json_quote("incomplete workspace transactions require recovery inspection"); }
-    out << "],\"suggested_fixes\":[";
-    comma = false;
-    if (installs.value().empty()) { out << json_quote("scan or import a Factorio install reference"); comma = true; }
-    if (invalid_candidates) { if (comma) out << ','; out << json_quote("inspect invalid candidates and choose a valid Factorio install root"); comma = true; }
-    if (incomplete != 0) { if (comma) out << ','; out << json_quote("run facman workspace recovery inspect --json"); }
-    out << "],\"checks\":[{\"id\":\"workspace\",\"status\":\"ok\"},{\"id\":\"install_refs\",\"status\":\""
-        << (installs.value().empty() ? "warning" : "ok") << "\"}";
-    if (!request.roots.empty()) out << ",{\"id\":\"discovery_candidates\",\"status\":\"" << (invalid_candidates ? "warning" : "ok") << "\"}";
-    out << ",{\"id\":\"workspace_transactions\",\"status\":\"" << (incomplete ? "warning" : "ok") << "\"}],\"warnings\":[";
-    comma = false;
-    if (installs.value().empty()) { out << json_quote("no install references registered yet"); comma = true; }
-    if (invalid_candidates) { if (comma) out << ','; out << json_quote("invalid Factorio install candidates found"); comma = true; }
-    if (incomplete != 0) { if (comma) out << ','; out << json_quote("incomplete workspace transactions require recovery inspection"); }
-    out << ']';
-    if (!request.roots.empty()) out << ",\"discovery\":" << facman::factorio::discovery::discovery_report_json(discovered);
-    out << '}';
+    facman::core::json::ArrayBuilder problems;
+    facman::core::json::ArrayBuilder suggested_fixes;
+    facman::core::json::ArrayBuilder warnings;
+    if (installs.value().empty()) {
+        problems.add_string("no install references registered yet");
+        suggested_fixes.add_string("scan or import a Factorio install reference");
+        warnings.add_string("no install references registered yet");
+    }
+    if (invalid_candidates) {
+        problems.add_string("invalid Factorio install candidates found");
+        suggested_fixes.add_string("inspect invalid candidates and choose a valid Factorio install root");
+        warnings.add_string("invalid Factorio install candidates found");
+    }
+    if (incomplete != 0) {
+        problems.add_string("incomplete workspace transactions require recovery inspection");
+        suggested_fixes.add_string("run facman workspace recovery inspect --json");
+        warnings.add_string("incomplete workspace transactions require recovery inspection");
+    }
+    facman::core::json::ArrayBuilder checks;
+    for (const auto& check : std::vector<std::pair<std::string, std::string>> {
+             {"workspace", "ok"},
+             {"install_refs", installs.value().empty() ? "warning" : "ok"}}) {
+        facman::core::json::ObjectBuilder item;
+        item.add_string("id", check.first);
+        item.add_string("status", check.second);
+        checks.add_object(item);
+    }
+    if (!request.roots.empty()) {
+        facman::core::json::ObjectBuilder item;
+        item.add_string("id", "discovery_candidates");
+        item.add_string("status", invalid_candidates ? "warning" : "ok");
+        checks.add_object(item);
+    }
+    facman::core::json::ObjectBuilder transaction_check;
+    transaction_check.add_string("id", "workspace_transactions");
+    transaction_check.add_string("status", incomplete ? "warning" : "ok");
+    checks.add_object(transaction_check);
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_report.v1");
+    output.add_string("command", "doctor.run");
+    output.add_string("status", warning ? "warning" : "ok");
+    output.add_string("workspace", context.workspace().string());
+    output.add_unsigned_integer("registered_installs", installs.value().size());
+    output.add_unsigned_integer("instances", instances.value().size());
+    output.add_unsigned_integer("incomplete_transactions", incomplete);
+    output.add_array("problems", problems);
+    output.add_array("suggested_fixes", suggested_fixes);
+    output.add_array("checks", checks);
+    output.add_array("warnings", warnings);
+    if (!request.roots.empty()) {
+        auto discovery_report = decode_json_value(
+            facman::factorio::discovery::discovery_report_json(discovered));
+        if (discovery_report) output.add_value("discovery", discovery_report.value());
+    }
     ApplicationResult result;
-    result.output = out.str();
+    result.output = output.serialize();
     return result;
 }
 }

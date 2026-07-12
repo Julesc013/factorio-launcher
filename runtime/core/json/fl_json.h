@@ -108,6 +108,7 @@ private:
 
 Result<Value> parse(const std::string& text, const Limits& limits = {});
 std::string escape_string(const std::string& value);
+std::string quote_string(const std::string& value);
 
 } // namespace facman::core::json
 

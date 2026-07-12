@@ -5,12 +5,12 @@
 
 #include "command_result.h"
 #include "fl_file_io.h"
+#include "fl_json.h"
 #include "fl_path_safety.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_launch_plan.h"
 
 #include <filesystem>
-#include <sstream>
 #include <utility>
 
 namespace facman::factorio::application::handlers {
@@ -38,19 +38,28 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
 
 std::string instance_json(const facman::workspace::InstanceRecord& instance)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.instance.v1\",\n"
-        << "  \"instance_id\": " << json_quote(instance.id.str()) << ",\n"
-        << "  \"display_name\": " << json_quote(instance.display_name) << ",\n"
-        << "  \"install_ref\": " << json_quote(instance.install_ref.str()) << ",\n"
-        << "  \"factorio_version\": " << json_quote(instance.factorio_version) << ",\n"
-        << "  \"local_data_root\": " << json_quote(facman::platform::path_to_utf8(instance.root.lexically_normal())) << ",\n"
-        << "  \"profile\": " << json_quote(instance.profile) << ",\n"
-        << "  \"modset\": null,\n  \"template\": " << json_quote(instance.template_id) << ",\n"
-        << "  \"save_policy\": {\"mode\": \"instance-local\"},\n"
-        << "  \"account_ref\": null,\n  \"concurrency\": {\"single_writer\": true},\n"
-        << "  \"export_policy\": {\"portable\": true, \"redact_secrets\": true}\n}\n";
-    return out.str();
+    facman::core::json::ObjectBuilder save_policy;
+    save_policy.add_string("mode", "instance-local");
+    facman::core::json::ObjectBuilder concurrency;
+    concurrency.add_bool("single_writer", true);
+    facman::core::json::ObjectBuilder export_policy;
+    export_policy.add_bool("portable", true);
+    export_policy.add_bool("redact_secrets", true);
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.instance.v1");
+    output.add_string("instance_id", instance.id.str());
+    output.add_string("display_name", instance.display_name);
+    output.add_string("install_ref", instance.install_ref.str());
+    output.add_string("factorio_version", instance.factorio_version);
+    output.add_string("local_data_root", facman::platform::path_to_utf8(instance.root.lexically_normal()));
+    output.add_string("profile", instance.profile);
+    output.add_null("modset");
+    output.add_string("template", instance.template_id);
+    output.add_object("save_policy", save_policy);
+    output.add_null("account_ref");
+    output.add_object("concurrency", concurrency);
+    output.add_object("export_policy", export_policy);
+    return output.serialize();
 }
 }
 
@@ -60,15 +69,17 @@ ApplicationResult list_instances(ApplicationContext& context)
     if (!records) return refused(
         safety_refusal("instance.list", records.error().code, "Instances could not be listed", records.error().message, true),
         records.error().code, records.error().message);
-    std::ostringstream out;
-    out << "{\"schema\":\"factorio.instances.v1\",\"command\":\"instance.list\",\"instances\":[";
-    for (std::size_t index = 0; index < records.value().size(); ++index) {
-        if (index) out << ',';
-        out << instance_json(records.value()[index]);
+    facman::core::json::ArrayBuilder instances;
+    for (const auto& record : records.value()) {
+        auto encoded = decode_json_value(instance_json(record));
+        if (encoded) instances.add_value(encoded.value());
     }
-    out << "]}";
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.instances.v1");
+    output.add_string("command", "instance.list");
+    output.add_array("instances", instances);
     ApplicationResult result;
-    result.output = out.str();
+    result.output = output.serialize();
     return result;
 }
 

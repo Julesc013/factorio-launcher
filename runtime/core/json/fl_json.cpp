@@ -330,6 +330,11 @@ std::string escape_string(const std::string& value)
     return picojson::value(value).serialize();
 }
 
+std::string quote_string(const std::string& value)
+{
+    return picojson::value(value).serialize();
+}
+
 bool ObjectBuilder::add_serialized(std::string key, std::string value)
 {
     for (const auto& field : fields_) if (field.first == key) return false;

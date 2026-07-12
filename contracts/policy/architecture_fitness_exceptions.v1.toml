@@ -6,13 +6,6 @@ policy = "exact_known_set_no_silent_growth"
 apps_boundary = []
 manual_json = [
   "apps/cli/command_dispatch.cpp",
-  "runtime/factorio/application/command_result.cpp",
-  "runtime/factorio/application/handlers/doctor.cpp",
-  "runtime/factorio/application/handlers/installs.cpp",
-  "runtime/factorio/application/handlers/instances.cpp",
-  "runtime/factorio/application/handlers/product.cpp",
-  "runtime/factorio/application/handlers/utility.cpp",
-  "runtime/factorio/binding/flb_api.c",
   "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp",
   "runtime/factorio/discovery/flb_factorio_discovery.cpp",
   "runtime/factorio/launch/flb_factorio_launch_plan.cpp",

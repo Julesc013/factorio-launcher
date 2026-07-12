@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -54,18 +53,34 @@ facman::core::Result<std::string> read_bounded(const fs::path& path, std::uint64
 
 std::string portal_refusal(const ServiceOperationRequest& request)
 {
-    return "{\"schema\":\"factorio.mod_portal_refusal.v1\",\"operation\":" + json_quote(request.operation) +
-        ",\"status\":\"refused\",\"network_allowed\":false,\"query\":" + json_quote(request.query) +
-        ",\"instance_id\":" + json_quote(request.instance_id) +
-        ",\"refusal\":{\"schema\":\"common.refusal.v1\",\"operation\":" + json_quote(request.operation) +
-        ",\"code\":\"network_forbidden\",\"reason\":\"Mod Portal network access is not enabled in this portable build\",\"recoverable\":true}}";
+    facman::core::json::ObjectBuilder refusal;
+    refusal.add_string("schema", "common.refusal.v1");
+    refusal.add_string("operation", request.operation);
+    refusal.add_string("code", "network_forbidden");
+    refusal.add_string("reason", "Mod Portal network access is not enabled in this portable build");
+    refusal.add_bool("recoverable", true);
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.mod_portal_refusal.v1");
+    output.add_string("operation", request.operation);
+    output.add_string("status", "refused");
+    output.add_bool("network_allowed", false);
+    output.add_string("query", request.query);
+    output.add_string("instance_id", request.instance_id);
+    output.add_object("refusal", refusal);
+    return output.serialize();
 }
 
 std::string server_json(const std::string& id, const std::string& name, const std::string& instance)
 {
-    return "{\"schema\":\"factorio.server.v1\",\"server_id\":" + json_quote(id) +
-        ",\"display_name\":" + json_quote(name) + ",\"instance_id\":" + json_quote(instance) +
-        ",\"status\":\"stopped\",\"start_policy\":\"manual\",\"execution\":\"not_implemented\"}";
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.server.v1");
+    output.add_string("server_id", id);
+    output.add_string("display_name", name);
+    output.add_string("instance_id", instance);
+    output.add_string("status", "stopped");
+    output.add_string("start_policy", "manual");
+    output.add_string("execution", "not_implemented");
+    return output.serialize();
 }
 
 ApplicationResult server_create(ApplicationContext& context, const ServiceOperationRequest& request)
@@ -123,15 +138,15 @@ ApplicationResult server_list(ApplicationContext& context)
         }
     }
     std::sort(files.begin(), files.end());
-    std::string output = "[";
-    for (std::size_t index = 0; index < files.size(); ++index) {
-        auto text = read_bounded(files[index], 1024U * 1024U);
+    facman::core::json::ArrayBuilder output;
+    for (const auto& file : files) {
+        auto text = read_bounded(file, 1024U * 1024U);
         if (!text) return refused(safety_refusal("servers.list", text.error().code, "Server profile could not be read", text.error().message, true), text.error().code, text.error().message);
-        if (index) output += ',';
-        output += text.value();
+        auto document = decode_json_value(text.value());
+        if (!document) return refused(safety_refusal("servers.list", document.error().code, "Server profile is invalid", document.error().message, false), document.error().code, document.error().message);
+        output.add_value(document.value());
     }
-    output += "]";
-    ApplicationResult result; result.output = std::move(output); return result;
+    ApplicationResult result; result.output = output.serialize(); return result;
 }
 
 ApplicationResult server_unavailable(ApplicationContext& context, const ServiceOperationRequest& request)
@@ -146,9 +161,19 @@ ApplicationResult server_unavailable(ApplicationContext& context, const ServiceO
     result.status = ULK_STATUS_ERROR;
     result.error_code = "execution_not_enabled";
     result.error_message = reason;
-    result.output = "{\"schema\":\"factorio.server_refusal.v1\",\"operation\":" + json_quote(request.operation) +
-        ",\"status\":\"refused\",\"server_id\":" + json_quote(request.id) + ",\"instance_id\":" + json_quote(instance_id) +
-        ",\"refusal\":{\"schema\":\"common.refusal.v1\",\"code\":\"execution_not_enabled\",\"reason\":" + json_quote(reason) + ",\"recoverable\":true}}";
+    facman::core::json::ObjectBuilder refusal;
+    refusal.add_string("schema", "common.refusal.v1");
+    refusal.add_string("code", "execution_not_enabled");
+    refusal.add_string("reason", reason);
+    refusal.add_bool("recoverable", true);
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.server_refusal.v1");
+    output.add_string("operation", request.operation);
+    output.add_string("status", "refused");
+    output.add_string("server_id", request.id);
+    output.add_string("instance_id", instance_id);
+    output.add_object("refusal", refusal);
+    result.output = output.serialize();
     return result;
 }
 
@@ -172,8 +197,14 @@ ApplicationResult diagnostics_redact(const ServiceOperationRequest& request)
     diagnostics::RedactionResult redacted = diagnostics::redact_text(text.value(), input.filename().generic_string());
     if (!redacted.safe) return refused(safety_refusal("diagnostics.redact", "diagnostic_structured_input_invalid", "Structured diagnostic input is invalid", redacted.error, false), "diagnostic_structured_input_invalid", redacted.error);
     ApplicationResult result;
-    result.output = "{\"schema\":\"factorio.diagnostic_redact.v1\",\"command\":\"diagnostics.redact\",\"status\":\"ok\",\"redacted_text\":" +
-        json_quote(redacted.text) + ",\"redaction_report\":" + diagnostics::redaction_report_json(redacted.events) + "}";
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_redact.v1");
+    output.add_string("command", "diagnostics.redact");
+    output.add_string("status", "ok");
+    output.add_string("redacted_text", redacted.text);
+    auto report = decode_json_value(diagnostics::redaction_report_json(redacted.events));
+    if (report) output.add_value("redaction_report", report.value());
+    result.output = output.serialize();
     return result;
 }
 
@@ -186,10 +217,16 @@ ApplicationResult bug_report(ApplicationContext& context)
     std::size_t server_count = 0;
     std::error_code error;
     if (fs::is_directory(servers, error) && !error) for (fs::directory_iterator iterator(servers, error), end; iterator != end && !error; iterator.increment(error)) if (iterator->is_regular_file(error)) ++server_count;
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.bug_report.v1");
+    output.add_string("workspace", context.workspace().string());
+    output.add_unsigned_integer("installs", installs.value().size());
+    output.add_unsigned_integer("instances", instances.value().size());
+    output.add_unsigned_integer("servers", server_count);
+    output.add_bool("redacts_secrets", true);
+    output.add_bool("includes_factorio_binaries", false);
     ApplicationResult result;
-    result.output = "{\"schema\":\"factorio.bug_report.v1\",\"workspace\":" + json_quote(context.workspace().string()) +
-        ",\"installs\":" + std::to_string(installs.value().size()) + ",\"instances\":" + std::to_string(instances.value().size()) +
-        ",\"servers\":" + std::to_string(server_count) + ",\"redacts_secrets\":true,\"includes_factorio_binaries\":false}";
+    result.output = output.serialize();
     return result;
 }
 }

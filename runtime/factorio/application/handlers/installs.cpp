@@ -4,6 +4,7 @@
 #include "handlers/installs.h"
 
 #include "command_result.h"
+#include "fl_json.h"
 #include "flb_factorio_discovery.h"
 
 #include <filesystem>
@@ -39,17 +40,20 @@ ApplicationResult list_installs(ApplicationContext& context)
     if (!records) return refused(
         safety_refusal("install_refs.list", records.error().code, "Install references could not be listed", records.error().message, true),
         records.error().code, records.error().message);
-    std::string output = "{\"schema\":\"factorio.install_refs.v1\",\"command\":\"install_refs.list\",\"install_refs\":[";
+    facman::core::json::ArrayBuilder references;
     for (std::size_t index = 0; index < records.value().size(); ++index) {
-        if (index) output += ',';
         discovery::InstallRef install;
         if (load_install(context, records.value()[index].id.str(), install)) {
-            output += discovery::install_ref_json(install);
+            auto encoded = decode_json_value(discovery::install_ref_json(install));
+            if (encoded) references.add_value(encoded.value());
         }
     }
-    output += "]}";
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.install_refs.v1");
+    output.add_string("command", "install_refs.list");
+    output.add_array("install_refs", references);
     ApplicationResult result;
-    result.output = std::move(output);
+    result.output = output.serialize();
     return result;
 }
 

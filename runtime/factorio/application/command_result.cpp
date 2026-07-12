@@ -5,31 +5,10 @@
 
 #include "fl_json.h"
 
-#include <sstream>
 #include <variant>
 
 namespace facman::factorio::application {
 namespace {
-
-std::string json_escape(const std::string& value)
-{
-    std::ostringstream out;
-    for (unsigned char ch : value) {
-        switch (ch) {
-        case '\\': out << "\\\\"; break;
-        case '"': out << "\\\""; break;
-        case '\n': out << "\\n"; break;
-        case '\r': out << "\\r"; break;
-        case '\t': out << "\\t"; break;
-        default:
-            if (ch < 0x20) {
-                const char* hex = "0123456789abcdef";
-                out << "\\u00" << hex[(ch >> 4) & 0x0f] << hex[ch & 0x0f];
-            } else out << static_cast<char>(ch);
-        }
-    }
-    return out.str();
-}
 
 template <typename Success, typename Outcome>
 ApplicationResult modset_result(const Outcome& outcome)
@@ -84,11 +63,16 @@ std::string output_json(const ApplicationOutput& output, const std::string& comm
 
 } // namespace
 
-std::string json_quote(const std::string& value) { return "\"" + json_escape(value) + "\""; }
+std::string json_quote(const std::string& value) { return facman::core::json::quote_string(value); }
+
+facman::core::Result<facman::core::json::Value> decode_json_value(const std::string& document)
+{
+    return facman::core::json::parse(document);
+}
 
 std::string decode_json_string_field(const std::string& source, const char* key)
 {
-    auto document = facman::core::json::parse(source);
+    auto document = decode_json_value(source);
     if (!document || !document.value().is_object()) return {};
     const auto* field = document.value().find(key);
     if (field == nullptr || !field->is_string()) return {};
@@ -99,7 +83,7 @@ std::string decode_json_string_field(const std::string& source, const char* key)
 SetupVerificationSummary decode_setup_verification(const std::string& envelope)
 {
     SetupVerificationSummary summary;
-    auto document = facman::core::json::parse(envelope);
+    auto document = decode_json_value(envelope);
     const auto* payload = document && document.value().is_object()
         ? document.value().find("payload")
         : nullptr;
@@ -130,13 +114,20 @@ std::string safety_refusal(
     const std::string& detail,
     bool recoverable)
 {
-    std::ostringstream out;
-    out << "{\"schema\":\"facman.safety_refusal.v1\",\"operation\":" << json_quote(operation)
-        << ",\"status\":\"refused\",\"refusal\":{\"schema\":\"common.refusal.v1\",\"code\":" << json_quote(code)
-        << ",\"reason\":" << json_quote(reason) << ",\"detail\":" << json_quote(detail)
-        << ",\"recoverable\":" << (recoverable ? "true" : "false")
-        << ",\"retryable\":" << (recoverable ? "true" : "false") << ",\"severity\":\"blocked\"}}";
-    return out.str();
+    facman::core::json::ObjectBuilder refusal;
+    refusal.add_string("schema", "common.refusal.v1");
+    refusal.add_string("code", code);
+    refusal.add_string("reason", reason);
+    refusal.add_string("detail", detail);
+    refusal.add_bool("recoverable", recoverable);
+    refusal.add_bool("retryable", recoverable);
+    refusal.add_string("severity", "blocked");
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "facman.safety_refusal.v1");
+    output.add_string("operation", operation);
+    output.add_string("status", "refused");
+    output.add_object("refusal", refusal);
+    return output.serialize();
 }
 
 ApplicationResult refused(const std::string& payload, const std::string& code, const std::string& message)
@@ -198,14 +189,21 @@ ApplicationResult from_diagnostic_outcome(const diagnostics::ExportOutcome& outc
 std::string response_envelope(const ApplicationResult& result, const std::string& command)
 {
     const std::string payload = output_json(result.output, command);
-    std::ostringstream out;
-    out << "{\"schema\":\"ulk.command_response.v1\",\"status\":"
-        << json_quote(result.status == ULK_STATUS_OK ? "ok" : "refused")
-        << ",\"payload\":" << (payload.empty() ? "null" : payload) << ",\"error\":";
-    if (result.error_code.empty()) out << "null";
-    else out << "{\"code\":" << json_quote(result.error_code) << ",\"message\":" << json_quote(result.error_message) << '}';
-    out << '}';
-    return out.str();
+    facman::core::json::ObjectBuilder envelope;
+    envelope.add_string("schema", "ulk.command_response.v1");
+    envelope.add_string("status", result.status == ULK_STATUS_OK ? "ok" : "refused");
+    auto parsed_payload = payload.empty() ? facman::core::Result<facman::core::json::Value>::failure({"empty", "", ""})
+                                          : decode_json_value(payload);
+    if (parsed_payload) envelope.add_value("payload", parsed_payload.value());
+    else envelope.add_null("payload");
+    if (result.error_code.empty()) envelope.add_null("error");
+    else {
+        facman::core::json::ObjectBuilder error;
+        error.add_string("code", result.error_code);
+        error.add_string("message", result.error_message);
+        envelope.add_object("error", error);
+    }
+    return envelope.serialize();
 }
 
 } // namespace facman::factorio::application

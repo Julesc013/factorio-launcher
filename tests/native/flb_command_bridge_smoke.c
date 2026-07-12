@@ -216,7 +216,7 @@ int main(void)
         run_refusal(context, "setup.operation", 1, "{\"operation\":\"installs.install-version\",\"version\":\"2.0.77\",\"archive\":\"fixture.zip\"}", "setup_plan_inputs_not_evaluated") != 0) {
         return 39;
     }
-    if (run_command(context, "install_refs.scan", 1, "\"schema\": \"factorio.discovery_report.v1\"") != 0) {
+    if (run_command(context, "install_refs.scan", 1, "\"schema\":\"factorio.discovery_report.v1\"") != 0) {
         return 24;
     }
     if (run_command(context, "diagnostics.run", 1, "\"report_id\":\"ulk.diagnostic.minimal\"") != 0) {

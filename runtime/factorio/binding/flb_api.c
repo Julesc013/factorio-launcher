@@ -6,6 +6,7 @@
 #include "ulk/ulk_api.h"
 #include "flb_factorio_application.h"
 #include "command_catalog.h"
+#include "fl_json_boundary_c.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -168,8 +169,7 @@ int flb_command_execute_v1(
     ulk_command_response_v1* response
 )
 {
-    static const char invalid_payload[] =
-        "{\"schema\":\"ulk.command_response.v1\",\"status\":\"invalid_argument\",\"payload\":null,\"error\":{\"code\":\"invalid_argument\",\"message\":\"Factorio binding command request is invalid\"}}";
+    static const char invalid_payload[] = FACMAN_JSON_BOUNDARY_INVALID_REQUEST;
     static const char invalid_message[] = "Factorio binding command request is invalid";
 
     if (response == 0 || response->struct_size < (ulk_size)sizeof(*response)) {
