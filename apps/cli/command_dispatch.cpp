@@ -392,6 +392,52 @@ int command_instances(const Options& options)
             {"template_id", option(options.args, "--template", "vanilla")}});
         return emit_basic(call(options, "instance.create", payload, false), flag(options.args, "--json"), "Created instance " + id);
     }
+    const std::string action = options.args[1];
+    if ((action == "inspect" || action == "verify" || action == "archive") && options.args.size() >= 3) {
+        for (std::size_t index = 3; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;
+        return emit_basic(
+            call(options, "instances." + action, exact_fields_payload({{"instance_id", options.args[2]}}), action != "archive"),
+            flag(options.args, "--json"), "Instance " + action + " completed");
+    }
+    if (action == "diff" && options.args.size() >= 4) {
+        for (std::size_t index = 4; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;
+        return emit_basic(call(options, "instances.diff", exact_fields_payload({
+            {"left_instance_id", options.args[2]}, {"right_ref", options.args[3]}})),
+            flag(options.args, "--json"), "Instance diff completed");
+    }
+    if (action == "clone" && options.args.size() >= 4) {
+        for (std::size_t index = 4; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if ((options.args[index] != "--name" && options.args[index] != "--install") || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        return emit_basic(call(options, "instances.clone", fields_payload({
+            {"source_instance_id", options.args[2]}, {"destination_instance_id", options.args[3]},
+            {"display_name", option(options.args, "--name")}, {"install_ref", option(options.args, "--install")}}), false),
+            flag(options.args, "--json"), "Instance clone completed");
+    }
+    if (action == "rename" && options.args.size() >= 3) {
+        const std::string name = option(options.args, "--name");
+        if (name.empty()) return 2;
+        for (std::size_t index = 3; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (options.args[index] != "--name" || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        return emit_basic(call(options, "instances.rename", exact_fields_payload({
+            {"instance_id", options.args[2]}, {"display_name", name}}), false),
+            flag(options.args, "--json"), "Instance display name updated");
+    }
+    if (action == "restore" && options.args.size() >= 3) {
+        for (std::size_t index = 3; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (options.args[index] != "--new-id" || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        return emit_basic(call(options, "instances.restore", fields_payload({
+            {"archive_id", options.args[2]}, {"new_instance_id", option(options.args, "--new-id")}}), false),
+            flag(options.args, "--json"), "Instance restored");
+    }
     return 2;
 }
 

@@ -10,5 +10,13 @@
 namespace facman::factorio::application::handlers {
 ApplicationResult list_instances(ApplicationContext& context);
 ApplicationResult create_instance(ApplicationContext& context, const CreateInstanceRequest& request);
+ApplicationResult inspect_instance(ApplicationContext& context, const InspectInstanceRequest& request);
+ApplicationResult verify_instance(ApplicationContext& context, const InspectInstanceRequest& request);
+ApplicationResult diff_instances(ApplicationContext& context, const DiffInstanceRequest& request);
+ApplicationResult clone_instance(ApplicationContext& context, const CloneInstanceRequest& request);
+ApplicationResult rename_instance(ApplicationContext& context, const RenameInstanceRequest& request);
+ApplicationResult archive_instance(ApplicationContext& context, const ArchiveInstanceRequest& request);
+ApplicationResult restore_instance(ApplicationContext& context, const RestoreInstanceRequest& request);
+ApplicationResult dispatch_instance_lifecycle(ApplicationContext& context, const ApplicationRequest& request);
 }
 #endif

@@ -13,6 +13,9 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 IMPACT_PATH = ROOT / "contracts" / "policy" / "test_impact.v1.json"
+NATIVE_BUILD_PREREQUISITES = {
+    "facman_abi_symbol_smoke": "flb_factorio_shared",
+}
 
 
 def run(command: list[str], *, env: dict[str, str] | None = None) -> None:
@@ -65,8 +68,9 @@ def affected(impact: dict[str, Any], paths: list[str]) -> dict[str, list[str]]:
     return selected
 
 
-def native_executable(build_root: Path) -> Path | None:
-    for relative in ("Debug/facman.exe", "Release/facman.exe", "facman.exe", "facman"):
+def native_executable(build_root: Path, configuration: str = "") -> Path | None:
+    preferred = [f"{configuration}/facman.exe"] if configuration else []
+    for relative in (*preferred, "facman.exe", "facman", "Debug/facman.exe", "Release/facman.exe"):
         candidate = build_root / relative
         if candidate.is_file():
             return candidate
@@ -78,7 +82,8 @@ def ensure_native(build_root: Path, configuration: str, targets: list[str]) -> N
         run(["cmake", "-S", ".", "-B", str(build_root), "-DFACMAN_BUILD_TESTS=ON"])
     command = ["cmake", "--build", str(build_root), "--config", configuration, "--parallel"]
     if targets and "*" not in targets:
-        command.extend(["--target", *targets])
+        build_targets = sorted({NATIVE_BUILD_PREREQUISITES.get(target, target) for target in targets})
+        command.extend(["--target", *build_targets])
     run(command)
 
 
@@ -92,7 +97,7 @@ def run_native(build_root: Path, configuration: str, targets: list[str], label: 
     run(command)
 
 
-def run_python(modules: list[str], build_root: Path) -> None:
+def run_python(modules: list[str], build_root: Path, configuration: str = "") -> None:
     if not modules:
         return
     env = os.environ.copy()
@@ -100,7 +105,7 @@ def run_python(modules: list[str], build_root: Path) -> None:
     if env.get("PYTHONPATH"):
         python_paths.append(env["PYTHONPATH"])
     env["PYTHONPATH"] = os.pathsep.join(python_paths)
-    executable = native_executable(build_root)
+    executable = native_executable(build_root, configuration)
     if executable:
         env["FACMAN_NATIVE_CLI"] = str(executable.resolve())
         env["FACMAN_CLI_EXE"] = str(executable.resolve())
@@ -114,7 +119,7 @@ def test_command(args: argparse.Namespace) -> None:
         run_native(build_root, args.configuration, ["*"])
         env = os.environ.copy()
         env["PYTHONPATH"] = str(ROOT)
-        executable = native_executable(build_root)
+        executable = native_executable(build_root, args.configuration)
         if executable:
             env["FACMAN_NATIVE_CLI"] = str(executable.resolve())
             env["FACMAN_CLI_EXE"] = str(executable.resolve())
@@ -122,14 +127,14 @@ def test_command(args: argparse.Namespace) -> None:
         return
     if args.mode == "fast":
         run_native(build_root, args.configuration, [], "fast-unit")
-        run_python(impact["fast_python"], build_root)
+        run_python(impact["fast_python"], build_root, args.configuration)
         return
     if args.mode == "category":
         if args.category == "operator":
             print(impact["operator"]["message"])
             raise SystemExit(2)
         run_native(build_root, args.configuration, [], args.category)
-        run_python(impact["category_python"][args.category], build_root)
+        run_python(impact["category_python"][args.category], build_root, args.configuration)
         return
     paths = changed_paths(args.base)
     selection = affected(impact, paths)
@@ -137,10 +142,10 @@ def test_command(args: argparse.Namespace) -> None:
     if not paths:
         print("No changed paths; running the deterministic fast suite.")
         run_native(build_root, args.configuration, [], "fast-unit")
-        run_python(impact["fast_python"], build_root)
+        run_python(impact["fast_python"], build_root, args.configuration)
         return
     run_native(build_root, args.configuration, selection["native_targets"])
-    run_python(selection["python_tests"], build_root)
+    run_python(selection["python_tests"], build_root, args.configuration)
     for validator in selection["strict_validators"]:
         run([sys.executable, validator])
 

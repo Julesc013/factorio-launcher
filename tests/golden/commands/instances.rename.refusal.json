@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"instances.rename","status":"refused","refusal":{"schema":"common.refusal.v1","code":"instance_display_name_invalid","reason":"display name is invalid","recoverable":true}}

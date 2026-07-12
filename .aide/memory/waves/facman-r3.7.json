@@ -92,7 +92,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T14:14:43Z",
+  "updated_at": "2026-07-12T14:16:11Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -329,7 +329,8 @@
       "id": "FACMAN-INSTANCE-LIFECYCLE-02",
       "last_green_commit": null,
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T14:16:11Z",
+      "status": "active",
       "stop_conditions": [
         "no-clobber cannot be preserved",
         "recovery is uncertain"

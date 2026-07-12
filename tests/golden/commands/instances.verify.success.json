@@ -1,0 +1,1 @@
+{"schema":"factorio.instance_verification.v1","command":"instances.verify","status":"pass","instance_id":"main","checks":{"manifest_schema":true,"id_path_consistency":true,"install_reference":true,"effective_config":true,"link_free_roots":true,"save_archives":true,"transaction_state":true,"ownership_markers":true},"warnings":[],"mutation_executed":false}

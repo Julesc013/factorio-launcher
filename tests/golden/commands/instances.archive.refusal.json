@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"instances.archive","status":"refused","refusal":{"schema":"common.refusal.v1","code":"run_lock_contended","reason":"instance has an active run lock","recoverable":true}}

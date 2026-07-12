@@ -1,0 +1,20 @@
+{
+  "$id": "https://facman.invalid/schema/command/instances.restore.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "archive_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "new_instance_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "archive_id"
+  ],
+  "title": "instances.restore request",
+  "type": "object"
+}

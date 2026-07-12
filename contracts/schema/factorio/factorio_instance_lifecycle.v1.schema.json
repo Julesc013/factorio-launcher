@@ -1,0 +1,19 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_lifecycle.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "archive_id": {"type": "string"},
+    "command": {"enum": ["instances.clone", "instances.rename", "instances.archive", "instances.restore"]},
+    "hard_delete_available": {"const": false},
+    "instance_id": {"type": "string"},
+    "mutation_executed": {"type": "boolean"},
+    "path": {"type": "string"},
+    "schema": {"const": "factorio.instance_lifecycle.v1"},
+    "status": {"const": "ok"},
+    "transaction_id": {"type": "string"}
+  },
+  "required": ["schema", "command", "status", "instance_id", "path", "mutation_executed", "hard_delete_available"],
+  "title": "Factorio instance lifecycle result",
+  "type": "object"
+}

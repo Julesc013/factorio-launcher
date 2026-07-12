@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `2710e561e5a067f2a50508a5c9643a733b2e2c10de8ae96912a2011230d51ebb`.
+Source digest: `02ff62c3fa3077c37c71bcf54d1e4f55e20c6a8d68498426f1020c6d031c8a18`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -28,7 +28,14 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `instance.export` | `instance.export` | `instance_export` | yes | - | available | workspace_read, workspace_write | `facman export instance <instance-id> <pack.zip> --json` |
 | `instance.import` | `instance.import` | `instance_import` | yes | - | available | workspace_read, workspace_write | `facman import instance <pack.zip> --json` |
 | `instance.list` | `instance.list` | `instance_list` | no | - | available | workspace_read | `facman instances list --json` |
+| `instances.archive` | `instances.archive` | `instances_archive` | yes | - | available | workspace_read, workspace_write | `facman instances archive <instance-id> --json` |
+| `instances.clone` | `instances.clone` | `instances_clone` | yes | - | available | workspace_read, workspace_write | `facman instances clone <source-id> <destination-id> [--name <display-name>] [--install <install-id>] --json` |
 | `instances.create` | `instance.create` | `instance_create` | yes | - | available | workspace_read, workspace_write | `facman instances create <name> --install <install-id> --json` |
+| `instances.diff` | `instances.diff` | `instances_diff` | no | - | available | workspace_read | `facman instances diff <left-instance-id> <right-instance-or-snapshot> --json` |
+| `instances.inspect` | `instances.inspect` | `instances_inspect` | no | - | available | workspace_read | `facman instances inspect <instance-id> --json` |
+| `instances.rename` | `instances.rename` | `instances_rename` | yes | - | available | workspace_read, workspace_write | `facman instances rename <instance-id> --name <display-name> --json` |
+| `instances.restore` | `instances.restore` | `instances_restore` | yes | - | available | workspace_read, workspace_write | `facman instances restore <archive-id> [--new-id <instance-id>] --json` |
+| `instances.verify` | `instances.verify` | `instances_verify` | no | - | available | workspace_read | `facman instances verify <instance-id> --json` |
 | `launch.plan` | `launch_plan.build` | `launch_plan_build` | no | launch-plan.build | available | workspace_read | `facman launch plan <instance-id> --json` |
 | `launch_plan.explain` | `launch_plan.explain` | `launch_plan_explain` | no | launch-plan.explain | available | workspace_read | `facman launch explain <instance-id> --json` |
 | `launch_plan.preflight` | `launch_plan.preflight` | `launch_plan_preflight` | no | launch-plan.preflight | available | workspace_read | `facman launch plan <instance-id> --preflight --json` |

@@ -1,0 +1,17 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_verification.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {"additionalProperties": {"type": "boolean"}, "type": "object"},
+    "command": {"const": "instances.verify"},
+    "instance_id": {"type": "string"},
+    "mutation_executed": {"const": false},
+    "schema": {"const": "factorio.instance_verification.v1"},
+    "status": {"enum": ["pass", "warning", "refused", "recovery_required"]},
+    "warnings": {"items": {"type": "string"}, "type": "array"}
+  },
+  "required": ["schema", "command", "status", "instance_id", "checks", "warnings", "mutation_executed"],
+  "title": "Factorio instance verification",
+  "type": "object"
+}

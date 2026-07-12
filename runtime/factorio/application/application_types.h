@@ -12,6 +12,7 @@
 #include "fl_identity.h"
 #include "fl_result.h"
 #include "fl_preferences.h"
+#include "flb_factorio_instance_lifecycle.h"
 
 #include "ulk/ulk_command.h"
 
@@ -27,6 +28,7 @@ namespace modsets = facman::factorio::modsets::operations;
 namespace saves = facman::factorio::saves::operations;
 namespace transactions = facman::transaction;
 namespace preferences = facman::preferences;
+namespace instance_lifecycle = facman::factorio::instance;
 
 enum class CommandId {
 #include "generated/command_ids.inc"
@@ -74,6 +76,12 @@ using CloneSaveRequest = saves::CloneRequest;
 using ExportInstanceRequest = saves::ExportRequest;
 using ImportInstanceRequest = saves::ImportRequest;
 using ExportDiagnosticRequest = diagnostics::ExportRequest;
+using InspectInstanceRequest = instance_lifecycle::InspectRequest;
+using DiffInstanceRequest = instance_lifecycle::DiffRequest;
+using CloneInstanceRequest = instance_lifecycle::CloneRequest;
+using RenameInstanceRequest = instance_lifecycle::RenameRequest;
+using ArchiveInstanceRequest = instance_lifecycle::ArchiveRequest;
+using RestoreInstanceRequest = instance_lifecycle::RestoreRequest;
 
 using ApplicationPayload = std::variant<
     std::monostate,
@@ -96,6 +104,12 @@ using ApplicationPayload = std::variant<
     ImportInstanceRequest,
     RecoveryRequest,
     PreferencesRequest,
+    InspectInstanceRequest,
+    DiffInstanceRequest,
+    CloneInstanceRequest,
+    RenameInstanceRequest,
+    ArchiveInstanceRequest,
+    RestoreInstanceRequest,
     ServiceOperationRequest,
     ExportDiagnosticRequest>;
 

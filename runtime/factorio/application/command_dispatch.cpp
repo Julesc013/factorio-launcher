@@ -391,6 +391,48 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "template_id", typed.template_id, detail)) return false;
         request.payload = std::move(typed); return true;
     }
+    case CommandId::instances_inspect:
+    case CommandId::instances_verify:
+    case CommandId::instances_archive: {
+        if (!validate_fields(payload, {"instance_id"}, detail)) return false;
+        InspectInstanceRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail)) return false;
+        if (command == CommandId::instances_archive) {
+            ArchiveInstanceRequest archive_request {typed.instance_id};
+            request.payload = std::move(archive_request);
+        } else request.payload = std::move(typed);
+        return true;
+    }
+    case CommandId::instances_diff: {
+        if (!validate_fields(payload, {"left_instance_id", "right_ref"}, detail)) return false;
+        DiffInstanceRequest typed;
+        if (!required_string(payload, "left_instance_id", typed.left_instance_id, detail) ||
+            !required_string(payload, "right_ref", typed.right_ref, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::instances_clone: {
+        if (!validate_fields(payload, {"source_instance_id", "destination_instance_id", "display_name", "install_ref"}, detail)) return false;
+        CloneInstanceRequest typed;
+        if (!required_string(payload, "source_instance_id", typed.source_instance_id, detail) ||
+            !required_string(payload, "destination_instance_id", typed.destination_instance_id, detail) ||
+            !optional_string(payload, "display_name", typed.display_name, detail) ||
+            !optional_string(payload, "install_ref", typed.install_ref, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::instances_rename: {
+        if (!validate_fields(payload, {"instance_id", "display_name"}, detail)) return false;
+        RenameInstanceRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !required_string(payload, "display_name", typed.display_name, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::instances_restore: {
+        if (!validate_fields(payload, {"archive_id", "new_instance_id"}, detail)) return false;
+        RestoreInstanceRequest typed;
+        if (!required_string(payload, "archive_id", typed.archive_id, detail) ||
+            !optional_string(payload, "new_instance_id", typed.new_instance_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::launch_plan_build:
     case CommandId::launch_plan_preflight:
     case CommandId::run_preview: {

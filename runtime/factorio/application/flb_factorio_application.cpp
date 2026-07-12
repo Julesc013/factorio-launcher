@@ -128,6 +128,9 @@ private:
         case CommandId::install_inspect: return handlers::inspect_install(context_, std::get<InspectInstallRefRequest>(request.payload));
         case CommandId::instance_list: return handlers::list_instances(context_);
         case CommandId::instance_create: return handlers::create_instance(context_, std::get<CreateInstanceRequest>(request.payload));
+        case CommandId::instances_inspect: case CommandId::instances_verify: case CommandId::instances_diff:
+        case CommandId::instances_clone: case CommandId::instances_rename: case CommandId::instances_archive:
+        case CommandId::instances_restore: return handlers::dispatch_instance_lifecycle(context_, request);
         case CommandId::launch_plan_build: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "launch_plan.build");
         case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
         case CommandId::run_execute: {

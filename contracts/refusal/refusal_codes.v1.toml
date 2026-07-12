@@ -95,6 +95,37 @@ required_codes = [
   "preferences_timeout_invalid",
   "preferences_retention_invalid",
   "preferences_version_unsupported",
+  "instance_archive_commit_failed",
+  "instance_archive_directory_refused",
+  "instance_archive_hash_mismatch",
+  "instance_archive_id_invalid",
+  "instance_archive_manifest_invalid",
+  "instance_archive_not_found",
+  "instance_archive_target_exists",
+  "instance_backup_failed",
+  "instance_clone_commit_failed",
+  "instance_clone_target_exists",
+  "instance_copy_verification_failed",
+  "instance_directory_refused",
+  "instance_display_name_invalid",
+  "instance_effective_config_invalid",
+  "instance_fault_injected",
+  "instance_file_read_failed",
+  "instance_file_unsafe",
+  "instance_install_missing",
+  "instance_link_refused",
+  "instance_rename_failed",
+  "instance_restore_commit_failed",
+  "instance_restore_target_exists",
+  "instance_root_unsafe",
+  "instance_save_invalid",
+  "instance_snapshot_unavailable",
+  "instance_staging_failed",
+  "instance_transaction_failed",
+  "instance_transaction_recovery_required",
+  "instance_tree_budget_exceeded",
+  "instance_tree_read_failed",
+  "instance_write_failed",
 ]
 
 [[code]]
@@ -341,6 +372,223 @@ severity = "blocked"
 effect = "workspace_read"
 retryable = false
 message = "The preferences document uses an unknown or future schema version."
+
+[[code]]
+id = "instance_archive_commit_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance could not be moved into its owned trash target without clobbering content."
+
+[[code]]
+id = "instance_archive_directory_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The owned instance trash directory is unavailable or crosses an unsafe path."
+
+[[code]]
+id = "instance_archive_hash_mismatch"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Archived instance content does not match its recorded file hash closure."
+
+[[code]]
+id = "instance_archive_id_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The instance archive identifier is not a safe owned directory leaf."
+
+[[code]]
+id = "instance_archive_manifest_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The owned instance archive metadata is malformed, mismatched, or incomplete."
+
+[[code]]
+id = "instance_archive_not_found"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The requested owned instance archive record is unavailable."
+
+[[code]]
+id = "instance_archive_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The unique owned instance trash target already exists."
+
+[[code]]
+id = "instance_backup_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance manifest backup could not be copied and hash-verified."
+
+[[code]]
+id = "instance_clone_commit_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The verified instance clone staging tree could not be committed without replacement."
+
+[[code]]
+id = "instance_clone_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested instance clone destination already exists."
+
+[[code]]
+id = "instance_copy_verification_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "An instance lifecycle copy did not preserve the expected file size and SHA-256 digest."
+
+[[code]]
+id = "instance_directory_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "An owned instance staging directory could not be created safely."
+
+[[code]]
+id = "instance_display_name_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The requested instance display name is empty or exceeds its bounded length."
+
+[[code]]
+id = "instance_effective_config_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The instance effective configuration is missing or does not match its managed paths."
+
+[[code]]
+id = "instance_fault_injected"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A lifecycle proof fault was injected before a normal operation could complete."
+
+[[code]]
+id = "instance_file_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "An instance file could not be read as one stable object."
+
+[[code]]
+id = "instance_file_unsafe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "An instance file is not a bounded singly-linked regular file."
+
+[[code]]
+id = "instance_install_missing"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The instance install reference is not registered in this workspace."
+
+[[code]]
+id = "instance_link_refused"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Instance traversal encountered a link or reparse point."
+
+[[code]]
+id = "instance_rename_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The display-name-only instance manifest replacement could not be completed."
+
+[[code]]
+id = "instance_restore_commit_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The verified restored instance staging tree could not be committed without replacement."
+
+[[code]]
+id = "instance_restore_target_exists"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The requested instance restore destination already exists."
+
+[[code]]
+id = "instance_root_unsafe"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The instance root is unavailable or crosses a link or reparse point."
+
+[[code]]
+id = "instance_save_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "An instance save does not satisfy the bounded Factorio save archive structure."
+
+[[code]]
+id = "instance_snapshot_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "Snapshot comparison is unavailable until the snapshot lifecycle work unit is complete."
+
+[[code]]
+id = "instance_staging_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The owned instance lifecycle staging tree could not be prepared or populated."
+
+[[code]]
+id = "instance_transaction_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The instance lifecycle transaction journal could not record a required pre-commit state."
+
+[[code]]
+id = "instance_transaction_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "An instance lifecycle commit or prior workspace transaction requires explicit recovery."
+
+[[code]]
+id = "instance_tree_budget_exceeded"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The instance tree exceeds the bounded file-count or byte traversal budget."
+
+[[code]]
+id = "instance_tree_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The instance tree could not be enumerated completely and safely."
+
+[[code]]
+id = "instance_write_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "A generated instance lifecycle file could not be written and durably flushed."
 
 [[code]]
 id = "diagnostic_export_not_safe"

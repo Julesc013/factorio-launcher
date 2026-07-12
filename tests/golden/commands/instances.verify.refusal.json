@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"instances.verify","status":"refused","refusal":{"schema":"common.refusal.v1","code":"instance_effective_config_invalid","reason":"effective configuration is invalid","recoverable":true}}

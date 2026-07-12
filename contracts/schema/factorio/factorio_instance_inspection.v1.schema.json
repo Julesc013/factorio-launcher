@@ -1,0 +1,41 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_inspection.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "archive_status": {"enum": ["live", "archived"]},
+    "command": {"const": "instances.inspect"},
+    "display_name": {"type": "string"},
+    "effective_config_status": {"enum": ["present", "missing", "invalid"]},
+    "effective_paths": {"additionalProperties": {"type": "string"}, "type": "object"},
+    "factorio_version": {"type": "string"},
+    "install_ref": {"type": "string"},
+    "install_status": {"enum": ["registered", "missing"]},
+    "instance_id": {"type": "string"},
+    "last_modification_evidence": {
+      "additionalProperties": false,
+      "properties": {"file_time_ticks": {"pattern": "^-?[0-9]+$", "type": "string"}, "path": {"type": "string"}},
+      "required": ["path", "file_time_ticks"],
+      "type": "object"
+    },
+    "modset_status": {"enum": ["present", "absent", "invalid"]},
+    "mutation_executed": {"const": false},
+    "pending_transactions": {"minimum": 0, "type": "integer"},
+    "profile": {"type": "string"},
+    "run_authority_state": {"const": "not_granted"},
+    "save_count": {"minimum": 0, "type": "integer"},
+    "schema": {"const": "factorio.instance_inspection.v1"},
+    "size_summary": {
+      "additionalProperties": false,
+      "properties": {"bytes": {"minimum": 0, "type": "integer"}, "files": {"minimum": 0, "type": "integer"}},
+      "required": ["files", "bytes"],
+      "type": "object"
+    },
+    "snapshot_count": {"minimum": 0, "type": "integer"},
+    "status": {"const": "ok"},
+    "template": {"type": "string"}
+  },
+  "required": ["schema", "command", "status", "instance_id", "display_name", "install_ref", "factorio_version", "profile", "template", "effective_paths", "effective_config_status", "modset_status", "save_count", "snapshot_count", "archive_status", "pending_transactions", "run_authority_state", "size_summary", "last_modification_evidence", "mutation_executed"],
+  "title": "Factorio instance inspection",
+  "type": "object"
+}

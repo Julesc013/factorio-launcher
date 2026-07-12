@@ -9,6 +9,7 @@
 #include "fl_path_safety.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_launch_plan.h"
+#include "flb_factorio_instance_lifecycle.h"
 
 #include <filesystem>
 #include <utility>
@@ -17,6 +18,7 @@ namespace facman::factorio::application::handlers {
 namespace fs = std::filesystem;
 namespace discovery = facman::factorio::discovery;
 namespace launch = facman::factorio::launch;
+namespace lifecycle = facman::factorio::instance;
 
 namespace {
 bool load_install(ApplicationContext& context, const std::string& id, discovery::InstallRef& install)
@@ -60,6 +62,19 @@ std::string instance_json(const facman::workspace::InstanceRecord& instance)
     output.add_object("concurrency", concurrency);
     output.add_object("export_policy", export_policy);
     return output.serialize();
+}
+
+ApplicationResult lifecycle_result(const char* operation, facman::core::Result<std::string> result)
+{
+    if (result) {
+        ApplicationResult output;
+        output.output = result.take_value();
+        return output;
+    }
+    return refused(
+        safety_refusal(operation, result.error().code, "Instance lifecycle operation was refused",
+            result.error().message, result.error().recoverable),
+        result.error().code, result.error().message, result.error().kind);
 }
 }
 
@@ -171,6 +186,56 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
     ApplicationResult result;
     result.output = instance_json(instance);
     return result;
+}
+
+ApplicationResult inspect_instance(ApplicationContext& context, const InspectInstanceRequest& request)
+{
+    return lifecycle_result("instances.inspect", lifecycle::inspect(context.workspace(), request));
+}
+
+ApplicationResult verify_instance(ApplicationContext& context, const InspectInstanceRequest& request)
+{
+    return lifecycle_result("instances.verify", lifecycle::verify(context.workspace(), request));
+}
+
+ApplicationResult diff_instances(ApplicationContext& context, const DiffInstanceRequest& request)
+{
+    return lifecycle_result("instances.diff", lifecycle::diff(context.workspace(), request));
+}
+
+ApplicationResult clone_instance(ApplicationContext& context, const CloneInstanceRequest& request)
+{
+    return lifecycle_result("instances.clone", lifecycle::clone(context.workspace(), request));
+}
+
+ApplicationResult rename_instance(ApplicationContext& context, const RenameInstanceRequest& request)
+{
+    return lifecycle_result("instances.rename", lifecycle::rename_display(context.workspace(), request));
+}
+
+ApplicationResult archive_instance(ApplicationContext& context, const ArchiveInstanceRequest& request)
+{
+    return lifecycle_result("instances.archive", lifecycle::archive(context.workspace(), request));
+}
+
+ApplicationResult restore_instance(ApplicationContext& context, const RestoreInstanceRequest& request)
+{
+    return lifecycle_result("instances.restore", lifecycle::restore(context.workspace(), request));
+}
+
+ApplicationResult dispatch_instance_lifecycle(ApplicationContext& context, const ApplicationRequest& request)
+{
+    switch (request.command) {
+    case CommandId::instances_inspect: return inspect_instance(context, std::get<InspectInstanceRequest>(request.payload));
+    case CommandId::instances_verify: return verify_instance(context, std::get<InspectInstanceRequest>(request.payload));
+    case CommandId::instances_diff: return diff_instances(context, std::get<DiffInstanceRequest>(request.payload));
+    case CommandId::instances_clone: return clone_instance(context, std::get<CloneInstanceRequest>(request.payload));
+    case CommandId::instances_rename: return rename_instance(context, std::get<RenameInstanceRequest>(request.payload));
+    case CommandId::instances_archive: return archive_instance(context, std::get<ArchiveInstanceRequest>(request.payload));
+    case CommandId::instances_restore: return restore_instance(context, std::get<RestoreInstanceRequest>(request.payload));
+    default: return lifecycle_result("instances.lifecycle", facman::core::Result<std::string>::failure(
+        {"unsupported_operation", "Unsupported instance lifecycle command", "instances"}));
+    }
 }
 
 } // namespace facman::factorio::application::handlers
