@@ -72,14 +72,31 @@ def collect() -> dict[str, Any]:
             "universal_launcher": pins["universal_launcher"]["revision"],
             "universal_setup": pins["universal_setup"]["revision"],
         },
-        "current_phase": "r3.4-architecture-consolidation",
+        "current_phase": "r3.6-real-world-product-readiness",
+        "current_checkpoint": "r3.5-zero-exception-productization",
+        "completed_wave": {
+            "id": "facman-r3.5",
+            "revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
+            "status": "complete",
+        },
+        "command_law": {
+            "contracts": 51,
+            "registered_routes": 49,
+            "schemas": 122,
+            "catalog_digest": "7377e13d2a054d1752b9b914e3f366c1d67fd971eeefe210b8b42defc15214b9",
+        },
+        "machine_protocol": {
+            "transport": "bounded newline-delimited JSON over stdio",
+            "status": "implemented",
+            "daemon_transport": "unavailable",
+        },
         "active_workunit": active_workunit(),
         "quarantined_capabilities": [
             "run.execute pending operator-supplied real Factorio verdict",
             "setup mutation",
             "network and credential operations",
             "release signing, notarization, publication, and publisher authenticity",
-            "experimental TUI and daemon publication",
+            "TUI and daemon publication until target-specific runtime proof",
         ],
         "claim_levels": claim_levels(),
         "provider_pins": pins,
@@ -92,11 +109,15 @@ def collect() -> dict[str, Any]:
             "docs/quality/benchmarks/baseline.v1.json",
             ".aide/history/r3.3/index.json",
             ".aide/history/r3.4/index.json",
+            ".aide/history/r3.5/index.json",
+            "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip sha256:fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b",
+            "facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz sha256:f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
+            "facman-0.1.0-dev.contract-macos-cli-x64-portable.tar.gz sha256:ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706",
         ],
         "known_blockers": [
             "Real Factorio isolation remains operator-only and has no human verdict.",
-            "Linux sanitizer, libFuzzer, clang-tidy, coverage, and target package results are CI-owned per revision.",
-            "macOS target package proof is CI-owned per revision; AppKit remains compile-only.",
+            "R3.6 target proof must be rerun at the final R3.6 revision; R3.5 target proof remains revision-pinned historical evidence.",
+            "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
             "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
             "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.",
         ],
@@ -118,16 +139,24 @@ def markdown(data: dict[str, Any]) -> str:
         "## Current",
         "",
         f"- phase: `{data['current_phase']}`;",
+        f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{active}`;",
         "- FacMan revision: live `HEAD` (resolve with `git rev-parse HEAD`);",
         f"- Universal Launcher pin: `{data['current_revisions']['universal_launcher']}`;",
         f"- Universal Setup pin: `{data['current_revisions']['universal_setup']}`.",
         "",
-        "R3.4 consolidates the native architecture, install-tree packaging, test proof, "
-        "AIDE state, and supply-chain policy. Commands use the authoritative Universal "
-        "Launcher route. Windows read-only discovery is implemented and must not be "
-        "scheduled again. The public C ABI remains experimental. The Windows x64 "
-        "static-first package proof remains unsigned and unpublished.",
+        "R3.5 is the architecture endpoint: it records zero manual-JSON and critical-I/O "
+        "exceptions, 51 command contracts, 49 registered routes, 122 schemas, generated "
+        "command law, a typed Setup gateway, and a bounded machine protocol. R3.6 uses "
+        "that foundation for real discovery and frontend product readiness rather than "
+        "another repository-wide redesign. The public C ABI remains experimental and "
+        "all recorded packages remain unsigned and unpublished.",
+        "",
+        "## Frozen R3.5 proof",
+        "",
+        f"- completed wave revision: `{data['completed_wave']['revision']}`;",
+        f"- command catalog digest: `{data['command_law']['catalog_digest']}`;",
+        f"- machine protocol: {data['machine_protocol']['transport']} ({data['machine_protocol']['status']});",
         "",
         "## Quarantined capabilities",
         "",

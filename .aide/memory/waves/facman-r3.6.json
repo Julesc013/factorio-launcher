@@ -1,0 +1,463 @@
+{
+  "architecture_invariants": [
+    "R3.5 is the architecture endpoint; this wave must deliver product value without another broad redesign.",
+    "Universal Setup owns installed-state mutation and Universal Launcher owns product-neutral orchestration.",
+    "Frontends consume generated command law and contain no Factorio backend behavior.",
+    "AIDE makes no provider, model or network call.",
+    "Human Factorio gates remain explicit operator decisions and cannot be inferred from automated proof."
+  ],
+  "blockers": [
+    "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
+    "Release, signing, publication and Safe beta promotion are outside this wave."
+  ],
+  "checkpoints": [],
+  "created_at": "2026-07-12T00:00:00Z",
+  "current_exact_revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
+  "provider_revisions": {
+    "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+    "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+  },
+  "schema_version": "aide.wave.v1",
+  "status": "active",
+  "title": "R3.6 real-world product readiness",
+  "updated_at": "2026-07-12T09:40:25Z",
+  "validation_cache": {
+    "advisory_only": true,
+    "entries": [
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T09:40:25Z",
+        "result": "PASS",
+        "source_fingerprint": "680565391f0bb57fdf826168c49501f33c305c4181c355b5da6c13801b1aef8a",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_aide_compaction.py": "4c1e3b69ba977a504b9edc58a8f801dd2e7b66aee272d1d53040f3f6001d7dad",
+          "tests/test_aide_target_truth.py": "f9f4ffa11214a9b528ca4e6c71eeb5859b5ee138adb239cd5dc379e53dec63d5"
+        },
+        "test_results": {
+          "aide-compaction": "PASS",
+          "aide-target-truth": "PASS",
+          "architecture-fitness": "PASS",
+          "project-state": "PASS",
+          "provider-revisions": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01"
+      }
+    ]
+  },
+  "wave_id": "facman-r3.6",
+  "workunits": [
+    {
+      "affected_contracts": [
+        "release/index/workspace_lock.v1.toml",
+        "runtime/core/generated/command_catalog.json"
+      ],
+      "affected_targets": [
+        "project-state",
+        "aide-lite"
+      ],
+      "affected_tests": [
+        "tests/test_aide_compaction.py",
+        "tests/test_aide_target_truth.py"
+      ],
+      "allowed_paths": [
+        ".aide/",
+        "README.md",
+        "docs/",
+        "tests/",
+        "tools/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "r3.5-current-truth"
+      ],
+      "dependencies": [],
+      "forbidden_paths": [
+        ".git",
+        ".aide.local",
+        "protected branches without a validated helper plan"
+      ],
+      "id": "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "started_at": "2026-07-12T09:37:12Z",
+      "status": "verified",
+      "stop_conditions": [
+        "baseline revision mismatch",
+        "provider revision mismatch"
+      ],
+      "title": "Reconcile R3.5 integration and current truth",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T09:40:25Z",
+        "result": "PASS",
+        "source_fingerprint": "680565391f0bb57fdf826168c49501f33c305c4181c355b5da6c13801b1aef8a",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_aide_compaction.py": "4c1e3b69ba977a504b9edc58a8f801dd2e7b66aee272d1d53040f3f6001d7dad",
+          "tests/test_aide_target_truth.py": "f9f4ffa11214a9b528ca4e6c71eeb5859b5ee138adb239cd5dc379e53dec63d5"
+        },
+        "test_results": {
+          "aide-compaction": "PASS",
+          "aide-target-truth": "PASS",
+          "architecture-fitness": "PASS",
+          "project-state": "PASS",
+          "provider-revisions": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/",
+        "contracts/refusal/"
+      ],
+      "affected_targets": [
+        "facman_client_static",
+        "flb_factorio_application_static",
+        "facman_cli"
+      ],
+      "affected_tests": [
+        "tests/native/facman_client_smoke.cpp",
+        "tests/test_machine_transport.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "include/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "apps/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "outcome-fidelity",
+        "unicode-boundaries",
+        "setup-plan-truth"
+      ],
+      "dependencies": [
+        "FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01"
+      ],
+      "forbidden_paths": [
+        "public ABI breaks",
+        "capability promotion"
+      ],
+      "id": "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "persisted state becomes unreadable",
+        "a public ABI break is required"
+      ],
+      "title": "Close residual boundary correctness gaps"
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/install/"
+      ],
+      "affected_targets": [
+        "flb_factorio_discovery_static"
+      ],
+      "affected_tests": [
+        "tests/native/flb_factorio_discovery_smoke.cpp",
+        "tests/test_discovery_golden.py"
+      ],
+      "allowed_paths": [
+        "runtime/factorio/discovery/",
+        "runtime/factorio/CMakeLists.txt",
+        "contracts/",
+        "tests/",
+        "tools/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "cross-platform-read-only-discovery"
+      ],
+      "dependencies": [
+        "FACMAN-R3.6-RESIDUAL-CORRECTNESS-01"
+      ],
+      "forbidden_paths": [
+        "recursive home scans",
+        "package manager execution",
+        "discovery writes"
+      ],
+      "id": "FACMAN-DISCOVERY-PROVIDERS-02",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "target proof requires unsafe traversal",
+        "discovery mutates source or workspace"
+      ],
+      "title": "Implement bounded native discovery providers"
+    },
+    {
+      "affected_contracts": [
+        "contracts/command/",
+        "contracts/schema/"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static",
+        "facman_cli"
+      ],
+      "affected_tests": [
+        "tests/test_command_contracts.py",
+        "tests/native/flb_command_bridge_smoke.c"
+      ],
+      "allowed_paths": [
+        "contracts/",
+        "runtime/",
+        "apps/",
+        "tests/",
+        "tools/",
+        "content/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "deterministic-product-intelligence"
+      ],
+      "dependencies": [
+        "FACMAN-DISCOVERY-PROVIDERS-02"
+      ],
+      "forbidden_paths": [
+        "network or model dependencies",
+        "onboarding mutation"
+      ],
+      "id": "FACMAN-STATUS-ONBOARDING-EXPLAIN-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "a command hides mutation",
+        "a report lacks observed evidence"
+      ],
+      "title": "Add deterministic status onboarding and explanation commands"
+    },
+    {
+      "affected_contracts": [
+        "runtime/core/generated/command_catalog.json"
+      ],
+      "affected_targets": [
+        "facman_tui",
+        "FacMan.WinForms",
+        "FacMan.AppKit"
+      ],
+      "affected_tests": [
+        "tests/test_generated_metadata.py",
+        "tests/test_frontend_contract.py"
+      ],
+      "allowed_paths": [
+        "tools/codegen/",
+        "runtime/core/generated/",
+        "apps/",
+        "content/",
+        "tests/",
+        "tools/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "frontend-command-law-parity"
+      ],
+      "dependencies": [
+        "FACMAN-STATUS-ONBOARDING-EXPLAIN-01"
+      ],
+      "forbidden_paths": [
+        "hand-maintained frontend command catalogs",
+        "frontend backend logic"
+      ],
+      "id": "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "a frontend must invent command metadata",
+        "generation is not deterministic"
+      ],
+      "title": "Generate and consume frontend command models"
+    },
+    {
+      "affected_contracts": [
+        "runtime/core/generated/command_catalog.json"
+      ],
+      "affected_targets": [
+        "facman_tui"
+      ],
+      "affected_tests": [
+        "tests/native/facman_tui_smoke.cpp",
+        "tests/package_runtime/"
+      ],
+      "allowed_paths": [
+        "apps/tui/",
+        "release/profiles/",
+        "runtime/client/",
+        "tests/",
+        "tools/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "functional-second-frontend"
+      ],
+      "dependencies": [
+        "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
+      ],
+      "forbidden_paths": [
+        "new terminal dependencies",
+        "run.execute promotion"
+      ],
+      "id": "FACMAN-TUI-MINIMUM-PRODUCT-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "an unreviewed runtime dependency is required",
+        "package proof skips a required check"
+      ],
+      "title": "Replace the TUI scaffold with a functional client"
+    },
+    {
+      "affected_contracts": [
+        "runtime/core/generated/command_catalog.json"
+      ],
+      "affected_targets": [
+        "FacMan.WinForms",
+        "FacMan.AppKit"
+      ],
+      "affected_tests": [
+        "tools/winforms_command_client_smoke.py",
+        "tests/test_frontend_contract.py"
+      ],
+      "allowed_paths": [
+        "apps/gui/windows/winforms/",
+        "apps/gui/macos/appkit/",
+        "tests/",
+        "tools/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "desktop-command-client-parity"
+      ],
+      "dependencies": [
+        "FACMAN-FRONTEND-CATALOG-CONSUMPTION-02"
+      ],
+      "forbidden_paths": [
+        "desktop-only backend behavior",
+        "AppKit runtime promotion from compile proof"
+      ],
+      "id": "FACMAN-DESKTOP-FRONTEND-PARITY-02",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "UI-thread blocking is required",
+        "runtime proof is unavailable for a runtime claim"
+      ],
+      "title": "Bring desktop command clients to generated parity"
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/"
+      ],
+      "affected_targets": [
+        "facman_cli",
+        "facman_tui",
+        "FacMan.WinForms",
+        "FacMan.AppKit"
+      ],
+      "affected_tests": [
+        "tests/test_end_to_end_user_journey.py",
+        "tests/package_runtime/"
+      ],
+      "allowed_paths": [
+        "tests/",
+        "tools/",
+        "docs/quality/",
+        "release/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "non-execution-product-journey"
+      ],
+      "dependencies": [
+        "FACMAN-TUI-MINIMUM-PRODUCT-01",
+        "FACMAN-DESKTOP-FRONTEND-PARITY-02"
+      ],
+      "forbidden_paths": [
+        "source fixture mutation",
+        "writes outside disposable workspaces"
+      ],
+      "id": "FACMAN-END-TO-END-USER-JOURNEY-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "semantic results diverge across transports",
+        "a security refusal must be weakened"
+      ],
+      "title": "Prove the complete hermetic non-execution journey"
+    },
+    {
+      "affected_contracts": [
+        "contracts/",
+        "release/index/workspace_lock.v1.toml"
+      ],
+      "affected_targets": [
+        "all"
+      ],
+      "affected_tests": [
+        "py -3 tools/dev.py verify-all",
+        "py -3 .aide/scripts/aide_lite.py test"
+      ],
+      "allowed_paths": [
+        ".aide/",
+        "docs/",
+        "release/",
+        "tests/",
+        "tools/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "r3.6-product-readiness"
+      ],
+      "dependencies": [
+        "FACMAN-END-TO-END-USER-JOURNEY-01"
+      ],
+      "forbidden_paths": [
+        "Safe beta promotion",
+        "human verdict automation",
+        "release publication"
+      ],
+      "id": "FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "any mandatory autonomous criterion is not green",
+        "target evidence is stale"
+      ],
+      "title": "Close R3.6 autonomous product readiness"
+    }
+  ]
+}

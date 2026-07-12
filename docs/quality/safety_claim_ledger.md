@@ -6,6 +6,7 @@ R3.2 registry and routed-preview revision: `d898d4e702043b186cf0669ba98fb1c69afb
 R3.2 controlled-isolation revision: `17b11224db897bc11c8d4a024e2f1409cba4dd3f`.
 R3.2 final bounded-foundation revision: `0c64d56c6d1efee6ef7faf17f2781c6a1c1db8cc`.
 R3.2 public integration revision: `b739d271083c2883c94921a1441574cda55912ad`.
+R3.5 architecture endpoint revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`.
 
 This ledger prevents a fixture, declaration, or generated file from being
 reported as stronger runtime evidence.
@@ -60,10 +61,12 @@ The local-lock, provenance, and macOS CLI stretches are frozen in
 [`r3.3-stretch-proofs.md`](../release/checkpoints/r3.3-stretch-proofs.md).
 
 The R3.4 architecture consolidation and exact local Windows artifact are
-recorded in
+historical evidence recorded in
 [`r3.4-architecture-consolidation.md`](../release/checkpoints/r3.4-architecture-consolidation.md).
-That checkpoint is a target-promotion hold: it does not reuse R3.3 Linux or
-macOS evidence as fresh proof.
+R3.5 supersedes that promotion hold with exact Windows, Linux, macOS,
+sanitizer, fuzz, coverage, CodeQL, compatibility, and package proof recorded in
+[`r3.5-zero-exception-productization.md`](../release/checkpoints/r3.5-zero-exception-productization.md).
+Those results remain revision-pinned and do not promote real Factorio execution.
 
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and deliberately pending human-verdict template are in

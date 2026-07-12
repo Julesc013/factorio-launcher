@@ -107,6 +107,17 @@
       "limitation": "development governance only; no product or human proof"
     }
   ],
+  "command_law": {
+    "catalog_digest": "7377e13d2a054d1752b9b914e3f366c1d67fd971eeefe210b8b42defc15214b9",
+    "contracts": 51,
+    "registered_routes": 49,
+    "schemas": 122
+  },
+  "completed_wave": {
+    "id": "facman-r3.5",
+    "revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
+    "status": "complete"
+  },
   "current_artifacts": [
     "build/Release/facman.exe (local unsigned build, when present)",
     "release/profiles/windows_portable_cli_x64/profile.toml",
@@ -114,21 +125,31 @@
     "release/profiles/macos_portable_cli_x64/profile.toml",
     "docs/quality/benchmarks/baseline.v1.json",
     ".aide/history/r3.3/index.json",
-    ".aide/history/r3.4/index.json"
+    ".aide/history/r3.4/index.json",
+    ".aide/history/r3.5/index.json",
+    "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip sha256:fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b",
+    "facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz sha256:f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
+    "facman-0.1.0-dev.contract-macos-cli-x64-portable.tar.gz sha256:ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706"
   ],
-  "current_phase": "r3.4-architecture-consolidation",
+  "current_checkpoint": "r3.5-zero-exception-productization",
+  "current_phase": "r3.6-real-world-product-readiness",
   "current_revisions": {
     "factorio_launcher": "HEAD",
-    "universal_launcher": "80a848375227dc858865874ef594c4b466877241",
+    "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
   },
   "known_blockers": [
     "Real Factorio isolation remains operator-only and has no human verdict.",
-    "Linux sanitizer, libFuzzer, clang-tidy, coverage, and target package results are CI-owned per revision.",
-    "macOS target package proof is CI-owned per revision; AppKit remains compile-only.",
+    "R3.6 target proof must be rerun at the final R3.6 revision; R3.5 target proof remains revision-pinned historical evidence.",
+    "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision."
   ],
+  "machine_protocol": {
+    "daemon_transport": "unavailable",
+    "status": "implemented",
+    "transport": "bounded newline-delimited JSON over stdio"
+  },
   "provider_pins": {
     "factorio_binding": {
       "pin_kind": "historical_proof_baseline",
@@ -137,7 +158,7 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "80a848375227dc858865874ef594c4b466877241",
+      "revision": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
       "source": "universal-launcher"
     },
     "universal_setup": {
@@ -151,7 +172,7 @@
     "setup mutation",
     "network and credential operations",
     "release signing, notarization, publication, and publisher authenticity",
-    "experimental TUI and daemon publication"
+    "TUI and daemon publication until target-specific runtime proof"
   ],
   "schema": "facman.project_state.v1",
   "target_proof_platforms": [

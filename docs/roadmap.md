@@ -3,18 +3,17 @@
 FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
-## Current R3.4 architecture consolidation
+## R3.6 - Real-World Product Readiness
 
-The native architecture now uses generated metadata, shared core/platform
-primitives, repositories, typed transactions, decomposed application handlers,
-a client-only CLI, truthful frontend transports, module-local CMake, and a
-reproducible install-tree package pipeline. Test impact routing, compact AIDE
-state, SPDX/REUSE compliance, dependency licensing, and built-component SBOM
-closure are implemented. The local Windows closeout matrix is green; fresh
-Linux sanitizer/package and macOS Intel package/AppKit promotion remain a
-target-runner handoff, not an inferred local result. Historical R3.2/R3.3
-sections below remain evidence context, not the active queue. Ordered future
-gates live in
+R3.5 is the architecture endpoint. Its exact Windows, Linux, macOS, sanitizer,
+fuzzer, coverage, CodeQL, compatibility, and package evidence is frozen at
+`966387280db4eb544e37f1f337c8bcf5d7cec3f4`; another repository-wide redesign
+is not scheduled. R3.6 delivers Linux and macOS read-only discovery providers,
+deterministic status/onboarding/explanation commands, generated WinForms,
+AppKit and TUI command models, a functional TUI, desktop client parity, and a
+hermetic non-execution user journey. Real Factorio execution remains a separate
+human authority lane. Historical R3.2/R3.3/R3.4 sections below remain evidence
+context, not the active queue. Ordered future gates live in
 [`future_layers_plan.md`](architecture/future_layers_plan.md).
 
 ## Immediate Safety And Truth Gates

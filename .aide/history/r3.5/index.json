@@ -1,0 +1,29 @@
+{
+  "checkpoint": "r3.5",
+  "completed_wave": {
+    "branch": "task/r3.5-zero-exception-productization",
+    "final_revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
+    "implementation_revision": "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
+    "wave_id": "facman-r3.5"
+  },
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "provider_revisions": {
+    "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+    "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+  },
+  "schema": "aide.history_index.v1",
+  "superseded_queue_items": [
+    {
+      "id": "FACMAN-R3.4-TARGET-RUNNER-PROMOTION-01",
+      "reason": "R3.5 exact-revision target matrix completed on Windows, Linux and macOS with sanitizer, fuzz, coverage, CodeQL and zero-skip package proof.",
+      "status": "superseded_by_r3.5_target_proof"
+    }
+  ],
+  "target_artifacts": {
+    "linux_x64_cli": "f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
+    "macos_x64_cli": "ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706",
+    "windows_x64_cli": "fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b"
+  },
+  "tasks": []
+}

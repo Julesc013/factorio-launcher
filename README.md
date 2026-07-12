@@ -50,9 +50,15 @@ Dominium proves the universal setup.
 FacMan ships as the first serious Factorio product binding.
 ```
 
-## Current Slice
+## Current R3.6 Slice
 
-The repository starts with a native CLI-first vertical slice:
+R3.5 is the architecture endpoint. R3.6 turns its generated command law,
+bounded machine protocol, typed Setup gateway, and proven target packages into
+a real non-execution product: cross-platform discovery, deterministic status
+and onboarding, a functional TUI, and generated desktop command clients. Real
+Factorio execution remains behind two reviewed operator passes.
+
+The current native CLI-first slice includes:
 
 ```bash
 facman --version

@@ -403,7 +403,7 @@
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "a051a17804ef7239ec39cee5592eedc7ff7fc78d",
+  "current_exact_revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -1657,7 +1657,7 @@
         "human-gate promotion"
       ],
       "id": "FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01",
-      "last_green_commit": "a051a17804ef7239ec39cee5592eedc7ff7fc78d",
+      "last_green_commit": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
       "progress_commits": [],
       "provider_revisions": {},
       "started_at": "2026-07-12T08:16:47Z",

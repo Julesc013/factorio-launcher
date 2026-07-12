@@ -83,10 +83,9 @@ def validate_root_authority_text(text: str) -> list[str]:
 def validate_profile_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "phase: r3.4-architecture-consolidation",
-        "reproducible install-tree packaging",
-        "read-only discovery is implemented",
-        "must not be scheduled again",
+        "phase: r3.6-real-world-product-readiness",
+        "frozen R3.5 architecture",
+        "bounded cross-platform",
         "C-compatible experimental ABI correctness floor",
         "authoritative_command_slice:",
         "install_refs.scan",
@@ -125,13 +124,12 @@ def validate_profile_text(text: str) -> list[str]:
 def validate_project_state_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "R3.4 consolidates the native architecture",
+        "R3.5 is the architecture endpoint",
+        "R3.6 uses that foundation",
+        "checkpoint: `r3.5-zero-exception-productization`",
         "Real Factorio isolation remains operator-only and has no human verdict",
-        "authoritative Universal Launcher route",
-        "Windows x64 static-first package proof",
-        "Windows read-only discovery is implemented",
         "public C ABI remains experimental",
-        "must not be scheduled again",
+        "completed wave revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`",
         "release/index/workspace_lock.v1.toml",
     ]
     for anchor in required:
@@ -151,9 +149,9 @@ def validate_project_state_text(text: str) -> list[str]:
 def validate_roadmap_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "R3.2 - Authoritative Registry And Instance Isolation Foundation",
-        "Real Windows discovery is implemented",
-        "macOS Spotlight and Linux package-manager provider databases remain deferred",
+        "R3.6 - Real-World Product Readiness",
+        "R3.5 is the architecture endpoint",
+        "Linux and macOS read-only discovery providers",
         "public ABI remains an experimental correctness floor",
     ]
     for anchor in required:

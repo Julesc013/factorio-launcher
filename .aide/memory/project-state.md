@@ -4,13 +4,20 @@ Generated from `.aide/memory/project-state.v1.json`; edit the generator or canon
 
 ## Current
 
-- phase: `r3.4-architecture-consolidation`;
+- phase: `r3.6-real-world-product-readiness`;
+- checkpoint: `r3.5-zero-exception-productization`;
 - active WorkUnit: `none`;
 - FacMan revision: live `HEAD` (resolve with `git rev-parse HEAD`);
-- Universal Launcher pin: `80a848375227dc858865874ef594c4b466877241`;
+- Universal Launcher pin: `de6c7c6cfa80c524296066bd6bb90a70ba02b760`;
 - Universal Setup pin: `4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`.
 
-R3.4 consolidates the native architecture, install-tree packaging, test proof, AIDE state, and supply-chain policy. Commands use the authoritative Universal Launcher route. Windows read-only discovery is implemented and must not be scheduled again. The public C ABI remains experimental. The Windows x64 static-first package proof remains unsigned and unpublished.
+R3.5 is the architecture endpoint: it records zero manual-JSON and critical-I/O exceptions, 51 command contracts, 49 registered routes, 122 schemas, generated command law, a typed Setup gateway, and a bounded machine protocol. R3.6 uses that foundation for real discovery and frontend product readiness rather than another repository-wide redesign. The public C ABI remains experimental and all recorded packages remain unsigned and unpublished.
+
+## Frozen R3.5 proof
+
+- completed wave revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`;
+- command catalog digest: `7377e13d2a054d1752b9b914e3f366c1d67fd971eeefe210b8b42defc15214b9`;
+- machine protocol: bounded newline-delimited JSON over stdio (implemented);
 
 ## Quarantined capabilities
 
@@ -18,7 +25,7 @@ R3.4 consolidates the native architecture, install-tree packaging, test proof, A
 - setup mutation
 - network and credential operations
 - release signing, notarization, publication, and publisher authenticity
-- experimental TUI and daemon publication
+- TUI and daemon publication until target-specific runtime proof
 
 ## Proof platforms
 
@@ -29,8 +36,8 @@ R3.4 consolidates the native architecture, install-tree packaging, test proof, A
 ## Known blockers
 
 - Real Factorio isolation remains operator-only and has no human verdict.
-- Linux sanitizer, libFuzzer, clang-tidy, coverage, and target package results are CI-owned per revision.
-- macOS target package proof is CI-owned per revision; AppKit remains compile-only.
+- R3.6 target proof must be rerun at the final R3.6 revision; R3.5 target proof remains revision-pinned historical evidence.
+- AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 - Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.
 

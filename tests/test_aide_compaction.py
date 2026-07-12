@@ -25,9 +25,27 @@ class AideCompactionTests(unittest.TestCase):
             "current_revisions", "current_phase", "active_workunit",
             "quarantined_capabilities", "claim_levels", "provider_pins",
             "target_proof_platforms", "current_artifacts", "known_blockers",
+            "current_checkpoint", "completed_wave", "command_law", "machine_protocol",
         ):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
+
+    def test_r35_checkpoint_provider_and_catalog_truth_do_not_drift(self) -> None:
+        data = project_state.collect()
+        self.assertEqual("r3.6-real-world-product-readiness", data["current_phase"])
+        self.assertEqual("r3.5-zero-exception-productization", data["current_checkpoint"])
+        self.assertEqual(
+            "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
+            data["completed_wave"]["revision"],
+        )
+        self.assertEqual(
+            "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+            data["provider_pins"]["universal_launcher"]["revision"],
+        )
+        self.assertEqual(
+            "7377e13d2a054d1752b9b914e3f366c1d67fd971eeefe210b8b42defc15214b9",
+            data["command_law"]["catalog_digest"],
+        )
 
     def test_lifecycle_transitions_and_hashes_archived_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

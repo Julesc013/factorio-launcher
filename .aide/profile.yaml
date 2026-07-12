@@ -8,17 +8,16 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3.4-architecture-consolidation
+  phase: r3.6-real-world-product-readiness
   primary_goal: >
-    Consolidate the native module graph, generated contracts, repositories,
-    typed transactions, application handlers, client-only frontends,
-    reproducible install-tree packaging, test proof, compact AIDE state, and
-    supply-chain policy without promoting human-gated or release claims.
+    Use the frozen R3.5 architecture to deliver bounded cross-platform
+    discovery, generated frontend parity, a functional TUI, deterministic
+    operator guidance, and a hermetic non-execution user journey.
   next_task: >
-    Complete the active R3.4 WorkUnit from .aide/queue/active. The later
+    Complete the active R3.6 WorkUnit from the resumable facman-r3.6 wave. The
     FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 authority gate remains
     operator-only; automation must never convert its pending verdict into pass.
-    Windows read-only discovery is implemented and must not be scheduled again.
+    human authority lane does not block independent product work.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import
