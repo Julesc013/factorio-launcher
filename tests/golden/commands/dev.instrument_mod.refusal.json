@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "dev.instrument_mod",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "execution_not_enabled",
+    "reason": "Canonical command refusal fixture",
+    "recoverable": true
+  }
+}

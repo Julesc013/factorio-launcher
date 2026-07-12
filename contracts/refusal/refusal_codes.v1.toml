@@ -134,6 +134,13 @@ retryable = false
 message = "Universal Setup is unavailable in this application configuration."
 
 [[code]]
+id = "setup_plan_inputs_not_evaluated"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "Universal Setup did not evaluate the requested version and archive, so FacMan cannot claim an install plan."
+
+[[code]]
 id = "unsupported_operation"
 severity = "blocked"
 effect = "none"

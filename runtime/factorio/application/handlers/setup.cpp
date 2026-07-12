@@ -48,7 +48,7 @@ std::string toml_value(const std::string& text, const std::string& key)
     return end == std::string::npos ? std::string() : text.substr(value, end - value);
 }
 
-ApplicationResult package_verify(ApplicationContext& context, const ServiceOperationRequest& request)
+ApplicationResult verify_package_impl(ApplicationContext& context, const ServiceOperationRequest& request)
 {
     const fs::path root = request.path.empty() ? fs::path(fl_runtime_package_root()) : fs::path(request.path);
     const std::string manifest = read_text(root / "manifest" / "package.v1.toml");
@@ -92,63 +92,92 @@ ApplicationResult preview_setup(ApplicationContext& context)
     return unavailable(context, "setup.preview", "setup_unavailable", "Universal Setup preview is unavailable in this application configuration");
 }
 
-ApplicationResult setup_operation(ApplicationContext& context, const ServiceOperationRequest& request)
+ApplicationResult verify_package(ApplicationContext& context, const ServiceOperationRequest& request)
 {
 #if FACMAN_WITH_SETUP
-    if (request.operation == "package.verify") return package_verify(context, request);
-    if (request.operation == "installs.verify") {
-        auto provider = context.setup().verify_install(request.id);
-        if (!provider) return unavailable(context, request.operation, provider.error().code, provider.error().message);
-        return unavailable(context, request.operation, provider.value().code, provider.value().reason);
-    }
-    if (request.operation == "installs.repair" || request.operation == "installs.uninstall") {
-        auto install = context.installs().load(facman::core::InstallId(request.id));
-        if (!install) return refused(safety_refusal(request.operation, "unknown_install", "Install reference is not registered", request.id, true), "unknown_install", "Install reference is not registered");
-        const std::string reason = "setup may not " + request.operation.substr(9) + " " + install.value().ownership + " installs";
-        ApplicationResult result;
-        result.status = ULK_STATUS_ERROR;
-        result.error_code = "ownership_denied";
-        result.error_message = reason;
-        facman::core::json::ObjectBuilder refusal;
-        refusal.add_string("schema", "common.refusal.v1");
-        refusal.add_string("code", "ownership_denied");
-        refusal.add_string("reason", reason);
-        refusal.add_bool("recoverable", true);
-        facman::core::json::ObjectBuilder output;
-        output.add_string("schema", "factorio.managed_install_refusal.v1");
-        output.add_string("operation", request.operation.substr(9));
-        output.add_string("status", "refused");
-        output.add_string("setup_authority", "universal-setup");
-        output.add_string("setup_command", "policy.inspect");
-        output.add_bool("mutates_install", false);
-        output.add_string("install_id", request.id);
-        output.add_string("ownership", install.value().ownership);
-        output.add_object("refusal", refusal);
-        result.output = output.serialize();
-        return result;
-    }
-    if (request.operation == "installs.install-version") {
-        InstallPlanRequest plan_request;
-        plan_request.version = request.version;
-        plan_request.archive = request.archive;
-        auto plan = context.setup().plan_install(plan_request);
-        if (!plan) return unavailable(context, request.operation, plan.error().code, plan.error().message);
-        if (!plan.value().inputs_evaluated) {
-            return unavailable(
-                context,
-                request.operation,
-                "setup_plan_inputs_not_evaluated",
-                "Universal Setup did not evaluate the requested version and archive");
-        }
-        return unavailable(context, request.operation, "setup_mutation_not_implemented", "Setup mutation remains unavailable");
-    }
-    return unavailable(context, request.operation, "setup_unavailable", "Setup operation is unavailable");
+    return verify_package_impl(context, request);
 #else
-    return unavailable(
-        context,
-        request.operation,
-        "setup_unavailable",
-        "Universal Setup support is disabled in this build");
+    return unavailable(context, "package.verify", "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
+}
+
+ApplicationResult verify_install(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+#if FACMAN_WITH_SETUP
+    auto provider = context.setup().verify_install(request.id);
+    if (!provider) return unavailable(context, "installs.verify", provider.error().code, provider.error().message);
+    return unavailable(context, "installs.verify", provider.value().code, provider.value().reason);
+#else
+    return unavailable(context, "installs.verify", "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
+}
+
+namespace {
+ApplicationResult managed_install_policy(
+    ApplicationContext& context,
+    const ServiceOperationRequest& request,
+    const char* operation)
+{
+#if FACMAN_WITH_SETUP
+    auto install = context.installs().load(facman::core::InstallId(request.id));
+    if (!install) return refused(safety_refusal(operation, "unknown_install", "Install reference is not registered", request.id, true), "unknown_install", "Install reference is not registered");
+    const std::string action = std::string(operation).substr(9);
+    const std::string reason = "setup may not " + action + " " + install.value().ownership + " installs";
+    ApplicationResult result;
+    result.status = ULK_STATUS_ERROR;
+    result.error_code = "ownership_denied";
+    result.error_message = reason;
+    facman::core::json::ObjectBuilder refusal;
+    refusal.add_string("schema", "common.refusal.v1");
+    refusal.add_string("code", "ownership_denied");
+    refusal.add_string("reason", reason);
+    refusal.add_bool("recoverable", true);
+    facman::core::json::ObjectBuilder output;
+    output.add_string("schema", "factorio.managed_install_refusal.v1");
+    output.add_string("operation", action);
+    output.add_string("status", "refused");
+    output.add_string("setup_authority", "universal-setup");
+    output.add_string("setup_command", "policy.inspect");
+    output.add_bool("mutates_install", false);
+    output.add_string("install_id", request.id);
+    output.add_string("ownership", install.value().ownership);
+    output.add_object("refusal", refusal);
+    result.output = output.serialize();
+    return result;
+#else
+    return unavailable(context, operation, "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
+}
+}
+
+ApplicationResult repair_install(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return managed_install_policy(context, request, "installs.repair");
+}
+
+ApplicationResult uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return managed_install_policy(context, request, "installs.uninstall");
+}
+
+ApplicationResult install_version(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+#if FACMAN_WITH_SETUP
+    InstallPlanRequest plan_request;
+    plan_request.version = request.version;
+    plan_request.archive = request.archive;
+    auto plan = context.setup().plan_install(plan_request);
+    if (!plan) return unavailable(context, "installs.install_version", plan.error().code, plan.error().message);
+    if (!plan.value().inputs_evaluated) {
+        return unavailable(
+            context,
+            "installs.install_version",
+            "setup_plan_inputs_not_evaluated",
+            "Universal Setup did not evaluate the requested version and archive");
+    }
+    return unavailable(context, "installs.install_version", "setup_mutation_not_implemented", "Setup mutation remains unavailable");
+#else
+    return unavailable(context, "installs.install_version", "setup_unavailable", "Universal Setup support is disabled in this build");
 #endif
 }
 

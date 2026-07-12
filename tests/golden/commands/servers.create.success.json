@@ -1,0 +1,6 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "servers.create",
+  "status": "ok"
+}
+

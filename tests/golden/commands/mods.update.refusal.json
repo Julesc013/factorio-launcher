@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "mods.update",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "network_forbidden",
+    "reason": "Canonical command refusal fixture",
+    "recoverable": true
+  }
+}

@@ -191,6 +191,12 @@ int main(void)
         run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.plan\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.apply\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"diagnostics.export\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"package.verify\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"installs.install_version\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"mods.search\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"servers.create\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"diagnostics.redact\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"dev.bug_report\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"owner\":\"factorio-launcher\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"availability\":\"unavailable_until_isolation_proof\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"availability\":\"unavailable_until_gateway\"") != 0 ||
@@ -205,7 +211,9 @@ int main(void)
     }
     if (run_command(context, "doctor.run", 1, "\"command\":\"doctor.run\"") != 0) return 40;
     if (run_refusal(context, "run.execute", 0, "{}", "isolation_not_proven") != 0 ||
-        run_refusal(context, "setup.preview", 1, "{}", "setup_unavailable") != 0) {
+        run_refusal(context, "setup.preview", 1, "{}", "setup_unavailable") != 0 ||
+        run_refusal(context, "utility.operation", 0, "{\"operation\":\"mods.search\",\"query\":\"space\"}", "network_forbidden") != 0 ||
+        run_refusal(context, "setup.operation", 1, "{\"operation\":\"installs.install-version\",\"version\":\"2.0.77\",\"archive\":\"fixture.zip\"}", "setup_plan_inputs_not_evaluated") != 0) {
         return 39;
     }
     if (run_command(context, "install_refs.scan", 1, "\"schema\": \"factorio.discovery_report.v1\"") != 0) {

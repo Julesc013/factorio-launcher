@@ -27,11 +27,11 @@ REQUIRED_GOLDENS = {
     "saves.backup.success.json": {"command": "saves.backup"},
     "instance.export.success.json": {"command": "instance.export"},
     "instance.import.success.json": {"command": "instance.import"},
-    "installs.install-version.success.json": {"command": "installs.install-version"},
+    "installs.install_version.refusal.json": {"command": "installs.install_version", "refusal_code": "setup_plan_inputs_not_evaluated"},
     "installs.repair.refusal.json": {"command": "installs.repair", "refusal_code": "ownership_denied"},
     "mods.search.refusal.json": {"command": "mods.search", "refusal_code": "network_forbidden"},
     "servers.start.refusal.json": {"command": "servers.start", "refusal_code": "execution_not_enabled"},
-    "dev.dump-data.refusal.json": {"command": "dev.dump-data", "refusal_code": "execution_not_enabled"},
+    "dev.dump_data.refusal.json": {"command": "dev.dump_data", "refusal_code": "execution_not_enabled"},
 }
 
 

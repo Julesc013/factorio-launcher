@@ -40,17 +40,18 @@ Transport names describe implemented behavior; none claim JSON-RPC.
 
 The provider command registry uses allocator-backed geometric growth under an
 explicit storage budget; the former fixed capacity of 32 is removed.
-Frontend aliases whose behavior is related are normalized into two typed
-application routes:
+Every setup, package, Mod Portal, server, diagnostic, and developer operation
+has a first-class runtime command. Hyphenated CLI spellings such as
+`install-version`, `bug-report`, and `dump-data` normalize to canonical IDs such
+as `installs.install_version`, `dev.bug_report`, and `dev.dump_data` before the
+FLB call. `setup.operation` and `utility.operation` are not registered and are
+not emitted in help, completions, frontend metadata, or the executable command
+graph.
 
-- `setup.operation` owns setup-backed package and managed-install operations.
-- `utility.operation` owns bounded server, Mod Portal, developer, and diagnostic
-  utility operations.
-
-The public aliases remain the compatibility surface. The grouped runtime IDs
-are internal catalog entries and are not emitted as CLI help or completions.
-The grouped routes remain deprecated compatibility paths while R3.5 replaces
-them with first-class catalog commands; they are not a capacity workaround.
+The decoder still recognizes those two deprecated IDs for compatibility with
+older direct clients. It immediately normalizes their `operation` field to one
+of the first-class `CommandId` values; no generic handler or transaction
+identity remains authoritative.
 
 ## Optional Universal Setup
 

@@ -1,2 +1,2 @@
-# generated source-sha256: 602e29be1d0e0c2030ed67594f6961ab19a28af4673b8e6fd1af62b725a98717
-Register-ArgumentCompleter -Native -CommandName facman -ScriptBlock { param($wordToComplete) 'diagnostics doctor export import installs instances launch mods modsets product run saves setup workspace'.Split(' ') | Where-Object { $_ -like "$wordToComplete*" } }
+# generated source-sha256: 48e7aba7487dd5456d7d8863711039c0a4ab2712106926ca4b91c846b18a25a3
+Register-ArgumentCompleter -Native -CommandName facman -ScriptBlock { param($wordToComplete) 'dev diagnostics doctor export import installs instances launch mods modsets package product run saves servers setup workspace'.Split(' ') | Where-Object { $_ -like "$wordToComplete*" } }

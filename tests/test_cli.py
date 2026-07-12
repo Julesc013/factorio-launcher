@@ -64,12 +64,41 @@ class CliTests(unittest.TestCase):
             {"workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"}.issubset(commands)
         )
         self.assertIn("diagnostics.export", commands)
+        self.assertGreater(len(commands), 32)
+        self.assertTrue(
+            {
+                "package.verify",
+                "installs.install_version",
+                "installs.verify",
+                "installs.repair",
+                "installs.uninstall",
+                "mods.search",
+                "mods.install",
+                "mods.update",
+                "servers.list",
+                "servers.create",
+                "servers.start",
+                "servers.stop",
+                "servers.rcon",
+                "diagnostics.redact",
+                "dev.bug_report",
+                "dev.dump_data",
+                "dev.dump_icons",
+                "dev.benchmark",
+                "dev.instrument_mod",
+            }.issubset(commands)
+        )
+        self.assertNotIn("setup.operation", commands)
+        self.assertNotIn("utility.operation", commands)
         descriptors = {command["command"]: command for command in graph["commands"]}
         self.assertEqual(descriptors["mods.import"]["effects"], ["workspace_read", "workspace_write"])
         self.assertEqual(descriptors["modsets.verify"]["dry_run_behavior"], "read_only")
         self.assertEqual(descriptors["modsets.export"]["owner"], "factorio-launcher")
         self.assertEqual(descriptors["saves.list"]["effects"], ["workspace_read"])
         self.assertEqual(descriptors["instance.import"]["dry_run_behavior"], "explicit_persistent_write")
+        self.assertEqual(descriptors["mods.search"]["availability"], "unavailable_until_gateway")
+        self.assertEqual(descriptors["servers.start"]["availability"], "unavailable_until_isolation_proof")
+        self.assertEqual(descriptors["servers.create"]["availability"], "available")
         self.assertIn("install_refs.scan", commands)
         self.assertIn("install_refs.import", commands)
         self.assertIn("run.preview", commands)
@@ -307,12 +336,11 @@ class CliTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 0, stderr)
+            self.assertEqual(code, 1, stderr)
             install_plan = json.loads(stdout)
-            self.assertEqual(install_plan["setup_authority"], "universal-setup")
-            self.assertEqual(install_plan["setup_command"], "install_local.plan")
-            self.assertFalse(install_plan["mutates_install"])
-            self.assertEqual(install_plan["setup_response"]["payload"]["schema"], "usk.install_plan.v1")
+            self.assertEqual(install_plan["status"], "refused")
+            self.assertEqual(install_plan["operation"], "installs.install_version")
+            self.assertEqual(install_plan["refusal"]["code"], "setup_plan_inputs_not_evaluated")
 
             code, _stdout, stderr = invoke(
                 ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
@@ -637,7 +665,7 @@ class CliTests(unittest.TestCase):
             code, stdout, _stderr = invoke(["--workspace", tmp, "dev", "dump-data", "--json"])
             self.assertEqual(code, 1)
             dev_refusal = json.loads(stdout)
-            self.assertEqual(dev_refusal["operation"], "dev.dump-data")
+            self.assertEqual(dev_refusal["operation"], "dev.dump_data")
             self.assertEqual(dev_refusal["refusal"]["schema"], "common.refusal.v1")
             self.assertEqual(dev_refusal["refusal"]["code"], "execution_not_enabled")
 

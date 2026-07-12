@@ -9,6 +9,10 @@
 
 namespace facman::factorio::application::handlers {
 ApplicationResult preview_setup(ApplicationContext& context);
-ApplicationResult setup_operation(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult verify_package(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult install_version(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult verify_install(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult repair_install(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request);
 }
 #endif

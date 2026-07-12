@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "dev.bug_report",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "workspace_list_failed",
+    "reason": "Canonical command refusal fixture",
+    "recoverable": true
+  }
+}

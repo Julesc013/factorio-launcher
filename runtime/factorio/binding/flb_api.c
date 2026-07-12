@@ -57,6 +57,16 @@ static char* flb_copy_string(ulk_string_view value)
     return copy;
 }
 
+static int flb_is_legacy_operation_command(ulk_string_view command_name)
+{
+    static const char setup_operation[] = "setup.operation";
+    static const char utility_operation[] = "utility.operation";
+    return (command_name.size == (ulk_size)(sizeof(setup_operation) - 1) &&
+            memcmp(command_name.data, setup_operation, sizeof(setup_operation) - 1) == 0) ||
+        (command_name.size == (ulk_size)(sizeof(utility_operation) - 1) &&
+            memcmp(command_name.data, utility_operation, sizeof(utility_operation) - 1) == 0);
+}
+
 static int flb_register_application_command(
     flb_context* context,
     const facman_generated_command_descriptor* generated)
@@ -174,6 +184,9 @@ int flb_command_execute_v1(
         return ULK_STATUS_INVALID_ARGUMENT;
     }
 
+    if (flb_is_legacy_operation_command(request->command_name)) {
+        return flb_factorio_application_handle_v1(context->application, request, response);
+    }
     return ulk_command_execute_v1(context->launcher_context, request, response);
 }
 

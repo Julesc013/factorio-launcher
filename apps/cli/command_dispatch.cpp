@@ -115,12 +115,9 @@ int emit_basic(const facman::core::Result<facman::client::CommandResponse>& resp
     return 0;
 }
 
-std::string operation_payload(
-    const std::string& operation,
-    const std::vector<std::pair<std::string, std::string>>& fields = {})
+std::string fields_payload(const std::vector<std::pair<std::string, std::string>>& fields = {})
 {
     json::ObjectBuilder output;
-    output.add_string("operation", operation);
     for (const auto& field : fields) if (!field.second.empty()) output.add_string(field.first, field.second);
     return output.serialize();
 }
@@ -279,13 +276,13 @@ int command_installs(const Options& options)
     if (action == "install-version" && options.args.size() >= 3) {
         const std::string archive = option(options.args, "--archive");
         return emit_basic(
-            call(options, "setup.operation", operation_payload(
-                "installs.install-version", {{"version", options.args[2]}, {"archive", archive}})),
+            call(options, "installs.install_version", fields_payload(
+                {{"version", options.args[2]}, {"archive", archive}})),
             flag(options.args, "--json"),
             "Managed install plan created through Universal Setup.");
     }
     if ((action == "verify" || action == "repair" || action == "uninstall") && options.args.size() >= 3) {
-        return emit_basic(call(options, "setup.operation", operation_payload("installs." + action, {{"id", options.args[2]}})), flag(options.args, "--json"), "Setup operation previewed");
+        return emit_basic(call(options, "installs." + action, fields_payload({{"id", options.args[2]}})), flag(options.args, "--json"), "Setup operation previewed");
     }
     return 2;
 }
@@ -322,7 +319,7 @@ int command_mods(const Options& options)
     }
     if (action == "search" || action == "install" || action == "update") {
         const std::string query = options.args.size() >= 3 && action != "update" ? options.args[2] : "";
-        return emit_basic(call(options, "utility.operation", operation_payload("mods." + action, {{"query", query}, {"instance_id", option(options.args, "--instance")}}), false), flag(options.args, "--json"), "");
+        return emit_basic(call(options, "mods." + action, fields_payload({{"query", query}, {"instance_id", option(options.args, "--instance")}}), false), flag(options.args, "--json"), "");
     }
     return 2;
 }
@@ -374,8 +371,8 @@ int command_diagnostics(const Options& options)
     if (options.args[1] == "report") return emit_basic(call(options, "diagnostics.run"), flag(options.args, "--json"), "Diagnostics completed");
     if (options.args[1] == "redact" && options.args.size() >= 3) {
         return emit_basic(
-            call(options, "utility.operation", operation_payload(
-                "diagnostics.redact", {{"path", options.args[2]}}), false),
+            call(options, "diagnostics.redact", fields_payload(
+                {{"path", options.args[2]}}), false),
             flag(options.args, "--json"),
             "Diagnostic input redacted");
     }
@@ -419,13 +416,15 @@ int command_servers(const Options& options)
     std::vector<std::pair<std::string, std::string>> fields;
     if (action == "create" && options.args.size() >= 3) fields = {{"name", options.args[2]}, {"id", option(options.args, "--id")}, {"instance_id", option(options.args, "--instance")}};
     else if (action == "start" || action == "stop" || action == "rcon") { if (options.args.size() < 3) return 2; fields = {{"id", options.args[2]}}; }
-    return emit_basic(call(options, "utility.operation", operation_payload("servers." + action, fields), false), flag(options.args, "--json"), action == "create" ? "Server profile created" : "Servers listed");
+    return emit_basic(call(options, "servers." + action, fields_payload(fields), false), flag(options.args, "--json"), action == "create" ? "Server profile created" : "Servers listed");
 }
 
 int command_dev(const Options& options)
 {
     if (options.args.size() < 2) return 2;
-    return emit_basic(call(options, "utility.operation", operation_payload("dev." + options.args[1]), false), flag(options.args, "--json"), "Bug report created");
+    std::string action = options.args[1];
+    std::replace(action.begin(), action.end(), '-', '_');
+    return emit_basic(call(options, "dev." + action, "{}", false), flag(options.args, "--json"), "Bug report created");
 }
 
 int command_workspace(const Options& options)
@@ -442,7 +441,7 @@ int command_workspace(const Options& options)
 int command_package(const Options& options)
 {
     if (options.args.size() < 2 || options.args[1] != "verify") return 2;
-    return emit_basic(call(options, "setup.operation", operation_payload("package.verify")), flag(options.args, "--json"), "Package integrity verified");
+    return emit_basic(call(options, "package.verify"), flag(options.args, "--json"), "Package integrity verified");
 }
 
 int command_graph(const Options& options)

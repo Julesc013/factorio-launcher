@@ -29,6 +29,8 @@ EXPECTED_REQUIRED = {
 
 EXPECTED_OPTIONAL = {
     "diagnostics.export",
+    "diagnostics.redact",
+    "dev.bug_report",
     "mods.import",
     "modsets.lock",
     "modsets.verify",
@@ -41,9 +43,29 @@ EXPECTED_OPTIONAL = {
     "workspace.recovery.inspect",
     "workspace.recovery.plan",
     "workspace.recovery.apply",
+    "servers.create",
+    "servers.list",
 }
 
-EXPECTED_UNAVAILABLE = {"run.execute", "setup.preview"}
+EXPECTED_UNAVAILABLE = {
+    "dev.benchmark",
+    "dev.dump_data",
+    "dev.dump_icons",
+    "dev.instrument_mod",
+    "installs.install_version",
+    "installs.repair",
+    "installs.uninstall",
+    "installs.verify",
+    "mods.install",
+    "mods.search",
+    "mods.update",
+    "package.verify",
+    "run.execute",
+    "servers.rcon",
+    "servers.start",
+    "servers.stop",
+    "setup.preview",
+}
 
 EXPECTED_FRONTENDS = {
     "cli": "apps/cli",

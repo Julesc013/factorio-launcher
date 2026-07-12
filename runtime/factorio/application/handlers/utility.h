@@ -8,6 +8,12 @@
 #include "application_types.h"
 
 namespace facman::factorio::application::handlers {
-ApplicationResult utility_operation(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult refuse_mod_portal(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult create_server(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult list_servers(ApplicationContext& context);
+ApplicationResult control_server(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult redact_diagnostics(ApplicationContext& context, const ServiceOperationRequest& request);
+ApplicationResult create_bug_report(ApplicationContext& context);
+ApplicationResult refuse_dev_execution(ApplicationContext& context, const ServiceOperationRequest& request);
 }
 #endif

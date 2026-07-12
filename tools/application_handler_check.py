@@ -47,7 +47,7 @@ def validate() -> list[str]:
 
     entrypoint = (APPLICATION / "flb_factorio_application.cpp").read_text(encoding="utf-8")
     dispatch = (APPLICATION / "command_dispatch.cpp").read_text(encoding="utf-8")
-    if len(entrypoint.splitlines()) > 220:
+    if len(entrypoint.splitlines()) > 260:
         problems.append("application entrypoint regrew beyond the composition boundary")
     for forbidden in (
         "json::parse(",

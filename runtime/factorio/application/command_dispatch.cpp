@@ -120,6 +120,110 @@ bool optional_string_array(const json::Value& object, const char* key, std::vect
     }
     return true;
 }
+
+const char* service_operation(CommandId command) noexcept
+{
+    switch (command) {
+    case CommandId::package_verify: return "package.verify";
+    case CommandId::installs_install_version: return "installs.install_version";
+    case CommandId::installs_verify: return "installs.verify";
+    case CommandId::installs_repair: return "installs.repair";
+    case CommandId::installs_uninstall: return "installs.uninstall";
+    case CommandId::mods_search: return "mods.search";
+    case CommandId::mods_install: return "mods.install";
+    case CommandId::mods_update: return "mods.update";
+    case CommandId::servers_list: return "servers.list";
+    case CommandId::servers_create: return "servers.create";
+    case CommandId::servers_start: return "servers.start";
+    case CommandId::servers_stop: return "servers.stop";
+    case CommandId::servers_rcon: return "servers.rcon";
+    case CommandId::diagnostics_redact: return "diagnostics.redact";
+    case CommandId::dev_bug_report: return "dev.bug_report";
+    case CommandId::dev_dump_data: return "dev.dump_data";
+    case CommandId::dev_dump_icons: return "dev.dump_icons";
+    case CommandId::dev_benchmark: return "dev.benchmark";
+    case CommandId::dev_instrument_mod: return "dev.instrument_mod";
+    default: return "";
+    }
+}
+
+CommandId service_command(const std::string& operation) noexcept
+{
+    if (operation == "package.verify") return CommandId::package_verify;
+    if (operation == "installs.install_version" || operation == "installs.install-version") return CommandId::installs_install_version;
+    if (operation == "installs.verify") return CommandId::installs_verify;
+    if (operation == "installs.repair") return CommandId::installs_repair;
+    if (operation == "installs.uninstall") return CommandId::installs_uninstall;
+    if (operation == "mods.search") return CommandId::mods_search;
+    if (operation == "mods.install") return CommandId::mods_install;
+    if (operation == "mods.update") return CommandId::mods_update;
+    if (operation == "servers.list") return CommandId::servers_list;
+    if (operation == "servers.create") return CommandId::servers_create;
+    if (operation == "servers.start") return CommandId::servers_start;
+    if (operation == "servers.stop") return CommandId::servers_stop;
+    if (operation == "servers.rcon") return CommandId::servers_rcon;
+    if (operation == "diagnostics.redact") return CommandId::diagnostics_redact;
+    if (operation == "dev.bug_report" || operation == "dev.bug-report") return CommandId::dev_bug_report;
+    if (operation == "dev.dump_data" || operation == "dev.dump-data") return CommandId::dev_dump_data;
+    if (operation == "dev.dump_icons" || operation == "dev.dump-icons") return CommandId::dev_dump_icons;
+    if (operation == "dev.benchmark") return CommandId::dev_benchmark;
+    if (operation == "dev.instrument_mod" || operation == "dev.instrument-mod") return CommandId::dev_instrument_mod;
+    return CommandId::unsupported;
+}
+
+bool decode_service_request(
+    CommandId command,
+    const json::Value& payload,
+    ServiceOperationRequest& typed,
+    std::string& detail)
+{
+    typed.operation = service_operation(command);
+    std::set<std::string> allowed;
+    switch (command) {
+    case CommandId::package_verify: allowed = {"path"}; break;
+    case CommandId::installs_install_version: allowed = {"version", "archive"}; break;
+    case CommandId::installs_verify:
+    case CommandId::installs_repair:
+    case CommandId::installs_uninstall: allowed = {"id"}; break;
+    case CommandId::mods_search: allowed = {"query"}; break;
+    case CommandId::mods_install: allowed = {"query", "instance_id"}; break;
+    case CommandId::mods_update: allowed = {"instance_id"}; break;
+    case CommandId::servers_list:
+    case CommandId::dev_bug_report:
+    case CommandId::dev_dump_data:
+    case CommandId::dev_dump_icons:
+    case CommandId::dev_benchmark:
+    case CommandId::dev_instrument_mod: break;
+    case CommandId::servers_create: allowed = {"name", "id", "instance_id"}; break;
+    case CommandId::servers_start:
+    case CommandId::servers_stop:
+    case CommandId::servers_rcon: allowed = {"id"}; break;
+    case CommandId::diagnostics_redact: allowed = {"path"}; break;
+    default: detail = "unsupported service command"; return false;
+    }
+    if (!validate_fields(payload, allowed, detail)) return false;
+    if (!optional_string(payload, "name", typed.name, detail) ||
+        !optional_string(payload, "id", typed.id, detail) ||
+        !optional_string(payload, "instance_id", typed.instance_id, detail) ||
+        !optional_string(payload, "path", typed.path, detail) ||
+        !optional_string(payload, "query", typed.query, detail) ||
+        !optional_string(payload, "version", typed.version, detail) ||
+        !optional_string(payload, "archive", typed.archive, detail)) return false;
+    if (command == CommandId::installs_install_version && typed.version.empty()) {
+        detail = "request payload is missing non-empty string field: version"; return false;
+    }
+    if ((command == CommandId::installs_verify || command == CommandId::installs_repair || command == CommandId::installs_uninstall ||
+         command == CommandId::servers_start || command == CommandId::servers_stop || command == CommandId::servers_rcon) && typed.id.empty()) {
+        detail = "request payload is missing non-empty string field: id"; return false;
+    }
+    if (command == CommandId::servers_create && (typed.name.empty() || typed.instance_id.empty())) {
+        detail = "servers.create requires non-empty name and instance_id fields"; return false;
+    }
+    if (command == CommandId::diagnostics_redact && typed.path.empty()) {
+        detail = "request payload is missing non-empty string field: path"; return false;
+    }
+    return true;
+}
 }
 
 CommandId command_id(ulk_string_view command)
@@ -138,8 +242,27 @@ CommandId command_id(ulk_string_view command)
     if (value == "run.preview") return CommandId::run_preview;
     if (value == "run.execute") return CommandId::run_execute;
     if (value == "setup.preview") return CommandId::setup_preview;
-    if (value == "setup.operation") return CommandId::setup_operation;
-    if (value == "utility.operation") return CommandId::utility_operation;
+    if (value == "package.verify") return CommandId::package_verify;
+    if (value == "installs.install_version") return CommandId::installs_install_version;
+    if (value == "installs.verify") return CommandId::installs_verify;
+    if (value == "installs.repair") return CommandId::installs_repair;
+    if (value == "installs.uninstall") return CommandId::installs_uninstall;
+    if (value == "mods.search") return CommandId::mods_search;
+    if (value == "mods.install") return CommandId::mods_install;
+    if (value == "mods.update") return CommandId::mods_update;
+    if (value == "servers.list") return CommandId::servers_list;
+    if (value == "servers.create") return CommandId::servers_create;
+    if (value == "servers.start") return CommandId::servers_start;
+    if (value == "servers.stop") return CommandId::servers_stop;
+    if (value == "servers.rcon") return CommandId::servers_rcon;
+    if (value == "diagnostics.redact") return CommandId::diagnostics_redact;
+    if (value == "dev.bug_report") return CommandId::dev_bug_report;
+    if (value == "dev.dump_data") return CommandId::dev_dump_data;
+    if (value == "dev.dump_icons") return CommandId::dev_dump_icons;
+    if (value == "dev.benchmark") return CommandId::dev_benchmark;
+    if (value == "dev.instrument_mod") return CommandId::dev_instrument_mod;
+    if (value == "setup.operation") return CommandId::legacy_setup_operation;
+    if (value == "utility.operation") return CommandId::legacy_utility_operation;
     if (value == "mods.import") return CommandId::mods_import;
     if (value == "modsets.lock") return CommandId::modsets_lock;
     if (value == "modsets.verify") return CommandId::modsets_verify;
@@ -167,7 +290,7 @@ bool writes_persistent_state(CommandId command) noexcept
         command == CommandId::saves_clone || command == CommandId::instance_export ||
         command == CommandId::instance_import || command == CommandId::recovery_apply ||
         command == CommandId::migration_apply || command == CommandId::diagnostics_export ||
-        command == CommandId::utility_operation;
+        command == CommandId::servers_create;
 }
 
 bool decode_request(CommandId command, const std::string& text, bool dry_run, ApplicationRequest& request, std::string& detail)
@@ -200,8 +323,8 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!optional_string_array(payload, "roots", typed.roots, detail)) return false;
         request.payload = std::move(typed); return true;
     }
-    case CommandId::setup_operation:
-    case CommandId::utility_operation: {
+    case CommandId::legacy_setup_operation:
+    case CommandId::legacy_utility_operation: {
         if (!validate_fields(payload, {"operation", "name", "id", "instance_id", "path", "query", "version", "archive"}, detail)) return false;
         ServiceOperationRequest typed;
         if (!required_string(payload, "operation", typed.operation, detail) ||
@@ -212,6 +335,33 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "query", typed.query, detail) ||
             !optional_string(payload, "version", typed.version, detail) ||
             !optional_string(payload, "archive", typed.archive, detail)) return false;
+        const CommandId normalized = service_command(typed.operation);
+        if (normalized == CommandId::unsupported) { detail = "unsupported compatibility operation"; return false; }
+        typed.operation = service_operation(normalized);
+        request.command = normalized;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::package_verify:
+    case CommandId::installs_install_version:
+    case CommandId::installs_verify:
+    case CommandId::installs_repair:
+    case CommandId::installs_uninstall:
+    case CommandId::mods_search:
+    case CommandId::mods_install:
+    case CommandId::mods_update:
+    case CommandId::servers_list:
+    case CommandId::servers_create:
+    case CommandId::servers_start:
+    case CommandId::servers_stop:
+    case CommandId::servers_rcon:
+    case CommandId::diagnostics_redact:
+    case CommandId::dev_bug_report:
+    case CommandId::dev_dump_data:
+    case CommandId::dev_dump_icons:
+    case CommandId::dev_benchmark:
+    case CommandId::dev_instrument_mod: {
+        ServiceOperationRequest typed;
+        if (!decode_service_request(command, payload, typed, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::run_execute:

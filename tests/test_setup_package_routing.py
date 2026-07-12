@@ -18,7 +18,8 @@ class SetupPackageRoutingTests(unittest.TestCase):
         gateway = (
             ROOT / "runtime" / "factorio" / "application" / "setup_gateway.cpp"
         ).read_text(encoding="utf-8")
-        self.assertIn('call(options, "setup.operation", operation_payload("package.verify"))', cli)
+        self.assertIn('call(options, "package.verify")', cli)
+        self.assertNotIn('call(options, "setup.operation"', cli)
         self.assertNotIn("usk/usk_api.h", cli)
         self.assertNotIn("usk/usk_api.h", setup)
         self.assertIn("context.setup().verify_package", setup)

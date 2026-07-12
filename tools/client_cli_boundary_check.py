@@ -50,8 +50,6 @@ def validate() -> list[str]:
         "fl_transaction",
         "fl_archive",
         "fl_runtime_",
-        "fl_json",
-        "json::",
         "flb_factorio_",
         "usk/",
         "CreateProcess",

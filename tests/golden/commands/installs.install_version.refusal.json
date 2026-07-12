@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "installs.install_version",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "setup_plan_inputs_not_evaluated",
+    "reason": "Universal Setup did not evaluate the requested version and archive",
+    "recoverable": true
+  }
+}

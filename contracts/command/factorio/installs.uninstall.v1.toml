@@ -1,0 +1,13 @@
+command_id = "installs.uninstall"
+cli = "facman installs uninstall <install-id> --json"
+effects = ["setup_preview", "foreign_owned_refusal"]
+request_schema = "contracts/schema/common/command_request.v1.schema.json"
+response_schema = "contracts/schema/common/result.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = false
+executes_process = false
+mutates_workspace = false
+availability = "unavailable_until_gateway"
+golden_refusal = "tests/golden/commands/installs.uninstall.refusal.json"

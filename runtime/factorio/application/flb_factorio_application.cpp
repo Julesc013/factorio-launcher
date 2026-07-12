@@ -20,6 +20,7 @@
 #include "handlers/setup.h"
 #include "handlers/unavailable.h"
 #include "handlers/utility.h"
+#include "fl_json_boundary.h"
 
 #include <filesystem>
 #include <mutex>
@@ -32,14 +33,12 @@ namespace {
 
 int write_boundary_error(ulk_command_response_v1* response, const char* code, const char* message) noexcept
 {
-    static const char payload[] =
-        "{\"schema\":\"ulk.command_response.v1\",\"status\":\"internal_error\",\"payload\":null,"
-        "\"error\":{\"code\":\"cxx_exception_contained\",\"message\":\"A C++ exception was contained at the FLB boundary\"}}";
+    const char* payload = facman::core::json::boundary::contained_exception_response;
     if (response == nullptr || response->struct_size < sizeof(*response)) return ULK_STATUS_INVALID_ARGUMENT;
     response->struct_size = sizeof(*response);
     response->status = ULK_STATUS_ERROR;
     response->json_payload.data = payload;
-    response->json_payload.size = sizeof(payload) - 1;
+    response->json_payload.size = std::char_traits<char>::length(payload);
     response->error.struct_size = sizeof(response->error);
     response->error.code = ULK_STATUS_ERROR;
     response->error.message.data = message;
@@ -114,8 +113,25 @@ private:
         case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
         case CommandId::run_execute: return handlers::unavailable(context_, "run.execute", "isolation_not_proven", "real Factorio write isolation has not been proven");
         case CommandId::setup_preview: return handlers::preview_setup(context_);
-        case CommandId::setup_operation: return handlers::setup_operation(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::utility_operation: return handlers::utility_operation(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::package_verify: return handlers::verify_package(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_install_version: return handlers::install_version(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_verify: return handlers::verify_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_repair: return handlers::repair_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_uninstall: return handlers::uninstall_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::mods_search:
+        case CommandId::mods_install:
+        case CommandId::mods_update: return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::servers_list: return handlers::list_servers(context_);
+        case CommandId::servers_create: return handlers::create_server(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::servers_start:
+        case CommandId::servers_stop:
+        case CommandId::servers_rcon: return handlers::control_server(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::diagnostics_redact: return handlers::redact_diagnostics(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::dev_bug_report: return handlers::create_bug_report(context_);
+        case CommandId::dev_dump_data:
+        case CommandId::dev_dump_icons:
+        case CommandId::dev_benchmark:
+        case CommandId::dev_instrument_mod: return handlers::refuse_dev_execution(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::launch_plan_preflight: return handlers::preflight_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload));
         case CommandId::mods_import: return handlers::import_mod(context_, std::get<ImportModRequest>(request.payload));
         case CommandId::modsets_lock: return handlers::lock_modset(context_, std::get<ModsetInstanceRequest>(request.payload));

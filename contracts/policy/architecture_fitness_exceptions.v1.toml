@@ -33,8 +33,5 @@ target_dependency = []
 aide_queue_state = []
 registry_capacity = []
 availability_parity = []
-generic_operation = [
-  "setup.operation",
-  "utility.operation",
-]
+generic_operation = []
 setup_provider_boundary = []

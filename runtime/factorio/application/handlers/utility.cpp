@@ -80,7 +80,7 @@ ApplicationResult server_create(ApplicationContext& context, const ServiceOperat
     if (fs::exists(target.path)) return refused(safety_refusal("servers.create", "persistent_target_exists", "Server profile already exists", target.path.string(), true), "persistent_target_exists", "Server profile already exists");
     const std::string text = server_json(id, request.name, request.instance_id);
     transactions::Record record;
-    record.command_id = "utility.operation";
+    record.command_id = "servers.create";
     record.target = target.path;
     record.sources = {instance.value().source_path};
     record.commit_strategy = "durable_exclusive_file_create";
@@ -173,42 +173,61 @@ ApplicationResult diagnostics_redact(const ServiceOperationRequest& request)
     return result;
 }
 
-ApplicationResult dev_operation(ApplicationContext& context, const ServiceOperationRequest& request)
+ApplicationResult bug_report(ApplicationContext& context)
 {
-    if (request.operation == "dev.bug-report") {
-        auto installs = context.installs().list();
-        auto instances = context.instances().list();
-        if (!installs || !instances) return refused(safety_refusal(request.operation, "workspace_list_failed", "Workspace records could not be listed", "", true), "workspace_list_failed", "Workspace records could not be listed");
-        const fs::path servers = context.workspace() / "servers";
-        std::size_t server_count = 0;
-        std::error_code error;
-        if (fs::is_directory(servers, error) && !error) for (fs::directory_iterator iterator(servers, error), end; iterator != end && !error; iterator.increment(error)) if (iterator->is_regular_file(error)) ++server_count;
-        ApplicationResult result;
-        result.output = "{\"schema\":\"factorio.bug_report.v1\",\"workspace\":" + json_quote(context.workspace().string()) +
-            ",\"installs\":" + std::to_string(installs.value().size()) + ",\"instances\":" + std::to_string(instances.value().size()) +
-            ",\"servers\":" + std::to_string(server_count) + ",\"redacts_secrets\":true,\"includes_factorio_binaries\":false}";
-        return result;
-    }
-    return unavailable(context, request.operation, "execution_not_enabled", "Factorio execution-based developer tooling is not enabled in this slice");
+    auto installs = context.installs().list();
+    auto instances = context.instances().list();
+    if (!installs || !instances) return refused(safety_refusal("dev.bug_report", "workspace_list_failed", "Workspace records could not be listed", "", true), "workspace_list_failed", "Workspace records could not be listed");
+    const fs::path servers = context.workspace() / "servers";
+    std::size_t server_count = 0;
+    std::error_code error;
+    if (fs::is_directory(servers, error) && !error) for (fs::directory_iterator iterator(servers, error), end; iterator != end && !error; iterator.increment(error)) if (iterator->is_regular_file(error)) ++server_count;
+    ApplicationResult result;
+    result.output = "{\"schema\":\"factorio.bug_report.v1\",\"workspace\":" + json_quote(context.workspace().string()) +
+        ",\"installs\":" + std::to_string(installs.value().size()) + ",\"instances\":" + std::to_string(instances.value().size()) +
+        ",\"servers\":" + std::to_string(server_count) + ",\"redacts_secrets\":true,\"includes_factorio_binaries\":false}";
+    return result;
 }
 }
 
-ApplicationResult utility_operation(ApplicationContext& context, const ServiceOperationRequest& request)
+ApplicationResult refuse_mod_portal(ApplicationContext&, const ServiceOperationRequest& request)
 {
-    if (request.operation == "mods.search" || request.operation == "mods.install" || request.operation == "mods.update") {
-        ApplicationResult result;
-        result.status = ULK_STATUS_ERROR;
-        result.error_code = "network_forbidden";
-        result.error_message = "Mod Portal network access is not enabled in this portable build";
-        result.output = portal_refusal(request);
-        return result;
-    }
-    if (request.operation == "servers.create") return server_create(context, request);
-    if (request.operation == "servers.list") return server_list(context);
-    if (request.operation == "servers.start" || request.operation == "servers.stop" || request.operation == "servers.rcon") return server_unavailable(context, request);
-    if (request.operation.rfind("dev.", 0) == 0) return dev_operation(context, request);
-    if (request.operation == "diagnostics.redact") return diagnostics_redact(request);
-    return unavailable(context, request.operation, "unsupported_operation", "Utility operation is not supported");
+    ApplicationResult result;
+    result.status = ULK_STATUS_ERROR;
+    result.error_code = "network_forbidden";
+    result.error_message = "Mod Portal network access is not enabled in this portable build";
+    result.output = portal_refusal(request);
+    return result;
+}
+
+ApplicationResult create_server(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return server_create(context, request);
+}
+
+ApplicationResult list_servers(ApplicationContext& context)
+{
+    return server_list(context);
+}
+
+ApplicationResult control_server(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return server_unavailable(context, request);
+}
+
+ApplicationResult redact_diagnostics(ApplicationContext&, const ServiceOperationRequest& request)
+{
+    return diagnostics_redact(request);
+}
+
+ApplicationResult create_bug_report(ApplicationContext& context)
+{
+    return bug_report(context);
+}
+
+ApplicationResult refuse_dev_execution(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return unavailable(context, request.operation, "execution_not_enabled", "Factorio execution-based developer tooling is not enabled in this slice");
 }
 
 } // namespace facman::factorio::application::handlers

@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "servers.list",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unknown_server",
+    "reason": "Canonical command refusal fixture",
+    "recoverable": true
+  }
+}

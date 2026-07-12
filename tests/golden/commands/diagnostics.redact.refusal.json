@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "diagnostics.redact",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "diagnostic_structured_input_invalid",
+    "reason": "Canonical command refusal fixture",
+    "recoverable": true
+  }
+}

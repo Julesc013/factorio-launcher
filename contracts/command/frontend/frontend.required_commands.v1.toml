@@ -21,6 +21,8 @@ required = [
 ]
 optional = [
   "diagnostics.export",
+  "diagnostics.redact",
+  "dev.bug_report",
   "mods.import",
   "modsets.lock",
   "modsets.verify",
@@ -33,9 +35,26 @@ optional = [
   "workspace.recovery.inspect",
   "workspace.recovery.plan",
   "workspace.recovery.apply",
+  "servers.create",
+  "servers.list",
 ]
 unavailable = [
+  "dev.benchmark",
+  "dev.dump_data",
+  "dev.dump_icons",
+  "dev.instrument_mod",
+  "installs.install_version",
+  "installs.repair",
+  "installs.uninstall",
+  "installs.verify",
+  "mods.install",
+  "mods.search",
+  "mods.update",
+  "package.verify",
   "run.execute",
+  "servers.rcon",
+  "servers.start",
+  "servers.stop",
   "setup.preview",
 ]
 
@@ -207,6 +226,120 @@ phase = "unavailable"
 backend_id = "install_local.plan"
 cli = "facman installs install-version <version> --archive <path> --json"
 
+[[commands]]
+id = "diagnostics.redact"
+phase = "optional"
+backend_id = "diagnostics.redact"
+cli = "facman diagnostics redact <path> --json"
+
+[[commands]]
+id = "dev.bug_report"
+phase = "optional"
+backend_id = "dev.bug_report"
+cli = "facman dev bug-report --json"
+
+[[commands]]
+id = "servers.create"
+phase = "optional"
+backend_id = "servers.create"
+cli = "facman servers create <name> --instance <id> --json"
+
+[[commands]]
+id = "servers.list"
+phase = "optional"
+backend_id = "servers.list"
+cli = "facman servers list --json"
+
+[[commands]]
+id = "package.verify"
+phase = "unavailable"
+backend_id = "package.verify"
+cli = "facman package verify --json"
+
+[[commands]]
+id = "installs.install_version"
+phase = "unavailable"
+backend_id = "installs.install_version"
+cli = "facman installs install-version <version> --archive <path> --json"
+
+[[commands]]
+id = "installs.verify"
+phase = "unavailable"
+backend_id = "installs.verify"
+cli = "facman installs verify <install-id> --json"
+
+[[commands]]
+id = "installs.repair"
+phase = "unavailable"
+backend_id = "installs.repair"
+cli = "facman installs repair <install-id> --json"
+
+[[commands]]
+id = "installs.uninstall"
+phase = "unavailable"
+backend_id = "installs.uninstall"
+cli = "facman installs uninstall <install-id> --json"
+
+[[commands]]
+id = "mods.search"
+phase = "unavailable"
+backend_id = "mods.search"
+cli = "facman mods search <query> --json"
+
+[[commands]]
+id = "mods.install"
+phase = "unavailable"
+backend_id = "mods.install"
+cli = "facman mods install <name> --instance <id> --json"
+
+[[commands]]
+id = "mods.update"
+phase = "unavailable"
+backend_id = "mods.update"
+cli = "facman mods update --instance <id> --json"
+
+[[commands]]
+id = "servers.start"
+phase = "unavailable"
+backend_id = "servers.start"
+cli = "facman servers start <server-id> --json"
+
+[[commands]]
+id = "servers.stop"
+phase = "unavailable"
+backend_id = "servers.stop"
+cli = "facman servers stop <server-id> --json"
+
+[[commands]]
+id = "servers.rcon"
+phase = "unavailable"
+backend_id = "servers.rcon"
+cli = "facman servers rcon <server-id> --json"
+
+[[commands]]
+id = "dev.dump_data"
+phase = "unavailable"
+backend_id = "dev.dump_data"
+cli = "facman dev dump-data --json"
+
+[[commands]]
+id = "dev.dump_icons"
+phase = "unavailable"
+backend_id = "dev.dump_icons"
+cli = "facman dev dump-icons --json"
+
+[[commands]]
+id = "dev.benchmark"
+phase = "unavailable"
+backend_id = "dev.benchmark"
+cli = "facman dev benchmark --json"
+
+[[commands]]
+id = "dev.instrument_mod"
+phase = "unavailable"
+backend_id = "dev.instrument_mod"
+cli = "facman dev instrument-mod --json"
+
 [[frontends]]
 id = "cli"
 kind = "cli"
@@ -243,6 +376,25 @@ doctor = "implemented"
 "workspace.recovery.plan" = "implemented"
 "workspace.recovery.apply" = "implemented"
 "setup.preview" = "stubbed_with_refusal"
+"diagnostics.redact" = "implemented"
+"dev.bug_report" = "implemented"
+"servers.create" = "implemented"
+"servers.list" = "implemented"
+"dev.benchmark" = "stubbed_with_refusal"
+"dev.dump_data" = "stubbed_with_refusal"
+"dev.dump_icons" = "stubbed_with_refusal"
+"dev.instrument_mod" = "stubbed_with_refusal"
+"installs.install_version" = "stubbed_with_refusal"
+"installs.repair" = "stubbed_with_refusal"
+"installs.uninstall" = "stubbed_with_refusal"
+"installs.verify" = "stubbed_with_refusal"
+"mods.install" = "stubbed_with_refusal"
+"mods.search" = "stubbed_with_refusal"
+"mods.update" = "stubbed_with_refusal"
+"package.verify" = "stubbed_with_refusal"
+"servers.rcon" = "stubbed_with_refusal"
+"servers.start" = "stubbed_with_refusal"
+"servers.stop" = "stubbed_with_refusal"
 
 [[frontends]]
 id = "tui"
@@ -280,6 +432,25 @@ doctor = "stubbed_with_refusal"
 "workspace.recovery.plan" = "not_supported_with_reason"
 "workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
+"diagnostics.redact" = "not_supported_with_reason"
+"dev.bug_report" = "not_supported_with_reason"
+"servers.create" = "not_supported_with_reason"
+"servers.list" = "not_supported_with_reason"
+"dev.benchmark" = "not_supported_with_reason"
+"dev.dump_data" = "not_supported_with_reason"
+"dev.dump_icons" = "not_supported_with_reason"
+"dev.instrument_mod" = "not_supported_with_reason"
+"installs.install_version" = "not_supported_with_reason"
+"installs.repair" = "not_supported_with_reason"
+"installs.uninstall" = "not_supported_with_reason"
+"installs.verify" = "not_supported_with_reason"
+"mods.install" = "not_supported_with_reason"
+"mods.search" = "not_supported_with_reason"
+"mods.update" = "not_supported_with_reason"
+"package.verify" = "not_supported_with_reason"
+"servers.rcon" = "not_supported_with_reason"
+"servers.start" = "not_supported_with_reason"
+"servers.stop" = "not_supported_with_reason"
 
 [[frontends]]
 id = "daemon"
@@ -317,6 +488,25 @@ doctor = "stubbed_with_refusal"
 "workspace.recovery.plan" = "not_supported_with_reason"
 "workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
+"diagnostics.redact" = "not_supported_with_reason"
+"dev.bug_report" = "not_supported_with_reason"
+"servers.create" = "not_supported_with_reason"
+"servers.list" = "not_supported_with_reason"
+"dev.benchmark" = "not_supported_with_reason"
+"dev.dump_data" = "not_supported_with_reason"
+"dev.dump_icons" = "not_supported_with_reason"
+"dev.instrument_mod" = "not_supported_with_reason"
+"installs.install_version" = "not_supported_with_reason"
+"installs.repair" = "not_supported_with_reason"
+"installs.uninstall" = "not_supported_with_reason"
+"installs.verify" = "not_supported_with_reason"
+"mods.install" = "not_supported_with_reason"
+"mods.search" = "not_supported_with_reason"
+"mods.update" = "not_supported_with_reason"
+"package.verify" = "not_supported_with_reason"
+"servers.rcon" = "not_supported_with_reason"
+"servers.start" = "not_supported_with_reason"
+"servers.stop" = "not_supported_with_reason"
 
 [[frontends]]
 id = "windows.winforms"
@@ -354,6 +544,25 @@ doctor = "implemented"
 "workspace.recovery.plan" = "not_supported_with_reason"
 "workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
+"diagnostics.redact" = "not_supported_with_reason"
+"dev.bug_report" = "not_supported_with_reason"
+"servers.create" = "not_supported_with_reason"
+"servers.list" = "not_supported_with_reason"
+"dev.benchmark" = "not_supported_with_reason"
+"dev.dump_data" = "not_supported_with_reason"
+"dev.dump_icons" = "not_supported_with_reason"
+"dev.instrument_mod" = "not_supported_with_reason"
+"installs.install_version" = "not_supported_with_reason"
+"installs.repair" = "not_supported_with_reason"
+"installs.uninstall" = "not_supported_with_reason"
+"installs.verify" = "not_supported_with_reason"
+"mods.install" = "not_supported_with_reason"
+"mods.search" = "not_supported_with_reason"
+"mods.update" = "not_supported_with_reason"
+"package.verify" = "not_supported_with_reason"
+"servers.rcon" = "not_supported_with_reason"
+"servers.start" = "not_supported_with_reason"
+"servers.stop" = "not_supported_with_reason"
 
 [[frontends]]
 id = "windows.winui"
@@ -391,6 +600,25 @@ doctor = "not_supported_with_reason"
 "workspace.recovery.plan" = "not_supported_with_reason"
 "workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
+"diagnostics.redact" = "not_supported_with_reason"
+"dev.bug_report" = "not_supported_with_reason"
+"servers.create" = "not_supported_with_reason"
+"servers.list" = "not_supported_with_reason"
+"dev.benchmark" = "not_supported_with_reason"
+"dev.dump_data" = "not_supported_with_reason"
+"dev.dump_icons" = "not_supported_with_reason"
+"dev.instrument_mod" = "not_supported_with_reason"
+"installs.install_version" = "not_supported_with_reason"
+"installs.repair" = "not_supported_with_reason"
+"installs.uninstall" = "not_supported_with_reason"
+"installs.verify" = "not_supported_with_reason"
+"mods.install" = "not_supported_with_reason"
+"mods.search" = "not_supported_with_reason"
+"mods.update" = "not_supported_with_reason"
+"package.verify" = "not_supported_with_reason"
+"servers.rcon" = "not_supported_with_reason"
+"servers.start" = "not_supported_with_reason"
+"servers.stop" = "not_supported_with_reason"
 
 [[frontends]]
 id = "macos.appkit"
@@ -428,6 +656,25 @@ doctor = "implemented"
 "workspace.recovery.plan" = "not_supported_with_reason"
 "workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
+"diagnostics.redact" = "not_supported_with_reason"
+"dev.bug_report" = "not_supported_with_reason"
+"servers.create" = "not_supported_with_reason"
+"servers.list" = "not_supported_with_reason"
+"dev.benchmark" = "not_supported_with_reason"
+"dev.dump_data" = "not_supported_with_reason"
+"dev.dump_icons" = "not_supported_with_reason"
+"dev.instrument_mod" = "not_supported_with_reason"
+"installs.install_version" = "not_supported_with_reason"
+"installs.repair" = "not_supported_with_reason"
+"installs.uninstall" = "not_supported_with_reason"
+"installs.verify" = "not_supported_with_reason"
+"mods.install" = "not_supported_with_reason"
+"mods.search" = "not_supported_with_reason"
+"mods.update" = "not_supported_with_reason"
+"package.verify" = "not_supported_with_reason"
+"servers.rcon" = "not_supported_with_reason"
+"servers.start" = "not_supported_with_reason"
+"servers.stop" = "not_supported_with_reason"
 
 [[frontends]]
 id = "macos.swiftui"
@@ -465,6 +712,25 @@ doctor = "not_supported_with_reason"
 "workspace.recovery.plan" = "not_supported_with_reason"
 "workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
+"diagnostics.redact" = "not_supported_with_reason"
+"dev.bug_report" = "not_supported_with_reason"
+"servers.create" = "not_supported_with_reason"
+"servers.list" = "not_supported_with_reason"
+"dev.benchmark" = "not_supported_with_reason"
+"dev.dump_data" = "not_supported_with_reason"
+"dev.dump_icons" = "not_supported_with_reason"
+"dev.instrument_mod" = "not_supported_with_reason"
+"installs.install_version" = "not_supported_with_reason"
+"installs.repair" = "not_supported_with_reason"
+"installs.uninstall" = "not_supported_with_reason"
+"installs.verify" = "not_supported_with_reason"
+"mods.install" = "not_supported_with_reason"
+"mods.search" = "not_supported_with_reason"
+"mods.update" = "not_supported_with_reason"
+"package.verify" = "not_supported_with_reason"
+"servers.rcon" = "not_supported_with_reason"
+"servers.start" = "not_supported_with_reason"
+"servers.stop" = "not_supported_with_reason"
 
 [[frontends]]
 id = "linux.gtk"
@@ -502,6 +768,25 @@ doctor = "stubbed_with_refusal"
 "workspace.recovery.plan" = "not_supported_with_reason"
 "workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
+"diagnostics.redact" = "not_supported_with_reason"
+"dev.bug_report" = "not_supported_with_reason"
+"servers.create" = "not_supported_with_reason"
+"servers.list" = "not_supported_with_reason"
+"dev.benchmark" = "not_supported_with_reason"
+"dev.dump_data" = "not_supported_with_reason"
+"dev.dump_icons" = "not_supported_with_reason"
+"dev.instrument_mod" = "not_supported_with_reason"
+"installs.install_version" = "not_supported_with_reason"
+"installs.repair" = "not_supported_with_reason"
+"installs.uninstall" = "not_supported_with_reason"
+"installs.verify" = "not_supported_with_reason"
+"mods.install" = "not_supported_with_reason"
+"mods.search" = "not_supported_with_reason"
+"mods.update" = "not_supported_with_reason"
+"package.verify" = "not_supported_with_reason"
+"servers.rcon" = "not_supported_with_reason"
+"servers.start" = "not_supported_with_reason"
+"servers.stop" = "not_supported_with_reason"
 
 [[frontends]]
 id = "linux.qt"
@@ -539,3 +824,22 @@ doctor = "stubbed_with_refusal"
 "workspace.recovery.plan" = "not_supported_with_reason"
 "workspace.recovery.apply" = "not_supported_with_reason"
 "setup.preview" = "not_supported_with_reason"
+"diagnostics.redact" = "not_supported_with_reason"
+"dev.bug_report" = "not_supported_with_reason"
+"servers.create" = "not_supported_with_reason"
+"servers.list" = "not_supported_with_reason"
+"dev.benchmark" = "not_supported_with_reason"
+"dev.dump_data" = "not_supported_with_reason"
+"dev.dump_icons" = "not_supported_with_reason"
+"dev.instrument_mod" = "not_supported_with_reason"
+"installs.install_version" = "not_supported_with_reason"
+"installs.repair" = "not_supported_with_reason"
+"installs.uninstall" = "not_supported_with_reason"
+"installs.verify" = "not_supported_with_reason"
+"mods.install" = "not_supported_with_reason"
+"mods.search" = "not_supported_with_reason"
+"mods.update" = "not_supported_with_reason"
+"package.verify" = "not_supported_with_reason"
+"servers.rcon" = "not_supported_with_reason"
+"servers.start" = "not_supported_with_reason"
+"servers.stop" = "not_supported_with_reason"
