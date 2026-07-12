@@ -358,6 +358,7 @@ std::vector<fs::path> path_list_environment(const char* name)
     return paths;
 }
 
+#ifdef _WIN32
 class VdfTokenReader {
 public:
     explicit VdfTokenReader(const std::string& text) : text_(text) {}
@@ -453,7 +454,6 @@ std::vector<fs::path> steam_libraries(const fs::path& steam_root)
     return libraries;
 }
 
-#ifdef _WIN32
 std::string registry_string(HKEY root, const wchar_t* subkey, const wchar_t* name)
 {
     DWORD type = 0;
@@ -522,18 +522,20 @@ std::vector<SearchRoot> discovery_search_roots(const std::vector<fs::path>& expl
             "foreign_owned");
     }
 #else
-    const char* home = std::getenv("HOME");
-    if (home && *home) {
-        append_search_root(roots, fs::path(home) / "factorio");
-        append_search_root(
-            roots,
-            fs::path(home) / ".local" / "share" / "Steam" / "steamapps" / "common" / "Factorio",
-            "steam",
-            "foreign_owned");
-        append_search_root(roots, fs::path(home) / "Applications" / "factorio.app", "app_bundle", "foreign_owned");
+    if (!disable_defaults) {
+        const char* home = std::getenv("HOME");
+        if (home && *home) {
+            append_search_root(roots, fs::path(home) / "factorio");
+            append_search_root(
+                roots,
+                fs::path(home) / ".local" / "share" / "Steam" / "steamapps" / "common" / "Factorio",
+                "steam",
+                "foreign_owned");
+            append_search_root(roots, fs::path(home) / "Applications" / "factorio.app", "app_bundle", "foreign_owned");
+        }
+        append_search_root(roots, "/opt/factorio", "os_package", "foreign_owned");
+        append_search_root(roots, "/Applications/factorio.app", "app_bundle", "foreign_owned");
     }
-    append_search_root(roots, "/opt/factorio", "os_package", "foreign_owned");
-    append_search_root(roots, "/Applications/factorio.app", "app_bundle", "foreign_owned");
 #endif
     std::sort(roots.begin(), roots.end(), [](const SearchRoot& left, const SearchRoot& right) {
         return comparison_key(left.path) < comparison_key(right.path);
