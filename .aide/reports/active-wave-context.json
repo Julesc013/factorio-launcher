@@ -1,56 +1,52 @@
 {
   "active_workunit": {
     "affected_contracts": [
+      "contracts/schema/",
       "contracts/generated-index/command_catalog.v2.json"
     ],
     "affected_targets": [
-      "facman_tui",
-      "FacMan.WinForms",
-      "FacMan.AppKit"
+      "all non-execution clients"
     ],
     "affected_tests": [
-      "tests/test_tui_product.py",
-      "tests/test_frontend_contract.py"
+      "tests/test_r37_lifecycle_journey.py",
+      "tests/package_runtime/"
     ],
     "allowed_paths": [
-      "apps/",
-      "runtime/core/generated/",
-      "tools/codegen/",
-      "contracts/",
       "tests/",
-      "docs/"
+      "tools/",
+      "docs/quality/",
+      "release/",
+      ".github/"
     ],
     "blockers": [],
     "claim_impacts": [
-      "guided-operational-ux",
-      "generated-frontend-parity"
+      "r3.7-cross-transport-lifecycle-proof"
     ],
     "dependencies": [
-      "FACMAN-INSTANCE-SNAPSHOT-01",
-      "FACMAN-LOCAL-MODSET-SOLVER-01",
-      "FACMAN-SERVER-PLAN-02"
+      "FACMAN-OPERATIONAL-UX-03"
     ],
     "forbidden_paths": [
-      "frontend backend logic",
-      "secret history",
-      "daemon promotion"
+      "real Factorio execution",
+      "fixture mutation",
+      "unbounded fixtures"
     ],
-    "id": "FACMAN-OPERATIONAL-UX-03",
+    "id": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
     "last_green_commit": null,
     "provider_revisions": {},
     "status": "pending",
     "stop_conditions": [
-      "frontend invents grammar",
-      "accessibility regresses"
+      "transport semantics diverge",
+      "a refusal must weaken"
     ],
-    "title": "Generate guided frontend forms and operational visualizations"
+    "title": "Prove the reversible lifecycle across transports and packages"
   },
   "affected_contracts": [
+    "contracts/schema/",
     "contracts/generated-index/command_catalog.v2.json"
   ],
   "affected_tests": [
-    "tests/test_tui_product.py",
-    "tests/test_frontend_contract.py"
+    "tests/test_r37_lifecycle_journey.py",
+    "tests/package_runtime/"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -60,21 +56,11 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "578bfb57bf824ef8093f9caaac364d17639d84fa",
+  "current_exact_revision": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-INSTANCE-SNAPSHOT-01",
-      "last_green_commit": "9f4b3d351dfb23dc5252886ac77e8b83ff772599",
-      "status": "closed"
-    },
-    {
-      "id": "FACMAN-LOCAL-MODSET-SOLVER-01",
-      "last_green_commit": "b93d7376c625d824b4a401a59e610ac92a734d28",
-      "status": "closed"
-    },
-    {
-      "id": "FACMAN-SERVER-PLAN-02",
-      "last_green_commit": "578bfb57bf824ef8093f9caaac364d17639d84fa",
+      "id": "FACMAN-OPERATIONAL-UX-03",
+      "last_green_commit": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
       "status": "closed"
     }
   ],

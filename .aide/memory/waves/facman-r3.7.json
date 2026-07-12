@@ -295,10 +295,37 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-SERVER-PLAN-02"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "27f97882e589d9b6b2439e636c370017cf9167650471221693c9ac81b90c26a5",
+      "test_fingerprints": {
+        "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+        "tests/test_tui_product.py": "70af14536ac7fba53e757755c3012d81cac54c5a237359a78ab4275dfc872f45"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-OPERATIONAL-UX-03"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "578bfb57bf824ef8093f9caaac364d17639d84fa",
+  "current_exact_revision": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -306,7 +333,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T18:10:17Z",
+  "updated_at": "2026-07-12T18:37:55Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -572,6 +599,42 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-SERVER-PLAN-02"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T18:37:54Z",
+        "result": "PASS",
+        "source_fingerprint": "27f97882e589d9b6b2439e636c370017cf9167650471221693c9ac81b90c26a5",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tests/test_tui_product.py": "70af14536ac7fba53e757755c3012d81cac54c5a237359a78ab4275dfc872f45"
+        },
+        "test_results": {
+          "accessibility": "PASS",
+          "appkit_generated_contract": "PASS",
+          "clean_repro": "PASS",
+          "daemon_unavailable": "PASS",
+          "desktop_visualizations": "PASS",
+          "direct_transport": "PASS",
+          "frontend_no_backend_logic": "PASS",
+          "generated_guided_forms": "PASS",
+          "process_transport": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "tui_release_build": "PASS",
+          "winforms_release_build": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-OPERATIONAL-UX-03"
       }
     ]
   },
@@ -1258,6 +1321,8 @@
         "guided-operational-ux",
         "generated-frontend-parity"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T18:37:55Z",
       "dependencies": [
         "FACMAN-INSTANCE-SNAPSHOT-01",
         "FACMAN-LOCAL-MODSET-SOLVER-01",
@@ -1269,14 +1334,50 @@
         "daemon promotion"
       ],
       "id": "FACMAN-OPERATIONAL-UX-03",
-      "last_green_commit": null,
+      "last_green_commit": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T18:11:28Z",
+      "status": "closed",
       "stop_conditions": [
         "frontend invents grammar",
         "accessibility regresses"
       ],
-      "title": "Generate guided frontend forms and operational visualizations"
+      "title": "Generate guided frontend forms and operational visualizations",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T18:37:54Z",
+        "result": "PASS",
+        "source_fingerprint": "27f97882e589d9b6b2439e636c370017cf9167650471221693c9ac81b90c26a5",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_frontend_contract.py": "43e7258c1e99faba251ee25f452412e56244117b4e0a32901ec22123e3b34499",
+          "tests/test_tui_product.py": "70af14536ac7fba53e757755c3012d81cac54c5a237359a78ab4275dfc872f45"
+        },
+        "test_results": {
+          "accessibility": "PASS",
+          "appkit_generated_contract": "PASS",
+          "clean_repro": "PASS",
+          "daemon_unavailable": "PASS",
+          "desktop_visualizations": "PASS",
+          "direct_transport": "PASS",
+          "frontend_no_backend_logic": "PASS",
+          "generated_guided_forms": "PASS",
+          "process_transport": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "tui_release_build": "PASS",
+          "winforms_release_build": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
