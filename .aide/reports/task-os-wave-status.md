@@ -2,7 +2,7 @@
 
 - wave_id: facman-r3.7
 - status: active
-- current_exact_revision: dedadfa2f95e24c1160dce8014e1138c859d54cd
+- current_exact_revision: 8556b05e033a3739d7bd5c78b8c530d3cff2ff3c
 - mode: report_only
 - task_execution: false
 - repair_execution: false
@@ -25,7 +25,7 @@
 - `FACMAN-SAVE-INDEX-AND-RETENTION-02`: closed (last_green_commit: 2e9a66f8a4bdf5107882c5f54b102be63bfa9a64)
 - `FACMAN-SERVER-PLAN-02`: closed (last_green_commit: 578bfb57bf824ef8093f9caaac364d17639d84fa)
 - `FACMAN-OPERATIONAL-UX-03`: closed (last_green_commit: dedadfa2f95e24c1160dce8014e1138c859d54cd)
-- `FACMAN-R3.7-END-TO-END-LIFECYCLE-01`: pending (last_green_commit: none)
+- `FACMAN-R3.7-END-TO-END-LIFECYCLE-01`: closed (last_green_commit: 8556b05e033a3739d7bd5c78b8c530d3cff2ff3c)
 - `FACMAN-R3.7-CLOSEOUT-01`: pending (last_green_commit: none)
 
 ## Active Context

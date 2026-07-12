@@ -1,52 +1,53 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "contracts/schema/",
-      "contracts/generated-index/command_catalog.v2.json"
+      "contracts/",
+      "release/index/workspace_lock.v1.toml"
     ],
     "affected_targets": [
-      "all non-execution clients"
+      "all"
     ],
     "affected_tests": [
-      "tests/test_r37_lifecycle_journey.py",
-      "tests/package_runtime/"
+      "py -3 tools/dev.py verify-all",
+      "py -3 .aide/scripts/aide_lite.py test"
     ],
     "allowed_paths": [
+      ".aide/",
+      "docs/",
+      "release/",
       "tests/",
       "tools/",
-      "docs/quality/",
-      "release/",
       ".github/"
     ],
     "blockers": [],
     "claim_impacts": [
-      "r3.7-cross-transport-lifecycle-proof"
+      "r3.7-instance-content-lifecycle"
     ],
     "dependencies": [
-      "FACMAN-OPERATIONAL-UX-03"
+      "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
     ],
     "forbidden_paths": [
-      "real Factorio execution",
-      "fixture mutation",
-      "unbounded fixtures"
+      "run.execute promotion",
+      "human verdict automation",
+      "publication"
     ],
-    "id": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+    "id": "FACMAN-R3.7-CLOSEOUT-01",
     "last_green_commit": null,
     "provider_revisions": {},
     "status": "pending",
     "stop_conditions": [
-      "transport semantics diverge",
-      "a refusal must weaken"
+      "mandatory proof is not green",
+      "evidence is stale"
     ],
-    "title": "Prove the reversible lifecycle across transports and packages"
+    "title": "Close R3.7 with exact cross-platform evidence"
   },
   "affected_contracts": [
-    "contracts/schema/",
-    "contracts/generated-index/command_catalog.v2.json"
+    "contracts/",
+    "release/index/workspace_lock.v1.toml"
   ],
   "affected_tests": [
-    "tests/test_r37_lifecycle_journey.py",
-    "tests/package_runtime/"
+    "py -3 tools/dev.py verify-all",
+    "py -3 .aide/scripts/aide_lite.py test"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -56,11 +57,11 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
+  "current_exact_revision": "8556b05e033a3739d7bd5c78b8c530d3cff2ff3c",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-OPERATIONAL-UX-03",
-      "last_green_commit": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
+      "id": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+      "last_green_commit": "8556b05e033a3739d7bd5c78b8c530d3cff2ff3c",
       "status": "closed"
     }
   ],

@@ -322,10 +322,36 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-OPERATIONAL-UX-03"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "8556b05e033a3739d7bd5c78b8c530d3cff2ff3c",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "35a6339bfe11a9ae9bfa517cab22ad9ff94d4545e9fb78fc66072e755b5ac747",
+      "test_fingerprints": {
+        "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+        "tests/test_r37_lifecycle_journey.py": "902fa2f6a8336ee2f4aab05e7c606c87daaa8af8313242c93a04429d9b8d687d"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "dedadfa2f95e24c1160dce8014e1138c859d54cd",
+  "current_exact_revision": "8556b05e033a3739d7bd5c78b8c530d3cff2ff3c",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -333,7 +359,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T18:37:55Z",
+  "updated_at": "2026-07-12T19:35:38Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -635,6 +661,45 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-OPERATIONAL-UX-03"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T19:35:38Z",
+        "result": "PASS",
+        "source_fingerprint": "35a6339bfe11a9ae9bfa517cab22ad9ff94d4545e9fb78fc66072e755b5ac747",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+          "tests/test_r37_lifecycle_journey.py": "902fa2f6a8336ee2f4aab05e7c606c87daaa8af8313242c93a04429d9b8d687d"
+        },
+        "test_results": {
+          "adversarial_matrix": "PASS",
+          "appkit_generated_contract": "PASS",
+          "bounded_stdio": "PASS",
+          "clean_three_repo_repro": "PASS",
+          "cli": "PASS",
+          "direct_flb": "PASS",
+          "fixture_hashes_unchanged": "PASS",
+          "full_scale_performance": "PASS",
+          "lifecycle_journey": "PASS",
+          "no_execution": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "tui_guided": "PASS",
+          "tui_noninteractive": "PASS",
+          "tui_process": "PASS",
+          "winforms_generated_client": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
       }
     ]
   },
@@ -1402,6 +1467,8 @@
       "claim_impacts": [
         "r3.7-cross-transport-lifecycle-proof"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T19:35:38Z",
       "dependencies": [
         "FACMAN-OPERATIONAL-UX-03"
       ],
@@ -1411,14 +1478,53 @@
         "unbounded fixtures"
       ],
       "id": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
-      "last_green_commit": null,
+      "last_green_commit": "8556b05e033a3739d7bd5c78b8c530d3cff2ff3c",
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T18:38:49Z",
+      "status": "closed",
       "stop_conditions": [
         "transport semantics diverge",
         "a refusal must weaken"
       ],
-      "title": "Prove the reversible lifecycle across transports and packages"
+      "title": "Prove the reversible lifecycle across transports and packages",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T19:35:38Z",
+        "result": "PASS",
+        "source_fingerprint": "35a6339bfe11a9ae9bfa517cab22ad9ff94d4545e9fb78fc66072e755b5ac747",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/package_runtime": "bcea04b6f5ff547b3ebf9d96199153aa010ecc5fadf64261d42b743ee40a5ccc",
+          "tests/test_r37_lifecycle_journey.py": "902fa2f6a8336ee2f4aab05e7c606c87daaa8af8313242c93a04429d9b8d687d"
+        },
+        "test_results": {
+          "adversarial_matrix": "PASS",
+          "appkit_generated_contract": "PASS",
+          "bounded_stdio": "PASS",
+          "clean_three_repo_repro": "PASS",
+          "cli": "PASS",
+          "direct_flb": "PASS",
+          "fixture_hashes_unchanged": "PASS",
+          "full_scale_performance": "PASS",
+          "lifecycle_journey": "PASS",
+          "no_execution": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "tui_guided": "PASS",
+          "tui_noninteractive": "PASS",
+          "tui_process": "PASS",
+          "winforms_generated_client": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
