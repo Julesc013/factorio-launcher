@@ -100,3 +100,8 @@ reason = "Published on the R3.6 task branch before the closeout range audit iden
 sha = "72fcdcf"
 subject = "chore(aide): close the R3.6 autonomous wave"
 reason = "Published on the R3.6 task branch before the closeout range audit identified the missing Q27 body and trailers; preserve the completed wave history instead of force-pushing it."
+
+[[commit]]
+sha = "1c323eb"
+subject = "policy(commit): acknowledge published R3.6 message debt"
+reason = "Published before trailer parsing showed that separate Git message paragraphs are not a valid contiguous trailer block; preserve published history and correct the invocation in the following commit."
