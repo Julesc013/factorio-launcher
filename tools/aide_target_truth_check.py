@@ -83,9 +83,9 @@ def validate_root_authority_text(text: str) -> list[str]:
 def validate_profile_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
-        "phase: r3.6-real-world-product-readiness",
+        "phase: r3.6-product-readiness-complete",
         "frozen R3.5 architecture",
-        "bounded cross-platform",
+        "completed R3.6 non-execution product",
         "C-compatible experimental ABI correctness floor",
         "authoritative_command_slice:",
         "install_refs.scan",
@@ -125,11 +125,11 @@ def validate_project_state_text(text: str) -> list[str]:
     problems: list[str] = []
     required = [
         "R3.5 is the architecture endpoint",
-        "R3.6 uses that foundation",
-        "checkpoint: `r3.5-zero-exception-productization`",
+        "R3.6 used that foundation",
+        "checkpoint: `r3.6-product-readiness`",
         "Real Factorio isolation remains operator-only and has no human verdict",
         "public C ABI remains experimental",
-        "completed wave revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`",
+        "completed wave revision: `fc8423572e9c055991558f8a4e7cbbc95e0c4a24`",
         "release/index/workspace_lock.v1.toml",
     ]
     for anchor in required:
@@ -170,7 +170,7 @@ def validate_claim_ledger_text(text: str) -> list[str]:
         "Run preview uses the authoritative route",
         "Experimental public C ABI has a correctness floor",
         "stable third-party compatibility",
-        "Windows install discovery is read-only",
+        "Windows, Linux, and macOS install discovery is read-only",
     ]
     for anchor in required:
         if anchor not in text:

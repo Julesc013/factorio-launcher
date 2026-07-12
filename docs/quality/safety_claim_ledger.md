@@ -7,6 +7,7 @@ R3.2 controlled-isolation revision: `17b11224db897bc11c8d4a024e2f1409cba4dd3f`.
 R3.2 final bounded-foundation revision: `0c64d56c6d1efee6ef7faf17f2781c6a1c1db8cc`.
 R3.2 public integration revision: `b739d271083c2883c94921a1441574cda55912ad`.
 R3.5 architecture endpoint revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`.
+R3.6 product-readiness implementation revision: `fc8423572e9c055991558f8a4e7cbbc95e0c4a24`.
 
 This ledger prevents a fixture, declaration, or generated file from being
 reported as stronger runtime evidence.
@@ -23,7 +24,9 @@ reported as stronger runtime evidence.
 | JSON contracts describe runtime output | proven for the truth-floor slice | live response, refusal, persisted-instance, and package-verification schema tests | remaining legacy commands and goldens are not implicitly promoted |
 | Command registry introspection matches dispatch | registry-proven | runtime descriptor projection, register/unregister parity, metadata lifetime and allocator tests | new descriptor versions and handlers require the same parity proof |
 | Run preview uses the authoritative route | live-contract tested | normalized CLI, registered FLB handler, typed request/result, shared argument builder | no process starts; real Factorio remains unproven |
-| Windows install discovery is read-only | provider-tested | Steam VDF, registry/default roots, standalone roots, zero-write tests | registry proof is host-dependent; macOS and Linux provider databases remain future work |
+| Windows, Linux, and macOS install discovery is read-only | target CI proven | bounded target providers, no-follow reads, provenance, zero-write tests | scoped roots/layouts only; no package-manager or Spotlight execution |
+| Non-execution product journey is functional | hermetic cross-transport proof | discovery through recovery over CLI plus direct, stdio, TUI, desktop-client, and package evidence | does not execute Factorio or prove operator usability |
+| Functional TUI packages run on three x64 targets | target CI proven preview | generated catalog, direct client, cancellation, bounded output, package runtime smokes | unsigned and unpublished; no OS-neutral or ARM64 claim |
 | Windows x64 static CLI package runs after relocation | host-tested built artifact | strict profile/component/lock verification and relocation matrix | local Windows x64 only; unsigned and unpublished |
 | Linux x64 CLI tarball runs after relocation | target CI proven | ELF allowlist, archive, read-only and relocation matrix | Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished |
 | macOS x64 CLI tarball runs after relocation | target CI proven | Mach-O, deployment, integrity, relocation | Intel runner and target 13.0 only; no Apple Silicon, AppKit runtime, signing, or publication claim |
@@ -67,6 +70,8 @@ R3.5 supersedes that promotion hold with exact Windows, Linux, macOS,
 sanitizer, fuzz, coverage, CodeQL, compatibility, and package proof recorded in
 [`r3.5-zero-exception-productization.md`](../release/checkpoints/r3.5-zero-exception-productization.md).
 Those results remain revision-pinned and do not promote real Factorio execution.
+R3.6 product behavior and its remaining authority boundary are recorded in
+[`r3.6-product-readiness.md`](../release/checkpoints/r3.6-product-readiness.md).
 
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and deliberately pending human-verdict template are in

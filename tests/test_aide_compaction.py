@@ -30,12 +30,12 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_r35_checkpoint_provider_and_catalog_truth_do_not_drift(self) -> None:
+    def test_r36_checkpoint_provider_and_catalog_truth_do_not_drift(self) -> None:
         data = project_state.collect()
-        self.assertEqual("r3.6-real-world-product-readiness", data["current_phase"])
-        self.assertEqual("r3.5-zero-exception-productization", data["current_checkpoint"])
+        self.assertEqual("r3.6-product-readiness-complete", data["current_phase"])
+        self.assertEqual("r3.6-product-readiness", data["current_checkpoint"])
         self.assertEqual(
-            "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
+            "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
             data["completed_wave"]["revision"],
         )
         self.assertEqual(

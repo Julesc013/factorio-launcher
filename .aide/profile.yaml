@@ -8,16 +8,14 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3.6-real-world-product-readiness
+  phase: r3.6-product-readiness-complete
   primary_goal: >
-    Use the frozen R3.5 architecture to deliver bounded cross-platform
-    discovery, generated frontend parity, a functional TUI, deterministic
-    operator guidance, and a hermetic non-execution user journey.
+    Preserve the completed R3.6 non-execution product on the frozen R3.5 architecture
+    while keeping real Factorio execution behind the operator-owned authority lane.
   next_task: >
-    Complete the active R3.6 WorkUnit from the resumable facman-r3.6 wave. The
-    FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 authority gate remains
+    FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 is the next authority gate and remains
     operator-only; automation must never convert its pending verdict into pass.
-    human authority lane does not block independent product work.
+    The completed autonomous lane does not imply this human verdict.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import
@@ -38,10 +36,10 @@ current_focus:
     proof_gates: docs/quality/safety_proof_gates.md
 deferred_surfaces:
   - Gateway forwarding, provider/model calls, UI, runtime, and autonomous loops remain deferred.
-  - Native GUI implementation remains deferred until command graph stability.
+  - Native GUI package/runtime promotion remains deferred beyond current WinForms client and AppKit compile proof.
   - Universal setup and universal launcher are sibling repos, not Factorio subtrees.
   - Real Factorio execution remains unavailable until operator-supplied isolation proof.
-  - Diagnostic export is CLI-authoritative for reviewed local formats; native GUI export UX remains deferred.
+  - Diagnostic export remains backend-authoritative; generated desktop forms do not own export behavior.
 runtime:
   gateway_forwarding: deferred
   provider_calls: forbidden_until_reviewed_phase

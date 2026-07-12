@@ -42,7 +42,7 @@ roots:
             "phase: r3.2-registry-and-isolation-foundation"
         )
         self.assertTrue(
-            any("r3.6-real-world-product-readiness" in problem for problem in profile_problems),
+            any("r3.6-product-readiness-complete" in problem for problem in profile_problems),
             profile_problems,
         )
         state_problems = aide_target_truth_check.validate_project_state_text(

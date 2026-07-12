@@ -5,14 +5,17 @@ leaving setup mutation to Universal Setup.
 
 ## R3.6 - Real-World Product Readiness
 
-R3.5 is the architecture endpoint. Its exact Windows, Linux, macOS, sanitizer,
+R3.6 autonomous product readiness is complete at the
+[`R3.6 Product Readiness`](release/checkpoints/r3.6-product-readiness.md)
+checkpoint. R3.5 is the architecture endpoint. Its exact Windows, Linux,
+macOS, sanitizer,
 fuzzer, coverage, CodeQL, compatibility, and package evidence is frozen at
 `966387280db4eb544e37f1f337c8bcf5d7cec3f4`; another repository-wide redesign
-is not scheduled. R3.6 delivers Linux and macOS read-only discovery providers,
+is not scheduled. R3.6 delivered Linux and macOS read-only discovery providers,
 deterministic status/onboarding/explanation commands, generated WinForms,
 AppKit and TUI command models, a functional TUI, desktop client parity, and a
 hermetic non-execution user journey. Real Factorio execution remains a separate
-human authority lane. Historical R3.2/R3.3/R3.4 sections below remain evidence
+human authority lane and is the next WorkUnit. Historical R3.2/R3.3/R3.4 sections below remain evidence
 context, not the active queue. Ordered future gates live in
 [`future_layers_plan.md`](architecture/future_layers_plan.md).
 

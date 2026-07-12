@@ -90,11 +90,11 @@ def collect() -> dict[str, Any]:
             "universal_launcher": pins["universal_launcher"]["revision"],
             "universal_setup": pins["universal_setup"]["revision"],
         },
-        "current_phase": "r3.6-real-world-product-readiness",
-        "current_checkpoint": "r3.5-zero-exception-productization",
+        "current_phase": "r3.6-product-readiness-complete",
+        "current_checkpoint": "r3.6-product-readiness",
         "completed_wave": {
-            "id": "facman-r3.5",
-            "revision": "966387280db4eb544e37f1f337c8bcf5d7cec3f4",
+            "id": "facman-r3.6",
+            "revision": "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
             "status": "complete",
         },
         "command_law": command_law(),
@@ -126,13 +126,15 @@ def collect() -> dict[str, Any]:
             ".aide/history/r3.3/index.json",
             ".aide/history/r3.4/index.json",
             ".aide/history/r3.5/index.json",
+            ".aide/history/r3.6/index.json",
             "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip sha256:fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b",
             "facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz sha256:f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
             "facman-0.1.0-dev.contract-macos-cli-x64-portable.tar.gz sha256:ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706",
+            "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip sha256:2526a5f5d085087301f66d2855a1942d01457cb598c1bf41704388948295b595",
+            "facman-0.1.0-dev.contract-windows-tui-x64-portable.zip sha256:8b87f28e098096dfd6672b1d9701bd227bdfaf99d0d8f5ade9eacb9021ddd3a1",
         ],
         "known_blockers": [
             "Real Factorio isolation remains operator-only and has no human verdict.",
-            "R3.6 target proof must be rerun at the final R3.6 revision; R3.5 target proof remains revision-pinned historical evidence.",
             "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
             "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
             "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.",
@@ -161,14 +163,13 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Universal Launcher pin: `{data['current_revisions']['universal_launcher']}`;",
         f"- Universal Setup pin: `{data['current_revisions']['universal_setup']}`.",
         "",
-        "R3.5 is the architecture endpoint: it records zero manual-JSON and critical-I/O "
-        "exceptions, 51 command contracts, 49 registered routes, 122 schemas, generated "
-        "command law, a typed Setup gateway, and a bounded machine protocol. R3.6 uses "
-        "that foundation for real discovery and frontend product readiness rather than "
-        "another repository-wide redesign. The public C ABI remains experimental and "
-        "all recorded packages remain unsigned and unpublished.",
+        "R3.5 is the architecture endpoint. R3.6 used that foundation to deliver bounded "
+        "cross-platform discovery, 58 command contracts, 56 registered routes, 130 schemas, "
+        "deterministic guidance, generated desktop parity, a functional TUI, and a hermetic "
+        "non-execution journey rather than another repository-wide redesign. The public C ABI "
+        "remains experimental and all recorded packages remain unsigned and unpublished.",
         "",
-        "## Frozen R3.5 proof",
+        "## Frozen R3.6 proof",
         "",
         f"- completed wave revision: `{data['completed_wave']['revision']}`;",
         f"- command catalog digest: `{data['command_law']['catalog_digest']}`;",

@@ -1,0 +1,36 @@
+{
+  "checkpoint": "r3.6",
+  "completed_wave": {
+    "branch": "task/r3.6-real-world-product-readiness",
+    "implementation_revision": "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
+    "wave_id": "facman-r3.6"
+  },
+  "hash_canonicalization": "text_lf_v1",
+  "human_authority": {
+    "H1": "blocked_no_reviewed_operator_verdict",
+    "H2": "not_started_requires_H1_pass",
+    "H3": "not_started_requires_execution_candidate",
+    "run_execute": "unavailable_isolation_not_proven",
+    "safe_beta": "not_promoted"
+  },
+  "immutable_task_records": true,
+  "provider_revisions": {
+    "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+    "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+  },
+  "schema": "aide.history_index.v1",
+  "target_evidence": {
+    "appkit": "compile_only",
+    "ci_run": "29191354581",
+    "code_security_run": "29191354622",
+    "linux_x64_cli_tui": "target_ci_pass",
+    "macos_intel_cli_tui": "target_ci_pass",
+    "security_policy_run": "29191354571",
+    "windows_x64_cli_tui": "target_ci_and_local_reproducibility_pass"
+  },
+  "tasks": [],
+  "windows_artifacts": {
+    "cli": "2526a5f5d085087301f66d2855a1942d01457cb598c1bf41704388948295b595",
+    "tui": "8b87f28e098096dfd6672b1d9701bd227bdfaf99d0d8f5ade9eacb9021ddd3a1"
+  }
+}

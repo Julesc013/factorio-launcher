@@ -4,19 +4,19 @@ Generated from `.aide/memory/project-state.v1.json`; edit the generator or canon
 
 ## Current
 
-- phase: `r3.6-real-world-product-readiness`;
-- checkpoint: `r3.5-zero-exception-productization`;
+- phase: `r3.6-product-readiness-complete`;
+- checkpoint: `r3.6-product-readiness`;
 - active WorkUnit: `none`;
 - FacMan revision: live `HEAD` (resolve with `git rev-parse HEAD`);
 - Universal Launcher pin: `de6c7c6cfa80c524296066bd6bb90a70ba02b760`;
 - Universal Setup pin: `4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`.
 
-R3.5 is the architecture endpoint: it records zero manual-JSON and critical-I/O exceptions, 51 command contracts, 49 registered routes, 122 schemas, generated command law, a typed Setup gateway, and a bounded machine protocol. R3.6 uses that foundation for real discovery and frontend product readiness rather than another repository-wide redesign. The public C ABI remains experimental and all recorded packages remain unsigned and unpublished.
+R3.5 is the architecture endpoint. R3.6 used that foundation to deliver bounded cross-platform discovery, 58 command contracts, 56 registered routes, 130 schemas, deterministic guidance, generated desktop parity, a functional TUI, and a hermetic non-execution journey rather than another repository-wide redesign. The public C ABI remains experimental and all recorded packages remain unsigned and unpublished.
 
-## Frozen R3.5 proof
+## Frozen R3.6 proof
 
-- completed wave revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`;
-- command catalog digest: `8408499480d1c7bf78f9eab8889b4ae2d867a536c8507606205935a6b70c05ff`;
+- completed wave revision: `fc8423572e9c055991558f8a4e7cbbc95e0c4a24`;
+- command catalog digest: `8bc0dd0e9ad16acd34c9d8fc992407b46f5627b50b714e1311f79f5ceb274d2b`;
 - machine protocol: bounded newline-delimited JSON over stdio (implemented);
 
 ## Quarantined capabilities
@@ -39,7 +39,6 @@ R3.5 is the architecture endpoint: it records zero manual-JSON and critical-I/O 
 ## Known blockers
 
 - Real Factorio isolation remains operator-only and has no human verdict.
-- R3.6 target proof must be rerun at the final R3.6 revision; R3.5 target proof remains revision-pinned historical evidence.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 - Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.
