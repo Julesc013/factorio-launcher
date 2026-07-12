@@ -168,10 +168,74 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-WORKSPACE-DOMAIN-STORES-01"
+    },
+    {
+      "blockers": [
+        "Linux and macOS target-runner proof requires the corresponding native runners.",
+        "Remote CodeQL execution begins only after this task branch is pushed."
+      ],
+      "clean_status": true,
+      "commit_sha": "cf96c61095e128cca7b9b46810a79f944c3ffe8e",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.4-TARGET-PROMOTION-01",
+        "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01",
+        "FACMAN-ABI-CLIENT-SESSION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01",
+        "FACMAN-MACHINE-TRANSPORT-01",
+        "FACMAN-CONFORMANCE-COMPAT-SECURITY-01",
+        "FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "de1af24455809d903d9b5782a0b18f4325a4fc4c6525d247b69a763f9080ecec",
+      "test_fingerprints": {
+        "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af",
+        "tools/command_contract_check.py": "eb21f8405f58ee78820bcb4cd0ebdfcd4737da7000e2505e726253408728ee3d",
+        "tools/command_truth_check.py": "68fadfe9863f20a15e5f3051b723ddf2a28cfd5ab51f09885a7d70736d7eb0a9"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-COMMAND-CATALOG-V2-01"
+    },
+    {
+      "blockers": [
+        "Linux and macOS target-runner proof requires the corresponding native runners.",
+        "Remote CodeQL execution begins only after this task branch is pushed."
+      ],
+      "clean_status": true,
+      "commit_sha": "cf96c61095e128cca7b9b46810a79f944c3ffe8e",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-R3.4-TARGET-PROMOTION-01",
+        "FACMAN-ABI-CLIENT-SESSION-01",
+        "FACMAN-PLATFORM-PORTABILITY-01",
+        "FACMAN-MACHINE-TRANSPORT-01",
+        "FACMAN-CONFORMANCE-COMPAT-SECURITY-01",
+        "FACMAN-R3.5-ZERO-EXCEPTION-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "2e49b9178440c3fc257f8d09d578e69dde4afe915db34117c9f0febac9d05c0b",
+      "test_fingerprints": {
+        "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af",
+        "tools/command_truth_check.py": "68fadfe9863f20a15e5f3051b723ddf2a28cfd5ab51f09885a7d70736d7eb0a9"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "edcf10ca4584fe3dedc7cec07fa9c70890d2a059",
+  "current_exact_revision": "cf96c61095e128cca7b9b46810a79f944c3ffe8e",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -179,7 +243,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "FacMan R3.5 zero-exception productization",
-  "updated_at": "2026-07-12T06:30:48Z",
+  "updated_at": "2026-07-12T06:38:10Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -265,6 +329,65 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-WORKSPACE-DOMAIN-STORES-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:38:01Z",
+        "result": "PASS",
+        "source_fingerprint": "de1af24455809d903d9b5782a0b18f4325a4fc4c6525d247b69a763f9080ecec",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af",
+          "tools/command_contract_check.py": "eb21f8405f58ee78820bcb4cd0ebdfcd4737da7000e2505e726253408728ee3d",
+          "tools/command_truth_check.py": "68fadfe9863f20a15e5f3051b723ddf2a28cfd5ab51f09885a7d70736d7eb0a9"
+        },
+        "test_results": {
+          "catalog_v2_guard": "PASS",
+          "cli_golden_12_of_12": "PASS",
+          "generator_freshness": "PASS",
+          "metadata_tests_4_of_4": "PASS",
+          "native_ctest_16_of_16": "PASS",
+          "strict_check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-COMMAND-CATALOG-V2-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:38:10Z",
+        "result": "PASS",
+        "source_fingerprint": "2e49b9178440c3fc257f8d09d578e69dde4afe915db34117c9f0febac9d05c0b",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af",
+          "tools/command_truth_check.py": "68fadfe9863f20a15e5f3051b723ddf2a28cfd5ab51f09885a7d70736d7eb0a9"
+        },
+        "test_results": {
+          "cli_golden_12_of_12": "PASS",
+          "command_contracts_51": "PASS",
+          "frontend_contract": "PASS",
+          "generic_operations_zero": "PASS",
+          "registered_routes_49": "PASS",
+          "strict_check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01"
       }
     ],
     "promotion_uses_cache_alone": false,
@@ -579,13 +702,13 @@
         "apps/winforms/",
         "apps/appkit/"
       ],
-      "blockers": [
-        "Command IDs, grammar and write policy are not yet fully generated."
-      ],
+      "blockers": [],
       "claim_impacts": [
         "command-catalog-v2",
         "generated-command-truth"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T06:38:01Z",
       "dependencies": [
         "FACMAN-ULK-DYNAMIC-REGISTRY-01",
         "FACMAN-JSON-OUTCOME-CODECS-01"
@@ -595,17 +718,47 @@
         "third_party/"
       ],
       "id": "FACMAN-COMMAND-CATALOG-V2-01",
-      "last_green_commit": null,
+      "last_green_commit": "cf96c61095e128cca7b9b46810a79f944c3ffe8e",
       "progress_commits": [
         "674a72e65733587022d4a5adf178b2484f13673d"
       ],
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T06:38:00Z",
+      "status": "closed",
       "stop_conditions": [
         "Generated metadata drifts",
         "An alias enters the runtime registry"
       ],
-      "title": "Generated command catalog v2"
+      "title": "Generated command catalog v2",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:38:01Z",
+        "result": "PASS",
+        "source_fingerprint": "de1af24455809d903d9b5782a0b18f4325a4fc4c6525d247b69a763f9080ecec",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af",
+          "tools/command_contract_check.py": "eb21f8405f58ee78820bcb4cd0ebdfcd4737da7000e2505e726253408728ee3d",
+          "tools/command_truth_check.py": "68fadfe9863f20a15e5f3051b723ddf2a28cfd5ab51f09885a7d70736d7eb0a9"
+        },
+        "test_results": {
+          "catalog_v2_guard": "PASS",
+          "cli_golden_12_of_12": "PASS",
+          "generator_freshness": "PASS",
+          "metadata_tests_4_of_4": "PASS",
+          "native_ctest_16_of_16": "PASS",
+          "strict_check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
@@ -626,14 +779,14 @@
         "runtime/application/setup_gateway*",
         "apps/cli/"
       ],
-      "blockers": [
-        "Generic utility.operation and setup.operation remain registered authoritative routes."
-      ],
+      "blockers": [],
       "claim_impacts": [
         "first-class-command-coverage",
         "generic-router-retirement",
         "setup-input-truth"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T06:38:10Z",
       "dependencies": [
         "FACMAN-COMMAND-CATALOG-V2-01"
       ],
@@ -641,19 +794,48 @@
         "vendor/UniversalSetupKit/"
       ],
       "id": "FACMAN-FIRST-CLASS-CAPABILITY-ROUTES-01",
-      "last_green_commit": null,
+      "last_green_commit": "cf96c61095e128cca7b9b46810a79f944c3ffe8e",
       "progress_commits": [
         "0b7cf3fcab88fdc70a857905c24f7c45be3186eb"
       ],
       "provider_revisions": {
         "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
       },
-      "status": "pending",
+      "started_at": "2026-07-12T06:38:09Z",
+      "status": "closed",
       "stop_conditions": [
         "A generic multiplexer remains authoritative",
         "USK is claimed to evaluate inputs it did not inspect"
       ],
-      "title": "First-class capability routes"
+      "title": "First-class capability routes",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T06:38:10Z",
+        "result": "PASS",
+        "source_fingerprint": "2e49b9178440c3fc257f8d09d578e69dde4afe915db34117c9f0febac9d05c0b",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_command_contracts.py": "bd674bcdc54db02c2d86e8c2631617b743d163eaeaefd8d3381693dab7c253af",
+          "tools/command_truth_check.py": "68fadfe9863f20a15e5f3051b723ddf2a28cfd5ab51f09885a7d70736d7eb0a9"
+        },
+        "test_results": {
+          "cli_golden_12_of_12": "PASS",
+          "command_contracts_51": "PASS",
+          "frontend_contract": "PASS",
+          "generic_operations_zero": "PASS",
+          "registered_routes_49": "PASS",
+          "strict_check": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
