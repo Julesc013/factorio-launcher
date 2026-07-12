@@ -30,6 +30,7 @@ def validate() -> list[str]:
         "doctor",
         "installs",
         "instances",
+        "intelligence",
         "launch",
         "mods",
         "modsets",
@@ -72,6 +73,8 @@ def validate() -> list[str]:
     for anchor in (
         "handlers::inspect_product(",
         "handlers::run_doctor(",
+        "handlers::workspace_status(",
+        "handlers::onboarding_plan(",
         "handlers::list_installs(",
         "handlers::list_instances(",
         "handlers::preview_setup(",

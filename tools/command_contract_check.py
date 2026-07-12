@@ -14,9 +14,11 @@ COMMAND_ROOT = ROOT / "contracts" / "command" / "factorio"
 EFFECTS_POLICY = ROOT / "contracts" / "policy" / "effects.v1.toml"
 
 EXPECTED_COMMANDS = {
+    "capabilities.inspect",
     "product.inspect",
     "factorio.product.inspect",
     "doctor.run",
+    "doctor.explain",
     "installs.scan",
     "installs.import",
     "installs.inspect",
@@ -25,6 +27,7 @@ EXPECTED_COMMANDS = {
     "instance.list",
     "launch.plan",
     "launch_plan.preflight",
+    "launch_plan.explain",
     "run.preview",
     "run.execute",
     "setup.preview",
@@ -34,6 +37,8 @@ EXPECTED_COMMANDS = {
     "modsets.lock",
     "modsets.verify",
     "modsets.export",
+    "modsets.explain",
+    "onboarding.plan",
     "saves.list",
     "saves.backup",
     "saves.clone",
@@ -45,6 +50,8 @@ EXPECTED_COMMANDS = {
     "workspace.migration.inspect",
     "workspace.migration.plan",
     "workspace.migration.apply",
+    "workspace.paths",
+    "workspace.status",
     "diagnostics.export",
     "diagnostics.redact",
     "package.verify",

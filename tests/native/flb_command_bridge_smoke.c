@@ -207,6 +207,11 @@ int main(void)
         run_command(context, "command_graph.inspect", 1, "factorio_launch_preflight.v1.schema.json") != 0) {
         return 34;
     }
+    if (run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.status\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"onboarding.plan\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"command\":\"launch_plan.explain\"") != 0) {
+        return 41;
+    }
     if (run_command(context, "install_refs.list", 1, "\"install_refs\":[]") != 0) {
         return 23;
     }
@@ -214,6 +219,13 @@ int main(void)
         return 38;
     }
     if (run_command(context, "doctor.run", 1, "\"command\":\"doctor.run\"") != 0) return 40;
+    if (run_command(context, "workspace.status", 1, "\"mutation_executed\":false") != 0 ||
+        run_command(context, "workspace.paths", 1, "\"command\":\"workspace.paths\"") != 0 ||
+        run_command(context, "capabilities.inspect", 1, "human_gated") != 0 ||
+        run_command(context, "onboarding.plan", 1, "\"executed\":false") != 0 ||
+        run_command(context, "doctor.explain", 1, "isolation_not_proven") != 0) return 42;
+    if (run_refusal(context, "launch_plan.explain", 1, "{}", "invalid_request") != 0 ||
+        run_refusal(context, "modsets.explain", 1, "{}", "invalid_request") != 0) return 43;
     if (run_refusal(context, "run.execute", 0, "{}", "isolation_not_proven") != 0 ||
         run_refusal(context, "setup.preview", 1, "{}", "setup_unavailable") != 0 ||
         run_refusal(context, "utility.operation", 0, "{\"operation\":\"mods.search\",\"query\":\"space\"}", "network_forbidden") != 0 ||

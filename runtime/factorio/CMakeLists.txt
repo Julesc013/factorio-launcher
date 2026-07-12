@@ -49,6 +49,7 @@ add_library(flb_factorio_application_static STATIC
   application/application_context.cpp application/command_dispatch.cpp application/command_result.cpp
   application/flb_factorio_application.cpp application/setup_gateway.cpp application/handlers/diagnostics.cpp
   application/handlers/doctor.cpp application/handlers/installs.cpp application/handlers/instances.cpp
+  application/handlers/intelligence.cpp
   application/handlers/launch.cpp application/handlers/mods.cpp application/handlers/modsets.cpp
   application/handlers/product.cpp application/handlers/recovery.cpp application/handlers/saves.cpp
   application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
@@ -56,9 +57,9 @@ target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_application_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application)
 target_compile_definitions(flb_factorio_application_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_factorio_application_static PUBLIC
-  facman_base_static facman_workspace_static facman_factorio_model ulk_static)
+  facman_base_static facman_workspace_static facman_factorio_model flaunch_runtime_static ulk_static)
 if(FACMAN_WITH_SETUP)
-  target_link_libraries(flb_factorio_application_static PUBLIC flaunch_runtime_static usk_static)
+  target_link_libraries(flb_factorio_application_static PUBLIC usk_static)
 endif()
 add_library(facman::factorio_application ALIAS flb_factorio_application_static)
 

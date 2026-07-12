@@ -40,6 +40,9 @@ OUTPUTS = {
 }
 
 REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
+    "onboarding.plan": [("preferred_install", "identifier", False), ("instance_display_name", "string", False), ("template_id", "identifier", False), ("workspace", "path", False)],
+    "launch_plan.explain": [("instance_id", "identifier", True)],
+    "modsets.explain": [("instance_id", "identifier", True)],
     "doctor.run": [("roots", "string_array", False)],
     "install_refs.scan": [("roots", "string_array", False)],
     "install_refs.import": [("path", "path", True), ("install_id", "identifier", True)],

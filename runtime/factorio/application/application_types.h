@@ -43,6 +43,13 @@ struct CreateInstanceRequest {
 };
 struct BuildLaunchPlanRequest { std::string instance_id; };
 struct ExecuteRunRequest { facman::core::InstanceId instance_id; };
+struct OnboardingPlanRequest {
+    std::string preferred_install;
+    std::string instance_display_name;
+    std::string template_id;
+    std::string workspace;
+};
+struct ExplainInstanceRequest { facman::core::InstanceId instance_id; };
 struct RecoveryRequest { std::string transaction_id; };
 struct ServiceOperationRequest {
     std::string operation;
@@ -74,6 +81,8 @@ using ApplicationPayload = std::variant<
     CreateInstanceRequest,
     BuildLaunchPlanRequest,
     ExecuteRunRequest,
+    OnboardingPlanRequest,
+    ExplainInstanceRequest,
     ImportModRequest,
     ModsetInstanceRequest,
     ExportModsetRequest,

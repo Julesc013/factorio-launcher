@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_guidance_report.v1.schema.json",
+  "title": "FacMan deterministic status, onboarding, or explanation report",
+  "type": "object",
+  "required": ["schema", "command", "status", "observations", "reasons", "remediation", "mutation_executed"],
+  "properties": {
+    "schema": { "const": "factorio.guidance_report.v1" },
+    "command": { "type": "string" },
+    "status": { "enum": ["ok", "warning", "blocked"] },
+    "observations": { "type": "object" },
+    "reasons": { "type": "array", "items": { "type": "object" } },
+    "remediation": { "type": "array", "items": { "type": "object" } },
+    "mutation_executed": { "const": false }
+  },
+  "additionalProperties": true
+}

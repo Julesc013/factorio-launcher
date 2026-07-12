@@ -16,7 +16,7 @@ R3.5 is the architecture endpoint: it records zero manual-JSON and critical-I/O 
 ## Frozen R3.5 proof
 
 - completed wave revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`;
-- command catalog digest: `7377e13d2a054d1752b9b914e3f366c1d67fd971eeefe210b8b42defc15214b9`;
+- command catalog digest: `19dc76b416b24f6eba5cbd3a8c40a46e4af6ce2a194414c0f4ea314b02030b8a`;
 - machine protocol: bounded newline-delimited JSON over stdio (implemented);
 
 ## Quarantined capabilities

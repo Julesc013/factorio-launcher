@@ -229,8 +229,32 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     case CommandId::install_list:
     case CommandId::instance_list:
     case CommandId::setup_preview:
+    case CommandId::workspace_status:
+    case CommandId::workspace_paths:
+    case CommandId::capabilities_inspect:
+    case CommandId::doctor_explain:
         if (!validate_fields(payload, {}, detail)) return false;
         request.payload = std::monostate {}; return true;
+    case CommandId::onboarding_plan: {
+        if (!validate_fields(payload, {"preferred_install", "instance_display_name", "template_id", "workspace"}, detail)) return false;
+        OnboardingPlanRequest typed;
+        if (!optional_string(payload, "preferred_install", typed.preferred_install, detail) ||
+            !optional_string(payload, "instance_display_name", typed.instance_display_name, detail) ||
+            !optional_string(payload, "template_id", typed.template_id, detail) ||
+            !optional_string(payload, "workspace", typed.workspace, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::launch_plan_explain:
+    case CommandId::modsets_explain: {
+        if (!validate_fields(payload, {"instance_id"}, detail)) return false;
+        std::string value;
+        if (!required_string(payload, "instance_id", value, detail)) return false;
+        auto instance_id = facman::core::InstanceId::parse_legacy(value);
+        if (!instance_id) { detail = instance_id.error().message; return false; }
+        ExplainInstanceRequest typed;
+        typed.instance_id = instance_id.take_value();
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::doctor_run: {
         if (!validate_fields(payload, {"roots"}, detail)) return false;
         DoctorRequest typed;

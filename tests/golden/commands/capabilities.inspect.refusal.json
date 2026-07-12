@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"capabilities.inspect","status":"refused","refusal":{"schema":"common.refusal.v1","code":"invalid_request","reason":"request could not be represented safely","recoverable":false}}

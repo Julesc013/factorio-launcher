@@ -11,6 +11,7 @@
 #include "handlers/doctor.h"
 #include "handlers/installs.h"
 #include "handlers/instances.h"
+#include "handlers/intelligence.h"
 #include "handlers/launch.h"
 #include "handlers/mods.h"
 #include "handlers/modsets.h"
@@ -106,6 +107,13 @@ private:
                 "Dry-run requests never execute data writes");
         }
         switch (request.command) {
+        case CommandId::workspace_status: return handlers::workspace_status(context_);
+        case CommandId::workspace_paths: return handlers::workspace_paths(context_);
+        case CommandId::capabilities_inspect: return handlers::capabilities_inspect(context_);
+        case CommandId::onboarding_plan: return handlers::onboarding_plan(context_, std::get<OnboardingPlanRequest>(request.payload));
+        case CommandId::doctor_explain: return handlers::doctor_explain(context_);
+        case CommandId::launch_plan_explain: return handlers::launch_plan_explain(context_, std::get<ExplainInstanceRequest>(request.payload));
+        case CommandId::modsets_explain: return handlers::modsets_explain(context_, std::get<ExplainInstanceRequest>(request.payload));
         case CommandId::doctor_run: return handlers::run_doctor(context_, std::get<DoctorRequest>(request.payload));
         case CommandId::install_list: return handlers::list_installs(context_);
         case CommandId::install_scan: return handlers::scan_installs(context_, std::get<ScanInstallRefsRequest>(request.payload));

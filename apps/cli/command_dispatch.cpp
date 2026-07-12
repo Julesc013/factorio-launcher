@@ -119,6 +119,36 @@ int emit_basic(const facman::core::Result<facman::client::CommandResponse>& resp
     return 0;
 }
 
+int emit_guidance(const facman::core::Result<facman::client::CommandResponse>& response, bool as_json)
+{
+    if (as_json) return emit_json(response);
+    if (!response || !response.value().ok() || !response.value().parsed_payload) return emit_basic(response, false, "");
+    const json::Value& report = *response.value().parsed_payload;
+    const auto text = [&report](const char* key) {
+        const json::Value* value = report.find(key);
+        if (value == nullptr) return std::string();
+        auto string = value->string_value();
+        return string ? string.take_value() : std::string();
+    };
+    std::cout << text("command") << "\nStatus: " << text("status") << '\n';
+    const json::Value* reasons = report.find("reasons");
+    if (reasons != nullptr && reasons->is_array()) {
+        for (std::size_t index = 0; index < reasons->size(); ++index) {
+            const json::Value* reason = reasons->at(index);
+            if (reason == nullptr || !reason->is_object()) continue;
+            const auto field = [reason](const char* key) {
+                const json::Value* value = reason->find(key);
+                if (value == nullptr) return std::string();
+                auto string = value->string_value();
+                return string ? string.take_value() : std::string();
+            };
+            std::cout << "- [" << field("code") << "] " << field("summary") << "\n  Evidence: " << field("evidence") << '\n';
+        }
+    }
+    std::cout << "No steps were executed. Use --json for the complete typed report.\n";
+    return 0;
+}
+
 std::string fields_payload(const std::vector<std::pair<std::string, std::string>>& fields = {})
 {
     json::ObjectBuilder output;
@@ -250,6 +280,9 @@ int command_product(const Options& options)
 
 int command_doctor(const Options& options)
 {
+    if (options.args.size() >= 2 && options.args[1] == "explain") {
+        return emit_guidance(call(options, "doctor.explain"), flag(options.args, "--json"));
+    }
     const std::string bundle = option(options.args, "--diagnostic-bundle");
     if (!bundle.empty()) {
         const std::string instance = option(options.args, "--instance");
@@ -349,6 +382,7 @@ int command_modsets(const Options& options)
 {
     if (options.args.size() < 3) return 2;
     const std::string action = options.args[1], instance = options.args[2];
+    if (action == "explain") return emit_guidance(call(options, "modsets.explain", exact_fields_payload({{"instance_id", instance}})), flag(options.args, "--json"));
     if (action == "lock" || action == "verify") return emit_basic(call(options, "modsets." + action, exact_fields_payload({{"instance_id", instance}}), action == "verify"), flag(options.args, "--json"), "Modset " + action + " completed");
     if (action == "export" && options.args.size() >= 4) {
         return emit_basic(
@@ -403,6 +437,9 @@ int command_diagnostics(const Options& options)
 
 int command_launch(const Options& options, bool run)
 {
+    if (!run && options.args.size() >= 3 && options.args[0] == "launch" && options.args[1] == "explain") {
+        return emit_guidance(call(options, "launch_plan.explain", exact_fields_payload({{"instance_id", options.args[2]}})), flag(options.args, "--json"));
+    }
     std::size_t id_index = 1;
     if (!run && options.args[0] == "launch" && options.args.size() > 2 && options.args[1] == "plan") id_index = 2;
     if (options.args.size() <= id_index) return 2;
@@ -447,6 +484,9 @@ int command_dev(const Options& options)
 
 int command_workspace(const Options& options)
 {
+    if (options.args.size() >= 2 && (options.args[1] == "status" || options.args[1] == "paths")) {
+        return emit_guidance(call(options, "workspace." + options.args[1]), flag(options.args, "--json"));
+    }
     if (options.args.size() < 3) return 2;
     const std::string family = options.args[1], action = options.args[2];
     if (family != "recovery" && family != "migration") return 2;
@@ -454,6 +494,24 @@ int command_workspace(const Options& options)
     std::string payload = "{}";
     if (family == "recovery" && action != "inspect") { if (options.args.size() < 4) return 2; payload = exact_fields_payload({{"transaction_id", options.args[3]}}); }
     return emit_basic(call(options, command, payload, action != "apply"), flag(options.args, "--json"), "Workspace operation completed");
+}
+
+int command_capabilities(const Options& options)
+{
+    if (options.args.size() < 2 || options.args[1] != "inspect") return 2;
+    return emit_guidance(call(options, "capabilities.inspect"), flag(options.args, "--json"));
+}
+
+int command_onboarding(const Options& options)
+{
+    if (options.args.size() < 2 || options.args[1] != "plan") return 2;
+    return emit_guidance(
+        call(options, "onboarding.plan", fields_payload({
+            {"preferred_install", option(options.args, "--preferred-install")},
+            {"instance_display_name", option(options.args, "--name")},
+            {"template_id", option(options.args, "--template")},
+            {"workspace", options.workspace}})),
+        flag(options.args, "--json"));
 }
 
 int command_package(const Options& options)
@@ -502,6 +560,8 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     if (command == "servers") return command_servers(options);
     if (command == "dev") return command_dev(options);
     if (command == "workspace") return command_workspace(options);
+    if (command == "capabilities") return command_capabilities(options);
+    if (command == "onboarding") return command_onboarding(options);
     if (command == "package") return command_package(options);
     std::cerr << "Unknown command: " << command << '\n';
     return 2;
