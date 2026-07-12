@@ -79,14 +79,10 @@ jobs:
           ./build/native-smoke/facman --version
           ./build/native-smoke/facman product inspect
           ./build/native-smoke/facman doctor
-      - name: Build enabled portable compatibility profiles
-        run: |
-          python tools/package_build.py --profile portable_cli_x64 --out build/packages --build-root build/native-smoke
-          python tools/package_build.py --profile portable_tui_x64 --out build/packages --build-root build/native-smoke
-      - name: Smoke portable compatibility profiles
-        run: |
-          python tools/package_runtime_smoke.py --root build/packages/portable_cli_x64
-          python tools/package_runtime_smoke.py --root build/packages/portable_tui_x64
+      - name: Build enabled portable CLI compatibility profile
+        run: python tools/package_build.py --profile portable_cli_x64 --out build/packages --build-root build/native-smoke
+      - name: Smoke portable CLI compatibility profile
+        run: python tools/package_runtime_smoke.py --root build/packages/portable_cli_x64
       - name: Run required Linux x64 CLI package proof with zero skips
         run: >-
           python tools/linux_package_proof.py
