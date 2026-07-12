@@ -6,7 +6,6 @@ policy = "exact_known_set_no_silent_growth"
 apps_boundary = []
 manual_json = [
   "apps/cli/command_dispatch.cpp",
-  "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp",
 ]
 critical_io = []
 generated_catalog = []

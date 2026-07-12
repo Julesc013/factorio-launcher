@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_diagnostics.h"
+#include "fl_json.h"
 
 #include <algorithm>
 #include <chrono>
@@ -149,10 +150,19 @@ int main(int argc, char** argv)
         result,
         "$FACMAN_INSTANCE_ROOT",
         time_policy);
-    if (report.find("factorio.diagnostic_traversal_report.v1") == std::string::npos ||
-        report.find("\"omissions\"") == std::string::npos ||
-        report.find("\"allowlisted_roots\": [\"logs\"]") == std::string::npos ||
-        report.find("\"time_budget_milliseconds\": 0") == std::string::npos) {
+    auto document = facman::core::json::parse(report);
+    const facman::core::json::Value* report_policy = document && document.value().is_object()
+        ? document.value().find("policy")
+        : nullptr;
+    const facman::core::json::Value* roots = report_policy == nullptr ? nullptr : report_policy->find("allowlisted_roots");
+    const facman::core::json::Value* budget = report_policy == nullptr ? nullptr : report_policy->find("time_budget_milliseconds");
+    const facman::core::json::Value* first_root = roots == nullptr ? nullptr : roots->at(0);
+    if (!document || document.value().find("omissions") == nullptr || first_root == nullptr || budget == nullptr) {
+        return 22;
+    }
+    auto root_value = first_root->string_value();
+    auto budget_value = budget->unsigned_integer_value();
+    if (!root_value || root_value.value() != "logs" || !budget_value || budget_value.value() != 0) {
         return 22;
     }
 

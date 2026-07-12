@@ -5,6 +5,7 @@
 
 #include "fl_archive.h"
 #include "fl_archive_platform.h"
+#include "fl_json.h"
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
 #include "fl_transaction.h"
@@ -32,6 +33,7 @@
 #endif
 
 namespace facman::factorio::diagnostics {
+namespace json = facman::core::json;
 
 namespace {
 
@@ -46,51 +48,6 @@ std::string lowercase_ascii(std::string value)
 std::string generic_path(std::filesystem::path path)
 {
     return path.lexically_normal().generic_string();
-}
-
-std::string json_escape(const std::string& value)
-{
-    std::ostringstream out;
-    for (char raw : value) {
-        unsigned char ch = static_cast<unsigned char>(raw);
-        switch (raw) {
-        case '\\':
-            out << "\\\\";
-            break;
-        case '"':
-            out << "\\\"";
-            break;
-        case '\b':
-            out << "\\b";
-            break;
-        case '\f':
-            out << "\\f";
-            break;
-        case '\n':
-            out << "\\n";
-            break;
-        case '\r':
-            out << "\\r";
-            break;
-        case '\t':
-            out << "\\t";
-            break;
-        default:
-            if (ch < 0x20) {
-                const char* hex = "0123456789abcdef";
-                out << "\\u00" << hex[(ch >> 4) & 0x0f] << hex[ch & 0x0f];
-            } else {
-                out << raw;
-            }
-            break;
-        }
-    }
-    return out.str();
-}
-
-std::string quote(const std::string& value)
-{
-    return "\"" + json_escape(value) + "\"";
 }
 
 bool contains_any_field(const std::string& lower_line, const RedactionPolicy& policy, std::string& matched)
@@ -114,7 +71,7 @@ std::string json_like_redaction(const std::string& line, std::size_t separator, 
     if (comma != std::string::npos && suffix[comma] == ',') {
         trailing = ",";
     }
-    return prefix + " " + quote(marker) + trailing;
+    return prefix + " " + json::quote_string(marker) + trailing;
 }
 
 std::string key_value_redaction(const std::string& line, std::size_t separator, const std::string& marker)
@@ -200,25 +157,6 @@ std::string redact_line(
     return redacted;
 }
 
-bool json_string_end(const std::string& text, std::size_t start, std::size_t& end)
-{
-    bool escaped = false;
-    for (std::size_t index = start + 1; index < text.size(); ++index) {
-        char ch = text[index];
-        if (escaped) {
-            escaped = false;
-        } else if (ch == '\\') {
-            escaped = true;
-        } else if (ch == '"') {
-            end = index + 1;
-            return true;
-        } else if (ch == '\n' || ch == '\r') {
-            return false;
-        }
-    }
-    return false;
-}
-
 bool sensitive_json_key(const std::string& raw_key, const RedactionPolicy& policy, std::string& matched)
 {
     std::string lower_key = lowercase_ascii(raw_key);
@@ -229,42 +167,6 @@ bool sensitive_json_key(const std::string& raw_key, const RedactionPolicy& polic
         }
     }
     return false;
-}
-
-bool json_structure_balanced(const std::string& text)
-{
-    std::vector<char> stack;
-    bool in_string = false;
-    bool escaped = false;
-    for (char ch : text) {
-        if (in_string) {
-            if (escaped) {
-                escaped = false;
-            } else if (ch == '\\') {
-                escaped = true;
-            } else if (ch == '"') {
-                in_string = false;
-            } else if (ch == '\n' || ch == '\r') {
-                return false;
-            }
-            continue;
-        }
-        if (ch == '"') {
-            in_string = true;
-        } else if (ch == '{' || ch == '[') {
-            stack.push_back(ch);
-        } else if (ch == '}' || ch == ']') {
-            if (stack.empty()) {
-                return false;
-            }
-            char expected = ch == '}' ? '{' : '[';
-            if (stack.back() != expected) {
-                return false;
-            }
-            stack.pop_back();
-        }
-    }
-    return !in_string && stack.empty();
 }
 
 bool looks_like_json_document(const std::string& text, const std::string& logical_path)
@@ -312,68 +214,100 @@ bool ini_structure_valid(const std::string& text)
     return true;
 }
 
-RedactionResult redact_json_fields(
+bool copy_redacted_array(
+    const json::Value& source,
+    json::ArrayBuilder& output,
+    const RedactionPolicy& policy,
+    const std::string& logical_path,
+    RedactionResult& result);
+
+bool copy_redacted_object(
+    const json::Value& source,
+    json::ObjectBuilder& output,
+    const RedactionPolicy& policy,
+    const std::string& logical_path,
+    RedactionResult& result)
+{
+    for (const std::string& key : source.object_keys()) {
+        const json::Value* value = source.find(key);
+        if (value == nullptr) return false;
+        std::string matched;
+        if (sensitive_json_key(key, policy, matched)) {
+            if (!value->is_string()) {
+                result.error = "sensitive JSON field does not contain a string value";
+                return false;
+            }
+            output.add_string(key, policy.marker);
+            result.events.push_back(event_for(
+                "diagnostic_secret_redacted",
+                "warning",
+                logical_path,
+                "json-field:" + matched,
+                "structured JSON value was replaced by the redaction marker"));
+        } else if (value->is_object()) {
+            json::ObjectBuilder child;
+            if (!copy_redacted_object(*value, child, policy, logical_path, result)) return false;
+            output.add_object(key, child);
+        } else if (value->is_array()) {
+            json::ArrayBuilder child;
+            if (!copy_redacted_array(*value, child, policy, logical_path, result)) return false;
+            output.add_array(key, child);
+        } else {
+            output.add_value(key, *value);
+        }
+    }
+    return true;
+}
+
+bool copy_redacted_array(
+    const json::Value& source,
+    json::ArrayBuilder& output,
+    const RedactionPolicy& policy,
+    const std::string& logical_path,
+    RedactionResult& result)
+{
+    for (std::size_t index = 0; index < source.size(); ++index) {
+        const json::Value* value = source.at(index);
+        if (value == nullptr) return false;
+        if (value->is_object()) {
+            json::ObjectBuilder child;
+            if (!copy_redacted_object(*value, child, policy, logical_path, result)) return false;
+            output.add_object(child);
+        } else if (value->is_array()) {
+            json::ArrayBuilder child;
+            if (!copy_redacted_array(*value, child, policy, logical_path, result)) return false;
+            output.add_array(child);
+        } else {
+            output.add_value(*value);
+        }
+    }
+    return true;
+}
+
+RedactionResult redact_structured_fields(
     const std::string& text,
     const RedactionPolicy& policy,
     const std::string& logical_path)
 {
     RedactionResult result;
-    result.text = text;
-    if (!json_structure_balanced(text)) {
+    json::Limits limits;
+    limits.maximum_bytes = 8U * 1024U * 1024U;
+    limits.maximum_depth = 64;
+    limits.maximum_nodes = 250000;
+    limits.maximum_string_bytes = 4U * 1024U * 1024U;
+    auto document = json::parse(text, limits);
+    if (!document || !document.value().is_object()) {
         result.safe = false;
-        result.error = "JSON structure is malformed or contains an unterminated string";
+        result.error = document ? "structured JSON root must be an object" : document.error().message;
+        return result;
+    }
+    json::ObjectBuilder output;
+    if (!copy_redacted_object(document.value(), output, policy, logical_path, result)) {
+        result.safe = false;
         result.text.clear();
         return result;
     }
-
-    std::size_t index = 0;
-    while (index < result.text.size()) {
-        if (result.text[index] != '"') {
-            ++index;
-            continue;
-        }
-        std::size_t key_end = 0;
-        if (!json_string_end(result.text, index, key_end)) {
-            result.safe = false;
-            result.error = "JSON key string is malformed";
-            result.text.clear();
-            return result;
-        }
-        std::size_t separator = result.text.find_first_not_of(" \t\r\n", key_end);
-        if (separator == std::string::npos || result.text[separator] != ':') {
-            index = key_end;
-            continue;
-        }
-        std::string matched;
-        std::string raw_key = result.text.substr(index + 1, key_end - index - 2);
-        if (!sensitive_json_key(raw_key, policy, matched)) {
-            index = key_end;
-            continue;
-        }
-        std::size_t value_start = result.text.find_first_not_of(" \t\r\n", separator + 1);
-        if (value_start == std::string::npos || result.text[value_start] != '"') {
-            result.safe = false;
-            result.error = "sensitive JSON field does not contain a string value";
-            result.text.clear();
-            return result;
-        }
-        std::size_t value_end = 0;
-        if (!json_string_end(result.text, value_start, value_end)) {
-            result.safe = false;
-            result.error = "sensitive JSON string is malformed";
-            result.text.clear();
-            return result;
-        }
-        std::string replacement = quote(policy.marker);
-        result.text.replace(value_start, value_end - value_start, replacement);
-        result.events.push_back(event_for(
-            "diagnostic_secret_redacted",
-            "warning",
-            logical_path,
-            "json-field:" + matched,
-            "structured JSON value was replaced by the redaction marker"));
-        index = value_start + replacement.size();
-    }
+    result.text = output.serialize();
     return result;
 }
 
@@ -417,7 +351,7 @@ RedactionResult redact_text(
     RedactionResult result;
     std::string input = text;
     if (looks_like_json_document(text, logical_path)) {
-        RedactionResult structured = redact_json_fields(text, policy, logical_path);
+        RedactionResult structured = redact_structured_fields(text, policy, logical_path);
         if (!structured.safe) {
             return structured;
         }
@@ -503,48 +437,37 @@ RedactionSummary summarize_events(const std::vector<RedactionEvent>& events)
     return summary;
 }
 
-std::string redaction_events_json(const std::vector<RedactionEvent>& events)
+json::ArrayBuilder redaction_events_builder(const std::vector<RedactionEvent>& events)
 {
-    std::ostringstream out;
-    out << "[";
-    for (std::size_t index = 0; index < events.size(); ++index) {
-        const RedactionEvent& event = events[index];
-        if (index) {
-            out << ",";
-        }
-        out << "\n    {\n";
-        out << "      \"code\": " << quote(event.code) << ",\n";
-        out << "      \"severity\": " << quote(event.severity) << ",\n";
-        out << "      \"path\": " << quote(event.path) << ",\n";
-        out << "      \"rule\": " << quote(event.rule) << ",\n";
-        out << "      \"details\": " << quote(event.details) << ",\n";
-        out << "      \"retryable\": " << (event.retryable ? "true" : "false") << "\n";
-        out << "    }";
+    json::ArrayBuilder output;
+    for (const RedactionEvent& event : events) {
+        json::ObjectBuilder item;
+        item.add_string("code", event.code);
+        item.add_string("severity", event.severity);
+        item.add_string("path", event.path);
+        item.add_string("rule", event.rule);
+        item.add_string("details", event.details);
+        item.add_bool("retryable", event.retryable);
+        output.add_object(item);
     }
-    if (!events.empty()) {
-        out << "\n  ";
-    }
-    out << "]";
-    return out.str();
+    return output;
 }
 
 std::string redaction_report_json(const std::vector<RedactionEvent>& events)
 {
     RedactionSummary summary = summarize_events(events);
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.diagnostic_redaction_report.v1\",\n";
-    out << "  \"policy_schema\": \"facman.redaction_policy.v1\",\n";
-    out << "  \"marker\": " << quote(redaction_marker()) << ",\n";
-    out << "  \"events\": " << redaction_events_json(events) << ",\n";
-    out << "  \"summary\": {\n";
-    out << "    \"redacted_fields\": " << summary.redacted_fields << ",\n";
-    out << "    \"excluded_paths\": " << summary.excluded_paths << ",\n";
-    out << "    \"binary_files_skipped\": " << summary.binary_files_skipped << ",\n";
-    out << "    \"archive_files_skipped\": " << summary.archive_files_skipped << "\n";
-    out << "  }\n";
-    out << "}\n";
-    return out.str();
+    json::ObjectBuilder counts;
+    (void)counts.add_unsigned_integer("redacted_fields", summary.redacted_fields);
+    (void)counts.add_unsigned_integer("excluded_paths", summary.excluded_paths);
+    (void)counts.add_unsigned_integer("binary_files_skipped", summary.binary_files_skipped);
+    (void)counts.add_unsigned_integer("archive_files_skipped", summary.archive_files_skipped);
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_redaction_report.v1");
+    output.add_string("policy_schema", "facman.redaction_policy.v1");
+    output.add_string("marker", redaction_marker());
+    output.add_array("events", redaction_events_builder(events));
+    output.add_object("summary", counts);
+    return output.serialize() + "\n";
 }
 
 std::string traversal_report_json(
@@ -552,36 +475,33 @@ std::string traversal_report_json(
     const std::filesystem::path& root,
     const TraversalPolicy& policy)
 {
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.diagnostic_traversal_report.v1\",\n";
-    out << "  \"root\": " << quote(generic_path(root)) << ",\n";
-    out << "  \"safe\": " << (result.safe ? "true" : "false") << ",\n";
-    out << "  \"policy\": {\n";
-    out << "    \"allowlisted_roots\": [";
-    for (std::size_t index = 0; index < policy.allowlisted_roots.size(); ++index) {
-        if (index) out << ", ";
-        out << quote(generic_path(policy.allowlisted_roots[index]));
+    json::ArrayBuilder roots;
+    for (const std::filesystem::path& allowlisted : policy.allowlisted_roots) {
+        roots.add_string(generic_path(allowlisted));
     }
-    out << "],\n";
-    out << "    \"maximum_depth\": " << policy.maximum_depth << ",\n";
-    out << "    \"maximum_file_count\": " << policy.maximum_file_count << ",\n";
-    out << "    \"maximum_file_size\": " << policy.maximum_file_size << ",\n";
-    out << "    \"maximum_total_size\": " << policy.maximum_total_size << ",\n";
-    out << "    \"time_budget_milliseconds\": " << policy.time_budget_milliseconds << "\n";
-    out << "  },\n";
-    out << "  \"selected_files\": " << result.files.size() << ",\n";
-    out << "  \"selected_bytes\": " << result.total_size << ",\n";
-    out << "  \"omissions\": [";
-    for (std::size_t index = 0; index < result.omissions.size(); ++index) {
-        if (index) out << ",";
-        out << "\n    {\"path\": " << quote(result.omissions[index].path)
-            << ", \"reason\": " << quote(result.omissions[index].reason) << "}";
+    json::ObjectBuilder policy_value;
+    policy_value.add_array("allowlisted_roots", roots);
+    (void)policy_value.add_unsigned_integer("maximum_depth", policy.maximum_depth);
+    (void)policy_value.add_unsigned_integer("maximum_file_count", policy.maximum_file_count);
+    (void)policy_value.add_unsigned_integer("maximum_file_size", policy.maximum_file_size);
+    (void)policy_value.add_unsigned_integer("maximum_total_size", policy.maximum_total_size);
+    (void)policy_value.add_unsigned_integer("time_budget_milliseconds", policy.time_budget_milliseconds);
+    json::ArrayBuilder omissions;
+    for (const TraversalOmission& omission : result.omissions) {
+        json::ObjectBuilder item;
+        item.add_string("path", omission.path);
+        item.add_string("reason", omission.reason);
+        omissions.add_object(item);
     }
-    if (!result.omissions.empty()) out << "\n  ";
-    out << "]\n";
-    out << "}\n";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_traversal_report.v1");
+    output.add_string("root", generic_path(root));
+    output.add_bool("safe", result.safe);
+    output.add_object("policy", policy_value);
+    (void)output.add_unsigned_integer("selected_files", result.files.size());
+    (void)output.add_unsigned_integer("selected_bytes", result.total_size);
+    output.add_array("omissions", omissions);
+    return output.serialize() + "\n";
 }
 
 std::string redaction_marker()
@@ -718,40 +638,6 @@ struct Omission {
     std::string path;
     std::string reason;
 };
-
-[[maybe_unused]] std::string json_string_value(
-    const std::string& text,
-    const std::string& key)
-{
-    const std::string marker = "\"" + key + "\"";
-    std::size_t position = text.find(marker);
-    if (position == std::string::npos) return {};
-    position = text.find(':', position + marker.size());
-    if (position == std::string::npos) return {};
-    position = text.find('"', position + 1);
-    if (position == std::string::npos) return {};
-    std::ostringstream value;
-    bool escaped = false;
-    for (++position; position < text.size(); ++position) {
-        const char ch = text[position];
-        if (escaped) {
-            switch (ch) {
-            case 'n': value << '\n'; break;
-            case 'r': value << '\r'; break;
-            case 't': value << '\t'; break;
-            default: value << ch; break;
-            }
-            escaped = false;
-        } else if (ch == '\\') {
-            escaped = true;
-        } else if (ch == '"') {
-            break;
-        } else {
-            value << ch;
-        }
-    }
-    return value.str();
-}
 
 bool safe_relative_path(const fs::path& relative)
 {
@@ -898,37 +784,36 @@ std::string detail_code(const std::string& detail, const std::string& fallback)
 
 std::string omission_report_json(const std::vector<Omission>& omissions)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.diagnostic_omission_report.v1\",\n";
-    out << "  \"omissions\": [";
-    for (std::size_t index = 0; index < omissions.size(); ++index) {
-        if (index) out << ',';
-        out << "\n    {\"path\": " << quote(omissions[index].path)
-            << ", \"reason\": " << quote(omissions[index].reason) << "}";
+    json::ArrayBuilder values;
+    for (const Omission& omission : omissions) {
+        json::ObjectBuilder item;
+        item.add_string("path", omission.path);
+        item.add_string("reason", omission.reason);
+        values.add_object(item);
     }
-    if (!omissions.empty()) out << "\n  ";
-    out << "]\n}\n";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_omission_report.v1");
+    output.add_array("omissions", values);
+    return output.serialize() + "\n";
 }
 
 std::string read_report_json(const std::vector<CollectedFile>& files)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.diagnostic_file_read_report.v1\",\n";
-    out << "  \"policy\": \"facman.diagnostic_file_read.v1\",\n";
-    out << "  \"files\": [";
-    for (std::size_t index = 0; index < files.size(); ++index) {
-        if (index) out << ',';
-        const CollectedFile& file = files[index];
-        out << "\n    {\"path\": " << quote(file.archive_path)
-            << ", \"identity_sha256\": " << quote(file.identity_sha256)
-            << ", \"original_sha256\": " << quote(file.original_sha256)
-            << ", \"redacted_sha256\": " << quote(file.redacted_sha256)
-            << ", \"consistent\": true}";
+    json::ArrayBuilder values;
+    for (const CollectedFile& file : files) {
+        json::ObjectBuilder item;
+        item.add_string("path", file.archive_path);
+        item.add_string("identity_sha256", file.identity_sha256);
+        item.add_string("original_sha256", file.original_sha256);
+        item.add_string("redacted_sha256", file.redacted_sha256);
+        item.add_bool("consistent", true);
+        values.add_object(item);
     }
-    if (!files.empty()) out << "\n  ";
-    out << "]\n}\n";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_file_read_report.v1");
+    output.add_string("policy", "facman.diagnostic_file_read.v1");
+    output.add_array("files", values);
+    return output.serialize() + "\n";
 }
 
 std::string manifest_json(
@@ -936,34 +821,35 @@ std::string manifest_json(
     const std::vector<CollectedFile>& files,
     std::size_t omission_count)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.diagnostic_bundle.v1\",\n";
-    out << "  \"bundle_version\": 1,\n";
-    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
-    out << "  \"policy_version\": \"facman.diagnostic_export.v1\",\n";
-    out << "  \"source_identity_policy\": \"sha256-pseudonymous\",\n";
-    out << "  \"files\": [";
-    for (std::size_t index = 0; index < files.size(); ++index) {
-        if (index) out << ',';
-        const CollectedFile& file = files[index];
-        out << "\n    {\"path\": " << quote(file.archive_path)
-            << ", \"kind\": " << quote(file.kind)
-            << ", \"redacted\": " << (file.redacted ? "true" : "false")
-            << ", \"sha256\": " << quote(file.redacted_sha256) << "}";
+    json::ArrayBuilder file_values;
+    for (const CollectedFile& file : files) {
+        json::ObjectBuilder item;
+        item.add_string("path", file.archive_path);
+        item.add_string("kind", file.kind);
+        item.add_bool("redacted", file.redacted);
+        item.add_string("sha256", file.redacted_sha256);
+        file_values.add_object(item);
     }
-    if (!files.empty()) out << "\n  ";
-    out << "],\n  \"omission_count\": " << omission_count << ",\n";
-    out << "  \"reports\": {\n";
-    out << "    \"traversal\": \"reports/traversal.v1.json\",\n";
-    out << "    \"redaction\": \"reports/redaction.v1.json\",\n";
-    out << "    \"file_reads\": \"reports/file-reads.v1.json\",\n";
-    out << "    \"omissions\": \"reports/omissions.v1.json\"\n";
-    out << "  },\n  \"redaction\": {\n";
-    out << "    \"policy_schema\": \"facman.redaction_policy.v1\",\n";
-    out << "    \"marker\": " << quote(redaction_marker()) << ",\n";
-    out << "    \"report_path\": \"reports/redaction.v1.json\"\n";
-    out << "  }\n}\n";
-    return out.str();
+    json::ObjectBuilder reports;
+    reports.add_string("traversal", "reports/traversal.v1.json");
+    reports.add_string("redaction", "reports/redaction.v1.json");
+    reports.add_string("file_reads", "reports/file-reads.v1.json");
+    reports.add_string("omissions", "reports/omissions.v1.json");
+    json::ObjectBuilder redaction;
+    redaction.add_string("policy_schema", "facman.redaction_policy.v1");
+    redaction.add_string("marker", redaction_marker());
+    redaction.add_string("report_path", "reports/redaction.v1.json");
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_bundle.v1");
+    (void)output.add_unsigned_integer("bundle_version", 1);
+    output.add_string("instance_id", instance_id);
+    output.add_string("policy_version", "facman.diagnostic_export.v1");
+    output.add_string("source_identity_policy", "sha256-pseudonymous");
+    output.add_array("files", file_values);
+    (void)output.add_unsigned_integer("omission_count", omission_count);
+    output.add_object("reports", reports);
+    output.add_object("redaction", redaction);
+    return output.serialize() + "\n";
 }
 
 bool recognized_format(
@@ -1763,33 +1649,37 @@ ExportOutcome export_bundle(
 
 std::string to_json(const ExportResult& result)
 {
-    std::ostringstream out;
-    out << "{\"schema\":\"factorio.diagnostic_bundle_export.v1\",";
-    out << "\"command\":\"diagnostics.export\",\"status\":\"ok\",";
-    out << "\"instance_id\":" << quote(result.instance_id) << ',';
-    out << "\"path\":" << quote(result.output_path.lexically_normal().string()) << ',';
-    out << "\"transaction_id\":" << quote(result.transaction_id) << ',';
-    out << "\"manifest_sha256\":" << quote(result.manifest_sha256) << ',';
-    out << "\"files\":" << result.file_count << ',';
-    out << "\"omissions\":" << result.omission_count << ',';
-    out << "\"self_verified\":" << (result.self_verified ? "true" : "false") << '}';
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_bundle_export.v1");
+    output.add_string("command", "diagnostics.export");
+    output.add_string("status", "ok");
+    output.add_string("instance_id", result.instance_id);
+    output.add_string("path", result.output_path.lexically_normal().string());
+    output.add_string("transaction_id", result.transaction_id);
+    output.add_string("manifest_sha256", result.manifest_sha256);
+    (void)output.add_unsigned_integer("files", result.file_count);
+    (void)output.add_unsigned_integer("omissions", result.omission_count);
+    output.add_bool("self_verified", result.self_verified);
+    return output.serialize();
 }
 
 std::string to_json(const Refusal& refusal)
 {
-    std::ostringstream out;
-    out << "{\"schema\":\"factorio.diagnostic_refusal.v1\",";
-    out << "\"command\":" << quote(refusal.command) << ',';
-    out << "\"status\":\"refused\",\"instance_id\":" << quote(refusal.instance_id) << ',';
-    out << "\"refusal\":{\"schema\":\"common.refusal.v1\",";
-    out << "\"code\":" << quote(refusal.code) << ',';
-    out << "\"reason\":" << quote(refusal.reason) << ',';
-    out << "\"detail\":" << quote(refusal.detail) << ',';
-    out << "\"recoverable\":" << (refusal.recoverable ? "true" : "false") << ',';
-    out << "\"retryable\":" << (refusal.recoverable ? "true" : "false") << ',';
-    out << "\"severity\":\"blocked\"}}";
-    return out.str();
+    json::ObjectBuilder refusal_value;
+    refusal_value.add_string("schema", "common.refusal.v1");
+    refusal_value.add_string("code", refusal.code);
+    refusal_value.add_string("reason", refusal.reason);
+    refusal_value.add_string("detail", refusal.detail);
+    refusal_value.add_bool("recoverable", refusal.recoverable);
+    refusal_value.add_bool("retryable", refusal.recoverable);
+    refusal_value.add_string("severity", "blocked");
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.diagnostic_refusal.v1");
+    output.add_string("command", refusal.command);
+    output.add_string("status", "refused");
+    output.add_string("instance_id", refusal.instance_id);
+    output.add_object("refusal", refusal_value);
+    return output.serialize();
 }
 
 } // namespace facman::factorio::diagnostics
