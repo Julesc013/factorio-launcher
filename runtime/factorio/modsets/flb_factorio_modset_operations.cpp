@@ -7,6 +7,7 @@
 #include "fl_archive_platform.h"
 #include "fl_path_safety.h"
 #include "fl_file_io.h"
+#include "fl_json.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 
@@ -20,6 +21,7 @@
 namespace facman::factorio::modsets::operations {
 namespace fs = std::filesystem;
 namespace tx = facman::transaction;
+namespace json = facman::core::json;
 namespace {
 
 struct Instance {
@@ -27,33 +29,6 @@ struct Instance {
     std::string factorio_version;
     fs::path root;
 };
-
-std::string json_escape(const std::string& value)
-{
-    std::ostringstream out;
-    for (unsigned char character : value) {
-        switch (character) {
-        case '\\': out << "\\\\"; break;
-        case '"': out << "\\\""; break;
-        case '\n': out << "\\n"; break;
-        case '\r': out << "\\r"; break;
-        case '\t': out << "\\t"; break;
-        default:
-            if (character < 0x20) {
-                const char* hex = "0123456789abcdef";
-                out << "\\u00" << hex[(character >> 4) & 0x0f] << hex[character & 0x0f];
-            } else {
-                out << static_cast<char>(character);
-            }
-        }
-    }
-    return out.str();
-}
-
-std::string quote(const std::string& value)
-{
-    return "\"" + json_escape(value) + "\"";
-}
 
 std::string path_string(const fs::path& path)
 {
@@ -66,36 +41,6 @@ std::string read_text(const fs::path& path)
     std::ostringstream output;
     output << input.rdbuf();
     return output.str();
-}
-
-std::string json_string_value(const std::string& text, const std::string& key)
-{
-    const std::string marker = "\"" + key + "\"";
-    std::size_t position = text.find(marker);
-    if (position == std::string::npos) return "";
-    position = text.find(':', position + marker.size());
-    if (position == std::string::npos) return "";
-    position = text.find('"', position + 1);
-    if (position == std::string::npos) return "";
-    std::string value;
-    bool escaped = false;
-    for (++position; position < text.size(); ++position) {
-        const char character = text[position];
-        if (escaped) {
-            if (character == 'n') value.push_back('\n');
-            else if (character == 'r') value.push_back('\r');
-            else if (character == 't') value.push_back('\t');
-            else value.push_back(character);
-            escaped = false;
-        } else if (character == '\\') {
-            escaped = true;
-        } else if (character == '"') {
-            break;
-        } else {
-            value.push_back(character);
-        }
-    }
-    return value;
 }
 
 Refusal refuse(
@@ -166,20 +111,18 @@ std::vector<ModRef> instance_mods(const Instance& instance)
 
 std::string lock_json(const Instance& instance, const std::vector<ModRef>& mods)
 {
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"lockfile_version\": 1,\n";
-    out << "  \"schema\": \"factorio.modset_lock.v1\",\n";
-    out << "  \"instance_id\": " << quote(instance.instance_id) << ",\n";
-    out << "  \"factorio_version\": " << quote(instance.factorio_version) << ",\n";
-    out << "  \"mods\": [";
-    for (std::size_t index = 0; index < mods.size(); ++index) {
-        if (index) out << ',';
-        out << "\n    " << ::facman::factorio::modsets::mod_ref_json(mods[index]);
+    json::ArrayBuilder entries;
+    for (const ModRef& mod : mods) {
+        auto value = json::parse(::facman::factorio::modsets::mod_ref_json(mod));
+        if (value) entries.add_value(value.value());
     }
-    if (!mods.empty()) out << "\n  ";
-    out << "]\n}\n";
-    return out.str();
+    json::ObjectBuilder output;
+    (void)output.add_unsigned_integer("lockfile_version", 1);
+    output.add_string("schema", "factorio.modset_lock.v1");
+    output.add_string("instance_id", instance.instance_id);
+    output.add_string("factorio_version", instance.factorio_version);
+    output.add_array("mods", entries);
+    return output.serialize() + "\n";
 }
 
 struct LockEntry {
@@ -191,21 +134,33 @@ struct LockEntry {
 std::vector<LockEntry> lock_entries(const std::string& text)
 {
     std::vector<LockEntry> entries;
-    std::size_t position = 0;
-    for (;;) {
-        const std::size_t file_position = text.find("\"file_name\"", position);
-        if (file_position == std::string::npos) break;
-        const std::size_t sha1_position = text.find("\"sha1\"", file_position);
-        if (sha1_position == std::string::npos) break;
-        const std::size_t sha256_position = text.find("\"sha256\"", sha1_position);
+    json::Limits limits;
+    limits.maximum_bytes = 8U * 1024U * 1024U;
+    limits.maximum_depth = 24;
+    limits.maximum_nodes = 100000;
+    auto document = json::parse(text, limits);
+    if (!document || !document.value().is_object()) return entries;
+    const json::Value* mods = document.value().find("mods");
+    if (mods == nullptr || !mods->is_array()) return entries;
+    for (std::size_t index = 0; index < mods->size(); ++index) {
+        const json::Value* item = mods->at(index);
+        if (item == nullptr || !item->is_object()) return {};
+        const json::Value* file_name = item->find("file_name");
+        const json::Value* sha1 = item->find("sha1");
+        const json::Value* sha256 = item->find("sha256");
+        if (file_name == nullptr || sha1 == nullptr) return {};
+        auto file_text = file_name->string_value();
+        auto sha1_text = sha1->string_value();
+        if (!file_text || !sha1_text) return {};
         LockEntry entry;
-        entry.file_name = json_string_value(text.substr(file_position), "file_name");
-        entry.sha1 = json_string_value(text.substr(sha1_position), "sha1");
-        if (sha256_position != std::string::npos) {
-            entry.sha256 = json_string_value(text.substr(sha256_position), "sha256");
+        entry.file_name = file_text.take_value();
+        entry.sha1 = sha1_text.take_value();
+        if (sha256 != nullptr) {
+            auto sha256_text = sha256->string_value();
+            if (!sha256_text) return {};
+            entry.sha256 = sha256_text.take_value();
         }
         if (!entry.file_name.empty()) entries.push_back(entry);
-        position = sha1_position + 6;
     }
     return entries;
 }
@@ -556,69 +511,68 @@ std::string to_json(const LockResult& result)
 
 std::string to_json(const VerifyResult& result)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.modset_verify.v1\",\n";
-    out << "  \"instance_id\": " << quote(result.instance_id) << ",\n";
-    out << "  \"status\": " << quote(result.problems.empty() ? "ok" : "error") << ",\n";
-    out << "  \"problems\": [";
-    for (std::size_t index = 0; index < result.problems.size(); ++index) {
-        if (index) out << ',';
-        out << quote(result.problems[index]);
-    }
-    out << "]";
+    json::ArrayBuilder problems;
+    for (const std::string& problem : result.problems) problems.add_string(problem);
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.modset_verify.v1");
+    output.add_string("instance_id", result.instance_id);
+    output.add_string("status", result.problems.empty() ? "ok" : "error");
+    output.add_array("problems", problems);
     if (!result.problems.empty()) {
-        out << ",\n  \"refusal\": {\"schema\":\"common.refusal.v1\","
-            "\"code\":\"mod_hash_mismatch\",\"reason\":\"Locked modset verification failed\","
-            "\"recoverable\":true,\"retryable\":true,\"severity\":\"error\"}\n";
-    } else {
-        out << '\n';
+        json::ObjectBuilder refusal;
+        refusal.add_string("schema", "common.refusal.v1");
+        refusal.add_string("code", "mod_hash_mismatch");
+        refusal.add_string("reason", "Locked modset verification failed");
+        refusal.add_bool("recoverable", true);
+        refusal.add_bool("retryable", true);
+        refusal.add_string("severity", "error");
+        output.add_object("refusal", refusal);
     }
-    out << "}\n";
-    return out.str();
+    return output.serialize() + "\n";
 }
 
 std::string to_json(const ExportResult& result)
 {
-    std::ostringstream out;
-    out << "{\n  \"schema\": \"factorio.modset_export.v1\",\n";
-    out << "  \"instance_id\": " << quote(result.instance_id) << ",\n";
-    out << "  \"path\": " << quote(path_string(result.output_path)) << ",\n";
-    out << "  \"files\": " << result.file_count << "\n}\n";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.modset_export.v1");
+    output.add_string("instance_id", result.instance_id);
+    output.add_string("path", path_string(result.output_path));
+    (void)output.add_unsigned_integer("files", result.file_count);
+    return output.serialize() + "\n";
 }
 
 std::string to_json(const Refusal& refusal)
 {
-    std::ostringstream out;
     const bool mod_import = refusal.command == "mods.import" && !refusal.source_path.empty();
-    out << "{\n  \"schema\": " << quote(
-        mod_import ? "factorio.mod_refusal.v1" : "factorio.modset_refusal.v1") << ",\n";
-    out << "  \"command\": " << quote(refusal.command) << ",\n";
-    out << "  \"status\": \"refused\",\n";
-    out << "  \"instance_id\": " << quote(refusal.instance_id) << ",\n";
+    json::ObjectBuilder output;
+    output.add_string("schema", mod_import ? "factorio.mod_refusal.v1" : "factorio.modset_refusal.v1");
+    output.add_string("command", refusal.command);
+    output.add_string("status", "refused");
+    output.add_string("instance_id", refusal.instance_id);
     if (!refusal.file_name.empty()) {
-        out << "  \"file_name\": " << quote(refusal.file_name) << ",\n";
+        output.add_string("file_name", refusal.file_name);
     }
     if (mod_import) {
-        out << "  \"path\": " << quote(path_string(refusal.source_path)) << ",\n";
+        output.add_string("path", path_string(refusal.source_path));
     }
-    out << "  \"refusal\": {\n";
-    out << "    \"schema\": \"common.refusal.v1\",\n";
-    out << "    \"code\": " << quote(refusal.code) << ",\n";
-    out << "    \"reason\": " << quote(refusal.reason) << ",\n";
-    out << "    \"recoverable\": " << (refusal.recoverable ? "true" : "false") << ",\n";
-    out << "    \"retryable\": " << (refusal.recoverable ? "true" : "false") << ",\n";
-    out << "    \"severity\": \"blocked\"\n  },\n";
-    out << "  \"details\": {\n";
+    json::ObjectBuilder refusal_value;
+    refusal_value.add_string("schema", "common.refusal.v1");
+    refusal_value.add_string("code", refusal.code);
+    refusal_value.add_string("reason", refusal.reason);
+    refusal_value.add_bool("recoverable", refusal.recoverable);
+    refusal_value.add_bool("retryable", refusal.recoverable);
+    refusal_value.add_string("severity", "blocked");
+    output.add_object("refusal", refusal_value);
+    json::ObjectBuilder details;
     if (mod_import) {
-        out << "    \"metadata_source\": " << quote(refusal.metadata_source) << ",\n";
+        details.add_string("metadata_source", refusal.metadata_source);
     }
-    out << "    \"detail\": " << quote(refusal.detail) << "\n  }";
+    details.add_string("detail", refusal.detail);
+    output.add_object("details", details);
     if (!refusal.suggested_next_command.empty()) {
-        out << ",\n  \"suggested_next_command\": " << quote(refusal.suggested_next_command);
+        output.add_string("suggested_next_command", refusal.suggested_next_command);
     }
-    out << "\n}\n";
-    return out.str();
+    return output.serialize() + "\n";
 }
 
 } // namespace facman::factorio::modsets::operations

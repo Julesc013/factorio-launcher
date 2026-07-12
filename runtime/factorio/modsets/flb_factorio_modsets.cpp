@@ -3,59 +3,16 @@
 
 #include "flb_factorio_modsets.h"
 
+#include "fl_json.h"
+
 #include <cctype>
 #include <map>
 #include <set>
-#include <sstream>
 
 namespace facman::factorio::modsets {
+namespace json = facman::core::json;
 
 namespace {
-
-std::string json_escape(const std::string& value)
-{
-    std::ostringstream out;
-    for (char raw : value) {
-        unsigned char ch = static_cast<unsigned char>(raw);
-        switch (raw) {
-        case '\\':
-            out << "\\\\";
-            break;
-        case '"':
-            out << "\\\"";
-            break;
-        case '\b':
-            out << "\\b";
-            break;
-        case '\f':
-            out << "\\f";
-            break;
-        case '\n':
-            out << "\\n";
-            break;
-        case '\r':
-            out << "\\r";
-            break;
-        case '\t':
-            out << "\\t";
-            break;
-        default:
-            if (ch < 0x20) {
-                const char* hex = "0123456789abcdef";
-                out << "\\u00" << hex[(ch >> 4) & 0x0f] << hex[ch & 0x0f];
-            } else {
-                out << raw;
-            }
-            break;
-        }
-    }
-    return out.str();
-}
-
-std::string quote(const std::string& value)
-{
-    return "\"" + json_escape(value) + "\"";
-}
 
 std::vector<int> version_parts(const std::string& version)
 {
@@ -287,27 +244,26 @@ std::string modset_refusal_json(
     const ModsetIssue& issue
 )
 {
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.modset_refusal.v1\",\n";
-    out << "  \"command\": " << quote(command) << ",\n";
-    out << "  \"status\": \"refused\",\n";
-    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
-    out << "  \"file_name\": " << quote(issue.file_name) << ",\n";
-    out << "  \"refusal\": {\n";
-    out << "    \"schema\": \"common.refusal.v1\",\n";
-    out << "    \"code\": " << quote(issue.code) << ",\n";
-    out << "    \"reason\": " << quote(issue.reason) << ",\n";
-    out << "    \"recoverable\": " << (retryable_issue(issue.code) ? "true" : "false") << ",\n";
-    out << "    \"retryable\": " << (retryable_issue(issue.code) ? "true" : "false") << ",\n";
-    out << "    \"severity\": \"blocked\"\n";
-    out << "  },\n";
-    out << "  \"details\": {\n";
-    out << "    \"detail\": " << quote(issue.detail) << "\n";
-    out << "  },\n";
-    out << "  \"suggested_next_command\": \"facman modsets lock <instance-id> --json\"\n";
-    out << "}\n";
-    return out.str();
+    const bool retryable = retryable_issue(issue.code);
+    json::ObjectBuilder refusal;
+    refusal.add_string("schema", "common.refusal.v1");
+    refusal.add_string("code", issue.code);
+    refusal.add_string("reason", issue.reason);
+    refusal.add_bool("recoverable", retryable);
+    refusal.add_bool("retryable", retryable);
+    refusal.add_string("severity", "blocked");
+    json::ObjectBuilder details;
+    details.add_string("detail", issue.detail);
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.modset_refusal.v1");
+    output.add_string("command", command);
+    output.add_string("status", "refused");
+    output.add_string("instance_id", instance_id);
+    output.add_string("file_name", issue.file_name);
+    output.add_object("refusal", refusal);
+    output.add_object("details", details);
+    output.add_string("suggested_next_command", "facman modsets lock <instance-id> --json");
+    return output.serialize() + "\n";
 }
 
 } // namespace facman::factorio::modsets

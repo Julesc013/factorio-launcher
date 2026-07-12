@@ -4,6 +4,7 @@
 #include "flb_factorio_mods.h"
 
 #include "fl_archive.h"
+#include "fl_json.h"
 #include "fl_sha256.h"
 
 #include <algorithm>
@@ -18,6 +19,7 @@
 namespace facman::factorio::mods {
 
 namespace fs = std::filesystem;
+namespace json = facman::core::json;
 
 namespace {
 
@@ -27,51 +29,6 @@ struct InfoJson {
     std::map<std::string, std::string> strings;
     std::vector<std::string> dependencies;
 };
-
-std::string json_escape(const std::string& value)
-{
-    std::ostringstream out;
-    for (char raw : value) {
-        unsigned char ch = static_cast<unsigned char>(raw);
-        switch (raw) {
-        case '\\':
-            out << "\\\\";
-            break;
-        case '"':
-            out << "\\\"";
-            break;
-        case '\b':
-            out << "\\b";
-            break;
-        case '\f':
-            out << "\\f";
-            break;
-        case '\n':
-            out << "\\n";
-            break;
-        case '\r':
-            out << "\\r";
-            break;
-        case '\t':
-            out << "\\t";
-            break;
-        default:
-            if (ch < 0x20) {
-                const char* hex = "0123456789abcdef";
-                out << "\\u00" << hex[(ch >> 4) & 0x0f] << hex[ch & 0x0f];
-            } else {
-                out << raw;
-            }
-            break;
-        }
-    }
-    return out.str();
-}
-
-std::string quote(const std::string& value)
-{
-    return "\"" + json_escape(value) + "\"";
-}
 
 std::string path_string(const fs::path& path)
 {
@@ -749,19 +706,17 @@ private:
     return out.str();
 }
 
-std::string dependency_json(const DependencyRef& dependency)
+json::ObjectBuilder dependency_builder(const DependencyRef& dependency)
 {
-    std::ostringstream out;
-    out << "{";
-    out << "\"kind\":" << quote(dependency.kind) << ",";
-    out << "\"name\":" << quote(dependency.name) << ",";
-    out << "\"operator\":" << quote(dependency.oper) << ",";
-    out << "\"version\":" << quote(dependency.version);
+    json::ObjectBuilder output;
+    output.add_string("kind", dependency.kind);
+    output.add_string("name", dependency.name);
+    output.add_string("operator", dependency.oper);
+    output.add_string("version", dependency.version);
     if (!dependency.raw.empty()) {
-        out << ",\"raw\":" << quote(dependency.raw);
+        output.add_string("raw", dependency.raw);
     }
-    out << "}";
-    return out.str();
+    return output;
 }
 
 std::string refusal_severity(const std::string& code)
@@ -977,53 +932,54 @@ ModRef inspect_mod_zip(const fs::path& path)
     return mod;
 }
 
+json::ArrayBuilder dependency_array_builder(const std::vector<DependencyRef>& dependencies)
+{
+    json::ArrayBuilder output;
+    for (const DependencyRef& dependency : dependencies) output.add_object(dependency_builder(dependency));
+    return output;
+}
+
 std::string dependency_array_json(const std::vector<DependencyRef>& dependencies)
 {
-    std::ostringstream out;
-    out << "[";
-    for (std::size_t index = 0; index < dependencies.size(); ++index) {
-        if (index) {
-            out << ",";
-        }
-        out << dependency_json(dependencies[index]);
+    return dependency_array_builder(dependencies).serialize();
+}
+
+json::ObjectBuilder mod_ref_builder(const ModRef& mod)
+{
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.mod_ref.v1");
+    output.add_string("name", mod.name);
+    output.add_string("title", mod.title);
+    output.add_string("version", mod.version);
+    output.add_string("factorio_version", mod.factorio_version);
+    output.add_string("author", mod.author);
+    output.add_string("description", mod.description);
+    output.add_string("file_name", mod.file_name);
+    output.add_string("sha1", mod.sha1);
+    output.add_string("sha256", mod.sha256);
+    output.add_string("source", mod.source);
+    output.add_string("metadata_source", mod.metadata_source);
+    output.add_bool("enabled", mod.enabled);
+    output.add_string("validation_status", mod.validation_status);
+    output.add_array("dependencies", dependency_array_builder(mod.dependencies));
+    output.add_array("optional_dependencies", dependency_array_builder(mod.optional_dependencies));
+    output.add_array("incompatibilities", dependency_array_builder(mod.incompatibilities));
+    if (!mod.valid) {
+        json::ObjectBuilder refusal;
+        refusal.add_string("schema", "common.refusal.v1");
+        refusal.add_string("code", mod.refusal_code);
+        refusal.add_string("reason", mod.refusal_reason);
+        refusal.add_bool("recoverable", refusal_retryable(mod.refusal_code));
+        refusal.add_bool("retryable", refusal_retryable(mod.refusal_code));
+        refusal.add_string("severity", refusal_severity(mod.refusal_code));
+        output.add_object("refusal", refusal);
     }
-    out << "]";
-    return out.str();
+    return output;
 }
 
 std::string mod_ref_json(const ModRef& mod)
 {
-    std::ostringstream out;
-    out << "{";
-    out << "\"schema\":\"factorio.mod_ref.v1\",";
-    out << "\"name\":" << quote(mod.name) << ",";
-    out << "\"title\":" << quote(mod.title) << ",";
-    out << "\"version\":" << quote(mod.version) << ",";
-    out << "\"factorio_version\":" << quote(mod.factorio_version) << ",";
-    out << "\"author\":" << quote(mod.author) << ",";
-    out << "\"description\":" << quote(mod.description) << ",";
-    out << "\"file_name\":" << quote(mod.file_name) << ",";
-    out << "\"sha1\":" << quote(mod.sha1) << ",";
-    out << "\"sha256\":" << quote(mod.sha256) << ",";
-    out << "\"source\":" << quote(mod.source) << ",";
-    out << "\"metadata_source\":" << quote(mod.metadata_source) << ",";
-    out << "\"enabled\":" << (mod.enabled ? "true" : "false") << ",";
-    out << "\"validation_status\":" << quote(mod.validation_status) << ",";
-    out << "\"dependencies\":" << dependency_array_json(mod.dependencies) << ",";
-    out << "\"optional_dependencies\":" << dependency_array_json(mod.optional_dependencies) << ",";
-    out << "\"incompatibilities\":" << dependency_array_json(mod.incompatibilities);
-    if (!mod.valid) {
-        out << ",\"refusal\":{";
-        out << "\"schema\":\"common.refusal.v1\",";
-        out << "\"code\":" << quote(mod.refusal_code) << ",";
-        out << "\"reason\":" << quote(mod.refusal_reason) << ",";
-        out << "\"recoverable\":" << (refusal_retryable(mod.refusal_code) ? "true" : "false") << ",";
-        out << "\"retryable\":" << (refusal_retryable(mod.refusal_code) ? "true" : "false") << ",";
-        out << "\"severity\":" << quote(refusal_severity(mod.refusal_code));
-        out << "}";
-    }
-    out << "}";
-    return out.str();
+    return mod_ref_builder(mod).serialize();
 }
 
 std::string mod_refusal_json(
@@ -1033,29 +989,28 @@ std::string mod_refusal_json(
     const ModRef& mod
 )
 {
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.mod_refusal.v1\",\n";
-    out << "  \"command\": " << quote(command) << ",\n";
-    out << "  \"status\": \"refused\",\n";
-    out << "  \"instance_id\": " << quote(instance_id) << ",\n";
-    out << "  \"file_name\": " << quote(path.filename().string()) << ",\n";
-    out << "  \"path\": " << quote(path_string(path)) << ",\n";
-    out << "  \"refusal\": {\n";
-    out << "    \"schema\": \"common.refusal.v1\",\n";
-    out << "    \"code\": " << quote(mod.refusal_code) << ",\n";
-    out << "    \"reason\": " << quote(mod.refusal_reason) << ",\n";
-    out << "    \"recoverable\": " << (refusal_retryable(mod.refusal_code) ? "true" : "false") << ",\n";
-    out << "    \"retryable\": " << (refusal_retryable(mod.refusal_code) ? "true" : "false") << ",\n";
-    out << "    \"severity\": " << quote(refusal_severity(mod.refusal_code)) << "\n";
-    out << "  },\n";
-    out << "  \"details\": {\n";
-    out << "    \"metadata_source\": " << quote(mod.metadata_source) << ",\n";
-    out << "    \"detail\": " << quote(mod.refusal_detail) << "\n";
-    out << "  },\n";
-    out << "  \"suggested_next_command\": \"facman mods import <mod.zip> --instance <id> --json\"\n";
-    out << "}\n";
-    return out.str();
+    const bool retryable = refusal_retryable(mod.refusal_code);
+    json::ObjectBuilder refusal;
+    refusal.add_string("schema", "common.refusal.v1");
+    refusal.add_string("code", mod.refusal_code);
+    refusal.add_string("reason", mod.refusal_reason);
+    refusal.add_bool("recoverable", retryable);
+    refusal.add_bool("retryable", retryable);
+    refusal.add_string("severity", refusal_severity(mod.refusal_code));
+    json::ObjectBuilder details;
+    details.add_string("metadata_source", mod.metadata_source);
+    details.add_string("detail", mod.refusal_detail);
+    json::ObjectBuilder output;
+    output.add_string("schema", "factorio.mod_refusal.v1");
+    output.add_string("command", command);
+    output.add_string("status", "refused");
+    output.add_string("instance_id", instance_id);
+    output.add_string("file_name", path.filename().string());
+    output.add_string("path", path_string(path));
+    output.add_object("refusal", refusal);
+    output.add_object("details", details);
+    output.add_string("suggested_next_command", "facman mods import <mod.zip> --instance <id> --json");
+    return output.serialize() + "\n";
 }
 
 std::string sha1_hex_file(const fs::path& path)
