@@ -5,8 +5,11 @@
 #import "CommandClient.h"
 
 static const NSTimeInterval FacManCliTimeoutSeconds = 30.0;
+static const NSUInteger FacManMaximumStdoutBytes = 16U * 1024U * 1024U;
+static const NSUInteger FacManMaximumStderrBytes = 64U * 1024U;
 
 static NSString *FacManPipeText(NSData *data);
+static NSData *FacManReadBounded(NSFileHandle *handle, NSUInteger maximumBytes, BOOL *exceeded);
 static FacManCommandResult *FacManDecodeResult(
     FacManCommandDefinition *command,
     NSInteger exitCode,
@@ -16,7 +19,7 @@ static FacManCommandResult *FacManDecodeResult(
 @implementation FacManCliProcessClient
 
 - (void)invokeCommand:(FacManCommandDefinition *)command
-            arguments:(NSArray<NSString *> *)arguments
+              payload:(NSDictionary<NSString *, id> *)payload
             workspace:(NSString *)workspace
               cliPath:(NSString *)cliPath
            completion:(FacManCliProcessCompletion)completion
@@ -30,33 +33,33 @@ static FacManCommandResult *FacManDecodeResult(
         return;
     }
 
-    NSMutableArray<NSString *> *fullArguments = [NSMutableArray array];
     NSString *trimmedWorkspace = [workspace stringByTrimmingCharactersInSet:
         [NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    if ([trimmedWorkspace length] > 0) {
-        [fullArguments addObject:@"--workspace"];
-        [fullArguments addObject:trimmedWorkspace];
-    }
-    [fullArguments addObjectsFromArray:arguments ?: @[]];
 
     @try {
         NSTask *task = [[NSTask alloc] init];
         [task setLaunchPath:executable];
-        [task setArguments:fullArguments];
+        [task setArguments:@[ @"rpc", @"--stdio" ]];
+        NSPipe *stdinPipe = [NSPipe pipe];
         NSPipe *stdoutPipe = [NSPipe pipe];
         NSPipe *stderrPipe = [NSPipe pipe];
+        [task setStandardInput:stdinPipe];
         [task setStandardOutput:stdoutPipe];
         [task setStandardError:stderrPipe];
 
         dispatch_group_t group = dispatch_group_create();
         __block NSData *stdoutData = nil;
         __block NSData *stderrData = nil;
+        __block BOOL stdoutExceeded = NO;
+        __block BOOL stderrExceeded = NO;
         __block BOOL timedOut = NO;
         dispatch_group_async(group, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-            stdoutData = [[stdoutPipe fileHandleForReading] readDataToEndOfFile];
+            stdoutData = FacManReadBounded(
+                [stdoutPipe fileHandleForReading], FacManMaximumStdoutBytes, &stdoutExceeded);
         });
         dispatch_group_async(group, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-            stderrData = [[stderrPipe fileHandleForReading] readDataToEndOfFile];
+            stderrData = FacManReadBounded(
+                [stderrPipe fileHandleForReading], FacManMaximumStderrBytes, &stderrExceeded);
         });
         dispatch_group_enter(group);
         [task setTerminationHandler:^(NSTask *finishedTask) {
@@ -64,6 +67,18 @@ static FacManCommandResult *FacManDecodeResult(
             dispatch_group_leave(group);
         }];
         [task launch];
+        NSDictionary *request = @{
+            @"schema": @"facman.transport_request.v1",
+            @"protocol_version": @1,
+            @"request_id": [[NSUUID UUID] UUIDString],
+            @"workspace": trimmedWorkspace ?: @"",
+            @"command": command.backendId,
+            @"dry_run": @YES,
+            @"payload": payload ?: @{}
+        };
+        NSData *requestData = [NSJSONSerialization dataWithJSONObject:request options:0 error:nil];
+        [[stdinPipe fileHandleForWriting] writeData:requestData];
+        [[stdinPipe fileHandleForWriting] closeFile];
 
         dispatch_after(
             dispatch_time(DISPATCH_TIME_NOW, (int64_t)(FacManCliTimeoutSeconds * NSEC_PER_SEC)),
@@ -81,6 +96,13 @@ static FacManCommandResult *FacManDecodeResult(
                                                            backendId:command.backendId
                                                         refusalCode:@"frontend_backend_timeout"
                                                       refusalReason:@"The backend command exceeded the AppKit command timeout and was terminated."]);
+                return;
+            }
+            if (stdoutExceeded || stderrExceeded) {
+                completion([FacManCommandResult refusalWithCommandId:command.commandId
+                                                           backendId:command.backendId
+                                                        refusalCode:@"frontend_backend_output_too_large"
+                                                      refusalReason:@"The backend process exceeded its bounded output budget."]);
                 return;
             }
             completion(FacManDecodeResult(
@@ -119,6 +141,23 @@ static NSString *FacManPipeText(NSData *data)
     return text ?: @"";
 }
 
+static NSData *FacManReadBounded(NSFileHandle *handle, NSUInteger maximumBytes, BOOL *exceeded)
+{
+    NSMutableData *output = [NSMutableData data];
+    for (;;) {
+        NSData *chunk = [handle availableData];
+        if ([chunk length] == 0) break;
+        const NSUInteger remaining = maximumBytes > [output length] ? maximumBytes - [output length] : 0;
+        if ([chunk length] > remaining) {
+            if (remaining > 0) [output appendData:[chunk subdataWithRange:NSMakeRange(0, remaining)]];
+            if (exceeded != NULL) *exceeded = YES;
+        } else {
+            [output appendData:chunk];
+        }
+    }
+    return output;
+}
+
 static NSString *FacManDictionaryText(NSDictionary *dictionary, NSString *key)
 {
     id value = [dictionary objectForKey:key];
@@ -133,18 +172,15 @@ static FacManCommandResult *FacManDecodeResult(
 {
     NSData *data = [stdoutText dataUsingEncoding:NSUTF8StringEncoding];
     NSDictionary *document = data == nil ? nil : [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-    NSDictionary *refusal = [[document objectForKey:@"refusal"] isKindOfClass:[NSDictionary class]]
-        ? [document objectForKey:@"refusal"] : nil;
     NSDictionary *error = [[document objectForKey:@"error"] isKindOfClass:[NSDictionary class]]
         ? [document objectForKey:@"error"] : nil;
-    NSDictionary *detail = refusal ?: error;
-    BOOL refused = exitCode != 0 || [[document objectForKey:@"status"] isEqual:@"refused"] || detail != nil;
+    BOOL refused = exitCode != 0 || ![[document objectForKey:@"outcome"] isEqual:@"ok"] || error != nil;
     return [[FacManCommandResult alloc] initWithCommandId:command.commandId
                                                 backendId:command.backendId
                                                  exitCode:exitCode
                                                stdoutText:stdoutText
                                                stderrText:stderrText
                                                   refused:refused
-                                              refusalCode:FacManDictionaryText(detail, @"code")
-                                            refusalReason:FacManDictionaryText(detail, refusal != nil ? @"reason" : @"message")];
+                                               refusalCode:FacManDictionaryText(error, @"code")
+                                             refusalReason:FacManDictionaryText(error, @"message")];
 }

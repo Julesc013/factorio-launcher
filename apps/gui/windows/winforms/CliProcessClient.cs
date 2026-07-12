@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,10 +15,12 @@ namespace FacMan.WinForms
     public sealed class CliProcessClient
     {
         private const int TimeoutMilliseconds = 30000;
+        private const int MaximumStdoutCharacters = 16 * 1024 * 1024;
+        private const int MaximumStderrCharacters = 64 * 1024;
 
         public async Task<CommandResult> InvokeAsync(
             CommandDefinition command,
-            IList<string> arguments,
+            IDictionary<string, object> payload,
             string workspace,
             string configuredCliPath,
             CancellationToken cancellationToken)
@@ -34,26 +35,26 @@ namespace FacMan.WinForms
                     "No facman CLI executable is configured, colocated with the WinForms app, or available through FACMAN_CLI.");
             }
 
-            List<string> fullArguments = new List<string>();
-            if (!String.IsNullOrWhiteSpace(workspace))
-            {
-                fullArguments.Add("--workspace");
-                fullArguments.Add(workspace.Trim());
-            }
-            foreach (string argument in arguments)
-            {
-                fullArguments.Add(argument);
-            }
-
             try
             {
-                ProcessStartInfo startInfo = CreateStartInfo(executable, fullArguments);
+                ProcessStartInfo startInfo = CreateStartInfo(executable);
                 using (Process process = new Process())
                 {
                     process.StartInfo = startInfo;
                     process.Start();
-                    Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync();
-                    Task<string> stderrTask = process.StandardError.ReadToEndAsync();
+                    JavaScriptSerializer serializer = new JavaScriptSerializer();
+                    Dictionary<string, object> request = new Dictionary<string, object>();
+                    request["schema"] = "facman.transport_request.v1";
+                    request["protocol_version"] = 1;
+                    request["request_id"] = Guid.NewGuid().ToString("D");
+                    request["workspace"] = String.IsNullOrWhiteSpace(workspace) ? String.Empty : workspace.Trim();
+                    request["command"] = command.BackendId;
+                    request["dry_run"] = true;
+                    request["payload"] = payload ?? new Dictionary<string, object>();
+                    await process.StandardInput.WriteAsync(serializer.Serialize(request)).ConfigureAwait(false);
+                    process.StandardInput.Close();
+                    Task<string> stdoutTask = ReadBoundedAsync(process.StandardOutput, MaximumStdoutCharacters);
+                    Task<string> stderrTask = ReadBoundedAsync(process.StandardError, MaximumStderrCharacters);
                     Task exitTask = Task.Run(delegate { process.WaitForExit(); });
                     Task timeoutTask = Task.Delay(TimeoutMilliseconds, cancellationToken);
                     Task completed = await Task.WhenAny(exitTask, timeoutTask).ConfigureAwait(false);
@@ -85,31 +86,37 @@ namespace FacMan.WinForms
             }
         }
 
-        private static ProcessStartInfo CreateStartInfo(string executable, IList<string> arguments)
+        private static Task<string> ReadBoundedAsync(StreamReader reader, int maximumCharacters)
+        {
+            return Task.Run(delegate
+            {
+                StringBuilder output = new StringBuilder();
+                char[] buffer = new char[4096];
+                bool exceeded = false;
+                int count;
+                while ((count = reader.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    int remaining = maximumCharacters - output.Length;
+                    if (remaining > 0) output.Append(buffer, 0, Math.Min(count, remaining));
+                    if (count > remaining) exceeded = true;
+                }
+                if (exceeded) throw new InvalidDataException("Backend process output exceeded its configured budget.");
+                return output.ToString();
+            });
+        }
+
+        private static ProcessStartInfo CreateStartInfo(string executable)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.FileName = executable;
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
+            startInfo.RedirectStandardInput = true;
             startInfo.CreateNoWindow = true;
             startInfo.StandardOutputEncoding = Encoding.UTF8;
             startInfo.StandardErrorEncoding = Encoding.UTF8;
-            PropertyInfo argumentListProperty = typeof(ProcessStartInfo).GetProperty("ArgumentList");
-            if (argumentListProperty != null)
-            {
-                object argumentList = argumentListProperty.GetValue(startInfo, null);
-                MethodInfo add = argumentList == null ? null : argumentList.GetType().GetMethod("Add");
-                if (add != null)
-                {
-                    foreach (string argument in arguments)
-                    {
-                        add.Invoke(argumentList, new object[] { argument });
-                    }
-                    return startInfo;
-                }
-            }
-            startInfo.Arguments = JoinArguments(arguments);
+            startInfo.Arguments = "rpc --stdio";
             return startInfo;
         }
 
@@ -129,7 +136,7 @@ namespace FacMan.WinForms
                 Dictionary<string, object> refusal = Member(envelope, "refusal");
                 Dictionary<string, object> error = Member(envelope, "error");
                 Dictionary<string, object> detail = refusal ?? error;
-                bool refused = exitCode != 0 || Text(envelope, "status") == "refused" || detail != null;
+                bool refused = exitCode != 0 || Text(envelope, "outcome") != "ok" || detail != null;
                 return new CommandResult(
                     command.Id,
                     command.BackendId,
@@ -191,22 +198,5 @@ namespace FacMan.WinForms
             return "facman";
         }
 
-        private static string JoinArguments(IEnumerable<string> arguments)
-        {
-            StringBuilder builder = new StringBuilder();
-            foreach (string argument in arguments)
-            {
-                if (builder.Length > 0) builder.Append(' ');
-                builder.Append(QuoteArgument(argument));
-            }
-            return builder.ToString();
-        }
-
-        private static string QuoteArgument(string argument)
-        {
-            if (String.IsNullOrEmpty(argument)) return "\"\"";
-            if (argument.IndexOfAny(new[] { ' ', '\t', '\r', '\n', '"' }) < 0) return argument;
-            return "\"" + argument.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
-        }
     }
 }

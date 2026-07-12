@@ -59,7 +59,7 @@ namespace FacMan.WinForms
                 "installs.scan",
                 "Installs",
                 "Scan Installs",
-                "installs.scan",
+                "install_refs.scan",
                 "Ask the backend to scan for local install candidates.",
                 Inputs(Optional("scanPath", "Scan root")),
                 delegate(IDictionary<string, string> inputs)
@@ -72,7 +72,7 @@ namespace FacMan.WinForms
                 "installs.import",
                 "Installs",
                 "Import Install",
-                "installs.import",
+                "install_refs.import",
                 "Register an existing local install reference through the backend.",
                 Inputs(Required("installPath", "Install path"), Required("installId", "Install id")),
                 delegate(IDictionary<string, string> inputs)
@@ -83,7 +83,7 @@ namespace FacMan.WinForms
                 "installs.inspect",
                 "Installs",
                 "Inspect Install",
-                "installs.inspect",
+                "install_refs.inspect",
                 "Inspect a registered install reference.",
                 Inputs(Required("installId", "Install id")),
                 delegate(IDictionary<string, string> inputs)
@@ -102,7 +102,7 @@ namespace FacMan.WinForms
                 "instances.create",
                 "Instances",
                 "Create Instance",
-                "instances.create",
+                "instance.create",
                 "Create an isolated instance through the backend.",
                 Inputs(Required("instanceName", "Instance name"), Required("installId", "Install id"), Optional("templateId", "Template id")),
                 delegate(IDictionary<string, string> inputs)

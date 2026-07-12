@@ -31,8 +31,14 @@ def validate() -> list[str]:
     windows_form = (winforms / "MainForm.cs").read_text(encoding="utf-8")
     for anchor in (
         "class CliProcessClient",
-        "ArgumentList",
-        "ReadToEndAsync()",
+        "rpc --stdio",
+        "RedirectStandardInput",
+        "facman.transport_request.v1",
+        "protocol_version",
+        "request_id",
+        "ReadBoundedAsync(",
+        "MaximumStdoutCharacters",
+        "MaximumStderrCharacters",
         "Task.WhenAny(",
         "CancellationToken",
         "frontend_backend_timeout",
@@ -43,6 +49,8 @@ def validate() -> list[str]:
             problems.append(f"WinForms CLI process transport missing: {anchor}")
     if "StandardOutput.ReadToEnd()" in windows_transport or "StandardError.ReadToEnd()" in windows_transport:
         problems.append("WinForms transport retains sequential blocking pipe reads")
+    if "JoinArguments(" in windows_transport or "QuoteArgument(" in windows_transport:
+        problems.append("WinForms machine transport retains CLI argument reconstruction")
     if "async void RunCommand" not in windows_form or "await commandClient.ExecuteAsync(" not in windows_form:
         problems.append("WinForms command execution can block the UI thread")
 
@@ -50,7 +58,14 @@ def validate() -> list[str]:
     appkit_window = (appkit / "MainWindowController.m").read_text(encoding="utf-8")
     for anchor in (
         "FacManCliProcessClient",
+        '@[ @"rpc", @"--stdio" ]',
+        "setStandardInput:",
+        "facman.transport_request.v1",
+        "protocol_version",
+        "request_id",
         "dispatch_group_async(",
+        "FacManReadBounded(",
+        "FacManMaximumStdoutBytes",
         "setTerminationHandler:",
         "dispatch_after(",
         "NSJSONSerialization",
@@ -60,6 +75,8 @@ def validate() -> list[str]:
             problems.append(f"AppKit CLI process transport missing: {anchor}")
     if "waitUntilExit" in appkit_transport:
         problems.append("AppKit transport waits before draining pipes")
+    if "addObjectsFromArray:arguments" in appkit_transport:
+        problems.append("AppKit machine transport retains CLI argument reconstruction")
     if "completion:^(FacManCommandResult *result)" not in appkit_window:
         problems.append("AppKit window does not render command completion asynchronously")
 

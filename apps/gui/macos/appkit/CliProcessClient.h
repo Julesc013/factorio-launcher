@@ -11,7 +11,7 @@ typedef void (^FacManCliProcessCompletion)(FacManCommandResult *result);
 @interface FacManCliProcessClient : NSObject
 
 - (void)invokeCommand:(FacManCommandDefinition *)command
-            arguments:(NSArray<NSString *> *)arguments
+              payload:(NSDictionary<NSString *, id> *)payload
             workspace:(NSString *)workspace
               cliPath:(NSString *)cliPath
            completion:(FacManCliProcessCompletion)completion;

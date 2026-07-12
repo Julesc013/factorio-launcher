@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,8 +54,8 @@ namespace FacMan.WinForms
 
             try
             {
-                IList<string> arguments = command.ArgumentBuilder(inputs);
-                return transport.InvokeAsync(command, arguments, workspace, configuredCliPath, cancellationToken);
+                command.ArgumentBuilder(inputs);
+                return transport.InvokeAsync(command, BuildPayload(command, inputs), workspace, configuredCliPath, cancellationToken);
             }
             catch (CommandValidationException ex)
             {
@@ -64,6 +65,49 @@ namespace FacMan.WinForms
                     "winforms_input_required",
                     ex.Message));
             }
+        }
+
+        private static IDictionary<string, object> BuildPayload(
+            CommandDefinition command,
+            IDictionary<string, string> inputs)
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>();
+            string value;
+            if (command.Id == "installs.scan")
+            {
+                List<string> roots = new List<string>();
+                if (inputs.TryGetValue("scanPath", out value) && !String.IsNullOrWhiteSpace(value)) roots.Add(value.Trim());
+                payload["roots"] = roots;
+            }
+            else if (command.Id == "installs.import")
+            {
+                payload["path"] = inputs["installPath"].Trim();
+                payload["install_id"] = inputs["installId"].Trim();
+            }
+            else if (command.Id == "installs.inspect") payload["install_id"] = inputs["installId"].Trim();
+            else if (command.Id == "instances.create")
+            {
+                string name = inputs["instanceName"].Trim();
+                payload["display_name"] = name;
+                payload["instance_id"] = Slugify(name);
+                payload["install_id"] = inputs["installId"].Trim();
+                if (inputs.TryGetValue("templateId", out value) && !String.IsNullOrWhiteSpace(value)) payload["template_id"] = value.Trim();
+            }
+            else if (command.Id == "launch_plan.build" || command.Id == "launch_plan.preflight" || command.Id == "run.preview")
+                payload["instance_id"] = inputs["instanceId"].Trim();
+            return payload;
+        }
+
+        private static string Slugify(string value)
+        {
+            StringBuilder output = new StringBuilder();
+            bool separator = false;
+            foreach (char character in value.ToLowerInvariant())
+            {
+                if (Char.IsLetterOrDigit(character)) { output.Append(character); separator = false; }
+                else if (output.Length > 0 && !separator) { output.Append('-'); separator = true; }
+            }
+            return output.ToString().Trim('-');
         }
     }
 }

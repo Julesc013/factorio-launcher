@@ -4,6 +4,7 @@
 #include "command_dispatch.h"
 
 #include "facman_client.h"
+#include "fl_json.h"
 #include "version.h"
 #include "generated/command_help.inc"
 
@@ -17,6 +18,11 @@
 #include <vector>
 
 namespace {
+namespace json = facman::core::json;
+
+constexpr std::size_t kTransportInputLimit = 1024U * 1024U;
+constexpr std::size_t kTransportOutputLimit = 16U * 1024U * 1024U;
+
 struct Options {
     std::string workspace;
     std::vector<std::string> args;
@@ -113,11 +119,100 @@ std::string operation_payload(
     const std::string& operation,
     const std::vector<std::pair<std::string, std::string>>& fields = {})
 {
-    std::ostringstream out;
-    out << "{\"operation\":" << q(operation);
-    for (const auto& field : fields) if (!field.second.empty()) out << ',' << q(field.first) << ':' << q(field.second);
-    out << '}';
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("operation", operation);
+    for (const auto& field : fields) if (!field.second.empty()) output.add_string(field.first, field.second);
+    return output.serialize();
+}
+
+std::string transport_response(
+    const std::string& request_id,
+    const std::string& command,
+    const facman::core::Result<facman::client::CommandResponse>& response)
+{
+    json::ObjectBuilder output;
+    output.add_string("schema", "facman.transport_response.v1");
+    output.add_string("request_id", request_id);
+    output.add_unsigned_integer("protocol_version", 1);
+    output.add_string("command", command);
+    output.add_string("outcome", response && response.value().ok() ? "ok" : "refused");
+    if (response && response.value().parsed_payload) output.add_value("payload", *response.value().parsed_payload);
+    else output.add_null("payload");
+    if (response && response.value().ok()) {
+        output.add_null("error");
+    } else {
+        json::ObjectBuilder error;
+        error.add_string("code", response ? response.value().error_code : response.error().code);
+        error.add_string("message", response ? response.value().error_message : response.error().message);
+        output.add_object("error", error);
+    }
+    json::ArrayBuilder diagnostics;
+    json::ArrayBuilder effects;
+    output.add_array("diagnostics", diagnostics);
+    output.add_array("effects", effects);
+    return output.serialize();
+}
+
+int transport_refusal(
+    const std::string& request_id,
+    const std::string& command,
+    const std::string& code,
+    const std::string& message)
+{
+    auto failure = facman::core::Result<facman::client::CommandResponse>::failure({code, message, "$"});
+    std::cout << transport_response(request_id, command, failure) << '\n';
+    return 1;
+}
+
+std::string json_string_field(const json::Value& object, const char* key)
+{
+    const auto* field = object.find(key);
+    if (field == nullptr) return {};
+    auto value = field->string_value();
+    return value ? value.take_value() : std::string();
+}
+
+int command_rpc(const Options& options)
+{
+    if (!flag(options.args, "--stdio")) return 2;
+    std::string input;
+    input.resize(kTransportInputLimit + 1);
+    std::cin.read(input.data(), static_cast<std::streamsize>(input.size()));
+    input.resize(static_cast<std::size_t>(std::cin.gcount()));
+    if (input.size() > kTransportInputLimit) {
+        return transport_refusal("", "", "transport_input_too_large", "Transport request exceeds the input budget");
+    }
+    json::Limits limits;
+    limits.maximum_bytes = kTransportInputLimit;
+    limits.maximum_depth = 32;
+    limits.maximum_nodes = 32768;
+    limits.maximum_string_bytes = 512U * 1024U;
+    auto document = json::parse(input, limits);
+    if (!document || !document.value().is_object()) {
+        return transport_refusal("", "", "transport_request_invalid", document ? "Transport request must be an object" : document.error().message);
+    }
+    const json::Value& request = document.value();
+    const std::string request_id = json_string_field(request, "request_id");
+    const std::string command = json_string_field(request, "command");
+    const std::string schema = json_string_field(request, "schema");
+    const auto* version = request.find("protocol_version");
+    const auto* dry_run = request.find("dry_run");
+    const auto* payload = request.find("payload");
+    if (schema != "facman.transport_request.v1" || request_id.empty() || command.empty() ||
+        version == nullptr || !version->unsigned_integer_value() || version->unsigned_integer_value().value() != 1 ||
+        dry_run == nullptr || !dry_run->bool_value() || payload == nullptr || !payload->is_object()) {
+        return transport_refusal(request_id, command, "transport_protocol_invalid", "Transport request does not satisfy protocol v1");
+    }
+    const std::string requested_workspace = json_string_field(request, "workspace");
+    const std::string workspace = requested_workspace.empty() ? options.workspace : requested_workspace;
+    facman::client::FacManClient client(std::make_unique<facman::client::DirectFlbTransport>(workspace));
+    auto response = client.execute({command, payload->serialize(), dry_run->bool_value().value()});
+    std::string output = transport_response(request_id, command, response);
+    if (output.size() > kTransportOutputLimit) {
+        return transport_refusal(request_id, command, "transport_output_too_large", "Transport response exceeds the output budget");
+    }
+    std::cout << output << '\n';
+    return response && response.value().ok() ? 0 : 1;
 }
 
 int command_product(const Options& options)
@@ -360,6 +455,7 @@ int usage()
 {
     std::cout << "facman " << FACMAN_VERSION_SEMVER << "\n";
     for (const char* line : kGeneratedCommandHelp) std::cout << "  " << line << '\n';
+    std::cout << "  rpc --stdio (bounded machine transport)\n";
     return 0;
 }
 
@@ -372,6 +468,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     const std::string& command = options.args[0];
     if (command == "--version" || command == "version") { std::cout << "FacMan " << FACMAN_VERSION_SEMVER << '\n'; return 0; }
     if (command == "--help" || command == "help") return usage();
+    if (command == "rpc") return command_rpc(options);
     if (command == "product") return command_product(options);
     if (command == "command-graph") return command_graph(options);
     if (command == "diagnostics") return command_diagnostics(options);

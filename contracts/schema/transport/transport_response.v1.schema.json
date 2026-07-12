@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/transport/transport_response.v1.schema.json",
+  "title": "FacMan bounded stdio transport response v1",
+  "type": "object",
+  "required": ["schema", "protocol_version", "request_id", "command", "outcome", "payload", "error", "diagnostics", "effects"],
+  "properties": {
+    "schema": { "const": "facman.transport_response.v1" },
+    "protocol_version": { "const": 1 },
+    "request_id": { "type": "string" },
+    "command": { "type": "string" },
+    "outcome": { "enum": ["ok", "refused", "invalid_argument", "unavailable", "not_found", "conflict", "cancelled", "timeout", "recovery_required", "internal_error"] },
+    "payload": { "type": ["object", "array", "string", "number", "boolean", "null"] },
+    "error": { "type": ["object", "null"] },
+    "diagnostics": { "type": "array" },
+    "effects": { "type": "array" }
+  },
+  "additionalProperties": false
+}

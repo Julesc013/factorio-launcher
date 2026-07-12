@@ -11,6 +11,7 @@ static NSString *FacManJsonEscape(NSString *value);
 static FacManCommandDefinition *FacManImplemented(NSString *commandId, NSString *backendId, NSString *screen, NSString *label, NSString *summary);
 static FacManCommandDefinition *FacManDeferred(NSString *commandId, NSString *backendId, NSString *screen, NSString *label);
 static NSArray<NSString *> *FacManArgumentsForCommand(NSString *commandId, NSDictionary<NSString *, NSString *> *inputs, NSString **error);
+static NSDictionary<NSString *, id> *FacManPayloadForCommand(NSString *commandId, NSDictionary<NSString *, NSString *> *inputs);
 static NSString *FacManRequired(NSDictionary<NSString *, NSString *> *inputs, NSString *key, NSString **error);
 static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSString *, NSString *> *inputs, NSString *key, NSString *flag);
 
@@ -116,11 +117,11 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
         FacManImplemented(@"doctor", @"doctor.run", @"Doctor", @"Doctor", @"Run workspace checks through the shared backend."),
         FacManImplemented(@"product.inspect", @"product.inspect", @"Dashboard", @"Product Inspect", @"Inspect the FacMan product binding."),
         FacManImplemented(@"command_graph.inspect", @"command_graph.inspect", @"Dashboard", @"Command Graph", @"Inspect the shared command graph."),
-        FacManImplemented(@"installs.scan", @"installs.scan", @"Installs", @"Scan Installs", @"Ask the backend to scan for local install candidates."),
-        FacManImplemented(@"installs.import", @"installs.import", @"Installs", @"Import Install", @"Register an existing local install reference through the backend."),
-        FacManImplemented(@"installs.inspect", @"installs.inspect", @"Installs", @"Inspect Install", @"Inspect a registered install reference."),
+        FacManImplemented(@"installs.scan", @"install_refs.scan", @"Installs", @"Scan Installs", @"Ask the backend to scan for local install candidates."),
+        FacManImplemented(@"installs.import", @"install_refs.import", @"Installs", @"Import Install", @"Register an existing local install reference through the backend."),
+        FacManImplemented(@"installs.inspect", @"install_refs.inspect", @"Installs", @"Inspect Install", @"Inspect a registered install reference."),
         FacManImplemented(@"instances.list", @"instance.list", @"Instances", @"List Instances", @"List isolated instances from the backend workspace."),
-        FacManImplemented(@"instances.create", @"instances.create", @"Instances", @"Create Instance", @"Create an isolated instance through the backend."),
+        FacManImplemented(@"instances.create", @"instance.create", @"Instances", @"Create Instance", @"Create an isolated instance through the backend."),
         FacManImplemented(@"launch_plan.build", @"launch_plan.build", @"Launch Plan", @"Build Launch Plan", @"Build a dry-run launch plan through the backend."),
         FacManImplemented(@"launch_plan.preflight", @"launch_plan.preflight", @"Launch Plan", @"Preflight Launch", @"Validate the routed launch plan without starting a process."),
         FacManImplemented(@"run.preview", @"run.preview", @"Launch Plan", @"Run Preview", @"Preview run arguments without launching Factorio."),
@@ -178,10 +179,43 @@ static void FacManAddOptional(NSMutableArray<NSString *> *args, NSDictionary<NSS
 
     FacManCliProcessClient *transport = [[FacManCliProcessClient alloc] init];
     [transport invokeCommand:command
-                   arguments:arguments
+                     payload:FacManPayloadForCommand(command.commandId, inputs ?: @{})
                    workspace:workspace
                      cliPath:cliPath
                   completion:completion];
+}
+
+static NSDictionary<NSString *, id> *FacManPayloadForCommand(
+    NSString *commandId,
+    NSDictionary<NSString *, NSString *> *inputs)
+{
+    if ([commandId isEqualToString:@"installs.scan"]) {
+        NSString *path = [inputs objectForKey:@"scanPath"];
+        return [path length] > 0 ? @{ @"roots": @[ path ] } : @{ @"roots": @[] };
+    }
+    if ([commandId isEqualToString:@"installs.import"]) {
+        return @{ @"path": [inputs objectForKey:@"installPath"] ?: @"",
+                  @"install_id": [inputs objectForKey:@"installId"] ?: @"" };
+    }
+    if ([commandId isEqualToString:@"installs.inspect"]) {
+        return @{ @"install_id": [inputs objectForKey:@"installId"] ?: @"" };
+    }
+    if ([commandId isEqualToString:@"instances.create"]) {
+        NSString *name = [inputs objectForKey:@"instanceName"] ?: @"";
+        NSString *identifier = [[name lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@"-"];
+        NSMutableDictionary *payload = [@{ @"display_name": name,
+                                           @"instance_id": identifier,
+                                           @"install_id": [inputs objectForKey:@"installId"] ?: @"" } mutableCopy];
+        NSString *templateId = [inputs objectForKey:@"templateId"];
+        if ([templateId length] > 0) [payload setObject:templateId forKey:@"template_id"];
+        return payload;
+    }
+    if ([commandId isEqualToString:@"launch_plan.build"] ||
+        [commandId isEqualToString:@"launch_plan.preflight"] ||
+        [commandId isEqualToString:@"run.preview"]) {
+        return @{ @"instance_id": [inputs objectForKey:@"instanceId"] ?: @"" };
+    }
+    return @{};
 }
 
 @end

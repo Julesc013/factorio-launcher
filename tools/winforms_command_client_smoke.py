@@ -141,7 +141,8 @@ namespace FacMan.WinForms.CommandClientSmoke
             File.WriteAllText(
                 fakeCli,
                 "@echo off\r\n" +
-                "echo {\"schema\":\"fake.facman.v1\",\"status\":\"ok\"}\r\n" +
+                "set /p FACMAN_REQUEST=\r\n" +
+                "echo {\"schema\":\"facman.transport_response.v1\",\"protocol_version\":1,\"request_id\":\"fake\",\"command\":\"product.inspect\",\"outcome\":\"ok\",\"payload\":{},\"error\":null,\"diagnostics\":[],\"effects\":[]}\r\n" +
                 "exit /b 0\r\n");
 
             CommandClient client = new CommandClient();
@@ -152,7 +153,7 @@ namespace FacMan.WinForms.CommandClientSmoke
                 fakeCli,
                 CancellationToken.None).GetAwaiter().GetResult();
             Require(success.ExitCode == 0, "product.inspect should exit successfully");
-            Require(success.Stdout.Contains("fake.facman.v1"), "product.inspect should render fake backend stdout");
+            Require(success.Stdout.Contains("facman.transport_response.v1"), "product.inspect should render fake backend stdout");
             Require(!success.Refused, "product.inspect should not be a frontend refusal");
 
             CommandResult missingInput = client.ExecuteAsync(
