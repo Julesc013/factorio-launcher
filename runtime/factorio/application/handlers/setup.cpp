@@ -79,14 +79,6 @@ ApplicationResult verify_package_impl(ApplicationContext& context, const Service
     verify_request.target_os = expected->os;
     verify_request.target_arch = expected->arch;
     verify_request.linkage_model = expected->linkage;
-    if (toml_value(manifest, "target_os") != verify_request.target_os ||
-        toml_value(manifest, "target_arch") != verify_request.target_arch ||
-        toml_value(manifest, "linkage_model") != verify_request.linkage_model) {
-        return refused(
-            safety_refusal("package.verify", "package_manifest_invalid", "Package manifest target metadata contradicts its profile", root.string(), false),
-            "package_manifest_invalid",
-            "Package manifest target metadata contradicts its profile");
-    }
     auto verification = context.setup().verify_package(verify_request);
     if (!verification) return unavailable(context, "package.verify", verification.error().code, verification.error().message);
     ApplicationResult result;
