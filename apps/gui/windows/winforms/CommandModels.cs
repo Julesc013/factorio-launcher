@@ -23,7 +23,8 @@ namespace FacMan.WinForms
             string type,
             bool repeatable,
             string requestField,
-            string defaultValue)
+            string defaultValue,
+            IEnumerable<string> choices)
         {
             Key = key;
             Label = label;
@@ -32,6 +33,7 @@ namespace FacMan.WinForms
             Repeatable = repeatable;
             RequestField = requestField;
             DefaultValue = defaultValue;
+            Choices = new List<string>(choices ?? new string[0]).AsReadOnly();
         }
 
         public string Key { get; private set; }
@@ -41,6 +43,7 @@ namespace FacMan.WinForms
         public bool Repeatable { get; private set; }
         public string RequestField { get; private set; }
         public string DefaultValue { get; private set; }
+        public IList<string> Choices { get; private set; }
     }
 
     public delegate IList<string> CommandArgumentBuilder(IDictionary<string, string> inputs);

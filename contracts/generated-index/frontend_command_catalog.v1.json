@@ -401,6 +401,7 @@
       "renderer": "diagnostics_export",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -409,6 +410,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "output_path",
           "repeatable": false,
@@ -481,6 +483,7 @@
       "renderer": "diagnostics_redact",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "path",
           "repeatable": false,
@@ -601,6 +604,7 @@
       "renderer": "doctor_run",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "roots",
           "repeatable": true,
@@ -784,6 +788,7 @@
       "renderer": "install_import",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "path",
           "repeatable": false,
@@ -792,6 +797,7 @@
           "type": "path"
         },
         {
+          "choices": [],
           "default": null,
           "name": "install_id",
           "repeatable": false,
@@ -865,6 +871,7 @@
       "renderer": "install_inspect",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "install_id",
           "repeatable": false,
@@ -942,6 +949,7 @@
       "renderer": "installs_install_version",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "version",
           "repeatable": false,
@@ -950,6 +958,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "archive",
           "repeatable": false,
@@ -1021,6 +1030,7 @@
       "renderer": "installs_repair",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "id",
           "repeatable": false,
@@ -1089,6 +1099,7 @@
       "renderer": "install_scan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "roots",
           "repeatable": true,
@@ -1160,6 +1171,7 @@
       "renderer": "installs_uninstall",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "id",
           "repeatable": false,
@@ -1231,6 +1243,7 @@
       "renderer": "installs_verify",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "id",
           "repeatable": false,
@@ -1306,6 +1319,7 @@
       "renderer": "instance_export",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -1314,6 +1328,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "output_path",
           "repeatable": false,
@@ -1386,6 +1401,7 @@
       "renderer": "instance_import",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "source_path",
           "repeatable": false,
@@ -1394,6 +1410,7 @@
           "type": "path"
         },
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -1522,6 +1539,7 @@
       "renderer": "instances_archive",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -1598,6 +1616,7 @@
       "renderer": "instances_clone",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "source_instance_id",
           "repeatable": false,
@@ -1606,6 +1625,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "destination_instance_id",
           "repeatable": false,
@@ -1614,6 +1634,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "display_name",
           "repeatable": false,
@@ -1622,6 +1643,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "install_ref",
           "repeatable": false,
@@ -1699,6 +1721,7 @@
       "renderer": "instance_create",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "display_name",
           "repeatable": false,
@@ -1707,6 +1730,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -1715,6 +1739,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "install_id",
           "repeatable": false,
@@ -1723,6 +1748,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "template_id",
           "repeatable": false,
@@ -1798,6 +1824,7 @@
       "renderer": "instances_diff",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "left_instance_id",
           "repeatable": false,
@@ -1806,6 +1833,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "right_ref",
           "repeatable": false,
@@ -1876,6 +1904,7 @@
       "renderer": "instances_inspect",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -1952,6 +1981,7 @@
       "renderer": "instances_rename",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -1960,6 +1990,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "display_name",
           "repeatable": false,
@@ -2032,6 +2063,7 @@
       "renderer": "instances_restore",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "archive_id",
           "repeatable": false,
@@ -2040,6 +2072,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "new_instance_id",
           "repeatable": false,
@@ -2111,6 +2144,7 @@
       "renderer": "instances_verify",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -2183,6 +2217,7 @@
       "renderer": "launch_plan_build",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -2255,6 +2290,7 @@
       "renderer": "launch_plan_explain",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -2332,6 +2368,7 @@
       "renderer": "launch_plan_preflight",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -2402,6 +2439,7 @@
       "renderer": "mods_explain",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "identity",
           "repeatable": false,
@@ -2478,6 +2516,7 @@
       "renderer": "mods_import",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "source_path",
           "repeatable": false,
@@ -2486,6 +2525,7 @@
           "type": "path"
         },
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -2554,6 +2594,7 @@
       "renderer": "mods_index",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "roots",
           "repeatable": true,
@@ -2624,6 +2665,7 @@
       "renderer": "mods_inspect",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "identity",
           "repeatable": false,
@@ -2699,6 +2741,7 @@
       "renderer": "mods_install",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "query",
           "repeatable": false,
@@ -2707,6 +2750,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -2833,6 +2877,7 @@
       "renderer": "mods_search",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "query",
           "repeatable": false,
@@ -2903,6 +2948,7 @@
       "renderer": "mods_update",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -2973,6 +3019,7 @@
       "renderer": "mods_verify",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "identity",
           "repeatable": false,
@@ -3044,6 +3091,7 @@
       "renderer": "modsets_apply",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -3052,6 +3100,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "enabled_mods",
           "repeatable": true,
@@ -3060,6 +3109,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "disabled_mods",
           "repeatable": true,
@@ -3068,6 +3118,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "version_preferences",
           "repeatable": true,
@@ -3076,6 +3127,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_packages",
           "repeatable": false,
@@ -3084,6 +3136,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_versions_per_package",
           "repeatable": false,
@@ -3092,6 +3145,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_graph_edges",
           "repeatable": false,
@@ -3100,6 +3154,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_solver_states",
           "repeatable": false,
@@ -3108,6 +3163,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_backtracks",
           "repeatable": false,
@@ -3116,6 +3172,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_elapsed_ms",
           "repeatable": false,
@@ -3124,6 +3181,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_explanation_nodes",
           "repeatable": false,
@@ -3195,6 +3253,7 @@
       "renderer": "modsets_diff",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -3203,6 +3262,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "enabled_mods",
           "repeatable": true,
@@ -3211,6 +3271,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "disabled_mods",
           "repeatable": true,
@@ -3219,6 +3280,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "version_preferences",
           "repeatable": true,
@@ -3227,6 +3289,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_packages",
           "repeatable": false,
@@ -3235,6 +3298,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_versions_per_package",
           "repeatable": false,
@@ -3243,6 +3307,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_graph_edges",
           "repeatable": false,
@@ -3251,6 +3316,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_solver_states",
           "repeatable": false,
@@ -3259,6 +3325,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_backtracks",
           "repeatable": false,
@@ -3267,6 +3334,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_elapsed_ms",
           "repeatable": false,
@@ -3275,6 +3343,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_explanation_nodes",
           "repeatable": false,
@@ -3345,6 +3414,7 @@
       "renderer": "modsets_explain",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -3353,6 +3423,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "enabled_mods",
           "repeatable": true,
@@ -3361,6 +3432,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "disabled_mods",
           "repeatable": true,
@@ -3369,6 +3441,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "version_preferences",
           "repeatable": true,
@@ -3377,6 +3450,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_packages",
           "repeatable": false,
@@ -3385,6 +3459,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_versions_per_package",
           "repeatable": false,
@@ -3393,6 +3468,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_graph_edges",
           "repeatable": false,
@@ -3401,6 +3477,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_solver_states",
           "repeatable": false,
@@ -3409,6 +3486,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_backtracks",
           "repeatable": false,
@@ -3417,6 +3495,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_elapsed_ms",
           "repeatable": false,
@@ -3425,6 +3504,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_explanation_nodes",
           "repeatable": false,
@@ -3500,6 +3580,7 @@
       "renderer": "modsets_export",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -3508,6 +3589,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "output_path",
           "repeatable": false,
@@ -3580,6 +3662,7 @@
       "renderer": "modsets_lock",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -3651,6 +3734,7 @@
       "renderer": "modsets_plan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -3659,6 +3743,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "enabled_mods",
           "repeatable": true,
@@ -3667,6 +3752,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "disabled_mods",
           "repeatable": true,
@@ -3675,6 +3761,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "version_preferences",
           "repeatable": true,
@@ -3683,6 +3770,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_packages",
           "repeatable": false,
@@ -3691,6 +3779,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_versions_per_package",
           "repeatable": false,
@@ -3699,6 +3788,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_graph_edges",
           "repeatable": false,
@@ -3707,6 +3797,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_solver_states",
           "repeatable": false,
@@ -3715,6 +3806,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_backtracks",
           "repeatable": false,
@@ -3723,6 +3815,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_elapsed_ms",
           "repeatable": false,
@@ -3731,6 +3824,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_explanation_nodes",
           "repeatable": false,
@@ -3806,6 +3900,7 @@
       "renderer": "modsets_rollback",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -3814,6 +3909,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "transaction_id",
           "repeatable": false,
@@ -3885,6 +3981,7 @@
       "renderer": "modsets_verify",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -3965,6 +4062,7 @@
       "renderer": "onboarding_plan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "preferred_install",
           "repeatable": false,
@@ -3973,6 +4071,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "instance_display_name",
           "repeatable": false,
@@ -3981,6 +4080,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "template_id",
           "repeatable": false,
@@ -3989,6 +4089,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "workspace",
           "repeatable": false,
@@ -4054,6 +4155,7 @@
       "renderer": "package_verify",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "path",
           "repeatable": false,
@@ -4120,6 +4222,7 @@
       "renderer": "preferences_apply",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "preferred_workspace",
           "repeatable": false,
@@ -4128,6 +4231,11 @@
           "type": "path"
         },
         {
+          "choices": [
+            "direct",
+            "process",
+            "daemon"
+          ],
           "default": null,
           "name": "preferred_transport",
           "repeatable": false,
@@ -4136,6 +4244,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "default_instance_template",
           "repeatable": false,
@@ -4144,6 +4253,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "default_launch_profile",
           "repeatable": false,
@@ -4152,6 +4262,11 @@
           "type": "identifier"
         },
         {
+          "choices": [
+            "auto",
+            "always",
+            "never"
+          ],
           "default": null,
           "name": "display_color_policy",
           "repeatable": false,
@@ -4160,6 +4275,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "tui_page_size",
           "repeatable": false,
@@ -4168,6 +4284,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "command_timeout_seconds",
           "repeatable": false,
@@ -4176,6 +4293,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "backup_destination",
           "repeatable": false,
@@ -4184,6 +4302,7 @@
           "type": "path"
         },
         {
+          "choices": [],
           "default": null,
           "name": "backup_keep_last",
           "repeatable": false,
@@ -4192,6 +4311,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "discovery_providers",
           "repeatable": true,
@@ -4200,6 +4320,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "discovery_roots",
           "repeatable": true,
@@ -4322,6 +4443,7 @@
       "renderer": "preferences_plan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "preferred_workspace",
           "repeatable": false,
@@ -4330,6 +4452,11 @@
           "type": "path"
         },
         {
+          "choices": [
+            "direct",
+            "process",
+            "daemon"
+          ],
           "default": null,
           "name": "preferred_transport",
           "repeatable": false,
@@ -4338,6 +4465,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "default_instance_template",
           "repeatable": false,
@@ -4346,6 +4474,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "default_launch_profile",
           "repeatable": false,
@@ -4354,6 +4483,11 @@
           "type": "identifier"
         },
         {
+          "choices": [
+            "auto",
+            "always",
+            "never"
+          ],
           "default": null,
           "name": "display_color_policy",
           "repeatable": false,
@@ -4362,6 +4496,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "tui_page_size",
           "repeatable": false,
@@ -4370,6 +4505,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "command_timeout_seconds",
           "repeatable": false,
@@ -4378,6 +4514,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "backup_destination",
           "repeatable": false,
@@ -4386,6 +4523,7 @@
           "type": "path"
         },
         {
+          "choices": [],
           "default": null,
           "name": "backup_keep_last",
           "repeatable": false,
@@ -4394,6 +4532,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "discovery_providers",
           "repeatable": true,
@@ -4402,6 +4541,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "discovery_roots",
           "repeatable": true,
@@ -4583,6 +4723,7 @@
       "renderer": "preferences_validate",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "preferred_workspace",
           "repeatable": false,
@@ -4591,6 +4732,11 @@
           "type": "path"
         },
         {
+          "choices": [
+            "direct",
+            "process",
+            "daemon"
+          ],
           "default": null,
           "name": "preferred_transport",
           "repeatable": false,
@@ -4599,6 +4745,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "default_instance_template",
           "repeatable": false,
@@ -4607,6 +4754,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "default_launch_profile",
           "repeatable": false,
@@ -4615,6 +4763,11 @@
           "type": "identifier"
         },
         {
+          "choices": [
+            "auto",
+            "always",
+            "never"
+          ],
           "default": null,
           "name": "display_color_policy",
           "repeatable": false,
@@ -4623,6 +4776,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "tui_page_size",
           "repeatable": false,
@@ -4631,6 +4785,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "command_timeout_seconds",
           "repeatable": false,
@@ -4639,6 +4794,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "backup_destination",
           "repeatable": false,
@@ -4647,6 +4803,7 @@
           "type": "path"
         },
         {
+          "choices": [],
           "default": null,
           "name": "backup_keep_last",
           "repeatable": false,
@@ -4655,6 +4812,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "discovery_providers",
           "repeatable": true,
@@ -4663,6 +4821,7 @@
           "type": "string_array"
         },
         {
+          "choices": [],
           "default": null,
           "name": "discovery_roots",
           "repeatable": true,
@@ -4794,6 +4953,7 @@
       "renderer": "profiles_apply",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -4802,6 +4962,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "profile_id",
           "repeatable": false,
@@ -4810,6 +4971,10 @@
           "type": "identifier"
         },
         {
+          "choices": [
+            "windowed",
+            "fullscreen"
+          ],
           "default": null,
           "name": "window_mode",
           "repeatable": false,
@@ -4818,6 +4983,11 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "low",
+            "medium",
+            "high"
+          ],
           "default": null,
           "name": "graphics_quality",
           "repeatable": false,
@@ -4826,6 +4996,10 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "enabled",
+            "disabled"
+          ],
           "default": null,
           "name": "audio",
           "repeatable": false,
@@ -4834,6 +5008,11 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "none",
+            "load-save",
+            "benchmark-save"
+          ],
           "default": null,
           "name": "selection_mode",
           "repeatable": false,
@@ -4842,6 +5021,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "selection",
           "repeatable": false,
@@ -4850,6 +5030,11 @@
           "type": "string"
         },
         {
+          "choices": [
+            "gui",
+            "headless-plan",
+            "benchmark-preview"
+          ],
           "default": null,
           "name": "launch_mode",
           "repeatable": false,
@@ -4858,6 +5043,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "benchmark_ticks",
           "repeatable": false,
@@ -4866,6 +5052,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "additional_arguments",
           "repeatable": true,
@@ -4938,6 +5125,7 @@
       "renderer": "profiles_archive",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "profile_id",
           "repeatable": false,
@@ -5014,6 +5202,7 @@
       "renderer": "profiles_clone",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "source_profile_id",
           "repeatable": false,
@@ -5022,6 +5211,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "destination_profile_id",
           "repeatable": false,
@@ -5094,6 +5284,7 @@
       "renderer": "profiles_create",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "profile_id",
           "repeatable": false,
@@ -5102,6 +5293,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "template_id",
           "repeatable": false,
@@ -5110,6 +5302,10 @@
           "type": "identifier"
         },
         {
+          "choices": [
+            "windowed",
+            "fullscreen"
+          ],
           "default": null,
           "name": "window_mode",
           "repeatable": false,
@@ -5118,6 +5314,11 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "low",
+            "medium",
+            "high"
+          ],
           "default": null,
           "name": "graphics_quality",
           "repeatable": false,
@@ -5126,6 +5327,10 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "enabled",
+            "disabled"
+          ],
           "default": null,
           "name": "audio",
           "repeatable": false,
@@ -5134,6 +5339,11 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "none",
+            "load-save",
+            "benchmark-save"
+          ],
           "default": null,
           "name": "selection_mode",
           "repeatable": false,
@@ -5142,6 +5352,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "selection",
           "repeatable": false,
@@ -5150,6 +5361,11 @@
           "type": "string"
         },
         {
+          "choices": [
+            "gui",
+            "headless-plan",
+            "benchmark-preview"
+          ],
           "default": null,
           "name": "launch_mode",
           "repeatable": false,
@@ -5158,6 +5374,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "benchmark_ticks",
           "repeatable": false,
@@ -5166,6 +5383,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "additional_arguments",
           "repeatable": true,
@@ -5241,6 +5459,7 @@
       "renderer": "profiles_diff",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "left_profile_id",
           "repeatable": false,
@@ -5249,6 +5468,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "right_profile_id",
           "repeatable": false,
@@ -5319,6 +5539,7 @@
       "renderer": "profiles_inspect",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "profile_id",
           "repeatable": false,
@@ -5449,6 +5670,7 @@
       "renderer": "profiles_plan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -5457,6 +5679,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "profile_id",
           "repeatable": false,
@@ -5465,6 +5688,10 @@
           "type": "identifier"
         },
         {
+          "choices": [
+            "windowed",
+            "fullscreen"
+          ],
           "default": null,
           "name": "window_mode",
           "repeatable": false,
@@ -5473,6 +5700,11 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "low",
+            "medium",
+            "high"
+          ],
           "default": null,
           "name": "graphics_quality",
           "repeatable": false,
@@ -5481,6 +5713,10 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "enabled",
+            "disabled"
+          ],
           "default": null,
           "name": "audio",
           "repeatable": false,
@@ -5489,6 +5725,11 @@
           "type": "enum"
         },
         {
+          "choices": [
+            "none",
+            "load-save",
+            "benchmark-save"
+          ],
           "default": null,
           "name": "selection_mode",
           "repeatable": false,
@@ -5497,6 +5738,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "selection",
           "repeatable": false,
@@ -5505,6 +5747,11 @@
           "type": "string"
         },
         {
+          "choices": [
+            "gui",
+            "headless-plan",
+            "benchmark-preview"
+          ],
           "default": null,
           "name": "launch_mode",
           "repeatable": false,
@@ -5513,6 +5760,7 @@
           "type": "enum"
         },
         {
+          "choices": [],
           "default": null,
           "name": "benchmark_ticks",
           "repeatable": false,
@@ -5521,6 +5769,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "additional_arguments",
           "repeatable": true,
@@ -5595,6 +5844,7 @@
       "renderer": "run_execute",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -5664,6 +5914,7 @@
       "renderer": "run_preview",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -5740,6 +5991,7 @@
       "renderer": "saves_associate",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -5748,6 +6000,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -5756,6 +6009,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "profile_id",
           "repeatable": false,
@@ -5764,6 +6018,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "source_operation",
           "repeatable": false,
@@ -5841,6 +6096,7 @@
       "renderer": "saves_backup",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -5849,6 +6105,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -5857,6 +6114,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "output_path",
           "repeatable": false,
@@ -5939,6 +6197,7 @@
       "renderer": "saves_clone",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "source_instance_id",
           "repeatable": false,
@@ -5947,6 +6206,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "target_instance_id",
           "repeatable": false,
@@ -5955,6 +6215,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -6035,6 +6296,7 @@
       "renderer": "saves_diff",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -6043,6 +6305,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -6051,6 +6314,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "other_save",
           "repeatable": false,
@@ -6121,6 +6385,7 @@
       "renderer": "saves_index",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -6196,6 +6461,7 @@
       "renderer": "saves_inspect",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -6204,6 +6470,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -6274,6 +6541,7 @@
       "renderer": "saves_list",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -6346,6 +6614,7 @@
       "renderer": "saves_retention_apply",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -6354,6 +6623,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_last",
           "repeatable": false,
@@ -6362,6 +6632,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_daily",
           "repeatable": false,
@@ -6370,6 +6641,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_weekly",
           "repeatable": false,
@@ -6378,6 +6650,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_total_bytes",
           "repeatable": false,
@@ -6386,6 +6659,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "minimum_age_days",
           "repeatable": false,
@@ -6458,6 +6732,7 @@
       "renderer": "saves_retention_plan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -6466,6 +6741,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_last",
           "repeatable": false,
@@ -6474,6 +6750,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_daily",
           "repeatable": false,
@@ -6482,6 +6759,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_weekly",
           "repeatable": false,
@@ -6490,6 +6768,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_total_bytes",
           "repeatable": false,
@@ -6498,6 +6777,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "minimum_age_days",
           "repeatable": false,
@@ -6573,6 +6853,7 @@
       "renderer": "saves_verify",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -6581,6 +6862,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -6658,6 +6940,7 @@
       "renderer": "servers_create",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "name",
           "repeatable": false,
@@ -6666,6 +6949,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "id",
           "repeatable": false,
@@ -6674,6 +6958,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -6749,6 +7034,7 @@
       "renderer": "servers_diff",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "server_id",
           "repeatable": false,
@@ -6757,6 +7043,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "other_server_id",
           "repeatable": false,
@@ -6832,6 +7119,7 @@
       "renderer": "servers_export",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "server_id",
           "repeatable": false,
@@ -6840,6 +7128,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "output_path",
           "repeatable": false,
@@ -6848,6 +7137,7 @@
           "type": "path"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -6856,6 +7146,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "include_save",
           "repeatable": false,
@@ -6927,6 +7218,7 @@
       "renderer": "servers_inspect",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "server_id",
           "repeatable": false,
@@ -7054,6 +7346,7 @@
       "renderer": "servers_plan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "server_id",
           "repeatable": false,
@@ -7062,6 +7355,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -7133,6 +7427,7 @@
       "renderer": "servers_rcon",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "id",
           "repeatable": false,
@@ -7205,6 +7500,7 @@
       "renderer": "servers_start",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "id",
           "repeatable": false,
@@ -7277,6 +7573,7 @@
       "renderer": "servers_stop",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "id",
           "repeatable": false,
@@ -7348,6 +7645,7 @@
       "renderer": "servers_validate",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "server_id",
           "repeatable": false,
@@ -7356,6 +7654,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "save",
           "repeatable": false,
@@ -7487,6 +7786,7 @@
       "renderer": "snapshots_create",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -7495,6 +7795,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "snapshot_id",
           "repeatable": false,
@@ -7503,6 +7804,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "saves",
           "repeatable": true,
@@ -7582,6 +7884,7 @@
       "renderer": "snapshots_diff",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -7590,6 +7893,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "left_snapshot_id",
           "repeatable": false,
@@ -7598,6 +7902,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "right_snapshot_id",
           "repeatable": false,
@@ -7672,6 +7977,7 @@
       "renderer": "snapshots_inspect",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -7680,6 +7986,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "snapshot_id",
           "repeatable": false,
@@ -7750,6 +8057,7 @@
       "renderer": "snapshots_list",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -7825,6 +8133,7 @@
       "renderer": "snapshots_restore",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "snapshot_ref",
           "repeatable": false,
@@ -7833,6 +8142,7 @@
           "type": "path"
         },
         {
+          "choices": [],
           "default": null,
           "name": "target_instance_id",
           "repeatable": false,
@@ -7906,6 +8216,7 @@
       "renderer": "snapshots_retention_apply",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -7914,6 +8225,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_last",
           "repeatable": false,
@@ -7922,6 +8234,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_daily",
           "repeatable": false,
@@ -7930,6 +8243,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_weekly",
           "repeatable": false,
@@ -7938,6 +8252,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_total_bytes",
           "repeatable": false,
@@ -7946,6 +8261,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "minimum_age_days",
           "repeatable": false,
@@ -8018,6 +8334,7 @@
       "renderer": "snapshots_retention_plan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -8026,6 +8343,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_last",
           "repeatable": false,
@@ -8034,6 +8352,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_daily",
           "repeatable": false,
@@ -8042,6 +8361,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "keep_weekly",
           "repeatable": false,
@@ -8050,6 +8370,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "maximum_total_bytes",
           "repeatable": false,
@@ -8058,6 +8379,7 @@
           "type": "string"
         },
         {
+          "choices": [],
           "default": null,
           "name": "minimum_age_days",
           "repeatable": false,
@@ -8132,6 +8454,7 @@
       "renderer": "snapshots_verify",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "instance_id",
           "repeatable": false,
@@ -8140,6 +8463,7 @@
           "type": "identifier"
         },
         {
+          "choices": [],
           "default": null,
           "name": "snapshot_id",
           "repeatable": false,
@@ -8210,6 +8534,7 @@
       "renderer": "templates_inspect",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "template_id",
           "repeatable": false,
@@ -8336,6 +8661,7 @@
       "renderer": "templates_validate",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "template_id",
           "repeatable": false,
@@ -8637,6 +8963,7 @@
       "renderer": "recovery_apply",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "transaction_id",
           "repeatable": false,
@@ -8766,6 +9093,7 @@
       "renderer": "recovery_plan",
       "request_fields": [
         {
+          "choices": [],
           "default": null,
           "name": "transaction_id",
           "repeatable": false,
@@ -8844,5 +9172,5 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "1a4b50f74dce35289fdd9c0ed6ea7fc5b3b3b63421c7e0403d06f0949ec7ff15"
+  "source_digest": "06aaaeb8a66cab59f0f56c9a5bccba7867dc11d8d8462d6e6bfd086a7049a8a4"
 }

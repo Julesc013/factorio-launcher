@@ -201,6 +201,16 @@ REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
     ],
 }
 
+ENUM_CHOICES: dict[str, list[str]] = {
+    "audio": ["enabled", "disabled"],
+    "display_color_policy": ["auto", "always", "never"],
+    "graphics_quality": ["low", "medium", "high"],
+    "launch_mode": ["gui", "headless-plan", "benchmark-preview"],
+    "preferred_transport": ["direct", "process", "daemon"],
+    "selection_mode": ["none", "load-save", "benchmark-save"],
+    "window_mode": ["windowed", "fullscreen"],
+}
+
 APPLICATION_ID_OVERRIDES = {
     "factorio.product.inspect": "product_inspect",
     "install_refs.list": "install_list",
@@ -381,6 +391,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
                 "default": None,
                 "repeatable": kind == "string_array",
                 "request_field": name,
+                "choices": ENUM_CHOICES.get(name, []),
             }
             for name, kind, required in REQUEST_FIELDS.get(runtime_id, [])
         ],
@@ -464,7 +475,8 @@ def render_winforms_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         inputs = REQUEST_FIELDS.get(str(item["runtime_id"]), [])
         input_lines = ", ".join(
             f"new CommandInput({c_string(name)}, {c_string(humanize(name))}, {str(required).lower()}, "
-            f"{c_string(kind)}, {str(kind == 'string_array').lower()}, {c_string(name)}, null)"
+            f"{c_string(kind)}, {str(kind == 'string_array').lower()}, {c_string(name)}, null, "
+            f"new string[] {{ {', '.join(c_string(choice) for choice in ENUM_CHOICES.get(name, []))} }})"
             for name, kind, required in inputs
         )
         grammar = metadata["cli_grammar"]
@@ -532,6 +544,7 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
                 "required": required,
                 "repeatable": kind == "string_array",
                 "default": None,
+                "choices": ENUM_CHOICES.get(name, []),
             }
             for name, kind, required in REQUEST_FIELDS.get(str(item["runtime_id"]), [])
         ]

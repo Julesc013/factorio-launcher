@@ -1,4 +1,4 @@
-# generated source-sha256: 1a4b50f74dce35289fdd9c0ed6ea7fc5b3b3b63421c7e0403d06f0949ec7ff15
+# generated source-sha256: 06aaaeb8a66cab59f0f56c9a5bccba7867dc11d8d8462d6e6bfd086a7049a8a4
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report

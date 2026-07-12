@@ -6,25 +6,11 @@
 #include "fl_json.h"
 #include "generated_command_catalog.hpp"
 
-#include <array>
 #include <iostream>
 
 namespace facman::tui {
 namespace json = facman::core::json;
 namespace {
-
-constexpr std::array<const char*, 10> kMenuCommands {{
-    "workspace.status",
-    "doctor.run",
-    "install_refs.list",
-    "instance.list",
-    "launch.plan",
-    "modsets.verify",
-    "saves.list",
-    "diagnostics.export",
-    "workspace.recovery.inspect",
-    "capabilities.inspect",
-}};
 
 void emit_transport_error(std::ostream& output, const facman::core::Error& failure, bool structured)
 {
@@ -96,20 +82,6 @@ int render_response(
         if (!body.empty()) output << "\n" << body << '\n';
     }
     return value.ok() ? 0 : 1;
-}
-
-void render_menu(std::ostream& output, bool ascii_only)
-{
-    output << "FacMan interactive terminal\n";
-    output << (ascii_only ? "---------------------------\n" : "===========================\n");
-    for (std::size_t index = 0; index < kMenuCommands.size(); ++index)
-        output << "  " << (index + 1) << ". " << kMenuCommands[index] << '\n';
-    output << "  q. Quit\nSelection: " << std::flush;
-}
-
-const char* menu_command(unsigned int selection)
-{
-    return selection > 0 && selection <= kMenuCommands.size() ? kMenuCommands[selection - 1] : nullptr;
 }
 
 }  // namespace facman::tui

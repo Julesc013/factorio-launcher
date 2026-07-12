@@ -54,6 +54,7 @@ Product:
 - [Save Manager](product/save_manager.md)
 - [Server Manager](product/server_manager.md)
 - [Server Planning](product/server_planning.md)
+- [Operational UX](product/operational_ux.md)
 - [Troubleshooting](product/troubleshooting.md)
 - [User Stories](product/user_stories.md)
 
