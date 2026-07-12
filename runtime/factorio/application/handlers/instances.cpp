@@ -161,7 +161,7 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
         "recovery_write_refused", session.detail());
     const char* dirs[] = {"config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "exports", "cache", "locks"};
     for (const char* dir : dirs) fs::create_directories(staging / dir);
-    launch::InstanceLaunchRef launch_instance {instance.id.str(), instance.profile, instance.root};
+    launch::InstanceLaunchRef launch_instance {instance.id.str(), instance.profile, instance.root, "gui", {}};
     launch::InstallLaunchRef launch_install {install.root, install.executable, install.ownership};
     const bool staged = facman::base::write_text_new_atomic(
             staging / "config" / "config.ini", launch::effective_config_ini(launch_instance, launch_install), error) &&

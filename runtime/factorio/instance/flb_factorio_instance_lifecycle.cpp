@@ -261,7 +261,7 @@ std::string effective_config(
     const workspace::InstallRecord& install)
 {
     facman::factorio::launch::InstanceLaunchRef instance_ref {
-        instance.id.str(), instance.profile, instance.root};
+        instance.id.str(), instance.profile, instance.root, "gui", {}};
     facman::factorio::launch::InstallLaunchRef install_ref {
         install.root, install.executable, install.ownership};
     return facman::factorio::launch::effective_config_ini(instance_ref, install_ref);
