@@ -1,20 +1,18 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "facman.preferences.v1",
-      "contracts/command/"
+      "contracts/schema/instance/",
+      "contracts/command/instances.*"
     ],
     "affected_targets": [
-      "facman_client_static",
-      "facman_cli",
-      "facman_tui"
+      "flb_factorio_application_static",
+      "facman_client_static"
     ],
     "affected_tests": [
-      "tests/test_workspace_preferences.py"
+      "tests/test_instance_lifecycle.py"
     ],
     "allowed_paths": [
       "runtime/",
-      "apps/",
       "contracts/",
       "tests/",
       "tools/",
@@ -22,33 +20,32 @@
     ],
     "blockers": [],
     "claim_impacts": [
-      "shared-workspace-and-preferences-truth"
+      "reversible-instance-lifecycle"
     ],
     "dependencies": [
-      "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+      "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
     ],
     "forbidden_paths": [
-      "credentials",
-      "shell commands",
-      "setup mutation"
+      "instances.purge",
+      "mutable instance IDs",
+      "unowned deletion"
     ],
-    "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
+    "id": "FACMAN-INSTANCE-LIFECYCLE-02",
     "last_green_commit": null,
     "provider_revisions": {},
-    "started_at": "2026-07-12T14:10:14Z",
-    "status": "active",
+    "status": "pending",
     "stop_conditions": [
-      "legacy workspace becomes unreadable",
-      "a secret field is accepted"
+      "no-clobber cannot be preserved",
+      "recovery is uncertain"
     ],
-    "title": "Add shared non-secret preferences and workspace resolution"
+    "title": "Implement reversible instance inspection and lifecycle"
   },
   "affected_contracts": [
-    "facman.preferences.v1",
-    "contracts/command/"
+    "contracts/schema/instance/",
+    "contracts/command/instances.*"
   ],
   "affected_tests": [
-    "tests/test_workspace_preferences.py"
+    "tests/test_instance_lifecycle.py"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -58,11 +55,11 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
+  "current_exact_revision": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
   "direct_dependency_summaries": [
     {
-      "id": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01",
-      "last_green_commit": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
+      "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
+      "last_green_commit": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
       "status": "closed"
     }
   ],

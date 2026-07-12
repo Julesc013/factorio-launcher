@@ -47,10 +47,44 @@
         "python": "3.11.9"
       },
       "workunit": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+    },
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-INSTANCE-LIFECYCLE-02",
+        "FACMAN-INSTANCE-SNAPSHOT-01",
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "95e1840a263f7f9aab59ec2e5f6e4b60a377d6b468ce7cfc103a3c079012ad75",
+      "test_fingerprints": {
+        "tests/test_workspace_preferences.py": "1f269ab18379c0c9319436939c6ab2cd84a376a3c8750dbebd0c2352c586bd0d"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
     }
   ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
+  "current_exact_revision": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -58,7 +92,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T14:10:14Z",
+  "updated_at": "2026-07-12T14:14:43Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -89,6 +123,33 @@
           "python": "3.11.9"
         },
         "workunit": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+      },
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T14:14:43Z",
+        "result": "PASS",
+        "source_fingerprint": "95e1840a263f7f9aab59ec2e5f6e4b60a377d6b468ce7cfc103a3c079012ad75",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_workspace_preferences.py": "1f269ab18379c0c9319436939c6ab2cd84a376a3c8750dbebd0c2352c586bd0d"
+        },
+        "test_results": {
+          "aide_lite": "PASS",
+          "clean_repro": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "winforms": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
       }
     ]
   },
@@ -187,6 +248,8 @@
       "claim_impacts": [
         "shared-workspace-and-preferences-truth"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T14:14:43Z",
       "dependencies": [
         "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
       ],
@@ -196,15 +259,41 @@
         "setup mutation"
       ],
       "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
-      "last_green_commit": null,
+      "last_green_commit": "ec77cc1f10006c96e66d1011c69bc7bcde6de5a1",
       "provider_revisions": {},
       "started_at": "2026-07-12T14:10:14Z",
-      "status": "active",
+      "status": "closed",
       "stop_conditions": [
         "legacy workspace becomes unreadable",
         "a secret field is accepted"
       ],
-      "title": "Add shared non-secret preferences and workspace resolution"
+      "title": "Add shared non-secret preferences and workspace resolution",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T14:14:43Z",
+        "result": "PASS",
+        "source_fingerprint": "95e1840a263f7f9aab59ec2e5f6e4b60a377d6b468ce7cfc103a3c079012ad75",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_workspace_preferences.py": "1f269ab18379c0c9319436939c6ab2cd84a376a3c8750dbebd0c2352c586bd0d"
+        },
+        "test_results": {
+          "aide_lite": "PASS",
+          "clean_repro": "PASS",
+          "release_full": "PASS",
+          "strict": "PASS",
+          "winforms": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [
