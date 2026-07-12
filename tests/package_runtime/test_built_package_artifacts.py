@@ -19,7 +19,7 @@ from tools import package_build, package_runtime_smoke, provenance_build
 from tools import package_hash_manifest
 
 ROOT = Path(__file__).resolve().parents[2]
-BUILD_ROOT = ROOT / "build" / "native-smoke"
+BUILD_ROOT = Path(os.environ.get("FACMAN_NATIVE_BUILD_ROOT", ROOT / "build" / "native-smoke"))
 SECRET_CORPUS = ROOT / "tests" / "fixtures" / "redaction" / "secrets_corpus.v1.json"
 
 
@@ -462,6 +462,50 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             archive.extractall(extracted)
         report = package_runtime_smoke.smoke_package(extracted)
         self.assertEqual(report["integrity"], "sha256_consistent")
+
+
+@unittest.skipUnless(os.name == "nt", "Windows TUI package proof")
+class WindowsPortableTuiPackageProofTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        tui = BUILD_ROOT / "Debug" / "facman-tui.exe"
+        if not tui.is_file():
+            raise unittest.SkipTest(f"functional TUI build is missing: {tui}")
+        cls._tmp = tempfile.TemporaryDirectory(prefix="facman-windows-tui-package-")
+        cls.root = Path(cls._tmp.name)
+        cls.package_root = package_build.build_profile(
+            profile_id="windows_portable_tui_x64",
+            out_root=cls.root / "packages",
+            build_root=BUILD_ROOT,
+            dist_root=cls.root / "dist",
+            allow_dirty=True,
+        )
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        tmp = getattr(cls, "_tmp", None)
+        if tmp is not None:
+            tmp.cleanup()
+
+    def test_target_specific_package_contains_and_smokes_both_frontends(self) -> None:
+        self.assertTrue((self.package_root / "bin/facman.exe").is_file())
+        self.assertTrue((self.package_root / "bin/facman-tui.exe").is_file())
+        self.assertFalse((self.package_root / "lib").exists())
+        report = package_runtime_smoke.smoke_package(self.package_root)
+        self.assertTrue(report["tui"]["present"])
+        self.assertEqual(report["tui"]["smoke"], "pass")
+        self.assertGreaterEqual(report["tui"]["command_count"], 56)
+        self.assertEqual(report["tui"]["execution_authority"], "blocked_pending_h1_h3")
+
+    def test_target_specific_archive_identity_is_not_portable_os_neutral(self) -> None:
+        artifacts = list((self.root / "dist").glob("*.zip"))
+        self.assertEqual(len(artifacts), 1)
+        self.assertIn("windows-tui-x64-portable", artifacts[0].name)
+        package = tomllib.loads(
+            (self.package_root / "manifest/package.v1.toml").read_text(encoding="utf-8")
+        )
+        self.assertEqual(package["profile_id"], "windows_portable_tui_x64")
+        self.assertEqual(package["target_os"], "windows")
 
 
 @unittest.skipIf(os.name != "nt", "WinForms package layout proof is Windows-only")

@@ -6,6 +6,9 @@ include(GNUInstallDirs)
 if(TARGET facman_cli)
   install(TARGETS facman_cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT CLI)
 endif()
+if(TARGET facman_tui)
+  install(TARGETS facman_tui RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT TUI)
+endif()
 install(TARGETS flb_factorio_shared LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime)
 if(TARGET ulk_shared)
   install(TARGETS ulk_shared LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime)
@@ -31,5 +34,5 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INC
 
 set(FACMAN_INSTALL_MANIFEST ${CMAKE_CURRENT_BINARY_DIR}/facman-install-artifact-manifest.v1.json)
 file(WRITE ${FACMAN_INSTALL_MANIFEST}
-  "{\n  \"schema\": \"facman.install_artifact_manifest.v1\",\n  \"components\": [\"Runtime\", \"CLI\", \"Contracts\", \"Content\", \"Documentation\", \"Licenses\", \"Development\"]\n}\n")
+  "{\n  \"schema\": \"facman.install_artifact_manifest.v1\",\n  \"components\": [\"Runtime\", \"CLI\", \"TUI\", \"Contracts\", \"Content\", \"Documentation\", \"Licenses\", \"Development\"]\n}\n")
 install(FILES ${FACMAN_INSTALL_MANIFEST} DESTINATION ${CMAKE_INSTALL_DATADIR}/facman/manifest COMPONENT Runtime)

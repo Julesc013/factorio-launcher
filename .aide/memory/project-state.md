@@ -16,7 +16,7 @@ R3.5 is the architecture endpoint: it records zero manual-JSON and critical-I/O 
 ## Frozen R3.5 proof
 
 - completed wave revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`;
-- command catalog digest: `19dc76b416b24f6eba5cbd3a8c40a46e4af6ce2a194414c0f4ea314b02030b8a`;
+- command catalog digest: `8408499480d1c7bf78f9eab8889b4ae2d867a536c8507606205935a6b70c05ff`;
 - machine protocol: bounded newline-delimited JSON over stdio (implemented);
 
 ## Quarantined capabilities
@@ -25,13 +25,16 @@ R3.5 is the architecture endpoint: it records zero manual-JSON and critical-I/O 
 - setup mutation
 - network and credential operations
 - release signing, notarization, publication, and publisher authenticity
-- TUI and daemon publication until target-specific runtime proof
+- OS-neutral TUI and daemon publication; target-specific TUI profiles remain package previews
 
 ## Proof platforms
 
 - `windows_portable_cli_x64`: runner `windows-2025`, architecture `x86_64`, format `portable_zip`;
 - `linux_portable_cli_x64`: runner `ubuntu-24.04`, architecture `x86_64`, format `tarball`;
 - `macos_portable_cli_x64`: runner `macos-15-intel`, architecture `x86_64`, format `tarball`;
+- `windows_portable_tui_x64`: runner `windows-2025`, architecture `x86_64`, format `portable_zip`;
+- `linux_portable_tui_x64`: runner `ubuntu-24.04`, architecture `x86_64`, format `tarball`;
+- `macos_portable_tui_x64`: runner `macos-15-intel`, architecture `x86_64`, format `tarball`;
 
 ## Known blockers
 

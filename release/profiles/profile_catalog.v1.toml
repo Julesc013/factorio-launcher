@@ -69,6 +69,57 @@ unsupported_features = ["setup_mutation", "auto_update"]
 contract_backed = false
 
 [[profile]]
+id = "windows_portable_tui_x64"
+status = "package_preview"
+target_os = "windows"
+target_arch = "x64"
+frontend_stack = "cli_tui"
+minimum_os = "windows_10_22h2"
+toolchain = "native_cxx17_static_first"
+package_formats = ["portable_zip"]
+included_binaries = ["facman.exe", "facman-tui.exe"]
+included_libraries = []
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_verify", "tui_product_smoke", "package_runtime_smoke", "package_relocation_smoke"]
+unsupported_features = ["setup_mutation", "auto_update", "dynamic_component_loading", "run_execute"]
+contract_backed = true
+
+[[profile]]
+id = "linux_portable_tui_x64"
+status = "package_preview"
+target_os = "linux"
+target_arch = "x64"
+frontend_stack = "cli_tui"
+minimum_os = "ubuntu_24_04_runner_baseline"
+toolchain = "native_cxx17_static_first_system_dynamic"
+package_formats = ["tarball"]
+included_binaries = ["facman", "facman-tui"]
+included_libraries = []
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_verify", "elf_linkage", "tui_product_smoke", "package_runtime_smoke"]
+unsupported_features = ["setup_mutation", "auto_update", "dynamic_component_loading", "run_execute"]
+contract_backed = true
+
+[[profile]]
+id = "macos_portable_tui_x64"
+status = "package_preview"
+target_os = "macos"
+target_arch = "x64"
+frontend_stack = "cli_tui"
+minimum_os = "macos_13_0"
+toolchain = "native_cxx17_static_first_system_dynamic"
+package_formats = ["tarball"]
+included_binaries = ["facman", "facman-tui"]
+included_libraries = []
+install_modes = ["portable", "user", "system"]
+update_support = "check_only_until_universal_setup_apply"
+test_requirements = ["package_verify", "macho_linkage", "tui_product_smoke", "package_runtime_smoke"]
+unsupported_features = ["setup_mutation", "auto_update", "dynamic_component_loading", "run_execute", "apple_silicon"]
+contract_backed = true
+
+[[profile]]
 id = "portable_cli_x64"
 status = "contract_backed"
 target_os = "portable"

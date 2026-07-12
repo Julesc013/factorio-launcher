@@ -82,6 +82,22 @@ cmake --build build/native-smoke
 The packaged console command is `facman`. Python is used for repository
 tooling, validators, and tests; it is not a FacMan product runtime.
 
+The functional terminal frontend is opt-in at build time and uses the same
+direct client and generated command law:
+
+```bash
+cmake -S . -B build/tui -DFACMAN_BUILD_TUI=ON
+cmake --build build/tui
+facman-tui --list
+facman-tui --command workspace.status --json
+facman-tui --command diagnostics.export \
+  --payload '{"instance_id":"space-age-main","output_path":"diagnostics.zip"}' --apply
+```
+
+Target-specific Windows, Linux, and macOS x64 TUI profiles are package-preview
+lanes. The older OS-neutral `portable_tui_x64` scaffold remains unpublished
+and is not used as product proof.
+
 ## Permanent Rule
 
 ```text

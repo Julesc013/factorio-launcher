@@ -36,7 +36,7 @@ def tracked_sources() -> list[Path]:
         if relative.startswith(EXCLUDED_PREFIXES):
             continue
         path = ROOT / relative
-        if path.name == "CMakeLists.txt" or path.suffix.lower() in LINE_PREFIX:
+        if path.is_file() and (path.name == "CMakeLists.txt" or path.suffix.lower() in LINE_PREFIX):
             result.append(path)
     return sorted(result)
 

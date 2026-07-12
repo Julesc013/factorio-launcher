@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/native-smoke/facman
+      FACMAN_TUI_EXE: ${{ github.workspace }}/build/native-smoke/facman-tui
     steps:
       - uses: actions/checkout@v6
         with:
@@ -30,6 +31,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
           -DFACMAN_BUILD_CLI=ON
+          -DFACMAN_BUILD_TUI=ON
           -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build native core
         run: cmake --build build/native-smoke
@@ -79,10 +81,16 @@ jobs:
           ./build/native-smoke/facman --version
           ./build/native-smoke/facman product inspect
           ./build/native-smoke/facman doctor
+          ./build/native-smoke/facman-tui --list --json
+          ./build/native-smoke/facman-tui --command workspace.status --json
       - name: Build enabled portable CLI compatibility profile
         run: python tools/package_build.py --profile portable_cli_x64 --out build/packages --build-root build/native-smoke
       - name: Smoke portable CLI compatibility profile
         run: python tools/package_runtime_smoke.py --root build/packages/portable_cli_x64
+      - name: Build and smoke Linux x64 TUI preview package
+        run: |
+          python tools/package_build.py --profile linux_portable_tui_x64 --out build/tui-packages --build-root build/native-smoke --dist build/tui-dist
+          python tools/package_runtime_smoke.py --root build/tui-packages/linux_portable_tui_x64
       - name: Run required Linux x64 CLI package proof with zero skips
         run: >-
           python tools/linux_package_proof.py
@@ -98,6 +106,7 @@ jobs:
             build/linux-package-proof/dist/*.tar.gz
             build/linux-package-proof/dist/*.provenance.v1.json
             build/linux-package-proof/evidence.v1.json
+            build/tui-dist/*linux-tui-x64-portable.tar.gz
           if-no-files-found: error
           retention-days: 14
 
@@ -142,6 +151,7 @@ jobs:
     runs-on: windows-2022
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman.exe
+      FACMAN_TUI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman-tui.exe
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -157,7 +167,7 @@ jobs:
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
       - name: Configure Windows native core
-        run: cmake -S . -B build/native-smoke -DFACMAN_BUILD_CLI=ON -DFACMAN_WARNINGS_AS_ERRORS=ON
+        run: cmake -S . -B build/native-smoke -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build Windows native core
         run: cmake --build build/native-smoke --config Debug
       - name: Run Windows native tests
@@ -182,6 +192,10 @@ jobs:
         run: |
           python tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify
           python tools/package_runtime_smoke.py --root build/packages/windows_portable_cli_x64
+      - name: Build and smoke Windows x64 TUI preview package
+        run: |
+          python tools/package_build.py --profile windows_portable_tui_x64 --out build/tui-packages --build-root build/native-smoke --dist build/tui-dist
+          python tools/package_runtime_smoke.py --root build/tui-packages/windows_portable_tui_x64
       - name: Build and smoke legacy WinForms compatibility package
         run: |
           python tools/package_build.py --profile windows_legacy_winforms_x64 --out build/packages --build-root build/native-smoke
@@ -222,6 +236,7 @@ jobs:
     runs-on: macos-15-intel
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/macos-native/facman
+      FACMAN_TUI_EXE: ${{ github.workspace }}/build/macos-native/facman-tui
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -247,6 +262,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
           -DFLAUNCH_BUILD_NATIVE_APPS=ON
+          -DFACMAN_BUILD_TUI=ON
           -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build complete macOS Intel native core
         run: cmake --build build/macos-native
@@ -263,6 +279,10 @@ jobs:
           --out build/macos-package-proof/packages
           --dist build/macos-package-proof/dist
           --evidence build/macos-package-proof/evidence.v1.json
+      - name: Build and smoke macOS Intel TUI preview package
+        run: |
+          python tools/package_build.py --profile macos_portable_tui_x64 --out build/tui-packages --build-root build/macos-native --dist build/tui-dist
+          python tools/package_runtime_smoke.py --root build/tui-packages/macos_portable_tui_x64
       - name: Preserve unsigned macOS package proof artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -271,6 +291,7 @@ jobs:
             build/macos-package-proof/dist/*.tar.gz
             build/macos-package-proof/dist/*.provenance.v1.json
             build/macos-package-proof/evidence.v1.json
+            build/tui-dist/*macos-tui-x64-portable.tar.gz
           if-no-files-found: error
           retention-days: 14
 

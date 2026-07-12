@@ -259,6 +259,9 @@ bool load_package_identity(
         {"windows_portable_cli_x64", "windows", "portable_zip", "static_first", "bin/facman.exe"},
         {"linux_portable_cli_x64", "linux", "tarball", "static_first", "bin/facman"},
         {"macos_portable_cli_x64", "macos", "tarball", "static_first", "bin/facman"},
+        {"windows_portable_tui_x64", "windows", "portable_zip", "static_first", "bin/facman-tui.exe"},
+        {"linux_portable_tui_x64", "linux", "tarball", "static_first", "bin/facman-tui"},
+        {"macos_portable_tui_x64", "macos", "tarball", "static_first", "bin/facman-tui"},
         {"portable_cli_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman"},
         {"portable_tui_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman-tui"},
         {"windows_legacy_winforms_x64", "windows", "portable_zip", "compatibility_bundle", "bin/FacMan.WinForms.exe"},
@@ -373,6 +376,13 @@ bool component_semantics_match(
     bool selected_cli = false;
     bool selected_contracts = false;
     bool selected_content = false;
+    const bool target_static_profile =
+        identity.profile == "windows_portable_cli_x64" ||
+        identity.profile == "linux_portable_cli_x64" ||
+        identity.profile == "macos_portable_cli_x64" ||
+        identity.profile == "windows_portable_tui_x64" ||
+        identity.profile == "linux_portable_tui_x64" ||
+        identity.profile == "macos_portable_tui_x64";
     for (const facman::package::ComponentRecord& component : components) {
         if (!names.insert(component.name).second || !destinations.insert(component.destination).second) {
             error = "component manifest contains duplicate names or destinations";
@@ -394,11 +404,8 @@ bool component_semantics_match(
             return false;
         }
         if (component.runtime_role == "runtime_required") ++runtime_required;
-        if (identity.profile == "windows_portable_cli_x64" ||
-            identity.profile == "linux_portable_cli_x64" ||
-            identity.profile == "macos_portable_cli_x64") {
-            const std::string selected_entrypoint =
-                identity.profile == "windows_portable_cli_x64" ? "bin/facman.exe" : "bin/facman";
+        if (target_static_profile) {
+            const std::string& selected_entrypoint = identity.entrypoint;
             if (component.kind == "runtime_library") {
                 error = "static-first CLI package declares a shared project runtime library";
                 return false;
@@ -417,11 +424,8 @@ bool component_semantics_match(
         error = "component manifest has no runtime_required component";
         return false;
     }
-    if ((identity.profile == "windows_portable_cli_x64" ||
-         identity.profile == "linux_portable_cli_x64" ||
-         identity.profile == "macos_portable_cli_x64") &&
-        (!selected_cli || !selected_contracts || !selected_content)) {
-        error = "static-first CLI package component roles are incomplete";
+    if (target_static_profile && (!selected_cli || !selected_contracts || !selected_content)) {
+        error = "static-first CLI/TUI package component roles are incomplete";
         return false;
     }
     return true;

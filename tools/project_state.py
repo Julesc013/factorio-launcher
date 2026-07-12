@@ -50,7 +50,14 @@ def claim_levels() -> list[dict[str, str]]:
 
 def target_platforms() -> list[dict[str, str]]:
     result = []
-    for profile_id in ("windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"):
+    for profile_id in (
+        "windows_portable_cli_x64",
+        "linux_portable_cli_x64",
+        "macos_portable_cli_x64",
+        "windows_portable_tui_x64",
+        "linux_portable_tui_x64",
+        "macos_portable_tui_x64",
+    ):
         with (ROOT / "release" / "profiles" / profile_id / "profile.toml").open("rb") as handle:
             profile = tomllib.load(handle)
         proof = profile.get("proof", {})
@@ -102,7 +109,7 @@ def collect() -> dict[str, Any]:
             "setup mutation",
             "network and credential operations",
             "release signing, notarization, publication, and publisher authenticity",
-            "TUI and daemon publication until target-specific runtime proof",
+            "OS-neutral TUI and daemon publication; target-specific TUI profiles remain package previews",
         ],
         "claim_levels": claim_levels(),
         "provider_pins": pins,
@@ -112,6 +119,9 @@ def collect() -> dict[str, Any]:
             "release/profiles/windows_portable_cli_x64/profile.toml",
             "release/profiles/linux_portable_cli_x64/profile.toml",
             "release/profiles/macos_portable_cli_x64/profile.toml",
+            "release/profiles/windows_portable_tui_x64/profile.toml",
+            "release/profiles/linux_portable_tui_x64/profile.toml",
+            "release/profiles/macos_portable_tui_x64/profile.toml",
             "docs/quality/benchmarks/baseline.v1.json",
             ".aide/history/r3.3/index.json",
             ".aide/history/r3.4/index.json",

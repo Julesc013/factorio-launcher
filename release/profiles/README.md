@@ -15,6 +15,9 @@ The first contract-backed package lanes are:
 - `linux_x11_gtk_x64`
 - `portable_cli_x64`
 - `portable_tui_x64`
+- `windows_portable_tui_x64`
+- `linux_portable_tui_x64`
+- `macos_portable_tui_x64`
 
 The full release-profile catalog lives in `profile_catalog.v1.toml`. Planned
 profiles may be cataloged before they become contract-backed package profiles;

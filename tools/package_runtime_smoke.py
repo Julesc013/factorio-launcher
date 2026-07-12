@@ -77,6 +77,7 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
             raise ValueError("workspace must be outside package root")
         if package_verify_json.get("status") != "pass":
             raise ValueError("packaged CLI did not verify its package")
+        tui_report = smoke_tui_if_present(root, external_cwd, workspace_root)
     return {
         "schema": "facman.package_runtime_smoke.v1",
         "package_root": str(root),
@@ -93,6 +94,34 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         "files_verified": package_verify_json.get("files_verified"),
         "pathless_runtime": True,
         "arbitrary_cwd": True,
+        "tui": tui_report,
+    }
+
+
+def smoke_tui_if_present(root: Path, cwd: Path, workspace: Path) -> dict[str, object]:
+    candidates = [root / "bin/facman-tui.exe", root / "bin/facman-tui"]
+    tui = next((candidate for candidate in candidates if candidate.is_file()), None)
+    if tui is None:
+        return {"present": False, "smoke": "not_applicable"}
+    catalog = run_command(cwd, [str(tui), "--list", "--json"], pathless=True)
+    status = run_command(
+        cwd,
+        [str(tui), "--workspace", str(workspace), "--command", "workspace.status", "--json"],
+        pathless=True,
+    )
+    catalog_json = json.loads(catalog.stdout)
+    status_json = json.loads(status.stdout)
+    if catalog_json.get("schema") != "facman.tui_catalog.v1":
+        raise ValueError("packaged TUI catalog has the wrong schema")
+    if status_json.get("command") != "workspace.status":
+        raise ValueError("packaged TUI did not execute workspace.status")
+    if workspace.exists():
+        raise ValueError("packaged TUI read-only smoke initialized the external workspace")
+    return {
+        "present": True,
+        "smoke": "pass",
+        "command_count": len(catalog_json.get("commands", [])),
+        "execution_authority": status_json.get("observations", {}).get("execution_authority"),
     }
 
 

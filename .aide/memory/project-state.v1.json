@@ -108,7 +108,7 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "19dc76b416b24f6eba5cbd3a8c40a46e4af6ce2a194414c0f4ea314b02030b8a",
+    "catalog_digest": "8408499480d1c7bf78f9eab8889b4ae2d867a536c8507606205935a6b70c05ff",
     "contracts": 58,
     "registered_routes": 56,
     "schemas": 130
@@ -123,6 +123,9 @@
     "release/profiles/windows_portable_cli_x64/profile.toml",
     "release/profiles/linux_portable_cli_x64/profile.toml",
     "release/profiles/macos_portable_cli_x64/profile.toml",
+    "release/profiles/windows_portable_tui_x64/profile.toml",
+    "release/profiles/linux_portable_tui_x64/profile.toml",
+    "release/profiles/macos_portable_tui_x64/profile.toml",
     "docs/quality/benchmarks/baseline.v1.json",
     ".aide/history/r3.3/index.json",
     ".aide/history/r3.4/index.json",
@@ -172,7 +175,7 @@
     "setup mutation",
     "network and credential operations",
     "release signing, notarization, publication, and publisher authenticity",
-    "TUI and daemon publication until target-specific runtime proof"
+    "OS-neutral TUI and daemon publication; target-specific TUI profiles remain package previews"
   ],
   "schema": "facman.project_state.v1",
   "target_proof_platforms": [
@@ -192,6 +195,24 @@
       "architecture": "x86_64",
       "package_format": "tarball",
       "profile": "macos_portable_cli_x64",
+      "runner": "macos-15-intel"
+    },
+    {
+      "architecture": "x86_64",
+      "package_format": "portable_zip",
+      "profile": "windows_portable_tui_x64",
+      "runner": "windows-2025"
+    },
+    {
+      "architecture": "x86_64",
+      "package_format": "tarball",
+      "profile": "linux_portable_tui_x64",
+      "runner": "ubuntu-24.04"
+    },
+    {
+      "architecture": "x86_64",
+      "package_format": "tarball",
+      "profile": "macos_portable_tui_x64",
       "runner": "macos-15-intel"
     }
   ],

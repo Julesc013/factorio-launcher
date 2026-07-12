@@ -1,0 +1,63 @@
+schema = "facman.release_profile.v1"
+id = "windows_portable_tui_x64"
+lane = "windows_portable_tui"
+target_os = "windows"
+target_arch = "x64"
+minimum_os = "windows_10_22h2"
+runtime_floor = "static native runtime"
+support_tier = "package_preview"
+package_types = ["portable_zip"]
+install_modes = ["portable", "user", "system"]
+package_manifest = "release/packaging/windows/windows_portable_tui.v1.toml"
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+release_index = "release/index/release_index.v1.toml"
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
+bundles_factorio_binaries = false
+credential_storage = false
+required_cmake_option = "FACMAN_BUILD_TUI=ON"
+
+[proof]
+runner = "windows-2025"
+architecture = "x86_64"
+deployment_target = "windows_10_22h2"
+libc_baseline = "msvc_static_runtime"
+allowed_system_dependencies = ["KERNEL32.dll", "bcrypt.dll"]
+package_format = "portable_zip"
+
+[frontends]
+cli = "apps/cli"
+tui = "apps/tui"
+
+[entrypoints]
+cli = "bin/facman.exe"
+tui = "bin/facman-tui.exe"
+
+[required_components]
+binaries = ["bin/facman.exe", "bin/facman-tui.exe"]
+libraries = []
+contracts = "contracts/schema"
+content = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/windows/windows_portable_tui.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+
+[linkage]
+model = "static_first"
+replaceable_components = false
+shared_libraries_shipped = false
+
+[capabilities]
+setup_mutation = false
+network_download = false
+mod_portal_download = false
+server_execution = false
+devtool_execution = false
+auto_update = false
+
+[unsupported]
+features = ["gui_frontend", "daemon_frontend", "dynamic_component_loading", "mod_portal_download", "network_download", "setup_mutation", "server_execution", "devtool_execution", "auto_update"]
+commands = ["run.execute", "mods.search", "mods.install", "servers.start", "servers.stop", "servers.rcon"]

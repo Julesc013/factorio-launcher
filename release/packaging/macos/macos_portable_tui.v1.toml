@@ -1,0 +1,63 @@
+schema = "facman.packaging.bundle_manifest.v1"
+artifact_id = "facman-<version>-macos-tui-x64-portable"
+platform = "macos"
+support_level = "package_preview"
+package_type = "tarball"
+architecture = "x64"
+linkage_model = "static_first"
+python_runtime = false
+bundles_factorio_binaries = false
+entrypoint = "bin/facman-tui"
+gui_stack_required = false
+
+[[components]]
+name = "console_cli"
+source_target = "facman_cli"
+destination = "bin/facman"
+required_platform = "macos"
+architecture = "x64"
+runtime_role = "runtime_required"
+hash = "BUILD_TIME"
+signature_policy = "unsigned_hash_consistency"
+extraction_policy = "none"
+runtime_search_path = "bin"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "console_tui"
+source_target = "facman_tui"
+destination = "bin/facman-tui"
+required_platform = "macos"
+architecture = "x64"
+runtime_role = "runtime_required"
+hash = "BUILD_TIME"
+signature_policy = "unsigned_hash_consistency"
+extraction_policy = "none"
+runtime_search_path = "bin"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "contracts_schema"
+source_target = "contracts/schema"
+destination = "contracts/schema/"
+required_platform = "macos"
+architecture = "any"
+runtime_role = "compatibility_reference"
+hash = "BUILD_TIME"
+signature_policy = "unsigned_hash_consistency"
+extraction_policy = "none"
+runtime_search_path = "contracts/schema"
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
+name = "factorio_content"
+source_target = "content/factorio"
+destination = "content/factorio/"
+required_platform = "macos"
+architecture = "any"
+runtime_role = "compatibility_reference"
+hash = "BUILD_TIME"
+signature_policy = "unsigned_hash_consistency"
+extraction_policy = "none"
+runtime_search_path = "content/factorio"
+license_notice = "THIRD_PARTY_NOTICES.md"

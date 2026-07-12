@@ -159,11 +159,13 @@ ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
 ALLOWED_RELEASE_PROFILE_ROOTS = {
     "dev",
     "linux_portable_cli_x64",
+    "linux_portable_tui_x64",
     "linux_x11_gtk_x64",
     "linux_wayland_qt",
     "linux_x11_gtk",
     "macos_legacy_appkit_x64",
     "macos_portable_cli_x64",
+    "macos_portable_tui_x64",
     "macos_legacy_appkit",
     "macos_modern_swiftui",
     "portable",
@@ -173,6 +175,7 @@ ALLOWED_RELEASE_PROFILE_ROOTS = {
     "portable_tui_x64",
     "windows_legacy_winforms_x64",
     "windows_portable_cli_x64",
+    "windows_portable_tui_x64",
     "windows_legacy_winforms",
     "windows_modern_winui",
 }

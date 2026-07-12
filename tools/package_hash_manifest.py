@@ -292,6 +292,9 @@ def validate_profile_component_roles(root: Path, records: list[Any]) -> list[str
         "windows_portable_cli_x64",
         "linux_portable_cli_x64",
         "macos_portable_cli_x64",
+        "windows_portable_tui_x64",
+        "linux_portable_tui_x64",
+        "macos_portable_tui_x64",
     }:
         return []
     by_destination = {
@@ -300,7 +303,15 @@ def validate_profile_component_roles(root: Path, records: list[Any]) -> list[str
         if isinstance(record, dict)
     }
     problems: list[str] = []
-    cli_destination = "bin/facman.exe" if profile_id == "windows_portable_cli_x64" else "bin/facman"
+    entrypoints = {
+        "windows_portable_cli_x64": "bin/facman.exe",
+        "linux_portable_cli_x64": "bin/facman",
+        "macos_portable_cli_x64": "bin/facman",
+        "windows_portable_tui_x64": "bin/facman-tui.exe",
+        "linux_portable_tui_x64": "bin/facman-tui",
+        "macos_portable_tui_x64": "bin/facman-tui",
+    }
+    cli_destination = entrypoints[profile_id]
     cli = by_destination.get(cli_destination)
     if not isinstance(cli, dict) or cli.get("runtime_role") != "runtime_required":
         problems.append(f"{profile_id} requires {cli_destination} as runtime_required")

@@ -42,6 +42,9 @@ SUPPORTED_BUILT_PROFILES = {
     "linux_portable_cli_x64",
     "macos_portable_cli_x64",
     "windows_portable_cli_x64",
+    "windows_portable_tui_x64",
+    "linux_portable_tui_x64",
+    "macos_portable_tui_x64",
     "portable_cli_x64",
     "windows_legacy_winforms_x64",
 }
@@ -691,6 +694,9 @@ def assert_host_matches_profile(profile_id: str, profile: dict[str, Any]) -> Non
         "windows_portable_cli_x64",
         "linux_portable_cli_x64",
         "macos_portable_cli_x64",
+        "windows_portable_tui_x64",
+        "linux_portable_tui_x64",
+        "macos_portable_tui_x64",
     }:
         machine = platform.machine().lower()
         if machine not in {"amd64", "x86_64"}:
