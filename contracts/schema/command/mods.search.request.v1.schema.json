@@ -1,0 +1,12 @@
+{
+  "$id": "https://facman.invalid/schema/command/mods.search.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "query": {
+      "type": "string"
+    }
+  },
+  "title": "mods.search request",
+  "type": "object"
+}

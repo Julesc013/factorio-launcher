@@ -1,7 +1,7 @@
 command_id = "installs.scan"
 cli = "facman installs scan --json"
 effects = ["workspace_read"]
-request_schema = "contracts/schema/common/command_request.v1.schema.json"
+request_schema = "contracts/schema/command/install_refs.scan.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_discovery_report.v1.schema.json"
 result_schema = "contracts/result/result.v1.schema.json"
 refusal_schema = "contracts/refusal/refusal.v1.schema.json"

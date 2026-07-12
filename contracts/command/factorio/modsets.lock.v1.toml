@@ -1,7 +1,7 @@
 command_id = "modsets.lock"
 cli = "facman modsets lock <instance-id> --json"
 effects = ["workspace_read", "workspace_write"]
-request_schema = "contracts/schema/common/command_request.v1.schema.json"
+request_schema = "contracts/schema/command/modsets.lock.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_modset_lock.v1.schema.json"
 result_schema = "contracts/result/result.v1.schema.json"
 refusal_schema = "contracts/refusal/refusal.v1.schema.json"

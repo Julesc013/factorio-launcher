@@ -1,0 +1,13 @@
+{
+  "$id": "https://facman.invalid/schema/command/mods.update.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "instance_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "title": "mods.update request",
+  "type": "object"
+}

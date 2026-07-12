@@ -1,0 +1,8 @@
+{
+  "$id": "https://facman.invalid/schema/command/factorio.product.inspect.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {},
+  "title": "factorio.product.inspect request",
+  "type": "object"
+}

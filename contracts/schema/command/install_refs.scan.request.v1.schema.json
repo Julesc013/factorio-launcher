@@ -1,0 +1,16 @@
+{
+  "$id": "https://facman.invalid/schema/command/install_refs.scan.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "roots": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    }
+  },
+  "title": "install_refs.scan request",
+  "type": "object"
+}

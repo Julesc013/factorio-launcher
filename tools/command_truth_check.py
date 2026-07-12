@@ -89,6 +89,26 @@ def detect_command_catalog_v2() -> set[str]:
             violations.add(f"{runtime_id}:aliases-missing")
         if not isinstance(item.get("writes_state"), bool):
             violations.add(f"{runtime_id}:writes-state-missing")
+        for key in (
+            "schema", "owner", "binding", "visibility", "deprecation",
+            "availability_refusal_code", "required_capabilities", "risk_tier",
+            "request_fields", "cli_grammar", "renderer", "frontend_category",
+            "localization_keys",
+        ):
+            if key not in item:
+                violations.add(f"{runtime_id}:{key}-missing")
+        expected_schema = f"contracts/schema/command/{runtime_id}.request.v1.schema.json"
+        if item.get("request_schema") != expected_schema or not (ROOT / expected_schema).is_file():
+            violations.add(f"{runtime_id}:command-request-schema-missing")
+        grammar = item.get("cli_grammar")
+        if not isinstance(grammar, dict) or not isinstance(grammar.get("path"), list):
+            violations.add(f"{runtime_id}:cli-grammar-invalid")
+    for generated_path in (
+        "contracts/generated-index/command_cli_grammar.v2.json",
+        "contracts/generated-index/frontend_command_catalog.v1.json",
+    ):
+        if not (ROOT / generated_path).is_file():
+            violations.add(f"{generated_path}:missing")
     application_types = (ROOT / "runtime/factorio/application/application_types.h").read_text(encoding="utf-8")
     dispatch = (ROOT / "runtime/factorio/application/command_dispatch.cpp").read_text(encoding="utf-8")
     if '#include "generated/command_ids.inc"' not in application_types:
@@ -100,6 +120,18 @@ def detect_command_catalog_v2() -> set[str]:
         violations.add("runtime/factorio/application/command_dispatch.cpp:manual-command-lookup")
     if "command == CommandId::install_import" in dispatch:
         violations.add("runtime/factorio/application/command_dispatch.cpp:manual-write-policy")
+    header = (ROOT / "runtime/core/generated/command_catalog.h").read_text(encoding="utf-8")
+    for field in ("request_fields_json", "cli_grammar_json", "availability_refusal_code", "localization_keys_json"):
+        if f"const char* {field};" not in header:
+            violations.add(f"runtime/core/generated/command_catalog.h:{field}-missing")
+    for path in (
+        ROOT / "apps/cli/completions/facman.bash",
+        ROOT / "apps/cli/completions/_facman",
+        ROOT / "apps/cli/completions/facman.fish",
+        ROOT / "apps/cli/completions/FacMan.ps1",
+    ):
+        if "full paths:" not in path.read_text(encoding="utf-8") and "# path:" not in path.read_text(encoding="utf-8"):
+            violations.add(f"{architecture_fitness.relative(path)}:full-grammar-missing")
     return violations
 
 

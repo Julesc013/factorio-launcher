@@ -17,3 +17,15 @@ py -3 tools/codegen/generate_metadata.py --write
 Strict validation regenerates in memory and rejects stale catalog, descriptor,
 help, completion, documentation, and version outputs. Product runtime never
 invokes Python.
+
+Catalog generation also materializes one Draft 2020-12 request schema per
+runtime command, the full nested CLI grammar, complete frontend command
+metadata, and contextual shell-completion inputs. The generated descriptor
+records ownership, binding, visibility, deprecation, availability refusal,
+capabilities, effects, risk, request fields, renderer, category, and
+localization keys. Shared result, refusal, and diagnostic schemas remain common
+where their wire shape is intentionally identical.
+
+`setup.operation` and `utility.operation` remain indexed only as deprecated
+compatibility normalization. They are not registered authoritative routes and
+their generated visibility is `internal_compatibility`.

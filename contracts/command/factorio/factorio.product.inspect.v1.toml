@@ -1,7 +1,7 @@
 command_id = "factorio.product.inspect"
 cli = "FLB command bridge: factorio.product.inspect"
 effects = ["none"]
-request_schema = "contracts/schema/common/command_request.v1.schema.json"
+request_schema = "contracts/schema/command/factorio.product.inspect.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_product.v1.schema.json"
 result_schema = "contracts/result/result.v1.schema.json"
 refusal_schema = "contracts/refusal/refusal.v1.schema.json"

@@ -1,7 +1,7 @@
 command_id = "workspace.migration.apply"
 cli = "facman workspace migration apply --json"
 effects = ["workspace_read", "workspace_write"]
-request_schema = "contracts/schema/common/command_request.v1.schema.json"
+request_schema = "contracts/schema/command/workspace.migration.apply.request.v1.schema.json"
 response_schema = "contracts/schema/facman/facman_workspace_migration.v1.schema.json"
 result_schema = "contracts/result/result.v1.schema.json"
 refusal_schema = "contracts/refusal/refusal.v1.schema.json"

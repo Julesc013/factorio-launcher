@@ -1,0 +1,22 @@
+{
+  "$id": "https://facman.invalid/schema/command/install_refs.import.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "install_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "path": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "path",
+    "install_id"
+  ],
+  "title": "install_refs.import request",
+  "type": "object"
+}

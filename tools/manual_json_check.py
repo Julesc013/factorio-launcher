@@ -26,7 +26,8 @@ REPEATED_ESCAPE_HELPER = re.compile(r"(?:json|escape)[A-Za-z0-9_]*\s*\([^)]*\)[\
 def detect() -> set[str]:
     violations: set[str] = set()
     for path in architecture_fitness.first_party_sources("runtime", "apps"):
-        if "/core/json/" in f"/{architecture_fitness.relative(path)}/":
+        relative = architecture_fitness.relative(path)
+        if "/core/json/" in f"/{relative}/" or "/generated/" in f"/{relative}/":
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         if (

@@ -155,6 +155,8 @@ def validate_contract(path: Path, contract: dict, allowed_effects: set[str]) -> 
         referenced = ROOT / contract[key]
         if not referenced.is_file():
             problems.append(f"{path.relative_to(ROOT)}: {key} does not exist: {contract[key]}")
+    if not str(contract["request_schema"]).startswith("contracts/schema/command/"):
+        problems.append(f"{path.relative_to(ROOT)}: request_schema must be command-specific and generated")
 
     availability = contract.get("availability", "implemented")
     if availability not in {"implemented", "unavailable_until_isolation_proof", "unavailable_until_gateway"}:
