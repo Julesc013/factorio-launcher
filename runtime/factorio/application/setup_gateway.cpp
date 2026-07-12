@@ -74,7 +74,10 @@ facman::core::Result<std::string> execute_setup(const std::string& command, cons
     }
     usk_context_destroy_v1(context);
     if (status != USK_STATUS_OK) {
-        return facman::core::Result<std::string>::failure({"setup_provider_refused", "Universal Setup refused the request", ""});
+        return facman::core::Result<std::string>::failure({
+            "setup_provider_refused",
+            "Universal Setup refused the request",
+            std::move(output)});
     }
     return facman::core::Result<std::string>::success(std::move(output));
 }
@@ -98,7 +101,21 @@ public:
         payload.add_string("expected_target_arch", request.target_arch);
         payload.add_string("expected_linkage_model", request.linkage_model);
         auto response = execute_setup("package.verify", payload.serialize());
-        if (!response) return facman::core::Result<PackageVerifyResult>::failure(response.error());
+        if (!response) {
+            auto document = facman::core::json::parse(response.error().detail);
+            if (document && document.value().is_object()) {
+                const auto* provider_error = document.value().find("error");
+                if (provider_error != nullptr && provider_error->is_object()) {
+                    const std::string code = string_field(*provider_error, "code");
+                    const std::string message = string_field(*provider_error, "message");
+                    if (!code.empty() && !message.empty()) {
+                        return facman::core::Result<PackageVerifyResult>::failure(
+                            {code, message, response.error().detail});
+                    }
+                }
+            }
+            return facman::core::Result<PackageVerifyResult>::failure(response.error());
+        }
         auto document = facman::core::json::parse(response.value());
         if (!document || !document.value().is_object()) {
             return facman::core::Result<PackageVerifyResult>::failure({"setup_response_invalid", "Universal Setup returned invalid JSON", ""});
