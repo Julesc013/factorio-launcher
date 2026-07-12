@@ -38,6 +38,13 @@ def load_toml(path: Path) -> dict[str, Any]:
         return tomllib.load(handle)
 
 
+def digest_source(digest: Any, path: Path) -> None:
+    digest.update(path.relative_to(ROOT).as_posix().encode())
+    digest.update(b"\0")
+    digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
+    digest.update(b"\0")
+
+
 def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], str]:
     index = load_toml(INDEX)
     version = load_toml(VERSION)
@@ -53,10 +60,7 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
     commands: list[dict[str, Any]] = []
     digest = hashlib.sha256()
     for path in [INDEX, VERSION, FRONTEND]:
-        digest.update(path.relative_to(ROOT).as_posix().encode())
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
+        digest_source(digest, path)
     for name in files:
         path = INDEX.parent / str(name)
         if not path.is_file():
@@ -71,10 +75,7 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
         item["runtime_id"] = runtime_id
         item["registered"] = runtime_id in registered
         commands.append(item)
-        digest.update(path.relative_to(ROOT).as_posix().encode())
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
+        digest_source(digest, path)
     ids = [str(item["command_id"]) for item in commands]
     runtime = [str(item["runtime_id"]) for item in commands]
     if len(ids) != len(set(ids)) or len(runtime) != len(set(runtime)):
@@ -107,6 +108,11 @@ def dry_run_behavior(item: dict[str, Any]) -> str:
     return "read_only"
 
 
+def runtime_availability(item: dict[str, Any]) -> str:
+    availability = str(item.get("availability", "implemented"))
+    return "available" if availability == "implemented" else availability
+
+
 def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[str, Any]], digest: str) -> dict[str, str]:
     catalog = {
         "schema": "facman.generated_command_catalog.v1",
@@ -132,8 +138,15 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         "typedef struct facman_generated_command_descriptor {",
         "    const char* command_name;",
         "    const char* effects_json;",
+        "    const char* request_schema;",
         "    const char* response_schema;",
+        "    const char* result_schema;",
+        "    const char* refusal_schema;",
+        "    const char* diagnostic_schema;",
         "    const char* dry_run_behavior;",
+        "    const char* availability;",
+        "    const char* owner;",
+        "    const char* binding;",
         "} facman_generated_command_descriptor;",
         "",
         "static const facman_generated_command_descriptor facman_generated_registered_commands[] = {",
@@ -142,14 +155,22 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         if not item["registered"]:
             continue
         effects = json.dumps(item.get("effects", []), separators=(",", ":"))
-        header.append(
-            "    {" + ", ".join([
-                c_string(str(item["runtime_id"])),
-                c_string(effects),
-                c_string(str(item["response_schema"])),
-                c_string(dry_run_behavior(item)),
-            ]) + "},"
-        )
+        values = [
+            str(item["runtime_id"]),
+            effects,
+            str(item["request_schema"]),
+            str(item["response_schema"]),
+            str(item["result_schema"]),
+            str(item["refusal_schema"]),
+            str(item["diagnostic_schema"]),
+            dry_run_behavior(item),
+            runtime_availability(item),
+            str(index["owner"]),
+            str(index["binding"]),
+        ]
+        header.append("    {")
+        header.extend(f"        {c_string(value)}," for value in values)
+        header.append("    },")
     header.extend([
         "};",
         "#define FACMAN_GENERATED_REGISTERED_COMMAND_COUNT \\",

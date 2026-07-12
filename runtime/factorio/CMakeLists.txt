@@ -60,11 +60,12 @@ add_library(facman::factorio_application ALIAS flb_factorio_application_static)
 
 add_library(flb_factorio_static STATIC binding/flb_api.c)
 target_include_directories(flb_factorio_static PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/runtime/core/generated)
+target_compile_definitions(flb_factorio_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_factorio_static PUBLIC ulk_static flb_factorio_application_static)
 
 add_library(flb_factorio_shared SHARED binding/flb_api.c)
 target_include_directories(flb_factorio_shared PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/runtime/core/generated)
-target_compile_definitions(flb_factorio_shared PRIVATE FLB_BUILD_SHARED)
+target_compile_definitions(flb_factorio_shared PRIVATE FLB_BUILD_SHARED FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_factorio_shared PUBLIC ulk_shared flb_factorio_application_static)
 set_target_properties(flb_factorio_shared PROPERTIES OUTPUT_NAME flb_factorio WINDOWS_EXPORT_ALL_SYMBOLS ON)
 

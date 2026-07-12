@@ -192,6 +192,8 @@ int main(void)
         run_command(context, "command_graph.inspect", 1, "\"command\":\"workspace.recovery.apply\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"diagnostics.export\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"owner\":\"factorio-launcher\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"availability\":\"unavailable_until_isolation_proof\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"availability\":\"unavailable_until_gateway\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "factorio_launch_preflight.v1.schema.json") != 0) {
         return 34;
     }

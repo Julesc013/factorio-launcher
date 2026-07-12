@@ -20,7 +20,7 @@
       "version": "0.1.0-dev",
       "type": "library",
       "source": "https://github.com/Julesc013/universal-launcher",
-      "commit": "80a848375227dc858865874ef594c4b466877241",
+      "commit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
       "license": "NOASSERTION",
       "linkage": "bundled_runtime",
       "bundled_source": false,

@@ -59,40 +59,37 @@ static char* flb_copy_string(ulk_string_view value)
 
 static int flb_register_application_command(
     flb_context* context,
-    const char* command_name,
-    const char* effects,
-    const char* response_schema,
-    const char* dry_run_behavior)
+    const facman_generated_command_descriptor* generated)
 {
-    static const char request_schema[] = "contracts/schema/common/command_request.v1.schema.json";
-    static const char result_schema[] = "contracts/result/result.v1.schema.json";
-    static const char refusal_schema[] = "contracts/refusal/refusal.v1.schema.json";
-    static const char availability[] = "available";
-    static const char owner[] = "factorio-launcher";
-    static const char binding[] = "flb.factorio";
+    const char* availability = generated->availability;
     ulk_command_descriptor_v2 descriptor;
+#if !FACMAN_WITH_SETUP
+    if (strncmp(generated->command_name, "setup.", 6) == 0 && strcmp(availability, "available") == 0) {
+        availability = "disabled_by_build";
+    }
+#endif
     memset(&descriptor, 0, sizeof(descriptor));
     descriptor.struct_size = sizeof(descriptor);
-    descriptor.command_name.data = command_name;
-    descriptor.command_name.size = (ulk_size)strlen(command_name);
-    descriptor.effects_json.data = effects;
-    descriptor.effects_json.size = (ulk_size)strlen(effects);
-    descriptor.request_schema.data = request_schema;
-    descriptor.request_schema.size = (ulk_size)strlen(request_schema);
-    descriptor.response_schema.data = response_schema;
-    descriptor.response_schema.size = (ulk_size)strlen(response_schema);
-    descriptor.result_schema.data = result_schema;
-    descriptor.result_schema.size = (ulk_size)strlen(result_schema);
-    descriptor.refusal_schema.data = refusal_schema;
-    descriptor.refusal_schema.size = (ulk_size)strlen(refusal_schema);
-    descriptor.dry_run_behavior.data = dry_run_behavior;
-    descriptor.dry_run_behavior.size = (ulk_size)strlen(dry_run_behavior);
+    descriptor.command_name.data = generated->command_name;
+    descriptor.command_name.size = (ulk_size)strlen(generated->command_name);
+    descriptor.effects_json.data = generated->effects_json;
+    descriptor.effects_json.size = (ulk_size)strlen(generated->effects_json);
+    descriptor.request_schema.data = generated->request_schema;
+    descriptor.request_schema.size = (ulk_size)strlen(generated->request_schema);
+    descriptor.response_schema.data = generated->response_schema;
+    descriptor.response_schema.size = (ulk_size)strlen(generated->response_schema);
+    descriptor.result_schema.data = generated->result_schema;
+    descriptor.result_schema.size = (ulk_size)strlen(generated->result_schema);
+    descriptor.refusal_schema.data = generated->refusal_schema;
+    descriptor.refusal_schema.size = (ulk_size)strlen(generated->refusal_schema);
+    descriptor.dry_run_behavior.data = generated->dry_run_behavior;
+    descriptor.dry_run_behavior.size = (ulk_size)strlen(generated->dry_run_behavior);
     descriptor.availability.data = availability;
     descriptor.availability.size = (ulk_size)strlen(availability);
-    descriptor.owner.data = owner;
-    descriptor.owner.size = (ulk_size)strlen(owner);
-    descriptor.binding.data = binding;
-    descriptor.binding.size = (ulk_size)strlen(binding);
+    descriptor.owner.data = generated->owner;
+    descriptor.owner.size = (ulk_size)strlen(generated->owner);
+    descriptor.binding.data = generated->binding;
+    descriptor.binding.size = (ulk_size)strlen(generated->binding);
     descriptor.user = context->application;
     descriptor.handler = flb_factorio_application_handle_v1;
     return ulk_command_register_v2(context->launcher_context, &descriptor);
@@ -137,12 +134,7 @@ int flb_context_create_v1(
              ++command_index) {
             const facman_generated_command_descriptor* descriptor =
                 &facman_generated_registered_commands[command_index];
-            if (flb_register_application_command(
-                    context,
-                    descriptor->command_name,
-                    descriptor->effects_json,
-                    descriptor->response_schema,
-                    descriptor->dry_run_behavior) != ULK_STATUS_OK) {
+            if (flb_register_application_command(context, descriptor) != ULK_STATUS_OK) {
                 break;
             }
         }
