@@ -16,7 +16,7 @@ int main()
     using facman::tui::CommandClient;
     using facman::tui::Invocation;
 
-    if (facman::tui::kGeneratedCommandCount < 56) return 1;
+    static_assert(facman::tui::kGeneratedCommandCount >= 56, "generated TUI catalog is incomplete");
     const auto* status_command = facman::tui::find_command("workspace.status");
     const auto* diagnostics = facman::tui::find_command("diagnostics.export");
     if (status_command == nullptr || diagnostics == nullptr) return 2;
