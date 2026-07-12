@@ -2,7 +2,7 @@
 
 X-OS-01 adds local, report-only inspection and planning commands for AIDE Task OS records. These commands read the AIDE source repository's queue, status, evidence, and generated report files, then write deterministic reports under `.aide/reports/task-os-*`.
 
-The commands do not execute tasks, apply repair plans, requeue work, resume target work, create branches, merge, push, promote, publish releases, call providers or models, call the network, or mutate target repositories.
+The inspection and planning commands do not execute tasks, apply repair plans, requeue work, create branches, merge, push, promote, publish releases, call providers or models, call the network, or mutate target repositories. The R3.5 wave lifecycle commands described below only mutate target-local coordination state under `.aide/memory/waves/` and its generated reports.
 
 ## Command Surface
 
@@ -15,6 +15,13 @@ The commands do not execute tasks, apply repair plans, requeue work, resume targ
 - `py -3 .aide/scripts/aide_lite.py blocker classify`
 - `py -3 .aide/scripts/aide_lite.py wave status`
 - `py -3 .aide/scripts/aide_lite.py wave plan`
+- `py -3 .aide/scripts/aide_lite.py wave create`
+- `py -3 .aide/scripts/aide_lite.py wave next`
+- `py -3 .aide/scripts/aide_lite.py wave start`
+- `py -3 .aide/scripts/aide_lite.py wave verify`
+- `py -3 .aide/scripts/aide_lite.py wave close`
+- `py -3 .aide/scripts/aide_lite.py wave resume`
+- `py -3 .aide/scripts/aide_lite.py wave archive`
 - `py -3 .aide/scripts/aide_lite.py checkpoint status`
 - `py -3 .aide/scripts/aide_lite.py checkpoint plan`
 
@@ -44,13 +51,27 @@ The commands do not execute tasks, apply repair plans, requeue work, resume targ
 
 `task repair-plan`, `task requeue-plan`, and `task resume-plan` are planning aids. They may name suggested repair or resume paths, but they always record that no queue mutation, repair execution, target resume, or target mutation was applied.
 
-`wave status`, `wave plan`, `checkpoint status`, and `checkpoint plan` describe the current AIDE-only Task OS foundation wave and the planned X-OS-02 / AIDE-CHECK-OS-01 sequence. They do not create checkpoint branches or promote work to `main`.
+`wave plan`, `checkpoint status`, and `checkpoint plan` retain the historical report-only Task OS planning surface. When a graph exists under `.aide/memory/waves/`, `wave status` projects that graph and writes a compact active-context report without loading closed history.
+
+## Resumable Wave Lifecycle
+
+The graph-backed lifecycle uses `aide.wave.v1` state. Every WorkUnit declares dependencies, provider revisions, allowed and forbidden paths, affected targets and tests, claim impacts, stop conditions, status, blockers, and its last green commit.
+
+- `wave create` creates a target-local graph from `--manifest` or a minimal one-WorkUnit template. Existing state is preserved unless `--force` is explicit.
+- `wave next` selects an already active WorkUnit or the first pending WorkUnit whose dependencies are closed.
+- `wave start` makes exactly one dependency-ready WorkUnit active.
+- `wave verify --test-result NAME=PASS` records supplied results, source/test fingerprints, Python toolchain identity, and provider pins. It does not run arbitrary commands and records that target-runner evidence was not inferred.
+- `wave close` requires passing verification and no unrelated worktree changes. It records the exact `HEAD`, clean status, fingerprints, provider pins, remaining WorkUnits, and blockers.
+- `wave resume` reads the last green checkpoint and next WorkUnit without loading archived history.
+- `wave archive` accepts only a complete wave and writes a new immutable, commit-addressed history file. It does not overwrite an existing archive.
+
+The validation cache is explicitly advisory. Cache entries have `promotion_eligible: false`; promotion cannot use cached proof alone, changed sources produce a new fingerprint, and local execution never manufactures target-runner evidence. Claim-impact rows are selection aids only and are never promoted automatically.
 
 X-OS-02 adds a separate `capability` command group for capability reality scans, ledgers, overclaim reports, and validation. Those commands write `.aide/reports/capability-*` outputs and preserve the same report-only boundary.
 
 ## Boundary
 
-Every generated Markdown report includes these boundary markers:
+Every report-only Task OS Markdown report includes these boundary markers:
 
 - `mode: report_only`
 - `task_execution: false`
@@ -62,12 +83,15 @@ Every generated Markdown report includes these boundary markers:
 
 JSON classification reports include the same boundary under `no_apply_boundary`.
 
+Wave lifecycle state changes are limited to `.aide/memory/waves/` and generated wave reports. They never execute the WorkUnit, mutate branches or targets, call providers/models/network services, promote a claim, or satisfy a human gate.
+
 ## Validation
 
 X-OS-01 is covered by:
 
 - `.aide/scripts/tests/test_x_os_01_task_os_commands.py`
 - `.aide/scripts/tests/test_x_os_02_capability_reality.py` for the X-OS-02 capability surface
+- `.aide/scripts/tests/test_r35_wave_autonomy.py` for graph validation, lifecycle ordering, checkpoint resume, failed-verification blocking, cache boundaries, and archive refusal
 - `validate_task_os_command_files` inside `.aide/scripts/aide_lite.py`
 - `validate_capability_files` inside `.aide/scripts/aide_lite.py`
 - six `task_os_*` golden tasks added for command surface, status/classification, repair/requeue/resume planning, blocker classification, wave/checkpoint planning, and no-apply boundaries

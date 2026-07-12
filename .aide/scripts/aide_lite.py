@@ -1793,6 +1793,9 @@ TASK_OS_BLOCKER_CLASSIFICATION_JSON_PATH = ".aide/reports/task-os-blocker-classi
 TASK_OS_BLOCKER_CLASSIFICATION_MD_PATH = ".aide/reports/task-os-blocker-classification.md"
 TASK_OS_WAVE_STATUS_REPORT_PATH = ".aide/reports/task-os-wave-status.md"
 TASK_OS_WAVE_PLAN_REPORT_PATH = ".aide/reports/task-os-wave-plan.md"
+WAVE_STATE_ROOT = ".aide/memory/waves"
+WAVE_ARCHIVE_ROOT = ".aide/memory/waves/archive"
+WAVE_ACTIVE_CONTEXT_REPORT_PATH = ".aide/reports/active-wave-context.json"
 TASK_OS_CHECKPOINT_STATUS_REPORT_PATH = ".aide/reports/task-os-checkpoint-status.md"
 TASK_OS_CHECKPOINT_PLAN_REPORT_PATH = ".aide/reports/task-os-checkpoint-plan.md"
 TASK_OS_NEXT_PLAN_REPORT_PATH = ".aide/reports/task-os-next-plan.md"
@@ -6354,6 +6357,213 @@ def write_task_os_wave_plan(repo_root: Path) -> tuple[WriteResult, dict[str, obj
     write_task_os_command_status(repo_root, context)
     result = write_text_if_changed(repo_root / TASK_OS_WAVE_PLAN_REPORT_PATH, task_os_render_wave_plan(context))
     return result, context
+
+
+def wave_safe_id(value: str) -> str:
+    normalized = value.strip().lower()
+    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,127}", normalized):
+        raise ValueError("wave id must use 1-128 lowercase letters, digits, '.', '_' or '-'")
+    return normalized
+
+
+def wave_state_path(repo_root: Path, wave_id: str) -> Path:
+    return repo_root / WAVE_STATE_ROOT / f"{wave_safe_id(wave_id)}.json"
+
+
+def wave_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def wave_read_state(repo_root: Path, wave_id: str) -> dict[str, object]:
+    path = wave_state_path(repo_root, wave_id)
+    if not path.exists():
+        raise ValueError(f"wave state does not exist: {normalize_rel(path.relative_to(repo_root))}")
+    try:
+        data = json.loads(read_text(path))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"wave state is malformed: {exc}") from exc
+    if not isinstance(data, dict) or data.get("schema_version") != "aide.wave.v1":
+        raise ValueError("wave state must use schema_version aide.wave.v1")
+    if data.get("wave_id") != wave_safe_id(wave_id):
+        raise ValueError("wave state wave_id does not match its filename")
+    workunits = data.get("workunits")
+    if not isinstance(workunits, list) or not workunits:
+        raise ValueError("wave state must contain at least one WorkUnit")
+    ids: set[str] = set()
+    for item in workunits:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            raise ValueError("every WorkUnit must be an object with an id")
+        unit_id = str(item["id"])
+        if unit_id in ids:
+            raise ValueError(f"duplicate WorkUnit id: {unit_id}")
+        ids.add(unit_id)
+        for field in [
+            "dependencies", "provider_revisions", "allowed_paths", "forbidden_paths",
+            "affected_targets", "affected_tests", "claim_impacts", "stop_conditions",
+        ]:
+            if not isinstance(item.get(field), (list, dict)):
+                raise ValueError(f"WorkUnit {unit_id} has invalid {field}")
+        if item.get("status") not in {"pending", "active", "blocked", "verified", "closed"}:
+            raise ValueError(f"WorkUnit {unit_id} has invalid status")
+    for item in workunits:
+        unknown = set(item.get("dependencies", [])) - ids
+        if unknown:
+            raise ValueError(f"WorkUnit {item['id']} has unknown dependencies: {sorted(unknown)}")
+    return data
+
+
+def wave_write_state(repo_root: Path, data: dict[str, object]) -> WriteResult:
+    wave_id = wave_safe_id(str(data.get("wave_id", "")))
+    data["updated_at"] = wave_now()
+    return write_text_if_changed(wave_state_path(repo_root, wave_id), stable_json_text(data))
+
+
+def wave_unit(state: dict[str, object], workunit_id: str) -> dict[str, object]:
+    for item in state.get("workunits", []):
+        if isinstance(item, dict) and item.get("id") == workunit_id:
+            return item
+    raise ValueError(f"unknown WorkUnit: {workunit_id}")
+
+
+def wave_next_unit(state: dict[str, object]) -> dict[str, object] | None:
+    units = [item for item in state.get("workunits", []) if isinstance(item, dict)]
+    by_id = {str(item.get("id")): item for item in units}
+    active = next((item for item in units if item.get("status") in {"active", "verified"}), None)
+    if active is not None:
+        return active
+    for item in units:
+        if item.get("status") not in {"pending", "blocked"}:
+            continue
+        dependencies = [str(value) for value in item.get("dependencies", [])]
+        if all(by_id[dependency].get("status") == "closed" for dependency in dependencies):
+            return item
+    return None
+
+
+def wave_file_fingerprints(repo_root: Path, paths: Iterable[str]) -> dict[str, str]:
+    fingerprints: dict[str, str] = {}
+    for rel in sorted(set(normalize_rel(value) for value in paths)):
+        path = safe_repo_path(repo_root, rel)
+        if path.is_file():
+            fingerprints[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
+        elif path.is_dir():
+            digest = hashlib.sha256()
+            for child in sorted(candidate for candidate in path.rglob("*") if candidate.is_file()):
+                child_rel = normalize_rel(child.relative_to(repo_root))
+                digest.update(child_rel.encode("utf-8"))
+                digest.update(b"\0")
+                digest.update(hashlib.sha256(child.read_bytes()).digest())
+            fingerprints[rel] = digest.hexdigest()
+        else:
+            fingerprints[rel] = "missing"
+    return fingerprints
+
+
+def wave_source_fingerprint(repo_root: Path, unit: dict[str, object]) -> str:
+    inputs = [str(value) for value in unit.get("allowed_paths", [])]
+    inputs.extend(str(value) for value in unit.get("affected_tests", []))
+    return sha256_text(stable_json_text(wave_file_fingerprints(repo_root, inputs)))
+
+
+def wave_toolchain_identity() -> dict[str, str]:
+    return {
+        "python": sys.version.split()[0],
+        "implementation": sys.implementation.name,
+        "platform": sys.platform,
+    }
+
+
+def wave_relevant_dirty_paths(repo_root: Path, wave_id: str) -> list[str]:
+    result = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=all"],
+        cwd=repo_root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        encoding="utf-8",
+    )
+    if result.returncode != 0:
+        return ["git-status-unavailable"]
+    ignored = {
+        normalize_rel(wave_state_path(repo_root, wave_id).relative_to(repo_root)),
+        TASK_OS_WAVE_STATUS_REPORT_PATH,
+        TASK_OS_WAVE_PLAN_REPORT_PATH,
+        WAVE_ACTIVE_CONTEXT_REPORT_PATH,
+        TASK_OS_COMMAND_STATUS_REPORT_PATH,
+    }
+    dirty: list[str] = []
+    for line in result.stdout.splitlines():
+        rel = normalize_rel(line[3:].strip().strip('"')) if len(line) > 3 else ""
+        if rel and rel not in ignored:
+            dirty.append(rel)
+    return dirty
+
+
+def wave_compact_context(state: dict[str, object]) -> dict[str, object]:
+    active = wave_next_unit(state)
+    if active is None:
+        return {
+            "schema_version": "aide.wave-context.v1",
+            "wave_id": state.get("wave_id"),
+            "wave_status": state.get("status"),
+            "active_workunit": None,
+            "open_blockers": state.get("blockers", []),
+        }
+    dependencies = set(str(value) for value in active.get("dependencies", []))
+    summaries = [
+        {"id": item.get("id"), "status": item.get("status"), "last_green_commit": item.get("last_green_commit")}
+        for item in state.get("workunits", [])
+        if isinstance(item, dict) and item.get("id") in dependencies
+    ]
+    return {
+        "schema_version": "aide.wave-context.v1",
+        "wave_id": state.get("wave_id"),
+        "wave_status": state.get("status"),
+        "current_exact_revision": state.get("current_exact_revision"),
+        "provider_revisions": state.get("provider_revisions", {}),
+        "architecture_invariants": state.get("architecture_invariants", []),
+        "active_workunit": active,
+        "direct_dependency_summaries": summaries,
+        "affected_contracts": active.get("affected_contracts", []),
+        "affected_tests": active.get("affected_tests", []),
+        "open_blockers": [*state.get("blockers", []), *active.get("blockers", [])],
+        "history_included": False,
+    }
+
+
+def wave_write_reports(repo_root: Path, state: dict[str, object]) -> tuple[WriteResult, WriteResult]:
+    context = wave_compact_context(state)
+    context_result = write_text_if_changed(repo_root / WAVE_ACTIVE_CONTEXT_REPORT_PATH, stable_json_text(context))
+    units = [item for item in state.get("workunits", []) if isinstance(item, dict)]
+    lines = [
+        "# AIDE Wave Status", "", f"- wave_id: {state.get('wave_id')}", f"- status: {state.get('status')}",
+        f"- current_exact_revision: {state.get('current_exact_revision', '')}", "- mode: report_only",
+        "- task_execution: false", "- repair_execution: false", "- branch_mutation: false", "- target_mutation: false",
+        "- provider_or_model_calls: none", "- network_calls: none", "- automatic_claim_promotion: false",
+        "- cached_promotion_proof: false", "",
+        "## WorkUnits", "",
+    ]
+    lines.extend(
+        f"- `{item.get('id')}`: {item.get('status')} (last_green_commit: {item.get('last_green_commit') or 'none'})"
+        for item in units
+    )
+    lines.extend(["", "## Active Context", "", f"- report: `{WAVE_ACTIVE_CONTEXT_REPORT_PATH}`", "- history_included: false", ""])
+    status_result = write_text_if_changed(repo_root / TASK_OS_WAVE_STATUS_REPORT_PATH, "\n".join(lines))
+    return status_result, context_result
+
+
+def wave_parse_test_results(values: Iterable[str]) -> dict[str, str]:
+    parsed: dict[str, str] = {}
+    for value in values:
+        if "=" not in value:
+            raise ValueError("test result must use NAME=PASS, NAME=WARN or NAME=FAIL")
+        name, result = value.rsplit("=", 1)
+        result = result.upper()
+        if not name.strip() or result not in {"PASS", "WARN", "FAIL"}:
+            raise ValueError("test result must use NAME=PASS, NAME=WARN or NAME=FAIL")
+        parsed[name.strip()] = result
+    return parsed
 
 
 def write_task_os_checkpoint_status(repo_root: Path) -> tuple[WriteResult, dict[str, object]]:
@@ -38064,6 +38274,22 @@ def command_blocker_classify(args: argparse.Namespace) -> int:
 
 
 def command_wave_status(args: argparse.Namespace) -> int:
+    state_path = wave_state_path(args.repo_root, args.wave_id)
+    if state_path.exists():
+        state = wave_read_state(args.repo_root, args.wave_id)
+        status_result, context_result = wave_write_reports(args.repo_root, state)
+        next_unit = wave_next_unit(state)
+        print("AIDE Lite wave status")
+        print("result: PASS")
+        print(f"wave_id: {state['wave_id']}")
+        print(f"wave_status: {state.get('status')}")
+        print(f"next_workunit: {next_unit.get('id') if next_unit else 'none'}")
+        print(f"report: {TASK_OS_WAVE_STATUS_REPORT_PATH} ({status_result.action})")
+        print(f"active_context: {WAVE_ACTIVE_CONTEXT_REPORT_PATH} ({context_result.action})")
+        print("provider_or_model_calls: none")
+        print("network_calls: none")
+        print("automatic_claim_promotion: false")
+        return 0
     result, _context = write_task_os_wave_status(args.repo_root)
     print("AIDE Lite wave status")
     print("result: PASS")
@@ -38084,6 +38310,257 @@ def command_wave_plan(args: argparse.Namespace) -> int:
     print(f"report: {TASK_OS_WAVE_PLAN_REPORT_PATH} ({result.action})")
     print("report_only: true")
     print("branch_mutation: false")
+    return 0
+
+
+def command_wave_create(args: argparse.Namespace) -> int:
+    target = wave_state_path(args.repo_root, args.wave_id)
+    if target.exists() and not args.force:
+        raise ValueError(f"wave already exists: {normalize_rel(target.relative_to(args.repo_root))}; use --force to replace it")
+    if args.manifest:
+        manifest_path = safe_repo_path(args.repo_root, args.manifest)
+        try:
+            state = json.loads(read_text(manifest_path))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"wave manifest is malformed: {exc}") from exc
+        if not isinstance(state, dict):
+            raise ValueError("wave manifest must contain an object")
+        state["wave_id"] = wave_safe_id(args.wave_id)
+    else:
+        state = {
+            "schema_version": "aide.wave.v1",
+            "wave_id": wave_safe_id(args.wave_id),
+            "title": args.title or args.wave_id,
+            "status": "active",
+            "created_at": wave_now(),
+            "current_exact_revision": safe_git_head_commit(args.repo_root),
+            "provider_revisions": {},
+            "architecture_invariants": [
+                "AIDE makes no provider, model or network call.",
+                "Cached validation is advisory and cannot promote a claim.",
+                "Human gates remain human.",
+            ],
+            "blockers": [],
+            "checkpoints": [],
+            "validation_cache": {"advisory_only": True, "entries": []},
+            "workunits": [
+                {
+                    "id": "WORKUNIT-01",
+                    "title": "Define the wave manifest",
+                    "dependencies": [],
+                    "provider_revisions": {},
+                    "allowed_paths": [WAVE_STATE_ROOT],
+                    "forbidden_paths": [".git", ".aide.local"],
+                    "affected_targets": ["aide-lite"],
+                    "affected_tests": ["py -3 .aide/scripts/aide_lite.py test"],
+                    "affected_contracts": [],
+                    "claim_impacts": [],
+                    "stop_conditions": ["validation fails"],
+                    "status": "pending",
+                    "last_green_commit": None,
+                    "blockers": [],
+                }
+            ],
+        }
+    wave_write_state(args.repo_root, state)
+    validated = wave_read_state(args.repo_root, args.wave_id)
+    wave_write_reports(args.repo_root, validated)
+    print("AIDE Lite wave create")
+    print("result: PASS")
+    print(f"wave_id: {validated['wave_id']}")
+    print(f"state: {normalize_rel(target.relative_to(args.repo_root))}")
+    print("provider_or_model_calls: none")
+    print("network_calls: none")
+    return 0
+
+
+def command_wave_next(args: argparse.Namespace) -> int:
+    state = wave_read_state(args.repo_root, args.wave_id)
+    unit = wave_next_unit(state)
+    wave_write_reports(args.repo_root, state)
+    print("AIDE Lite wave next")
+    print("result: PASS")
+    if unit is None:
+        print("workunit: none")
+    else:
+        print(f"workunit: {unit['id']}")
+        print(f"status: {unit['status']}")
+        print(f"dependencies: {','.join(str(value) for value in unit.get('dependencies', [])) or 'none'}")
+        print(f"claim_impacts: {','.join(str(value) for value in unit.get('claim_impacts', [])) or 'none'}")
+    print("context_history_included: false")
+    return 0
+
+
+def command_wave_start(args: argparse.Namespace) -> int:
+    state = wave_read_state(args.repo_root, args.wave_id)
+    selected = wave_next_unit(state)
+    workunit_id = args.workunit or (str(selected.get("id")) if selected else "")
+    if not workunit_id:
+        raise ValueError("wave has no startable WorkUnit")
+    unit = wave_unit(state, workunit_id)
+    if unit.get("status") not in {"pending", "blocked", "active"}:
+        raise ValueError(f"WorkUnit {workunit_id} cannot start from {unit.get('status')}")
+    by_id = {str(item.get("id")): item for item in state.get("workunits", []) if isinstance(item, dict)}
+    unclosed = [dependency for dependency in unit.get("dependencies", []) if by_id[str(dependency)].get("status") != "closed"]
+    if unclosed:
+        raise ValueError(f"WorkUnit {workunit_id} has unclosed dependencies: {unclosed}")
+    other_active = [
+        str(item.get("id")) for item in state.get("workunits", [])
+        if isinstance(item, dict) and item.get("status") in {"active", "verified"} and item.get("id") != workunit_id
+    ]
+    if other_active:
+        raise ValueError(f"another WorkUnit is active: {other_active[0]}")
+    unit["status"] = "active"
+    unit["started_at"] = wave_now()
+    unit["blockers"] = []
+    wave_write_state(args.repo_root, state)
+    wave_write_reports(args.repo_root, state)
+    print("AIDE Lite wave start")
+    print("result: PASS")
+    print(f"workunit: {workunit_id}")
+    print("task_execution: operator_or_agent_owned")
+    print("provider_or_model_calls: none")
+    return 0
+
+
+def command_wave_verify(args: argparse.Namespace) -> int:
+    state = wave_read_state(args.repo_root, args.wave_id)
+    selected = wave_next_unit(state)
+    workunit_id = args.workunit or (str(selected.get("id")) if selected else "")
+    if not workunit_id:
+        raise ValueError("wave has no verifiable WorkUnit")
+    unit = wave_unit(state, workunit_id)
+    if unit.get("status") not in {"active", "verified"}:
+        raise ValueError(f"WorkUnit {workunit_id} cannot verify from {unit.get('status')}")
+    test_results = wave_parse_test_results(args.test_result)
+    if not test_results:
+        raise ValueError("wave verify requires at least one --test-result NAME=PASS|WARN|FAIL")
+    verification_result = "PASS" if all(value == "PASS" for value in test_results.values()) else "FAIL"
+    source_fingerprint = wave_source_fingerprint(args.repo_root, unit)
+    evidence = {
+        "recorded_at": wave_now(),
+        "result": verification_result,
+        "source_fingerprint": source_fingerprint,
+        "test_results": test_results,
+        "test_fingerprints": wave_file_fingerprints(args.repo_root, [str(value) for value in unit.get("affected_tests", [])]),
+        "toolchain_identity": wave_toolchain_identity(),
+        "provider_revisions": {**state.get("provider_revisions", {}), **unit.get("provider_revisions", {})},
+        "target_runner_evidence_inferred": False,
+        "promotion_eligible": False,
+    }
+    unit["verification"] = evidence
+    unit["status"] = "verified" if verification_result == "PASS" else "blocked"
+    if verification_result != "PASS":
+        unit["blockers"] = [f"validation result: {name}={result}" for name, result in test_results.items() if result != "PASS"]
+    cache = state.setdefault("validation_cache", {"advisory_only": True, "entries": []})
+    if isinstance(cache, dict):
+        entries = cache.setdefault("entries", [])
+        if isinstance(entries, list):
+            entries.append({"workunit": workunit_id, **evidence})
+    wave_write_state(args.repo_root, state)
+    wave_write_reports(args.repo_root, state)
+    print("AIDE Lite wave verify")
+    print(f"result: {verification_result}")
+    print(f"workunit: {workunit_id}")
+    print(f"source_fingerprint: {source_fingerprint}")
+    print("cache_advisory_only: true")
+    print("target_runner_evidence_inferred: false")
+    return 0 if verification_result == "PASS" else 1
+
+
+def command_wave_close(args: argparse.Namespace) -> int:
+    state = wave_read_state(args.repo_root, args.wave_id)
+    selected = wave_next_unit(state)
+    workunit_id = args.workunit or (str(selected.get("id")) if selected else "")
+    if not workunit_id:
+        raise ValueError("wave has no closable WorkUnit")
+    unit = wave_unit(state, workunit_id)
+    if unit.get("status") != "verified" or not isinstance(unit.get("verification"), dict):
+        raise ValueError(f"WorkUnit {workunit_id} must have passing verification before close")
+    dirty_paths = wave_relevant_dirty_paths(args.repo_root, args.wave_id)
+    if dirty_paths:
+        raise ValueError(f"WorkUnit {workunit_id} cannot close with unrelated dirty paths: {dirty_paths}")
+    commit = safe_git_head_commit(args.repo_root)
+    unit["status"] = "closed"
+    unit["closed_at"] = wave_now()
+    unit["last_green_commit"] = commit
+    unit["clean_status"] = True
+    checkpoint = {
+        "workunit": workunit_id,
+        "commit_sha": commit,
+        "clean_status": True,
+        "test_fingerprints": unit["verification"].get("test_fingerprints", {}),
+        "source_fingerprint": unit["verification"].get("source_fingerprint"),
+        "toolchain_identity": unit["verification"].get("toolchain_identity", {}),
+        "provider_pins": unit["verification"].get("provider_revisions", {}),
+        "remaining_workunits": [
+            str(item.get("id")) for item in state.get("workunits", [])
+            if isinstance(item, dict) and item.get("id") != workunit_id and item.get("status") != "closed"
+        ],
+        "blockers": [*state.get("blockers", []), *unit.get("blockers", [])],
+    }
+    checkpoints = state.setdefault("checkpoints", [])
+    if isinstance(checkpoints, list):
+        checkpoints.append(checkpoint)
+    state["current_exact_revision"] = commit
+    if all(isinstance(item, dict) and item.get("status") == "closed" for item in state.get("workunits", [])):
+        state["status"] = "complete"
+    wave_write_state(args.repo_root, state)
+    wave_write_reports(args.repo_root, state)
+    print("AIDE Lite wave close")
+    print("result: PASS")
+    print(f"workunit: {workunit_id}")
+    print(f"last_green_commit: {commit}")
+    print("clean_status: true")
+    print("automatic_claim_promotion: false")
+    return 0
+
+
+def command_wave_resume(args: argparse.Namespace) -> int:
+    state = wave_read_state(args.repo_root, args.wave_id)
+    checkpoints = [item for item in state.get("checkpoints", []) if isinstance(item, dict)]
+    checkpoint = checkpoints[-1] if checkpoints else None
+    unit = wave_next_unit(state)
+    blockers = [*state.get("blockers", [])]
+    if checkpoint:
+        blockers.extend(value for value in checkpoint.get("blockers", []) if value not in blockers)
+    if unit:
+        blockers.extend(value for value in unit.get("blockers", []) if value not in blockers)
+    wave_write_reports(args.repo_root, state)
+    print("AIDE Lite wave resume")
+    print("result: PASS")
+    print(f"last_green_commit: {checkpoint.get('commit_sha') if checkpoint else 'none'}")
+    print(f"last_closed_workunit: {checkpoint.get('workunit') if checkpoint else 'none'}")
+    print(f"next_workunit: {unit.get('id') if unit else 'none'}")
+    print(f"blockers: {json.dumps(blockers)}")
+    print("history_loaded: false")
+    print("target_runner_evidence_inferred: false")
+    return 0
+
+
+def command_wave_archive(args: argparse.Namespace) -> int:
+    state = wave_read_state(args.repo_root, args.wave_id)
+    if state.get("status") != "complete" or any(
+        not isinstance(item, dict) or item.get("status") != "closed" for item in state.get("workunits", [])
+    ):
+        raise ValueError("only a complete wave with all WorkUnits closed can be archived")
+    commit = safe_git_head_commit(args.repo_root)
+    archive_path = args.repo_root / WAVE_ARCHIVE_ROOT / f"{wave_safe_id(args.wave_id)}-{commit[:12]}.json"
+    if archive_path.exists():
+        raise ValueError(f"immutable wave archive already exists: {normalize_rel(archive_path.relative_to(args.repo_root))}")
+    archived = dict(state)
+    archived["status"] = "archived"
+    archived["archived_at"] = wave_now()
+    archived["archive_commit"] = commit
+    write_text_if_changed(archive_path, stable_json_text(archived))
+    state["status"] = "archived"
+    state["archive_path"] = normalize_rel(archive_path.relative_to(args.repo_root))
+    wave_write_state(args.repo_root, state)
+    wave_write_reports(args.repo_root, state)
+    print("AIDE Lite wave archive")
+    print("result: PASS")
+    print(f"archive: {normalize_rel(archive_path.relative_to(args.repo_root))}")
+    print("history_immutable: true")
     return 0
 
 
@@ -41124,8 +41601,38 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
 
     wave_parser = subparsers.add_parser("wave")
     wave_subparsers = wave_parser.add_subparsers(dest="wave_command", required=True)
-    wave_subparsers.add_parser("status").set_defaults(handler=command_wave_status)
+    wave_create_parser = wave_subparsers.add_parser("create")
+    wave_create_parser.add_argument("--wave-id", default="facman-r3.5")
+    wave_create_parser.add_argument("--title")
+    wave_create_parser.add_argument("--manifest")
+    wave_create_parser.add_argument("--force", action="store_true")
+    wave_create_parser.set_defaults(handler=command_wave_create)
+    wave_status_parser = wave_subparsers.add_parser("status")
+    wave_status_parser.add_argument("--wave-id", default="facman-r3.5")
+    wave_status_parser.set_defaults(handler=command_wave_status)
     wave_subparsers.add_parser("plan").set_defaults(handler=command_wave_plan)
+    wave_next_parser = wave_subparsers.add_parser("next")
+    wave_next_parser.add_argument("--wave-id", default="facman-r3.5")
+    wave_next_parser.set_defaults(handler=command_wave_next)
+    wave_start_parser = wave_subparsers.add_parser("start")
+    wave_start_parser.add_argument("--wave-id", default="facman-r3.5")
+    wave_start_parser.add_argument("--workunit")
+    wave_start_parser.set_defaults(handler=command_wave_start)
+    wave_verify_parser = wave_subparsers.add_parser("verify")
+    wave_verify_parser.add_argument("--wave-id", default="facman-r3.5")
+    wave_verify_parser.add_argument("--workunit")
+    wave_verify_parser.add_argument("--test-result", action="append", default=[])
+    wave_verify_parser.set_defaults(handler=command_wave_verify)
+    wave_close_parser = wave_subparsers.add_parser("close")
+    wave_close_parser.add_argument("--wave-id", default="facman-r3.5")
+    wave_close_parser.add_argument("--workunit")
+    wave_close_parser.set_defaults(handler=command_wave_close)
+    wave_resume_parser = wave_subparsers.add_parser("resume")
+    wave_resume_parser.add_argument("--wave-id", default="facman-r3.5")
+    wave_resume_parser.set_defaults(handler=command_wave_resume)
+    wave_archive_parser = wave_subparsers.add_parser("archive")
+    wave_archive_parser.add_argument("--wave-id", default="facman-r3.5")
+    wave_archive_parser.set_defaults(handler=command_wave_archive)
 
     checkpoint_parser = subparsers.add_parser("checkpoint")
     checkpoint_subparsers = checkpoint_parser.add_subparsers(dest="checkpoint_command", required=True)
