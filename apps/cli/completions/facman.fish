@@ -1,4 +1,4 @@
-# generated source-sha256: 8bc0dd0e9ad16acd34c9d8fc992407b46f5627b50b714e1311f79f5ceb274d2b
+# generated source-sha256: 2710e561e5a067f2a50508a5c9643a733b2e2c10de8ae96912a2011230d51ebb
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -33,6 +33,12 @@
 # path: modsets verify
 # path: onboarding plan
 # path: package verify
+# path: preferences apply
+# path: preferences inspect
+# path: preferences plan
+# path: preferences reset apply
+# path: preferences reset plan
+# path: preferences validate
 # path: product inspect
 # path: run
 # path: saves backup
@@ -84,12 +90,14 @@ complete -c facman -f -a onboarding
 complete -c facman -f -a package
 complete -c facman -f -a paths
 complete -c facman -f -a plan
+complete -c facman -f -a preferences
 complete -c facman -f -a preview
 complete -c facman -f -a product
 complete -c facman -f -a rcon
 complete -c facman -f -a recovery
 complete -c facman -f -a redact
 complete -c facman -f -a repair
+complete -c facman -f -a reset
 complete -c facman -f -a run
 complete -c facman -f -a saves
 complete -c facman -f -a scan
@@ -101,5 +109,6 @@ complete -c facman -f -a status
 complete -c facman -f -a stop
 complete -c facman -f -a uninstall
 complete -c facman -f -a update
+complete -c facman -f -a validate
 complete -c facman -f -a verify
 complete -c facman -f -a workspace

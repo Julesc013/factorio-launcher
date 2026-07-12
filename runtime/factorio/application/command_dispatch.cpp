@@ -6,9 +6,12 @@
 #include "fl_json.h"
 #include "fl_file_io.h"
 
+#include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <filesystem>
 #include <set>
+#include <stdexcept>
 #include <utility>
 
 namespace facman::factorio::application {
@@ -118,6 +121,30 @@ bool optional_string_array(const json::Value& object, const char* key, std::vect
         auto text = item->string_value();
         if (!text) { detail = std::string("request payload array contains a non-string item: ") + key; return false; }
         values.push_back(text.take_value());
+    }
+    return true;
+}
+
+bool optional_unsigned_string(
+    const json::Value& object,
+    const char* key,
+    std::uint32_t& value,
+    std::string& detail)
+{
+    std::string text;
+    if (!optional_string(object, key, text, detail)) return false;
+    if (text.empty()) return true;
+    if (!std::all_of(text.begin(), text.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
+        detail = std::string("request payload field must be an unsigned integer string: ") + key;
+        return false;
+    }
+    try {
+        const unsigned long parsed = std::stoul(text);
+        if (parsed > 1000000UL) throw std::out_of_range("preference limit");
+        value = static_cast<std::uint32_t>(parsed);
+    } catch (...) {
+        detail = std::string("request payload field exceeds its numeric budget: ") + key;
+        return false;
     }
     return true;
 }
@@ -259,6 +286,28 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!validate_fields(payload, {"roots"}, detail)) return false;
         DoctorRequest typed;
         if (!optional_string_array(payload, "roots", typed.roots, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::preferences_validate:
+    case CommandId::preferences_plan:
+    case CommandId::preferences_apply: {
+        if (!validate_fields(payload, {
+                "preferred_workspace", "preferred_transport", "default_instance_template",
+                "default_launch_profile", "display_color_policy", "tui_page_size",
+                "command_timeout_seconds", "backup_destination", "backup_keep_last",
+                "discovery_providers", "discovery_roots"}, detail)) return false;
+        PreferencesRequest typed;
+        if (!optional_string(payload, "preferred_workspace", typed.values.preferred_workspace, detail) ||
+            !optional_string(payload, "preferred_transport", typed.values.preferred_transport, detail) ||
+            !optional_string(payload, "default_instance_template", typed.values.default_instance_template, detail) ||
+            !optional_string(payload, "default_launch_profile", typed.values.default_launch_profile, detail) ||
+            !optional_string(payload, "display_color_policy", typed.values.display_color_policy, detail) ||
+            !optional_unsigned_string(payload, "tui_page_size", typed.values.tui_page_size, detail) ||
+            !optional_unsigned_string(payload, "command_timeout_seconds", typed.values.command_timeout_seconds, detail) ||
+            !optional_string(payload, "backup_destination", typed.values.backup_destination, detail) ||
+            !optional_unsigned_string(payload, "backup_keep_last", typed.values.backup_keep_last, detail) ||
+            !optional_string_array(payload, "discovery_providers", typed.values.discovery_providers, detail) ||
+            !optional_string_array(payload, "discovery_roots", typed.values.discovery_roots, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::legacy_setup_operation:
@@ -410,6 +459,9 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         typed.output_path = facman::platform::path_from_utf8(path); request.payload = std::move(typed); return true;
     }
     case CommandId::recovery_inspect:
+    case CommandId::preferences_inspect:
+    case CommandId::preferences_reset_plan:
+    case CommandId::preferences_reset_apply:
     case CommandId::migration_inspect:
     case CommandId::migration_plan:
     case CommandId::migration_apply:

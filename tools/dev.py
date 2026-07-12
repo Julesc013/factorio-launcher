@@ -96,7 +96,10 @@ def run_python(modules: list[str], build_root: Path) -> None:
     if not modules:
         return
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(ROOT)
+    python_paths = [str(ROOT / "tests"), str(ROOT)]
+    if env.get("PYTHONPATH"):
+        python_paths.append(env["PYTHONPATH"])
+    env["PYTHONPATH"] = os.pathsep.join(python_paths)
     executable = native_executable(build_root)
     if executable:
         env["FACMAN_NATIVE_CLI"] = str(executable.resolve())

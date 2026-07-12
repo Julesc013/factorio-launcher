@@ -22,6 +22,7 @@ struct WorkspaceResolutionInputs {
     std::filesystem::path explicit_workspace;
     std::filesystem::path facman_workspace;
     std::filesystem::path compatibility_workspace;
+    std::filesystem::path preferred_workspace;
     facman::platform::UserPaths user_paths;
     bool user_paths_available = true;
     LegacyWorkspaceState legacy_state = LegacyWorkspaceState::missing;

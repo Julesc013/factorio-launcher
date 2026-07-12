@@ -11,6 +11,7 @@
 #include "fl_transaction.h"
 #include "fl_identity.h"
 #include "fl_result.h"
+#include "fl_preferences.h"
 
 #include "ulk/ulk_command.h"
 
@@ -25,6 +26,7 @@ namespace launch = facman::factorio::launch;
 namespace modsets = facman::factorio::modsets::operations;
 namespace saves = facman::factorio::saves::operations;
 namespace transactions = facman::transaction;
+namespace preferences = facman::preferences;
 
 enum class CommandId {
 #include "generated/command_ids.inc"
@@ -51,6 +53,7 @@ struct OnboardingPlanRequest {
 };
 struct ExplainInstanceRequest { facman::core::InstanceId instance_id; };
 struct RecoveryRequest { std::string transaction_id; };
+struct PreferencesRequest { preferences::Preferences values; };
 struct ServiceOperationRequest {
     std::string operation;
     std::string name;
@@ -92,6 +95,7 @@ using ApplicationPayload = std::variant<
     ExportInstanceRequest,
     ImportInstanceRequest,
     RecoveryRequest,
+    PreferencesRequest,
     ServiceOperationRequest,
     ExportDiagnosticRequest>;
 

@@ -4,6 +4,7 @@
 #include "workspace_resolver.h"
 
 #include "fl_file_io.h"
+#include "fl_preferences.h"
 
 #include <cstdlib>
 #include <system_error>
@@ -71,6 +72,10 @@ facman::core::Result<WorkspaceResolution> resolve_workspace_from_inputs(
         return facman::core::Result<WorkspaceResolution>::success(
             selected(inputs.compatibility_workspace, "FACTORIO_LAUNCHER_WORKSPACE"));
     }
+    if (!inputs.preferred_workspace.empty()) {
+        return facman::core::Result<WorkspaceResolution>::success(
+            selected(inputs.preferred_workspace, "preferences"));
+    }
     if (!inputs.user_paths_available || inputs.user_paths.home.empty() || inputs.user_paths.data.empty()) {
         return facman::core::Result<WorkspaceResolution>::failure({
             "workspace_default_unavailable",
@@ -101,6 +106,16 @@ facman::core::Result<WorkspaceResolution> resolve_workspace(const fs::path& expl
     inputs.explicit_workspace = explicit_workspace;
     inputs.facman_workspace = environment_path("FACMAN_WORKSPACE");
     inputs.compatibility_workspace = environment_path("FACTORIO_LAUNCHER_WORKSPACE");
+    if (!inputs.explicit_workspace.empty() || !inputs.facman_workspace.empty() ||
+        !inputs.compatibility_workspace.empty()) {
+        return resolve_workspace_from_inputs(inputs);
+    }
+    auto preferences = facman::preferences::inspect();
+    if (!preferences) return facman::core::Result<WorkspaceResolution>::failure(preferences.error());
+    if (preferences.value().present) {
+        inputs.preferred_workspace = facman::platform::path_from_utf8(
+            preferences.value().values.preferred_workspace);
+    }
     auto paths = facman::platform::user_paths();
     if (paths) {
         inputs.user_paths = paths.take_value();

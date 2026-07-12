@@ -20,6 +20,7 @@ def validate() -> list[str]:
         "inputs.explicit_workspace",
         "inputs.facman_workspace",
         "inputs.compatibility_workspace",
+        "inputs.preferred_workspace",
         "inputs.legacy_state == LegacyWorkspaceState::directory",
         'inputs.user_paths.data / "facman" / "workspace"',
     ]

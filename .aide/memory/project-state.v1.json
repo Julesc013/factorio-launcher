@@ -137,10 +137,10 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "8bc0dd0e9ad16acd34c9d8fc992407b46f5627b50b714e1311f79f5ceb274d2b",
-    "contracts": 58,
-    "registered_routes": 56,
-    "schemas": 130
+    "catalog_digest": "2710e561e5a067f2a50508a5c9643a733b2e2c10de8ae96912a2011230d51ebb",
+    "contracts": 64,
+    "registered_routes": 62,
+    "schemas": 138
   },
   "completed_wave": {
     "id": "facman-r3.6",

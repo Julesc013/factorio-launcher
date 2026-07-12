@@ -19,7 +19,7 @@ R3.7 now adds reversible local instance and content management without changing 
 ## Frozen R3.6 proof
 
 - completed wave revision: `fc8423572e9c055991558f8a4e7cbbc95e0c4a24`;
-- command catalog digest: `8bc0dd0e9ad16acd34c9d8fc992407b46f5627b50b714e1311f79f5ceb274d2b`;
+- command catalog digest: `2710e561e5a067f2a50508a5c9643a733b2e2c10de8ae96912a2011230d51ebb`;
 - machine protocol: bounded newline-delimited JSON over stdio (implemented);
 - clean R3.7 baseline: PASS in 166.5 seconds;
 

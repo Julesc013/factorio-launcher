@@ -16,6 +16,7 @@
 #include "handlers/mods.h"
 #include "handlers/modsets.h"
 #include "handlers/product.h"
+#include "handlers/preferences.h"
 #include "handlers/recovery.h"
 #include "handlers/saves.h"
 #include "handlers/setup.h"
@@ -109,6 +110,12 @@ private:
         switch (request.command) {
         case CommandId::workspace_status: return handlers::workspace_status(context_);
         case CommandId::workspace_paths: return handlers::workspace_paths(context_);
+        case CommandId::preferences_inspect: return handlers::inspect_preferences(context_);
+        case CommandId::preferences_validate: return handlers::validate_preferences(context_, std::get<PreferencesRequest>(request.payload));
+        case CommandId::preferences_plan: return handlers::plan_preferences(context_, std::get<PreferencesRequest>(request.payload));
+        case CommandId::preferences_apply: return handlers::apply_preferences(context_, std::get<PreferencesRequest>(request.payload));
+        case CommandId::preferences_reset_plan: return handlers::plan_preferences_reset(context_);
+        case CommandId::preferences_reset_apply: return handlers::apply_preferences_reset(context_);
         case CommandId::capabilities_inspect: return handlers::capabilities_inspect(context_);
         case CommandId::onboarding_plan: return handlers::onboarding_plan(context_, std::get<OnboardingPlanRequest>(request.payload));
         case CommandId::doctor_explain: return handlers::doctor_explain(context_);

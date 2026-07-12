@@ -75,6 +75,26 @@ required_codes = [
   "package_verification_failed",
   "utility_input_too_large",
   "utility_input_read_failed",
+  "preferences_document_invalid",
+  "preferences_too_large",
+  "preferences_read_failed",
+  "preferences_type_invalid",
+  "preferences_field_unsupported",
+  "preferences_path_unsafe",
+  "preferences_path_unavailable",
+  "preferences_directory_refused",
+  "preferences_write_failed",
+  "preferences_transport_invalid",
+  "preferences_recovery_required",
+  "preferences_journal_failed",
+  "preferences_request_invalid",
+  "preferences_secret_forbidden",
+  "preferences_transport_unavailable",
+  "preferences_color_invalid",
+  "preferences_page_size_invalid",
+  "preferences_timeout_invalid",
+  "preferences_retention_invalid",
+  "preferences_version_unsupported",
 ]
 
 [[code]]
@@ -181,6 +201,146 @@ severity = "blocked"
 effect = "workspace_read"
 retryable = true
 message = "Utility input could not be read completely from one stable object."
+
+[[code]]
+id = "preferences_document_invalid"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The preferences document is malformed or violates its bounded schema."
+
+[[code]]
+id = "preferences_too_large"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The preferences document exceeds the bounded read limit."
+
+[[code]]
+id = "preferences_read_failed"
+severity = "blocked"
+effect = "workspace_read"
+retryable = true
+message = "The preferences document could not be read as one stable object."
+
+[[code]]
+id = "preferences_type_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A preferences field has the wrong type or exceeds its bounded value limit."
+
+[[code]]
+id = "preferences_field_unsupported"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The preferences document contains an unknown field."
+
+[[code]]
+id = "preferences_path_unsafe"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The preferences path is linked, reparsed, or not a regular owned file."
+
+[[code]]
+id = "preferences_path_unavailable"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The platform did not provide a safe per-user configuration path."
+
+[[code]]
+id = "preferences_directory_refused"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The preferences directory could not be created or remained unsafe after creation."
+
+[[code]]
+id = "preferences_write_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The preferences document could not be written and durably flushed."
+
+[[code]]
+id = "preferences_transport_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The preferred transport is not one of the supported transport identifiers."
+
+[[code]]
+id = "preferences_recovery_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The preferences target committed but its transaction requires explicit recovery."
+
+[[code]]
+id = "preferences_journal_failed"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "The preferences transaction journal could not record a required state transition."
+
+[[code]]
+id = "preferences_request_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The preferences request omitted required proposed values."
+
+[[code]]
+id = "preferences_secret_forbidden"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Preferences cannot contain tokens, passwords, cookies, credentials, scripts, or commands."
+
+[[code]]
+id = "preferences_transport_unavailable"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The selected preferences transport is not available in this build."
+
+[[code]]
+id = "preferences_color_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The display color policy is not auto, always, or never."
+
+[[code]]
+id = "preferences_page_size_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The TUI page size is outside its supported bounded range."
+
+[[code]]
+id = "preferences_timeout_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The command timeout is outside its supported bounded range."
+
+[[code]]
+id = "preferences_retention_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The backup retention count exceeds its supported bounded range."
+
+[[code]]
+id = "preferences_version_unsupported"
+severity = "blocked"
+effect = "workspace_read"
+retryable = false
+message = "The preferences document uses an unknown or future schema version."
 
 [[code]]
 id = "diagnostic_export_not_safe"

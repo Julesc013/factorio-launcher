@@ -187,6 +187,7 @@ ALLOWED_RUNTIME_ROOTS = {
     "factorio",
     "package",
     "platform",
+    "preferences",
     "transaction",
     "workspace",
 }

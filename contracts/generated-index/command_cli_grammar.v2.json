@@ -1920,6 +1920,505 @@
           }
         ],
         "path": [
+          "preferences",
+          "apply"
+        ],
+        "positionals": [],
+        "usage": "facman preferences apply --json"
+      },
+      "command_id": "preferences.apply",
+      "deprecation": "active",
+      "frontend_category": "preferences",
+      "localization_keys": [
+        "command.preferences.apply.title",
+        "command.preferences.apply.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "preferences_apply",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "preferred_workspace",
+          "repeatable": false,
+          "request_field": "preferred_workspace",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "default": null,
+          "name": "preferred_transport",
+          "repeatable": false,
+          "request_field": "preferred_transport",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "default": null,
+          "name": "default_instance_template",
+          "repeatable": false,
+          "request_field": "default_instance_template",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "default_launch_profile",
+          "repeatable": false,
+          "request_field": "default_launch_profile",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "display_color_policy",
+          "repeatable": false,
+          "request_field": "display_color_policy",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "default": null,
+          "name": "tui_page_size",
+          "repeatable": false,
+          "request_field": "tui_page_size",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "command_timeout_seconds",
+          "repeatable": false,
+          "request_field": "command_timeout_seconds",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "backup_destination",
+          "repeatable": false,
+          "request_field": "backup_destination",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "default": null,
+          "name": "backup_keep_last",
+          "repeatable": false,
+          "request_field": "backup_keep_last",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "discovery_providers",
+          "repeatable": true,
+          "request_field": "discovery_providers",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "discovery_roots",
+          "repeatable": true,
+          "request_field": "discovery_roots",
+          "required": false,
+          "type": "string_array"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "preferences.apply",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "preferences",
+          "inspect"
+        ],
+        "positionals": [],
+        "usage": "facman preferences inspect --json"
+      },
+      "command_id": "preferences.inspect",
+      "deprecation": "active",
+      "frontend_category": "preferences",
+      "localization_keys": [
+        "command.preferences.inspect.title",
+        "command.preferences.inspect.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "preferences_inspect",
+      "request_fields": [],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "preferences.inspect",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "preferences",
+          "plan"
+        ],
+        "positionals": [],
+        "usage": "facman preferences plan --json"
+      },
+      "command_id": "preferences.plan",
+      "deprecation": "active",
+      "frontend_category": "preferences",
+      "localization_keys": [
+        "command.preferences.plan.title",
+        "command.preferences.plan.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "preferences_plan",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "preferred_workspace",
+          "repeatable": false,
+          "request_field": "preferred_workspace",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "default": null,
+          "name": "preferred_transport",
+          "repeatable": false,
+          "request_field": "preferred_transport",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "default": null,
+          "name": "default_instance_template",
+          "repeatable": false,
+          "request_field": "default_instance_template",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "default_launch_profile",
+          "repeatable": false,
+          "request_field": "default_launch_profile",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "display_color_policy",
+          "repeatable": false,
+          "request_field": "display_color_policy",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "default": null,
+          "name": "tui_page_size",
+          "repeatable": false,
+          "request_field": "tui_page_size",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "command_timeout_seconds",
+          "repeatable": false,
+          "request_field": "command_timeout_seconds",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "backup_destination",
+          "repeatable": false,
+          "request_field": "backup_destination",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "default": null,
+          "name": "backup_keep_last",
+          "repeatable": false,
+          "request_field": "backup_keep_last",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "discovery_providers",
+          "repeatable": true,
+          "request_field": "discovery_providers",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "discovery_roots",
+          "repeatable": true,
+          "request_field": "discovery_roots",
+          "required": false,
+          "type": "string_array"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "preferences.plan",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "preferences",
+          "reset",
+          "apply"
+        ],
+        "positionals": [],
+        "usage": "facman preferences reset apply --json"
+      },
+      "command_id": "preferences.reset.apply",
+      "deprecation": "active",
+      "frontend_category": "preferences",
+      "localization_keys": [
+        "command.preferences.reset.apply.title",
+        "command.preferences.reset.apply.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "preferences_reset_apply",
+      "request_fields": [],
+      "required_capabilities": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "preferences.reset.apply",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "preferences",
+          "reset",
+          "plan"
+        ],
+        "positionals": [],
+        "usage": "facman preferences reset plan --json"
+      },
+      "command_id": "preferences.reset.plan",
+      "deprecation": "active",
+      "frontend_category": "preferences",
+      "localization_keys": [
+        "command.preferences.reset.plan.title",
+        "command.preferences.reset.plan.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "preferences_reset_plan",
+      "request_fields": [],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "preferences.reset.plan",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "preferences",
+          "validate"
+        ],
+        "positionals": [],
+        "usage": "facman preferences validate --json"
+      },
+      "command_id": "preferences.validate",
+      "deprecation": "active",
+      "frontend_category": "preferences",
+      "localization_keys": [
+        "command.preferences.validate.title",
+        "command.preferences.validate.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "preferences_validate",
+      "request_fields": [
+        {
+          "default": null,
+          "name": "preferred_workspace",
+          "repeatable": false,
+          "request_field": "preferred_workspace",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "default": null,
+          "name": "preferred_transport",
+          "repeatable": false,
+          "request_field": "preferred_transport",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "default": null,
+          "name": "default_instance_template",
+          "repeatable": false,
+          "request_field": "default_instance_template",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "default_launch_profile",
+          "repeatable": false,
+          "request_field": "default_launch_profile",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "default": null,
+          "name": "display_color_policy",
+          "repeatable": false,
+          "request_field": "display_color_policy",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "default": null,
+          "name": "tui_page_size",
+          "repeatable": false,
+          "request_field": "tui_page_size",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "command_timeout_seconds",
+          "repeatable": false,
+          "request_field": "command_timeout_seconds",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "backup_destination",
+          "repeatable": false,
+          "request_field": "backup_destination",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "default": null,
+          "name": "backup_keep_last",
+          "repeatable": false,
+          "request_field": "backup_keep_last",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "default": null,
+          "name": "discovery_providers",
+          "repeatable": true,
+          "request_field": "discovery_providers",
+          "required": false,
+          "type": "string_array"
+        },
+        {
+          "default": null,
+          "name": "discovery_roots",
+          "repeatable": true,
+          "request_field": "discovery_roots",
+          "required": false,
+          "type": "string_array"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "preferences.validate",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
           "product",
           "inspect"
         ],
@@ -3097,5 +3596,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "8bc0dd0e9ad16acd34c9d8fc992407b46f5627b50b714e1311f79f5ceb274d2b"
+  "source_digest": "2710e561e5a067f2a50508a5c9643a733b2e2c10de8ae96912a2011230d51ebb"
 }

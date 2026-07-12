@@ -32,6 +32,12 @@ optional = [
   "saves.clone",
   "instance.export",
   "instance.import",
+  "preferences.apply",
+  "preferences.inspect",
+  "preferences.plan",
+  "preferences.reset.apply",
+  "preferences.reset.plan",
+  "preferences.validate",
   "workspace.recovery.inspect",
   "workspace.recovery.plan",
   "workspace.recovery.apply",
@@ -239,6 +245,42 @@ backend_id = "dev.bug_report"
 cli = "facman dev bug-report --json"
 
 [[commands]]
+id = "preferences.inspect"
+phase = "optional"
+backend_id = "preferences.inspect"
+cli = "facman preferences inspect --json"
+
+[[commands]]
+id = "preferences.validate"
+phase = "optional"
+backend_id = "preferences.validate"
+cli = "facman preferences validate --json"
+
+[[commands]]
+id = "preferences.plan"
+phase = "optional"
+backend_id = "preferences.plan"
+cli = "facman preferences plan --json"
+
+[[commands]]
+id = "preferences.apply"
+phase = "optional"
+backend_id = "preferences.apply"
+cli = "facman preferences apply --json"
+
+[[commands]]
+id = "preferences.reset.plan"
+phase = "optional"
+backend_id = "preferences.reset.plan"
+cli = "facman preferences reset plan --json"
+
+[[commands]]
+id = "preferences.reset.apply"
+phase = "optional"
+backend_id = "preferences.reset.apply"
+cli = "facman preferences reset apply --json"
+
+[[commands]]
 id = "servers.create"
 phase = "optional"
 backend_id = "servers.create"
@@ -349,6 +391,12 @@ default_refusal = "frontend_command_not_enabled"
 default_reason = "CLI route is intentionally deferred for this frontend contract phase."
 [frontends.commands]
 help = "implemented"
+"preferences.apply" = "implemented"
+"preferences.inspect" = "implemented"
+"preferences.plan" = "implemented"
+"preferences.reset.apply" = "implemented"
+"preferences.reset.plan" = "implemented"
+"preferences.validate" = "implemented"
 version = "implemented"
 doctor = "implemented"
 "product.inspect" = "implemented"
@@ -405,6 +453,12 @@ default_refusal = "tui_command_unavailable"
 default_reason = "The functional TUI renders generated availability and backend refusal reasons."
 [frontends.commands]
 help = "implemented"
+"preferences.apply" = "implemented"
+"preferences.inspect" = "implemented"
+"preferences.plan" = "implemented"
+"preferences.reset.apply" = "implemented"
+"preferences.reset.plan" = "implemented"
+"preferences.validate" = "implemented"
 version = "implemented"
 doctor = "implemented"
 "product.inspect" = "implemented"
@@ -461,6 +515,12 @@ default_refusal = "daemon_route_not_implemented"
 default_reason = "Daemon command hosting is scaffolded and must not invent frontend behavior."
 [frontends.commands]
 help = "stubbed_with_refusal"
+"preferences.apply" = "not_supported_with_reason"
+"preferences.inspect" = "not_supported_with_reason"
+"preferences.plan" = "not_supported_with_reason"
+"preferences.reset.apply" = "not_supported_with_reason"
+"preferences.reset.plan" = "not_supported_with_reason"
+"preferences.validate" = "not_supported_with_reason"
 version = "stubbed_with_refusal"
 doctor = "stubbed_with_refusal"
 "product.inspect" = "stubbed_with_refusal"
@@ -517,6 +577,12 @@ default_refusal = "winforms_command_deferred"
 default_reason = "WinForms renders generated fields for backend-live commands and generated reasons for unavailable commands."
 [frontends.commands]
 help = "implemented"
+"preferences.apply" = "implemented"
+"preferences.inspect" = "implemented"
+"preferences.plan" = "implemented"
+"preferences.reset.apply" = "implemented"
+"preferences.reset.plan" = "implemented"
+"preferences.validate" = "implemented"
 version = "implemented"
 doctor = "implemented"
 "product.inspect" = "implemented"
@@ -573,6 +639,12 @@ default_refusal = "winui_shell_not_implemented"
 default_reason = "WinUI lane is reserved for modern Windows after WinForms/AppKit shell proof."
 [frontends.commands]
 help = "not_supported_with_reason"
+"preferences.apply" = "not_supported_with_reason"
+"preferences.inspect" = "not_supported_with_reason"
+"preferences.plan" = "not_supported_with_reason"
+"preferences.reset.apply" = "not_supported_with_reason"
+"preferences.reset.plan" = "not_supported_with_reason"
+"preferences.validate" = "not_supported_with_reason"
 version = "not_supported_with_reason"
 doctor = "not_supported_with_reason"
 "product.inspect" = "not_supported_with_reason"
@@ -629,6 +701,12 @@ default_refusal = "appkit_command_deferred"
 default_reason = "AppKit renders generated fields for backend-live commands and generated reasons for unavailable commands."
 [frontends.commands]
 help = "implemented"
+"preferences.apply" = "implemented"
+"preferences.inspect" = "implemented"
+"preferences.plan" = "implemented"
+"preferences.reset.apply" = "implemented"
+"preferences.reset.plan" = "implemented"
+"preferences.validate" = "implemented"
 version = "implemented"
 doctor = "implemented"
 "product.inspect" = "implemented"
@@ -685,6 +763,12 @@ default_refusal = "swiftui_shell_not_implemented"
 default_reason = "SwiftUI lane is reserved for modern macOS after AppKit shell proof."
 [frontends.commands]
 help = "not_supported_with_reason"
+"preferences.apply" = "not_supported_with_reason"
+"preferences.inspect" = "not_supported_with_reason"
+"preferences.plan" = "not_supported_with_reason"
+"preferences.reset.apply" = "not_supported_with_reason"
+"preferences.reset.plan" = "not_supported_with_reason"
+"preferences.validate" = "not_supported_with_reason"
 version = "not_supported_with_reason"
 doctor = "not_supported_with_reason"
 "product.inspect" = "not_supported_with_reason"
@@ -741,6 +825,12 @@ default_refusal = "gtk_shell_not_implemented"
 default_reason = "GTK lane is scaffolded and must wait for frontend contract proof."
 [frontends.commands]
 help = "stubbed_with_refusal"
+"preferences.apply" = "not_supported_with_reason"
+"preferences.inspect" = "not_supported_with_reason"
+"preferences.plan" = "not_supported_with_reason"
+"preferences.reset.apply" = "not_supported_with_reason"
+"preferences.reset.plan" = "not_supported_with_reason"
+"preferences.validate" = "not_supported_with_reason"
 version = "stubbed_with_refusal"
 doctor = "stubbed_with_refusal"
 "product.inspect" = "stubbed_with_refusal"
@@ -797,6 +887,12 @@ default_refusal = "qt_shell_not_implemented"
 default_reason = "Qt lane is scaffolded and must wait for frontend contract proof."
 [frontends.commands]
 help = "stubbed_with_refusal"
+"preferences.apply" = "not_supported_with_reason"
+"preferences.inspect" = "not_supported_with_reason"
+"preferences.plan" = "not_supported_with_reason"
+"preferences.reset.apply" = "not_supported_with_reason"
+"preferences.reset.plan" = "not_supported_with_reason"
+"preferences.validate" = "not_supported_with_reason"
 version = "stubbed_with_refusal"
 doctor = "stubbed_with_refusal"
 "product.inspect" = "stubbed_with_refusal"

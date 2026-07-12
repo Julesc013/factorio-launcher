@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `8bc0dd0e9ad16acd34c9d8fc992407b46f5627b50b714e1311f79f5ceb274d2b`.
+Source digest: `2710e561e5a067f2a50508a5c9643a733b2e2c10de8ae96912a2011230d51ebb`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -42,6 +42,12 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `modsets.verify` | `modsets.verify` | `modsets_verify` | no | - | available | workspace_read | `facman modsets verify <instance-id> --json` |
 | `onboarding.plan` | `onboarding.plan` | `onboarding_plan` | no | - | available | workspace_read | `facman onboarding plan --preferred-install <install-id> --name <display-name> --template <template-id> --json` |
 | `package.verify` | `package.verify` | `package_verify` | no | - | unavailable_until_gateway | setup_preview | `facman package verify --json` |
+| `preferences.apply` | `preferences.apply` | `preferences_apply` | yes | - | available | workspace_read, workspace_write | `facman preferences apply --json` |
+| `preferences.inspect` | `preferences.inspect` | `preferences_inspect` | no | - | available | workspace_read | `facman preferences inspect --json` |
+| `preferences.plan` | `preferences.plan` | `preferences_plan` | no | - | available | workspace_read | `facman preferences plan --json` |
+| `preferences.reset.apply` | `preferences.reset.apply` | `preferences_reset_apply` | yes | - | available | workspace_read, workspace_write | `facman preferences reset apply --json` |
+| `preferences.reset.plan` | `preferences.reset.plan` | `preferences_reset_plan` | no | - | available | workspace_read | `facman preferences reset plan --json` |
+| `preferences.validate` | `preferences.validate` | `preferences_validate` | no | - | available | workspace_read | `facman preferences validate --json` |
 | `product.inspect` | `product.inspect` | `product_inspect` | no | - | available | none | `facman product inspect --json` |
 | `run.execute` | `run.execute` | `run_execute` | no | - | unavailable_until_isolation_proof | workspace_read | `facman run <instance-id> --execute --json` |
 | `run.preview` | `run.preview` | `run_preview` | no | - | available | workspace_read | `facman run <instance-id> --json` |

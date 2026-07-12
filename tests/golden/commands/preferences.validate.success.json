@@ -1,0 +1,1 @@
+{"schema":"facman.preferences_report.v1","command":"preferences.validate","operation":"preferences.validate","status":"ok","path":"<config>/facman/preferences.v1.json","present":false,"mutation_executed":false,"reset":false,"change_required":true}

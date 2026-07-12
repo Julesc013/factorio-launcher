@@ -14,6 +14,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -165,6 +166,34 @@ std::string roots_payload(const std::vector<std::string>& roots)
     for (const std::string& root : roots) values.add_string(root);
     json::ObjectBuilder output;
     output.add_array("roots", values);
+    return output.serialize();
+}
+
+std::string preferences_payload(const std::vector<std::string>& args)
+{
+    json::ObjectBuilder output;
+    for (const auto& field : std::vector<std::pair<std::string, std::string>> {
+             {"preferred_workspace", option(args, "--preferred-workspace")},
+             {"preferred_transport", option(args, "--transport")},
+             {"default_instance_template", option(args, "--template")},
+             {"default_launch_profile", option(args, "--profile")},
+             {"display_color_policy", option(args, "--color")},
+             {"tui_page_size", option(args, "--page-size")},
+             {"command_timeout_seconds", option(args, "--timeout-seconds")},
+             {"backup_destination", option(args, "--backup-destination")},
+             {"backup_keep_last", option(args, "--backup-keep-last")},
+         }) {
+        if (!field.second.empty()) output.add_string(field.first, field.second);
+    }
+    for (const auto& array_field : std::vector<std::pair<std::string, std::vector<std::string>>> {
+             {"discovery_providers", option_values(args, "--discovery-provider")},
+             {"discovery_roots", option_values(args, "--discovery-root")},
+         }) {
+        if (array_field.second.empty()) continue;
+        json::ArrayBuilder values;
+        for (const std::string& value : array_field.second) values.add_string(value);
+        output.add_array(array_field.first, values);
+    }
     return output.serialize();
 }
 
@@ -499,6 +528,45 @@ int command_workspace(const Options& options)
     return emit_basic(call(options, command, payload, action != "apply"), flag(options.args, "--json"), "Workspace operation completed");
 }
 
+int command_preferences(const Options& options)
+{
+    if (options.args.size() < 2) return 2;
+    const bool as_json = flag(options.args, "--json");
+    if (options.args[1] == "reset") {
+        if (options.args.size() < 3 || (options.args[2] != "plan" && options.args[2] != "apply")) return 2;
+        for (std::size_t index = 3; index < options.args.size(); ++index) {
+            if (options.args[index] != "--json") return 2;
+        }
+        const bool apply = options.args[2] == "apply";
+        return emit_basic(
+            call(options, "preferences.reset." + options.args[2], "{}", !apply),
+            as_json,
+            apply ? "Preferences reset" : "Preferences reset plan created");
+    }
+    const std::string action = options.args[1];
+    if (action != "inspect" && action != "validate" && action != "plan" && action != "apply") return 2;
+    if (action == "inspect") {
+        for (std::size_t index = 2; index < options.args.size(); ++index) {
+            if (options.args[index] != "--json") return 2;
+        }
+    }
+    const std::set<std::string> value_options = {
+        "--preferred-workspace", "--transport", "--template", "--profile", "--color",
+        "--page-size", "--timeout-seconds", "--backup-destination", "--backup-keep-last",
+        "--discovery-provider", "--discovery-root",
+    };
+    for (std::size_t index = 2; index < options.args.size(); ++index) {
+        if (options.args[index] == "--json") continue;
+        if (value_options.count(options.args[index]) == 0 || index + 1 >= options.args.size()) return 2;
+        ++index;
+    }
+    const std::string payload = action == "inspect" ? "{}" : preferences_payload(options.args);
+    return emit_basic(
+        call(options, "preferences." + action, payload, action != "apply"),
+        as_json,
+        "Preferences " + action + " completed");
+}
+
 int command_capabilities(const Options& options)
 {
     if (options.args.size() < 2 || options.args[1] != "inspect") return 2;
@@ -563,6 +631,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     if (command == "servers") return command_servers(options);
     if (command == "dev") return command_dev(options);
     if (command == "workspace") return command_workspace(options);
+    if (command == "preferences") return command_preferences(options);
     if (command == "capabilities") return command_capabilities(options);
     if (command == "onboarding") return command_onboarding(options);
     if (command == "package") return command_package(options);

@@ -21,6 +21,20 @@ INDEX = ROOT / "contracts/command/factorio/index.v1.toml"
 VERSION = ROOT / "release/index/version.v1.toml"
 FRONTEND = ROOT / "contracts/command/frontend/frontend.required_commands.v1.toml"
 
+PREFERENCE_REQUEST_FIELDS = [
+    ("preferred_workspace", "path", False),
+    ("preferred_transport", "enum", False),
+    ("default_instance_template", "identifier", False),
+    ("default_launch_profile", "identifier", False),
+    ("display_color_policy", "enum", False),
+    ("tui_page_size", "string", False),
+    ("command_timeout_seconds", "string", False),
+    ("backup_destination", "path", False),
+    ("backup_keep_last", "string", False),
+    ("discovery_providers", "string_array", False),
+    ("discovery_roots", "string_array", False),
+]
+
 OUTPUTS = {
     "catalog_json": ROOT / "contracts/generated-index/command_catalog.v2.json",
     "command_header": ROOT / "runtime/core/generated/command_catalog.h",
@@ -45,6 +59,9 @@ OUTPUTS = {
 }
 
 REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
+    "preferences.apply": PREFERENCE_REQUEST_FIELDS,
+    "preferences.plan": PREFERENCE_REQUEST_FIELDS,
+    "preferences.validate": PREFERENCE_REQUEST_FIELDS,
     "onboarding.plan": [("preferred_install", "identifier", False), ("instance_display_name", "string", False), ("template_id", "identifier", False), ("workspace", "path", False)],
     "launch_plan.explain": [("instance_id", "identifier", True)],
     "modsets.explain": [("instance_id", "identifier", True)],

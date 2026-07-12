@@ -1,0 +1,1 @@
+{"schema":"factorio.command_refusal.v1","command":"preferences.plan","status":"refused","refusal":{"schema":"common.refusal.v1","code":"preferences_transport_unavailable","reason":"daemon transport is unavailable","recoverable":false}}

@@ -73,6 +73,13 @@
       "package_profiles": []
     },
     {
+      "paths": ["runtime/preferences/", "tests/test_workspace_preferences.py"],
+      "native_targets": ["facman_preferences_smoke", "facman_workspace_resolver_smoke", "flb_command_bridge_smoke"],
+      "python_tests": ["tests.test_workspace_preferences", "tests.test_workspace_resolver", "tests.test_command_contracts", "tests.test_contract_truth"],
+      "strict_validators": ["tools/command_contract_check.py", "tools/frontend_contract_check.py", "tools/schema_validate.py", "tools/workspace_resolver_check.py"],
+      "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
       "paths": ["runtime/archive/", "external/miniz/"],
       "native_targets": ["fl_archive_core_smoke", "miniz_dependency_smoke"],
       "python_tests": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth"],

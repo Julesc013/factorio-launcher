@@ -29,24 +29,29 @@ int main()
     if (!result || result.value().source != "FACTORIO_LAUNCHER_WORKSPACE") return 3;
 
     inputs.compatibility_workspace.clear();
+    inputs.preferred_workspace = fs::path("chosen") / "preferences";
+    result = facman::client::resolve_workspace_from_inputs(inputs);
+    if (!result || result.value().source != "preferences" || result.value().path != inputs.preferred_workspace) return 4;
+
+    inputs.preferred_workspace.clear();
     inputs.legacy_state = LegacyWorkspaceState::directory;
     result = facman::client::resolve_workspace_from_inputs(inputs);
     if (!result || !result.value().legacy || result.value().source != "existing_legacy" ||
-        result.value().path != inputs.user_paths.home / ".facman" / "workspace") return 4;
+        result.value().path != inputs.user_paths.home / ".facman" / "workspace") return 5;
 
     inputs.legacy_state = LegacyWorkspaceState::missing;
     result = facman::client::resolve_workspace_from_inputs(inputs);
     if (!result || result.value().legacy || result.value().source != "platform_native" ||
-        result.value().path != inputs.user_paths.data / "facman" / "workspace") return 5;
+        result.value().path != inputs.user_paths.data / "facman" / "workspace") return 6;
 
     inputs.legacy_state = LegacyWorkspaceState::unsafe;
     result = facman::client::resolve_workspace_from_inputs(inputs);
-    if (result || result.error().code != "workspace_legacy_unsafe") return 6;
+    if (result || result.error().code != "workspace_legacy_unsafe") return 7;
 
     inputs.legacy_state = LegacyWorkspaceState::missing;
     inputs.user_paths_available = false;
     result = facman::client::resolve_workspace_from_inputs(inputs);
     if (result || result.error().code != "workspace_default_unavailable" ||
-        result.error().kind != facman::core::OutcomeKind::unavailable) return 7;
+        result.error().kind != facman::core::OutcomeKind::unavailable) return 8;
     return 0;
 }
