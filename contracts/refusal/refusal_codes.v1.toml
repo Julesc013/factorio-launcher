@@ -116,6 +116,7 @@ required_codes = [
   "instance_link_refused",
   "instance_rename_failed",
   "instance_restore_commit_failed",
+  "instance_restore_install_incompatible",
   "instance_restore_target_exists",
   "instance_root_unsafe",
   "instance_save_invalid",
@@ -539,6 +540,13 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = true
 message = "The verified restored instance staging tree could not be committed without replacement."
+
+[[code]]
+id = "instance_restore_install_incompatible"
+severity = "blocked"
+effect = "workspace_write"
+retryable = true
+message = "The archived Factorio version no longer matches its registered install reference."
 
 [[code]]
 id = "instance_restore_target_exists"

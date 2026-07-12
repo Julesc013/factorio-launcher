@@ -45,10 +45,11 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
 add_library(flb_factorio_instance_static instance/flb_factorio_instance_lifecycle.cpp)
 target_compile_features(flb_factorio_instance_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_instance_static PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/instance ${CMAKE_CURRENT_SOURCE_DIR}/launch ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
+  ${CMAKE_CURRENT_SOURCE_DIR}/instance ${CMAKE_CURRENT_SOURCE_DIR}/launch
+  ${CMAKE_CURRENT_SOURCE_DIR}/modsets ${CMAKE_CURRENT_SOURCE_DIR}/snapshots)
 target_link_libraries(flb_factorio_instance_static PUBLIC
   facman_archive_static facman_base_static facman_transaction_static facman_workspace_static
-  flb_factorio_launch_static flb_factorio_modsets_static)
+  flb_factorio_launch_static flb_factorio_modsets_static flb_factorio_snapshots_static)
 
 add_library(flb_factorio_snapshots_static snapshots/flb_factorio_snapshots.cpp)
 target_compile_features(flb_factorio_snapshots_static PUBLIC cxx_std_17)

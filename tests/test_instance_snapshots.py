@@ -100,6 +100,12 @@ class InstanceSnapshotTests(unittest.TestCase):
             assert_schema(self, verified, "factorio_snapshot_report.v1.schema.json")
             self.assertEqual("pass", verified["status"])
 
+            live_difference = call(source, "instances", "diff", "main", "snapshot:portable")
+            assert_schema(self, live_difference, "factorio_instance_diff.v1.schema.json")
+            self.assertEqual("snapshot:portable", live_difference["right_ref"])
+            self.assertTrue(all(live_difference["selected_settings_equal"].values()))
+            self.assertTrue(live_difference["volatile_content_ignored"])
+
             restored = call(destination, "snapshots", "restore", str(source_archive), "restored")
             assert_schema(self, restored, "factorio_snapshot_report.v1.schema.json")
             self.assertEqual("restored", restored["instance_id"])

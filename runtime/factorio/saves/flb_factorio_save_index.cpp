@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstdlib>
 #include <ctime>
 #include <iomanip>
 #include <map>
@@ -29,7 +30,7 @@ namespace json = facman::core::json;
 namespace tx = facman::transaction;
 namespace {
 
-constexpr std::size_t kMaximumSaves = 4096;
+constexpr std::size_t kMaximumSaves = 10000;
 constexpr std::size_t kMaximumMembers = 100000;
 constexpr std::size_t kMemberSummary = 64;
 constexpr std::uint64_t kMaximumSidecarBytes = 1024U * 1024U;
@@ -619,8 +620,31 @@ facman::core::Result<std::string> retention_apply(const fs::path& workspace, con
         auto digest = stable_sha256(record.path, size);
         if (!digest || digest.value() != record.sha256 || size != record.size) return failure<std::string>(
             "save_source_changed", "Save changed before retention apply", record.path);
+        const char* fault = std::getenv("FACMAN_SAVE_RETENTION_FAULT");
+        if (fault != nullptr && std::string(fault) == "target_substitution") {
+            const fs::path preserved = record.path.parent_path() /
+                fs::u8path(".facman-retention-preserved-" + session.record().transaction_id + "-" + record.file_name);
+            auto preserved_status = facman::platform::commit_no_replace(record.path, preserved);
+            std::string injected_detail;
+            if (!preserved_status.ok() || !facman::base::write_text_new_atomic(
+                    record.path, "injected retention target substitution\n", injected_detail)) {
+                session.failed(preserved_status.ok() ? injected_detail : preserved_status.detail);
+                return failure<std::string>("save_retention_failed", session.detail(), record.path);
+            }
+        }
         const fs::path target = trash / fs::u8path(record.file_name);
         auto status = facman::platform::commit_no_replace(record.path, target);
+        std::uint64_t committed_size = 0;
+        auto committed_digest = status.ok() ? stable_sha256(target, committed_size)
+                                            : facman::core::Result<std::string>::failure({status.code, status.detail, path_text(target)});
+        if (status.ok() && (!committed_digest || committed_digest.value() != record.sha256 || committed_size != record.size)) {
+            session.failed("retention target identity changed during commit");
+            return failure<std::string>(
+                "save_transaction_recovery_required",
+                "Moved save identity does not match the revalidated source",
+                target,
+                facman::core::OutcomeKind::recovery_required);
+        }
         if (status.ok() && record.association.present) status = facman::platform::commit_no_replace(
             record.association.path, trash / record.association.path.filename());
         if (!status.ok()) {

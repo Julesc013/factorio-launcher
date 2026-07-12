@@ -127,6 +127,29 @@ class SaveIndexRetentionTests(unittest.TestCase):
             self.assertTrue((trash / "old.zip.save-ref.v1.json").is_file())
             self.assertFalse(applied["save_content_modified"])
 
+    def test_retention_target_substitution_enters_recovery_without_losing_original(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman save substitution ") as value:
+            workspace = Path(value)
+            instance = setup(workspace)
+            old = instance / "saves" / "old.zip"
+            new = instance / "saves" / "new.zip"
+            write_save(old, b"original save")
+            write_save(new, b"new save")
+            stamp = int(time.time()) - 10 * 24 * 60 * 60
+            os.utime(old, (stamp, stamp))
+            original = old.read_bytes()
+            environment = dict(os.environ)
+            environment["FACMAN_SAVE_RETENTION_FAULT"] = "target_substitution"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "saves", "retention", "apply", "--instance", "save-index",
+                "--keep-last", "1", "--min-age-days", "1", "--json",
+            ], env=environment)
+            self.assertNotEqual(0, code, stderr or stdout)
+            self.assertEqual("save_transaction_recovery_required", json.loads(stdout)["refusal"]["code"])
+            preserved = list((instance / "saves").glob(".facman-retention-preserved-*-old.zip"))
+            self.assertEqual(1, len(preserved))
+            self.assertEqual(original, preserved[0].read_bytes())
+
 
 if __name__ == "__main__":
     unittest.main()

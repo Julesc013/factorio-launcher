@@ -101,6 +101,9 @@ class ProfileTemplateTests(unittest.TestCase):
             self.assertEqual("factorio.instance_overrides.v1", overrides["schema"])
             assert_schema(self, overrides, "factorio_instance_overrides.v1.schema.json")
             self.assertTrue(any((workspace / "backups" / "profiles").rglob("instance.v1.json")))
+            selected = invoke_json(workspace, "profiles", "inspect", "quiet")
+            self.assertEqual("profiles.inspect", selected["command"])
+            self.assertFalse(selected["mutation_executed"])
 
             preview = invoke_json(workspace, "launch", "plan", "main")
             self.assertEqual("quiet", preview["profile_id"])

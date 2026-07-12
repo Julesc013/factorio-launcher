@@ -205,8 +205,13 @@ std::string response_envelope(const ApplicationResult& result, const std::string
     envelope.add_string("schema", "ulk.command_response.v1");
     envelope.add_string("status", result.status == ULK_STATUS_OK ? "ok" : "refused");
     envelope.add_string("outcome", facman::core::outcome_kind_name(result.outcome_kind));
+    facman::core::json::Limits payload_limits;
+    payload_limits.maximum_bytes = 64U * 1024U * 1024U;
+    payload_limits.maximum_depth = 64;
+    payload_limits.maximum_nodes = 1000000;
+    payload_limits.maximum_string_bytes = 32U * 1024U * 1024U;
     auto parsed_payload = payload.empty() ? facman::core::Result<facman::core::json::Value>::failure({"empty", "", ""})
-                                          : decode_json_value(payload);
+                                          : facman::core::json::parse(payload, payload_limits);
     if (parsed_payload) envelope.add_value("payload", parsed_payload.value());
     else envelope.add_null("payload");
     if (result.error_code.empty()) envelope.add_null("error");

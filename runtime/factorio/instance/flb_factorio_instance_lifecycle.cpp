@@ -12,6 +12,7 @@
 #include "fl_workspace_store.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
+#include "flb_factorio_snapshots.h"
 
 #include <algorithm>
 #include <cctype>
@@ -358,6 +359,49 @@ std::string object_string(const json::Value& value, const char* key)
     return text ? text.take_value() : std::string {};
 }
 
+facman::core::Result<void> rewrite_restored_modset_identity(
+    const fs::path& instance_root,
+    const std::string& instance_id)
+{
+    const fs::path path = instance_root / "mods" / "modset-lock.v1.json";
+    std::error_code error;
+    const bool present = fs::exists(path, error);
+    if (!present && (!error || error == std::errc::no_such_file_or_directory)) {
+        return facman::core::Result<void>::success();
+    }
+    const bool regular = !error && fs::is_regular_file(path, error);
+    if (error || !regular) return facman::core::Result<void>::failure({
+        "instance_modset_regeneration_failed",
+        error ? error.message() : "Restored modset lock is not a regular file",
+        facman::platform::path_to_utf8(path)});
+    auto text = stable_text(path, kMaximumMetadataBytes);
+    auto document = text ? json::parse(text.value()) : facman::core::Result<json::Value>::failure(text.error());
+    const json::Value* lockfile_version = document && document.value().is_object()
+        ? document.value().find("lockfile_version") : nullptr;
+    const json::Value* mods = document && document.value().is_object() ? document.value().find("mods") : nullptr;
+    auto version = lockfile_version == nullptr
+        ? facman::core::Result<std::uint64_t>::failure({"instance_modset_regeneration_failed", "Lock version is missing", {}})
+        : lockfile_version->unsigned_integer_value();
+    const std::string factorio_version = document && document.value().is_object()
+        ? object_string(document.value(), "factorio_version") : std::string {};
+    if (!document || !document.value().is_object() ||
+        object_string(document.value(), "schema") != "factorio.modset_lock.v1" ||
+        !version || version.value() != 1U || factorio_version.empty() || mods == nullptr || !mods->is_array()) {
+        return facman::core::Result<void>::failure({
+            "instance_modset_regeneration_failed", "Restored modset lock is malformed", facman::platform::path_to_utf8(path)});
+    }
+    json::ObjectBuilder output;
+    (void)output.add_unsigned_integer("lockfile_version", 1);
+    output.add_string("schema", "factorio.modset_lock.v1");
+    output.add_string("instance_id", instance_id);
+    output.add_string("factorio_version", factorio_version);
+    output.add_value("mods", *mods);
+    fs::remove(path, error);
+    if (error) return facman::core::Result<void>::failure({
+        "instance_modset_regeneration_failed", error.message(), facman::platform::path_to_utf8(path)});
+    return durable_new(path, output.serialize() + "\n");
+}
+
 facman::core::Result<ArchiveRecord> load_archive(const fs::path& workspace_root, const std::string& archive_id)
 {
     if (archive_id.empty() || archive_id.size() > 160U ||
@@ -584,20 +628,41 @@ facman::core::Result<std::string> verify(const fs::path& root, const InspectRequ
 facman::core::Result<std::string> diff(const fs::path& root, const DiffRequest& request)
 {
     auto left = load_instance(root, request.left_instance_id);
-    auto right = load_instance(root, request.right_ref);
     if (!left) return failure(left.error().code, left.error().message, left.error().path);
-    if (!right) return failure(
-        request.right_ref.rfind("snapshot:", 0) == 0 ? "instance_snapshot_unavailable" : right.error().code,
-        request.right_ref.rfind("snapshot:", 0) == 0 ? "Snapshot comparison becomes available in the snapshot work unit" : right.error().message,
-        right.error().path, request.right_ref.rfind("snapshot:", 0) == 0 ? facman::core::OutcomeKind::unavailable : facman::core::OutcomeKind::refused);
     auto left_tree = summarize_tree(left.value().root, true, true);
-    auto right_tree = summarize_tree(right.value().root, true, true);
     if (!left_tree) return failure(left_tree.error().code, left_tree.error().message, left_tree.error().path);
-    if (!right_tree) return failure(right_tree.error().code, right_tree.error().message, right_tree.error().path);
     std::map<std::string, std::string> left_hashes;
     std::map<std::string, std::string> right_hashes;
     for (const FileEntry& file : left_tree.value().files) left_hashes[file.relative] = file.sha256;
-    for (const FileEntry& file : right_tree.value().files) right_hashes[file.relative] = file.sha256;
+    std::string right_ref;
+    std::string right_install;
+    std::string right_profile;
+    std::string right_template;
+    std::string right_factorio_version;
+    if (request.right_ref.rfind("snapshot:", 0) == 0) {
+        const std::string snapshot_id = request.right_ref.substr(std::string("snapshot:").size());
+        auto snapshot = facman::factorio::snapshots::load_for_instance_diff(
+            root, {left.value().id.str(), snapshot_id});
+        if (!snapshot) return failure(
+            snapshot.error().code, snapshot.error().message, fs::u8path(snapshot.error().path), snapshot.error().kind);
+        right_hashes = snapshot.value().hashes;
+        right_ref = "snapshot:" + snapshot.value().snapshot_id;
+        right_install = snapshot.value().install_ref;
+        right_profile = snapshot.value().profile;
+        right_template = snapshot.value().template_id;
+        right_factorio_version = snapshot.value().factorio_version;
+    } else {
+        auto right = load_instance(root, request.right_ref);
+        if (!right) return failure(right.error().code, right.error().message, right.error().path);
+        auto right_tree = summarize_tree(right.value().root, true, true);
+        if (!right_tree) return failure(right_tree.error().code, right_tree.error().message, right_tree.error().path);
+        for (const FileEntry& file : right_tree.value().files) right_hashes[file.relative] = file.sha256;
+        right_ref = right.value().id.str();
+        right_install = right.value().install_ref.str();
+        right_profile = right.value().profile;
+        right_template = right.value().template_id;
+        right_factorio_version = right.value().factorio_version;
+    }
     std::set<std::string> paths;
     for (const auto& item : left_hashes) paths.insert(item.first);
     for (const auto& item : right_hashes) paths.insert(item.first);
@@ -615,16 +680,16 @@ facman::core::Result<std::string> diff(const fs::path& root, const DiffRequest& 
         differences.add_object(item);
     }
     json::ObjectBuilder settings;
-    settings.add_bool("install_ref", left.value().install_ref.str() == right.value().install_ref.str());
-    settings.add_bool("profile", left.value().profile == right.value().profile);
-    settings.add_bool("template", left.value().template_id == right.value().template_id);
-    settings.add_bool("factorio_version", left.value().factorio_version == right.value().factorio_version);
+    settings.add_bool("install_ref", left.value().install_ref.str() == right_install);
+    settings.add_bool("profile", left.value().profile == right_profile);
+    settings.add_bool("template", left.value().template_id == right_template);
+    settings.add_bool("factorio_version", left.value().factorio_version == right_factorio_version);
     json::ObjectBuilder output;
     output.add_string("schema", "factorio.instance_diff.v1");
     output.add_string("command", "instances.diff");
     output.add_string("status", "ok");
     output.add_string("left_instance_id", left.value().id.str());
-    output.add_string("right_ref", right.value().id.str());
+    output.add_string("right_ref", right_ref);
     output.add_object("selected_settings_equal", settings);
     output.add_array("differences", differences);
     output.add_bool("volatile_content_ignored", true);
@@ -868,6 +933,11 @@ facman::core::Result<std::string> restore(const fs::path& root, const RestoreReq
     if (fs::exists(target_result.path)) return failure("instance_restore_target_exists", "Restore destination already exists", target_result.path);
     auto install = load_install(root, archived.value().install_ref);
     if (!install) return failure("instance_install_missing", "Archived install reference is not registered", root);
+    if (install.value().version != archived.value().factorio_version) return failure(
+        "instance_restore_install_incompatible",
+        "Archived instance Factorio version does not match its current install reference",
+        install.value().source_path,
+        facman::core::OutcomeKind::conflict);
     tx::Record record;
     record.command_id = "instances.restore";
     record.target = target_result.path;
@@ -913,13 +983,17 @@ facman::core::Result<std::string> restore(const fs::path& root, const RestoreReq
     auto manifest_written = durable_new(
         staging / "instance.v1.json",
         manifest_json(destination, archived.value().original_instance_id, session.record().created_utc));
+    auto modset_rewritten = rewrite_restored_modset_identity(staging, destination.id.str());
     auto staged_plan = summarize_tree(staging, true, false);
-    if (!config_written || !manifest_written || !staged_plan || !session.staged("archive_files_copied_and_generated") ||
+    if (!config_written || !manifest_written || !modset_rewritten || !staged_plan ||
+        !session.staged("archive_files_copied_and_environment_identity_regenerated") ||
         fault("after_verified") || !session.verified("restored_file_hashes_verified")) {
         std::string cleanup;
         (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup);
         session.failed(fault("after_verified") ? "injected after verification" : "restore staging verification failed");
-        return failure(fault("after_verified") ? "instance_fault_injected" : "instance_copy_verification_failed", "Restore staging verification failed", staging);
+        return failure(
+            fault("after_verified") ? "instance_fault_injected" : !modset_rewritten ? modset_rewritten.error().code : "instance_copy_verification_failed",
+            !modset_rewritten ? modset_rewritten.error().message : "Restore staging verification failed", staging);
     }
     if (!session.committing("restore_no_clobber_commit_started") ||
         !tx::StagedDirectoryCommit::commit(staging, target_result.path, detail)) {

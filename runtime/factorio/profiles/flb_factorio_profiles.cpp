@@ -541,11 +541,6 @@ facman::core::Result<std::string> profiles_inspect(const fs::path& workspace, co
 {
     auto profile = load_profile(workspace, request.id);
     if (!profile) return failure(profile.error().code, profile.error().message, fs::u8path(profile.error().path));
-    facman::workspace::InstanceRepository instances {facman::workspace::WorkspaceLayout(workspace)};
-    auto referenced = instances.list();
-    if (!referenced) return failure("profile_reference_check_failed", referenced.error().message, workspace);
-    for (const auto& instance : referenced.value()) if (instance.profile == request.id) return failure(
-        "profile_in_use", "Profile is selected by instance " + instance.id.str(), instance.source_path);
     return facman::core::Result<std::string>::success(profile_report("profiles.inspect", profile.value(), false));
 }
 

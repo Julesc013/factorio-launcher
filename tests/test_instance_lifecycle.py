@@ -183,6 +183,27 @@ class InstanceLifecycleTests(unittest.TestCase):
             self.assertEqual("run_lock_contended", json.loads(stdout)["refusal"]["code"])
             self.assertEqual(before, snapshot(source))
 
+    def test_restore_refuses_when_registered_install_version_drifted(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman restore incompatible ") as temporary:
+            workspace = Path(temporary)
+            create_fixture(workspace)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "archive", "main", "--json",
+            ])
+            self.assertEqual(0, code, stderr or stdout)
+            archive_id = json.loads(stdout)["archive_id"]
+            install_ref = workspace / "installs" / "refs" / "fixture.json"
+            document = json.loads(install_ref.read_text(encoding="utf-8"))
+            document["version"] = "9.9.9"
+            install_ref.write_text(json.dumps(document, separators=(",", ":")) + "\n", encoding="utf-8")
+            code, stdout, _ = invoke([
+                "--workspace", str(workspace), "instances", "restore", archive_id, "--json",
+            ])
+            self.assertNotEqual(0, code)
+            self.assertEqual("instance_restore_install_incompatible", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse((workspace / "instances" / "main").exists())
+            self.assertTrue((workspace / "trash" / "instances" / archive_id).is_dir())
+
     def test_archive_fault_matrix_preserves_live_or_owned_trash_content(self) -> None:
         for stage in ("after_validated", "before_commit", "after_commit", "after_metadata"):
             with self.subTest(stage=stage), tempfile.TemporaryDirectory(

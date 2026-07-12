@@ -322,6 +322,10 @@ int command_rpc(const Options& options)
     input.resize(kTransportInputLimit + 1);
     std::cin.read(input.data(), static_cast<std::streamsize>(input.size()));
     input.resize(static_cast<std::size_t>(std::cin.gcount()));
+    if (input.size() >= 3U && static_cast<unsigned char>(input[0]) == 0xEFU &&
+        static_cast<unsigned char>(input[1]) == 0xBBU && static_cast<unsigned char>(input[2]) == 0xBFU) {
+        input.erase(0, 3);
+    }
     if (input.size() > kTransportInputLimit) {
         return transport_refusal("", "", "transport_input_too_large", "Transport request exceeds the input budget");
     }

@@ -646,13 +646,28 @@ std::set<std::string> retention_candidates(
     const std::vector<SnapshotRecord>& values,
     const RetentionRequest& request)
 {
+    std::vector<RetentionSample> samples;
+    samples.reserve(values.size());
+    for (const SnapshotRecord& record : values) {
+        samples.push_back({record.snapshot_id, record.created_utc, record.size});
+    }
+    const auto ids = retention_candidate_ids(samples, request);
+    return std::set<std::string>(ids.begin(), ids.end());
+}
+
+} // namespace
+
+std::vector<std::string> retention_candidate_ids(
+    const std::vector<RetentionSample>& samples,
+    const RetentionRequest& request)
+{
     std::set<std::string> protected_ids;
-    for (std::size_t index = 0; index < values.size() && index < request.keep_last; ++index) {
-        protected_ids.insert(values[index].snapshot_id);
+    for (std::size_t index = 0; index < samples.size() && index < request.keep_last; ++index) {
+        protected_ids.insert(samples[index].snapshot_id);
     }
     std::set<std::string> daily;
     std::set<std::string> weekly;
-    for (const SnapshotRecord& record : values) {
+    for (const RetentionSample& record : samples) {
         const std::string day = record.created_utc.substr(0, std::min<std::size_t>(10, record.created_utc.size()));
         const std::time_t stamp = parse_utc(record.created_utc);
         const std::string week = std::to_string(stamp <= 0 ? 0 : stamp / (7 * 24 * 60 * 60));
@@ -663,8 +678,8 @@ std::set<std::string> retention_candidates(
     const std::time_t minimum_age = static_cast<std::time_t>(request.minimum_age_days) * 24 * 60 * 60;
     std::set<std::string> candidates;
     std::uint64_t remaining = 0;
-    for (const SnapshotRecord& record : values) remaining += record.size;
-    for (auto iterator = values.rbegin(); iterator != values.rend(); ++iterator) {
+    for (const RetentionSample& record : samples) remaining += record.size;
+    for (auto iterator = samples.rbegin(); iterator != samples.rend(); ++iterator) {
         if (protected_ids.count(iterator->snapshot_id) != 0) continue;
         const std::time_t created = parse_utc(iterator->created_utc);
         if (created == 0 || now - created < minimum_age) continue;
@@ -675,10 +690,38 @@ std::set<std::string> retention_candidates(
             remaining -= iterator->size;
         }
     }
-    return candidates;
+    return std::vector<std::string>(candidates.begin(), candidates.end());
 }
 
-} // namespace
+facman::core::Result<ComparisonSnapshot> load_for_instance_diff(
+    const fs::path& workspace,
+    const SnapshotRequest& request)
+{
+    auto values = records(workspace, request.instance_id);
+    if (!values) return facman::core::Result<ComparisonSnapshot>::failure(values.error());
+    const SnapshotRecord* record = nullptr;
+    for (const SnapshotRecord& candidate : values.value()) {
+        if (candidate.snapshot_id == request.snapshot_id) { record = &candidate; break; }
+    }
+    if (record == nullptr) return facman::core::Result<ComparisonSnapshot>::failure({
+        "snapshot_not_found", "Managed snapshot does not exist", request.snapshot_id,
+        facman::core::OutcomeKind::not_found});
+    auto loaded = load_snapshot(record->archive_path);
+    if (!loaded) return facman::core::Result<ComparisonSnapshot>::failure(loaded.error());
+    if (loaded.value().instance_id != request.instance_id || loaded.value().snapshot_id != request.snapshot_id) {
+        return facman::core::Result<ComparisonSnapshot>::failure({
+            "snapshot_identity_mismatch", "Snapshot identity does not match its managed record", request.snapshot_id});
+    }
+    ComparisonSnapshot output;
+    output.snapshot_id = loaded.value().snapshot_id;
+    output.instance_id = loaded.value().instance_id;
+    output.install_ref = loaded.value().install_ref;
+    output.factorio_version = loaded.value().factorio_version;
+    output.profile = loaded.value().profile;
+    output.template_id = loaded.value().template_id;
+    for (const auto& value : loaded.value().hashes) output.hashes[value.first] = value.second.second;
+    return facman::core::Result<ComparisonSnapshot>::success(std::move(output));
+}
 
 facman::core::Result<std::string> create(const fs::path& workspace, const CreateRequest& request)
 {
