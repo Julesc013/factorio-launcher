@@ -36,6 +36,15 @@ and transport interfaces.
 
 Transport names describe implemented behavior; none claim JSON-RPC.
 
+`CommandRequest` also carries optional cooperative execution controls without
+changing the public C ABI. `CancellationToken` is thread-safe and is checked
+before transport selection, before direct dispatch after lock acquisition, and
+after the C ABI call. `ProgressSink` receives bounded stage updates for waiting,
+dispatch, response decoding, and completion. A positive timeout is mandatory;
+process transports additionally enforce it against the child process. Direct
+FLB execution remains synchronous, so cancellation requested during a native
+call is observed at the first safe boundary after that call returns.
+
 ## Canonical grouped routes
 
 The provider command registry uses allocator-backed geometric growth under an

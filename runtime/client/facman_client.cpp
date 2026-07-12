@@ -14,6 +14,16 @@
 namespace facman::client {
 namespace {
 
+bool cancelled(const CommandRequest& request) noexcept
+{
+    return request.cancellation && request.cancellation->cancellation_requested();
+}
+
+void progress(const CommandRequest& request, const char* stage, std::uint64_t completed, std::uint64_t total) noexcept
+{
+    if (request.progress) request.progress->report({stage, completed, total});
+}
+
 facman::core::Result<CommandResponse> failure(std::string code, std::string message, std::string path = {})
 {
     return facman::core::Result<CommandResponse>::failure(
@@ -102,7 +112,10 @@ DirectFlbTransport::~DirectFlbTransport()
 facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandRequest& request)
 {
     if (request.command.empty()) return failure("client_request_invalid", "command must not be empty");
+    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled before dispatch");
+    progress(request, "waiting_for_direct_transport", 0, 3);
     std::lock_guard<std::mutex> lock(mutex_);
+    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled while waiting for transport");
     if (context_ == nullptr) {
         return failure(
             "client_context_create_failed",
@@ -116,7 +129,9 @@ facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandR
     native_request.json_payload = view(request.json_payload);
     native_request.dry_run = request.dry_run ? 1 : 0;
     native_response.struct_size = sizeof(native_response);
+    progress(request, "executing_direct_transport", 1, 3);
     const int status = fl_command_client_execute_cabi_v1(context_, &native_request, &native_response);
+    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled during dispatch");
     std::string envelope;
     if (native_response.json_payload.data != nullptr) {
         envelope.assign(
@@ -124,7 +139,10 @@ facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandR
             native_response.json_payload.data + native_response.json_payload.size);
     }
     if (envelope.empty()) return failure("client_response_empty", "Factorio binding returned an empty response");
-    return decode_response(status, std::move(envelope));
+    progress(request, "decoding_response", 2, 3);
+    auto response = decode_response(status, std::move(envelope));
+    progress(request, "completed", 3, 3);
+    return response;
 }
 
 CliProcessTransport::CliProcessTransport(std::filesystem::path executable)
@@ -150,6 +168,8 @@ FacManClient::FacManClient(std::unique_ptr<Transport> transport) : transport_(st
 facman::core::Result<CommandResponse> FacManClient::execute(const CommandRequest& request)
 {
     if (!transport_) return failure("client_transport_missing", "FacMan client transport is not configured");
+    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled before transport selection");
+    if (request.timeout.count() <= 0) return failure("client_timeout_invalid", "command timeout must be positive");
     return transport_->execute(request);
 }
 

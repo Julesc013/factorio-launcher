@@ -9,16 +9,42 @@
 #include "flb/flb_api.h"
 
 #include <filesystem>
+#include <atomic>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>
 
 namespace facman::client {
 
+class CancellationToken {
+public:
+    void request_cancellation() noexcept { cancelled_.store(true, std::memory_order_release); }
+    bool cancellation_requested() const noexcept { return cancelled_.load(std::memory_order_acquire); }
+
+private:
+    std::atomic<bool> cancelled_ {false};
+};
+
+struct ProgressUpdate {
+    std::string stage;
+    std::uint64_t completed = 0;
+    std::uint64_t total = 0;
+};
+
+class ProgressSink {
+public:
+    virtual ~ProgressSink() = default;
+    virtual void report(const ProgressUpdate& update) noexcept = 0;
+};
+
 struct CommandRequest {
     std::string command;
     std::string json_payload = "{}";
     bool dry_run = true;
+    std::shared_ptr<CancellationToken> cancellation;
+    std::shared_ptr<ProgressSink> progress;
+    std::chrono::milliseconds timeout {std::chrono::minutes(5)};
 };
 
 struct CommandResponse {
