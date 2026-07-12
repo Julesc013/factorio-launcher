@@ -3,6 +3,7 @@
 
 #include "flb_factorio_launch_plan.h"
 
+#include "fl_json.h"
 #include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
 
@@ -27,6 +28,7 @@
 namespace facman::factorio::launch {
 
 namespace fs = std::filesystem;
+namespace json = facman::core::json;
 
 namespace {
 
@@ -99,61 +101,24 @@ std::string trim(const std::string& value)
     return value.substr(first, last - first);
 }
 
-std::string json_escape(const std::string& value)
+json::ArrayBuilder string_array_builder(const std::vector<std::string>& values)
 {
-    std::ostringstream out;
-    for (char ch : value) {
-        switch (ch) {
-        case '\\': out << "\\\\"; break;
-        case '"': out << "\\\""; break;
-        case '\b': out << "\\b"; break;
-        case '\f': out << "\\f"; break;
-        case '\n': out << "\\n"; break;
-        case '\r': out << "\\r"; break;
-        case '\t': out << "\\t"; break;
-        default:
-            if (static_cast<unsigned char>(ch) < 0x20) {
-                const char* hex = "0123456789abcdef";
-                out << "\\u00" << hex[(ch >> 4) & 0x0f] << hex[ch & 0x0f];
-            } else {
-                out << ch;
-            }
-            break;
-        }
-    }
-    return out.str();
+    json::ArrayBuilder output;
+    for (const std::string& value : values) output.add_string(value);
+    return output;
 }
 
-std::string quote(const std::string& value)
+json::ObjectBuilder effective_config_builder(const EffectiveFactorioConfig& config)
 {
-    return "\"" + json_escape(value) + "\"";
-}
-
-std::string string_array_json(const std::vector<std::string>& values)
-{
-    std::ostringstream out;
-    out << "[";
-    for (std::size_t index = 0; index < values.size(); ++index) {
-        if (index != 0) out << ", ";
-        out << quote(values[index]);
-    }
-    out << "]";
-    return out.str();
-}
-
-std::string effective_config_json(const EffectiveFactorioConfig& config)
-{
-    std::ostringstream out;
-    out << "{";
-    out << "\"config_file\":" << quote(path_string(config.config_file)) << ",";
-    out << "\"read_data\":" << quote(path_string(config.read_data)) << ",";
-    out << "\"write_data\":" << quote(path_string(config.write_data)) << ",";
-    out << "\"mod_root\":" << quote(path_string(config.mod_root)) << ",";
-    out << "\"save_root\":" << quote(path_string(config.save_root)) << ",";
-    out << "\"script_output_root\":" << quote(path_string(config.script_output_root)) << ",";
-    out << "\"log_root\":" << quote(path_string(config.log_root));
-    out << "}";
-    return out.str();
+    json::ObjectBuilder output;
+    output.add_string("config_file", path_string(config.config_file));
+    output.add_string("read_data", path_string(config.read_data));
+    output.add_string("write_data", path_string(config.write_data));
+    output.add_string("mod_root", path_string(config.mod_root));
+    output.add_string("save_root", path_string(config.save_root));
+    output.add_string("script_output_root", path_string(config.script_output_root));
+    output.add_string("log_root", path_string(config.log_root));
+    return output;
 }
 
 void add_problem_if_missing_file(
@@ -284,38 +249,46 @@ std::string read_small_file(const fs::path& path, std::size_t limit)
     return value.size() <= limit ? value : "";
 }
 
-std::string json_string_value(const std::string& text, const std::string& key)
-{
-    std::string marker = "\"" + key + "\"";
-    std::size_t position = text.find(marker);
-    if (position == std::string::npos) return "";
-    position = text.find(':', position + marker.size());
-    if (position == std::string::npos) return "";
-    position = text.find('"', position + 1);
-    if (position == std::string::npos) return "";
-    std::size_t end = text.find('"', position + 1);
-    return end == std::string::npos ? "" : text.substr(position + 1, end - position - 1);
-}
+struct RunLockMetadata {
+    std::string schema;
+    std::string token;
+    std::string identity;
+    std::uint64_t process_id = 0;
+    std::uint64_t created_unix = 0;
+    bool valid = false;
+};
 
-std::uint64_t json_integer_value(const std::string& text, const std::string& key)
+RunLockMetadata decode_run_lock(const std::string& text)
 {
-    std::string marker = "\"" + key + "\"";
-    std::size_t position = text.find(marker);
-    if (position == std::string::npos) return 0;
-    position = text.find(':', position + marker.size());
-    if (position == std::string::npos) return 0;
-    ++position;
-    while (position < text.size() && (text[position] == ' ' || text[position] == '\t')) {
-        ++position;
+    RunLockMetadata output;
+    json::Limits limits;
+    limits.maximum_bytes = 4096;
+    limits.maximum_depth = 8;
+    limits.maximum_nodes = 32;
+    auto document = json::parse(text, limits);
+    if (!document || !document.value().is_object()) return output;
+    const json::Value* schema = document.value().find("schema");
+    const json::Value* token = document.value().find("token");
+    const json::Value* identity = document.value().find("identity");
+    const json::Value* process_id = document.value().find("process_id");
+    const json::Value* created_unix = document.value().find("created_unix");
+    if (schema == nullptr || token == nullptr || process_id == nullptr || created_unix == nullptr) return output;
+    auto schema_text = schema->string_value();
+    auto token_text = token->string_value();
+    auto process_value = process_id->unsigned_integer_value();
+    auto created_value = created_unix->unsigned_integer_value();
+    if (!schema_text || !token_text || !process_value || !created_value) return output;
+    output.schema = schema_text.take_value();
+    output.token = token_text.take_value();
+    if (identity != nullptr) {
+        auto identity_text = identity->string_value();
+        if (!identity_text) return RunLockMetadata {};
+        output.identity = identity_text.take_value();
     }
-    std::uint64_t value = 0;
-    bool found = false;
-    while (position < text.size() && text[position] >= '0' && text[position] <= '9') {
-        found = true;
-        value = value * 10 + static_cast<std::uint64_t>(text[position] - '0');
-        ++position;
-    }
-    return found ? value : 0;
+    output.process_id = process_value.value();
+    output.created_unix = created_value.value();
+    output.valid = true;
+    return output;
 }
 
 } // namespace
@@ -472,26 +445,26 @@ LaunchPlanResult build_launch_plan(
 
 std::string launch_plan_json(const LaunchPlanResult& plan)
 {
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.launch_plan.v1\",\n";
-    out << "  \"command\": " << quote(plan.command) << ",\n";
-    out << "  \"instance_id\": " << quote(plan.instance_id) << ",\n";
-    out << "  \"profile_id\": " << quote(plan.profile_id) << ",\n";
-    out << "  \"mode\": " << quote(plan.mode) << ",\n";
-    out << "  \"executable\": " << quote(path_string(plan.executable)) << ",\n";
-    out << "  \"app_dir\": " << quote(path_string(plan.app_dir)) << ",\n";
-    out << "  \"args\": " << string_array_json(plan.args) << ",\n";
-    out << "  \"preflight\": " << string_array_json(plan.preflight) << ",\n";
-    out << "  \"postrun\": " << string_array_json(plan.postrun) << ",\n";
-    out << "  \"command_line\": " << quote(plan.command_line) << ",\n";
-    out << "  \"effective_config\": " << effective_config_json(plan.effective_config) << ",\n";
-    out << "  \"dry_run_default\": " << (plan.dry_run_default ? "true" : "false") << ",\n";
-    out << "  \"execution\": \"not_started\",\n";
-    out << "  \"ownership\": " << quote(plan.ownership) << ",\n";
-    out << "  \"notes\": [\"Launch execution requires --execute.\"]\n";
-    out << "}\n";
-    return out.str();
+    json::ArrayBuilder notes;
+    notes.add_string("Launch execution requires --execute.");
+    json::ObjectBuilder document;
+    document.add_string("schema", "factorio.launch_plan.v1");
+    document.add_string("command", plan.command);
+    document.add_string("instance_id", plan.instance_id);
+    document.add_string("profile_id", plan.profile_id);
+    document.add_string("mode", plan.mode);
+    document.add_string("executable", path_string(plan.executable));
+    document.add_string("app_dir", path_string(plan.app_dir));
+    document.add_array("args", string_array_builder(plan.args));
+    document.add_array("preflight", string_array_builder(plan.preflight));
+    document.add_array("postrun", string_array_builder(plan.postrun));
+    document.add_string("command_line", plan.command_line);
+    document.add_object("effective_config", effective_config_builder(plan.effective_config));
+    document.add_bool("dry_run_default", plan.dry_run_default);
+    document.add_string("execution", "not_started");
+    document.add_string("ownership", plan.ownership);
+    document.add_array("notes", notes);
+    return document.serialize() + "\n";
 }
 
 std::string build_launch_plan_json(
@@ -562,19 +535,17 @@ LaunchPreflightResult preflight_launch(
 
 std::string launch_preflight_json(const LaunchPreflightResult& preflight)
 {
-    std::ostringstream out;
-    out << "{\n";
-    out << "  \"schema\": \"factorio.launch_preflight.v1\",\n";
-    out << "  \"command\": " << quote(preflight.command) << ",\n";
-    out << "  \"instance_id\": " << quote(preflight.instance_id) << ",\n";
-    out << "  \"status\": " << quote(preflight.ok ? "pass" : "refused") << ",\n";
-    out << "  \"executable\": " << quote(path_string(preflight.executable)) << ",\n";
-    out << "  \"args\": " << string_array_json(preflight.args) << ",\n";
-    out << "  \"effective_config\": " << effective_config_json(preflight.effective_config) << ",\n";
-    out << "  \"problems\": " << string_array_json(preflight.problems) << ",\n";
-    out << "  \"started\": false\n";
-    out << "}\n";
-    return out.str();
+    json::ObjectBuilder document;
+    document.add_string("schema", "factorio.launch_preflight.v1");
+    document.add_string("command", preflight.command);
+    document.add_string("instance_id", preflight.instance_id);
+    document.add_string("status", preflight.ok ? "pass" : "refused");
+    document.add_string("executable", path_string(preflight.executable));
+    document.add_array("args", string_array_builder(preflight.args));
+    document.add_object("effective_config", effective_config_builder(preflight.effective_config));
+    document.add_array("problems", string_array_builder(preflight.problems));
+    document.add_bool("started", false);
+    return document.serialize() + "\n";
 }
 
 InstanceRunLockResult acquire_instance_run_lock(
@@ -621,19 +592,16 @@ InstanceRunLockResult acquire_instance_run_lock(
             result.detail = open_result.detail;
             return result;
         }
-        std::string schema = json_string_value(existing, "schema");
-        std::string token = json_string_value(existing, "token");
-        std::uint64_t process_id = json_integer_value(existing, "process_id");
-        std::uint64_t created = json_integer_value(existing, "created_unix");
-        if (schema != "facman.instance_run_lock.v1" ||
-            token.empty() || process_id == 0 || created == 0) {
+        const RunLockMetadata metadata = decode_run_lock(existing);
+        if (!metadata.valid || metadata.schema != "facman.instance_run_lock.v1" ||
+            metadata.token.empty() || metadata.process_id == 0 || metadata.created_unix == 0) {
             result.code = "run_lock_malformed";
             result.detail = "existing run lock has invalid ownership metadata";
             return result;
         }
         std::uint64_t now = current_unix_seconds();
-        std::uint64_t age = now >= created ? now - created : 0;
-        const bool owner_is_alive = process_is_alive(process_id);
+        std::uint64_t age = now >= metadata.created_unix ? now - metadata.created_unix : 0;
+        const bool owner_is_alive = process_is_alive(metadata.process_id);
         if (owner_is_alive || age < stale_after_seconds) {
             result.code = "run_lock_contended";
             result.detail = owner_is_alive
@@ -666,14 +634,14 @@ InstanceRunLockResult acquire_instance_run_lock(
         std::chrono::steady_clock::now().time_since_epoch().count());
     std::string token = std::to_string(process_id) + "-" +
         std::to_string(created) + "-" + std::to_string(tick);
-    std::ostringstream content;
-    content << "{\"schema\":\"facman.instance_run_lock.v1\",";
-    content << "\"process_id\":" << process_id << ",";
-    content << "\"created_unix\":" << created << ",";
-    content << "\"token\":" << quote(token) << ",";
-    content << "\"identity\":" << quote(held->identity_text()) << "}\n";
+    json::ObjectBuilder lock_document;
+    lock_document.add_string("schema", "facman.instance_run_lock.v1");
+    (void)lock_document.add_unsigned_integer("process_id", process_id);
+    (void)lock_document.add_unsigned_integer("created_unix", created);
+    lock_document.add_string("token", token);
+    lock_document.add_string("identity", held->identity_text());
     std::string write_detail;
-    if (!held->write_text(content.str(), write_detail)) {
+    if (!held->write_text(lock_document.serialize() + "\n", write_detail)) {
         std::string ignored;
         (void)held->remove_exact(ignored);
         result.code = "run_lock_unavailable";
@@ -700,11 +668,12 @@ bool release_instance_run_lock(InstanceRunLock& lock, std::string& detail)
     if (!lock.stable_handle->read_text(4096, existing, detail)) {
         return false;
     }
-    if (json_string_value(existing, "token") != lock.token) {
+    const RunLockMetadata metadata = decode_run_lock(existing);
+    if (!metadata.valid || metadata.token != lock.token) {
         detail = "run lock ownership token changed";
         return false;
     }
-    if (json_string_value(existing, "identity") != lock.identity) {
+    if (metadata.identity != lock.identity) {
         detail = "run lock recorded identity changed";
         return false;
     }
