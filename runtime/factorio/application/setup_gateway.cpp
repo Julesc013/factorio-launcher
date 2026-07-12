@@ -74,10 +74,13 @@ facman::core::Result<std::string> execute_setup(const std::string& command, cons
     }
     usk_context_destroy_v1(context);
     if (status != USK_STATUS_OK) {
-        return facman::core::Result<std::string>::failure({
+        facman::core::Error error {
             "setup_provider_refused",
             "Universal Setup refused the request",
-            std::move(output)});
+            "",
+            facman::core::OutcomeKind::refused};
+        error.detail = std::move(output);
+        return facman::core::Result<std::string>::failure(std::move(error));
     }
     return facman::core::Result<std::string>::success(std::move(output));
 }
@@ -109,8 +112,13 @@ public:
                     const std::string code = string_field(*provider_error, "code");
                     const std::string message = string_field(*provider_error, "message");
                     if (!code.empty() && !message.empty()) {
-                        return facman::core::Result<PackageVerifyResult>::failure(
-                            {code, message, response.error().detail});
+                        facman::core::Error error {
+                            code,
+                            message,
+                            "",
+                            facman::core::OutcomeKind::refused};
+                        error.detail = response.error().detail;
+                        return facman::core::Result<PackageVerifyResult>::failure(std::move(error));
                     }
                 }
             }
