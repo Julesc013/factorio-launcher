@@ -166,7 +166,7 @@ int prove_compatibility_corpus(const fs::path& root)
         if (!workspace || !workspace.value().legacy_local_identity || !loaded_install ||
             !loaded_install.value().legacy_path || !loaded_instance || !loaded_instance.value().legacy_path) return 42;
     }
-    for (const std::string& release : {"r3.3", "r3.4"}) {
+    for (const std::string release : {"r3.3", "r3.4"}) {
         WorkspaceLayout layout(root / release);
         if (!write_file(layout.manifest(), read_file(corpus / release / "workspace.v1.json"))) return 43;
         const std::string transaction_id = release == "r3.3" ? "tx-r33" : "tx-r34";
