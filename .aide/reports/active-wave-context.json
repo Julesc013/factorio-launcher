@@ -1,10 +1,70 @@
 {
-  "active_workunit": null,
-  "open_blockers": [
-    "H1 real Factorio isolation has no reviewed operator verdict; this blocks only H1-H3.",
-    "Release, signing, publication and Safe beta promotion are outside this wave."
+  "active_workunit": {
+    "affected_contracts": [
+      "release/index/workspace_lock.v1.toml"
+    ],
+    "affected_targets": [
+      "project-state",
+      "repro-workspace-smoke",
+      "aide-lite"
+    ],
+    "affected_tests": [
+      "tests/test_aide_compaction.py",
+      "tests/test_repro_workspace_smoke.py"
+    ],
+    "allowed_paths": [
+      ".aide/",
+      "docs/",
+      "tests/",
+      "tools/"
+    ],
+    "blockers": [],
+    "claim_impacts": [
+      "r3.7-baseline-truth"
+    ],
+    "dependencies": [],
+    "forbidden_paths": [
+      "runtime execution code",
+      "evidence branch mutation"
+    ],
+    "id": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01",
+    "last_green_commit": "47bc5eff9a22abddb70824acb68cddeaf46042a8",
+    "provider_revisions": {},
+    "status": "active",
+    "stop_conditions": [
+      "revision mismatch",
+      "provider mismatch",
+      "clean baseline failure"
+    ],
+    "title": "Preserve R3.6 authority and establish R3.7 truth"
+  },
+  "affected_contracts": [
+    "release/index/workspace_lock.v1.toml"
   ],
+  "affected_tests": [
+    "tests/test_aide_compaction.py",
+    "tests/test_repro_workspace_smoke.py"
+  ],
+  "architecture_invariants": [
+    "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
+    "Universal Setup owns installed-state mutation and Universal Launcher owns product-neutral orchestration.",
+    "Frontends render generated contracts and contain no Factorio backend decisions.",
+    "AIDE makes no provider, model, Gateway, or product-network call.",
+    "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
+    "Archive and retention operations are reversible and never hard-delete managed content."
+  ],
+  "current_exact_revision": "47bc5eff9a22abddb70824acb68cddeaf46042a8",
+  "direct_dependency_summaries": [],
+  "history_included": false,
+  "open_blockers": [
+    "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+    "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+  ],
+  "provider_revisions": {
+    "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+    "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+  },
   "schema_version": "aide.wave-context.v1",
-  "wave_id": "facman-r3.6",
-  "wave_status": "complete"
+  "wave_id": "facman-r3.7",
+  "wave_status": "active"
 }

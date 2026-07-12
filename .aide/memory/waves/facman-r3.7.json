@@ -1,0 +1,536 @@
+{
+  "architecture_invariants": [
+    "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
+    "Universal Setup owns installed-state mutation and Universal Launcher owns product-neutral orchestration.",
+    "Frontends render generated contracts and contain no Factorio backend decisions.",
+    "AIDE makes no provider, model, Gateway, or product-network call.",
+    "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
+    "Archive and retention operations are reversible and never hard-delete managed content."
+  ],
+  "blockers": [
+    "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+    "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+  ],
+  "checkpoints": [],
+  "created_at": "2026-07-12T00:00:00Z",
+  "current_exact_revision": "47bc5eff9a22abddb70824acb68cddeaf46042a8",
+  "provider_revisions": {
+    "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+    "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+  },
+  "schema_version": "aide.wave.v1",
+  "status": "active",
+  "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
+  "updated_at": "2026-07-12T13:24:56Z",
+  "validation_cache": {
+    "advisory_only": true,
+    "entries": []
+  },
+  "wave_id": "facman-r3.7",
+  "workunits": [
+    {
+      "affected_contracts": [
+        "release/index/workspace_lock.v1.toml"
+      ],
+      "affected_targets": [
+        "project-state",
+        "repro-workspace-smoke",
+        "aide-lite"
+      ],
+      "affected_tests": [
+        "tests/test_aide_compaction.py",
+        "tests/test_repro_workspace_smoke.py"
+      ],
+      "allowed_paths": [
+        ".aide/",
+        "docs/",
+        "tests/",
+        "tools/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "r3.7-baseline-truth"
+      ],
+      "dependencies": [],
+      "forbidden_paths": [
+        "runtime execution code",
+        "evidence branch mutation"
+      ],
+      "id": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01",
+      "last_green_commit": "47bc5eff9a22abddb70824acb68cddeaf46042a8",
+      "provider_revisions": {},
+      "status": "active",
+      "stop_conditions": [
+        "revision mismatch",
+        "provider mismatch",
+        "clean baseline failure"
+      ],
+      "title": "Preserve R3.6 authority and establish R3.7 truth"
+    },
+    {
+      "affected_contracts": [
+        "facman.preferences.v1",
+        "contracts/command/"
+      ],
+      "affected_targets": [
+        "facman_client_static",
+        "facman_cli",
+        "facman_tui"
+      ],
+      "affected_tests": [
+        "tests/test_workspace_preferences.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "apps/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "shared-workspace-and-preferences-truth"
+      ],
+      "dependencies": [
+        "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+      ],
+      "forbidden_paths": [
+        "credentials",
+        "shell commands",
+        "setup mutation"
+      ],
+      "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "legacy workspace becomes unreadable",
+        "a secret field is accepted"
+      ],
+      "title": "Add shared non-secret preferences and workspace resolution"
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/instance/",
+        "contracts/command/instances.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static",
+        "facman_client_static"
+      ],
+      "affected_tests": [
+        "tests/test_instance_lifecycle.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "reversible-instance-lifecycle"
+      ],
+      "dependencies": [
+        "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      ],
+      "forbidden_paths": [
+        "instances.purge",
+        "mutable instance IDs",
+        "unowned deletion"
+      ],
+      "id": "FACMAN-INSTANCE-LIFECYCLE-02",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "no-clobber cannot be preserved",
+        "recovery is uncertain"
+      ],
+      "title": "Implement reversible instance inspection and lifecycle"
+    },
+    {
+      "affected_contracts": [
+        "factorio.instance_snapshot.v1",
+        "contracts/command/snapshots.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static",
+        "facman_client_static"
+      ],
+      "affected_tests": [
+        "tests/test_instance_snapshots.py",
+        "tests/test_archive_core.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "deterministic-secret-safe-snapshots"
+      ],
+      "dependencies": [
+        "FACMAN-INSTANCE-LIFECYCLE-02"
+      ],
+      "forbidden_paths": [
+        "secret-bearing snapshots",
+        "machine-local paths",
+        "permanent deletion"
+      ],
+      "id": "FACMAN-INSTANCE-SNAPSHOT-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "self-verification fails",
+        "secret exclusion cannot fail closed"
+      ],
+      "title": "Implement deterministic portable instance snapshots"
+    },
+    {
+      "affected_contracts": [
+        "factorio.instance_template.v1",
+        "factorio.launch_profile.v1"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static",
+        "facman_client_static"
+      ],
+      "affected_tests": [
+        "tests/test_profiles_templates.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "content/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "portable-safe-customization"
+      ],
+      "dependencies": [
+        "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      ],
+      "forbidden_paths": [
+        "scripts",
+        "arbitrary executables",
+        "reserved argument override"
+      ],
+      "id": "FACMAN-PROFILES-AND-TEMPLATES-02",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "customization gains execution authority",
+        "vanilla instances break"
+      ],
+      "title": "Implement declarative templates and launch profiles"
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/mod/",
+        "contracts/command/mods.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static"
+      ],
+      "affected_tests": [
+        "tests/test_local_mod_inventory.py",
+        "tests/test_modzip_depth.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "complete-managed-local-mod-inventory"
+      ],
+      "dependencies": [
+        "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01"
+      ],
+      "forbidden_paths": [
+        "Mod Portal access",
+        "arbitrary scans",
+        "source mutation"
+      ],
+      "id": "FACMAN-LOCAL-MOD-INVENTORY-02",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "stable reads fail",
+        "archive budgets are bypassed"
+      ],
+      "title": "Index bounded local mod inventory"
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/modset/",
+        "contracts/command/modsets.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static"
+      ],
+      "affected_tests": [
+        "tests/test_local_modset_solver.py",
+        "tests/fuzz/"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "deterministic-bounded-local-solver",
+        "transactional-modset-rollback"
+      ],
+      "dependencies": [
+        "FACMAN-LOCAL-MOD-INVENTORY-02"
+      ],
+      "forbidden_paths": [
+        "network fetch",
+        "unbounded backtracking",
+        "external drift overwrite"
+      ],
+      "id": "FACMAN-LOCAL-MODSET-SOLVER-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "a budget can be exceeded",
+        "same inputs differ"
+      ],
+      "title": "Implement deterministic bounded local dependency planning"
+    },
+    {
+      "affected_contracts": [
+        "factorio.save_ref.v1",
+        "contracts/command/saves.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static"
+      ],
+      "affected_tests": [
+        "tests/test_save_index_retention.py",
+        "tests/test_save_transfer.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "bounded-structural-save-intelligence"
+      ],
+      "dependencies": [
+        "FACMAN-INSTANCE-LIFECYCLE-02"
+      ],
+      "forbidden_paths": [
+        "save mutation",
+        "deep save claims",
+        "permanent deletion"
+      ],
+      "id": "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "save drift is accepted",
+        "retention is irreversible"
+      ],
+      "title": "Implement structural save intelligence and reversible retention"
+    },
+    {
+      "affected_contracts": [
+        "factorio.server_profile.v2",
+        "contracts/command/servers.*"
+      ],
+      "affected_targets": [
+        "flb_factorio_application_static"
+      ],
+      "affected_tests": [
+        "tests/test_server_planning.py"
+      ],
+      "allowed_paths": [
+        "runtime/",
+        "contracts/",
+        "tests/",
+        "tools/",
+        "docs/",
+        "examples/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "functional-non-executing-server-planning"
+      ],
+      "dependencies": [
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02"
+      ],
+      "forbidden_paths": [
+        "server execution",
+        "network sockets",
+        "RCON",
+        "plaintext credentials"
+      ],
+      "id": "FACMAN-SERVER-PLAN-02",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "a socket opens",
+        "a process starts",
+        "secrets enter exports"
+      ],
+      "title": "Implement reproducible headless server configuration planning"
+    },
+    {
+      "affected_contracts": [
+        "contracts/generated-index/command_catalog.v2.json"
+      ],
+      "affected_targets": [
+        "facman_tui",
+        "FacMan.WinForms",
+        "FacMan.AppKit"
+      ],
+      "affected_tests": [
+        "tests/test_tui_product.py",
+        "tests/test_frontend_contract.py"
+      ],
+      "allowed_paths": [
+        "apps/",
+        "runtime/core/generated/",
+        "tools/codegen/",
+        "contracts/",
+        "tests/",
+        "docs/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "guided-operational-ux",
+        "generated-frontend-parity"
+      ],
+      "dependencies": [
+        "FACMAN-INSTANCE-SNAPSHOT-01",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SERVER-PLAN-02"
+      ],
+      "forbidden_paths": [
+        "frontend backend logic",
+        "secret history",
+        "daemon promotion"
+      ],
+      "id": "FACMAN-OPERATIONAL-UX-03",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "frontend invents grammar",
+        "accessibility regresses"
+      ],
+      "title": "Generate guided frontend forms and operational visualizations"
+    },
+    {
+      "affected_contracts": [
+        "contracts/schema/",
+        "contracts/generated-index/command_catalog.v2.json"
+      ],
+      "affected_targets": [
+        "all non-execution clients"
+      ],
+      "affected_tests": [
+        "tests/test_r37_lifecycle_journey.py",
+        "tests/package_runtime/"
+      ],
+      "allowed_paths": [
+        "tests/",
+        "tools/",
+        "docs/quality/",
+        "release/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "r3.7-cross-transport-lifecycle-proof"
+      ],
+      "dependencies": [
+        "FACMAN-OPERATIONAL-UX-03"
+      ],
+      "forbidden_paths": [
+        "real Factorio execution",
+        "fixture mutation",
+        "unbounded fixtures"
+      ],
+      "id": "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "transport semantics diverge",
+        "a refusal must weaken"
+      ],
+      "title": "Prove the reversible lifecycle across transports and packages"
+    },
+    {
+      "affected_contracts": [
+        "contracts/",
+        "release/index/workspace_lock.v1.toml"
+      ],
+      "affected_targets": [
+        "all"
+      ],
+      "affected_tests": [
+        "py -3 tools/dev.py verify-all",
+        "py -3 .aide/scripts/aide_lite.py test"
+      ],
+      "allowed_paths": [
+        ".aide/",
+        "docs/",
+        "release/",
+        "tests/",
+        "tools/",
+        ".github/"
+      ],
+      "blockers": [],
+      "claim_impacts": [
+        "r3.7-instance-content-lifecycle"
+      ],
+      "dependencies": [
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01"
+      ],
+      "forbidden_paths": [
+        "run.execute promotion",
+        "human verdict automation",
+        "publication"
+      ],
+      "id": "FACMAN-R3.7-CLOSEOUT-01",
+      "last_green_commit": null,
+      "provider_revisions": {},
+      "status": "pending",
+      "stop_conditions": [
+        "mandatory proof is not green",
+        "evidence is stale"
+      ],
+      "title": "Close R3.7 with exact cross-platform evidence"
+    }
+  ]
+}

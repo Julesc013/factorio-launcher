@@ -13,6 +13,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v1.json"
 MARKDOWN_PATH = ROOT / ".aide" / "memory" / "project-state.md"
+R36_BASELINE_REVISION = "29cf22fa15250698b7587a9868737c10f3bcc749"
+R36_IMPLEMENTATION_PROOF_REVISION = "fc8423572e9c055991558f8a4e7cbbc95e0c4a24"
 
 
 def provider_pins() -> dict[str, dict[str, str]]:
@@ -90,11 +92,19 @@ def collect() -> dict[str, Any]:
             "universal_launcher": pins["universal_launcher"]["revision"],
             "universal_setup": pins["universal_setup"]["revision"],
         },
-        "current_phase": "r3.6-product-readiness-complete",
-        "current_checkpoint": "r3.6-product-readiness",
+        "implementation_revision": "HEAD",
+        "integration_revision": R36_BASELINE_REVISION,
+        "evidence_revision": R36_BASELINE_REVISION,
+        "provider_revisions": {
+            "universal_launcher": pins["universal_launcher"]["revision"],
+            "universal_setup": pins["universal_setup"]["revision"],
+        },
+        "current_phase": "r3.7-instance-content-lifecycle-active",
+        "current_checkpoint": "r3.7-baseline",
+        "active_wave": {"id": "facman-r3.7", "status": "active"},
         "completed_wave": {
             "id": "facman-r3.6",
-            "revision": "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
+            "revision": R36_IMPLEMENTATION_PROOF_REVISION,
             "status": "complete",
         },
         "command_law": command_law(),
@@ -114,25 +124,22 @@ def collect() -> dict[str, Any]:
         "claim_levels": claim_levels(),
         "provider_pins": pins,
         "target_proof_platforms": target_platforms(),
-        "current_artifacts": [
-            "build/Release/facman.exe (local unsigned build, when present)",
-            "release/profiles/windows_portable_cli_x64/profile.toml",
-            "release/profiles/linux_portable_cli_x64/profile.toml",
-            "release/profiles/macos_portable_cli_x64/profile.toml",
-            "release/profiles/windows_portable_tui_x64/profile.toml",
-            "release/profiles/linux_portable_tui_x64/profile.toml",
-            "release/profiles/macos_portable_tui_x64/profile.toml",
-            "docs/quality/benchmarks/baseline.v1.json",
-            ".aide/history/r3.3/index.json",
-            ".aide/history/r3.4/index.json",
-            ".aide/history/r3.5/index.json",
-            ".aide/history/r3.6/index.json",
-            "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip sha256:fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b",
-            "facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz sha256:f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
-            "facman-0.1.0-dev.contract-macos-cli-x64-portable.tar.gz sha256:ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706",
-            "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip sha256:2526a5f5d085087301f66d2855a1942d01457cb598c1bf41704388948295b595",
-            "facman-0.1.0-dev.contract-windows-tui-x64-portable.zip sha256:8b87f28e098096dfd6672b1d9701bd227bdfaf99d0d8f5ade9eacb9021ddd3a1",
-        ],
+        "current_artifacts": artifact_records(),
+        "baseline_evidence": {
+            "command": "py -3 tools/repro_workspace_smoke.py --require-clean --build --python py -3",
+            "result": "PASS",
+            "elapsed_seconds": 166.5,
+            "native_test_counts": {
+                "factorio_launcher": 19,
+                "universal_launcher": 1,
+                "universal_setup": 2,
+            },
+            "python_test_count": 275,
+            "python_elapsed_seconds": 141.9,
+            "benchmark": "advisory comparison PASS with no greater-than-25-percent warnings",
+            "proof_harness_repair_revision": "47bc5ef",
+            "initial_failure": "repro package proof did not bind its native build root or enable facman_tui",
+        },
         "known_blockers": [
             "Real Factorio isolation remains operator-only and has no human verdict.",
             "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
@@ -144,6 +151,57 @@ def collect() -> dict[str, Any]:
             "Focused affected tests do not replace the full promotion matrix.",
             "Human acceptance is never inferred from automated checks.",
         ],
+    }
+
+
+def artifact_records() -> list[dict[str, str]]:
+    return [
+        artifact(
+            "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
+            "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
+            "r3.5-zero-exception-productization",
+            "windows_portable_cli_x64",
+            "fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b",
+        ),
+        artifact(
+            "facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz",
+            "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
+            "r3.5-zero-exception-productization",
+            "linux_portable_cli_x64",
+            "f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
+        ),
+        artifact(
+            "facman-0.1.0-dev.contract-macos-cli-x64-portable.tar.gz",
+            "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
+            "r3.5-zero-exception-productization",
+            "macos_portable_cli_x64",
+            "ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706",
+        ),
+        artifact(
+            "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
+            R36_IMPLEMENTATION_PROOF_REVISION,
+            "r3.6-product-readiness",
+            "windows_portable_cli_x64",
+            "2526a5f5d085087301f66d2855a1942d01457cb598c1bf41704388948295b595",
+        ),
+        artifact(
+            "facman-0.1.0-dev.contract-windows-tui-x64-portable.zip",
+            R36_IMPLEMENTATION_PROOF_REVISION,
+            "r3.6-product-readiness",
+            "windows_portable_tui_x64",
+            "8b87f28e098096dfd6672b1d9701bd227bdfaf99d0d8f5ade9eacb9021ddd3a1",
+        ),
+    ]
+
+
+def artifact(name: str, revision: str, checkpoint: str, target: str, sha256: str) -> dict[str, str]:
+    return {
+        "artifact": name,
+        "revision": revision,
+        "checkpoint": checkpoint,
+        "target": target,
+        "sha256": sha256,
+        "authenticity": "not_proven_unsigned",
     }
 
 
@@ -159,7 +217,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"- phase: `{data['current_phase']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{active}`;",
-        "- FacMan revision: live `HEAD` (resolve with `git rev-parse HEAD`);",
+        f"- implementation revision: live `{data['implementation_revision']}` (resolve with `git rev-parse HEAD`);",
+        f"- integration revision: `{data['integration_revision']}`;",
+        f"- evidence revision: `{data['evidence_revision']}`;",
         f"- Universal Launcher pin: `{data['current_revisions']['universal_launcher']}`;",
         f"- Universal Setup pin: `{data['current_revisions']['universal_setup']}`.",
         "",
@@ -168,16 +228,27 @@ def markdown(data: dict[str, Any]) -> str:
         "deterministic guidance, generated desktop parity, a functional TUI, and a hermetic "
         "non-execution journey rather than another repository-wide redesign. The public C ABI "
         "remains experimental and all recorded packages remain unsigned and unpublished.",
+        "R3.7 now adds reversible local instance and content management without changing execution authority.",
         "",
         "## Frozen R3.6 proof",
         "",
         f"- completed wave revision: `{data['completed_wave']['revision']}`;",
         f"- command catalog digest: `{data['command_law']['catalog_digest']}`;",
         f"- machine protocol: {data['machine_protocol']['transport']} ({data['machine_protocol']['status']});",
+        f"- clean R3.7 baseline: {data['baseline_evidence']['result']} in {data['baseline_evidence']['elapsed_seconds']} seconds;",
+        "",
+        "## Structured artifact evidence",
+        "",
+    ]
+    lines.extend(
+        f"- `{item['artifact']}`: checkpoint `{item['checkpoint']}`, revision `{item['revision']}`, target `{item['target']}`, SHA-256 `{item['sha256']}`, authenticity `{item['authenticity']}`;"
+        for item in data["current_artifacts"]
+    )
+    lines.extend([
         "",
         "## Quarantined capabilities",
         "",
-    ]
+    ])
     lines.extend(f"- {value}" for value in data["quarantined_capabilities"])
     lines.extend(["", "## Proof platforms", ""])
     lines.extend(

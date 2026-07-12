@@ -1,8 +1,8 @@
 # AIDE Wave Status
 
-- wave_id: facman-r3.6
-- status: complete
-- current_exact_revision: c2ff6a9d25c74184173c37a540e381ad473134d5
+- wave_id: facman-r3.7
+- status: active
+- current_exact_revision: 47bc5eff9a22abddb70824acb68cddeaf46042a8
 - mode: report_only
 - task_execution: false
 - repair_execution: false
@@ -15,15 +15,18 @@
 
 ## WorkUnits
 
-- `FACMAN-R3.5-INTEGRATION-AND-TRUTH-CLOSEOUT-01`: closed (last_green_commit: bb5a3f476483c9ddb9f19ff52e0f66b4ffb6bdd8)
-- `FACMAN-R3.6-RESIDUAL-CORRECTNESS-01`: closed (last_green_commit: 1994a91b9eb4b02c29f4cc8ed84f7b0de84554a8)
-- `FACMAN-DISCOVERY-PROVIDERS-02`: closed (last_green_commit: 0cb1c1738b94a8d92c2ff4b509015fe1f80a528e)
-- `FACMAN-STATUS-ONBOARDING-EXPLAIN-01`: closed (last_green_commit: 0cb1c1738b94a8d92c2ff4b509015fe1f80a528e)
-- `FACMAN-FRONTEND-CATALOG-CONSUMPTION-02`: closed (last_green_commit: 49778550add01004b2b63d8326eafb8f07701ef4)
-- `FACMAN-TUI-MINIMUM-PRODUCT-01`: closed (last_green_commit: c2ff6a9d25c74184173c37a540e381ad473134d5)
-- `FACMAN-DESKTOP-FRONTEND-PARITY-02`: closed (last_green_commit: c2ff6a9d25c74184173c37a540e381ad473134d5)
-- `FACMAN-END-TO-END-USER-JOURNEY-01`: closed (last_green_commit: c2ff6a9d25c74184173c37a540e381ad473134d5)
-- `FACMAN-R3.6-PRODUCT-READINESS-CLOSEOUT-01`: closed (last_green_commit: c2ff6a9d25c74184173c37a540e381ad473134d5)
+- `FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01`: active (last_green_commit: 47bc5eff9a22abddb70824acb68cddeaf46042a8)
+- `FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01`: pending (last_green_commit: none)
+- `FACMAN-INSTANCE-LIFECYCLE-02`: pending (last_green_commit: none)
+- `FACMAN-INSTANCE-SNAPSHOT-01`: pending (last_green_commit: none)
+- `FACMAN-PROFILES-AND-TEMPLATES-02`: pending (last_green_commit: none)
+- `FACMAN-LOCAL-MOD-INVENTORY-02`: pending (last_green_commit: none)
+- `FACMAN-LOCAL-MODSET-SOLVER-01`: pending (last_green_commit: none)
+- `FACMAN-SAVE-INDEX-AND-RETENTION-02`: pending (last_green_commit: none)
+- `FACMAN-SERVER-PLAN-02`: pending (last_green_commit: none)
+- `FACMAN-OPERATIONAL-UX-03`: pending (last_green_commit: none)
+- `FACMAN-R3.7-END-TO-END-LIFECYCLE-01`: pending (last_green_commit: none)
+- `FACMAN-R3.7-CLOSEOUT-01`: pending (last_green_commit: none)
 
 ## Active Context
 
