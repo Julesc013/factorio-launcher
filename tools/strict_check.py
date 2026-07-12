@@ -59,6 +59,7 @@ from tools import (
     test_architecture_check,
     ui_accessibility_check,
     workspace_contract_check,
+    workspace_resolver_check,
     workspace_store_check,
     version_truth_check,
 )
@@ -84,6 +85,7 @@ def main() -> int:
         ("structure", structure_policy_check.main),
         ("strong-id", strong_id_check.main),
         ("workspace-contract", workspace_contract_check.main),
+        ("workspace-resolver", workspace_resolver_check.main),
         ("workspace-store", workspace_store_check.main),
         ("schema", schema_validate.main),
         ("security", security_policy_check.main),

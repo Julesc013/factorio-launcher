@@ -354,10 +354,7 @@ static NSString *FacManStatusText(FacManCommandStatus status);
     if ([cli length] > 0) {
         [self.cliPathField setStringValue:cli];
     }
-    NSString *workspace = [[[NSProcessInfo processInfo] environment] objectForKey:@"FACMAN_WORKSPACE"];
-    if ([workspace length] > 0) {
-        [self.workspaceField setStringValue:workspace];
-    }
+    [self.workspaceField setStringValue:@""];
 }
 
 - (void)renderText:(NSString *)text

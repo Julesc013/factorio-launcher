@@ -11,9 +11,9 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -25,30 +25,23 @@ constexpr std::size_t kTransportOutputLimit = 16U * 1024U * 1024U;
 
 struct Options {
     std::string workspace;
+    std::optional<facman::core::Error> workspace_error;
     std::vector<std::string> args;
 };
-
-std::string default_workspace()
-{
-    if (const char* value = std::getenv("FACMAN_WORKSPACE")) if (*value) return value;
-    if (const char* value = std::getenv("FACTORIO_LAUNCHER_WORKSPACE")) if (*value) return value;
-#ifdef _WIN32
-    const char* home = std::getenv("USERPROFILE");
-#else
-    const char* home = std::getenv("HOME");
-#endif
-    return home && *home ? std::string(home) + "/.facman/workspace" : "factorio_workspace";
-}
 
 Options parse_options(int argc, char** argv)
 {
     Options options;
-    options.workspace = default_workspace();
+    std::string explicit_workspace;
     for (int index = 1; index < argc; ++index) {
         const std::string value = argv[index];
-        if (value == "--workspace" && index + 1 < argc) options.workspace = argv[++index];
+        if (value == "--workspace" && index + 1 < argc) explicit_workspace = argv[++index];
         else options.args.push_back(value);
     }
+    auto resolution = facman::client::resolve_workspace(
+        facman::platform::path_from_utf8(explicit_workspace));
+    if (resolution) options.workspace = facman::platform::path_to_utf8(resolution.value().path);
+    else options.workspace_error = resolution.error();
     return options;
 }
 
@@ -88,6 +81,9 @@ facman::core::Result<facman::client::CommandResponse> call(
     const std::string& payload = "{}",
     bool dry_run = true)
 {
+    if (options.workspace_error) {
+        return facman::core::Result<facman::client::CommandResponse>::failure(*options.workspace_error);
+    }
     facman::client::FacManClient client(
         std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(options.workspace)));
     return client.execute({command, payload, dry_run});
@@ -256,6 +252,13 @@ int command_rpc(const Options& options)
         return transport_refusal(request_id, command, "transport_protocol_invalid", "Transport request does not satisfy protocol v1");
     }
     const std::string requested_workspace = json_string_field(request, "workspace");
+    if (requested_workspace.empty() && options.workspace_error) {
+        return transport_refusal(
+            request_id,
+            command,
+            options.workspace_error->code,
+            options.workspace_error->message);
+    }
     const std::string workspace = requested_workspace.empty() ? options.workspace : requested_workspace;
     facman::client::FacManClient client(
         std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(workspace)));

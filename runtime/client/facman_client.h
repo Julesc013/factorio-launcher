@@ -7,6 +7,7 @@
 #include "fl_result.h"
 #include "fl_json.h"
 #include "flb/flb_api.h"
+#include "workspace_resolver.h"
 
 #include <filesystem>
 #include <atomic>

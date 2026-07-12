@@ -8,7 +8,7 @@ target_include_directories(flaunch_client_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include)
 facman_apply_policies(flaunch_client_static)
 
-set(FACMAN_CLIENT_SOURCES facman_client.cpp)
+set(FACMAN_CLIENT_SOURCES facman_client.cpp workspace_resolver.cpp)
 if(WIN32)
   list(APPEND FACMAN_CLIENT_SOURCES facman_process_windows.cpp)
 else()

@@ -411,11 +411,7 @@ namespace FacMan.WinForms
                 cliPathBox.Text = envCli;
             }
 
-            string workspace = Environment.GetEnvironmentVariable("FACMAN_WORKSPACE");
-            if (!String.IsNullOrWhiteSpace(workspace))
-            {
-                workspaceBox.Text = workspace;
-            }
+            workspaceBox.Text = String.Empty;
         }
 
         private void RenderMessage(string text)

@@ -58,7 +58,7 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T13:29:35Z",
+  "updated_at": "2026-07-12T13:30:02Z",
   "validation_cache": {
     "advisory_only": true,
     "entries": [
@@ -198,7 +198,8 @@
       "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
       "last_green_commit": null,
       "provider_revisions": {},
-      "status": "pending",
+      "started_at": "2026-07-12T13:30:02Z",
+      "status": "active",
       "stop_conditions": [
         "legacy workspace becomes unreadable",
         "a secret field is accepted"

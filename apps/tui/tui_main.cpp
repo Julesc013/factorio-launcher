@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <string>
 
 #ifdef _WIN32
@@ -23,6 +24,7 @@ namespace {
 
 struct Options {
     std::string workspace;
+    std::optional<facman::core::Error> workspace_error;
     std::string command;
     std::string payload = "{}";
     bool structured = false;
@@ -51,25 +53,13 @@ bool terminal_output()
 #endif
 }
 
-std::string default_workspace()
-{
-    if (const char* value = std::getenv("FACMAN_WORKSPACE")) if (*value) return value;
-    if (const char* value = std::getenv("FACTORIO_LAUNCHER_WORKSPACE")) if (*value) return value;
-#ifdef _WIN32
-    const char* home = std::getenv("USERPROFILE");
-#else
-    const char* home = std::getenv("HOME");
-#endif
-    return home && *home ? std::string(home) + "/.facman/workspace" : "factorio_workspace";
-}
-
 Options parse(int argc, char** argv)
 {
     Options options;
-    options.workspace = default_workspace();
+    std::string explicit_workspace;
     for (int index = 1; index < argc; ++index) {
         const std::string value = argv[index];
-        if (value == "--workspace" && index + 1 < argc) options.workspace = argv[++index];
+        if (value == "--workspace" && index + 1 < argc) explicit_workspace = argv[++index];
         else if (value == "--command" && index + 1 < argc) options.command = argv[++index];
         else if (value == "--payload" && index + 1 < argc) options.payload = argv[++index];
         else if (value == "--json" || value == "--structured") options.structured = true;
@@ -84,6 +74,10 @@ Options parse(int argc, char** argv)
         else if (value == "--version") options.command = "__version__";
         else if (options.command.empty()) options.command = value;
     }
+    auto resolution = facman::client::resolve_workspace(
+        facman::platform::path_from_utf8(explicit_workspace));
+    if (resolution) options.workspace = facman::platform::path_to_utf8(resolution.value().path);
+    else options.workspace_error = resolution.error();
     return options;
 }
 
@@ -126,6 +120,11 @@ int main(int argc, char** argv)
     if (options.list || options.command == "command_graph.inspect") {
         facman::tui::render_catalog(std::cout, options.structured);
         return 0;
+    }
+    if (options.workspace_error) {
+        std::cerr << "Workspace resolution refused: " << options.workspace_error->code
+                  << ": " << options.workspace_error->message << '\n';
+        return 2;
     }
     facman::tui::CommandClient client(facman::platform::path_from_utf8(options.workspace));
     if (options.interactive || (options.command.empty() && terminal_input() && terminal_output()))
