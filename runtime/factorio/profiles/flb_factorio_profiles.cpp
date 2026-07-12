@@ -723,10 +723,11 @@ facman::core::Result<std::string> profiles_archive(const fs::path& workspace, co
         session.failed(error ? error.message() : session.detail());
         return failure("profile_archive_failed", error ? error.message() : session.detail(), target);
     }
-    auto status = facman::platform::commit_no_replace(source, target);
-    if (!status.ok() || !session.committed("profile_moved_to_owned_trash") || !session.complete()) {
-        session.failed(status.ok() ? session.detail() : status.detail);
-        return failure("profile_transaction_recovery_required", status.ok() ? session.detail() : status.detail, target,
+    std::string detail;
+    const bool moved = tx::StagedDirectoryCommit::commit(source, target, detail);
+    if (!moved || !session.committed("profile_moved_to_owned_trash") || !session.complete()) {
+        session.failed(moved ? session.detail() : detail);
+        return failure("profile_transaction_recovery_required", moved ? session.detail() : detail, target,
             facman::core::OutcomeKind::recovery_required, false);
     }
     json::ObjectBuilder output;
