@@ -1,0 +1,21 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <RootNamespace>FacMan.WinForms.Probe</RootNamespace>
+    <AssemblyName>FacMan.WinForms.Probe</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "><OutputPath>bin\Debug\</OutputPath></PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' "><OutputPath>bin\Release\</OutputPath></PropertyGroup>
+  <ItemGroup><Reference Include="System" /></ItemGroup>
+  <ItemGroup><Compile Include="Program.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\apps\gui\windows\winforms\FacMan.WinForms.csproj">
+      <Project>{2D394491-BBC2-4C0B-91B0-B4895C590901}</Project>
+      <Name>FacMan.WinForms</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
