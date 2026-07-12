@@ -11,9 +11,46 @@
     "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
     "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
   ],
-  "checkpoints": [],
+  "checkpoints": [
+    {
+      "blockers": [
+        "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",
+        "Signing, release, publication, credentials, networking, setup mutation, server execution, and RCON remain quarantined."
+      ],
+      "clean_status": true,
+      "commit_sha": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
+      "provider_pins": {
+        "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+        "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+      },
+      "remaining_workunits": [
+        "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
+        "FACMAN-INSTANCE-LIFECYCLE-02",
+        "FACMAN-INSTANCE-SNAPSHOT-01",
+        "FACMAN-PROFILES-AND-TEMPLATES-02",
+        "FACMAN-LOCAL-MOD-INVENTORY-02",
+        "FACMAN-LOCAL-MODSET-SOLVER-01",
+        "FACMAN-SAVE-INDEX-AND-RETENTION-02",
+        "FACMAN-SERVER-PLAN-02",
+        "FACMAN-OPERATIONAL-UX-03",
+        "FACMAN-R3.7-END-TO-END-LIFECYCLE-01",
+        "FACMAN-R3.7-CLOSEOUT-01"
+      ],
+      "source_fingerprint": "765d64a5c6904b4c4fc272a402406ba193202ee189f8a155263765a339c6cd98",
+      "test_fingerprints": {
+        "tests/test_aide_compaction.py": "0072c8ca7cee83a8ecb7cbb37040b5943e313c31ab345716727e35247be31ae1",
+        "tests/test_repro_workspace_smoke.py": "b301f29507631ceb1bd39053ec39cfb35423362ea5f0474a65995d92d96493f4"
+      },
+      "toolchain_identity": {
+        "implementation": "cpython",
+        "platform": "win32",
+        "python": "3.11.9"
+      },
+      "workunit": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+    }
+  ],
   "created_at": "2026-07-12T00:00:00Z",
-  "current_exact_revision": "47bc5eff9a22abddb70824acb68cddeaf46042a8",
+  "current_exact_revision": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
   "provider_revisions": {
     "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -21,10 +58,39 @@
   "schema_version": "aide.wave.v1",
   "status": "active",
   "title": "R3.7 instance lifecycle, local content intelligence, and operational UX",
-  "updated_at": "2026-07-12T13:24:56Z",
+  "updated_at": "2026-07-12T13:29:35Z",
   "validation_cache": {
     "advisory_only": true,
-    "entries": []
+    "entries": [
+      {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T13:29:34Z",
+        "result": "PASS",
+        "source_fingerprint": "765d64a5c6904b4c4fc272a402406ba193202ee189f8a155263765a339c6cd98",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_aide_compaction.py": "0072c8ca7cee83a8ecb7cbb37040b5943e313c31ab345716727e35247be31ae1",
+          "tests/test_repro_workspace_smoke.py": "b301f29507631ceb1bd39053ec39cfb35423362ea5f0474a65995d92d96493f4"
+        },
+        "test_results": {
+          "aide_lite": "PASS",
+          "benchmark_advisory": "PASS",
+          "clean_three_repo_baseline": "PASS",
+          "python_275": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        },
+        "workunit": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+      }
+    ]
   },
   "wave_id": "facman-r3.7",
   "workunits": [
@@ -51,21 +117,50 @@
       "claim_impacts": [
         "r3.7-baseline-truth"
       ],
+      "clean_status": true,
+      "closed_at": "2026-07-12T13:29:35Z",
       "dependencies": [],
       "forbidden_paths": [
         "runtime execution code",
         "evidence branch mutation"
       ],
       "id": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01",
-      "last_green_commit": "47bc5eff9a22abddb70824acb68cddeaf46042a8",
+      "last_green_commit": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
       "provider_revisions": {},
-      "status": "active",
+      "status": "closed",
       "stop_conditions": [
         "revision mismatch",
         "provider mismatch",
         "clean baseline failure"
       ],
-      "title": "Preserve R3.6 authority and establish R3.7 truth"
+      "title": "Preserve R3.6 authority and establish R3.7 truth",
+      "verification": {
+        "promotion_eligible": false,
+        "provider_revisions": {
+          "universal_launcher_kit": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+          "universal_setup_kit": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+        },
+        "recorded_at": "2026-07-12T13:29:34Z",
+        "result": "PASS",
+        "source_fingerprint": "765d64a5c6904b4c4fc272a402406ba193202ee189f8a155263765a339c6cd98",
+        "target_runner_evidence_inferred": false,
+        "test_fingerprints": {
+          "tests/test_aide_compaction.py": "0072c8ca7cee83a8ecb7cbb37040b5943e313c31ab345716727e35247be31ae1",
+          "tests/test_repro_workspace_smoke.py": "b301f29507631ceb1bd39053ec39cfb35423362ea5f0474a65995d92d96493f4"
+        },
+        "test_results": {
+          "aide_lite": "PASS",
+          "benchmark_advisory": "PASS",
+          "clean_three_repo_baseline": "PASS",
+          "python_275": "PASS",
+          "strict": "PASS"
+        },
+        "toolchain_identity": {
+          "implementation": "cpython",
+          "platform": "win32",
+          "python": "3.11.9"
+        }
+      }
     },
     {
       "affected_contracts": [

@@ -1,49 +1,53 @@
 {
   "active_workunit": {
     "affected_contracts": [
-      "release/index/workspace_lock.v1.toml"
+      "facman.preferences.v1",
+      "contracts/command/"
     ],
     "affected_targets": [
-      "project-state",
-      "repro-workspace-smoke",
-      "aide-lite"
+      "facman_client_static",
+      "facman_cli",
+      "facman_tui"
     ],
     "affected_tests": [
-      "tests/test_aide_compaction.py",
-      "tests/test_repro_workspace_smoke.py"
+      "tests/test_workspace_preferences.py"
     ],
     "allowed_paths": [
-      ".aide/",
-      "docs/",
+      "runtime/",
+      "apps/",
+      "contracts/",
       "tests/",
-      "tools/"
+      "tools/",
+      "docs/"
     ],
     "blockers": [],
     "claim_impacts": [
-      "r3.7-baseline-truth"
+      "shared-workspace-and-preferences-truth"
     ],
-    "dependencies": [],
+    "dependencies": [
+      "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01"
+    ],
     "forbidden_paths": [
-      "runtime execution code",
-      "evidence branch mutation"
+      "credentials",
+      "shell commands",
+      "setup mutation"
     ],
-    "id": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01",
-    "last_green_commit": "47bc5eff9a22abddb70824acb68cddeaf46042a8",
+    "id": "FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01",
+    "last_green_commit": null,
     "provider_revisions": {},
-    "status": "active",
+    "status": "pending",
     "stop_conditions": [
-      "revision mismatch",
-      "provider mismatch",
-      "clean baseline failure"
+      "legacy workspace becomes unreadable",
+      "a secret field is accepted"
     ],
-    "title": "Preserve R3.6 authority and establish R3.7 truth"
+    "title": "Add shared non-secret preferences and workspace resolution"
   },
   "affected_contracts": [
-    "release/index/workspace_lock.v1.toml"
+    "facman.preferences.v1",
+    "contracts/command/"
   ],
   "affected_tests": [
-    "tests/test_aide_compaction.py",
-    "tests/test_repro_workspace_smoke.py"
+    "tests/test_workspace_preferences.py"
   ],
   "architecture_invariants": [
     "R3.5 remains the architecture endpoint; R3.7 consumes existing safety and contract architecture.",
@@ -53,8 +57,14 @@
     "Real Factorio execution and the H1 verdict remain operator-only and separate from this autonomous wave.",
     "Archive and retention operations are reversible and never hard-delete managed content."
   ],
-  "current_exact_revision": "47bc5eff9a22abddb70824acb68cddeaf46042a8",
-  "direct_dependency_summaries": [],
+  "current_exact_revision": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
+  "direct_dependency_summaries": [
+    {
+      "id": "FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01",
+      "last_green_commit": "d07aec5280680e9de0d9300ea9db279c8b6d40a5",
+      "status": "closed"
+    }
+  ],
   "history_included": false,
   "open_blockers": [
     "H1 has no reviewed real Factorio isolation verdict; this blocks only the human execution lane.",

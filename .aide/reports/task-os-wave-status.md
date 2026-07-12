@@ -2,7 +2,7 @@
 
 - wave_id: facman-r3.7
 - status: active
-- current_exact_revision: 47bc5eff9a22abddb70824acb68cddeaf46042a8
+- current_exact_revision: d07aec5280680e9de0d9300ea9db279c8b6d40a5
 - mode: report_only
 - task_execution: false
 - repair_execution: false
@@ -15,7 +15,7 @@
 
 ## WorkUnits
 
-- `FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01`: active (last_green_commit: 47bc5eff9a22abddb70824acb68cddeaf46042a8)
+- `FACMAN-R3.7-BASELINE-AND-AUTHORITY-SPLIT-01`: closed (last_green_commit: d07aec5280680e9de0d9300ea9db279c8b6d40a5)
 - `FACMAN-WORKSPACE-PREFERENCES-AND-POLICY-01`: pending (last_green_commit: none)
 - `FACMAN-INSTANCE-LIFECYCLE-02`: pending (last_green_commit: none)
 - `FACMAN-INSTANCE-SNAPSHOT-01`: pending (last_green_commit: none)
