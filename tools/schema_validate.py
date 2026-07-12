@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import importlib.metadata
 import sys
 import tomllib
 from pathlib import Path
@@ -14,7 +15,15 @@ if str(ROOT) not in sys.path:
 
 from tools import json_contract
 
+try:
+    import jsonschema
+    from jsonschema.validators import validator_for
+except ModuleNotFoundError:
+    jsonschema = None
+    validator_for = None
+
 LIVE_SCHEMA_POLICY = ROOT / "contracts" / "policy" / "live_schema_subset.v1.toml"
+DEV_DEPENDENCY_LOCK = ROOT / "tools" / "dependency_license_lock.v1.toml"
 
 
 def main() -> int:
@@ -22,6 +31,7 @@ def main() -> int:
     schemas = sorted((ROOT / "contracts" / "schema").glob("**/*.json"))
     if not schemas:
         problems.append("no schema files found")
+    problems.extend(validate_dev_dependency_lock(DEV_DEPENDENCY_LOCK))
     for path in schemas:
         problems.extend(validate_schema_file(path))
     problems.extend(validate_live_schema_subset(LIVE_SCHEMA_POLICY))
@@ -48,6 +58,51 @@ def validate_schema_file(path: Path) -> list[str]:
             problems.append(f"{path}: missing {key}")
     if data.get("type") != "object":
         problems.append(f"{path}: root type should be object")
+    if validator_for is None or jsonschema is None:
+        problems.append(f"{path}: jsonschema dependency is unavailable; install tools/requirements-dev.lock")
+    else:
+        try:
+            validator_for(data).check_schema(data)
+        except jsonschema.exceptions.SchemaError as exc:
+            location = ".".join(str(part) for part in exc.absolute_schema_path)
+            problems.append(f"{path}: standards metaschema rejection at {location or '$'}: {exc.message}")
+    return problems
+
+
+def validate_dev_dependency_lock(path: Path) -> list[str]:
+    try:
+        with path.open("rb") as handle:
+            lock = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        return [f"{path}: {exc}"]
+    problems: list[str] = []
+    if lock.get("schema") != "facman.dev_dependency_license_lock.v1":
+        problems.append(f"{path}: unexpected schema")
+    if lock.get("runtime_dependency") is not False:
+        problems.append(f"{path}: validator dependencies must remain development-only")
+    packages = lock.get("package")
+    if not isinstance(packages, list) or not packages:
+        return problems + [f"{path}: package entries are required"]
+    requirements = (ROOT / "tools" / "requirements-dev.lock").read_text(encoding="utf-8")
+    for package in packages:
+        if not isinstance(package, dict):
+            problems.append(f"{path}: package entry must be a table")
+            continue
+        name = str(package.get("name", ""))
+        version = str(package.get("version", ""))
+        license_name = str(package.get("license", ""))
+        if not name or not version or not license_name:
+            problems.append(f"{path}: package name, version, and license are required")
+            continue
+        if f"{name}=={version}" not in requirements:
+            problems.append(f"{path}: {name}=={version} is not pinned in requirements-dev.lock")
+        try:
+            installed = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            problems.append(f"{path}: pinned development package is not installed: {name}=={version}")
+            continue
+        if installed != version:
+            problems.append(f"{path}: installed {name} version {installed} does not match {version}")
     return problems
 
 

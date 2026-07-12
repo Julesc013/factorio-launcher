@@ -83,7 +83,7 @@ def validate() -> list[str]:
         (ROOT / "docs" / "quality" / "benchmarks" / "baseline.v1.json").read_text(encoding="utf-8")
     )
     expected_benchmarks = {
-        "startup", "command_dispatch", "archive_inspect", "mod_inspection",
+        "startup", "command_dispatch", "command_graph_materialization", "archive_inspect", "mod_inspection",
         "diagnostic_export_traversal", "package_hashing",
     }
     if set(baseline.get("measurements", {})) != expected_benchmarks:

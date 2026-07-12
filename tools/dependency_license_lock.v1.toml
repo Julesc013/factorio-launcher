@@ -1,0 +1,36 @@
+schema = "facman.dev_dependency_license_lock.v1"
+python = ">=3.11"
+scope = "development_and_ci_only"
+runtime_dependency = false
+
+[[package]]
+name = "attrs"
+version = "26.1.0"
+license = "MIT"
+
+[[package]]
+name = "jsonschema"
+version = "4.26.0"
+license = "MIT"
+source = "https://pypi.org/project/jsonschema/4.26.0/"
+wheel_sha256 = "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce"
+
+[[package]]
+name = "jsonschema-specifications"
+version = "2025.9.1"
+license = "MIT"
+
+[[package]]
+name = "referencing"
+version = "0.37.0"
+license = "MIT"
+
+[[package]]
+name = "rpds-py"
+version = "2026.6.3"
+license = "MIT"
+
+[[package]]
+name = "typing-extensions"
+version = "4.16.0"
+license = "PSF-2.0"

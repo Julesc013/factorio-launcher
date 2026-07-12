@@ -4,6 +4,7 @@
 #include "fl_workspace_store.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_transaction.h"
 
 #include <chrono>
 #include <filesystem>
@@ -148,6 +149,38 @@ int prove_identity_migration(const fs::path& root)
     return 0;
 }
 
+int prove_compatibility_corpus(const fs::path& root)
+{
+    const fs::path corpus = fs::path(FACMAN_TEST_SOURCE_ROOT) / "tests" / "fixtures" / "compatibility";
+    {
+        WorkspaceLayout layout(root / "r3.2");
+        if (!write_file(layout.manifest(), read_file(corpus / "r3.2" / "workspace.v1.json"))) return 40;
+        auto install = layout.legacy_install_ref(InstallId::parse("legacy-install").value());
+        auto instance = layout.legacy_instance_manifest(InstanceId::parse("legacy-instance").value());
+        if (!install || !instance ||
+            !write_file(install.value(), read_file(corpus / "r3.2" / "legacy-install.json")) ||
+            !write_file(instance.value(), read_file(corpus / "r3.2" / "legacy-instance.json"))) return 41;
+        auto workspace = WorkspaceRepository(layout).load();
+        auto loaded_install = InstallRepository(layout).load(InstallId::parse("legacy-install").value());
+        auto loaded_instance = InstanceRepository(layout).load(InstanceId::parse("legacy-instance").value());
+        if (!workspace || !workspace.value().legacy_local_identity || !loaded_install ||
+            !loaded_install.value().legacy_path || !loaded_instance || !loaded_instance.value().legacy_path) return 42;
+    }
+    for (const std::string& release : {"r3.3", "r3.4"}) {
+        WorkspaceLayout layout(root / release);
+        if (!write_file(layout.manifest(), read_file(corpus / release / "workspace.v1.json"))) return 43;
+        const std::string transaction_id = release == "r3.3" ? "tx-r33" : "tx-r34";
+        const fs::path fixture = corpus / release / (release == "r3.3" ? "transaction.v1.json" : "transaction.v2.json");
+        auto journal = layout.transaction_journal(TransactionId::parse(transaction_id).value());
+        if (!journal || !write_file(journal.value(), read_file(fixture))) return 44;
+        if (!WorkspaceRepository(layout).load()) return 45;
+        auto recovery = facman::transaction::inspect(layout.root());
+        if (!std::holds_alternative<facman::transaction::RecoveryResult>(recovery) ||
+            std::get<facman::transaction::RecoveryResult>(recovery).json.find(transaction_id) == std::string::npos) return 46;
+    }
+    return 0;
+}
+
 } // namespace
 
 int main()
@@ -159,6 +192,7 @@ int main()
     if (error) return 1;
     int result = prove_store(root / "current");
     if (result == 0) result = prove_identity_migration(root / "local identity");
+    if (result == 0) result = prove_compatibility_corpus(root / "compatibility");
     fs::remove_all(root, error);
     if (error && result == 0) result = 2;
     if (result != 0) std::cerr << "workspace-store-smoke-stage-code=" << result << "\n";

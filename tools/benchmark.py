@@ -68,7 +68,8 @@ def collect(cli: Path, repeats: int) -> dict[str, object]:
     release_inputs = ROOT / "release"
     operations = {
         "startup": command(cli, "--version"),
-        "command_dispatch": command(cli, "command-graph", "inspect", "--json"),
+        "command_dispatch": command(cli, "product", "inspect", "--json"),
+        "command_graph_materialization": command(cli, "command-graph", "inspect", "--json"),
         "archive_inspect": zip_inspect(archive),
         "mod_inspection": zip_inspect(mod),
         "diagnostic_export_traversal": tree_hash(diagnostics),
@@ -79,6 +80,10 @@ def collect(cli: Path, repeats: int) -> dict[str, object]:
         "advisory": True,
         "host": {"system": platform.system(), "machine": platform.machine(), "python": platform.python_version()},
         "maximum_regression_percent": 25.0,
+        "methodology": {
+            "command_dispatch": "product.inspect isolates ordinary routed command overhead",
+            "command_graph_materialization": "serializes the complete generated registered-command graph",
+        },
         "measurements": {name: timed(operation, repeats) for name, operation in operations.items()},
     }
 

@@ -8,41 +8,51 @@
   "maximum_regression_percent": 25.0,
   "measurements": {
     "archive_inspect": {
-      "maximum_ms": 0.5917,
-      "median_ms": 0.0518,
-      "minimum_ms": 0.0418,
+      "maximum_ms": 0.9453,
+      "median_ms": 0.0533,
+      "minimum_ms": 0.0423,
       "repeats": 9
     },
     "command_dispatch": {
-      "maximum_ms": 16.048,
-      "median_ms": 14.8413,
-      "minimum_ms": 14.759,
+      "maximum_ms": 19.4355,
+      "median_ms": 17.4924,
+      "minimum_ms": 16.66,
+      "repeats": 9
+    },
+    "command_graph_materialization": {
+      "maximum_ms": 35.8431,
+      "median_ms": 34.6644,
+      "minimum_ms": 34.0965,
       "repeats": 9
     },
     "diagnostic_export_traversal": {
-      "maximum_ms": 0.5442,
-      "median_ms": 0.3833,
-      "minimum_ms": 0.376,
+      "maximum_ms": 0.5619,
+      "median_ms": 0.3994,
+      "minimum_ms": 0.3787,
       "repeats": 9
     },
     "mod_inspection": {
-      "maximum_ms": 0.0623,
-      "median_ms": 0.0377,
-      "minimum_ms": 0.0364,
+      "maximum_ms": 0.0727,
+      "median_ms": 0.0385,
+      "minimum_ms": 0.0361,
       "repeats": 9
     },
     "package_hashing": {
-      "maximum_ms": 3.0487,
-      "median_ms": 2.4221,
-      "minimum_ms": 2.3825,
+      "maximum_ms": 2.9159,
+      "median_ms": 2.588,
+      "minimum_ms": 2.4823,
       "repeats": 9
     },
     "startup": {
-      "maximum_ms": 15.359,
-      "median_ms": 14.0484,
-      "minimum_ms": 13.9327,
+      "maximum_ms": 17.2331,
+      "median_ms": 15.837,
+      "minimum_ms": 15.4475,
       "repeats": 9
     }
+  },
+  "methodology": {
+    "command_dispatch": "product.inspect isolates ordinary routed command overhead",
+    "command_graph_materialization": "serializes the complete generated registered-command graph"
   },
   "schema": "facman.performance_baseline.v1"
 }

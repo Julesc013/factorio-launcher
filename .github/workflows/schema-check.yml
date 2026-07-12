@@ -5,12 +5,16 @@ on:
     paths:
       - "contracts/schema/**"
       - "tools/schema_validate.py"
+      - "tools/requirements-dev.lock"
+      - "tools/dependency_license_lock.v1.toml"
       - "tools/package_check.py"
       - "release/packaging/**"
   pull_request:
     paths:
       - "contracts/schema/**"
       - "tools/schema_validate.py"
+      - "tools/requirements-dev.lock"
+      - "tools/dependency_license_lock.v1.toml"
       - "tools/package_check.py"
       - "release/packaging/**"
 
@@ -22,5 +26,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+      - run: python -m pip install -r tools/requirements-dev.lock
       - run: python tools/schema_validate.py
       - run: python tools/package_check.py
