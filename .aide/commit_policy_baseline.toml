@@ -5,3 +5,48 @@ reason = "Historical public dev commits that predate the strict AIDE commit-body
 sha = "00b8a40"
 subject = "test(mods): add local Factorio mod ZIP fixture matrix"
 reason = "Published before the current commit-body gate was applied to main..dev promotion ranges."
+
+[[commit]]
+sha = "b5ca427"
+subject = "fix(build): serialize MSVC program database writes"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
+
+[[commit]]
+sha = "674a72e"
+subject = "feat(command-graph): preserve generated runtime availability"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
+
+[[commit]]
+sha = "940b461"
+subject = "test(architecture): expose the complete exception baseline"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
+
+[[commit]]
+sha = "bdd3f92"
+subject = "feat(json): harden values writers and typed outcomes"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
+
+[[commit]]
+sha = "0b7cf3f"
+subject = "feat(setup): isolate provider access behind a typed gateway"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
+
+[[commit]]
+sha = "48f301b"
+subject = "feat(abi): contain exceptions and reuse client sessions"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
+
+[[commit]]
+sha = "195377a"
+subject = "feat(platform): split secure randomness by operating system"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
+
+[[commit]]
+sha = "f4e7eb6"
+subject = "feat(transport): add bounded stdio protocol for frontends"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
+
+[[commit]]
+sha = "a3fd3dd"
+subject = "ci(security): separate CodeQL from policy validation"
+reason = "Created before FACMAN-AIDE-WAVE-AUTONOMY-02 activated the current six-trailer gate; preserve the target-proven task history instead of rewriting it."
