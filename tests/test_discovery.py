@@ -71,13 +71,11 @@ class DiscoveryTests(unittest.TestCase):
 
         structural = [install for install in installs if install["verification"]["status"] == "structural"]
         self.assertEqual(report["structural_count"], len(structural))
-        by_source = {install["source"]: install for install in structural}
-        self.assertEqual(by_source["manual"]["ownership"], "imported")
-        self.assertEqual(by_source["portable"]["ownership"], "portable")
-        self.assertEqual(by_source["steam"]["ownership"], "foreign_owned")
-        self.assertEqual(by_source["headless"]["ownership"], "imported")
-        self.assertEqual(by_source["app_bundle"]["platform"], "macos")
-        self.assertEqual(by_source["manual"]["discovery"]["read_only"], True)
+        self.assertTrue(all(install["provider_id"] == "explicit.argument" for install in structural))
+        self.assertTrue(all(install["source"] == "manual" for install in structural))
+        self.assertTrue(all(install["ownership"] == "imported" for install in structural))
+        self.assertTrue(all(install["discovery"]["read_only"] for install in structural))
+        self.assertTrue(any(install["platform"] == "macos" for install in structural))
 
         invalid_candidates = [install for install in installs if install["verification"]["status"] == "invalid"]
         self.assertEqual(report["invalid_count"], len(invalid_candidates))

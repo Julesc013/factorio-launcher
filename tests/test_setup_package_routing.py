@@ -26,7 +26,8 @@ class SetupPackageRoutingTests(unittest.TestCase):
         self.assertIn('execute_setup("package.verify"', gateway)
         self.assertIn("usk.package_verify_request.v1", gateway)
         self.assertIn("request.version", gateway)
-        self.assertIn("request.archive.string()", gateway)
+        self.assertIn("facman::platform::path_to_utf8(request.archive)", gateway)
+        self.assertNotIn("request.archive.string()", gateway)
 
     def test_workspace_lock_pins_integrated_universal_revisions(self) -> None:
         lock = (ROOT / "release" / "index" / "workspace_lock.v1.toml").read_text(
