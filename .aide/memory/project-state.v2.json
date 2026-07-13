@@ -127,7 +127,7 @@
     "contracts": 111,
     "refusal_codes": 213,
     "registered_routes": 109,
-    "schemas": 217
+    "schemas": 218
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -139,8 +139,8 @@
   "current_revisions": {
     "accepted_integration": "53ffbd6e02f098e0eacda9392131592ba421b90a",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
-    "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+    "universal_launcher": "c43d390efe0db17480f9d0262827659b4ae242dd",
+    "universal_setup": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
   },
   "execution": {
     "operator_verdict": "Fail",
@@ -282,12 +282,12 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+      "revision": "c43d390efe0db17480f9d0262827659b4ae242dd",
       "source": "universal-launcher"
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
-      "revision": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2",
+      "revision": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7",
       "source": "universal-setup"
     }
   },

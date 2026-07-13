@@ -20,8 +20,8 @@ namespace facman::factorio::application::handlers {
 namespace json = facman::core::json;
 
 namespace {
-constexpr const char* kUlkRevision = "de6c7c6cfa80c524296066bd6bb90a70ba02b760";
-constexpr const char* kUskRevision = "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2";
+constexpr const char* kUlkRevision = "c43d390efe0db17480f9d0262827659b4ae242dd";
+constexpr const char* kUskRevision = "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7";
 
 const char* target_name() noexcept
 {

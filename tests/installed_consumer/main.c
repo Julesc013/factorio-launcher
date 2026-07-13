@@ -9,7 +9,7 @@ int main(void)
     flb_config_v1 config = {0};
     config.struct_size = sizeof(config);
     if (flb_abi_version_v1() != FLB_ABI_VERSION || FLB_ABI_VERSION != 0x00010002u) return 1;
-    if (flb_required_ulk_abi_v1() != 0x00010001u) return 2;
+    if (flb_required_ulk_abi_v1() != 0x00010002u) return 2;
     if (!flb_abi_is_compatible_v1(0x00010001u) || flb_abi_is_compatible_v1(0x00010003u)) return 3;
     if (flb_context_create_v1(&config, &context) != 0 || context == 0) return 4;
     flb_context_destroy_v1(context);

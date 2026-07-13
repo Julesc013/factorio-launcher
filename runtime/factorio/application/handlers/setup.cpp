@@ -199,7 +199,9 @@ ApplicationResult install_version(ApplicationContext& context, const ServiceOper
             context,
             "installs.install_version",
             "setup_plan_inputs_not_confirmed",
-            "Universal Setup did not return a typed confirmation for the requested version, archive, and target");
+            plan.value().archive_inspected && plan.value().product_layout_verified
+                ? "The archive passed Universal Setup inspection and the Factorio recipe, but no authoritative target-bound setup plan is available"
+                : "Universal Setup did not return a typed confirmation for the requested version, archive, and target");
     }
     return unavailable(context, "installs.install_version", "setup_mutation_not_implemented", "Setup mutation remains unavailable");
 #else
