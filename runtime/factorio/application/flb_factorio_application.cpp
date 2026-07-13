@@ -32,6 +32,13 @@
 namespace facman::factorio::application {
 namespace {
 
+const char* request_decode_refusal_code(const std::string& detail) noexcept
+{
+    return detail.rfind("invalid_identifier:", 0) == 0
+        ? "invalid_identifier"
+        : "invalid_request";
+}
+
 int write_boundary_error(ulk_command_response_v1* response, const char* code, const char* message) noexcept
 {
     const char* payload = facman::core::json::boundary::contained_exception_response;
@@ -72,10 +79,11 @@ public:
         ApplicationRequest typed;
         std::string decode_error;
         if (!decode_request(command_id(request->command_name), payload, request->dry_run != 0, typed, decode_error)) {
+            const char* refusal_code = request_decode_refusal_code(decode_error);
             return write_response(
                 refused(
-                    safety_refusal("command.execute", "invalid_request", "Command request payload is invalid", decode_error, false),
-                    "invalid_request",
+                    safety_refusal("command.execute", refusal_code, "Command request payload is invalid", decode_error, false),
+                    refusal_code,
                     decode_error,
                     facman::core::OutcomeKind::invalid_argument),
                 response);

@@ -275,6 +275,14 @@ int main(void)
             "missing non-empty string field") != 0) {
         return 28;
     }
+    if (run_refusal(
+            context,
+            "install_refs.import",
+            1,
+            "{\"path\":\"fixture\",\"install_id\":\"../escape\"}",
+            "invalid_identifier") != 0) {
+        return 44;
+    }
     if (run_invalid_payload(
             context,
             "launch_plan.build",

@@ -181,7 +181,7 @@ bool validate_request_string(
             !std::all_of(value.begin() + 1, value.end(), [](unsigned char ch) {
                 return ascii_alphanumeric(ch) || ch == '.' || ch == '_' || ch == '-';
             }))) {
-        detail = std::string("request payload field must be a valid identifier: ") + key;
+        detail = std::string("invalid_identifier: request payload field must be a valid identifier: ") + key;
         return false;
     }
     if (kind == RequestFieldKind::sha256 && (
