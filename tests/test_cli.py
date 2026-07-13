@@ -399,7 +399,35 @@ class CliTests(unittest.TestCase):
             install_plan = json.loads(stdout)
             self.assertEqual(install_plan["status"], "refused")
             self.assertEqual(install_plan["operation"], "installs.install_version")
+            self.assertEqual(install_plan["refusal"]["code"], "archive_inspection_refused")
+
+            with zipfile.ZipFile(archive, "w") as bundle:
+                bundle.writestr("factorio/bin/x64/factorio.exe", b"synthetic executable fixture")
+                bundle.writestr(
+                    "factorio/data/base/info.json",
+                    b'{"name":"base","version":"2.0.77"}',
+                )
+                bundle.writestr(
+                    "factorio/data/space-age/info.json",
+                    b'{"name":"space-age","version":"2.0.77"}',
+                )
+            target = Path(tmp) / "managed-factorio"
+            code, stdout, stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "installs",
+                    "install-version",
+                    "2.0.77",
+                    "--archive",
+                    str(archive),
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 1, stderr)
+            install_plan = json.loads(stdout)
             self.assertEqual(install_plan["refusal"]["code"], "setup_plan_inputs_not_confirmed")
+            self.assertFalse(target.exists())
 
             code, _stdout, stderr = invoke(
                 ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]

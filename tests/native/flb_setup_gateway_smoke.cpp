@@ -164,18 +164,31 @@ int main()
         return 1;
     }
 
+    application::InstallPlanRequest plan_request;
+    plan_request.version = "2.0.77";
+    plan_request.archive = valid;
+    plan_request.target = fixture.root / "owned-target";
+    auto plan = gateway->plan_install(plan_request);
+    if (!plan || !plan.value().archive_inspected ||
+        !plan.value().product_layout_verified || plan.value().inputs_confirmed ||
+        plan.value().provider_response.find(
+            "\"schema\":\"facman.factorio.archive_assessment.v1\"") == std::string::npos ||
+        fs::exists(plan_request.target)) {
+        return 2;
+    }
+
     const fs::path incomplete = make_archive(fixture.root, "incomplete", false, false);
     request.archive = incomplete;
     auto refused = gateway->inspect_install_archive(request);
-    if (refused || refused.error().code != "factorio_required_path_missing") return 2;
+    if (refused || refused.error().code != "factorio_required_path_missing") return 3;
 
     request.archive = fixture.root / "missing.zip";
     auto missing = gateway->inspect_install_archive(request);
-    if (missing || missing.error().code != "archive_inspection_refused") return 3;
+    if (missing || missing.error().code != "archive_inspection_refused") return 4;
 
     request.archive = valid;
     request.version = "latest";
     auto floating = gateway->inspect_install_archive(request);
-    if (floating || floating.error().code != "factorio_archive_binding_invalid") return 4;
+    if (floating || floating.error().code != "factorio_archive_binding_invalid") return 5;
     return 0;
 }

@@ -35,6 +35,8 @@ struct InstallPlanRequest {
 };
 
 struct InstallPlan {
+    bool archive_inspected = false;
+    bool product_layout_verified = false;
     bool inputs_confirmed = false;
     std::string provider_response;
 };

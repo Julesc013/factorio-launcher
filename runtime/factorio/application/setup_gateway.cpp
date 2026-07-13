@@ -321,34 +321,19 @@ public:
 
     facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest& request) override
     {
-        facman::core::json::ObjectBuilder payload;
-        payload.add_string("schema", "facman.install_plan_request.v1");
-        payload.add_string("version", request.version);
-        payload.add_string("archive", facman::platform::path_to_utf8(request.archive));
-        payload.add_string("target", facman::platform::path_to_utf8(request.target));
-        auto response = execute_setup("install_local.plan", payload.serialize());
-        if (!response) return facman::core::Result<InstallPlan>::failure(response.error());
+        FactorioArchiveInspectRequest inspection_request;
+        inspection_request.version = request.version;
+        inspection_request.archive = request.archive;
+        auto assessment = inspect_install_archive(inspection_request);
+        if (!assessment) {
+            return facman::core::Result<InstallPlan>::failure(assessment.error());
+        }
         InstallPlan plan;
-        plan.provider_response = response.take_value();
-        auto document = facman::core::json::parse(plan.provider_response);
-        const auto* report = document && document.value().is_object()
-            ? document.value().find("payload")
-            : nullptr;
-        const auto* evaluated = report != nullptr && report->is_object()
-            ? report->find("evaluated_inputs")
-            : nullptr;
-        const auto* mutation = report != nullptr && report->is_object()
-            ? report->find("mutation_executed")
-            : nullptr;
-        plan.inputs_confirmed =
-            document && string_field(document.value(), "status") == "ok" &&
-            report != nullptr && report->is_object() &&
-            string_field(*report, "schema") == "usk.install_plan.v1" &&
-            evaluated != nullptr && evaluated->is_object() &&
-            string_field(*evaluated, "requested_version") == request.version &&
-            string_field(*evaluated, "source_archive") == facman::platform::path_to_utf8(request.archive) &&
-            string_field(*evaluated, "target") == facman::platform::path_to_utf8(request.target) &&
-            mutation != nullptr && mutation->bool_value() && !mutation->bool_value().value();
+        plan.archive_inspected = true;
+        plan.product_layout_verified = assessment.value().layout_verified;
+        plan.inputs_confirmed = false;
+        plan.provider_response = facman::factorio::setup::archive_assessment_json(
+            assessment.value());
         return facman::core::Result<InstallPlan>::success(std::move(plan));
     }
 
