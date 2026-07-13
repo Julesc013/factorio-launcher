@@ -6,6 +6,12 @@ frozen at implementation proof revision
 `774628f442b0cd92ba7de14553f9bcd423aa3d9a`.
 `run.execute` remains unavailable and Safe beta is not promoted.
 
+The later
+[`R3.7 Public Integration Proof`](r3.7-public-integration-proof.md) binds that
+frozen product evidence to the accepted task/dev/main integration chain and the
+successful final workflows for canonical revision `d00456069eb509eabf6a63f831aadbd19813413f`.
+It is an evidence-only addendum, not a new product checkpoint.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)
