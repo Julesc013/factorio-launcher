@@ -24,7 +24,7 @@ class AideCompactionTests(unittest.TestCase):
         data = project_state.collect()
         for key in (
             "current_revisions", "active_work_unit", "last_closed_work_unit",
-            "r3_8_repair", "next_authority_gate",
+            "r3_8_repair", "r3_8_public_integration", "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
             "machine_protocol", "execution", "release", "validation", "safe_beta",
@@ -32,9 +32,9 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_r38_repair_closeout_preserves_provider_gate_and_catalog_truth(self) -> None:
+    def test_r38_public_integration_preserves_provider_gate_and_catalog_truth(self) -> None:
         data = project_state.collect()
-        self.assertEqual("r3.8-steam-external-state-isolation-repair", data["current_checkpoint"])
+        self.assertEqual("r3.8-public-integration-proof", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
@@ -44,14 +44,26 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
-        self.assertEqual("unproven", data["r3_8_repair"]["standalone_manual_isolation"])
-        self.assertFalse(data["r3_8_repair"]["authority_promotion"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
+            data["r3_8_repair"]["dev_integration_revision"],
+        )
+        self.assertEqual("unproven", data["r3_8_repair"]["standalone_manual_isolation"])
+        self.assertFalse(data["r3_8_repair"]["authority_promotion"])
+        integration = data["r3_8_public_integration"]
+        self.assertEqual("accepted", integration["status"])
+        self.assertEqual(
+            "70d04edb77525ae43945a2199acda87eaf48a469",
+            integration["shared_tree_identity"],
+        )
+        self.assertTrue(integration["main_dev_synchronized_at_proof"])
+        self.assertFalse(integration["authority_promotion"])
+        self.assertEqual(
+            "53ffbd6e02f098e0eacda9392131592ba421b90a",
             data["validation"]["accepted_revision"],
         )
         self.assertEqual(23, data["validation"]["native_test_count"])
-        self.assertEqual(327, data["validation"]["python_test_count"])
+        self.assertEqual(330, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
             "774628f442b0cd92ba7de14553f9bcd423aa3d9a",

@@ -29,6 +29,12 @@ The bounded implementation result for that WorkUnit is recorded in
 It adds the fail-closed Steam classification and refusal boundary, but does not
 claim an H1 retest or open an execution candidate.
 
+The later
+[`R3.8 Public Integration Proof`](r3.8-public-integration-proof.md) binds the
+repair and WU0 closeout chain to canonical `main` revision
+`53ffbd6e02f098e0eacda9392131592ba421b90a` and its exact successful workflows.
+It is a bookkeeping successor on `dev`, not self-validating product evidence.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

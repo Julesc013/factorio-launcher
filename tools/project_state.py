@@ -101,6 +101,7 @@ def collect() -> dict[str, Any]:
         "active_work_unit": status["active_work_unit"] or None,
         "last_closed_work_unit": status.get("last_closed_work_unit", "") or None,
         "r3_8_repair": status["r3_8_repair"],
+        "r3_8_public_integration": status["r3_8_public_integration"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
         "execution": status["execution"],
@@ -346,6 +347,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("R3.8 repair closeout must keep standalone/manual isolation unproven")
     if repair.get("authority_promotion") is not False:
         problems.append("R3.8 repair closeout must not promote authority")
+    integration = status.get("r3_8_public_integration", {})
+    if integration.get("status") != "accepted":
+        problems.append("canonical status must record accepted R3.8 public integration proof")
+    if integration.get("authority_promotion") is not False:
+        problems.append("R3.8 public integration proof must not promote authority")
+    if not integration.get("main_dev_synchronized_at_proof"):
+        problems.append("R3.8 public integration proof must bind synchronized main/dev ancestry")
     execution = status.get("execution", {})
     if execution.get("status") != "unavailable":
         problems.append("canonical status must keep execution unavailable")
