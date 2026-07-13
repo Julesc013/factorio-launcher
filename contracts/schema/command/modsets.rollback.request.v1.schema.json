@@ -9,7 +9,9 @@
       "type": "string"
     },
     "transaction_id": {
-      "minLength": 1,
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
       "type": "string"
     }
   },

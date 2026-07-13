@@ -11,15 +11,30 @@
       "type": "array"
     },
     "audio": {
+      "enum": [
+        "enabled",
+        "disabled"
+      ],
       "type": "string"
     },
     "benchmark_ticks": {
+      "pattern": "^(?:[0-9]{1,8}|100000000)$",
       "type": "string"
     },
     "graphics_quality": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
       "type": "string"
     },
     "launch_mode": {
+      "enum": [
+        "gui",
+        "headless-plan",
+        "benchmark-preview"
+      ],
       "type": "string"
     },
     "profile_id": {
@@ -31,6 +46,11 @@
       "type": "string"
     },
     "selection_mode": {
+      "enum": [
+        "none",
+        "load-save",
+        "benchmark-save"
+      ],
       "type": "string"
     },
     "template_id": {
@@ -38,6 +58,10 @@
       "type": "string"
     },
     "window_mode": {
+      "enum": [
+        "windowed",
+        "fullscreen"
+      ],
       "type": "string"
     }
   },

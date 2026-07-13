@@ -10,8 +10,10 @@
 #include <cctype>
 #include <cstdint>
 #include <filesystem>
+#include <initializer_list>
 #include <set>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
 namespace facman::factorio::application {
@@ -123,6 +125,123 @@ bool optional_string_array(const json::Value& object, const char* key, std::vect
         values.push_back(text.take_value());
     }
     return true;
+}
+
+enum class RequestFieldKind {
+    string_value,
+    identifier,
+    enumeration,
+    sha256,
+    bounded_unsigned,
+    bounded_ticks,
+    unsigned64,
+    boolean_string,
+};
+
+bool ascii_alphanumeric(unsigned char ch) noexcept
+{
+    return (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+}
+
+bool decimal_string_in_range(const std::string& value, std::size_t regular_digits, const char* maximum) noexcept
+{
+    if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char ch) {
+            return ch >= '0' && ch <= '9';
+        })) return false;
+    return value.size() <= regular_digits || value == maximum;
+}
+
+bool validate_request_string(
+    const json::Value& object,
+    const char* key,
+    bool required,
+    RequestFieldKind kind,
+    std::initializer_list<std::string_view> choices,
+    std::string& detail)
+{
+    const json::Value* field = object.find(key);
+    if (field == nullptr) {
+        if (!required) return true;
+        detail = std::string("request payload is missing non-empty string field: ") + key;
+        return false;
+    }
+    auto text = field->string_value();
+    if (!text) {
+        detail = std::string("request payload field must be a string: ") + key;
+        return false;
+    }
+    const std::string& value = text.value();
+    if (required && value.empty()) {
+        detail = std::string("request payload field must be a non-empty string: ") + key;
+        return false;
+    }
+    if (kind == RequestFieldKind::identifier && (
+            value.empty() || value.size() > 128U ||
+            !ascii_alphanumeric(static_cast<unsigned char>(value.front())) ||
+            !std::all_of(value.begin() + 1, value.end(), [](unsigned char ch) {
+                return ascii_alphanumeric(ch) || ch == '.' || ch == '_' || ch == '-';
+            }))) {
+        detail = std::string("request payload field must be a valid identifier: ") + key;
+        return false;
+    }
+    if (kind == RequestFieldKind::sha256 && (
+            value.size() != 64U ||
+            !std::all_of(value.begin(), value.end(), [](unsigned char ch) {
+                return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
+            }))) {
+        detail = std::string("request payload field must be a lowercase SHA-256 digest: ") + key;
+        return false;
+    }
+    if (kind == RequestFieldKind::bounded_unsigned && !decimal_string_in_range(value, 6U, "1000000")) {
+        detail = std::string("request payload field must be an unsigned integer string no greater than 1000000: ") + key;
+        return false;
+    }
+    if (kind == RequestFieldKind::bounded_ticks && !decimal_string_in_range(value, 8U, "100000000")) {
+        detail = std::string("request payload field must be an unsigned integer string no greater than 100000000: ") + key;
+        return false;
+    }
+    if (kind == RequestFieldKind::unsigned64 && (
+            value.empty() || value.size() > 19U ||
+            !std::all_of(value.begin(), value.end(), [](unsigned char ch) { return ch >= '0' && ch <= '9'; }))) {
+        detail = std::string("request payload field must be an unsigned integer string of at most 19 digits: ") + key;
+        return false;
+    }
+    if (kind == RequestFieldKind::boolean_string && value != "true" && value != "false") {
+        detail = std::string("request payload field must be true or false: ") + key;
+        return false;
+    }
+    if (kind == RequestFieldKind::enumeration && choices.size() != 0U &&
+        std::none_of(choices.begin(), choices.end(), [&value](std::string_view choice) {
+            return value == choice;
+        })) {
+        detail = std::string("request payload field has an unsupported enum value: ") + key;
+        return false;
+    }
+    return true;
+}
+
+bool validate_request_array(
+    const json::Value& object,
+    const char* key,
+    bool required,
+    std::string& detail)
+{
+    if (required && object.find(key) == nullptr) {
+        detail = std::string("request payload is missing required field: ") + key;
+        return false;
+    }
+    std::vector<std::string> values;
+    return optional_string_array(object, key, values, detail);
+}
+
+bool validate_request_contract(CommandId command, const json::Value& payload, std::string& detail)
+{
+    switch (command) {
+#include "generated/request_contracts.inc"
+    default:
+        detail = "request contract is unavailable for command";
+        return false;
+    }
 }
 
 bool optional_unsigned_string(
@@ -317,6 +436,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     if (!document) { detail = document.error().message; return false; }
     if (!document.value().is_object()) { detail = "request payload must be a JSON object"; return false; }
     const json::Value& payload = document.value();
+    if (!validate_request_contract(command, payload, detail)) return false;
 
     switch (command) {
     case CommandId::product_inspect:

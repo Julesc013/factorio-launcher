@@ -20,63 +20,7 @@ if str(ROOT) not in sys.path:
 INDEX = ROOT / "contracts/command/factorio/index.v1.toml"
 VERSION = ROOT / "release/index/version.v1.toml"
 FRONTEND = ROOT / "contracts/command/frontend/frontend.required_commands.v1.toml"
-
-PREFERENCE_REQUEST_FIELDS = [
-    ("preferred_workspace", "path", False),
-    ("preferred_transport", "enum", False),
-    ("default_instance_template", "identifier", False),
-    ("default_launch_profile", "identifier", False),
-    ("display_color_policy", "enum", False),
-    ("tui_page_size", "string", False),
-    ("command_timeout_seconds", "string", False),
-    ("backup_destination", "path", False),
-    ("backup_keep_last", "string", False),
-    ("discovery_providers", "string_array", False),
-    ("discovery_roots", "string_array", False),
-]
-
-SNAPSHOT_RETENTION_REQUEST_FIELDS = [
-    ("instance_id", "identifier", True),
-    ("keep_last", "string", False),
-    ("keep_daily", "string", False),
-    ("keep_weekly", "string", False),
-    ("maximum_total_bytes", "string", False),
-    ("minimum_age_days", "string", False),
-]
-
-PROFILE_PATCH_FIELDS = [
-    ("window_mode", "enum", False),
-    ("graphics_quality", "enum", False),
-    ("audio", "enum", False),
-    ("selection_mode", "enum", False),
-    ("selection", "string", False),
-    ("launch_mode", "enum", False),
-    ("benchmark_ticks", "string", False),
-    ("additional_arguments", "string_array", False),
-]
-
-MODSET_SOLVER_FIELDS = [
-    ("instance_id", "identifier", True),
-    ("enabled_mods", "string_array", False),
-    ("disabled_mods", "string_array", False),
-    ("version_preferences", "string_array", False),
-    ("maximum_packages", "string", False),
-    ("maximum_versions_per_package", "string", False),
-    ("maximum_graph_edges", "string", False),
-    ("maximum_solver_states", "string", False),
-    ("maximum_backtracks", "string", False),
-    ("maximum_elapsed_ms", "string", False),
-    ("maximum_explanation_nodes", "string", False),
-]
-
-SAVE_RETENTION_FIELDS = [
-    ("instance_id", "identifier", True),
-    ("keep_last", "string", False),
-    ("keep_daily", "string", False),
-    ("keep_weekly", "string", False),
-    ("maximum_total_bytes", "string", False),
-    ("minimum_age_days", "string", False),
-]
+REQUEST_FIELDS_PATH = ROOT / "contracts/command/request_fields.v1.json"
 
 OUTPUTS = {
     "catalog_json": ROOT / "contracts/generated-index/command_catalog.v2.json",
@@ -92,6 +36,7 @@ OUTPUTS = {
     "application_lookup": ROOT / "runtime/factorio/application/generated/command_lookup.inc",
     "application_names": ROOT / "runtime/factorio/application/generated/command_names.inc",
     "application_writes": ROOT / "runtime/factorio/application/generated/command_writes.inc",
+    "application_request_contracts": ROOT / "runtime/factorio/application/generated/request_contracts.inc",
     "grammar_json": ROOT / "contracts/generated-index/command_cli_grammar.v2.json",
     "frontend_json": ROOT / "contracts/generated-index/frontend_command_catalog.v1.json",
     "winforms_catalog": ROOT / "apps/gui/windows/winforms/GeneratedCommandCatalog.cs",
@@ -99,106 +44,6 @@ OUTPUTS = {
     "appkit_catalog_implementation": ROOT / "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m",
     "tui_catalog": ROOT / "apps/tui/generated_command_catalog.hpp",
     "english_strings": ROOT / "content/factorio/strings/en-US.toml",
-}
-
-REQUEST_FIELDS: dict[str, list[tuple[str, str, bool]]] = {
-    "preferences.apply": PREFERENCE_REQUEST_FIELDS,
-    "preferences.plan": PREFERENCE_REQUEST_FIELDS,
-    "preferences.validate": PREFERENCE_REQUEST_FIELDS,
-    "onboarding.plan": [("preferred_install", "identifier", False), ("instance_display_name", "string", False), ("template_id", "identifier", False), ("workspace", "path", False)],
-    "launch_plan.explain": [("instance_id", "identifier", True)],
-    "modsets.plan": MODSET_SOLVER_FIELDS,
-    "modsets.diff": MODSET_SOLVER_FIELDS,
-    "modsets.explain": MODSET_SOLVER_FIELDS,
-    "modsets.apply": MODSET_SOLVER_FIELDS,
-    "modsets.rollback": [("instance_id", "identifier", True), ("transaction_id", "string", True)],
-    "doctor.run": [("roots", "string_array", False)],
-    "install_refs.scan": [("roots", "string_array", False)],
-    "install_refs.import": [("path", "path", True), ("install_id", "identifier", True)],
-    "install_refs.inspect": [("install_id", "identifier", True)],
-    "instance.create": [("display_name", "string", True), ("instance_id", "identifier", True), ("install_id", "identifier", True), ("template_id", "identifier", False)],
-    "instances.inspect": [("instance_id", "identifier", True)],
-    "instances.verify": [("instance_id", "identifier", True)],
-    "instances.diff": [("left_instance_id", "identifier", True), ("right_ref", "string", True)],
-    "instances.clone": [("source_instance_id", "identifier", True), ("destination_instance_id", "identifier", True), ("display_name", "string", False), ("install_ref", "identifier", False)],
-    "instances.rename": [("instance_id", "identifier", True), ("display_name", "string", True)],
-    "instances.archive": [("instance_id", "identifier", True)],
-    "instances.restore": [("archive_id", "string", True), ("new_instance_id", "identifier", False)],
-    "snapshots.create": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True), ("saves", "string_array", False)],
-    "snapshots.list": [("instance_id", "identifier", True)],
-    "snapshots.inspect": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True)],
-    "snapshots.verify": [("instance_id", "identifier", True), ("snapshot_id", "identifier", True)],
-    "snapshots.diff": [("instance_id", "identifier", True), ("left_snapshot_id", "identifier", True), ("right_snapshot_id", "identifier", True)],
-    "snapshots.restore": [("snapshot_ref", "path", True), ("target_instance_id", "identifier", True)],
-    "snapshots.retention.plan": SNAPSHOT_RETENTION_REQUEST_FIELDS,
-    "snapshots.retention.apply": SNAPSHOT_RETENTION_REQUEST_FIELDS,
-    "templates.list": [],
-    "templates.inspect": [("template_id", "identifier", True)],
-    "templates.validate": [("template_id", "identifier", True)],
-    "profiles.list": [],
-    "profiles.inspect": [("profile_id", "identifier", True)],
-    "profiles.create": [("profile_id", "identifier", True), ("template_id", "identifier", False), *PROFILE_PATCH_FIELDS],
-    "profiles.clone": [("source_profile_id", "identifier", True), ("destination_profile_id", "identifier", True)],
-    "profiles.diff": [("left_profile_id", "identifier", True), ("right_profile_id", "identifier", True)],
-    "profiles.plan": [("instance_id", "identifier", True), ("profile_id", "identifier", True), *PROFILE_PATCH_FIELDS],
-    "profiles.apply": [("instance_id", "identifier", True), ("profile_id", "identifier", True), *PROFILE_PATCH_FIELDS],
-    "profiles.archive": [("profile_id", "identifier", True)],
-    "launch_plan.build": [("instance_id", "identifier", True)],
-    "launch_plan.preflight": [("instance_id", "identifier", True)],
-    "run.preview": [("instance_id", "identifier", True)],
-    "run.execute": [("instance_id", "identifier", False)],
-    "mods.import": [("source_path", "path", True), ("instance_id", "identifier", True)],
-    "mods.list": [],
-    "mods.index": [("roots", "string_array", False)],
-    "mods.inspect": [("identity", "string", True)],
-    "mods.verify": [("identity", "string", True)],
-    "mods.explain": [("identity", "string", True)],
-    "modsets.lock": [("instance_id", "identifier", True)],
-    "modsets.verify": [("instance_id", "identifier", True)],
-    "modsets.export": [("instance_id", "identifier", True), ("output_path", "path", True)],
-    "saves.list": [("instance_id", "identifier", True)],
-    "saves.index": [("instance_id", "identifier", True)],
-    "saves.inspect": [("instance_id", "identifier", True), ("save", "string", True)],
-    "saves.verify": [("instance_id", "identifier", True), ("save", "string", True)],
-    "saves.associate": [("instance_id", "identifier", True), ("save", "string", True), ("profile_id", "identifier", False), ("source_operation", "string", False)],
-    "saves.diff": [("instance_id", "identifier", True), ("save", "string", True), ("other_save", "string", True)],
-    "saves.retention.plan": SAVE_RETENTION_FIELDS,
-    "saves.retention.apply": SAVE_RETENTION_FIELDS,
-    "saves.backup": [("instance_id", "identifier", True), ("save", "string", True), ("output_path", "path", False)],
-    "saves.clone": [("source_instance_id", "identifier", True), ("target_instance_id", "identifier", True), ("save", "string", True)],
-    "instance.export": [("instance_id", "identifier", True), ("output_path", "path", True)],
-    "instance.import": [("source_path", "path", True), ("instance_id", "identifier", False)],
-    "diagnostics.export": [("instance_id", "identifier", True), ("output_path", "path", True)],
-    "workspace.recovery.plan": [("transaction_id", "identifier", True)],
-    "workspace.recovery.apply": [("transaction_id", "identifier", True)],
-    "package.verify": [("path", "path", False)],
-    "installs.install_version": [("version", "string", True), ("archive", "path", False)],
-    "installs.verify": [("id", "identifier", True)],
-    "installs.repair": [("id", "identifier", True)],
-    "installs.uninstall": [("id", "identifier", True)],
-    "mods.search": [("query", "string", False)],
-    "mods.install": [("query", "string", False), ("instance_id", "identifier", False)],
-    "mods.update": [("instance_id", "identifier", False)],
-    "servers.create": [("name", "string", True), ("id", "identifier", False), ("instance_id", "identifier", True)],
-    "servers.inspect": [("server_id", "identifier", True)],
-    "servers.validate": [("server_id", "identifier", True), ("save", "string", False)],
-    "servers.plan": [("server_id", "identifier", True), ("save", "string", False)],
-    "servers.diff": [("server_id", "identifier", True), ("other_server_id", "identifier", True)],
-    "servers.export": [("server_id", "identifier", True), ("output_path", "path", True), ("save", "string", False), ("include_save", "string", False)],
-    "servers.start": [("id", "identifier", True)],
-    "servers.stop": [("id", "identifier", True)],
-    "servers.rcon": [("id", "identifier", True)],
-    "diagnostics.redact": [("path", "path", True)],
-    "setup.operation": [
-        ("operation", "string", True), ("name", "string", False), ("id", "identifier", False),
-        ("instance_id", "identifier", False), ("path", "path", False), ("query", "string", False),
-        ("version", "string", False), ("archive", "path", False),
-    ],
-    "utility.operation": [
-        ("operation", "string", True), ("name", "string", False), ("id", "identifier", False),
-        ("instance_id", "identifier", False), ("path", "path", False), ("query", "string", False),
-        ("version", "string", False), ("archive", "path", False),
-    ],
 }
 
 ENUM_CHOICES: dict[str, list[str]] = {
@@ -210,6 +55,22 @@ ENUM_CHOICES: dict[str, list[str]] = {
     "selection_mode": ["none", "load-save", "benchmark-save"],
     "window_mode": ["windowed", "fullscreen"],
 }
+
+
+def load_request_fields() -> dict[str, list[tuple[str, str, bool]]]:
+    data = json.loads(REQUEST_FIELDS_PATH.read_text(encoding="utf-8"))
+    if data.get("schema") != "facman.request_fields.v1":
+        raise ValueError("request field contract has the wrong schema")
+    result: dict[str, list[tuple[str, str, bool]]] = {}
+    for command, fields in data.get("commands", {}).items():
+        result[str(command)] = [
+            (str(field["name"]), str(field["kind"]), bool(field["required"]))
+            for field in fields
+        ]
+    return result
+
+
+REQUEST_FIELDS = load_request_fields()
 
 APPLICATION_ID_OVERRIDES = {
     "factorio.product.inspect": "product_inspect",
@@ -254,7 +115,7 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
     registered = set(index.get("registered", []))
     commands: list[dict[str, Any]] = []
     digest = hashlib.sha256()
-    for path in [Path(__file__).resolve(), INDEX, VERSION, FRONTEND]:
+    for path in [Path(__file__).resolve(), INDEX, VERSION, FRONTEND, REQUEST_FIELDS_PATH]:
         digest_source(digest, path)
     for name in files:
         path = INDEX.parent / str(name)
@@ -277,6 +138,30 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
         raise ValueError("command and runtime IDs must be unique")
     if registered - set(runtime):
         raise ValueError(f"registered runtime IDs are missing contracts: {sorted(registered - set(runtime))}")
+    unknown_request_commands = set(REQUEST_FIELDS) - set(runtime)
+    if unknown_request_commands:
+        raise ValueError(
+            f"request field contracts reference unknown commands: {sorted(unknown_request_commands)}"
+        )
+    allowed_kinds = {
+        "string",
+        "path",
+        "identifier",
+        "enum",
+        "sha256",
+        "bounded_unsigned",
+        "bounded_ticks",
+        "unsigned64",
+        "boolean_string",
+        "string_array",
+    }
+    for command, fields in REQUEST_FIELDS.items():
+        names = [name for name, _kind, _required in fields]
+        if len(names) != len(set(names)):
+            raise ValueError(f"request field contract has duplicate fields for {command}")
+        invalid = sorted({kind for _name, kind, _required in fields} - allowed_kinds)
+        if invalid:
+            raise ValueError(f"request field contract has invalid kinds for {command}: {invalid}")
     commands.sort(key=lambda item: str(item["command_id"]))
     return index, version, commands, digest.hexdigest()
 
@@ -300,6 +185,10 @@ def request_schema_path(runtime_id: str) -> str:
     return f"contracts/schema/command/{runtime_id}.request.v1.schema.json"
 
 
+def frontend_field_kind(kind: str) -> str:
+    return kind if kind in {"path", "identifier", "enum", "sha256", "string_array"} else "string"
+
+
 def request_schema(runtime_id: str) -> str:
     properties: dict[str, Any] = {}
     required: list[str] = []
@@ -310,7 +199,23 @@ def request_schema(runtime_id: str) -> str:
             properties[name] = {"type": "string"}
             if kind == "identifier":
                 properties[name]["pattern"] = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
-            if is_required:
+            elif kind == "sha256":
+                properties[name].update({
+                    "minLength": 64,
+                    "maxLength": 64,
+                    "pattern": r"^[0-9a-f]{64}$",
+                })
+            elif kind == "bounded_unsigned":
+                properties[name]["pattern"] = r"^(?:[0-9]{1,6}|1000000)$"
+            elif kind == "bounded_ticks":
+                properties[name]["pattern"] = r"^(?:[0-9]{1,8}|100000000)$"
+            elif kind == "unsigned64":
+                properties[name]["pattern"] = r"^[0-9]{1,19}$"
+            elif kind == "boolean_string":
+                properties[name]["enum"] = ["true", "false"]
+            elif kind == "enum" and ENUM_CHOICES.get(name):
+                properties[name]["enum"] = ENUM_CHOICES[name]
+            if is_required and "minLength" not in properties[name]:
                 properties[name]["minLength"] = 1
         if is_required:
             required.append(name)
@@ -386,7 +291,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
         "request_fields": [
             {
                 "name": name,
-                "type": kind,
+                "type": frontend_field_kind(kind),
                 "required": required,
                 "default": None,
                 "repeatable": kind == "string_array",
@@ -475,7 +380,7 @@ def render_winforms_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         inputs = REQUEST_FIELDS.get(str(item["runtime_id"]), [])
         input_lines = ", ".join(
             f"new CommandInput({c_string(name)}, {c_string(humanize(name))}, {str(required).lower()}, "
-            f"{c_string(kind)}, {str(kind == 'string_array').lower()}, {c_string(name)}, null, "
+            f"{c_string(frontend_field_kind(kind))}, {str(kind == 'string_array').lower()}, {c_string(name)}, null, "
             f"new string[] {{ {', '.join(c_string(choice) for choice in ENUM_CHOICES.get(name, []))} }})"
             for name, kind, required in inputs
         )
@@ -540,7 +445,7 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
             {
                 "key": name,
                 "request_field": name,
-                "type": kind,
+                "type": frontend_field_kind(kind),
                 "required": required,
                 "repeatable": kind == "string_array",
                 "default": None,
@@ -884,6 +789,52 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
     for identifier in sorted(write_ids):
         application_writes.append(f"    case CommandId::{identifier}: return true;")
     application_writes.append("")
+    request_kind = {
+        "string": "string_value",
+        "path": "string_value",
+        "identifier": "identifier",
+        "enum": "enumeration",
+        "sha256": "sha256",
+        "bounded_unsigned": "bounded_unsigned",
+        "bounded_ticks": "bounded_ticks",
+        "unsigned64": "unsigned64",
+        "boolean_string": "boolean_string",
+    }
+    application_request_contracts = [
+        f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}."
+    ]
+    seen_request_contracts: set[str] = set()
+    for item in commands:
+        runtime_id = str(item["runtime_id"])
+        identifier = application_identifier(runtime_id)
+        if identifier in seen_request_contracts:
+            continue
+        seen_request_contracts.add(identifier)
+        fields = REQUEST_FIELDS.get(runtime_id, [])
+        allowed = ", ".join(c_string(name) for name, _kind, _required in fields)
+        application_request_contracts.append(f"    case CommandId::{identifier}: {{")
+        application_request_contracts.append(
+            f"        if (!validate_fields(payload, {{{allowed}}}, detail)) return false;"
+        )
+        calls = []
+        for name, kind, required in fields:
+            if kind == "string_array":
+                calls.append(
+                    f"validate_request_array(payload, {c_string(name)}, "
+                    f"{str(required).lower()}, detail)"
+                )
+                continue
+            choices = ", ".join(c_string(value) for value in ENUM_CHOICES.get(name, []))
+            calls.append(
+                f"validate_request_string(payload, {c_string(name)}, "
+                f"{str(required).lower()}, RequestFieldKind::{request_kind[kind]}, "
+                f"{{{choices}}}, detail)"
+            )
+        application_request_contracts.append(
+            "        return " + (" &&\n            ".join(calls) if calls else "true") + ";"
+        )
+        application_request_contracts.append("    }")
+    application_request_contracts.append("")
     rendered = {
         "catalog_json": json.dumps(catalog, indent=2, sort_keys=True) + "\n",
         "command_header": "\n".join(header),
@@ -895,6 +846,7 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         "application_lookup": "\n".join(application_lookup),
         "application_names": "\n".join(application_names),
         "application_writes": "\n".join(application_writes),
+        "application_request_contracts": "\n".join(application_request_contracts),
         "grammar_json": json.dumps({"schema": "facman.command_cli_grammar.v2", "source_digest": digest, "commands": grammars}, indent=2, sort_keys=True) + "\n",
         "frontend_json": json.dumps({"schema": "facman.frontend_command_catalog.v1", "source_digest": digest, "commands": [value for value in catalog_commands if value["registered"]]}, indent=2, sort_keys=True) + "\n",
     }
