@@ -59,3 +59,9 @@ be explicit without changing every binary ABI.
 
 Public ABI versions must be declared. Any ABI mismatch must refuse loudly before
 runtime mutation or launch execution.
+
+FLB and ULK retain independent identities. The experimental FLB runtime reports
+its own ABI and its required ULK ABI separately. Within an FLB major version, a
+runtime accepts an equal or older tested minor and refuses newer minors and
+different majors. The installed compatibility metadata records the exact rule;
+it is not yet a stable third-party compatibility promise.

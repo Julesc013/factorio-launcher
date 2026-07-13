@@ -13,6 +13,9 @@ Rules:
 - return explicit result codes
 - use configured typedefs instead of assuming compiler-specific widths
 - keep allocator, error, logging, and string lifetime policy visible
+- query an owning ABI and each required dependency ABI separately
+- accept only the same major and a non-newer minor unless a versioned contract
+  declares a stricter compatibility rule
 
 C89 is not a performance claim. It is an ABI discipline: fewer runtime
 assumptions, easier bindings, and predictable binary boundaries.

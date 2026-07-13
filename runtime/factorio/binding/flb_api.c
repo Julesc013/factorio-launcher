@@ -43,29 +43,27 @@ static void flb_set_response(
     }
 }
 
-static char* flb_copy_string(ulk_string_view value)
+static int flb_copy_string(ulk_string_view value, char** out_copy)
 {
     char* copy;
-    if (value.data == 0 || value.size == 0) {
-        return 0;
+    if (out_copy == 0) {
+        return ULK_STATUS_INVALID_ARGUMENT;
+    }
+    *out_copy = 0;
+    if (value.size == 0) {
+        return ULK_STATUS_OK;
+    }
+    if (value.data == 0 || value.size > (ulk_size)(SIZE_MAX - 1u)) {
+        return ULK_STATUS_INVALID_ARGUMENT;
     }
     copy = (char*)malloc((size_t)value.size + 1);
     if (copy == 0) {
-        return 0;
+        return ULK_STATUS_ERROR;
     }
     memcpy(copy, value.data, (size_t)value.size);
     copy[value.size] = '\0';
-    return copy;
-}
-
-static int flb_is_legacy_operation_command(ulk_string_view command_name)
-{
-    static const char setup_operation[] = "setup.operation";
-    static const char utility_operation[] = "utility.operation";
-    return (command_name.size == (ulk_size)(sizeof(setup_operation) - 1) &&
-            memcmp(command_name.data, setup_operation, sizeof(setup_operation) - 1) == 0) ||
-        (command_name.size == (ulk_size)(sizeof(utility_operation) - 1) &&
-            memcmp(command_name.data, utility_operation, sizeof(utility_operation) - 1) == 0);
+    *out_copy = copy;
+    return ULK_STATUS_OK;
 }
 
 static int flb_register_application_command(
@@ -116,8 +114,14 @@ int flb_context_create_v1(
     if (out_context == 0) {
         return ULK_STATUS_INVALID_ARGUMENT;
     }
+    *out_context = 0;
     if (config != 0 && config->struct_size < (ulk_size)sizeof(*config)) {
-        *out_context = 0;
+        return ULK_STATUS_INVALID_ARGUMENT;
+    }
+    if (config != 0 && (config->product_root.data != 0 || config->product_root.size != 0)) {
+        return ULK_STATUS_INVALID_ARGUMENT;
+    }
+    if (config != 0 && config->workspace_root.size != 0 && config->workspace_root.data == 0) {
         return ULK_STATUS_INVALID_ARGUMENT;
     }
 
@@ -134,7 +138,15 @@ int flb_context_create_v1(
         return ULK_STATUS_ERROR;
     }
     {
-        char* workspace_root = config == 0 ? 0 : flb_copy_string(config->workspace_root);
+        char* workspace_root = 0;
+        const int copy_status = config == 0
+            ? ULK_STATUS_OK
+            : flb_copy_string(config->workspace_root, &workspace_root);
+        if (copy_status != ULK_STATUS_OK) {
+            ulk_context_destroy_v1(context->launcher_context);
+            free(context);
+            return copy_status;
+        }
         context->application = flb_factorio_application_create(workspace_root);
         free(workspace_root);
     }
@@ -184,15 +196,25 @@ int flb_command_execute_v1(
         return ULK_STATUS_INVALID_ARGUMENT;
     }
 
-    if (flb_is_legacy_operation_command(request->command_name)) {
-        return flb_factorio_application_handle_v1(context->application, request, response);
-    }
     return ulk_command_execute_v1(context->launcher_context, request, response);
 }
 
 uint32_t flb_abi_version_v1(void)
 {
+    return (uint32_t)FLB_ABI_VERSION;
+}
+
+uint32_t flb_required_ulk_abi_v1(void)
+{
     return ((uint32_t)ULK_API_VERSION_MAJOR << 16) | (uint32_t)ULK_API_VERSION_MINOR;
+}
+
+int flb_abi_is_compatible_v1(uint32_t requested_abi)
+{
+    const uint32_t requested_major = requested_abi >> 16;
+    const uint32_t requested_minor = requested_abi & 0xffffu;
+    return requested_major == (uint32_t)FLB_ABI_VERSION_MAJOR &&
+        requested_minor <= (uint32_t)FLB_ABI_VERSION_MINOR;
 }
 
 void flb_context_destroy_v1(flb_context* context)

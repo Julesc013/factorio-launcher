@@ -97,9 +97,9 @@
       "limitation": "provider licenses are `NOASSERTION`; unsigned evidence is not publisher authentication"
     },
     {
-      "claim": "Experimental public C ABI has a correctness floor",
+      "claim": "Experimental FLB ABI and installed SDK have a correctness floor",
       "level": "bounded correctness proof",
-      "limitation": "stable third-party compatibility and independent consumers remain unproven"
+      "limitation": "stable compatibility, binary replay, and the full compiler matrix remain unproven"
     },
     {
       "claim": "CLI uses only the client boundary",
@@ -295,7 +295,7 @@
   ],
   "release": {
     "authenticity": "not_proven_unsigned",
-    "public_sdk": "unavailable",
+    "public_sdk": "experimental_installed",
     "status": "unpublished"
   },
   "safe_beta": false,

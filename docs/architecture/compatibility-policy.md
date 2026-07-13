@@ -20,6 +20,11 @@ experimental C ABI correctness floor, not a stable third-party promise. ABI
 version, layout, ownership, and exported symbols are tested; incompatible
 changes require a new versioned surface and migration notes.
 
+FLB and ULK have independent version identities. FLB compatibility requires an
+equal major and a requested minor no newer than the runtime minor. Dependency
+requirements are reported separately. Installed-consumer proof establishes a
+consumable experimental SDK, not a permanent binary-compatibility guarantee.
+
 Persisted models and JSON contracts accept only documented versions. Readers
 may retain bounded backwards compatibility; writers emit only the currently
 approved version after migration proof. Unknown fields or versions follow the

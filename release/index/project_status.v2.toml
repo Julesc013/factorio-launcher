@@ -35,7 +35,7 @@ operator_verdict = "pending"
 [release]
 status = "unpublished"
 authenticity = "not_proven_unsigned"
-public_sdk = "unavailable"
+public_sdk = "experimental_installed"
 
 [validation]
 accepted_revision = "d00456069eb509eabf6a63f831aadbd19813413f"

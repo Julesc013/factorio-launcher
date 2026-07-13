@@ -19,8 +19,9 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - operator verdict: `pending`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
+- public SDK: `experimental_installed`; stable compatibility is not promised.
 
-R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execution, Safe beta, SDK, daemon, setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
+R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execution, Safe beta, stable SDK, daemon, setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
 
 ## Contract and validation identity
 

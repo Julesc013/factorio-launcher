@@ -156,9 +156,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"- operator verdict: `{data['execution']['operator_verdict']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        f"- public SDK: `{data['release']['public_sdk']}`; stable compatibility is not promised.",
         "",
         "R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. "
-        "No execution, Safe beta, SDK, daemon, setup, networking, credential, signing, "
+        "No execution, Safe beta, stable SDK, daemon, setup, networking, credential, signing, "
         "or publication authority is inferred from the completed non-execution proof.",
         "",
         "## Contract and validation identity",
@@ -215,8 +216,8 @@ def readme_status(data: dict[str, Any]) -> str:
         f"The next authority gate is **{data['next_authority_gate']}**. `run.execute` remains "
         f"`{data['execution']['status']}` with `{data['execution']['reason']}`.",
         f"The operator verdict is `{data['execution']['operator_verdict']}` and Safe beta remains unpromoted.",
-        "Packages are unsigned and unpublished, and the public C ABI/SDK remains experimental and "
-        "unavailable for compatibility promises.",
+        "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
+        "neither carries a stable compatibility promise.",
     ])
 
 

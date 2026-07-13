@@ -59,7 +59,7 @@ The current contract surface contains 111 commands, 215 schemas, and 212 refusal
 
 The next authority gate is **H1**. `run.execute` remains `unavailable` with `real_factorio_isolation_not_proven`.
 The operator verdict is `pending` and Safe beta remains unpromoted.
-Packages are unsigned and unpublished, and the public C ABI/SDK remains experimental and unavailable for compatibility promises.
+Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 <!-- FACMAN-PROJECT-STATUS:END -->
 
 The native CLI-first slice includes:

@@ -147,16 +147,17 @@ def parse_claim_rows(text: str) -> dict[str, dict[str, str]]:
 def validate_claim_ledger_text(text: str) -> list[str]:
     problems: list[str] = []
     claims = parse_claim_rows(text)
+    abi_claim = "Experimental FLB ABI and installed SDK have a correctness floor"
     required = {
         "Command registry introspection matches dispatch",
         "Run preview uses the authoritative route",
-        "Experimental public C ABI has a correctness floor",
+        abi_claim,
         "Windows, Linux, and macOS install discovery is read-only",
     }
     for claim in sorted(required - claims.keys()):
         problems.append(f"claim ledger is missing structured row {claim!r}")
-    abi = claims.get("Experimental public C ABI has a correctness floor", {})
-    if abi and "stable third-party compatibility" not in abi.get("limitation", ""):
+    abi = claims.get(abi_claim, {})
+    if abi and "stable compatibility" not in abi.get("limitation", ""):
         problems.append("experimental ABI claim must retain the stable-compatibility limitation")
     if "Public C ABI is stable" in claims:
         problems.append("claim ledger promotes the experimental ABI to stable")
