@@ -7,6 +7,7 @@
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 
+#include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -37,15 +38,76 @@ std::string read_file(const fs::path& path)
 
 int prove_transition_table()
 {
-    if (!tx::can_transition(tx::State::requested, tx::State::validated) ||
-        tx::can_transition(tx::State::requested, tx::State::committed) ||
-        tx::can_transition(tx::State::complete, tx::State::staging) ||
-        tx::can_transition(tx::State::rolled_back, tx::State::committing) ||
-        !tx::terminal(tx::State::complete) || !tx::parse_state("verified") || tx::parse_state("future")) {
+    const std::array<tx::State, 17> states = {
+        tx::State::requested,
+        tx::State::validated,
+        tx::State::planned,
+        tx::State::staging,
+        tx::State::staged,
+        tx::State::verified,
+        tx::State::committing,
+        tx::State::committed,
+        tx::State::audited,
+        tx::State::complete,
+        tx::State::refused,
+        tx::State::cancelled,
+        tx::State::failed_before_commit,
+        tx::State::commit_uncertain,
+        tx::State::rollback_required,
+        tx::State::rolled_back,
+        tx::State::recovery_required,
+    };
+    for (const tx::State state : states) {
+        const char* name = tx::state_name(state);
+        auto parsed = tx::parse_state(name);
+        if (!parsed || parsed.value() != state) return 10;
+    }
+    if (std::string(tx::state_name(static_cast<tx::State>(255))) != "unknown" ||
+        tx::parse_state("future")) {
         return 10;
     }
-    if (tx::RelativePath::parse("../escape") || tx::RelativePath::parse("C:/absolute") ||
-        !tx::RelativePath::parse("nested/payload.txt")) return 11;
+
+    if (!tx::terminal(tx::State::complete) || !tx::terminal(tx::State::refused) ||
+        !tx::terminal(tx::State::rolled_back) || !tx::terminal(tx::State::cancelled) ||
+        tx::terminal(tx::State::requested) || tx::terminal(tx::State::commit_uncertain)) return 11;
+
+    if (!tx::can_transition(tx::State::requested, tx::State::validated) ||
+        !tx::can_transition(tx::State::validated, tx::State::planned) ||
+        !tx::can_transition(tx::State::planned, tx::State::staging) ||
+        !tx::can_transition(tx::State::planned, tx::State::staged) ||
+        !tx::can_transition(tx::State::staging, tx::State::staged) ||
+        !tx::can_transition(tx::State::staged, tx::State::verified) ||
+        !tx::can_transition(tx::State::verified, tx::State::committing) ||
+        !tx::can_transition(tx::State::committing, tx::State::committed) ||
+        !tx::can_transition(tx::State::committing, tx::State::commit_uncertain) ||
+        !tx::can_transition(tx::State::committed, tx::State::audited) ||
+        !tx::can_transition(tx::State::audited, tx::State::complete) ||
+        !tx::can_transition(tx::State::rollback_required, tx::State::rolled_back) ||
+        !tx::can_transition(tx::State::recovery_required, tx::State::audited) ||
+        !tx::can_transition(tx::State::recovery_required, tx::State::rollback_required) ||
+        !tx::can_transition(tx::State::commit_uncertain, tx::State::audited) ||
+        !tx::can_transition(tx::State::commit_uncertain, tx::State::rollback_required)) return 12;
+
+    if (!tx::can_transition(tx::State::requested, tx::State::recovery_required) ||
+        !tx::can_transition(tx::State::requested, tx::State::failed_before_commit) ||
+        !tx::can_transition(tx::State::requested, tx::State::rollback_required) ||
+        tx::can_transition(tx::State::committing, tx::State::failed_before_commit) ||
+        tx::can_transition(tx::State::committed, tx::State::rollback_required) ||
+        tx::can_transition(tx::State::audited, tx::State::failed_before_commit) ||
+        tx::can_transition(tx::State::complete, tx::State::recovery_required) ||
+        tx::can_transition(tx::State::failed_before_commit, tx::State::planned) ||
+        tx::can_transition(tx::State::requested, tx::State::committed) ||
+        tx::can_transition(tx::State::rolled_back, tx::State::committing)) return 13;
+
+    if (tx::RelativePath::parse("")) return 14;
+    if (tx::RelativePath::parse("../escape")) return 15;
+    if (tx::RelativePath::parse("/absolute")) return 16;
+    if (tx::RelativePath::parse("C:/absolute")) return 17;
+    if (tx::RelativePath::parse("back\\slash")) return 18;
+    if (tx::RelativePath::parse("colon:name")) return 19;
+    if (tx::RelativePath::parse(".")) return 20;
+    if (tx::RelativePath::parse("nested/../escape")) return 21;
+    if (!tx::RelativePath::parse("nested/payload.txt")) return 22;
     return 0;
 }
 
