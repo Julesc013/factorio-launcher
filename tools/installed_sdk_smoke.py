@@ -21,6 +21,14 @@ def cache_value(cache: Path, key: str) -> str:
     return ""
 
 
+def consumer_parent_configuration(cache: Path) -> list[str]:
+    arguments: list[str] = []
+    sanitizers = cache_value(cache, "FACMAN_ENABLE_SANITIZERS").upper()
+    if sanitizers in {"1", "ON", "TRUE", "YES"}:
+        arguments.append("-DFACMAN_CONSUMER_SANITIZERS=ON")
+    return arguments
+
+
 def run(command: list[str], *, environment: dict[str, str] | None = None) -> None:
     completed = subprocess.run(
         command,
@@ -94,6 +102,7 @@ def main() -> int:
         if toolset:
             configure.extend(["-T", toolset])
         configure.append(f"-DCMAKE_PREFIX_PATH={relocated}")
+        configure.extend(consumer_parent_configuration(cache))
         run(configure)
         run([args.cmake, "--build", str(consumer_build), "--config", args.config])
 
