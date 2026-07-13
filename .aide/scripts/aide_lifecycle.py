@@ -198,7 +198,10 @@ def transition(root: Path, task_id: str, action: str, *, result: str = "") -> st
 def hashes(path: Path) -> dict[str, str]:
     result = {}
     for file in sorted(candidate for candidate in path.rglob("*") if candidate.is_file()):
-        result[file.relative_to(path).as_posix()] = hashlib.sha256(file.read_bytes()).hexdigest()
+        data = file.read_bytes()
+        if file.suffix.lower() in {".json", ".md", ".toml", ".txt", ".yaml", ".yml"}:
+            data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        result[file.relative_to(path).as_posix()] = hashlib.sha256(data).hexdigest()
     return result
 
 
@@ -211,6 +214,7 @@ def rebuild_history_index(root: Path, checkpoint: str) -> None:
         "schema": "aide.history_index.v1",
         "checkpoint": checkpoint,
         "immutable_task_records": True,
+        "hash_canonicalization": "text_lf_v1",
         "tasks": records,
     }
     (checkpoint_root / "index.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")

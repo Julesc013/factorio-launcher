@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import unittest
 import json
+import hashlib
 import sys
 import tempfile
 from pathlib import Path
@@ -92,7 +93,14 @@ class AideCompactionTests(unittest.TestCase):
             )
             index = json.loads((archived.parent / "index.json").read_text(encoding="utf-8"))
             self.assertTrue(index["immutable_task_records"])
+            self.assertEqual("text_lf_v1", index["hash_canonicalization"])
             self.assertIn("task.yaml", index["tasks"][0]["files"])
+            task_bytes = archived.joinpath("task.yaml").read_bytes()
+            normalized = task_bytes.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            self.assertEqual(
+                hashlib.sha256(normalized).hexdigest(),
+                index["tasks"][0]["files"]["task.yaml"],
+            )
 
     def test_queue_index_rejects_partially_materialized_records(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
