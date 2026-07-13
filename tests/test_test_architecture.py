@@ -39,17 +39,58 @@ class TestArchitectureTests(unittest.TestCase):
     def test_operator_category_cannot_be_automatically_passed(self) -> None:
         self.assertFalse(dev.load_impact()["operator"]["automated"])
 
-    def test_critical_coverage_requires_each_policy_module(self) -> None:
+    def coverage_files(self) -> list[dict]:
         policy = json.loads(coverage_policy_check.POLICY.read_text(encoding="utf-8"))
-        files = []
-        for module in policy["modules"]:
-            files.append({"file": f"{module}/proof.cpp", "lines": [{"count": 1}]})
+        return [
+            {
+                "file": path,
+                "lines": [
+                    {"count": count, "branches": [{"count": 1}, {"count": 0}]}
+                    for count in (1, 1, 1, 0)
+                ],
+            }
+            for path in policy["designated_files"]
+        ]
+
+    def validate_coverage(self, files: list[dict]) -> list[str]:
         with tempfile.TemporaryDirectory() as temporary:
             report = Path(temporary) / "coverage.json"
             report.write_text(json.dumps({"files": files}), encoding="utf-8")
-            self.assertEqual([], coverage_policy_check.validate(report))
-            report.write_text(json.dumps({"files": files[:-1]}), encoding="utf-8")
-            self.assertTrue(coverage_policy_check.validate(report))
+            return coverage_policy_check.validate(report)
+
+    def test_critical_coverage_requires_each_policy_module_and_designated_file(self) -> None:
+        files = self.coverage_files()
+        self.assertEqual([], self.validate_coverage(files))
+        problems = self.validate_coverage(files[:-1])
+        self.assertTrue(any("designated file" in problem for problem in problems), problems)
+
+    def test_critical_coverage_uses_module_aggregate_not_best_file(self) -> None:
+        files = self.coverage_files()
+        files.append({
+            "file": "runtime/base/uncovered_bulk.cpp",
+            "lines": [
+                {"count": 0, "branches": [{"count": 0}, {"count": 0}]}
+                for _ in range(100)
+            ],
+        })
+        problems = self.validate_coverage(files)
+        self.assertTrue(
+            any("runtime/base aggregate line coverage" in problem for problem in problems),
+            problems,
+        )
+
+    def test_critical_coverage_enforces_aggregate_branches(self) -> None:
+        files = self.coverage_files()
+        for entry in files:
+            if entry["file"].startswith("runtime/archive/"):
+                for line in entry["lines"]:
+                    for branch in line["branches"]:
+                        branch["count"] = 0
+        problems = self.validate_coverage(files)
+        self.assertTrue(
+            any("runtime/archive aggregate branch coverage" in problem for problem in problems),
+            problems,
+        )
 
 
 if __name__ == "__main__":

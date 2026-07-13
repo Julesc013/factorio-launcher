@@ -1,11 +1,49 @@
 {
-  "schema": "facman.critical_coverage_policy.v1",
+  "schema": "facman.critical_coverage_policy.v2",
   "modules": {
-    "runtime/archive": 1.0,
-    "runtime/base": 1.0,
-    "runtime/transaction": 1.0,
-    "runtime/workspace": 1.0
+    "runtime/archive": {
+      "branch_percent": 25.0,
+      "line_percent": 40.0
+    },
+    "runtime/base": {
+      "branch_percent": 25.0,
+      "line_percent": 40.0
+    },
+    "runtime/transaction": {
+      "branch_percent": 30.0,
+      "line_percent": 45.0
+    },
+    "runtime/workspace": {
+      "branch_percent": 25.0,
+      "line_percent": 40.0
+    }
   },
-  "metric": "line_percent",
-  "note": "Initial evidence floor; increases require measured CI coverage and may never be lowered without an explicit policy change."
+  "designated_files": {
+    "runtime/archive/fl_archive_policy.cpp": {
+      "line_percent": 30.0,
+      "reason": "archive containment and no-clobber policy"
+    },
+    "runtime/archive/fl_archive_reader.cpp": {
+      "line_percent": 30.0,
+      "reason": "archive input validation and extraction planning"
+    },
+    "runtime/archive/fl_archive_writer.cpp": {
+      "line_percent": 30.0,
+      "reason": "deterministic archive commit path"
+    },
+    "runtime/base/fl_path_safety.cpp": {
+      "line_percent": 40.0,
+      "reason": "path containment and link refusal"
+    },
+    "runtime/transaction/fl_transaction.cpp": {
+      "line_percent": 40.0,
+      "reason": "transaction commit, rollback, and recovery law"
+    },
+    "runtime/workspace/fl_workspace_store.cpp": {
+      "line_percent": 35.0,
+      "reason": "workspace persistence and no-clobber behavior"
+    }
+  },
+  "exclusions": [],
+  "note": "Aggregate line and branch floors are ordinary-CI minimums. Designated trust-critical files also have individual line floors. Exclusions require a path and reviewed reason. Floors may never be lowered without an explicit policy change."
 }

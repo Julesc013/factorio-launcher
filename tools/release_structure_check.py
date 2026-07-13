@@ -64,9 +64,9 @@ def main() -> int:
     problems.extend(check_packaging_smoke())
     if problems:
         for problem in problems:
-            print(f"release-readiness-check: {problem}", file=sys.stderr)
+            print(f"release-structure-check: {problem}", file=sys.stderr)
         return 1
-    print("release-readiness-check: ok")
+    print("release-structure-check: ok")
     return 0
 
 

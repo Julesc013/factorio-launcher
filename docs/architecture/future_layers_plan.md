@@ -1,7 +1,7 @@
 # Future layers plan
 
 This document no longer describes completed R2/R3 work as future work. Current
-truth is generated in `.aide/memory/project-state.v1.json`; completed proof is
+truth is generated in `.aide/memory/project-state.v2.json`; completed proof is
 indexed under `.aide/history/` and `docs/release/checkpoints/`.
 
 ## Completed product-readiness lane

@@ -276,12 +276,21 @@ def check_retired_roots() -> list[str]:
     return problems
 
 
+def repository_paths() -> list[Path]:
+    return [
+        path
+        for path in ROOT.rglob("*")
+        if path.relative_to(ROOT).parts[0] not in IGNORED_TOP_LEVEL
+    ]
+
+
 def check_no_src_or_source_dirs() -> list[str]:
     problems: list[str] = []
-    source_dirs = sorted(path for path in ROOT.rglob("*") if path.is_dir() and path.name == "source")
+    paths = repository_paths()
+    source_dirs = sorted(path for path in paths if path.is_dir() and path.name == "source")
     for path in source_dirs:
         problems.append(f"directory named source is retired: {path.relative_to(ROOT)}")
-    for path in sorted(ROOT.rglob("*")):
+    for path in sorted(paths):
         if path.is_dir() and path.name == "src":
             problems.append(f"directory named src is forbidden: {path.relative_to(ROOT)}")
     return problems

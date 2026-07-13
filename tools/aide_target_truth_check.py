@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -10,12 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import structure_policy_check
+from tools import project_state, structure_policy_check
 
 ROOT_POLICY = ROOT / ".aide" / "policies" / "flaunch-root-authority.yaml"
 PROFILE = ROOT / ".aide" / "profile.yaml"
-PROJECT_STATE = ROOT / ".aide" / "memory" / "project-state.md"
-ROADMAP = ROOT / "docs" / "roadmap.md"
 CLAIM_LEDGER = ROOT / "docs" / "quality" / "safety_claim_ledger.md"
 DISCOVERY_README = ROOT / "runtime" / "factorio" / "discovery" / "README.md"
 
@@ -24,8 +23,7 @@ def main() -> int:
     problems: list[str] = []
     problems.extend(validate_root_authority_text(ROOT_POLICY.read_text(encoding="utf-8")))
     problems.extend(validate_profile_text(PROFILE.read_text(encoding="utf-8")))
-    problems.extend(validate_project_state_text(PROJECT_STATE.read_text(encoding="utf-8")))
-    problems.extend(validate_roadmap_text(ROADMAP.read_text(encoding="utf-8")))
+    problems.extend(project_state.validate())
     problems.extend(validate_claim_ledger_text(CLAIM_LEDGER.read_text(encoding="utf-8")))
     problems.extend(validate_discovery_text(DISCOVERY_README.read_text(encoding="utf-8")))
     if problems:
@@ -80,122 +78,98 @@ def validate_root_authority_text(text: str) -> list[str]:
     return problems
 
 
+def yaml_scalar(text: str, key: str, indent: int) -> str:
+    prefix = " " * indent
+    match = re.search(rf"(?m)^{prefix}{re.escape(key)}:\s*([^\n#]+?)\s*$", text)
+    return match.group(1).strip() if match else ""
+
+
+def yaml_list(text: str, key: str, indent: int) -> list[str]:
+    lines = text.splitlines()
+    marker = " " * indent + key + ":"
+    for index, line in enumerate(lines):
+        if line != marker:
+            continue
+        values = []
+        item_prefix = " " * (indent + 2) + "- "
+        for candidate in lines[index + 1 :]:
+            if candidate.startswith(item_prefix):
+                values.append(candidate[len(item_prefix) :].strip())
+                continue
+            if candidate.strip() and len(candidate) - len(candidate.lstrip()) <= indent:
+                break
+        return values
+    return []
+
+
 def validate_profile_text(text: str) -> list[str]:
     problems: list[str] = []
-    required = [
-        "phase: r3.6-product-readiness-complete",
-        "frozen R3.5 architecture",
-        "completed R3.6 non-execution product",
-        "C-compatible experimental ABI correctness floor",
-        "authoritative_command_slice:",
-        "install_refs.scan",
-        "launch_plan.build",
-        "quarantined_capabilities:",
-        "run.execute",
-        "diagnostics.export",
-        "workspace_lock: release/index/workspace_lock.v1.toml",
-        "threat_model: docs/architecture/threat_model.md",
-        "claim_ledger: docs/quality/safety_claim_ledger.md",
-        "proof_gates: docs/quality/safety_proof_gates.md",
-    ]
-    for anchor in required:
-        if anchor not in text:
-            problems.append(f"profile is missing current-truth anchor {anchor!r}")
-    for stale in [
+    phase = yaml_scalar(text, "phase", 2)
+    if phase != "r3.7-complete-h1-pending":
+        problems.append(f"profile phase is {phase!r}, expected 'r3.7-complete-h1-pending'")
+    quarantined = set(yaml_list(text, "quarantined_capabilities", 2))
+    for capability in {"run.execute", "setup.mutation", "network.access"} - quarantined:
+        problems.append(f"profile quarantine is missing {capability}")
+    evidence = {
+        "workspace_lock": "release/index/workspace_lock.v1.toml",
+        "threat_model": "docs/architecture/threat_model.md",
+        "claim_ledger": "docs/quality/safety_claim_ledger.md",
+        "proof_gates": "docs/quality/safety_proof_gates.md",
+    }
+    for key, expected in evidence.items():
+        value = yaml_scalar(text, key, 4)
+        if value != expected:
+            problems.append(f"profile {key} is {value!r}, expected {expected!r}")
+        elif not (ROOT / value).is_file():
+            problems.append(f"profile evidence authority does not exist: {value}")
+    for stale in (
         "pre-code-structure-governance",
         "apps/python_cli",
-        "add real Windows",
         "C-compatible stable ABI",
-    ]:
+        "r3.6-product-readiness-complete",
+    ):
         if stale in text:
             problems.append(f"profile retains stale target state {stale!r}")
-    evidence_paths = [
-        "release/index/workspace_lock.v1.toml",
-        "docs/architecture/threat_model.md",
-        "docs/quality/safety_claim_ledger.md",
-        "docs/quality/safety_proof_gates.md",
-    ]
-    for relative in evidence_paths:
-        if not (ROOT / relative).is_file():
-            problems.append(f"profile evidence authority does not exist: {relative}")
     return problems
 
 
-def validate_project_state_text(text: str) -> list[str]:
-    problems: list[str] = []
-    required = [
-        "R3.5 is the architecture endpoint",
-        "R3.6 used that foundation",
-        "checkpoint: `r3.7-baseline`",
-        "R3.7 now adds reversible local instance and content management",
-        "evidence revision: `29cf22fa15250698b7587a9868737c10f3bcc749`",
-        "Real Factorio isolation remains operator-only and has no human verdict",
-        "public C ABI remains experimental",
-        "completed wave revision: `fc8423572e9c055991558f8a4e7cbbc95e0c4a24`",
-        "release/index/workspace_lock.v1.toml",
-    ]
-    for anchor in required:
-        if anchor not in text:
-            problems.append(f"project state is missing current-truth anchor {anchor!r}")
-    for stale in [
-        "pre-code structure governance",
-        "apps/python_cli/` is the current runnable prototype",
-        "Native command graph implementation is still the major gap",
-        "extend real Windows read-only discovery",
-    ]:
-        if stale in text:
-            problems.append(f"project state retains stale claim {stale!r}")
-    return problems
-
-
-def validate_roadmap_text(text: str) -> list[str]:
-    problems: list[str] = []
-    required = [
-        "R3.6 - Real-World Product Readiness",
-        "R3.5 is the architecture endpoint",
-        "Linux and macOS read-only discovery providers",
-        "public ABI remains an experimental correctness floor",
-    ]
-    for anchor in required:
-        if anchor not in text:
-            problems.append(f"roadmap is missing current-truth anchor {anchor!r}")
-    stale = "Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager"
-    if stale in text:
-        problems.append("roadmap still defers implemented Windows discovery")
-    return problems
+def parse_claim_rows(text: str) -> dict[str, dict[str, str]]:
+    claims: dict[str, dict[str, str]] = {}
+    for line in text.splitlines():
+        if not line.startswith("|") or line.startswith("| ---") or "| Claim |" in line:
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) == 4:
+            claims[cells[0]] = {"level": cells[1], "proof": cells[2], "limitation": cells[3]}
+    return claims
 
 
 def validate_claim_ledger_text(text: str) -> list[str]:
     problems: list[str] = []
-    required = [
+    claims = parse_claim_rows(text)
+    required = {
         "Command registry introspection matches dispatch",
         "Run preview uses the authoritative route",
         "Experimental public C ABI has a correctness floor",
-        "stable third-party compatibility",
         "Windows, Linux, and macOS install discovery is read-only",
-    ]
-    for anchor in required:
-        if anchor not in text:
-            problems.append(f"claim ledger is missing current-truth anchor {anchor!r}")
-    if "| Public C ABI is stable |" in text:
+    }
+    for claim in sorted(required - claims.keys()):
+        problems.append(f"claim ledger is missing structured row {claim!r}")
+    abi = claims.get("Experimental public C ABI has a correctness floor", {})
+    if abi and "stable third-party compatibility" not in abi.get("limitation", ""):
+        problems.append("experimental ABI claim must retain the stable-compatibility limitation")
+    if "Public C ABI is stable" in claims:
         problems.append("claim ledger promotes the experimental ABI to stable")
-    if "command_graph.inspect` is still a duplicated static projection" in text:
-        problems.append("claim ledger still reports corrected registry introspection drift")
     return problems
 
 
 def validate_discovery_text(text: str) -> list[str]:
     problems: list[str] = []
-    required = [
-        "Steam registry roots",
-        "`libraryfolders.vdf`",
-        "deterministically de-duplicated",
-        "Windows read-only discovery is implemented",
-        "junction refusal",
-    ]
-    for anchor in required:
-        if anchor not in text:
-            problems.append(f"discovery documentation is missing current-truth anchor {anchor!r}")
+    stale = "Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager"
+    if stale in text:
+        problems.append("discovery documentation defers the implemented Windows provider")
+    if "Windows read-only discovery is not implemented" in text:
+        problems.append("discovery documentation denies the implemented Windows provider")
     return problems
 
 

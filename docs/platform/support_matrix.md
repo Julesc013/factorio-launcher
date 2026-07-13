@@ -14,17 +14,40 @@ user-installed, and system-installed FacMan packages should expose the same
 command graph where platform authority allows it. See
 [../product/install_distribution_modes.md](../product/install_distribution_modes.md).
 
-## Tiers
+<!-- FACMAN-SUPPORT-STATUS:BEGIN -->
+## Current Proven Status
+
+Compile, runtime, package, publication, and support are independent claims. The evidence revision is blank where no proof is claimed.
+
+| Platform | Compile | Runtime | Package | Publication | Support | Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `linux_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `macos_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `windows_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `windows_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `linux_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `macos_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `windows_legacy_winforms_x64` | passed | passed | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `macos_legacy_appkit_x64` | passed | not_proven | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `linux_x11_gtk_x64` | deferred | deferred | contract_only | unpublished | unavailable | `-` |
+| `portable_cli_x64` | passed | contract_tested | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
+| `portable_tui_x64` | opt_in_only | not_proven | not_built | unpublished | experimental | `-` |
+<!-- FACMAN-SUPPORT-STATUS:END -->
+
+## Design Targets, Not Current Support Claims
+
+The table below records product direction only. It does not override the
+evidence-backed status table above.
 
 | Platform | Support level | Artifact |
 | --- | ---: | --- |
-| Windows modern WinUI | Primary | installer + portable ZIP |
+| Windows modern WinUI | Primary target | installer + portable ZIP |
 | Windows legacy WinForms | Legacy best-effort | portable ZIP + optional installer |
-| macOS modern SwiftUI | Primary modern | signed/notarized universal `.app` |
-| macOS legacy AppKit | Legacy supported | x86_64 AppKit `.app` |
+| macOS modern SwiftUI | Primary modern target | signed/notarized universal `.app` |
+| macOS legacy AppKit | Legacy target | x86_64 AppKit `.app` |
 | macOS 10.10-10.12 Intel | Experimental legacy | CLI/basic GUI only if tested |
 | macOS 10.9 | Not primary | source/experimental only |
-| Linux Wayland Qt | Primary modern | GUI tarball/AppImage profile |
+| Linux Wayland Qt | Primary modern target | GUI tarball/AppImage profile |
 | Linux X11 GTK | Compatibility desktop | GUI tarball/AppImage profile |
 | Linux old desktop/server | Best-effort | portable CLI/TUI tarball |
 | Linux 2010-era GUI | Experimental | source build or special legacy AppImage |

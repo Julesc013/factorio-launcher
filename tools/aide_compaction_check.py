@@ -91,7 +91,7 @@ def validate() -> list[str]:
     if ".aide/history/**" not in ignore:
         problems.append("normal context does not exclude archived task bulk")
     compiler = (ROOT / ".aide" / "context" / "compiler.yaml").read_text(encoding="utf-8")
-    for anchor in ("project-state.v1.json", "contracts/policy/test_impact.v1.json", "exclude_archived_task_bulk: true"):
+    for anchor in ("project-state.v2.json", "contracts/policy/test_impact.v1.json", "exclude_archived_task_bulk: true"):
         if anchor not in compiler:
             problems.append(f"context compiler is missing compact-state anchor: {anchor}")
     script = (ROOT / ".aide" / "scripts" / "aide_lite.py").read_text(encoding="utf-8")

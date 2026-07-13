@@ -1,24 +1,5 @@
 {
-  "active_wave": {
-    "id": "facman-r3.7",
-    "status": "active"
-  },
-  "active_workunit": null,
-  "baseline_evidence": {
-    "benchmark": "advisory comparison PASS with no greater-than-25-percent warnings",
-    "command": "py -3 tools/repro_workspace_smoke.py --require-clean --build --python py -3",
-    "elapsed_seconds": 166.5,
-    "initial_failure": "repro package proof did not bind its native build root or enable facman_tui",
-    "native_test_counts": {
-      "factorio_launcher": 19,
-      "universal_launcher": 1,
-      "universal_setup": 2
-    },
-    "proof_harness_repair_revision": "47bc5ef",
-    "python_elapsed_seconds": 141.9,
-    "python_test_count": 275,
-    "result": "PASS"
-  },
+  "active_work_unit": null,
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -137,70 +118,33 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "02ff62c3fa3077c37c71bcf54d1e4f55e20c6a8d68498426f1020c6d031c8a18",
-    "contracts": 71,
-    "registered_routes": 69,
-    "schemas": 149
+    "catalog_digest": "43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86",
+    "contracts": 111,
+    "refusal_codes": 212,
+    "registered_routes": 109,
+    "schemas": 215
   },
   "completed_wave": {
-    "id": "facman-r3.6",
-    "revision": "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
+    "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
+    "id": "r3.7",
+    "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_artifacts": [
-    {
-      "artifact": "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
-      "authenticity": "not_proven_unsigned",
-      "checkpoint": "r3.5-zero-exception-productization",
-      "revision": "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
-      "sha256": "fba446780e5cb96c4f5afe1b03b59689e1010b2acf9de38257b2f8dc1dfed58b",
-      "target": "windows_portable_cli_x64"
-    },
-    {
-      "artifact": "facman-0.1.0-dev.contract-linux-cli-x64-portable.tar.gz",
-      "authenticity": "not_proven_unsigned",
-      "checkpoint": "r3.5-zero-exception-productization",
-      "revision": "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
-      "sha256": "f36748ccf436ef1a50e6667c315761d5210d0def559c15951e0f3f4e0f6b6d74",
-      "target": "linux_portable_cli_x64"
-    },
-    {
-      "artifact": "facman-0.1.0-dev.contract-macos-cli-x64-portable.tar.gz",
-      "authenticity": "not_proven_unsigned",
-      "checkpoint": "r3.5-zero-exception-productization",
-      "revision": "a4f28b8155ed3f79ea217c37886c4c73618d9d0a",
-      "sha256": "ed7479529ffe27c58ada5725c842bde8a0bf6c425d3d2accf8fe8377e0d7b706",
-      "target": "macos_portable_cli_x64"
-    },
-    {
-      "artifact": "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
-      "authenticity": "not_proven_unsigned",
-      "checkpoint": "r3.6-product-readiness",
-      "revision": "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
-      "sha256": "2526a5f5d085087301f66d2855a1942d01457cb598c1bf41704388948295b595",
-      "target": "windows_portable_cli_x64"
-    },
-    {
-      "artifact": "facman-0.1.0-dev.contract-windows-tui-x64-portable.zip",
-      "authenticity": "not_proven_unsigned",
-      "checkpoint": "r3.6-product-readiness",
-      "revision": "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
-      "sha256": "8b87f28e098096dfd6672b1d9701bd227bdfaf99d0d8f5ade9eacb9021ddd3a1",
-      "target": "windows_portable_tui_x64"
-    }
-  ],
-  "current_checkpoint": "r3.7-baseline",
-  "current_phase": "r3.7-instance-content-lifecycle-active",
+  "current_checkpoint": "r3.7-public-integration-proof",
   "current_revisions": {
-    "factorio_launcher": "HEAD",
+    "accepted_integration": "d00456069eb509eabf6a63f831aadbd19813413f",
+    "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
   },
-  "evidence_revision": "29cf22fa15250698b7587a9868737c10f3bcc749",
-  "implementation_revision": "HEAD",
-  "integration_revision": "29cf22fa15250698b7587a9868737c10f3bcc749",
+  "execution": {
+    "operator_verdict": "pending",
+    "proof": "",
+    "reason": "real_factorio_isolation_not_proven",
+    "status": "unavailable"
+  },
   "known_blockers": [
-    "Real Factorio isolation remains operator-only and has no human verdict.",
+    "H1 has no reviewed operator verdict.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision."
@@ -210,6 +154,120 @@
     "status": "implemented",
     "transport": "bounded newline-delimited JSON over stdio"
   },
+  "next_authority_gate": "H1",
+  "platforms": [
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "cli",
+      "id": "linux_portable_cli_x64",
+      "package_status": "passed",
+      "publication_status": "unpublished",
+      "runtime_status": "passed",
+      "support_status": "candidate"
+    },
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "cli",
+      "id": "macos_portable_cli_x64",
+      "package_status": "passed",
+      "publication_status": "unpublished",
+      "runtime_status": "passed",
+      "support_status": "candidate"
+    },
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "cli",
+      "id": "windows_portable_cli_x64",
+      "package_status": "passed",
+      "publication_status": "unpublished",
+      "runtime_status": "passed",
+      "support_status": "candidate"
+    },
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "cli_tui",
+      "id": "windows_portable_tui_x64",
+      "package_status": "passed",
+      "publication_status": "unpublished",
+      "runtime_status": "passed",
+      "support_status": "candidate"
+    },
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "cli_tui",
+      "id": "linux_portable_tui_x64",
+      "package_status": "passed",
+      "publication_status": "unpublished",
+      "runtime_status": "passed",
+      "support_status": "candidate"
+    },
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "cli_tui",
+      "id": "macos_portable_tui_x64",
+      "package_status": "passed",
+      "publication_status": "unpublished",
+      "runtime_status": "passed",
+      "support_status": "candidate"
+    },
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "winforms",
+      "id": "windows_legacy_winforms_x64",
+      "package_status": "contract_only",
+      "publication_status": "unpublished",
+      "runtime_status": "passed",
+      "support_status": "experimental"
+    },
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "appkit",
+      "id": "macos_legacy_appkit_x64",
+      "package_status": "contract_only",
+      "publication_status": "unpublished",
+      "runtime_status": "not_proven",
+      "support_status": "experimental"
+    },
+    {
+      "compile_status": "deferred",
+      "evidence_revision": "",
+      "frontend_family": "gtk",
+      "id": "linux_x11_gtk_x64",
+      "package_status": "contract_only",
+      "publication_status": "unpublished",
+      "runtime_status": "deferred",
+      "support_status": "unavailable"
+    },
+    {
+      "compile_status": "passed",
+      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "frontend_family": "cli",
+      "id": "portable_cli_x64",
+      "package_status": "contract_only",
+      "publication_status": "unpublished",
+      "runtime_status": "contract_tested",
+      "support_status": "experimental"
+    },
+    {
+      "compile_status": "opt_in_only",
+      "evidence_revision": "",
+      "frontend_family": "tui",
+      "id": "portable_tui_x64",
+      "package_status": "not_built",
+      "publication_status": "unpublished",
+      "runtime_status": "not_proven",
+      "support_status": "experimental"
+    }
+  ],
+  "product_version": "0.1.0-dev",
   "provider_pins": {
     "factorio_binding": {
       "pin_kind": "historical_proof_baseline",
@@ -227,59 +285,34 @@
       "source": "universal-setup"
     }
   },
-  "provider_revisions": {
-    "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
-    "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
-  },
   "quarantined_capabilities": [
-    "run.execute pending operator-supplied real Factorio verdict",
+    "run.execute",
     "setup mutation",
     "network and credential operations",
-    "release signing, notarization, publication, and publisher authenticity",
-    "OS-neutral TUI and daemon publication; target-specific TUI profiles remain package previews"
+    "server and developer process execution",
+    "daemon publication",
+    "release signing, notarization, publication, and publisher authenticity"
   ],
-  "schema": "facman.project_state.v1",
-  "target_proof_platforms": [
-    {
-      "architecture": "x86_64",
-      "package_format": "portable_zip",
-      "profile": "windows_portable_cli_x64",
-      "runner": "windows-2025"
-    },
-    {
-      "architecture": "x86_64",
-      "package_format": "tarball",
-      "profile": "linux_portable_cli_x64",
-      "runner": "ubuntu-24.04"
-    },
-    {
-      "architecture": "x86_64",
-      "package_format": "tarball",
-      "profile": "macos_portable_cli_x64",
-      "runner": "macos-15-intel"
-    },
-    {
-      "architecture": "x86_64",
-      "package_format": "portable_zip",
-      "profile": "windows_portable_tui_x64",
-      "runner": "windows-2025"
-    },
-    {
-      "architecture": "x86_64",
-      "package_format": "tarball",
-      "profile": "linux_portable_tui_x64",
-      "runner": "ubuntu-24.04"
-    },
-    {
-      "architecture": "x86_64",
-      "package_format": "tarball",
-      "profile": "macos_portable_tui_x64",
-      "runner": "macos-15-intel"
-    }
-  ],
+  "release": {
+    "authenticity": "not_proven_unsigned",
+    "public_sdk": "unavailable",
+    "status": "unpublished"
+  },
+  "safe_beta": false,
+  "schema": "facman.project_state.v2",
   "truth_boundaries": [
     "AIDE is development governance only and never a product dependency.",
     "Focused affected tests do not replace the full promotion matrix.",
-    "Human acceptance is never inferred from automated checks."
-  ]
+    "Human acceptance is never inferred from automated checks.",
+    "Compile, runtime, package, publication, and support status are separate claims."
+  ],
+  "validation": {
+    "accepted_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+    "ci_run": "29208144217",
+    "code_security_run": "29208144220",
+    "native_test_count": 22,
+    "python_test_count": 314,
+    "schema_check_run": "29208144255",
+    "security_policy_run": "29208144246"
+  }
 }

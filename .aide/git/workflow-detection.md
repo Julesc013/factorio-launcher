@@ -3,8 +3,8 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/r3.7-instance-content-lifecycle
-- current_commit: b6e8e6200b9ef942b1a95fc39890636621358a62
+- current_branch: task/r3.7-truth-conformance-repair
+- current_commit: eb629caaec9d62536a272336e940c0d3003fdaae
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
@@ -14,8 +14,8 @@
 
 ## Branch Summary
 
-- local_branches: 20
-- remote_branches: 9
+- local_branches: 23
+- remote_branches: 11
 - tags_count: 2
 
 ## Warnings

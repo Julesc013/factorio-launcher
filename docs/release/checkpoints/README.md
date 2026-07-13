@@ -1,5 +1,13 @@
 # Release and readiness checkpoints
 
+<!-- FACMAN-RELEASE-STATUS:BEGIN -->
+## Current Boundary
+
+The accepted non-execution product wave is `r3.7`. The exact H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the operator verdict remains `pending`.
+
+Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
+<!-- FACMAN-RELEASE-STATUS:END -->
+
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),
 frozen at implementation proof revision

@@ -11,7 +11,7 @@ source_inputs:
   - .aide/context/priority.yaml
   - .aide/context/excerpt-policy.yaml
   - .aide/memory/project-state.md
-  - .aide/memory/project-state.v1.json
+  - .aide/memory/project-state.v2.json
   - .aide/queue/index.yaml
   - contracts/policy/test_impact.v1.json
 generated_outputs:

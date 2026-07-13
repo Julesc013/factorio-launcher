@@ -1,6 +1,6 @@
 # Release handbook
 
-1. Reconcile `.aide/memory/project-state.v1.json`, the roadmap, claim ledger,
+1. Reconcile `.aide/memory/project-state.v2.json`, the roadmap, claim ledger,
    workspace lock, and release profile.
 2. Require a clean source tree and exact provider pins.
 3. Run Debug and Release native tests, the full Python suite, strict/AIDE
