@@ -263,7 +263,14 @@ std::string effective_config(
     facman::factorio::launch::InstanceLaunchRef instance_ref {
         instance.id.str(), instance.profile, instance.root, "gui", {}};
     facman::factorio::launch::InstallLaunchRef install_ref {
-        install.root, install.executable, install.ownership};
+        install.root,
+        install.executable,
+        install.ownership,
+        install.distribution_origin,
+        install.platform_integration,
+        install.strict_isolation_eligibility,
+        install.external_state_domains,
+    };
     return facman::factorio::launch::effective_config_ini(instance_ref, install_ref);
 }
 

@@ -587,7 +587,15 @@ std::string effective_config(
     const fs::path& root)
 {
     facman::factorio::launch::InstanceLaunchRef instance {target.str(), snapshot.profile, root, "gui", {}};
-    facman::factorio::launch::InstallLaunchRef install_ref {install.root, install.executable, install.ownership};
+    facman::factorio::launch::InstallLaunchRef install_ref {
+        install.root,
+        install.executable,
+        install.ownership,
+        install.distribution_origin,
+        install.platform_integration,
+        install.strict_isolation_eligibility,
+        install.external_state_domains,
+    };
     return facman::factorio::launch::effective_config_ini(instance, install_ref);
 }
 
