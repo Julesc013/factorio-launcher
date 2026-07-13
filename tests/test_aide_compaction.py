@@ -70,7 +70,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+            "c43d390efe0db17480f9d0262827659b4ae242dd",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         catalog = json.loads(

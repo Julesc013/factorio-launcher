@@ -14,8 +14,8 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `53ffbd6e02f098e0eacda9392131592ba421b90a`;
-- Universal Launcher pin: `de6c7c6cfa80c524296066bd6bb90a70ba02b760`;
-- Universal Setup pin: `4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`;
+- Universal Launcher pin: `c43d390efe0db17480f9d0262827659b4ae242dd`;
+- Universal Setup pin: `bc5991fb9ada6d9900eeda410bcd19fef98b036a`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
 - operator verdict: `Fail`;
 - Safe beta: `false`;
@@ -28,7 +28,7 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execu
 
 - command contracts: `111`;
 - registered routes: `109`;
-- schemas: `217`;
+- schemas: `218`;
 - refusal codes: `213`;
 - command catalog digest: `43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86`;
 - accepted CI revision: `53ffbd6e02f098e0eacda9392131592ba421b90a`;

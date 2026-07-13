@@ -22,7 +22,7 @@ int main()
 {
     facman_client_initialize_process(nullptr);
     if (flb_abi_version_v1() != FLB_ABI_VERSION || FLB_ABI_VERSION != 0x00010002u) return 1;
-    if (flb_required_ulk_abi_v1() != 0x00010001u) return 2;
+    if (flb_required_ulk_abi_v1() != 0x00010002u) return 2;
     if (!flb_abi_is_compatible_v1(0x00010000u) ||
         !flb_abi_is_compatible_v1(0x00010001u) ||
         !flb_abi_is_compatible_v1(FLB_ABI_VERSION)) return 3;
