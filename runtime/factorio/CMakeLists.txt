@@ -17,6 +17,13 @@ if(WIN32)
   target_link_libraries(flb_factorio_discovery_static PUBLIC Advapi32)
 endif()
 
+add_library(flb_factorio_install_validation_static STATIC
+  install_validation/flb_factorio_setup_recipe.cpp)
+target_compile_features(flb_factorio_install_validation_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_install_validation_static PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/install_validation)
+target_link_libraries(flb_factorio_install_validation_static PUBLIC facman_core_static)
+
 add_library(flb_factorio_diagnostics_static STATIC diagnostics/flb_factorio_diagnostics.cpp)
 target_compile_features(flb_factorio_diagnostics_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_diagnostics_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/diagnostics)
@@ -76,6 +83,7 @@ target_link_libraries(flb_factorio_server_static PUBLIC
 add_library(facman_factorio_model INTERFACE)
 target_link_libraries(facman_factorio_model INTERFACE
   flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_launch_static
+  flb_factorio_install_validation_static
   flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
   flb_factorio_snapshots_static)
 target_link_libraries(facman_factorio_model INTERFACE flb_factorio_profiles_static)
@@ -137,6 +145,7 @@ add_library(flb_factorio ALIAS flb_factorio_static)
 add_library(facman::binding ALIAS flb_factorio_static)
 foreach(target IN ITEMS
     flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static
+    flb_factorio_install_validation_static
     flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
     flb_factorio_snapshots_static
     flb_factorio_profiles_static
