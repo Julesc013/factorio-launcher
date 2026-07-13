@@ -24,8 +24,13 @@ extern "C" {
 
 typedef struct flb_context flb_context;
 
+#define FLB_ABI_VERSION_MAJOR 1u
+#define FLB_ABI_VERSION_MINOR 2u
+#define FLB_ABI_VERSION ((FLB_ABI_VERSION_MAJOR << 16) | FLB_ABI_VERSION_MINOR)
+
 typedef struct flb_config_v1 {
     ulk_size struct_size;
+    /* Reserved for a future product-content root. V1 callers must pass {0, 0}. */
     ulk_string_view product_root;
     ulk_string_view workspace_root;
 } flb_config_v1;
@@ -42,6 +47,10 @@ FLB_API int FLB_CALL flb_command_execute_v1(
 );
 
 FLB_API uint32_t FLB_CALL flb_abi_version_v1(void);
+
+FLB_API uint32_t FLB_CALL flb_required_ulk_abi_v1(void);
+
+FLB_API int FLB_CALL flb_abi_is_compatible_v1(uint32_t requested_abi);
 
 FLB_API void FLB_CALL flb_context_destroy_v1(flb_context* context);
 

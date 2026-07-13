@@ -8,14 +8,14 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3.6-product-readiness-complete
+  phase: r3.7-complete-h1-pending
   primary_goal: >
-    Preserve the completed R3.6 non-execution product on the frozen R3.5 architecture
-    while keeping real Factorio execution behind the operator-owned authority lane.
+    Preserve the completed R3.7 non-execution product and exact H1 candidate on
+    the frozen R3.5 architecture while keeping execution operator-owned.
   next_task: >
     FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 is the next authority gate and remains
     operator-only; automation must never convert its pending verdict into pass.
-    The completed autonomous lane does not imply this human verdict.
+    The completed R3.7 lane does not imply this human verdict.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import

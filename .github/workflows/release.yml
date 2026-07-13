@@ -23,7 +23,7 @@ jobs:
       - name: Validate release contracts
         run: |
           python tools/release_contract_check.py
-          python tools/release_readiness_check.py
+          python tools/release_structure_check.py
       - name: Preserve unpublished boundary
         run: |
           python -c "from pathlib import Path; text=Path('docs/release/built_package_artifacts.md').read_text(); assert 'No package has been published' in text"

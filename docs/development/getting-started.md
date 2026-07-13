@@ -18,7 +18,7 @@ Windows build and `build/native-smoke/facman` on a single-config Unix build.
 Use `tools/dev.py test --affected` while iterating and `verify-all` before a
 promotion handoff.
 
-Current project truth is generated into `.aide/memory/project-state.v1.json`.
+Current project truth is generated into `.aide/memory/project-state.v2.json`.
 Run `py -3 tools/project_state.py --write` after changing its canonical inputs.
 Archived AIDE history is discoverable through `.aide/history/<checkpoint>/index.json`
 but excluded from normal context packets.

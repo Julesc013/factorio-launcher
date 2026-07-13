@@ -1,0 +1,23 @@
+{
+  "schema": "facman.flb_abi_compatibility.v1",
+  "flb_abi": {
+    "major": 1,
+    "minor": 2,
+    "encoded": 65538,
+    "oldest_tested_client": 65537,
+    "rule": "requested major must match and requested minor must not exceed the runtime minor"
+  },
+  "required_ulk_abi": {
+    "major": 1,
+    "minor": 1,
+    "encoded": 65537
+  },
+  "config_v1": {
+    "product_root": "reserved_must_be_empty",
+    "workspace_root": "borrowed_during_context_creation"
+  },
+  "legacy_direct_dispatch": false,
+  "installed_linkage": "shared",
+  "response_views": "borrowed_until_next_call_or_context_destroy",
+  "stability": "experimental_no_stable_compatibility_promise"
+}

@@ -13,8 +13,12 @@ aliases during migration.
 
 Install rules expose explicit Runtime, CLI, Contracts, Content, Documentation,
 Licenses, and Development components and install a machine-readable artifact
-manifest. Presets cover development hosts, debug/release CI, sanitizers,
-coverage, and the three current x64 package lanes.
+manifest. The experimental Development component exports a relocatable
+`FacMan::flb` shared-library target, complete FLB and ULK headers, CMake and
+pkg-config discovery metadata, and ABI dependency metadata. A CTest installs,
+relocates, builds, and runs current- and older-header C consumers. Presets cover
+development hosts, debug/release CI, sanitizers, coverage, and the three current
+x64 package lanes.
 
 Package artifact lookup is deterministic. It checks documented configuration
 and dependency output directories and never recursively searches a build tree,

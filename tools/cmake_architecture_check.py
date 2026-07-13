@@ -32,7 +32,8 @@ def validate() -> list[str]:
     for alias in (
         "facman::core", "facman::platform", "facman::workspace", "facman::archive", "facman::preferences",
         "facman::package", "facman::factorio_model", "facman::factorio_application",
-        "facman::binding", "facman::client", "facman::cli",
+        "facman::binding", "facman::client_model", "facman::transport_direct",
+        "facman::transport_process", "facman::transport_daemon", "facman::client", "facman::cli",
     ):
         if f"{alias} ALIAS" not in combined:
             problems.append(f"namespaced target missing: {alias}")
@@ -57,6 +58,21 @@ def validate() -> list[str]:
     for component in ("Runtime", "CLI", "Contracts", "Content", "Documentation", "Licenses", "Development"):
         if f"COMPONENT {component}" not in install and f'\\"{component}\\"' not in install:
             problems.append(f"install component missing: {component}")
+    for anchor in (
+        "EXPORT FacManTargets",
+        "FacManConfig.cmake",
+        "FacManConfigVersion.cmake",
+        "facman-flb.pc",
+        "include/ulk",
+        "compatibility.v1.json",
+    ):
+        if anchor not in install:
+            problems.append(f"installed SDK contract is missing: {anchor}")
+    if "bin/Debug" in install:
+        problems.append("install graph contains a hard-coded Debug frontend artifact")
+    apps = (ROOT / "apps/CMakeLists.txt").read_text(encoding="utf-8")
+    if "if(FACMAN_BUILD_GUI)" not in apps or "does not build an in-tree GUI target" not in apps:
+        problems.append("FACMAN_BUILD_GUI remains a silent no-op")
     presets = json.loads((ROOT / "CMakePresets.json").read_text(encoding="utf-8"))
     names = {item["name"] for item in presets.get("configurePresets", [])}
     required = {"dev-windows", "dev-linux", "dev-macos", "ci-debug", "ci-release", "asan-ubsan", "coverage", "package-windows-x64", "package-linux-x64", "package-macos-x64"}

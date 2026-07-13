@@ -167,7 +167,10 @@ int main(void)
     if (flb_context_create_v1(&config, &context) != ULK_STATUS_OK || context == 0) {
         return 10;
     }
-    if (flb_abi_version_v1() != ((ULK_API_VERSION_MAJOR << 16) | ULK_API_VERSION_MINOR)) {
+    if (flb_abi_version_v1() != FLB_ABI_VERSION ||
+        flb_required_ulk_abi_v1() != ((ULK_API_VERSION_MAJOR << 16) | ULK_API_VERSION_MINOR) ||
+        !flb_abi_is_compatible_v1(0x00010001u) ||
+        flb_abi_is_compatible_v1(0x00010003u)) {
         return 11;
     }
 
@@ -228,14 +231,9 @@ int main(void)
         run_refusal(context, "modsets.explain", 1, "{}", "invalid_request") != 0) return 43;
     if (run_refusal(context, "run.execute", 0, "{}", "isolation_not_proven") != 0 ||
         run_refusal(context, "setup.preview", 1, "{}", "setup_unavailable") != 0 ||
-        run_refusal(context, "utility.operation", 0, "{\"operation\":\"mods.search\",\"query\":\"space\"}", "network_forbidden") != 0 ||
+        run_refusal(context, "utility.operation", 0, "{\"operation\":\"mods.search\",\"query\":\"space\"}", "unsupported_command") != 0 ||
         run_refusal(context, "setup.operation", 1, "{\"operation\":\"installs.install-version\",\"version\":\"2.0.77\",\"archive\":\"fixture.zip\"}",
-#if FACMAN_WITH_SETUP
-            "setup_plan_inputs_not_confirmed"
-#else
-            "setup_unavailable"
-#endif
-        ) != 0) {
+            "unsupported_command") != 0) {
         return 39;
     }
     if (run_command(context, "install_refs.scan", 1, "\"schema\":\"factorio.discovery_report.v1\"") != 0) {
@@ -388,6 +386,12 @@ int main(void)
     context = 0;
     if (flb_context_create_v1(&config, &context) != ULK_STATUS_INVALID_ARGUMENT || context != 0) {
         return 33;
+    }
+    memset(&config, 0, sizeof(config));
+    config.struct_size = sizeof(config);
+    config.product_root = view_from_cstr("reserved-product-root");
+    if (flb_context_create_v1(&config, &context) != ULK_STATUS_INVALID_ARGUMENT || context != 0) {
+        return 44;
     }
     return 0;
 }

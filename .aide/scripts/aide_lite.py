@@ -28025,7 +28025,7 @@ def render_context_packet(repo_root: Path, repo_map: dict[str, object], test_map
 - `{SNAPSHOT_PATH}`
 - `{CONTEXT_INDEX_PATH}`
 - `.aide/memory/project-state.md`
-- `.aide/memory/project-state.v1.json`
+- `.aide/memory/project-state.v2.json`
 - `contracts/policy/test_impact.v1.json`
 - `.aide/memory/decisions.md`
 - `.aide/memory/open-risks.md`
@@ -31411,7 +31411,7 @@ Continue AIDE token survival by using repo-local context refs, compact objective
 ## CONTEXT_REFS
 
 - `.aide/memory/project-state.md`
-- `.aide/memory/project-state.v1.json`
+- `.aide/memory/project-state.v2.json`
 - `.aide/memory/decisions.md`
 - `.aide/memory/open-risks.md`
 - `{SNAPSHOT_PATH}` ({snapshot_state})

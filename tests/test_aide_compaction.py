@@ -22,25 +22,24 @@ class AideCompactionTests(unittest.TestCase):
     def test_machine_state_has_every_required_truth_family(self) -> None:
         data = project_state.collect()
         for key in (
-            "current_revisions", "current_phase", "active_workunit",
-            "quarantined_capabilities", "claim_levels", "provider_pins",
-            "target_proof_platforms", "current_artifacts", "known_blockers",
-            "current_checkpoint", "completed_wave", "command_law", "machine_protocol",
-            "implementation_revision", "integration_revision", "evidence_revision",
-            "provider_revisions", "active_wave", "baseline_evidence",
+            "current_revisions", "active_work_unit", "next_authority_gate",
+            "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
+            "known_blockers", "current_checkpoint", "completed_wave", "command_law",
+            "machine_protocol", "execution", "release", "validation", "safe_beta",
         ):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_r37_baseline_preserves_r36_provider_and_catalog_truth(self) -> None:
+    def test_r37_completion_preserves_provider_and_catalog_truth(self) -> None:
         data = project_state.collect()
-        self.assertEqual("r3.7-instance-content-lifecycle-active", data["current_phase"])
-        self.assertEqual("r3.7-baseline", data["current_checkpoint"])
-        self.assertEqual("29cf22fa15250698b7587a9868737c10f3bcc749", data["evidence_revision"])
-        self.assertEqual(data["evidence_revision"], data["integration_revision"])
+        self.assertEqual("r3.7-public-integration-proof", data["current_checkpoint"])
+        self.assertEqual("H1", data["next_authority_gate"])
+        self.assertEqual("unavailable", data["execution"]["status"])
+        self.assertEqual("pending", data["execution"]["operator_verdict"])
+        self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "fc8423572e9c055991558f8a4e7cbbc95e0c4a24",
-            data["completed_wave"]["revision"],
+            "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
+            data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
             "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
@@ -51,21 +50,16 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual(catalog["source_digest"], data["command_law"]["catalog_digest"])
 
-    def test_artifact_evidence_is_structured_and_revision_specific(self) -> None:
-        records = project_state.collect()["current_artifacts"]
+    def test_platform_evidence_separates_proof_and_publication_status(self) -> None:
+        data = project_state.collect()
+        records = data["platforms"]
         self.assertTrue(records)
         for record in records:
-            self.assertEqual(
-                {"artifact", "revision", "checkpoint", "target", "sha256", "authenticity"},
-                set(record),
-            )
-            self.assertEqual("not_proven_unsigned", record["authenticity"])
-        windows_cli = [
-            record for record in records
-            if record["artifact"] == "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip"
-        ]
-        self.assertEqual(2, len(windows_cli))
-        self.assertEqual(2, len({record["revision"] for record in windows_cli}))
+            self.assertEqual("unpublished", record["publication_status"])
+            self.assertIn(record["support_status"], {"candidate", "experimental", "unavailable"})
+        appkit = next(record for record in records if record["id"] == "macos_legacy_appkit_x64")
+        self.assertEqual("passed", appkit["compile_status"])
+        self.assertEqual("not_proven", appkit["runtime_status"])
 
     def test_lifecycle_transitions_and_hashes_archived_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

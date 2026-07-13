@@ -24,7 +24,7 @@ affected_python_tests:
   - tests.test_aide_target_truth
   - tests.test_package_manifests
   - tests.test_package_pipeline_architecture
-  - tests.test_release_readiness
+  - tests.test_release_structure
 affected_strict_validators:
   - tools/aide_target_truth_check.py
   - tools/package_check.py
@@ -32,7 +32,7 @@ affected_strict_validators:
   - tools/package_manifest_check.py
   - tools/package_pipeline_check.py
   - tools/provenance_check.py
-  - tools/release_readiness_check.py
+  - tools/release_structure_check.py
 affected_package_profiles:
   - linux_portable_cli_x64
   - macos_portable_cli_x64

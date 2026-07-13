@@ -14,7 +14,7 @@ server execution, or GUI-only workflows.
 - `strict_check.py` runs structure, schema, security, source-format,
   accessibility, package, package-layout, package-manifest, package-skeleton,
   GUI, language/runtime, command, frontend, alpha-golden, refusal, discovery,
-  and release-readiness checks.
+  and release-structure checks.
 
 ## Hardened In This Slice
 

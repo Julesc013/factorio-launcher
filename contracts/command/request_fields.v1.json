@@ -1,0 +1,1510 @@
+{
+  "commands": {
+    "diagnostics.export": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "output_path",
+        "required": true
+      }
+    ],
+    "diagnostics.redact": [
+      {
+        "kind": "path",
+        "name": "path",
+        "required": true
+      }
+    ],
+    "doctor.run": [
+      {
+        "kind": "string_array",
+        "name": "roots",
+        "required": false
+      }
+    ],
+    "install_refs.import": [
+      {
+        "kind": "path",
+        "name": "path",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      }
+    ],
+    "install_refs.inspect": [
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      }
+    ],
+    "install_refs.scan": [
+      {
+        "kind": "string_array",
+        "name": "roots",
+        "required": false
+      }
+    ],
+    "installs.install_version": [
+      {
+        "kind": "string",
+        "name": "version",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "archive",
+        "required": false
+      }
+    ],
+    "installs.repair": [
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": true
+      }
+    ],
+    "installs.uninstall": [
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": true
+      }
+    ],
+    "installs.verify": [
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": true
+      }
+    ],
+    "instance.create": [
+      {
+        "kind": "string",
+        "name": "display_name",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "template_id",
+        "required": false
+      }
+    ],
+    "instance.export": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "output_path",
+        "required": true
+      }
+    ],
+    "instance.import": [
+      {
+        "kind": "path",
+        "name": "source_path",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": false
+      }
+    ],
+    "instances.archive": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "instances.clone": [
+      {
+        "kind": "identifier",
+        "name": "source_instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "destination_instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "display_name",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "install_ref",
+        "required": false
+      }
+    ],
+    "instances.diff": [
+      {
+        "kind": "identifier",
+        "name": "left_instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "right_ref",
+        "required": true
+      }
+    ],
+    "instances.inspect": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "instances.rename": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "display_name",
+        "required": true
+      }
+    ],
+    "instances.restore": [
+      {
+        "kind": "string",
+        "name": "archive_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "new_instance_id",
+        "required": false
+      }
+    ],
+    "instances.verify": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "launch_plan.build": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "launch_plan.explain": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "launch_plan.preflight": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "mods.explain": [
+      {
+        "kind": "string",
+        "name": "identity",
+        "required": true
+      }
+    ],
+    "mods.import": [
+      {
+        "kind": "path",
+        "name": "source_path",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "mods.index": [
+      {
+        "kind": "string_array",
+        "name": "roots",
+        "required": false
+      }
+    ],
+    "mods.inspect": [
+      {
+        "kind": "string",
+        "name": "identity",
+        "required": true
+      }
+    ],
+    "mods.install": [
+      {
+        "kind": "string",
+        "name": "query",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": false
+      }
+    ],
+    "mods.list": [],
+    "mods.search": [
+      {
+        "kind": "string",
+        "name": "query",
+        "required": false
+      }
+    ],
+    "mods.update": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": false
+      }
+    ],
+    "mods.verify": [
+      {
+        "kind": "string",
+        "name": "identity",
+        "required": true
+      }
+    ],
+    "modsets.apply": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string_array",
+        "name": "enabled_mods",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "disabled_mods",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "version_preferences",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_packages",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_versions_per_package",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_graph_edges",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_solver_states",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_backtracks",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_elapsed_ms",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_explanation_nodes",
+        "required": false
+      }
+    ],
+    "modsets.diff": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string_array",
+        "name": "enabled_mods",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "disabled_mods",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "version_preferences",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_packages",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_versions_per_package",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_graph_edges",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_solver_states",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_backtracks",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_elapsed_ms",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_explanation_nodes",
+        "required": false
+      }
+    ],
+    "modsets.explain": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string_array",
+        "name": "enabled_mods",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "disabled_mods",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "version_preferences",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_packages",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_versions_per_package",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_graph_edges",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_solver_states",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_backtracks",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_elapsed_ms",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_explanation_nodes",
+        "required": false
+      }
+    ],
+    "modsets.export": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "output_path",
+        "required": true
+      }
+    ],
+    "modsets.lock": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "modsets.plan": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string_array",
+        "name": "enabled_mods",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "disabled_mods",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "version_preferences",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_packages",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_versions_per_package",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_graph_edges",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_solver_states",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_backtracks",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_elapsed_ms",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "maximum_explanation_nodes",
+        "required": false
+      }
+    ],
+    "modsets.rollback": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "transaction_id",
+        "required": true
+      }
+    ],
+    "modsets.verify": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "onboarding.plan": [
+      {
+        "kind": "identifier",
+        "name": "preferred_install",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "instance_display_name",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "template_id",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "workspace",
+        "required": false
+      }
+    ],
+    "package.verify": [
+      {
+        "kind": "path",
+        "name": "path",
+        "required": false
+      }
+    ],
+    "preferences.apply": [
+      {
+        "kind": "path",
+        "name": "preferred_workspace",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "preferred_transport",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "default_instance_template",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "default_launch_profile",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "display_color_policy",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "tui_page_size",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "command_timeout_seconds",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "backup_destination",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "backup_keep_last",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "discovery_providers",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "discovery_roots",
+        "required": false
+      }
+    ],
+    "preferences.plan": [
+      {
+        "kind": "path",
+        "name": "preferred_workspace",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "preferred_transport",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "default_instance_template",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "default_launch_profile",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "display_color_policy",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "tui_page_size",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "command_timeout_seconds",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "backup_destination",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "backup_keep_last",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "discovery_providers",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "discovery_roots",
+        "required": false
+      }
+    ],
+    "preferences.validate": [
+      {
+        "kind": "path",
+        "name": "preferred_workspace",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "preferred_transport",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "default_instance_template",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "default_launch_profile",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "display_color_policy",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "tui_page_size",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "command_timeout_seconds",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "backup_destination",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "backup_keep_last",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "discovery_providers",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "discovery_roots",
+        "required": false
+      }
+    ],
+    "profiles.apply": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "profile_id",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "window_mode",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "graphics_quality",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "audio",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "selection_mode",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "selection",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "launch_mode",
+        "required": false
+      },
+      {
+        "kind": "bounded_ticks",
+        "name": "benchmark_ticks",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "additional_arguments",
+        "required": false
+      }
+    ],
+    "profiles.archive": [
+      {
+        "kind": "identifier",
+        "name": "profile_id",
+        "required": true
+      }
+    ],
+    "profiles.clone": [
+      {
+        "kind": "identifier",
+        "name": "source_profile_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "destination_profile_id",
+        "required": true
+      }
+    ],
+    "profiles.create": [
+      {
+        "kind": "identifier",
+        "name": "profile_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "template_id",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "window_mode",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "graphics_quality",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "audio",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "selection_mode",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "selection",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "launch_mode",
+        "required": false
+      },
+      {
+        "kind": "bounded_ticks",
+        "name": "benchmark_ticks",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "additional_arguments",
+        "required": false
+      }
+    ],
+    "profiles.diff": [
+      {
+        "kind": "identifier",
+        "name": "left_profile_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "right_profile_id",
+        "required": true
+      }
+    ],
+    "profiles.inspect": [
+      {
+        "kind": "identifier",
+        "name": "profile_id",
+        "required": true
+      }
+    ],
+    "profiles.list": [],
+    "profiles.plan": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "profile_id",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "window_mode",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "graphics_quality",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "audio",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "selection_mode",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "selection",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "launch_mode",
+        "required": false
+      },
+      {
+        "kind": "bounded_ticks",
+        "name": "benchmark_ticks",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "additional_arguments",
+        "required": false
+      }
+    ],
+    "run.execute": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": false
+      }
+    ],
+    "run.preview": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "saves.associate": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "profile_id",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "source_operation",
+        "required": false
+      }
+    ],
+    "saves.backup": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "output_path",
+        "required": false
+      }
+    ],
+    "saves.clone": [
+      {
+        "kind": "identifier",
+        "name": "source_instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "target_instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": true
+      }
+    ],
+    "saves.diff": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "other_save",
+        "required": true
+      }
+    ],
+    "saves.index": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "saves.inspect": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": true
+      }
+    ],
+    "saves.list": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "saves.retention.apply": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_last",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_daily",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_weekly",
+        "required": false
+      },
+      {
+        "kind": "unsigned64",
+        "name": "maximum_total_bytes",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "minimum_age_days",
+        "required": false
+      }
+    ],
+    "saves.retention.plan": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_last",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_daily",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_weekly",
+        "required": false
+      },
+      {
+        "kind": "unsigned64",
+        "name": "maximum_total_bytes",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "minimum_age_days",
+        "required": false
+      }
+    ],
+    "saves.verify": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": true
+      }
+    ],
+    "servers.create": [
+      {
+        "kind": "string",
+        "name": "name",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "servers.diff": [
+      {
+        "kind": "identifier",
+        "name": "server_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "other_server_id",
+        "required": true
+      }
+    ],
+    "servers.export": [
+      {
+        "kind": "identifier",
+        "name": "server_id",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "output_path",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": false
+      },
+      {
+        "kind": "boolean_string",
+        "name": "include_save",
+        "required": false
+      }
+    ],
+    "servers.inspect": [
+      {
+        "kind": "identifier",
+        "name": "server_id",
+        "required": true
+      }
+    ],
+    "servers.plan": [
+      {
+        "kind": "identifier",
+        "name": "server_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": false
+      }
+    ],
+    "servers.rcon": [
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": true
+      }
+    ],
+    "servers.start": [
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": true
+      }
+    ],
+    "servers.stop": [
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": true
+      }
+    ],
+    "servers.validate": [
+      {
+        "kind": "identifier",
+        "name": "server_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": false
+      }
+    ],
+    "setup.operation": [
+      {
+        "kind": "string",
+        "name": "operation",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "name",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "path",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "query",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "version",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "archive",
+        "required": false
+      }
+    ],
+    "snapshots.create": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "snapshot_id",
+        "required": true
+      },
+      {
+        "kind": "string_array",
+        "name": "saves",
+        "required": false
+      }
+    ],
+    "snapshots.diff": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "left_snapshot_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "right_snapshot_id",
+        "required": true
+      }
+    ],
+    "snapshots.inspect": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "snapshot_id",
+        "required": true
+      }
+    ],
+    "snapshots.list": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      }
+    ],
+    "snapshots.restore": [
+      {
+        "kind": "path",
+        "name": "snapshot_ref",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "target_instance_id",
+        "required": true
+      }
+    ],
+    "snapshots.retention.apply": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_last",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_daily",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_weekly",
+        "required": false
+      },
+      {
+        "kind": "unsigned64",
+        "name": "maximum_total_bytes",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "minimum_age_days",
+        "required": false
+      }
+    ],
+    "snapshots.retention.plan": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_last",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_daily",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "keep_weekly",
+        "required": false
+      },
+      {
+        "kind": "unsigned64",
+        "name": "maximum_total_bytes",
+        "required": false
+      },
+      {
+        "kind": "bounded_unsigned",
+        "name": "minimum_age_days",
+        "required": false
+      }
+    ],
+    "snapshots.verify": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "snapshot_id",
+        "required": true
+      }
+    ],
+    "templates.inspect": [
+      {
+        "kind": "identifier",
+        "name": "template_id",
+        "required": true
+      }
+    ],
+    "templates.list": [],
+    "templates.validate": [
+      {
+        "kind": "identifier",
+        "name": "template_id",
+        "required": true
+      }
+    ],
+    "utility.operation": [
+      {
+        "kind": "string",
+        "name": "operation",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "name",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "id",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "path",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "query",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "version",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "archive",
+        "required": false
+      }
+    ],
+    "workspace.recovery.apply": [
+      {
+        "kind": "identifier",
+        "name": "transaction_id",
+        "required": true
+      }
+    ],
+    "workspace.recovery.plan": [
+      {
+        "kind": "identifier",
+        "name": "transaction_id",
+        "required": true
+      }
+    ]
+  },
+  "schema": "facman.request_fields.v1"
+}

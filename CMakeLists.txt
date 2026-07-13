@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(facman LANGUAGES C CXX)
+project(facman VERSION 0.1.0 LANGUAGES C CXX)
 
 include(cmake/FacManOptions.cmake)
 include(cmake/FacManPolicies.cmake)

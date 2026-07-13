@@ -7,9 +7,11 @@
       "type": "string"
     },
     "backup_keep_last": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "command_timeout_seconds": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "default_instance_template": {
@@ -35,15 +37,26 @@
       "type": "array"
     },
     "display_color_policy": {
+      "enum": [
+        "auto",
+        "always",
+        "never"
+      ],
       "type": "string"
     },
     "preferred_transport": {
+      "enum": [
+        "direct",
+        "process",
+        "daemon"
+      ],
       "type": "string"
     },
     "preferred_workspace": {
       "type": "string"
     },
     "tui_page_size": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     }
   },
