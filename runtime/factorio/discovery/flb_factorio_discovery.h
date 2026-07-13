@@ -20,6 +20,10 @@ struct InstallRef {
     std::string ownership;
     std::string source;
     std::string platform;
+    std::string distribution_origin;
+    std::string platform_integration;
+    std::string strict_isolation_eligibility;
+    std::vector<std::string> external_state_domains;
     std::vector<std::string> capabilities;
     std::string verification_status;
     std::string diagnostic_code;
@@ -30,6 +34,8 @@ struct InstallRef {
 };
 
 InstallRef inspect_install(const std::filesystem::path& root, const std::string& install_id);
+
+void classify_install_isolation(InstallRef& install);
 
 std::vector<InstallRef> scan_install_candidates(const std::vector<std::filesystem::path>& explicit_roots);
 

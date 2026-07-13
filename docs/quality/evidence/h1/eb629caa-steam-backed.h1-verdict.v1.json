@@ -1,0 +1,26 @@
+{
+  "schema": "facman.h1_verdict.v1",
+  "work_unit": "FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01",
+  "candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
+  "operator_verdict": "Fail",
+  "operator_reviewed": true,
+  "factorio_version": "2.0.77",
+  "execution_route": "steam-backed",
+  "result": "protected_root_change_detected",
+  "observed_changes": [
+    "steam-userdata/427520/remote/achievements.dat",
+    "steam-userdata/427520/remote/player-data.json",
+    "steam-userdata/427520/remotecache.vdf"
+  ],
+  "unchanged_roots": [
+    "install_root",
+    "default_factorio_data"
+  ],
+  "raw_evidence_sha256": "2463EBE6D553B4EE3638A92A021FB9C06639BDFB8FE961B84C887295AC355B96",
+  "next_work_unit": "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01",
+  "unchanged_authority": {
+    "run_execute": "unavailable",
+    "safe_beta": false,
+    "r3_8_execution_candidate": "blocked_pending_reviewed_h1_pass"
+  }
+}

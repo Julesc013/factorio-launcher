@@ -6,6 +6,7 @@
 #include "command_result.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_profiles.h"
+#include "handlers/unavailable.h"
 
 namespace facman::factorio::application::handlers {
 namespace discovery = facman::factorio::discovery;
@@ -24,7 +25,12 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
     install.ownership = record.value().ownership;
     install.source = record.value().source;
     install.platform = record.value().platform;
+    install.distribution_origin = record.value().distribution_origin;
+    install.platform_integration = record.value().platform_integration;
+    install.strict_isolation_eligibility = record.value().strict_isolation_eligibility;
+    install.external_state_domains = record.value().external_state_domains;
     install.verification_status = record.value().verification_status;
+    discovery::classify_install_isolation(install);
     return true;
 }
 
@@ -64,7 +70,15 @@ ApplicationResult preview_launch(ApplicationContext& context, const BuildLaunchP
     launch::InstanceLaunchRef instance_ref {
         instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
         effective.value().launch_arguments};
-    launch::InstallLaunchRef install_ref {install.root, install.executable, install.ownership};
+    launch::InstallLaunchRef install_ref {
+        install.root,
+        install.executable,
+        install.ownership,
+        install.distribution_origin,
+        install.platform_integration,
+        install.strict_isolation_eligibility,
+        install.external_state_domains,
+    };
     ApplicationResult result;
     result.output = launch::build_launch_plan(instance_ref, install_ref, command);
     return result;
@@ -83,10 +97,47 @@ ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunc
     launch::InstanceLaunchRef instance_ref {
         instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
         effective.value().launch_arguments};
-    launch::InstallLaunchRef install_ref {install.root, install.executable, install.ownership};
+    launch::InstallLaunchRef install_ref {
+        install.root,
+        install.executable,
+        install.ownership,
+        install.distribution_origin,
+        install.platform_integration,
+        install.strict_isolation_eligibility,
+        install.external_state_domains,
+    };
     ApplicationResult result;
     result.output = launch::preflight_launch(instance_ref, install_ref, "launch_plan.preflight");
     return result;
+}
+
+ApplicationResult refuse_execute(ApplicationContext& context, const ExecuteRunRequest& request)
+{
+    std::string code = "isolation_not_proven";
+    std::string detail = request.instance_id.empty()
+        ? "real Factorio write isolation has not been proven"
+        : "real Factorio write isolation has not been proven for instance " + request.instance_id.str();
+    if (!request.instance_id.empty()) {
+        auto instance = context.instances().load(request.instance_id);
+        if (instance) {
+            auto record = context.installs().load(instance.value().install_ref);
+            if (record) {
+                discovery::InstallRef install;
+                install.root = record.value().root;
+                install.source = record.value().source;
+                install.distribution_origin = record.value().distribution_origin;
+                install.platform_integration = record.value().platform_integration;
+                install.strict_isolation_eligibility = record.value().strict_isolation_eligibility;
+                install.external_state_domains = record.value().external_state_domains;
+                discovery::classify_install_isolation(install);
+                if (install.distribution_origin == "steam" || install.platform_integration == "steam") {
+                    code = "steam_external_state_not_isolated";
+                    detail = "Steam-managed external state is not isolated for instance " + request.instance_id.str();
+                }
+            }
+        }
+    }
+    return unavailable(context, "run.execute", code, detail);
 }
 
 } // namespace facman::factorio::application::handlers

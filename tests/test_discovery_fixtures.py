@@ -93,6 +93,16 @@ class DiscoveryFixtureTests(unittest.TestCase):
         self.assertEqual(report["invalid_count"], 2)
         by_candidate = {install["candidate_id"]: install for install in report["installs"]}
         self.assertEqual(by_candidate["windows_steam"]["ownership"], "foreign_owned")
+        self.assertEqual(by_candidate["windows_steam"]["distribution_origin"], "steam")
+        self.assertEqual(by_candidate["windows_steam"]["platform_integration"], "steam")
+        self.assertEqual(by_candidate["windows_steam"]["strict_isolation_eligibility"], "ineligible")
+        self.assertEqual(
+            by_candidate["windows_steam"]["external_state_domains"],
+            ["default_factorio_data", "steam_cloud"],
+        )
+        self.assertEqual(by_candidate["windows_standalone"]["distribution_origin"], "website_zip")
+        self.assertEqual(by_candidate["windows_standalone"]["platform_integration"], "none_detected")
+        self.assertEqual(by_candidate["windows_standalone"]["strict_isolation_eligibility"], "candidate")
         self.assertEqual(by_candidate["linux_package_foreign"]["source"], "os_package")
         self.assertEqual(by_candidate["linux_headless"]["capabilities"], ["headless_server"])
         self.assertEqual(by_candidate["invalid"]["refusal"]["code"], "invalid_factorio_install")
@@ -117,6 +127,9 @@ class DiscoveryFixtureTests(unittest.TestCase):
             self.assertEqual(imported["install_id"], "portable-fixture")
             self.assertEqual(imported["candidate_id"], "windows_portable")
             self.assertEqual(imported["ownership"], "portable")
+            self.assertEqual(imported["distribution_origin"], "local_archive")
+            self.assertEqual(imported["platform_integration"], "none_detected")
+            self.assertEqual(imported["strict_isolation_eligibility"], "candidate")
             self.assertFalse(imported["setup_mutation_allowed"])
 
             code, inspected, stderr = run_json([
@@ -127,11 +140,12 @@ class DiscoveryFixtureTests(unittest.TestCase):
                 "portable-fixture",
                 "--json",
             ])
-
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(inspected["install_id"], "portable-fixture")
+            self.assertEqual(inspected["distribution_origin"], "local_archive")
+            self.assertEqual(inspected["strict_isolation_eligibility"], "candidate")
+            self.assertNotEqual(inspected["ownership"], "managed")
         self.assertEqual(before, after)
-        self.assertEqual(code, 0, stderr)
-        self.assertEqual(inspected["install_id"], "portable-fixture")
-        self.assertNotEqual(inspected["ownership"], "managed")
 
     def test_invalid_fixture_import_does_not_create_install_ref(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

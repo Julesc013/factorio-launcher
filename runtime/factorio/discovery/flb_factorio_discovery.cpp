@@ -371,6 +371,55 @@ std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
 
 } // namespace
 
+void classify_install_isolation(InstallRef& install)
+{
+    if (!install.distribution_origin.empty() && !install.platform_integration.empty() &&
+        !install.strict_isolation_eligibility.empty() && !install.external_state_domains.empty()) {
+        return;
+    }
+    std::string source = install.source;
+    std::transform(source.begin(), source.end(), source.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    const bool steam_marker =
+        fs::is_regular_file(install.root / "bin" / "x64" / "steam_api64.dll") ||
+        fs::is_regular_file(install.root / "bin" / "x64" / "steam_api.dll") ||
+        fs::is_regular_file(install.root / "steam_api64.dll") ||
+        fs::is_regular_file(install.root / "steam_api.dll");
+    install.external_state_domains = {"default_factorio_data"};
+    if (source == "steam" || steam_marker) {
+        install.distribution_origin = "steam";
+        install.platform_integration = "steam";
+        install.strict_isolation_eligibility = "ineligible";
+        install.external_state_domains.push_back("steam_cloud");
+    } else if (source == "standalone") {
+        install.distribution_origin = "website_zip";
+        install.platform_integration = "none_detected";
+        install.strict_isolation_eligibility = "candidate";
+    } else if (source == "portable" || source == "tarball") {
+        install.distribution_origin = "local_archive";
+        install.platform_integration = "none_detected";
+        install.strict_isolation_eligibility = "candidate";
+    } else if (source == "gog") {
+        install.distribution_origin = "gog";
+        install.platform_integration = "none_detected";
+        install.strict_isolation_eligibility = "candidate";
+    } else if (source == "os_package") {
+        install.distribution_origin = "os_package";
+        install.platform_integration = "unknown";
+        install.strict_isolation_eligibility = "unproven";
+    } else if (source == "manual" || source == "imported" || source == "registered" ||
+        source == "legacy") {
+        install.distribution_origin = "manually_imported";
+        install.platform_integration = "unknown";
+        install.strict_isolation_eligibility = "unproven";
+    } else {
+        install.distribution_origin = "unknown";
+        install.platform_integration = "unknown";
+        install.strict_isolation_eligibility = "unproven";
+    }
+}
+
 InstallRef inspect_install(const fs::path& root, const std::string& install_id)
 {
     InstallRef install;
@@ -437,6 +486,7 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
     if (install.verification_status == "invalid" && install.diagnostic_code.empty()) {
         install.diagnostic_code = "invalid_factorio_install";
     }
+    classify_install_isolation(install);
     return install;
 }
 
@@ -484,6 +534,11 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<fs::path>& exp
             const bool explicit_provider = search.provider_id.rfind("explicit.", 0) == 0;
             if (!explicit_provider && !search.source.empty()) install.source = search.source;
             if (!explicit_provider && !search.ownership.empty()) install.ownership = search.ownership;
+            install.distribution_origin.clear();
+            install.platform_integration.clear();
+            install.strict_isolation_eligibility.clear();
+            install.external_state_domains.clear();
+            classify_install_isolation(install);
             install.evidence = search.evidence;
             installs.push_back(std::move(install));
         }
@@ -516,6 +571,10 @@ json::ObjectBuilder install_ref_builder(const InstallRef& install)
     output.add_string("ownership", install.ownership);
     output.add_string("source", install.source);
     output.add_string("platform", install.platform);
+    output.add_string("distribution_origin", install.distribution_origin);
+    output.add_string("platform_integration", install.platform_integration);
+    output.add_string("strict_isolation_eligibility", install.strict_isolation_eligibility);
+    output.add_array("external_state_domains", string_array_builder(install.external_state_domains));
     output.add_array("capabilities", string_array_builder(install.capabilities));
     output.add_string("executable_path_kind", install.executable_path_kind);
     output.add_string("app_dir_kind", install.app_dir_kind);

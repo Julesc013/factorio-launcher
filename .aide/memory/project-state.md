@@ -9,14 +9,14 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
 - checkpoint: `r3.7-public-integration-proof`;
-- active WorkUnit: `none`;
+- active WorkUnit: `FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `d00456069eb509eabf6a63f831aadbd19813413f`;
 - Universal Launcher pin: `de6c7c6cfa80c524296066bd6bb90a70ba02b760`;
 - Universal Setup pin: `4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`;
-- execution: `unavailable` / `real_factorio_isolation_not_proven`;
-- operator verdict: `pending`;
+- execution: `unavailable` / `steam_external_state_not_isolated`;
+- operator verdict: `Fail`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 - public SDK: `experimental_installed`; stable compatibility is not promised.
@@ -27,8 +27,8 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execu
 
 - command contracts: `111`;
 - registered routes: `109`;
-- schemas: `215`;
-- refusal codes: `212`;
+- schemas: `217`;
+- refusal codes: `213`;
 - command catalog digest: `43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86`;
 - accepted CI revision: `d00456069eb509eabf6a63f831aadbd19813413f`;
 - CI / CodeQL / security / schema runs: `29208144217` / `29208144220` / `29208144246` / `29208144255`;
@@ -61,7 +61,7 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execu
 
 ## Known blockers
 
-- H1 has no reviewed operator verdict.
+- H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 - Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.

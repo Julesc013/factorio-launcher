@@ -50,6 +50,10 @@ struct InstallRecord {
     std::string ownership;
     std::string source;
     std::string platform;
+    std::string distribution_origin;
+    std::string platform_integration;
+    std::string strict_isolation_eligibility;
+    std::vector<std::string> external_state_domains;
     std::string verification_status;
     std::string schema;
     bool legacy_path = false;

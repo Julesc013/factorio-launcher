@@ -93,7 +93,8 @@ bool can_transition(State from, State to) noexcept
 facman::core::Result<RelativePath> RelativePath::parse(std::string value)
 {
     const fs::path path = fs::u8path(value);
-    if (value.empty() || path.is_absolute() || path.has_root_name() || path.lexically_normal() != path ||
+    if (value.empty() || value.front() == '/' || path.is_absolute() || path.has_root_name() ||
+        path.lexically_normal() != path ||
         value.find('\\') != std::string::npos || value.find(':') != std::string::npos) {
         return facman::core::Result<RelativePath>::failure(
             {"transaction_expected_path_invalid", "expected file path must be normalized and relative", value});

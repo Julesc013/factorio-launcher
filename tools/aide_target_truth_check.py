@@ -105,8 +105,8 @@ def yaml_list(text: str, key: str, indent: int) -> list[str]:
 def validate_profile_text(text: str) -> list[str]:
     problems: list[str] = []
     phase = yaml_scalar(text, "phase", 2)
-    if phase != "r3.7-complete-h1-pending":
-        problems.append(f"profile phase is {phase!r}, expected 'r3.7-complete-h1-pending'")
+    if phase != "r3.7-complete-h1-fail-repair":
+        problems.append(f"profile phase is {phase!r}, expected 'r3.7-complete-h1-fail-repair'")
     quarantined = set(yaml_list(text, "quarantined_capabilities", 2))
     for capability in {"run.execute", "setup.mutation", "network.access"} - quarantined:
         problems.append(f"profile quarantine is missing {capability}")

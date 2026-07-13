@@ -12,7 +12,10 @@ R3.7 is complete. The frozen H1 candidate is `eb629caaec9d62536a272336e940c0d300
 - H1 Fail routes to a narrow isolation-repair WorkUnit.
 - H1 Inconclusive routes to improved observation and a repeat.
 
-Until a reviewed operator verdict exists, execution, Safe beta, setup mutation, networking, credentials, server processes, daemon publication, signing, and publication remain unavailable.
+The human-reviewed H1 verdict for the Steam-backed route is **Fail**.
+The active narrow repair is `FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01`; Steam Cloud remains a protected external domain.
+A standalone/manual distribution must receive its own revision-pinned reviewed H1 Pass before an R3.8 execution-candidate WorkUnit can open.
+Execution, Safe beta, setup mutation, networking, credentials, server processes, daemon publication, signing, and publication remain unavailable.
 Truth/conformance and public-boundary hardening may continue without changing the frozen H1 runtime.
 <!-- FACMAN-PROJECT-STATUS:END -->
 

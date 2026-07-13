@@ -180,6 +180,16 @@ class CliTests(unittest.TestCase):
             self.assertTrue(plan["dry_run_default"])
             self.assertEqual(plan["command"], "launch_plan.build")
             self.assertEqual(plan["execution"], "not_started")
+            self.assertEqual(plan["isolation_mode"], "strict")
+            self.assertEqual(plan["execution_class"], "strict-isolated")
+            self.assertEqual(plan["strict_isolation_eligibility"], "unproven")
+            self.assertEqual(plan["expected_write_domains"], ["instance_root"])
+            self.assertEqual(
+                plan["forbidden_write_domains"],
+                ["install_root", "default_factorio_data"],
+            )
+            self.assertFalse(plan["strict_execution_eligible"])
+            self.assertEqual(plan["strict_refusal_code"], "isolation_not_proven")
             self.assertIn(str(instance_root / "config" / "config.ini"), plan["command_line"])
             launch_schema = json.loads(
                 (ROOT / "contracts/schema/factorio/factorio_launch_plan.v1.schema.json").read_text(
@@ -203,6 +213,9 @@ class CliTests(unittest.TestCase):
             self.assertEqual(preflight["status"], "pass")
             self.assertEqual(preflight["problems"], [])
             self.assertFalse(preflight["started"])
+            self.assertEqual(preflight["execution_class"], "strict-isolated")
+            self.assertFalse(preflight["strict_execution_eligible"])
+            self.assertEqual(preflight["strict_refusal_code"], "isolation_not_proven")
             preflight_schema = json.loads(
                 (ROOT / "contracts/schema/factorio/factorio_launch_preflight.v1.schema.json").read_text(
                     encoding="utf-8"
@@ -254,6 +267,45 @@ class CliTests(unittest.TestCase):
             self.assertFalse(history.exists())
             audit = Path(tmp) / "audit" / "launch_events.log"
             self.assertFalse(audit.exists())
+
+    def test_steam_integrated_run_is_explicitly_refused_without_starting(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            steam_fixture = ROOT / "tests" / "fixtures" / "factorio_installs" / "windows_steam"
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(steam_fixture), "--id", "steam-fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "instances", "create", "Steam Fixture", "--install", "steam-fixture"]
+            )
+            self.assertEqual(code, 0, stderr)
+
+            code, stdout, stderr = invoke(["--workspace", tmp, "run", "steam-fixture", "--json"])
+            self.assertEqual(code, 0, stderr)
+            preview = json.loads(stdout)
+            self.assertEqual(preview["execution_class"], "steam-integrated")
+            self.assertEqual(preview["distribution_origin"], "steam")
+            self.assertEqual(preview["platform_integration"], "steam")
+            self.assertEqual(preview["strict_isolation_eligibility"], "ineligible")
+            self.assertEqual(preview["strict_refusal_code"], "steam_external_state_not_isolated")
+            self.assertIn("steam_cloud", preview["forbidden_write_domains"])
+
+            code, stdout, stderr = invoke(
+                ["--workspace", tmp, "launch-plan", "steam-fixture", "--preflight", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            preflight = json.loads(stdout)
+            self.assertEqual(preflight["status"], "refused")
+            self.assertEqual(preflight["strict_refusal_code"], "steam_external_state_not_isolated")
+
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "run", "steam-fixture", "--execute", "--json"]
+            )
+            refusal = json.loads(stdout)
+            self.assertEqual(code, 1)
+            self.assertEqual(refusal["refusal"]["code"], "steam_external_state_not_isolated")
+            self.assertFalse((Path(tmp) / "instances" / "steam-fixture" / "logs" / "launch_history.log").exists())
+            self.assertFalse((Path(tmp) / "audit" / "launch_events.log").exists())
 
     def test_local_mod_import_lock_verify_and_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

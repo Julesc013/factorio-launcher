@@ -108,6 +108,43 @@ json::ArrayBuilder string_array_builder(const std::vector<std::string>& values)
     return output;
 }
 
+struct IsolationAssessment {
+    std::string execution_class;
+    std::vector<std::string> expected_write_domains;
+    std::vector<std::string> forbidden_write_domains;
+    bool strict_execution_eligible = false;
+    std::string strict_refusal_code;
+};
+
+IsolationAssessment assess_isolation(const InstallLaunchRef& install)
+{
+    IsolationAssessment assessment;
+    const bool steam_integrated = install.distribution_origin == "steam" ||
+        install.platform_integration == "steam";
+    assessment.execution_class = steam_integrated ? "steam-integrated" : "strict-isolated";
+    assessment.expected_write_domains = {"instance_root"};
+    assessment.forbidden_write_domains = {"install_root"};
+    for (const std::string& domain : install.external_state_domains) {
+        if (std::find(assessment.forbidden_write_domains.begin(),
+                assessment.forbidden_write_domains.end(), domain) ==
+            assessment.forbidden_write_domains.end()) {
+            assessment.forbidden_write_domains.push_back(domain);
+        }
+    }
+    if (std::find(assessment.forbidden_write_domains.begin(),
+            assessment.forbidden_write_domains.end(), "default_factorio_data") ==
+        assessment.forbidden_write_domains.end()) {
+        assessment.forbidden_write_domains.push_back("default_factorio_data");
+    }
+    assessment.strict_execution_eligible = !steam_integrated &&
+        install.strict_isolation_eligibility == "eligible";
+    if (!assessment.strict_execution_eligible) {
+        assessment.strict_refusal_code = steam_integrated ?
+            "steam_external_state_not_isolated" : "isolation_not_proven";
+    }
+    return assessment;
+}
+
 json::ObjectBuilder effective_config_builder(const EffectiveFactorioConfig& config)
 {
     json::ObjectBuilder output;
@@ -446,13 +483,28 @@ LaunchPlanResult build_launch_plan(
         instance.local_data_root / "mods");
     result.dry_run_default = true;
     result.ownership = install.ownership;
+    const IsolationAssessment isolation = assess_isolation(install);
+    result.isolation_mode = "strict";
+    result.execution_class = isolation.execution_class;
+    result.distribution_origin = install.distribution_origin;
+    result.platform_integration = install.platform_integration;
+    result.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    result.expected_write_domains = isolation.expected_write_domains;
+    result.forbidden_write_domains = isolation.forbidden_write_domains;
+    result.strict_execution_eligible = isolation.strict_execution_eligible;
+    result.strict_refusal_code = isolation.strict_refusal_code;
     return result;
 }
 
 std::string launch_plan_json(const LaunchPlanResult& plan)
 {
     json::ArrayBuilder notes;
-    notes.add_string("Launch execution requires --execute.");
+    if (plan.execution_class == "steam-integrated") {
+        notes.add_string("Steam-integrated Factorio may write Steam Cloud state outside the selected instance root.");
+        notes.add_string("Strict execution is refused for this install class.");
+    } else {
+        notes.add_string("This install is only a strict-isolation candidate until a reviewed standalone H1 Pass exists.");
+    }
     json::ObjectBuilder document;
     document.add_string("schema", "factorio.launch_plan.v1");
     document.add_string("command", plan.command);
@@ -469,6 +521,16 @@ std::string launch_plan_json(const LaunchPlanResult& plan)
     document.add_bool("dry_run_default", plan.dry_run_default);
     document.add_string("execution", "not_started");
     document.add_string("ownership", plan.ownership);
+    document.add_string("isolation_mode", plan.isolation_mode);
+    document.add_string("execution_class", plan.execution_class);
+    document.add_string("distribution_origin", plan.distribution_origin);
+    document.add_string("platform_integration", plan.platform_integration);
+    document.add_string("strict_isolation_eligibility", plan.strict_isolation_eligibility);
+    document.add_array("expected_write_domains", string_array_builder(plan.expected_write_domains));
+    document.add_array("forbidden_write_domains", string_array_builder(plan.forbidden_write_domains));
+    document.add_bool("strict_execution_eligible", plan.strict_execution_eligible);
+    if (plan.strict_refusal_code.empty()) document.add_null("strict_refusal_code");
+    else document.add_string("strict_refusal_code", plan.strict_refusal_code);
     document.add_array("notes", notes);
     return document.serialize() + "\n";
 }
@@ -493,6 +555,16 @@ LaunchPreflightResult preflight_launch(
     result.instance_id = instance.instance_id;
     result.executable = install.executable;
     result.args = build_launch_args(instance);
+    const IsolationAssessment isolation = assess_isolation(install);
+    result.isolation_mode = "strict";
+    result.execution_class = isolation.execution_class;
+    result.distribution_origin = install.distribution_origin;
+    result.platform_integration = install.platform_integration;
+    result.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    result.expected_write_domains = isolation.expected_write_domains;
+    result.forbidden_write_domains = isolation.forbidden_write_domains;
+    result.strict_execution_eligible = isolation.strict_execution_eligible;
+    result.strict_refusal_code = isolation.strict_refusal_code;
 
     add_problem_if_missing_directory(result, install.root, "install root does not exist");
     add_problem_if_missing_file(result, install.executable, "install executable does not exist");
@@ -534,6 +606,9 @@ LaunchPreflightResult preflight_launch(
     }
     collect_lock_files(result, instance.local_data_root / "locks", "instance lock blocks launch");
     collect_lock_files(result, instance.local_data_root / "saves", "save lock blocks launch");
+    if (result.execution_class == "steam-integrated") {
+        result.problems.push_back("Steam external state is not isolated from the selected instance root");
+    }
 
     result.ok = result.problems.empty();
     return result;
@@ -550,6 +625,16 @@ std::string launch_preflight_json(const LaunchPreflightResult& preflight)
     document.add_array("args", string_array_builder(preflight.args));
     document.add_object("effective_config", effective_config_builder(preflight.effective_config));
     document.add_array("problems", string_array_builder(preflight.problems));
+    document.add_string("isolation_mode", preflight.isolation_mode);
+    document.add_string("execution_class", preflight.execution_class);
+    document.add_string("distribution_origin", preflight.distribution_origin);
+    document.add_string("platform_integration", preflight.platform_integration);
+    document.add_string("strict_isolation_eligibility", preflight.strict_isolation_eligibility);
+    document.add_array("expected_write_domains", string_array_builder(preflight.expected_write_domains));
+    document.add_array("forbidden_write_domains", string_array_builder(preflight.forbidden_write_domains));
+    document.add_bool("strict_execution_eligible", preflight.strict_execution_eligible);
+    if (preflight.strict_refusal_code.empty()) document.add_null("strict_refusal_code");
+    else document.add_string("strict_refusal_code", preflight.strict_refusal_code);
     document.add_bool("started", false);
     return document.serialize() + "\n";
 }

@@ -20,7 +20,12 @@ def validate() -> list[str]:
     if len(wrapper.splitlines()) > 20 or "tools.package.pipeline" not in wrapper:
         problems.append("package_build.py is not a small compatibility CLI wrapper")
     pipeline = (package_dir / "pipeline.py").read_text(encoding="utf-8")
-    for anchor in ("package_staging.install_tree(", "package_archive.write(", "package_provenance.require_clean("):
+    for anchor in (
+        "package_staging.install_tree(",
+        "stage_external_components(",
+        "package_archive.write(",
+        "package_provenance.require_clean(",
+    ):
         if anchor not in pipeline:
             problems.append(f"package pipeline integration missing: {anchor}")
     if "shutil.make_archive(" in pipeline:

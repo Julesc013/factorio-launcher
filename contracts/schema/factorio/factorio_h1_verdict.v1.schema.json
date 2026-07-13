@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_h1_verdict.v1.schema.json",
+  "title": "Factorio H1 Operator Verdict",
+  "type": "object",
+  "required": [
+    "schema",
+    "work_unit",
+    "candidate",
+    "operator_verdict",
+    "operator_reviewed",
+    "factorio_version",
+    "execution_route",
+    "result",
+    "observed_changes",
+    "raw_evidence_sha256",
+    "next_work_unit",
+    "unchanged_authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.h1_verdict.v1" },
+    "work_unit": { "const": "FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01" },
+    "candidate": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "operator_verdict": { "const": "Fail" },
+    "operator_reviewed": { "const": true },
+    "factorio_version": { "type": "string", "minLength": 1 },
+    "execution_route": { "const": "steam-backed" },
+    "result": { "const": "protected_root_change_detected" },
+    "observed_changes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "steam-userdata/427520/remote/achievements.dat",
+          "steam-userdata/427520/remote/player-data.json",
+          "steam-userdata/427520/remotecache.vdf"
+        ]
+      }
+    },
+    "unchanged_roots": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["install_root", "default_factorio_data"]
+      }
+    },
+    "raw_evidence_sha256": {
+      "type": "string",
+      "pattern": "^[0-9A-F]{64}$"
+    },
+    "next_work_unit": {
+      "const": "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
+    },
+    "unchanged_authority": {
+      "type": "object",
+      "required": ["run_execute", "safe_beta", "r3_8_execution_candidate"],
+      "properties": {
+        "run_execute": { "const": "unavailable" },
+        "safe_beta": { "const": false },
+        "r3_8_execution_candidate": { "const": "blocked_pending_reviewed_h1_pass" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
