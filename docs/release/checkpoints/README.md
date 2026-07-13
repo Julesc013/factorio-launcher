@@ -1,5 +1,13 @@
 # Release and readiness checkpoints
 
+<!-- FACMAN-RELEASE-STATUS:BEGIN -->
+## Current Boundary
+
+The accepted non-execution product wave is `r3.7`. The exact H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the operator verdict remains `Fail`.
+
+Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
+<!-- FACMAN-RELEASE-STATUS:END -->
+
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),
 frozen at implementation proof revision
@@ -11,6 +19,15 @@ The later
 frozen product evidence to the accepted task/dev/main integration chain and the
 successful final workflows for canonical revision `d00456069eb509eabf6a63f831aadbd19813413f`.
 It is an evidence-only addendum, not a new product checkpoint.
+
+The human-reviewed Steam-backed H1 Fail is recorded separately in
+[`R3.7 H1 Steam-backed operator verdict`](r3.7-h1-steam-backed-fail.md). It
+opens a narrow isolation-repair WorkUnit and does not promote execution.
+
+The bounded implementation result for that WorkUnit is recorded in
+[`R3.8 Steam external-state isolation repair`](r3.8-steam-external-state-isolation-repair.md).
+It adds the fail-closed Steam classification and refusal boundary, but does not
+claim an H1 retest or open an execution candidate.
 
 Earlier checkpoints remain revision-pinned historical evidence:
 

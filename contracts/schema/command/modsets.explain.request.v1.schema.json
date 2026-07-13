@@ -23,24 +23,31 @@
       "type": "string"
     },
     "maximum_backtracks": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "maximum_elapsed_ms": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "maximum_explanation_nodes": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "maximum_graph_edges": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "maximum_packages": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "maximum_solver_states": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "maximum_versions_per_package": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "version_preferences": {

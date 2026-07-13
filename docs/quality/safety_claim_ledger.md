@@ -19,6 +19,7 @@ reported as stronger runtime evidence.
 | Package tools clean only owned output | regression-proven | owned-output markers for skeleton, built package, and archive roots plus preservation tests | other future destructive tools need their own ownership kind |
 | Instance layout is structurally isolated | regression-proven for generated state | effective `config.ini`, import regeneration, exact-root preflight, link and sensitive-root refusals | real Factorio write semantics unproven |
 | Process boundary preserves intended isolation | surrogate process proven | probe captures args, cwd, env, config, roots, writes, exit, and protected snapshots | proves FacMan and probe behavior, not Factorio internals |
+| Steam-backed strict instance-only persistence | human-reviewed Fail | sanitized verdict plus raw-evidence digest | protected Steam state changed; standalone remains unproven; execution remains blocked |
 | Per-instance run ownership is exclusive | local-filesystem native proof | stable handle, file identity, contention, stale recovery, substitution refusal | shared/network and multi-host filesystems remain unproven |
 | Reviewed local diagnostic export is bounded | cross-platform CI proven | stable handles, known formats, reports, production ZIP, journal faults | no arbitrary formats, GUI UX, shared filesystems, or authenticity |
 | JSON contracts describe runtime output | proven for the truth-floor slice | live response, refusal, persisted-instance, and package-verification schema tests | remaining legacy commands and goldens are not implicitly promoted |
@@ -33,7 +34,7 @@ reported as stronger runtime evidence.
 | Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and setup mutation remain unproven |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, licenses, identities, and digests | provider licenses are `NOASSERTION`; unsigned evidence is not publisher authentication |
-| Experimental public C ABI has a correctness floor | bounded correctness proof | size, ownership, ABI-query, and native-smoke tests | stable third-party compatibility and independent consumers remain unproven |
+| Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |
 | CLI uses only the client boundary | regression-proven | include/link checker, direct transport smoke, parity tests | process and daemon transports remain unavailable |
 | Install-tree archives reproduce | Windows digest-proven | independent roots, normalized metadata, dirty refusal | other targets need per-revision CI; output is unsigned |
 | Normal AIDE context excludes history bulk | locally regression-proven | active/next queue, history hashes, compact state | development governance only; no product or human proof |
@@ -74,9 +75,11 @@ R3.6 product behavior and its remaining authority boundary are recorded in
 [`r3.6-product-readiness.md`](../release/checkpoints/r3.6-product-readiness.md).
 
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
-procedure and deliberately pending human-verdict template are in
+procedure and human-verdict template are in
 [`real_factorio_isolation_smoke.template.md`](evidence/real_factorio_isolation_smoke.template.md).
 The preparation harness records exact identities, refuses incomplete protected
 snapshots, reports detailed before/after changes, supervises termination, and
 retains external write classifications without converting them into a human
-verdict.
+verdict. The later Steam-backed H1 Fail is frozen in
+[`r3.7-h1-steam-backed-fail.md`](../release/checkpoints/r3.7-h1-steam-backed-fail.md)
+and does not imply a result for standalone/manual distributions.

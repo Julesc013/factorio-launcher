@@ -9,18 +9,23 @@
       "type": "string"
     },
     "keep_daily": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "keep_last": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "keep_weekly": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     },
     "maximum_total_bytes": {
+      "pattern": "^[0-9]{1,19}$",
       "type": "string"
     },
     "minimum_age_days": {
+      "pattern": "^(?:[0-9]{1,6}|1000000)$",
       "type": "string"
     }
   },

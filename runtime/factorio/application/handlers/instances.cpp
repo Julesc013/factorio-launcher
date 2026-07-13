@@ -162,7 +162,15 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
     const char* dirs[] = {"config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "exports", "cache", "locks"};
     for (const char* dir : dirs) fs::create_directories(staging / dir);
     launch::InstanceLaunchRef launch_instance {instance.id.str(), instance.profile, instance.root, "gui", {}};
-    launch::InstallLaunchRef launch_install {install.root, install.executable, install.ownership};
+    launch::InstallLaunchRef launch_install {
+        install.root,
+        install.executable,
+        install.ownership,
+        install.distribution_origin,
+        install.platform_integration,
+        install.strict_isolation_eligibility,
+        install.external_state_domains,
+    };
     const bool staged = facman::base::write_text_new_atomic(
             staging / "config" / "config.ini", launch::effective_config_ini(launch_instance, launch_install), error) &&
         facman::base::write_text_new_atomic(staging / "instance.v1.json", instance_json(instance), error);

@@ -15,7 +15,7 @@ branding assets.
 include/    Factorio binding public C ABI headers only
 runtime/    reusable private implementation for the Factorio binding, clients,
             package locator, and platform adapters
-apps/       native CLI, TUI, daemon, and OS-first GUI frontends
+apps/       native CLI/TUI/GUI frontends and an unavailable daemon placeholder
 content/    Factorio product templates, discovery rules, launch templates,
             instance templates, redaction rules, and policy
 contracts/  ABI notes, command law, policies, and versioned JSON schemas
@@ -39,8 +39,9 @@ belong under the product domain they implement; folders like `c11/` and
 The CLI is the first frontend, not the foundation of every other frontend.
 CLI, TUI, WinForms, WinUI, AppKit, SwiftUI, GTK, and Qt all sit over the same
 command graph, native launcher service, and C ABI. Distribution packages may
-include CLI, TUI, daemon, and GUI entrypoints together, but each executable
-remains a separate frontend shell.
+include CLI, TUI, and proven GUI entrypoints together. A daemon entrypoint may
+join them only after its protocol and lifecycle receive runtime proof; the
+current daemon target is an unavailable placeholder.
 
 FacMan's long-term role is to prove the universal launcher with a real product:
 
@@ -50,15 +51,18 @@ Dominium proves the universal setup.
 FacMan ships as the first serious Factorio product binding.
 ```
 
-## Current R3.6 Slice
+<!-- FACMAN-PROJECT-STATUS:BEGIN -->
+## Current Status
 
-R3.5 is the architecture endpoint. R3.6 turns its generated command law,
-bounded machine protocol, typed Setup gateway, and proven target packages into
-a real non-execution product: cross-platform discovery, deterministic status
-and onboarding, a functional TUI, and generated desktop command clients. Real
-Factorio execution remains behind two reviewed operator passes.
+R3.7 is complete and `eb629caaec9d62536a272336e940c0d3003fdaae` is the exact H1 candidate.
+The current contract surface contains 111 commands, 217 schemas, and 213 refusal codes.
 
-The current native CLI-first slice includes:
+The next authority gate is **H1**. `run.execute` remains `unavailable` with `steam_external_state_not_isolated`.
+The operator verdict is `Fail` and Safe beta remains unpromoted.
+Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
+<!-- FACMAN-PROJECT-STATUS:END -->
+
+The native CLI-first slice includes:
 
 ```bash
 facman --version
@@ -164,7 +168,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 This repo includes AIDE Lite as development governance tooling only. It is not
 part of the launcher runtime and must not be bundled in production packages.
 See [docs/architecture/aide_lite_integration.md](docs/architecture/aide_lite_integration.md).
-Current machine-readable truth is `.aide/memory/project-state.v1.json`; the
+Current machine-readable truth is `.aide/memory/project-state.v2.json`; the
 human summary is generated from it. Closed task evidence is hash-indexed under
 `.aide/history/` and excluded from ordinary context packets.
 

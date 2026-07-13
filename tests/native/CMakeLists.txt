@@ -114,6 +114,14 @@ add_test(NAME facman_abi_symbol_smoke
     --library $<TARGET_FILE:flb_factorio_shared> ${FACMAN_ABI_SYMBOL_ARGS})
 set_tests_properties(facman_abi_symbol_smoke PROPERTIES LABELS "contract;platform")
 
+add_test(NAME facman_installed_sdk_smoke
+  COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/installed_sdk_smoke.py
+    --cmake ${CMAKE_COMMAND}
+    --build-dir ${CMAKE_BINARY_DIR}
+    --source-dir ${PROJECT_SOURCE_DIR}/tests/installed_consumer
+    --config $<CONFIG>)
+set_tests_properties(facman_installed_sdk_smoke PROPERTIES LABELS "contract;package-runtime;platform")
+
 facman_add_libfuzzer(fl_archive_libfuzzer fl_archive_libfuzzer.cpp)
 if(TARGET fl_archive_libfuzzer)
   target_compile_options(facman_archive_static PRIVATE -fsanitize=fuzzer-no-link,address,undefined)

@@ -3,7 +3,23 @@
 FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
-## R3.6 - Real-World Product Readiness
+<!-- FACMAN-PROJECT-STATUS:BEGIN -->
+## Current Status and Authority Gate
+
+R3.7 is complete. The frozen H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the next authority gate is **H1**.
+
+- H1 Pass may create a separate R3.8 execution-candidate branch.
+- H1 Fail routes to a narrow isolation-repair WorkUnit.
+- H1 Inconclusive routes to improved observation and a repeat.
+
+The human-reviewed H1 verdict for the Steam-backed route is **Fail**.
+The narrow isolation repair is `closed` at dev integration `f10aef03517a86a7c9d6afaf8b75c19549b6fa51`; Steam Cloud remains a protected external domain.
+A standalone/manual distribution must receive its own revision-pinned reviewed H1 Pass before an R3.8 execution-candidate WorkUnit can open.
+Execution, Safe beta, setup mutation, networking, credentials, server processes, daemon publication, signing, and publication remain unavailable.
+Truth/conformance and public-boundary hardening may continue without changing the frozen H1 runtime.
+<!-- FACMAN-PROJECT-STATUS:END -->
+
+## Historical R3.6 - Real-World Product Readiness
 
 R3.6 autonomous product readiness is complete at the
 [`R3.6 Product Readiness`](release/checkpoints/r3.6-product-readiness.md)
@@ -15,7 +31,7 @@ is not scheduled. R3.6 delivered Linux and macOS read-only discovery providers,
 deterministic status/onboarding/explanation commands, generated WinForms,
 AppKit and TUI command models, a functional TUI, desktop client parity, and a
 hermetic non-execution user journey. Real Factorio execution remains a separate
-human authority lane and is the next WorkUnit. Historical R3.2/R3.3/R3.4 sections below remain evidence
+human authority lane. Historical R3.2/R3.3/R3.4 sections below remain evidence
 context, not the active queue. Ordered future gates live in
 [`future_layers_plan.md`](architecture/future_layers_plan.md).
 

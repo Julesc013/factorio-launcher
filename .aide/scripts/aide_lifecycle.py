@@ -198,7 +198,10 @@ def transition(root: Path, task_id: str, action: str, *, result: str = "") -> st
 def hashes(path: Path) -> dict[str, str]:
     result = {}
     for file in sorted(candidate for candidate in path.rglob("*") if candidate.is_file()):
-        result[file.relative_to(path).as_posix()] = hashlib.sha256(file.read_bytes()).hexdigest()
+        data = file.read_bytes()
+        if file.suffix.lower() in {".json", ".md", ".toml", ".txt", ".yaml", ".yml"}:
+            data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        result[file.relative_to(path).as_posix()] = hashlib.sha256(data).hexdigest()
     return result
 
 
@@ -211,6 +214,7 @@ def rebuild_history_index(root: Path, checkpoint: str) -> None:
         "schema": "aide.history_index.v1",
         "checkpoint": checkpoint,
         "immutable_task_records": True,
+        "hash_canonicalization": "text_lf_v1",
         "tasks": records,
     }
     (checkpoint_root / "index.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -255,13 +259,28 @@ def queue_record(path: Path, queue_root: Path) -> dict[str, str]:
     }
 
 
+def mutable_queue_records(lane: Path) -> list[Path]:
+    records: list[Path] = []
+    for path in sorted(candidate for candidate in lane.iterdir() if candidate.is_dir()):
+        task_exists = (path / "task.yaml").is_file()
+        status_exists = (path / "status.yaml").is_file()
+        if not task_exists and not status_exists:
+            # Compaction may intentionally retain an evidence-only placeholder.
+            # It is not a mutable queue record and must not block unrelated work.
+            continue
+        if task_exists != status_exists:
+            raise ValueError(f"incomplete mutable queue record: {path.name}")
+        records.append(path)
+    return records
+
+
 def rebuild_queue_index(root: Path) -> None:
     queue = root / ".aide" / "queue"
     for lane in ("active", "next"):
         (queue / lane).mkdir(parents=True, exist_ok=True)
     records = []
     for lane in ("active", "next"):
-        records.extend(queue_record(path, queue) for path in sorted((queue / lane).iterdir()) if path.is_dir())
+        records.extend(queue_record(path, queue) for path in mutable_queue_records(queue / lane))
     lines = [
         "schema_version: aide.queue-index.v1",
         "profile: .aide/profile.yaml",

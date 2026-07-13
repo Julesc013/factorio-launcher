@@ -2,6 +2,19 @@
 
 This repository does not bundle Factorio binaries or Wube assets.
 
+## Universal Launcher
+
+- Source: pinned workspace provider `universal-launcher`, resolved outside this repository
+- Pinned commit: `de6c7c6cfa80c524296066bd6bb90a70ba02b760`
+- License: no license file is declared at the pinned commit
+- Use: linked shared library and installed public C headers for the experimental FacMan SDK
+- Runtime networking: none enabled by this repository
+
+The missing upstream license declaration is an unresolved redistribution issue.
+The installed SDK proof is therefore a local compatibility proof, not publication
+or redistribution approval. The provider README is installed as provenance and is
+not represented as a license.
+
 ## Miniz 3.1.2
 
 - Source: https://github.com/richgel999/miniz

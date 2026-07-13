@@ -52,6 +52,22 @@ def validate() -> list[str]:
     }
     if set(baseline.get("measurements", {})) != required_benchmarks:
         problems.append("benchmark matrix does not cover all required operations")
+    version_corpus = (ROOT / "tools/factorio_version_capability_corpus.py").read_text(encoding="utf-8")
+    for anchor in (
+        "read_only_install_probe",
+        "user_state_environment_redirected",
+        "raw_process_output_persisted",
+        "install_tree_unchanged",
+    ):
+        if anchor not in version_corpus:
+            problems.append(f"Factorio version capability corpus is missing anchor: {anchor}")
+    for required in (
+        "contracts/schema/factorio/factorio_version_capability_corpus.v1.schema.json",
+        "docs/quality/factorio_version_capability_corpus.md",
+        "tests/test_factorio_version_capability_corpus.py",
+    ):
+        if not (ROOT / required).is_file():
+            problems.append(f"Factorio version capability corpus support is missing: {required}")
     return problems
 
 

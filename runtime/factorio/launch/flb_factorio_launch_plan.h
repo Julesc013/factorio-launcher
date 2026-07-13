@@ -28,6 +28,10 @@ struct InstallLaunchRef {
     std::filesystem::path root;
     std::filesystem::path executable;
     std::string ownership;
+    std::string distribution_origin = "unknown";
+    std::string platform_integration = "unknown";
+    std::string strict_isolation_eligibility = "unproven";
+    std::vector<std::string> external_state_domains;
 };
 
 struct EffectiveFactorioConfig {
@@ -56,6 +60,15 @@ struct LaunchPlanResult {
     EffectiveFactorioConfig effective_config;
     bool dry_run_default;
     std::string ownership;
+    std::string isolation_mode;
+    std::string execution_class;
+    std::string distribution_origin;
+    std::string platform_integration;
+    std::string strict_isolation_eligibility;
+    std::vector<std::string> expected_write_domains;
+    std::vector<std::string> forbidden_write_domains;
+    bool strict_execution_eligible = false;
+    std::string strict_refusal_code;
 };
 
 struct LaunchPreflightResult {
@@ -66,6 +79,15 @@ struct LaunchPreflightResult {
     std::vector<std::string> args;
     EffectiveFactorioConfig effective_config;
     std::vector<std::string> problems;
+    std::string isolation_mode;
+    std::string execution_class;
+    std::string distribution_origin;
+    std::string platform_integration;
+    std::string strict_isolation_eligibility;
+    std::vector<std::string> expected_write_domains;
+    std::vector<std::string> forbidden_write_domains;
+    bool strict_execution_eligible = false;
+    std::string strict_refusal_code;
 };
 
 struct InstanceRunLock {

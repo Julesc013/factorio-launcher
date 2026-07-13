@@ -3,7 +3,7 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_ref.v1.schema.json",
   "title": "Factorio Install Reference",
   "type": "object",
-  "required": ["install_id", "product_id", "source", "ownership", "executable", "app_dir", "verification"],
+  "required": ["install_id", "product_id", "source", "ownership", "executable", "app_dir", "distribution_origin", "platform_integration", "strict_isolation_eligibility", "external_state_domains", "verification"],
   "properties": {
     "install_id": { "type": "string" },
     "provider_id": { "type": "string" },
@@ -13,6 +13,15 @@
     "version": { "type": ["string", "null"] },
     "channel": { "type": ["string", "null"] },
     "platform": { "type": "string" },
+    "distribution_origin": {
+      "enum": ["steam", "website_zip", "website_installer", "gog", "local_archive", "os_package", "manually_imported", "unknown"]
+    },
+    "platform_integration": { "enum": ["steam", "none_detected", "unknown"] },
+    "strict_isolation_eligibility": { "enum": ["ineligible", "candidate", "unproven", "eligible"] },
+    "external_state_domains": {
+      "type": "array",
+      "items": { "enum": ["default_factorio_data", "steam_cloud"] }
+    },
     "executable": { "type": "string" },
     "app_dir": { "type": "string" },
     "capabilities": { "type": "array", "items": { "type": "string" } },

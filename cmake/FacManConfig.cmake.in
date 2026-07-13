@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+@PACKAGE_INIT@
+
+set(FacMan_VERSION "@PROJECT_VERSION@")
+set(FacMan_FLB_ABI_VERSION "1.2")
+set(FacMan_REQUIRED_ULK_ABI_VERSION "1.1")
+
+include("${CMAKE_CURRENT_LIST_DIR}/FacManTargets.cmake")
+check_required_components(FacMan)

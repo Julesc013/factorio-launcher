@@ -71,6 +71,9 @@ ALLOWED_RUNTIME_ROLES = {
     "compatibility_reference",
     "documentation_only",
 }
+EXTERNAL_COMPONENT_TARGETS = {
+    "apps/gui/windows/winforms",
+}
 BUILT_PACKAGE_SCHEMA = ROOT / "contracts" / "schema" / "release" / "built_package.v1.schema.json"
 
 
@@ -123,6 +126,7 @@ def build_profile(
     bundle = package_layout_check.expand_bundle_manifest(bundle_path, load_toml(bundle_path), [])
     package_root = out_root / profile_id
     install_root = package_staging.install_tree(build_root, out_root / ".install" / profile_id)
+    stage_external_components(install_root, build_root, bundle)
     if clean and package_root.exists():
         owned_output.assert_owned_output_root(out_root, "built-packages")
         shutil.rmtree(package_root)
@@ -140,6 +144,27 @@ def build_profile(
         artifact = write_archive(package_root, dist_root, bundle)
         provenance_build.write_artifact_provenance(package_root, artifact)
     return package_root
+
+
+def stage_external_components(
+    install_root: Path,
+    build_root: Path,
+    bundle: dict[str, Any],
+) -> None:
+    components = bundle.get("components", [])
+    if not isinstance(components, list):
+        raise ValueError("bundle components must be an array")
+    for component in components:
+        source_target = str(component.get("source_target", ""))
+        if source_target not in EXTERNAL_COMPONENT_TARGETS:
+            continue
+        destination = normalize_destination(str(component.get("destination", "")))
+        if not destination:
+            raise ValueError(f"external component is missing destination: {component}")
+        copy_file(
+            resolve_source_target(source_target, build_root),
+            install_root / destination,
+        )
 
 
 def copy_bundle_components(

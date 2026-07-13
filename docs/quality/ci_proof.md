@@ -17,9 +17,14 @@ CI mirrors the bounded proof rather than implying release readiness.
   provenance, and runtime evidence.
 - `appkit-compile` remains an independent legacy shell compile-only lane. It is
   not an AppKit runtime or app-package claim.
+- `linux-coverage` aggregates covered and instrumented lines and branches for
+  each critical module, then applies individual line floors to designated path,
+  archive, transaction, and workspace files. A single well-covered file can no
+  longer satisfy a module, and exclusions require an explicit reviewed reason.
 - `security-policy` describes the current policy-only security check honestly.
-- `release-policy` validates unpublished release contracts and does not invoke
-  the retired Python-package build path or publish artifacts.
+- `release-policy` runs the release contract and release-structure checks. It
+  proves required contract/layout presence only; it does not establish launch
+  readiness, invoke the retired Python-package build path, or publish artifacts.
 
 `tools/ci_proof_check.py` makes these anchors part of strict validation. Future
 changes may replace the commands, but they must preserve equivalent evidence

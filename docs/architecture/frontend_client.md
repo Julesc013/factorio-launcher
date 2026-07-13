@@ -3,11 +3,17 @@
 Every frontend talks to the same command graph. No frontend is the backend for
 another frontend.
 
-The frontend-neutral client layer lives under `runtime/client/` and supports:
+The frontend-neutral client layer lives under `runtime/client/`. Its model and
+transports are independently linkable:
 
-- CLI JSON command invocation
-- daemon JSON-RPC
-- direct C ABI calls
+- `facman::client_model`: request/result model and response decoding only;
+- `facman::transport_direct`: direct C ABI calls and the embedded FLB backend;
+- `facman::transport_process`: bounded CLI process transport without FLB;
+- `facman::transport_daemon`: explicit unavailable placeholder without IPC.
+
+`facman::client` remains the compatibility facade selecting all current
+transports for the CLI and TUI. `DaemonTransport` does not implement JSON-RPC
+or IPC.
 
 WinForms, WinUI, AppKit, SwiftUI, GTK, Qt, TUI, and CLI shells can choose the
 transport that fits their platform maturity, but they must not invent hidden

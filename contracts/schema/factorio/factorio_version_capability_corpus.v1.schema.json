@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_version_capability_corpus.v1.schema.json",
+  "title": "Factorio Version Capability Corpus",
+  "type": "object",
+  "required": ["schema", "generated_utc", "status", "read_only_install_probe", "user_state_environment_redirected", "raw_process_output_persisted", "absolute_paths_persisted", "corpus_root_label", "expected_labels", "installation_count", "installations"],
+  "properties": {
+    "schema": { "const": "factorio.version_capability_corpus.v1" },
+    "generated_utc": { "type": "string" },
+    "status": { "enum": ["complete", "incomplete"] },
+    "read_only_install_probe": { "const": true },
+    "user_state_environment_redirected": { "const": true },
+    "raw_process_output_persisted": { "const": false },
+    "absolute_paths_persisted": { "const": false },
+    "corpus_root_label": { "type": "string" },
+    "expected_labels": { "type": "array", "items": { "type": "string" } },
+    "installation_count": { "type": "integer", "minimum": 0 },
+    "installations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "status", "install_tree_unchanged"],
+        "properties": {
+          "label": { "type": "string" },
+          "status": { "enum": ["probed", "missing_install", "missing_executable", "install_tree_changed", "probe_refused"] },
+          "executable_relative": { "type": "string" },
+          "executable_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "executable_size": { "type": "integer", "minimum": 0 },
+          "reported_version": { "type": "string" },
+          "version_source": { "enum": ["cli", "base_info_json", "unknown"] },
+          "distribution_origin": { "enum": ["steam", "unknown"] },
+          "platform_integration": { "enum": ["steam", "none_detected"] },
+          "strict_isolation_eligibility": { "enum": ["ineligible", "unproven"] },
+          "external_state_domains": { "type": "array", "items": { "enum": ["default_factorio_data", "steam_cloud"] } },
+          "install_tree_fingerprint_before": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "install_tree_fingerprint_after": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "install_tree_entry_count": { "type": "integer", "minimum": 0 },
+          "install_tree_unchanged": { "type": "boolean" },
+          "error_kind": { "type": "string" },
+          "version_probe": { "$ref": "#/$defs/probe" },
+          "help_probe": { "$ref": "#/$defs/probe" },
+          "capabilities": {
+            "type": "object",
+            "additionalProperties": { "type": "boolean" }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "probe": {
+      "type": "object",
+      "required": ["status", "exit_code", "timed_out", "captured_bytes"],
+      "properties": {
+        "status": { "enum": ["completed", "timeout", "error"] },
+        "exit_code": { "type": ["integer", "null"] },
+        "timed_out": { "type": "boolean" },
+        "captured_bytes": { "type": "integer", "minimum": 0 },
+        "error_kind": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

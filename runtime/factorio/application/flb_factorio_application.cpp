@@ -31,7 +31,12 @@
 #include <variant>
 namespace facman::factorio::application {
 namespace {
-
+const char* request_decode_refusal_code(const std::string& detail) noexcept
+{
+    return detail.rfind("invalid_identifier:", 0) == 0
+        ? "invalid_identifier"
+        : "invalid_request";
+}
 int write_boundary_error(ulk_command_response_v1* response, const char* code, const char* message) noexcept
 {
     const char* payload = facman::core::json::boundary::contained_exception_response;
@@ -48,7 +53,6 @@ int write_boundary_error(ulk_command_response_v1* response, const char* code, co
     response->error.detail.size = code == nullptr ? 0 : std::char_traits<char>::length(code);
     return ULK_STATUS_ERROR;
 }
-
 } // namespace
 class FactorioApplication {
 public:
@@ -58,7 +62,6 @@ public:
               : facman::platform::path_from_utf8(workspace_root))
     {
     }
-
     int handle(const ulk_command_request_v1* request, ulk_command_response_v1* response)
     {
         std::lock_guard<std::mutex> lock(request_mutex_);
@@ -72,10 +75,11 @@ public:
         ApplicationRequest typed;
         std::string decode_error;
         if (!decode_request(command_id(request->command_name), payload, request->dry_run != 0, typed, decode_error)) {
+            const char* refusal_code = request_decode_refusal_code(decode_error);
             return write_response(
                 refused(
-                    safety_refusal("command.execute", "invalid_request", "Command request payload is invalid", decode_error, false),
-                    "invalid_request",
+                    safety_refusal("command.execute", refusal_code, "Command request payload is invalid", decode_error, false),
+                    refusal_code,
                     decode_error,
                     facman::core::OutcomeKind::invalid_argument),
                 response);
@@ -136,13 +140,10 @@ private:
         case CommandId::profiles_archive: return handlers::dispatch_profiles(context_, request);
         case CommandId::launch_plan_build: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "launch_plan.build");
         case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
-        case CommandId::run_execute: {
-            const auto& execute = std::get<ExecuteRunRequest>(request.payload);
-            const std::string detail = execute.instance_id.empty()
-                ? "real Factorio write isolation has not been proven"
-                : "real Factorio write isolation has not been proven for instance " + execute.instance_id.str();
-            return handlers::unavailable(context_, "run.execute", "isolation_not_proven", detail);
-        }
+        case CommandId::run_execute:
+            return std::get<ExecuteRunRequest>(request.payload).instance_id.empty()
+                ? handlers::unavailable(context_, "run.execute", "isolation_not_proven", "real Factorio write isolation has not been proven")
+                : handlers::refuse_execute(context_, std::get<ExecuteRunRequest>(request.payload));
         case CommandId::setup_preview: return handlers::preview_setup(context_);
         case CommandId::package_verify: return handlers::verify_package(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_install_version: return handlers::install_version(context_, std::get<ServiceOperationRequest>(request.payload));
@@ -204,7 +205,6 @@ private:
         response->error.detail.size = 0;
         return result.status;
     }
-
     ApplicationContext context_;
     std::string current_command_;
     std::string response_json_;
@@ -212,7 +212,6 @@ private:
     std::mutex request_mutex_;
 };
 } // namespace facman::factorio::application
-
 extern "C" void* flb_factorio_application_create(const char* workspace_root)
 {
     try {

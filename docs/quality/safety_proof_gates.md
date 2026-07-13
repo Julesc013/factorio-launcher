@@ -68,6 +68,11 @@ public sizes, state string ownership, and publish calling-convention and
 visibility rules. This is a correctness floor, not a stable third-party ABI
 promise.
 
+The installed SDK must additionally build and run an external C consumer after
+relocation, report FLB and required ULK compatibility identities separately,
+and reject newer-minor or different-major ABI requests. This remains an
+experimental consumability floor rather than a stable compatibility promise.
+
 ## Gate 4 - FACMAN-PACKAGE-PROOF-02
 
 Prove one explicit target such as `windows-portable-cli-x64`:

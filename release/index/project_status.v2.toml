@@ -1,0 +1,56 @@
+schema = "facman.project_status.v2"
+product_version = "0.1.0-dev"
+completed_wave = "r3.7"
+current_checkpoint = "r3.8-steam-external-state-isolation-repair"
+implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
+hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
+accepted_integration_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
+h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
+active_work_unit = ""
+last_closed_work_unit = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
+next_authority_gate = "H1"
+safe_beta = false
+
+known_blockers = [
+  "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
+  "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
+  "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
+  "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.",
+]
+
+quarantined_capabilities = [
+  "run.execute",
+  "setup mutation",
+  "network and credential operations",
+  "server and developer process execution",
+  "daemon publication",
+  "release signing, notarization, publication, and publisher authenticity",
+]
+
+[r3_8_repair]
+status = "closed"
+task_head_revision = "b6006e514d03c56910160f32b6c9e7b90cb2b654"
+dev_integration_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
+operator_verdict = "Fail"
+standalone_manual_isolation = "unproven"
+authority_promotion = false
+
+[execution]
+status = "unavailable"
+reason = "steam_external_state_not_isolated"
+proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
+operator_verdict = "Fail"
+
+[release]
+status = "unpublished"
+authenticity = "not_proven_unsigned"
+public_sdk = "experimental_installed"
+
+[validation]
+accepted_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
+ci_run = "29276953794"
+code_security_run = "29276954155"
+security_policy_run = "29276954062"
+schema_check_run = "29276954191"
+native_test_count = 23
+python_test_count = 327

@@ -4,6 +4,10 @@
   "additionalProperties": false,
   "properties": {
     "include_save": {
+      "enum": [
+        "true",
+        "false"
+      ],
       "type": "string"
     },
     "output_path": {

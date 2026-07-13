@@ -12,9 +12,11 @@ from pathlib import Path
 
 REQUIRED_EXPORTS = (
     "flb_abi_version_v1",
+    "flb_abi_is_compatible_v1",
     "flb_command_execute_v1",
     "flb_context_create_v1",
     "flb_context_destroy_v1",
+    "flb_required_ulk_abi_v1",
 )
 
 
@@ -48,8 +50,20 @@ def validate(path: Path, symbols_only: bool = False) -> list[str]:
         version = library.flb_abi_version_v1
         version.argtypes = []
         version.restype = ctypes.c_uint32
-        if version() != 0x00010001:
-            return ["flb_abi_version_v1 did not return ABI version 1.1"]
+        if version() != 0x00010002:
+            return ["flb_abi_version_v1 did not return ABI version 1.2"]
+        required_ulk = library.flb_required_ulk_abi_v1
+        required_ulk.argtypes = []
+        required_ulk.restype = ctypes.c_uint32
+        if required_ulk() != 0x00010001:
+            return ["flb_required_ulk_abi_v1 did not return ULK ABI version 1.1"]
+        compatible = library.flb_abi_is_compatible_v1
+        compatible.argtypes = [ctypes.c_uint32]
+        compatible.restype = ctypes.c_int
+        if not compatible(0x00010001) or not compatible(0x00010002):
+            return ["flb_abi_is_compatible_v1 rejected a compatible 1.x client"]
+        if compatible(0x00010003) or compatible(0x00020000):
+            return ["flb_abi_is_compatible_v1 accepted a newer minor or different major"]
         return []
     except OSError as error:
         return [f"could not load shared library: {error}"]

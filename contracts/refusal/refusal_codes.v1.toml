@@ -7,6 +7,7 @@ required_codes = [
   "persistent_write_refused",
   "staging_target_exists",
   "isolation_not_proven",
+  "steam_external_state_not_isolated",
   "diagnostic_export_not_safe",
   "setup_verification_not_implemented",
   "diagnostic_structured_input_invalid",
@@ -197,6 +198,13 @@ severity = "blocked"
 effect = "process_execute"
 retryable = false
 message = "Process execution is unavailable until real product write isolation is proven."
+
+[[code]]
+id = "steam_external_state_not_isolated"
+severity = "blocked"
+effect = "process_execute"
+retryable = false
+message = "Strict execution is unavailable because Steam-managed external state is not isolated."
 
 [[code]]
 id = "workspace_list_failed"

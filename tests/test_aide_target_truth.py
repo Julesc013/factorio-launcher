@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import unittest
 
-from tools import aide_target_truth_check
+from tools import aide_target_truth_check, project_state
 
 
 class AideTargetTruthTests(unittest.TestCase):
@@ -22,58 +22,51 @@ roots:
         problems = aide_target_truth_check.validate_root_authority_text(text)
         self.assertTrue(any("retired root" in problem for problem in problems), problems)
 
-    def test_stale_python_prototype_claim_is_rejected(self) -> None:
-        problems = aide_target_truth_check.validate_project_state_text(
-            "apps/python_cli/` is the current runnable prototype"
-        )
-        self.assertTrue(any("stale claim" in problem for problem in problems), problems)
+    def test_canonical_status_fields_are_compared_as_data(self) -> None:
+        stale = {
+            "schema": "facman.project_status.v2",
+            "completed_wave": "r3.6",
+            "next_authority_gate": "H1",
+            "safe_beta": False,
+            "execution": {"status": "unavailable", "operator_verdict": "Fail", "proof": "evidence.json"},
+        }
+        problems = project_state.validate_status(stale)
+        self.assertTrue(any("completed R3.7" in problem for problem in problems), problems)
 
     def test_profile_evidence_authorities_exist(self) -> None:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
 
-    def test_profile_rejects_stable_abi_and_rescheduled_windows_discovery(self) -> None:
-        text = "C-compatible stable ABI\nadd real Windows read-only discovery"
+    def test_profile_rejects_stable_abi_and_stale_phase(self) -> None:
+        text = """\
+current_focus:
+  phase: r3.6-product-readiness-complete
+  quarantined_capabilities:
+    - run.execute
+native_direction:
+  public_abi: C-compatible stable ABI
+"""
         problems = aide_target_truth_check.validate_profile_text(text)
-        self.assertTrue(any("stale target state" in problem for problem in problems), problems)
+        self.assertTrue(any("profile phase" in problem for problem in problems), problems)
+        self.assertTrue(any("stable ABI" in problem for problem in problems), problems)
 
-    def test_profile_and_project_state_require_r36_without_promoting_factorio(self) -> None:
-        profile_problems = aide_target_truth_check.validate_profile_text(
-            "phase: r3.2-registry-and-isolation-foundation"
-        )
-        self.assertTrue(
-            any("r3.6-product-readiness-complete" in problem for problem in profile_problems),
-            profile_problems,
-        )
-        state_problems = aide_target_truth_check.validate_project_state_text(
-            "R3.5 is the architecture endpoint"
-        )
-        self.assertTrue(
-            any("Real Factorio isolation remains operator-only" in problem for problem in state_problems),
-            state_problems,
-        )
-
-    def test_roadmap_rejects_deferred_windows_discovery(self) -> None:
-        text = "Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager"
-        problems = aide_target_truth_check.validate_roadmap_text(text)
-        self.assertIn("roadmap still defers implemented Windows discovery", problems)
+    def test_generated_project_state_matches_canonical_inputs(self) -> None:
+        self.assertEqual(project_state.validate(), [])
 
     def test_claim_ledger_rejects_stable_abi_promotion(self) -> None:
-        problems = aide_target_truth_check.validate_claim_ledger_text("| Public C ABI is stable |")
+        problems = aide_target_truth_check.validate_claim_ledger_text(
+            "| Public C ABI is stable | proven | none | none |"
+        )
         self.assertIn("claim ledger promotes the experimental ABI to stable", problems)
 
-    def test_claim_ledger_rejects_corrected_registry_drift(self) -> None:
-        problems = aide_target_truth_check.validate_claim_ledger_text(
-            "command_graph.inspect` is still a duplicated static projection"
-        )
-        self.assertIn(
-            "claim ledger still reports corrected registry introspection drift",
-            problems,
-        )
+    def test_claim_ledger_requires_structured_current_rows(self) -> None:
+        problems = aide_target_truth_check.validate_claim_ledger_text("| Claim | Level | Proof | Limitation |")
+        self.assertTrue(any("structured row" in problem for problem in problems), problems)
 
-    def test_discovery_docs_require_completed_windows_provider_evidence(self) -> None:
-        problems = aide_target_truth_check.validate_discovery_text("Windows discovery")
-        self.assertTrue(any("Steam registry roots" in problem for problem in problems), problems)
+    def test_discovery_docs_reject_deferred_windows_provider(self) -> None:
+        text = "Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager"
+        problems = aide_target_truth_check.validate_discovery_text(text)
+        self.assertIn("discovery documentation defers the implemented Windows provider", problems)
 
 
 if __name__ == "__main__":

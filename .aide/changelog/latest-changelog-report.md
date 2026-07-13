@@ -1,21 +1,22 @@
 # Latest Changelog Report
 
 source_range: 29cf22fa..HEAD
-source_head: 81abee2fb1220d5f8620086f354621f7d58a2281
-commit_count: 31
-entry_count: 40
-malformed_count: 0
-highlight_count: 35
+source_head: 2671ca55d91d87e32f48b28890768339820b2d5d
+commit_count: 50
+entry_count: 75
+malformed_count: 8
+highlight_count: 71
 
 ## Category Counts
 
-- Added: 12
-- Changed: 7
-- Fixed: 9
-- Security: 4
-- Docs: 1
-- Tests: 2
-- Internal: 5
+- Added: 16
+- Changed: 14
+- Fixed: 16
+- Security: 9
+- Docs: 5
+- Tests: 11
+- Internal: 2
+- Risks: 2
 
 ## Outputs
 

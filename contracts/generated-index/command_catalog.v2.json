@@ -3916,7 +3916,7 @@
           "repeatable": false,
           "request_field": "transaction_id",
           "required": true,
-          "type": "string"
+          "type": "sha256"
         }
       ],
       "request_schema": "contracts/schema/command/modsets.rollback.request.v1.schema.json",
@@ -9418,6 +9418,6 @@
   ],
   "owner": "factorio-launcher",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "06aaaeb8a66cab59f0f56c9a5bccba7867dc11d8d8462d6e6bfd086a7049a8a4",
+  "source_digest": "43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86",
   "version": "facman-0.1.0+dev.contract"
 }
