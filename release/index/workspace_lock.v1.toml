@@ -20,5 +20,5 @@ path = "../universal-launcher"
 [[component]]
 id = "universal_setup"
 source = "universal-setup"
-pin = "bc5991fb9ada6d9900eeda410bcd19fef98b036a"
+pin = "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
 path = "../universal-setup"
