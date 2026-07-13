@@ -98,6 +98,21 @@ std::string optional_string(const json::Value& object, const char* key, const st
     return result ? result.value() : fallback;
 }
 
+std::vector<std::string> optional_strings(const json::Value& object, const char* key)
+{
+    std::vector<std::string> output;
+    const json::Value* values = object.find(key);
+    if (values == nullptr || !values->is_array()) return output;
+    for (std::size_t index = 0; index < values->size(); ++index) {
+        const json::Value* value = values->at(index);
+        if (value == nullptr || !value->is_string()) return {};
+        auto parsed = value->string_value();
+        if (!parsed) return {};
+        output.push_back(parsed.take_value());
+    }
+    return output;
+}
+
 std::string verification_status(const json::Value& object)
 {
     const json::Value* verification = object.find("verification");
@@ -239,6 +254,10 @@ Result<InstallRecord> InstallRepository::load(const InstallId& id) const
     record.ownership = optional_string(document.value(), "ownership");
     record.source = optional_string(document.value(), "source", legacy ? "legacy" : "registered");
     record.platform = optional_string(document.value(), "platform");
+    record.distribution_origin = optional_string(document.value(), "distribution_origin");
+    record.platform_integration = optional_string(document.value(), "platform_integration");
+    record.strict_isolation_eligibility = optional_string(document.value(), "strict_isolation_eligibility");
+    record.external_state_domains = optional_strings(document.value(), "external_state_domains");
     record.verification_status = verification_status(document.value());
     if (record.verification_status.empty()) record.verification_status = optional_string(document.value(), "state");
     record.schema = schema.value();
