@@ -1,0 +1,17 @@
+{
+  "checkpoint": "r3.8-steam-external-state-isolation-repair",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/closeout.md": "8a1e4f546e66fd2a997883ccab11e523c7180de77fea47db1ecb121786468268",
+        "evidence/dev-integration.json": "967e05eca1dc60b567025e566f242b7c740425bf39e534934179ef0ad6ecf0ff",
+        "status.yaml": "e75212b1278cfb208ac1a71f986095e3461f1372d93f62821871c492e7486d31",
+        "task.yaml": "80427c81450cc3ccd973c6ddab0662a07cd78a18591e7768090c1e59266ee816"
+      },
+      "task_id": "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
+    }
+  ]
+}

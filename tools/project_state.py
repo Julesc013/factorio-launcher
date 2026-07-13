@@ -99,6 +99,8 @@ def collect() -> dict[str, Any]:
         },
         "current_checkpoint": status["current_checkpoint"],
         "active_work_unit": status["active_work_unit"] or None,
+        "last_closed_work_unit": status.get("last_closed_work_unit", "") or None,
+        "r3_8_repair": status["r3_8_repair"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
         "execution": status["execution"],
@@ -147,6 +149,7 @@ def markdown(data: dict[str, Any]) -> str:
         f"- completed wave: `{data['completed_wave']['id']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
+        f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- H1 candidate: `{revisions['factorio_launcher']}`;",
         f"- accepted integration evidence: `{revisions['accepted_integration']}`;",
@@ -224,10 +227,12 @@ def readme_status(data: dict[str, Any]) -> str:
 def roadmap_status(data: dict[str, Any]) -> str:
     verdict = data["execution"]["operator_verdict"]
     if verdict == "Fail":
+        repair = data["r3_8_repair"]
         gate_detail = [
             "The human-reviewed H1 verdict for the Steam-backed route is **Fail**.",
-            "The active narrow repair is "
-            f"`{data['active_work_unit']}`; Steam Cloud remains a protected external domain.",
+            "The narrow isolation repair is "
+            f"`{repair['status']}` at dev integration `{repair['dev_integration_revision']}`; "
+            "Steam Cloud remains a protected external domain.",
             "A standalone/manual distribution must receive its own revision-pinned reviewed H1 Pass before "
             "an R3.8 execution-candidate WorkUnit can open.",
         ]
@@ -327,6 +332,20 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical status must route the next authority gate to H1")
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
+    repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
+    if status.get("active_work_unit") == repair_id:
+        problems.append("closed R3.8 repair must not remain the active WorkUnit")
+    if status.get("last_closed_work_unit") != repair_id:
+        problems.append("canonical status must bind the closed R3.8 repair WorkUnit")
+    repair = status.get("r3_8_repair", {})
+    if repair.get("status") != "closed":
+        problems.append("canonical status must record the R3.8 repair as closed")
+    if repair.get("operator_verdict") != "Fail":
+        problems.append("R3.8 repair closeout must preserve the operator H1 Fail")
+    if repair.get("standalone_manual_isolation") != "unproven":
+        problems.append("R3.8 repair closeout must keep standalone/manual isolation unproven")
+    if repair.get("authority_promotion") is not False:
+        problems.append("R3.8 repair closeout must not promote authority")
     execution = status.get("execution", {})
     if execution.get("status") != "unavailable":
         problems.append("canonical status must keep execution unavailable")

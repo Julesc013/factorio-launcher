@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-13T19:41:04Z
+result: PASS
+evidence_path: .aide/history/r3.8-steam-external-state-isolation-repair/FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01/evidence/
+active_at: 2026-07-13T19:41:38Z
+verified_at: 2026-07-13T19:44:00Z
+implementation_state: implemented
+reviewed_at: 2026-07-13T19:44:00Z
+closed_at: 2026-07-13T19:44:00Z
+archived_at: 2026-07-13T19:44:00Z
