@@ -28,8 +28,8 @@
     },
     {
       "claim": "Steam-backed strict instance-only persistence",
-      "level": "human-reviewed Fail for exact H1 candidate",
-      "limitation": "Steam Cloud changed; standalone/manual distribution remains unproven and execution authority remains blocked"
+      "level": "human-reviewed Fail",
+      "limitation": "protected Steam state changed; standalone remains unproven; execution remains blocked"
     },
     {
       "claim": "Per-instance run ownership is exclusive",
@@ -125,7 +125,7 @@
   "command_law": {
     "catalog_digest": "43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86",
     "contracts": 111,
-    "refusal_codes": 212,
+    "refusal_codes": 213,
     "registered_routes": 109,
     "schemas": 216
   },

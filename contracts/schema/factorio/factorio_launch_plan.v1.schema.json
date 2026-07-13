@@ -3,7 +3,7 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_launch_plan.v1.schema.json",
   "title": "Factorio Launch Plan",
   "type": "object",
-  "required": ["schema", "command", "instance_id", "executable", "args", "preflight", "command_line", "effective_config", "dry_run_default", "execution"],
+  "required": ["schema", "command", "instance_id", "executable", "args", "preflight", "command_line", "effective_config", "dry_run_default", "execution", "isolation_mode", "execution_class", "distribution_origin", "platform_integration", "strict_isolation_eligibility", "expected_write_domains", "forbidden_write_domains", "strict_execution_eligible", "strict_refusal_code"],
   "properties": {
     "schema": { "const": "factorio.launch_plan.v1" },
     "command": { "enum": ["launch_plan.build", "run.preview"] },
@@ -27,7 +27,19 @@
       "additionalProperties": false
     },
     "dry_run_default": { "const": true },
-    "execution": { "const": "not_started" }
+    "execution": { "const": "not_started" },
+    "isolation_mode": { "const": "strict" },
+    "execution_class": { "enum": ["strict-isolated", "steam-integrated"] },
+    "distribution_origin": { "type": "string" },
+    "platform_integration": { "enum": ["steam", "none_detected", "unknown"] },
+    "strict_isolation_eligibility": { "enum": ["ineligible", "candidate", "unproven", "eligible"] },
+    "expected_write_domains": { "type": "array", "items": { "enum": ["instance_root"] } },
+    "forbidden_write_domains": {
+      "type": "array",
+      "items": { "enum": ["install_root", "default_factorio_data", "steam_cloud"] }
+    },
+    "strict_execution_eligible": { "type": "boolean" },
+    "strict_refusal_code": { "type": ["string", "null"] }
   },
   "additionalProperties": true
 }
