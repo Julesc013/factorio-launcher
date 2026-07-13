@@ -31,6 +31,12 @@ public:
     {
         return facman::core::Result<PackageVerifyResult>::failure(unavailable_error());
     }
+    facman::core::Result<facman::factorio::setup::ArchiveAssessment> inspect_install_archive(
+        const FactorioArchiveInspectRequest&) override
+    {
+        return facman::core::Result<facman::factorio::setup::ArchiveAssessment>::failure(
+            unavailable_error());
+    }
     facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest&) override
     {
         return facman::core::Result<InstallPlan>::failure(unavailable_error());
@@ -94,6 +100,129 @@ std::string string_field(const facman::core::json::Value& object, const char* ke
     return text ? text.take_value() : std::string();
 }
 
+facman::core::Error provider_error(
+    const facman::core::Error& fallback,
+    const char* default_code,
+    const char* default_message)
+{
+    auto document = facman::core::json::parse(fallback.detail);
+    const auto* error = document && document.value().is_object()
+        ? document.value().find("error")
+        : nullptr;
+    const std::string code = error != nullptr && error->is_object()
+        ? string_field(*error, "code")
+        : std::string();
+    const std::string message = error != nullptr && error->is_object()
+        ? string_field(*error, "message")
+        : std::string();
+    facman::core::Error result {
+        code.empty() ? default_code : code,
+        message.empty() ? default_message : message,
+        "",
+        facman::core::OutcomeKind::refused};
+    result.detail = fallback.detail;
+    return result;
+}
+
+facman::core::Result<facman::factorio::setup::ArchiveInspection> decode_archive_inspection(
+    const std::string& response)
+{
+    facman::core::json::Limits limits;
+    limits.maximum_bytes = 64U * 1024U * 1024U;
+    limits.maximum_depth = 16;
+    limits.maximum_nodes = 1000000;
+    limits.maximum_string_bytes = 4096;
+    auto document = facman::core::json::parse(response, limits);
+    const auto* report = document && document.value().is_object()
+        ? document.value().find("payload")
+        : nullptr;
+    if (!document || string_field(document.value(), "status") != "ok" ||
+        report == nullptr || !report->is_object() ||
+        string_field(*report, "schema") != "usk.archive_inspection.v1" ||
+        string_field(*report, "status") != "pass" ||
+        string_field(*report, "normalization_policy") != "ascii_case_insensitive_v1") {
+        return facman::core::Result<facman::factorio::setup::ArchiveInspection>::failure({
+            "setup_archive_response_invalid",
+            "Universal Setup returned an invalid archive inspection envelope",
+            ""});
+    }
+    const auto* source = report->find("source");
+    const auto* totals = report->find("totals");
+    const auto* entries = report->find("entries");
+    const auto* problems = report->find("problems");
+    if (source == nullptr || !source->is_object() ||
+        string_field(*source, "schema") != "usk.source.v1" ||
+        string_field(*source, "kind") != "local_archive" ||
+        string_field(*source, "archive_format") != "zip" ||
+        totals == nullptr || !totals->is_object() ||
+        entries == nullptr || !entries->is_array() || entries->size() == 0 ||
+        problems == nullptr || !problems->is_array() || problems->size() != 0) {
+        return facman::core::Result<facman::factorio::setup::ArchiveInspection>::failure({
+            "setup_archive_response_invalid",
+            "Universal Setup archive inspection fields are incomplete",
+            ""});
+    }
+    const auto* stable = source->find("stable_read");
+    if (stable == nullptr || !stable->is_bool()) {
+        return facman::core::Result<facman::factorio::setup::ArchiveInspection>::failure({
+            "setup_archive_response_invalid",
+            "Universal Setup did not bind stable archive identity",
+            ""});
+    }
+    auto stable_value = stable->bool_value();
+    if (!stable_value || !stable_value.value()) {
+        return facman::core::Result<facman::factorio::setup::ArchiveInspection>::failure({
+            "setup_archive_response_invalid",
+            "Universal Setup did not prove a stable archive read",
+            ""});
+    }
+
+    const auto unsigned_field = [](const facman::core::json::Value& object, const char* key) {
+        const auto* field = object.find(key);
+        return field == nullptr
+            ? facman::core::Result<std::uint64_t>::failure({"json_field_missing", key, ""})
+            : field->unsigned_integer_value();
+    };
+    auto file_count = unsigned_field(*totals, "file_count");
+    auto directory_count = unsigned_field(*totals, "directory_count");
+    auto uncompressed_bytes = unsigned_field(*totals, "uncompressed_bytes");
+    if (!file_count || !directory_count || !uncompressed_bytes) {
+        return facman::core::Result<facman::factorio::setup::ArchiveInspection>::failure({
+            "setup_archive_response_invalid",
+            "Universal Setup archive totals are invalid",
+            ""});
+    }
+
+    facman::factorio::setup::ArchiveInspection inspection;
+    inspection.archive_sha256 = string_field(*source, "sha256");
+    inspection.entry_set_digest = string_field(*report, "entry_set_digest");
+    inspection.file_count = file_count.value();
+    inspection.directory_count = directory_count.value();
+    inspection.uncompressed_bytes = uncompressed_bytes.value();
+    inspection.entries.reserve(entries->size());
+    for (std::size_t index = 0; index < entries->size(); ++index) {
+        const auto* entry = entries->at(index);
+        if (entry == nullptr || !entry->is_object()) {
+            return facman::core::Result<facman::factorio::setup::ArchiveInspection>::failure({
+                "setup_archive_response_invalid",
+                "Universal Setup archive entry is invalid",
+                ""});
+        }
+        facman::factorio::setup::ArchiveEntry decoded;
+        decoded.normalized_path = string_field(*entry, "normalized_path");
+        decoded.entry_type = string_field(*entry, "entry_type");
+        if (decoded.normalized_path.empty() || decoded.entry_type.empty()) {
+            return facman::core::Result<facman::factorio::setup::ArchiveInspection>::failure({
+                "setup_archive_response_invalid",
+                "Universal Setup archive entry fields are incomplete",
+                ""});
+        }
+        inspection.entries.push_back(std::move(decoded));
+    }
+    return facman::core::Result<facman::factorio::setup::ArchiveInspection>::success(
+        std::move(inspection));
+}
+
 class UskSetupGateway final : public SetupGateway {
 public:
     facman::core::Result<PackageVerifyResult> verify_package(const PackageVerifyRequest& request) override
@@ -149,6 +278,45 @@ public:
         }
         result.detail = response.take_value();
         return facman::core::Result<PackageVerifyResult>::success(std::move(result));
+    }
+
+    facman::core::Result<facman::factorio::setup::ArchiveAssessment> inspect_install_archive(
+        const FactorioArchiveInspectRequest& request) override
+    {
+        auto recipe = facman::factorio::setup::portable_windows_zip_recipe();
+        if (!recipe) {
+            return facman::core::Result<facman::factorio::setup::ArchiveAssessment>::failure(
+                recipe.error());
+        }
+        facman::core::json::ObjectBuilder budgets;
+        budgets.add_unsigned_integer("max_entries", 100000);
+        budgets.add_unsigned_integer("max_uncompressed_bytes", 16ULL * 1024ULL * 1024ULL * 1024ULL);
+        budgets.add_unsigned_integer("max_entry_bytes", 8ULL * 1024ULL * 1024ULL * 1024ULL);
+        budgets.add_unsigned_integer("max_depth", 64);
+        budgets.add_unsigned_integer("max_ratio", 1000);
+        budgets.add_unsigned_integer("max_elapsed_ms", 120000);
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.archive_inspect_request.v1");
+        payload.add_string("archive_path", facman::platform::path_to_utf8(request.archive));
+        payload.add_string("archive_format", recipe.value().archive_format);
+        payload.add_object("budgets", budgets);
+        auto response = execute_setup("install_local.inspect", payload.serialize());
+        if (!response) {
+            return facman::core::Result<facman::factorio::setup::ArchiveAssessment>::failure(
+                provider_error(
+                    response.error(),
+                    "setup_archive_inspection_refused",
+                    "Universal Setup refused Factorio archive inspection"));
+        }
+        auto inspection = decode_archive_inspection(response.value());
+        if (!inspection) {
+            return facman::core::Result<facman::factorio::setup::ArchiveAssessment>::failure(
+                inspection.error());
+        }
+        return facman::factorio::setup::assess_portable_archive(
+            recipe.value(),
+            request.version,
+            inspection.value());
     }
 
     facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest& request) override
