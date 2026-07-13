@@ -1,12 +1,13 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "r3.7"
-current_checkpoint = "r3.7-public-integration-proof"
+current_checkpoint = "r3.8-steam-external-state-isolation-repair"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
-accepted_integration_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
+accepted_integration_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
+active_work_unit = ""
+last_closed_work_unit = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
 next_authority_gate = "H1"
 safe_beta = false
 
@@ -26,6 +27,14 @@ quarantined_capabilities = [
   "release signing, notarization, publication, and publisher authenticity",
 ]
 
+[r3_8_repair]
+status = "closed"
+task_head_revision = "b6006e514d03c56910160f32b6c9e7b90cb2b654"
+dev_integration_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
+operator_verdict = "Fail"
+standalone_manual_isolation = "unproven"
+authority_promotion = false
+
 [execution]
 status = "unavailable"
 reason = "steam_external_state_not_isolated"
@@ -38,10 +47,10 @@ authenticity = "not_proven_unsigned"
 public_sdk = "experimental_installed"
 
 [validation]
-accepted_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
-ci_run = "29208144217"
-code_security_run = "29208144220"
-security_policy_run = "29208144246"
-schema_check_run = "29208144255"
-native_test_count = 22
-python_test_count = 314
+accepted_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
+ci_run = "29276953794"
+code_security_run = "29276954155"
+security_policy_run = "29276954062"
+schema_check_run = "29276954191"
+native_test_count = 23
+python_test_count = 327

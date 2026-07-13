@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01",
+  "active_work_unit": null,
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -135,9 +135,9 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "r3.7-public-integration-proof",
+  "current_checkpoint": "r3.8-steam-external-state-isolation-repair",
   "current_revisions": {
-    "accepted_integration": "d00456069eb509eabf6a63f831aadbd19813413f",
+    "accepted_integration": "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
     "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
@@ -154,6 +154,7 @@
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision."
   ],
+  "last_closed_work_unit": "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01",
   "machine_protocol": {
     "daemon_transport": "unavailable",
     "status": "implemented",
@@ -298,6 +299,14 @@
     "daemon publication",
     "release signing, notarization, publication, and publisher authenticity"
   ],
+  "r3_8_repair": {
+    "authority_promotion": false,
+    "dev_integration_revision": "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
+    "operator_verdict": "Fail",
+    "standalone_manual_isolation": "unproven",
+    "status": "closed",
+    "task_head_revision": "b6006e514d03c56910160f32b6c9e7b90cb2b654"
+  },
   "release": {
     "authenticity": "not_proven_unsigned",
     "public_sdk": "experimental_installed",
@@ -312,12 +321,12 @@
     "Compile, runtime, package, publication, and support status are separate claims."
   ],
   "validation": {
-    "accepted_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
-    "ci_run": "29208144217",
-    "code_security_run": "29208144220",
-    "native_test_count": 22,
-    "python_test_count": 314,
-    "schema_check_run": "29208144255",
-    "security_policy_run": "29208144246"
+    "accepted_revision": "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
+    "ci_run": "29276953794",
+    "code_security_run": "29276954155",
+    "native_test_count": 23,
+    "python_test_count": 327,
+    "schema_check_run": "29276954191",
+    "security_policy_run": "29276954062"
   }
 }

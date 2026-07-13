@@ -8,15 +8,16 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3.7-complete-h1-fail-repair
+  phase: r3.8-repair-closed-h1-fail
   primary_goal: >
     Preserve the completed R3.7 non-execution product and exact H1 candidate,
-    record the human-reviewed Steam-backed H1 Fail, and repair the external-state
-    classification boundary without promoting execution.
+    retain the human-reviewed Steam-backed H1 Fail, and bind the closed R3.8
+    external-state isolation repair without promoting execution.
   next_task: >
-    FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01 is active. The recorded
-    Steam-backed Fail remains operator-owned; automation must never convert it
-    into a Pass. A separate standalone H1 retest requires another human verdict.
+    No WorkUnit is active after closing FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01.
+    M1 may open independently for fixture-backed local portable setup, while the
+    Steam-backed Fail remains operator-owned and a standalone H1 retest still
+    requires another human verdict.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import

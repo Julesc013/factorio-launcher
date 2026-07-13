@@ -8,11 +8,12 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `r3.7-public-integration-proof`;
-- active WorkUnit: `FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01`;
+- checkpoint: `r3.8-steam-external-state-isolation-repair`;
+- active WorkUnit: `none`;
+- last closed WorkUnit: `FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
-- accepted integration evidence: `d00456069eb509eabf6a63f831aadbd19813413f`;
+- accepted integration evidence: `f10aef03517a86a7c9d6afaf8b75c19549b6fa51`;
 - Universal Launcher pin: `de6c7c6cfa80c524296066bd6bb90a70ba02b760`;
 - Universal Setup pin: `4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
@@ -30,9 +31,9 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execu
 - schemas: `217`;
 - refusal codes: `213`;
 - command catalog digest: `43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86`;
-- accepted CI revision: `d00456069eb509eabf6a63f831aadbd19813413f`;
-- CI / CodeQL / security / schema runs: `29208144217` / `29208144220` / `29208144246` / `29208144255`;
-- accepted matrix counts: `22` native and `314` Python tests.
+- accepted CI revision: `f10aef03517a86a7c9d6afaf8b75c19549b6fa51`;
+- CI / CodeQL / security / schema runs: `29276953794` / `29276954155` / `29276954062` / `29276954191`;
+- accepted matrix counts: `23` native and `327` Python tests.
 
 ## Platform proof
 

@@ -1,0 +1,26 @@
+{
+  "schema": "facman.work_unit_closeout_evidence.v1",
+  "work_unit": "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01",
+  "implementation_task_head": "b6006e514d03c56910160f32b6c9e7b90cb2b654",
+  "dev_integration_revision": "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
+  "github_actions": {
+    "ci": "29276953794",
+    "code_security": "29276954155",
+    "schema_check": "29276954191",
+    "security_policy": "29276954062"
+  },
+  "local_validation": {
+    "msvc_debug_ctest": "23/23",
+    "msvc_release_ctest": "23/23",
+    "python_passed": 327,
+    "python_opt_in_skipped": 1,
+    "required_package_proof": "14/14",
+    "winforms_verified_files": 369
+  },
+  "authority": {
+    "operator_h1_verdict": "Fail",
+    "standalone_manual_isolation": "unproven",
+    "next_authority_gate": "H1",
+    "promotion": false
+  }
+}
