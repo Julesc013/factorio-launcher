@@ -72,6 +72,8 @@ class AideCompactionTests(unittest.TestCase):
             policy.mkdir(parents=True)
             source = project_state.ROOT / "contracts" / "policy" / "test_impact.v1.json"
             policy.joinpath("test_impact.v1.json").write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+            compacted = root / ".aide" / "queue" / "next" / "COMPACTED-EVIDENCE-ONLY"
+            compacted.joinpath("evidence").mkdir(parents=True)
             path = aide_lifecycle.create(root, "TEST-LIFECYCLE-01", "Lifecycle proof", "Prove state transitions.", ["docs/"])
             self.assertEqual("planned", aide_lifecycle.state_for(path))
             self.assertEqual("active", aide_lifecycle.transition(root, "TEST-LIFECYCLE-01", "start"))
@@ -91,6 +93,15 @@ class AideCompactionTests(unittest.TestCase):
             index = json.loads((archived.parent / "index.json").read_text(encoding="utf-8"))
             self.assertTrue(index["immutable_task_records"])
             self.assertIn("task.yaml", index["tasks"][0]["files"])
+
+    def test_queue_index_rejects_partially_materialized_records(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            partial = root / ".aide" / "queue" / "active" / "PARTIAL-RECORD"
+            partial.mkdir(parents=True)
+            partial.joinpath("task.yaml").write_text("id: PARTIAL-RECORD\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "incomplete mutable queue record"):
+                aide_lifecycle.rebuild_queue_index(root)
 
 
 if __name__ == "__main__":

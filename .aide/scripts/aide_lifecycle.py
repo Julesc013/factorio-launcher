@@ -255,13 +255,28 @@ def queue_record(path: Path, queue_root: Path) -> dict[str, str]:
     }
 
 
+def mutable_queue_records(lane: Path) -> list[Path]:
+    records: list[Path] = []
+    for path in sorted(candidate for candidate in lane.iterdir() if candidate.is_dir()):
+        task_exists = (path / "task.yaml").is_file()
+        status_exists = (path / "status.yaml").is_file()
+        if not task_exists and not status_exists:
+            # Compaction may intentionally retain an evidence-only placeholder.
+            # It is not a mutable queue record and must not block unrelated work.
+            continue
+        if task_exists != status_exists:
+            raise ValueError(f"incomplete mutable queue record: {path.name}")
+        records.append(path)
+    return records
+
+
 def rebuild_queue_index(root: Path) -> None:
     queue = root / ".aide" / "queue"
     for lane in ("active", "next"):
         (queue / lane).mkdir(parents=True, exist_ok=True)
     records = []
     for lane in ("active", "next"):
-        records.extend(queue_record(path, queue) for path in sorted((queue / lane).iterdir()) if path.is_dir())
+        records.extend(queue_record(path, queue) for path in mutable_queue_records(queue / lane))
     lines = [
         "schema_version: aide.queue-index.v1",
         "profile: .aide/profile.yaml",
