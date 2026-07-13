@@ -7,10 +7,29 @@ arguments, normalize aliases, construct command payloads, render responses, and
 map command status to an exit code. Backend behavior belongs to the Factorio
 application handlers reached through the public FLB command bridge.
 
-The enforced dependency direction is:
+The compatibility-facade dependency direction is:
 
 ```text
 facman_cli -> facman_client_static -> FLB command bridge -> application handlers
+```
+
+The implementation target graph is narrower:
+
+```text
+facman_client_model_static
+  request/result model, decoding, facade, cancellation, progress
+
+facman_transport_direct_static
+  -> client model + FLB
+
+facman_transport_process_static
+  -> client model + process/platform adapters
+
+facman_transport_daemon_static
+  -> client model only; unavailable
+
+facman_client_static
+  -> compatibility facade selecting all current transports
 ```
 
 `facman_cli` links only `facman_client_static`. The CLI does not include or link
@@ -20,8 +39,10 @@ Response-envelope decoding and JSON member access are owned by the client.
 
 ## Client API and transport truth
 
-`runtime/client/facman_client.h` defines the stable request, response, client,
-and transport interfaces.
+`runtime/client/facman_client_model.h` defines the request, response, client,
+and abstract transport interfaces. Transport-specific headers no longer force a
+process-only consumer to compile against or link the embedded Factorio backend.
+`runtime/client/facman_client.h` remains a source-compatible umbrella.
 
 - `DirectFlbTransport` is the working in-process transport. It creates one FLB
   context for the selected workspace, registers the graph once, serializes
@@ -61,10 +82,10 @@ FLB call. `setup.operation` and `utility.operation` are not registered and are
 not emitted in help, completions, frontend metadata, or the executable command
 graph.
 
-The decoder still recognizes those two deprecated IDs for compatibility with
-older direct clients. It immediately normalizes their `operation` field to one
-of the first-class `CommandId` values; no generic handler or transaction
-identity remains authoritative.
+The application decoder retains internal normalization code for compatibility
+corpus coverage, but the public FLB bridge no longer bypasses the registered
+command graph. Direct calls to those unregistered IDs now return the ordinary
+`unsupported_command` result. Older clients must migrate to first-class routes.
 
 ## Optional Universal Setup
 

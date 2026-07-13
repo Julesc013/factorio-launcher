@@ -8,17 +8,59 @@ target_include_directories(flaunch_client_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include)
 facman_apply_policies(flaunch_client_static)
 
-set(FACMAN_CLIENT_SOURCES facman_client.cpp workspace_resolver.cpp)
-if(WIN32)
-  list(APPEND FACMAN_CLIENT_SOURCES facman_process_windows.cpp)
-else()
-  list(APPEND FACMAN_CLIENT_SOURCES facman_process_posix.cpp)
-endif()
-add_library(facman_client_static STATIC ${FACMAN_CLIENT_SOURCES})
 find_package(Threads REQUIRED)
+
+add_library(facman_client_model_static STATIC facman_client.cpp)
+target_compile_features(facman_client_model_static PUBLIC cxx_std_17)
+target_include_directories(facman_client_model_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(facman_client_model_static PUBLIC facman_core_static)
+add_library(facman::client_model ALIAS facman_client_model_static)
+
+add_library(facman_workspace_resolver_static STATIC workspace_resolver.cpp)
+target_compile_features(facman_workspace_resolver_static PUBLIC cxx_std_17)
+target_include_directories(facman_workspace_resolver_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(facman_workspace_resolver_static PUBLIC
+  facman_core_static facman_preferences_static facman_platform_static)
+add_library(facman::workspace_resolver ALIAS facman_workspace_resolver_static)
+
+add_library(facman_transport_direct_static STATIC facman_transport_direct.cpp)
+target_compile_features(facman_transport_direct_static PUBLIC cxx_std_17)
+target_include_directories(facman_transport_direct_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(facman_transport_direct_static
+  PUBLIC facman_client_model_static
+  PRIVATE facman_platform_static flaunch_client_static flb_factorio_static)
+add_library(facman::transport_direct ALIAS facman_transport_direct_static)
+
+set(FACMAN_PROCESS_TRANSPORT_SOURCES facman_transport_process.cpp)
+if(WIN32)
+  list(APPEND FACMAN_PROCESS_TRANSPORT_SOURCES facman_process_windows.cpp)
+else()
+  list(APPEND FACMAN_PROCESS_TRANSPORT_SOURCES facman_process_posix.cpp)
+endif()
+add_library(facman_transport_process_static STATIC ${FACMAN_PROCESS_TRANSPORT_SOURCES})
+target_compile_features(facman_transport_process_static PUBLIC cxx_std_17)
+target_include_directories(facman_transport_process_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(facman_transport_process_static
+  PUBLIC facman_client_model_static
+  PRIVATE facman_platform_static flaunch_runtime_static Threads::Threads)
+add_library(facman::transport_process ALIAS facman_transport_process_static)
+
+add_library(facman_transport_daemon_static STATIC facman_transport_daemon.cpp)
+target_compile_features(facman_transport_daemon_static PUBLIC cxx_std_17)
+target_include_directories(facman_transport_daemon_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(facman_transport_daemon_static PUBLIC facman_client_model_static)
+add_library(facman::transport_daemon ALIAS facman_transport_daemon_static)
+
+add_library(facman_client_static STATIC facman_client_runtime.cpp)
 target_compile_features(facman_client_static PUBLIC cxx_std_17)
 target_include_directories(facman_client_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(facman_client_static PUBLIC
-  facman_core_static facman_preferences_static flaunch_client_static flaunch_runtime_static flb_factorio_static Threads::Threads)
+  facman_client_model_static facman_workspace_resolver_static facman_transport_direct_static
+  facman_transport_process_static facman_transport_daemon_static)
+target_link_libraries(facman_client_static PRIVATE flaunch_runtime_static)
 add_library(facman::client ALIAS facman_client_static)
-facman_apply_policies(facman_client_static)
+foreach(target IN ITEMS
+    facman_client_model_static facman_workspace_resolver_static facman_transport_direct_static
+    facman_transport_process_static facman_transport_daemon_static facman_client_static)
+  facman_apply_policies(${target})
+endforeach()

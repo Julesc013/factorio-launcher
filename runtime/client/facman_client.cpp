@@ -1,22 +1,14 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
 
-#include "facman_client.h"
+#include "facman_client_internal.h"
 
-#include "facman_process.h"
-#include "fl_command_client_cabi.h"
-#include "fl_json.h"
-#include "fl_file_io.h"
-#include "fl_runtime_verify.h"
-#include "flb/flb_api.h"
-
-#include <cstring>
-#include <atomic>
 #include <utility>
 
 namespace facman::client {
 namespace json = facman::core::json;
-namespace {
+
+namespace detail {
 
 bool cancelled(const CommandRequest& request) noexcept
 {
@@ -31,16 +23,11 @@ void progress(const CommandRequest& request, const char* stage, std::uint64_t co
 facman::core::Result<CommandResponse> failure(
     std::string code,
     std::string message,
-    std::string path = {},
-    facman::core::OutcomeKind kind = facman::core::OutcomeKind::internal_error)
+    std::string path,
+    facman::core::OutcomeKind kind)
 {
     return facman::core::Result<CommandResponse>::failure(
         {std::move(code), std::move(message), std::move(path), kind});
-}
-
-ulk_string_view view(const std::string& text)
-{
-    return {text.data(), static_cast<ulk_size>(text.size())};
 }
 
 std::string string_value(const facman::core::json::Value& object, const char* key)
@@ -60,7 +47,9 @@ facman::core::Result<CommandResponse> decode_response(int status, std::string en
     limits.maximum_string_bytes = 32U * 1024U * 1024U;
     auto document = facman::core::json::parse(envelope, limits);
     if (!document || !document.value().is_object()) {
-        return failure("client_response_invalid", document ? "command response must be an object" : document.error().message);
+        return failure(
+            "client_response_invalid",
+            document ? "command response must be an object" : document.error().message);
     }
     CommandResponse response;
     response.status = status;
@@ -73,7 +62,8 @@ facman::core::Result<CommandResponse> decode_response(int status, std::string en
         response.payload = payload->serialize();
         auto parsed_payload = facman::core::json::parse(response.payload, limits);
         if (parsed_payload) {
-            response.parsed_payload = std::make_shared<facman::core::json::Value>(parsed_payload.take_value());
+            response.parsed_payload = std::make_shared<facman::core::json::Value>(
+                parsed_payload.take_value());
         }
     }
     const auto* error = document.value().find("error");
@@ -84,7 +74,7 @@ facman::core::Result<CommandResponse> decode_response(int status, std::string en
     return facman::core::Result<CommandResponse>::success(std::move(response));
 }
 
-} // namespace
+} // namespace detail
 
 std::string quote_json_string(const std::string& value)
 {
@@ -94,7 +84,7 @@ std::string quote_json_string(const std::string& value)
 std::string CommandResponse::payload_string(const char* key) const
 {
     return parsed_payload && parsed_payload->is_object()
-        ? string_value(*parsed_payload, key)
+        ? detail::string_value(*parsed_payload, key)
         : std::string();
 }
 
@@ -105,118 +95,19 @@ std::string CommandResponse::payload_member_json(const char* key, const std::str
     return field == nullptr ? fallback : field->serialize();
 }
 
-DirectFlbTransport::DirectFlbTransport(std::filesystem::path workspace)
-    : workspace_(std::move(workspace))
-{
-    const std::string workspace_text = facman::platform::path_to_utf8(workspace_.lexically_normal());
-    flb_config_v1 config {};
-    config.struct_size = sizeof(config);
-    config.workspace_root = view(workspace_text);
-    (void)flb_context_create_v1(&config, &context_);
-}
-
-DirectFlbTransport::~DirectFlbTransport()
-{
-    flb_context_destroy_v1(context_);
-}
-
-facman::core::Result<CommandResponse> DirectFlbTransport::execute(const CommandRequest& request)
-{
-    if (request.command.empty()) return failure("client_request_invalid", "command must not be empty");
-    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled before dispatch", {}, facman::core::OutcomeKind::cancelled);
-    progress(request, "waiting_for_direct_transport", 0, 3);
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled while waiting for transport", {}, facman::core::OutcomeKind::cancelled);
-    if (context_ == nullptr) {
-        return failure(
-            "client_context_create_failed",
-            "Factorio binding context could not be created",
-            facman::platform::path_to_utf8(workspace_.lexically_normal()));
-    }
-    ulk_command_request_v1 native_request {};
-    ulk_command_response_v1 native_response {};
-    native_request.struct_size = sizeof(native_request);
-    native_request.command_name = view(request.command);
-    native_request.json_payload = view(request.json_payload);
-    native_request.dry_run = request.dry_run ? 1 : 0;
-    native_response.struct_size = sizeof(native_response);
-    progress(request, "executing_direct_transport", 1, 3);
-    const int status = fl_command_client_execute_cabi_v1(context_, &native_request, &native_response);
-    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled during dispatch", {}, facman::core::OutcomeKind::cancelled);
-    std::string envelope;
-    if (native_response.json_payload.data != nullptr) {
-        envelope.assign(
-            native_response.json_payload.data,
-            native_response.json_payload.data + native_response.json_payload.size);
-    }
-    if (envelope.empty()) return failure("client_response_empty", "Factorio binding returned an empty response");
-    progress(request, "decoding_response", 2, 3);
-    auto response = decode_response(status, std::move(envelope));
-    progress(request, "completed", 3, 3);
-    return response;
-}
-
-CliProcessTransport::CliProcessTransport(std::filesystem::path executable, std::filesystem::path workspace)
-    : executable_(std::move(executable)), workspace_(std::move(workspace))
-{
-}
-
-facman::core::Result<CommandResponse> CliProcessTransport::execute(const CommandRequest& request)
-{
-    if (request.command.empty()) return failure("client_request_invalid", "command must not be empty");
-    if (!std::filesystem::is_regular_file(executable_)) {
-        return failure("cli_process_executable_missing", "CLI process executable does not exist", facman::platform::path_to_utf8(executable_), facman::core::OutcomeKind::not_found);
-    }
-    json::Limits limits;
-    limits.maximum_bytes = 1024U * 1024U;
-    limits.maximum_depth = 32;
-    limits.maximum_nodes = 32768;
-    limits.maximum_string_bytes = 512U * 1024U;
-    auto payload = json::parse(request.json_payload.empty() ? "{}" : request.json_payload, limits);
-    if (!payload || !payload.value().is_object()) {
-        return failure("client_request_invalid", payload ? "command payload must be an object" : payload.error().message);
-    }
-    static std::atomic<std::uint64_t> next_request {1};
-    json::ObjectBuilder envelope;
-    envelope.add_string("schema", "facman.transport_request.v1");
-    envelope.add_string("request_id", "cli-" + std::to_string(next_request.fetch_add(1, std::memory_order_relaxed)));
-    (void)envelope.add_unsigned_integer("protocol_version", 1);
-    envelope.add_string("command", request.command);
-    envelope.add_value("payload", payload.value());
-    envelope.add_bool("dry_run", request.dry_run);
-    if (!workspace_.empty()) envelope.add_string("workspace", facman::platform::path_to_utf8(workspace_.lexically_normal()));
-    progress(request, "starting_cli_process", 0, 3);
-    detail::ProcessRequest process;
-    process.executable = executable_;
-    process.standard_input = envelope.serialize();
-    process.timeout = request.timeout;
-    process.cancellation_requested = [&request]() { return cancelled(request); };
-    auto result = detail::run_cli_process(process);
-    if (result.cancelled) return failure("client_operation_cancelled", "CLI process command was cancelled", {}, facman::core::OutcomeKind::cancelled);
-    if (result.timed_out) return failure("cli_process_timeout", "CLI process exceeded its timeout", {}, facman::core::OutcomeKind::timeout);
-    if (result.output_too_large) return failure("cli_process_output_too_large", "CLI process exceeded its output budget");
-    if (!result.error.empty()) return failure("cli_process_start_failed", result.error, facman::platform::path_to_utf8(executable_));
-    progress(request, "decoding_cli_response", 2, 3);
-    if (result.standard_output.empty()) {
-        return failure("cli_process_response_empty", result.standard_error.empty() ? "CLI process returned no machine response" : result.standard_error);
-    }
-    auto response = decode_response(result.exit_code, std::move(result.standard_output));
-    progress(request, "completed", 3, 3);
-    return response;
-}
-
-facman::core::Result<CommandResponse> DaemonTransport::execute(const CommandRequest&)
-{
-    return failure("daemon_transport_unavailable", "Daemon transport is not implemented", {}, facman::core::OutcomeKind::unavailable);
-}
-
 FacManClient::FacManClient(std::unique_ptr<Transport> transport) : transport_(std::move(transport)) {}
 
 facman::core::Result<CommandResponse> FacManClient::execute(const CommandRequest& request)
 {
-    if (!transport_) return failure("client_transport_missing", "FacMan client transport is not configured");
-    if (cancelled(request)) return failure("client_operation_cancelled", "command was cancelled before transport selection", {}, facman::core::OutcomeKind::cancelled);
-    if (request.timeout.count() <= 0) return failure("client_timeout_invalid", "command timeout must be positive");
+    if (!transport_) return detail::failure("client_transport_missing", "FacMan client transport is not configured");
+    if (detail::cancelled(request)) {
+        return detail::failure(
+            "client_operation_cancelled",
+            "command was cancelled before transport selection",
+            {},
+            facman::core::OutcomeKind::cancelled);
+    }
+    if (request.timeout.count() <= 0) return detail::failure("client_timeout_invalid", "command timeout must be positive");
     return transport_->execute(request);
 }
 
@@ -226,8 +117,3 @@ const char* FacManClient::transport_name() const noexcept
 }
 
 } // namespace facman::client
-
-extern "C" void facman_client_initialize_process(const char* executable_path)
-{
-    fl_runtime_set_executable_path(executable_path);
-}
