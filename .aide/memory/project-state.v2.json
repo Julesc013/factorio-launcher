@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -25,6 +25,11 @@
       "claim": "Process boundary preserves intended isolation",
       "level": "surrogate process proven",
       "limitation": "proves FacMan and probe behavior, not Factorio internals"
+    },
+    {
+      "claim": "Steam-backed strict instance-only persistence",
+      "level": "human-reviewed Fail for exact H1 candidate",
+      "limitation": "Steam Cloud changed; standalone/manual distribution remains unproven and execution authority remains blocked"
     },
     {
       "claim": "Per-instance run ownership is exclusive",
@@ -122,7 +127,7 @@
     "contracts": 111,
     "refusal_codes": 212,
     "registered_routes": 109,
-    "schemas": 215
+    "schemas": 216
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -138,13 +143,13 @@
     "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
   },
   "execution": {
-    "operator_verdict": "pending",
-    "proof": "",
-    "reason": "real_factorio_isolation_not_proven",
+    "operator_verdict": "Fail",
+    "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
+    "reason": "steam_external_state_not_isolated",
     "status": "unavailable"
   },
   "known_blockers": [
-    "H1 has no reviewed operator verdict.",
+    "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision."

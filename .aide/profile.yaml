@@ -8,14 +8,15 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3.7-complete-h1-pending
+  phase: r3.7-complete-h1-fail-repair
   primary_goal: >
-    Preserve the completed R3.7 non-execution product and exact H1 candidate on
-    the frozen R3.5 architecture while keeping execution operator-owned.
+    Preserve the completed R3.7 non-execution product and exact H1 candidate,
+    record the human-reviewed Steam-backed H1 Fail, and repair the external-state
+    classification boundary without promoting execution.
   next_task: >
-    FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 is the next authority gate and remains
-    operator-only; automation must never convert its pending verdict into pass.
-    The completed R3.7 lane does not imply this human verdict.
+    FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01 is active. The recorded
+    Steam-backed Fail remains operator-owned; automation must never convert it
+    into a Pass. A separate standalone H1 retest requires another human verdict.
   authoritative_command_slice:
     - install_refs.scan
     - install_refs.import

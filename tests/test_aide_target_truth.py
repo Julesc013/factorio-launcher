@@ -28,7 +28,7 @@ roots:
             "completed_wave": "r3.6",
             "next_authority_gate": "H1",
             "safe_beta": False,
-            "execution": {"status": "unavailable", "operator_verdict": "pending"},
+            "execution": {"status": "unavailable", "operator_verdict": "Fail", "proof": "evidence.json"},
         }
         problems = project_state.validate_status(stale)
         self.assertTrue(any("completed R3.7" in problem for problem in problems), problems)

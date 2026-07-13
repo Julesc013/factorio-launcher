@@ -6,12 +6,12 @@ implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
+active_work_unit = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
 next_authority_gate = "H1"
 safe_beta = false
 
 known_blockers = [
-  "H1 has no reviewed operator verdict.",
+  "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
   "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.",
@@ -28,9 +28,9 @@ quarantined_capabilities = [
 
 [execution]
 status = "unavailable"
-reason = "real_factorio_isolation_not_proven"
-proof = ""
-operator_verdict = "pending"
+reason = "steam_external_state_not_isolated"
+proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
+operator_verdict = "Fail"
 
 [release]
 status = "unpublished"

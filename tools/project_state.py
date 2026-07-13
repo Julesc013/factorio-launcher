@@ -222,6 +222,20 @@ def readme_status(data: dict[str, Any]) -> str:
 
 
 def roadmap_status(data: dict[str, Any]) -> str:
+    verdict = data["execution"]["operator_verdict"]
+    if verdict == "Fail":
+        gate_detail = [
+            "The human-reviewed H1 verdict for the Steam-backed route is **Fail**.",
+            "The active narrow repair is "
+            f"`{data['active_work_unit']}`; Steam Cloud remains a protected external domain.",
+            "A standalone/manual distribution must receive its own revision-pinned reviewed H1 Pass before "
+            "an R3.8 execution-candidate WorkUnit can open.",
+        ]
+    else:
+        gate_detail = [
+            "Until a reviewed operator verdict exists, execution, Safe beta, setup mutation, networking, "
+            "credentials, server processes, daemon publication, signing, and publication remain unavailable.",
+        ]
     return "\n".join([
         "## Current Status and Authority Gate",
         "",
@@ -233,8 +247,9 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "- H1 Fail routes to a narrow isolation-repair WorkUnit.",
         "- H1 Inconclusive routes to improved observation and a repeat.",
         "",
-        "Until a reviewed operator verdict exists, execution, Safe beta, setup mutation, networking, "
-        "credentials, server processes, daemon publication, signing, and publication remain unavailable.",
+        *gate_detail,
+        "Execution, Safe beta, setup mutation, networking, credentials, server processes, daemon publication, "
+        "signing, and publication remain unavailable.",
         "Truth/conformance and public-boundary hardening may continue without changing the frozen H1 runtime.",
     ])
 
@@ -313,8 +328,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     execution = status.get("execution", {})
-    if execution.get("status") != "unavailable" or execution.get("operator_verdict") != "pending":
-        problems.append("canonical status must keep execution unavailable and H1 pending")
+    if execution.get("status") != "unavailable":
+        problems.append("canonical status must keep execution unavailable")
+    verdict = execution.get("operator_verdict")
+    if verdict not in {"pending", "Fail"}:
+        problems.append("canonical status may record only pending or the reviewed H1 Fail before promotion")
+    if verdict == "Fail" and not execution.get("proof"):
+        problems.append("canonical H1 Fail must bind a sanitized proof record")
     return problems
 
 

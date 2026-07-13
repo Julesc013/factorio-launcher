@@ -35,7 +35,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("r3.7-public-integration-proof", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
-        self.assertEqual("pending", data["execution"]["operator_verdict"])
+        self.assertEqual("Fail", data["execution"]["operator_verdict"])
+        self.assertEqual(
+            "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01",
+            data["active_work_unit"],
+        )
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
             "774628f442b0cd92ba7de14553f9bcd423aa3d9a",

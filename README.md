@@ -55,10 +55,10 @@ FacMan ships as the first serious Factorio product binding.
 ## Current Status
 
 R3.7 is complete and `eb629caaec9d62536a272336e940c0d3003fdaae` is the exact H1 candidate.
-The current contract surface contains 111 commands, 215 schemas, and 212 refusal codes.
+The current contract surface contains 111 commands, 216 schemas, and 212 refusal codes.
 
-The next authority gate is **H1**. `run.execute` remains `unavailable` with `real_factorio_isolation_not_proven`.
-The operator verdict is `pending` and Safe beta remains unpromoted.
+The next authority gate is **H1**. `run.execute` remains `unavailable` with `steam_external_state_not_isolated`.
+The operator verdict is `Fail` and Safe beta remains unpromoted.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 <!-- FACMAN-PROJECT-STATUS:END -->
 
