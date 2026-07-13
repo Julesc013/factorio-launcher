@@ -24,6 +24,11 @@ The human-reviewed Steam-backed H1 Fail is recorded separately in
 [`R3.7 H1 Steam-backed operator verdict`](r3.7-h1-steam-backed-fail.md). It
 opens a narrow isolation-repair WorkUnit and does not promote execution.
 
+The bounded implementation result for that WorkUnit is recorded in
+[`R3.8 Steam external-state isolation repair`](r3.8-steam-external-state-isolation-repair.md).
+It adds the fail-closed Steam classification and refusal boundary, but does not
+claim an H1 retest or open an execution candidate.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)
