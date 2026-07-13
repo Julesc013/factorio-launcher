@@ -127,7 +127,7 @@
     "contracts": 111,
     "refusal_codes": 213,
     "registered_routes": 109,
-    "schemas": 216
+    "schemas": 217
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",

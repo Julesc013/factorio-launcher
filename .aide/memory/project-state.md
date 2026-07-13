@@ -27,7 +27,7 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execu
 
 - command contracts: `111`;
 - registered routes: `109`;
-- schemas: `216`;
+- schemas: `217`;
 - refusal codes: `213`;
 - command catalog digest: `43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86`;
 - accepted CI revision: `d00456069eb509eabf6a63f831aadbd19813413f`;
