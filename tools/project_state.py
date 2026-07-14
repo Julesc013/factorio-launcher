@@ -111,6 +111,7 @@ def collect() -> dict[str, Any]:
         "m2_wu4_live_acceptance": status["m2_wu4_live_acceptance"],
         "m2_wu5_interruption_recovery": status["m2_wu5_interruption_recovery"],
         "m2_wu6_launcher_handoff": status["m2_wu6_launcher_handoff"],
+        "m2_wu7_facman_live_portable_workflow": status["m2_wu7_facman_live_portable_workflow"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -200,6 +201,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"`{data['m2_wu6_launcher_handoff']['universal_launcher_main_revision']}`; recovery status: "
         f"`{data['m2_wu6_launcher_handoff']['dependent_instance_status']}`; operator verdict: "
         f"`{data['m2_wu6_launcher_handoff']['operator_verdict']}`.",
+        f"- M2-WU7 FacMan portable workflow: `{data['m2_wu7_facman_live_portable_workflow']['status']}`; "
+        f"plan: `{data['m2_wu7_facman_live_portable_workflow']['setup_command']}`; apply: "
+        f"`{data['m2_wu7_facman_live_portable_workflow']['ordinary_live_apply']}`; operator verdict: "
+        f"`{data['m2_wu7_facman_live_portable_workflow']['operator_verdict']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -379,7 +384,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01"
+    latest_closeout_id = "M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
     if status.get("last_closed_work_unit") != latest_closeout_id:
@@ -598,6 +603,32 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU6 must not promote ordinary live apply before a human Pass")
     if m2_wu6.get("execution_authority") is not False or m2_wu6.get("h1_inference") != "none":
         problems.append("M2-WU6 must not promote execution or infer H1")
+    m2_wu7 = status.get("m2_wu7_facman_live_portable_workflow", {})
+    if m2_wu7.get("status") not in {
+        "provider_integrated_local_plan_proven_pending_dev_integration_and_operator_verdict",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        problems.append("M2-WU7 FacMan workflow must record a recognized monotonic proof state")
+    if m2_wu7.get("universal_setup_revision") != provider_pins()["universal_setup"]["revision"] or m2_wu7.get("universal_launcher_revision") != provider_pins()["universal_launcher"]["revision"]:
+        problems.append("M2-WU7 must bind the exact current Universal provider pins")
+    if m2_wu7.get("setup_command") != "install_local.plan" or m2_wu7.get("target_class") != "operator_acceptance":
+        problems.append("M2-WU7 must route the bounded operator-acceptance install plan")
+    if m2_wu7.get("plan_is_read_only") is not True or m2_wu7.get("plan_binds_source_recipe_target_and_provider") is not True:
+        problems.append("M2-WU7 must bind a read-only complete provider plan")
+    if m2_wu7.get("default_refusal") != "live_target_acceptance_required" or m2_wu7.get("apply_refusal") != "live_target_acceptance_required" or m2_wu7.get("apply_enabled") is not False:
+        problems.append("M2-WU7 must keep every apply behind the human live-target gate")
+    if m2_wu7.get("native_test_count") != 41 or m2_wu7.get("python_test_count") != 339:
+        problems.append("M2-WU7 must bind the complete native and Python proof counts")
+    if m2_wu7.get("required_windows_package_tests") != 14 or m2_wu7.get("required_windows_package_skips") != 0:
+        problems.append("M2-WU7 must bind the required zero-skip Windows package proof")
+    if m2_wu7.get("package_tree_file_count") != 390:
+        problems.append("M2-WU7 must bind the complete reproducible selected package tree")
+    if m2_wu7.get("operator_verdict") != "pending" or m2_wu7.get("automation_can_record_operator_verdict") is not False:
+        problems.append("M2-WU7 automation must preserve a separate pending operator verdict")
+    if m2_wu7.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2-WU7 must not promote ordinary live apply before a human Pass")
+    if m2_wu7.get("execution_authority") is not False or m2_wu7.get("h1_inference") != "none":
+        problems.append("M2-WU7 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

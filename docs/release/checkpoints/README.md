@@ -86,6 +86,12 @@ checkpoint binds the additive Launcher 1.3 recovery projection, including the
 no-reference interruption case and stable dependent-instance status. Launcher
 remains unable to mutate setup and the human verdict remains pending.
 
+The subsequent
+[`M2-WU7 FacMan live portable workflow`](m2-wu7-facman-live-portable-workflow.md)
+checkpoint binds a real read-only Factorio recipe plan through Universal Setup,
+plus the uniform `live_target_acceptance_required` apply gate. It does not
+record the pending human verdict or enable mutation.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

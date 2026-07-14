@@ -33,6 +33,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu4_live_acceptance",
             "m2_wu5_interruption_recovery",
             "m2_wu6_launcher_handoff",
+            "m2_wu7_facman_live_portable_workflow",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -42,9 +43,9 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_wu6_handoff_preserves_human_and_execution_gates(self) -> None:
+    def test_m2_wu7_workflow_preserves_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu6-universal-launcher-live-handoff", data["current_checkpoint"])
+        self.assertEqual("m2-wu7-facman-live-portable-workflow", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
@@ -55,7 +56,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
-            "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
+            "M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
@@ -193,6 +194,21 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(14, m2_wu6["required_windows_package_tests"])
         self.assertEqual(0, m2_wu6["required_windows_package_skips"])
         self.assertEqual(390, m2_wu6["package_tree_file_count"])
+        m2_wu7 = data["m2_wu7_facman_live_portable_workflow"]
+        self.assertEqual(
+            "provider_integrated_local_plan_proven_pending_dev_integration_and_operator_verdict",
+            m2_wu7["status"],
+        )
+        self.assertEqual("install_local.plan", m2_wu7["setup_command"])
+        self.assertEqual("operator_acceptance", m2_wu7["target_class"])
+        self.assertTrue(m2_wu7["plan_is_read_only"])
+        self.assertTrue(m2_wu7["plan_binds_source_recipe_target_and_provider"])
+        self.assertFalse(m2_wu7["apply_enabled"])
+        self.assertEqual("live_target_acceptance_required", m2_wu7["apply_refusal"])
+        self.assertEqual("pending", m2_wu7["operator_verdict"])
+        self.assertFalse(m2_wu7["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu7["execution_authority"])
+        self.assertEqual("none", m2_wu7["h1_inference"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
