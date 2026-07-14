@@ -26,6 +26,7 @@ class AideCompactionTests(unittest.TestCase):
             "current_revisions", "active_work_unit", "last_closed_work_unit",
             "r3_8_repair", "r3_8_public_integration", "m1_managed_portable_install",
             "m1_public_integration",
+            "m2_live_portable_setup",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -35,17 +36,24 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m1_closeout_preserves_provider_gate_and_catalog_truth(self) -> None:
+    def test_m2_wu1_closeout_preserves_provider_gate_and_catalog_truth(self) -> None:
         data = project_state.collect()
-        self.assertEqual("universal-mit-license-integration", data["current_checkpoint"])
+        self.assertEqual("m2-wu1-live-target-policy", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("none", data["active_work_unit"])
         self.assertEqual(
-            "M1-PUBLIC-INTEGRATION-PROOF-01",
+            "wu1_policy_proven_public_activation_pending",
+            data["m2_live_portable_setup"]["status"],
+        )
+        self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
+        self.assertEqual(
+            "M2-WU1-LIVE-TARGET-POLICY-01",
             data["last_closed_work_unit"],
         )
+        self.assertEqual("accepted_policy_proof", data["m2_wu1_target_policy"]["status"])
+        self.assertFalse(data["m2_wu1_target_policy"]["mutation_authority"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
@@ -111,7 +119,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "264bb1939a67231878313155157abd0f83d24c13",
+            "f322655fa8fa287a400f7afb6c661eade30d707b",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

@@ -104,6 +104,8 @@ def collect() -> dict[str, Any]:
         "r3_8_public_integration": status["r3_8_public_integration"],
         "m1_managed_portable_install": status["m1_managed_portable_install"],
         "m1_public_integration": status["m1_public_integration"],
+        "m2_live_portable_setup": status["m2_live_portable_setup"],
+        "m2_wu1_target_policy": status["m2_wu1_target_policy"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -168,6 +170,12 @@ def markdown(data: dict[str, Any]) -> str:
         f"ordinary setup apply: `{data['m1_managed_portable_install']['ordinary_setup_apply']}`.",
         f"- M1 public integration: `{data['m1_public_integration']['status']}` at canonical main "
         f"`{data['m1_public_integration']['canonical_main_revision']}`.",
+        f"- M2 live portable setup: `{data['m2_live_portable_setup']['status']}`; "
+        f"operator verdict: `{data['m2_live_portable_setup']['operator_verdict']}`; "
+        f"ordinary live apply: `{data['m2_live_portable_setup']['ordinary_live_apply']}`.",
+        f"- M2-WU1 target policy: `{data['m2_wu1_target_policy']['status']}` at Universal Setup "
+        f"main `{data['m2_wu1_target_policy']['universal_setup_main_revision']}`; "
+        f"mutation authority: `{str(data['m2_wu1_target_policy']['mutation_authority']).lower()}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -347,11 +355,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    m1_closeout_id = "M1-PUBLIC-INTEGRATION-PROOF-01"
+    latest_closeout_id = "M2-WU1-LIVE-TARGET-POLICY-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
-    if status.get("last_closed_work_unit") != m1_closeout_id:
-        problems.append("canonical status must bind the closed M1 WU12 WorkUnit")
+    if status.get("last_closed_work_unit") != latest_closeout_id:
+        problems.append("canonical status must bind the closed M2-WU1 WorkUnit")
     repair = status.get("r3_8_repair", {})
     if repair.get("status") != "closed":
         problems.append("canonical status must record the R3.8 repair as closed")
@@ -388,6 +396,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M1 public integration must bind canonical main ancestry into dev")
     if m1_integration.get("authority_promotion") is not False:
         problems.append("M1 public integration proof must not promote authority")
+    m2 = status.get("m2_live_portable_setup", {})
+    if m2.get("operator_verdict") not in {"pending", "Pass", "Fail", "Inconclusive"}:
+        problems.append("M2 live setup must use the human verdict vocabulary")
+    if m2.get("operator_verdict") != "Pass" and m2.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2 must keep ordinary live apply unavailable before a human Pass")
+    if m2.get("execution_authority") is not False or m2.get("h1_inference") != "none":
+        problems.append("M2 must not promote execution or infer H1")
+    m2_wu1 = status.get("m2_wu1_target_policy", {})
+    if m2_wu1.get("status") != "accepted_policy_proof":
+        problems.append("M2-WU1 target policy must record the accepted policy proof")
+    if m2_wu1.get("mutation_authority") is not False:
+        problems.append("M2-WU1 target policy must not grant mutation authority")
+    if m2_wu1.get("operator_verdict") != "pending":
+        problems.append("M2-WU1 automation must preserve the pending human verdict")
+    if m2_wu1.get("execution_authority") is not False or m2_wu1.get("h1_inference") != "none":
+        problems.append("M2-WU1 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

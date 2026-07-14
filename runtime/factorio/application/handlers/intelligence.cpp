@@ -21,7 +21,7 @@ namespace json = facman::core::json;
 
 namespace {
 constexpr const char* kUlkRevision = "6d41e07b76cd19b2a7630835e05ac3aa125d57b8";
-constexpr const char* kUskRevision = "264bb1939a67231878313155157abd0f83d24c13";
+constexpr const char* kUskRevision = "f322655fa8fa287a400f7afb6c661eade30d707b";
 
 const char* target_name() noexcept
 {
