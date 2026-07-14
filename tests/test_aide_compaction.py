@@ -34,6 +34,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu5_interruption_recovery",
             "m2_wu6_launcher_handoff",
             "m2_wu7_facman_live_portable_workflow",
+            "m2_wu8_generated_frontend_workflow",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -217,6 +218,24 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m2_wu7["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu7["execution_authority"])
         self.assertEqual("none", m2_wu7["h1_inference"])
+        m2_wu8 = data["m2_wu8_generated_frontend_workflow"]
+        self.assertEqual(
+            "four_frontend_workflow_proven_pending_dev_integration_and_operator_verdict",
+            m2_wu8["status"],
+        )
+        self.assertEqual("facman.setup_workflow.v1", m2_wu8["workflow_schema"])
+        self.assertEqual("991ff78c5cc349dfcd8400f585d319b830d2c922", m2_wu8["implementation_revision"])
+        self.assertEqual(["cli", "tui", "winforms", "appkit"], m2_wu8["clients"])
+        self.assertEqual("universal-setup", m2_wu8["policy_owner"])
+        self.assertFalse(m2_wu8["frontend_policy"])
+        self.assertEqual("APPLY", m2_wu8["confirmation_literal"])
+        self.assertTrue(m2_wu8["recovery_required_is_distinct"])
+        self.assertFalse(m2_wu8["apply_enabled"])
+        self.assertEqual("live_target_acceptance_required", m2_wu8["apply_refusal"])
+        self.assertEqual("pending", m2_wu8["operator_verdict"])
+        self.assertFalse(m2_wu8["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu8["execution_authority"])
+        self.assertEqual("none", m2_wu8["h1_inference"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",

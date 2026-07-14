@@ -138,11 +138,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "e613b3450dab908322e3c7eb2e0d51e658f12cc1b113e8ffe8cb8663d8dd0982",
+    "catalog_digest": "7b587bd0b8f3f1317aca52509aa9996d787a075ed6d3b3837dcea44a1ce96c41",
     "contracts": 121,
     "refusal_codes": 217,
     "registered_routes": 119,
-    "schemas": 228
+    "schemas": 229
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -504,6 +504,36 @@
     "target_class": "operator_acceptance",
     "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
     "universal_setup_revision": "e1ce68e9593ae8d9a35cc0821b5e42c798524453"
+  },
+  "m2_wu8_generated_frontend_workflow": {
+    "active_work_unit": "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01",
+    "always_visible_field_count": 4,
+    "apply_enabled": false,
+    "apply_refusal": "live_target_acceptance_required",
+    "automation_can_record_operator_verdict": false,
+    "clients": [
+      "cli",
+      "tui",
+      "winforms",
+      "appkit"
+    ],
+    "confirmation_literal": "APPLY",
+    "execution_authority": false,
+    "frontend_policy": false,
+    "h1_inference": "none",
+    "implementation_revision": "991ff78c5cc349dfcd8400f585d319b830d2c922",
+    "native_test_count": 41,
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "policy_owner": "universal-setup",
+    "python_opt_in_skip_count": 1,
+    "python_test_count": 340,
+    "recovery_required_is_distinct": true,
+    "status": "four_frontend_workflow_proven_pending_dev_integration_and_operator_verdict",
+    "warning_count": 4,
+    "workflow_id": "live_portable_setup",
+    "workflow_schema": "facman.setup_workflow.v1",
+    "workflow_step_count": 10
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",

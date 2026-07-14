@@ -295,6 +295,31 @@ factorio_archive_acceptance = "unavailable"
 execution_authority = false
 h1_inference = "none"
 
+[m2_wu8_generated_frontend_workflow]
+status = "four_frontend_workflow_proven_pending_dev_integration_and_operator_verdict"
+active_work_unit = "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01"
+implementation_revision = "991ff78c5cc349dfcd8400f585d319b830d2c922"
+workflow_schema = "facman.setup_workflow.v1"
+workflow_id = "live_portable_setup"
+policy_owner = "universal-setup"
+frontend_policy = false
+clients = ["cli", "tui", "winforms", "appkit"]
+workflow_step_count = 10
+always_visible_field_count = 4
+warning_count = 4
+confirmation_literal = "APPLY"
+recovery_required_is_distinct = true
+apply_refusal = "live_target_acceptance_required"
+apply_enabled = false
+native_test_count = 41
+python_test_count = 340
+python_opt_in_skip_count = 1
+automation_can_record_operator_verdict = false
+operator_verdict = "pending"
+ordinary_live_apply = "unavailable_pending_operator_acceptance"
+execution_authority = false
+h1_inference = "none"
+
 [m2_wu1_target_policy]
 status = "accepted_dev_integration_proof"
 universal_setup_task_revision = "804ae1ea2f9fdb78525a0a3ef09069b51d8bb1c1"
