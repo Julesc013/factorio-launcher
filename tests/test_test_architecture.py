@@ -71,6 +71,26 @@ class TestArchitectureTests(unittest.TestCase):
             ):
                 self.assertEqual(current, native_cli.facman_executable())
 
+    def test_raw_python_runner_caches_build_tree_discovery(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            current = root / "build" / "m2-wu9" / "Release" / "facman.exe"
+            current.parent.mkdir(parents=True)
+            current.write_bytes(b"current")
+            with (
+                mock.patch.object(native_cli, "ROOT", root),
+                mock.patch.dict("os.environ", {"FACMAN_CLI_EXE": ""}),
+                mock.patch.object(
+                    Path,
+                    "glob",
+                    autospec=True,
+                    wraps=Path.glob,
+                ) as glob,
+            ):
+                self.assertEqual(current, native_cli.facman_executable())
+                self.assertEqual(current, native_cli.facman_executable())
+                self.assertEqual(glob.call_count, 2)
+
     def test_operator_category_cannot_be_automatically_passed(self) -> None:
         self.assertFalse(dev.load_impact()["operator"]["automated"])
 
