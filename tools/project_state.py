@@ -389,7 +389,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01"
+    latest_closeout_id = "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
     if status.get("last_closed_work_unit") != latest_closeout_id:
@@ -650,6 +650,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     m2_wu8 = status.get("m2_wu8_generated_frontend_workflow", {})
     if m2_wu8.get("status") not in {
         "four_frontend_workflow_proven_pending_dev_integration_and_operator_verdict",
+        "four_frontend_workflow_and_package_proven_pending_dev_integration_and_operator_verdict",
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU8 must record a recognized monotonic workflow proof state")
@@ -669,6 +670,16 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU8 must keep live apply behind the human acceptance gate")
     if m2_wu8.get("native_test_count") != 41 or m2_wu8.get("python_test_count") != 340 or m2_wu8.get("python_opt_in_skip_count") != 1:
         problems.append("M2-WU8 must bind the complete local native and Python proof counts")
+    if m2_wu8.get("status") in {
+        "four_frontend_workflow_and_package_proven_pending_dev_integration_and_operator_verdict",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        if m2_wu8.get("validation_remediation_revision") != "d59d22a27b088e75931eb3ff8005e59a20ff806e":
+            problems.append("M2-WU8 must bind the supervision deadline remediation revision")
+        if m2_wu8.get("required_windows_package_tests") != 14 or m2_wu8.get("required_windows_package_skips") != 0:
+            problems.append("M2-WU8 must bind the required zero-skip Windows package proof")
+        if m2_wu8.get("package_proof_revision") != "d59d22a27b088e75931eb3ff8005e59a20ff806e" or m2_wu8.get("package_tree_file_count") != 392:
+            problems.append("M2-WU8 must bind the clean selected package source and complete tree")
     if m2_wu8.get("operator_verdict") != "pending" or m2_wu8.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU8 automation must preserve the separate pending operator verdict")
     if m2_wu8.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":

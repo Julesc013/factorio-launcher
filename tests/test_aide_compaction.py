@@ -44,9 +44,9 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_wu7_workflow_preserves_human_and_execution_gates(self) -> None:
+    def test_m2_workflows_preserve_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu7-facman-live-portable-workflow", data["current_checkpoint"])
+        self.assertEqual("m2-wu8-generated-frontend-workflow", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
@@ -57,7 +57,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
-            "M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01",
+            "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
@@ -220,7 +220,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("none", m2_wu7["h1_inference"])
         m2_wu8 = data["m2_wu8_generated_frontend_workflow"]
         self.assertEqual(
-            "four_frontend_workflow_proven_pending_dev_integration_and_operator_verdict",
+            "four_frontend_workflow_and_package_proven_pending_dev_integration_and_operator_verdict",
             m2_wu8["status"],
         )
         self.assertEqual("facman.setup_workflow.v1", m2_wu8["workflow_schema"])
@@ -236,6 +236,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m2_wu8["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu8["execution_authority"])
         self.assertEqual("none", m2_wu8["h1_inference"])
+        self.assertEqual(14, m2_wu8["required_windows_package_tests"])
+        self.assertEqual(0, m2_wu8["required_windows_package_skips"])
+        self.assertEqual(392, m2_wu8["package_tree_file_count"])
+        self.assertEqual("m2-wu8-generated-frontend-workflow", data["current_checkpoint"])
+        self.assertEqual("M2-WU8-GENERATED-FRONTEND-WORKFLOW-01", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",

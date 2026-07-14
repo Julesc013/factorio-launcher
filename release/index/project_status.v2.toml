@@ -1,13 +1,13 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "r3.7"
-current_checkpoint = "m2-wu7-facman-live-portable-workflow"
+current_checkpoint = "m2-wu8-generated-frontend-workflow"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "73bec99916d509b0ab055a43562e93ef20a6b4b7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
 active_work_unit = ""
-last_closed_work_unit = "M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01"
+last_closed_work_unit = "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01"
 next_authority_gate = "H1"
 safe_beta = false
 
@@ -296,9 +296,10 @@ execution_authority = false
 h1_inference = "none"
 
 [m2_wu8_generated_frontend_workflow]
-status = "four_frontend_workflow_proven_pending_dev_integration_and_operator_verdict"
-active_work_unit = "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01"
+status = "four_frontend_workflow_and_package_proven_pending_dev_integration_and_operator_verdict"
+active_work_unit = ""
 implementation_revision = "991ff78c5cc349dfcd8400f585d319b830d2c922"
+validation_remediation_revision = "d59d22a27b088e75931eb3ff8005e59a20ff806e"
 workflow_schema = "facman.setup_workflow.v1"
 workflow_id = "live_portable_setup"
 policy_owner = "universal-setup"
@@ -314,6 +315,14 @@ apply_enabled = false
 native_test_count = 41
 python_test_count = 340
 python_opt_in_skip_count = 1
+required_windows_package_tests = 14
+required_windows_package_skips = 0
+package_proof_revision = "d59d22a27b088e75931eb3ff8005e59a20ff806e"
+package_archive_sha256 = "152cb42859b5d5fc9272ada231c266281c4e23714cfd41add552802e0084a2a3"
+package_tree_file_count = 392
+package_tree_sha256 = "c1c0a63a807b90c49113911a071b6d05aba9a7b9dd0216dc17ecf7f86e56bf80"
+sbom_sha256 = "00dcebb1dae98ce12ceb4749cba955fcdfdd44e608f1c0be84752f513d9bcb63"
+provenance_sha256 = "a20d8bba87907e0b789bc11d8c1468800628b9a472a0ff049e1a21b0418d61bb"
 automation_can_record_operator_verdict = false
 operator_verdict = "pending"
 ordinary_live_apply = "unavailable_pending_operator_acceptance"
