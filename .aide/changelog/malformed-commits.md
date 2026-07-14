@@ -1,9 +1,8 @@
 # Malformed Commits
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-malformed_count: 10
+malformed_count: 9
 
-- 842ee9fa36e7 merge(m1-wu9): bind Factorio portable setup recipe: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 96a559ffba4b merge(m1-wu10): generate guarded setup workflows: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 13319e4f9e51 merge(m1-wu11): prove managed lifecycle integration: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 307690ad9bbb chore(m2): open live-target evidence packet work unit: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category

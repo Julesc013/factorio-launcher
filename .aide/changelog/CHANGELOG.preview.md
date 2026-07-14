@@ -3,9 +3,9 @@
 This file is generated from local Git history and is a preview only.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: 4360d0f40c38d9e7f0c69151f57fd0a9ee7a92b5
+source_head: a8b298a35cd1587cea566886b5a3891153a2b7f2
 commit_count: 50
-malformed_count: 10
+malformed_count: 9
 preview_only: true
 release_publishing: false
 
@@ -13,12 +13,12 @@ release_publishing: false
 
 - Added: 12
 - Changed: 16
-- Fixed: 12
+- Fixed: 11
 - Deprecated: 1
 - Security: 21
 - Docs: 8
 - Tests: 14
-- Internal: 3
+- Internal: 4
 - Risks: 7
 - Follow-up: 12
 
@@ -58,7 +58,6 @@ release_publishing: false
 
 ## Fixed
 
-- FacMan now consumes the scheduler-independent Universal Setup proof head. (c24237e82245 chore(deps): repin remediated Universal Setup main)
 - legacy repair and uninstall grammar remains unambiguous beside phase subcommands. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
 - Reproducibility proof no longer treats the owned-output marker as a package archive. (2f13923a9cbd fix(package): distinguish archives from ownership metadata)
 - New non-ignored source files are now checked before their first commit. (5b01b36fb989 fix(validation): inspect new source files before commit)
@@ -132,6 +131,7 @@ release_publishing: false
 - generated frontend metadata excludes deprecated setup aliases without removing ABI compatibility. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
 - prepare dev ancestry synchronization from canonical main. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - no product command changed in this opening commit. (effce1f71784 chore(m2): open public setup lifecycle WorkUnit)
+- refreshed WU3 review-only changelog artifacts. (5f93f42f9708 chore(aide): refresh WU3 integration changelog preview)
 
 ## Risks
 
@@ -160,7 +160,6 @@ release_publishing: false
 
 ## Malformed Commits
 
-- 842ee9fa36e7 merge(m1-wu9): bind Factorio portable setup recipe: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 96a559ffba4b merge(m1-wu10): generate guarded setup workflows: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 13319e4f9e51 merge(m1-wu11): prove managed lifecycle integration: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 307690ad9bbb chore(m2): open live-target evidence packet work unit: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category

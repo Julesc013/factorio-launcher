@@ -1,10 +1,6 @@
 {
   "follow_up": [
     {
-      "commit": "c24237e82245",
-      "summary": "Rebuild the complete FacMan matrix and update PR #5."
-    },
-    {
       "commit": "d1fb7f97572a",
       "summary": "Route the canonical descriptors through the application boundary and prove frontend refusal behavior."
     },
@@ -423,6 +419,10 @@
     {
       "commit": "53ebb488daad",
       "summary": "Run the clean helper plan, push, and merge the evidence-only PR after exact-head checks."
+    },
+    {
+      "commit": "5f93f42f9708",
+      "summary": "Open the reviewed task-to-dev pull request and require exact-head workflows before merge."
     }
   ],
   "highlights": [
@@ -772,13 +772,6 @@
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "c24237e82245",
-      "subject": "chore(deps): repin remediated Universal Setup main",
-      "summary": "FacMan now consumes the scheduler-independent Universal Setup proof head."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
       "commit": "7850424d3e35",
       "subject": "feat(setup-gateway): route guarded lifecycle workflows",
       "summary": "legacy repair and uninstall grammar remains unambiguous beside phase subcommands."
@@ -1017,10 +1010,6 @@
   ],
   "preview_only": true,
   "risk_summary": [
-    {
-      "commit": "c24237e82245",
-      "summary": "FacMan hosted cross-platform confirmation remains required at the new exact head."
-    },
     {
       "commit": "d1fb7f97572a",
       "summary": "No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work."
@@ -1440,16 +1429,16 @@
     {
       "commit": "53ebb488daad",
       "summary": "No product or remote state changes in this commit."
+    },
+    {
+      "commit": "5f93f42f9708",
+      "summary": "Historical malformed commit messages remain reported for review; no history was rewritten."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "4360d0f40c38d9e7f0c69151f57fd0a9ee7a92b5",
+  "source_head": "a8b298a35cd1587cea566886b5a3891153a2b7f2",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
-    {
-      "commit": "c24237e82245",
-      "summary": "Setup exact-main CI 29293560341 test, sanitizer, and fuzz-smoke: PASS."
-    },
     {
       "commit": "d1fb7f97572a",
       "summary": "py -3 tools/codegen/generate_metadata.py --check: PASS."
@@ -1869,6 +1858,10 @@
     {
       "commit": "53ebb488daad",
       "summary": "AIDE git detect: PASS."
+    },
+    {
+      "commit": "5f93f42f9708",
+      "summary": "AIDE Lite test: PASS."
     }
   ],
   "warnings": [
@@ -1880,6 +1873,7 @@
     "d96384bf8f48 merge commit ignored",
     "747b4442cf22 merge commit ignored",
     "178de3192f3c merge commit ignored",
-    "10 malformed or legacy commits require review"
+    "a8b298a35cd1 merge commit ignored",
+    "9 malformed or legacy commits require review"
   ]
 }

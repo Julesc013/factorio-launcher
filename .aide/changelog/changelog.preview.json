@@ -935,31 +935,6 @@
     ],
     "Fixed": [
       {
-        "aide_phase": "hosted-ci-remediation",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Fixed",
-        "commit": "c24237e82245",
-        "commit_sha": "c24237e822454029f2a65fa0985eabab451b724e",
-        "entry": "FacMan now consumes the scheduler-independent Universal Setup proof head.",
-        "follow_up": "- Rebuild the complete FacMan matrix and update PR #5.\n\nAIDE-Task: FACMAN-M1-WU9-FACTORIO-RECIPE-GATEWAY-01\nAIDE-Phase: hosted-ci-remediation\nAIDE-Result: PASS\nAIDE-Scope: release indexes runtime status generated project state and tests\nAIDE-Token-Impact: provider revision only; no setup apply or execution authority\nAIDE-Quality-Gate: Setup exact-main CI and FacMan dependency truth checks PASS",
-        "risks": "- FacMan hosted cross-platform confirmation remains required at the new exact head.",
-        "scope": "deps",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "chore(deps): repin remediated Universal Setup main",
-        "summary": "FacMan now consumes the scheduler-independent Universal Setup proof head.",
-        "type": "chore",
-        "validation": "- Setup exact-main CI 29293560341 test, sanitizer, and fuzz-smoke: PASS.\n\n- FacMan lock, provenance, project-state, dependency alignment, and setup-routing checks: PASS."
-      },
-      {
         "aide_phase": "M1-WU10",
         "aide_result": "PASS",
         "breaking": false,
@@ -1612,6 +1587,31 @@
         "summary": "no product command changed in this opening commit.",
         "type": "chore",
         "validation": "- `py -3 -m unittest tests.test_aide_compaction -v`: PASS (6/6).\n- `py -3 tools/strict_check.py`: PASS.\n- WU1 exact dev CI 29318247825: PASS.\n- WU1 exact dev CodeQL 29318247952: PASS.\n- WU1 exact dev security 29318247752: PASS."
+      },
+      {
+        "aide_phase": "integration-review",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Internal",
+        "commit": "5f93f42f9708",
+        "commit_sha": "5f93f42f97089ae367e718d3466f4421abf43625",
+        "entry": "refreshed WU3 review-only changelog artifacts.",
+        "follow_up": "- Open the reviewed task-to-dev pull request and require exact-head workflows before merge.\n\nAIDE-Task: M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01\nAIDE-Phase: integration-review\nAIDE-Result: PASS\nAIDE-Scope: aide-changelog\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: local full matrix passed",
+        "risks": "- Historical malformed commit messages remain reported for review; no history was rewritten.",
+        "scope": "aide",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "chore(aide): refresh WU3 integration changelog preview",
+        "summary": "refreshed WU3 review-only changelog artifacts.",
+        "type": "chore",
+        "validation": "- AIDE Lite test: PASS.\n- Project state validation: PASS.\n- WU3 native, Python, package, reproducibility, and clean reconstruction gates: PASS."
       }
     ],
     "Risks": [
@@ -2676,40 +2676,15 @@
     "Changed": 16,
     "Deprecated": 1,
     "Docs": 8,
-    "Fixed": 12,
+    "Fixed": 11,
     "Follow-up": 12,
-    "Internal": 3,
+    "Internal": 4,
     "Risks": 7,
     "Security": 21,
     "Tests": 14
   },
   "commit_count": 50,
   "entries": [
-    {
-      "aide_phase": "hosted-ci-remediation",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "c24237e82245",
-      "commit_sha": "c24237e822454029f2a65fa0985eabab451b724e",
-      "entry": "FacMan now consumes the scheduler-independent Universal Setup proof head.",
-      "follow_up": "- Rebuild the complete FacMan matrix and update PR #5.\n\nAIDE-Task: FACMAN-M1-WU9-FACTORIO-RECIPE-GATEWAY-01\nAIDE-Phase: hosted-ci-remediation\nAIDE-Result: PASS\nAIDE-Scope: release indexes runtime status generated project state and tests\nAIDE-Token-Impact: provider revision only; no setup apply or execution authority\nAIDE-Quality-Gate: Setup exact-main CI and FacMan dependency truth checks PASS",
-      "risks": "- FacMan hosted cross-platform confirmation remains required at the new exact head.",
-      "scope": "deps",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "chore(deps): repin remediated Universal Setup main",
-      "summary": "FacMan now consumes the scheduler-independent Universal Setup proof head.",
-      "type": "chore",
-      "validation": "- Setup exact-main CI 29293560341 test, sanitizer, and fuzz-smoke: PASS.\n\n- FacMan lock, provenance, project-state, dependency alignment, and setup-routing checks: PASS."
-    },
     {
       "aide_phase": "M1-WU10",
       "aide_result": "PASS",
@@ -5334,22 +5309,35 @@
       "summary": "publication governance reports now match the closed evidence head.",
       "type": "chore",
       "validation": "- AIDE git detect: PASS.\n- Branch role and dev integration branch: PASS.\n- git diff --check: PASS."
+    },
+    {
+      "aide_phase": "integration-review",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Internal",
+      "commit": "5f93f42f9708",
+      "commit_sha": "5f93f42f97089ae367e718d3466f4421abf43625",
+      "entry": "refreshed WU3 review-only changelog artifacts.",
+      "follow_up": "- Open the reviewed task-to-dev pull request and require exact-head workflows before merge.\n\nAIDE-Task: M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01\nAIDE-Phase: integration-review\nAIDE-Result: PASS\nAIDE-Scope: aide-changelog\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: local full matrix passed",
+      "risks": "- Historical malformed commit messages remain reported for review; no history was rewritten.",
+      "scope": "aide",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "chore(aide): refresh WU3 integration changelog preview",
+      "summary": "refreshed WU3 review-only changelog artifacts.",
+      "type": "chore",
+      "validation": "- AIDE Lite test: PASS.\n- Project state validation: PASS.\n- WU3 native, Python, package, reproducibility, and clean reconstruction gates: PASS."
     }
   ],
   "generated_by": "aide-lite",
   "malformed_commits": [
-    {
-      "commit": "842ee9fa36e7",
-      "commit_sha": "842ee9fa36e7d46900eab7d55bc0cc3f917913a5",
-      "ignored": false,
-      "legacy": false,
-      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category",
-      "reasons": [
-        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
-        "missing_changelog_category"
-      ],
-      "subject": "merge(m1-wu9): bind Factorio portable setup recipe"
-    },
     {
       "commit": "96a559ffba4b",
       "commit_sha": "96a559ffba4b24e11e6ad71e4d4809dc50726d9f",
@@ -5459,13 +5447,13 @@
       "subject": "chore(state): bind WU3 closeout and branch identity"
     }
   ],
-  "malformed_count": 10,
+  "malformed_count": 9,
   "network_calls": "none",
   "preview_only": true,
   "provider_or_model_calls": "none",
   "release_publishing": false,
   "schema_version": "aide.changelog-preview.v0",
-  "source_head": "4360d0f40c38d9e7f0c69151f57fd0a9ee7a92b5",
+  "source_head": "a8b298a35cd1587cea566886b5a3891153a2b7f2",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "warnings": [
     "10b1caa915ed merge commit ignored",
@@ -5475,6 +5463,7 @@
     "a5e1461ac46d merge commit ignored",
     "d96384bf8f48 merge commit ignored",
     "747b4442cf22 merge commit ignored",
-    "178de3192f3c merge commit ignored"
+    "178de3192f3c merge commit ignored",
+    "a8b298a35cd1 merge commit ignored"
   ]
 }

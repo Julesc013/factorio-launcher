@@ -163,7 +163,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01",
+  "last_closed_work_unit": "M2-WU3-DEV-INTEGRATION-PROOF-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -205,7 +205,7 @@
     "h1_inference": "none",
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
-    "status": "live_evidence_provider_integrated_pending_operator_acceptance"
+    "status": "live_evidence_dev_integrated_pending_operator_acceptance"
   },
   "m2_wu1_target_policy": {
     "execution_authority": false,
@@ -277,8 +277,16 @@
     "clean_reconstruction": "passed_at_facman_validation_revision",
     "execution_authority": false,
     "facman_closeout_revision": "2678e1e2357662a401d9f91746bb10da8abfcd32",
+    "facman_dev_ci_run": "29332570822",
+    "facman_dev_code_security_run": "29332570777",
+    "facman_dev_integration_revision": "a8b298a35cd1587cea566886b5a3891153a2b7f2",
+    "facman_dev_security_policy_run": "29332570776",
+    "facman_dev_tree_identity": "b634c5b35080ae48d6b19acbc5b3ddbc1564ca9a",
     "facman_provider_integration_revision": "2e6012e0b14c738ce83753e9fc9e70c62622d269",
+    "facman_reviewed_pr": 16,
     "facman_state_validation_revision": "461251d7fd3d73e904df3d7040999588d6cd7725",
+    "facman_task_head_revision": "5f93f42f97089ae367e718d3466f4421abf43625",
+    "facman_task_tree_identity": "b634c5b35080ae48d6b19acbc5b3ddbc1564ca9a",
     "facman_validation_revision": "ecec3a46e78af54f386d08d9a4a24055f1210bdd",
     "h1_inference": "none",
     "native_test_count": 39,
@@ -297,7 +305,7 @@
     "required_windows_package_tests": 14,
     "sbom_sha256": "4bc56dff899460a4821b41141f1a3a8c8237e63ce14bf4b3dd55e8e378970004",
     "setup_owned_evidence_write": true,
-    "status": "implementation_proven_pending_dev_integration",
+    "status": "accepted_dev_integration_proof",
     "universal_setup_main_ci_run": "29329946351",
     "universal_setup_main_revision": "fbbeb762f25921ae05945206fd0c004a52239c13",
     "universal_setup_task_head_revision": "42ff66f8502bf6fea2996c96a56b9762fa6a7e9a",

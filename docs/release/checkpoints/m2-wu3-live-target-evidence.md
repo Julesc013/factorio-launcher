@@ -3,8 +3,7 @@
 
 # M2-WU3 Live Target Evidence Packet
 
-Status: implementation proven; `dev` integration pending; human verdict
-pending.
+Status: accepted `dev` integration proof; human verdict pending.
 
 This checkpoint records the product-neutral evidence packet and capture
 boundary. It does not record a live-target acceptance run, a human `Pass`, a
@@ -21,6 +20,13 @@ product execution authority.
 | Universal Launcher retained provider | `6d41e07b76cd19b2a7630835e05ac3aa125d57b8` |
 | FacMan provider-pin commit | `2e6012e0b14c738ce83753e9fc9e70c62622d269` |
 | FacMan validation/package revision | `ecec3a46e78af54f386d08d9a4a24055f1210bdd` |
+| FacMan reviewed PR | `#16` |
+| FacMan reviewed task head | `5f93f42f97089ae367e718d3466f4421abf43625` |
+| FacMan preserved `dev` merge | `a8b298a35cd1587cea566886b5a3891153a2b7f2` |
+| shared task/merge tree | `b634c5b35080ae48d6b19acbc5b3ddbc1564ca9a` |
+| exact-`dev` CI | `29332570822` |
+| exact-`dev` CodeQL | `29332570777` |
+| exact-`dev` security policy | `29332570776` |
 
 ## Evidence law
 
@@ -51,6 +57,10 @@ confirmation and creates a successor packet for a human `Pass`, `Fail`, or
 - clean three-repository reconstruction passed all builds, CTest, strict,
   AIDE, installed-consumer, and Python gates;
 - selected Windows package reproducibility passed over a 386-file tree.
+- PR #16 preserved the complete commit series in `dev`; the task head and merge
+  have identical Git tree identities;
+- exact-`dev` CI, CodeQL, and security policy completed successfully at the
+  preserved merge commit.
 
 | Reproducible evidence | SHA-256 |
 | --- | --- |
