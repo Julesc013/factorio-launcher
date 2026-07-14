@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -145,11 +145,11 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu5-live-interruption-recovery",
+  "current_checkpoint": "m2-wu6-universal-launcher-live-handoff",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "universal_launcher": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+    "universal_launcher": "7bd4425f0c35414f738159b45d8bec42edf70235",
     "universal_setup": "e1ce68e9593ae8d9a35cc0821b5e42c798524453"
   },
   "execution": {
@@ -197,7 +197,7 @@
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
   "m2_live_portable_setup": {
-    "active_work_unit": "",
+    "active_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
     "authorized_acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
     "autonomous_archive_scope": "non_proprietary_synthetic_only",
     "execution_authority": false,
@@ -411,6 +411,27 @@
     "universal_setup_task_head_revision": "ebc87c78cf0254242adfd5337c3ce2fa89b9a2ca",
     "visible_target_finalization": "internal_exact_original_install_plan_only"
   },
+  "m2_wu6_launcher_handoff": {
+    "active_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
+    "automation_can_record_operator_verdict": false,
+    "dependent_instance_status": "managed_install_recovery_required",
+    "execution_authority": false,
+    "facman_binding_abi_version": "1.3",
+    "factorio_archive_acceptance": "unavailable",
+    "focused_native_test_count": 6,
+    "h1_inference": "none",
+    "launch_plan_status": "stale",
+    "launcher_abi_version": "1.3",
+    "launcher_can_mutate_setup": false,
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "recovery_without_install_reference": true,
+    "setup_mutation_owner": "universal-setup",
+    "status": "provider_integrated_local_handoff_proven_pending_dev_integration",
+    "universal_launcher_main_ci_run": "29337737777",
+    "universal_launcher_main_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "universal_launcher_task_revision": "43115d50822ac5a3ab0c51801873ff9a230408dd"
+  },
   "machine_protocol": {
     "daemon_transport": "unavailable",
     "status": "implemented",
@@ -538,7 +559,7 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+      "revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
       "source": "universal-launcher"
     },
     "universal_setup": {

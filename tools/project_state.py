@@ -110,6 +110,7 @@ def collect() -> dict[str, Any]:
         "m2_wu3_live_evidence": status["m2_wu3_live_evidence"],
         "m2_wu4_live_acceptance": status["m2_wu4_live_acceptance"],
         "m2_wu5_interruption_recovery": status["m2_wu5_interruption_recovery"],
+        "m2_wu6_launcher_handoff": status["m2_wu6_launcher_handoff"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -195,6 +196,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"`{data['m2_wu5_interruption_recovery']['universal_setup_main_revision']}`; run: "
         f"`{data['m2_wu5_interruption_recovery']['run_id']}`; operator verdict: "
         f"`{data['m2_wu5_interruption_recovery']['operator_verdict']}`.",
+        f"- M2-WU6 Launcher handoff: `{data['m2_wu6_launcher_handoff']['status']}` at Universal Launcher main "
+        f"`{data['m2_wu6_launcher_handoff']['universal_launcher_main_revision']}`; recovery status: "
+        f"`{data['m2_wu6_launcher_handoff']['dependent_instance_status']}`; operator verdict: "
+        f"`{data['m2_wu6_launcher_handoff']['operator_verdict']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -552,6 +557,28 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU5 must not promote ordinary live apply before a human Pass")
     if m2_wu5.get("execution_authority") is not False or m2_wu5.get("h1_inference") != "none":
         problems.append("M2-WU5 must not promote execution or infer H1")
+    m2_wu6 = status.get("m2_wu6_launcher_handoff", {})
+    if m2_wu6.get("status") not in {
+        "provider_integrated_local_handoff_proven_pending_dev_integration",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        problems.append("M2-WU6 Launcher handoff must record a recognized monotonic proof state")
+    if m2_wu6.get("universal_launcher_main_revision") != provider_pins()["universal_launcher"]["revision"]:
+        problems.append("M2-WU6 must bind the exact current Universal Launcher provider pin")
+    if m2_wu6.get("launcher_abi_version") != "1.3" or m2_wu6.get("facman_binding_abi_version") != "1.3":
+        problems.append("M2-WU6 must bind the additive Launcher and FacMan ABI 1.3 integration")
+    if m2_wu6.get("recovery_without_install_reference") is not True:
+        problems.append("M2-WU6 must preserve recovery-required state before an install reference exists")
+    if m2_wu6.get("dependent_instance_status") != "managed_install_recovery_required" or m2_wu6.get("launch_plan_status") != "stale":
+        problems.append("M2-WU6 must expose structured recovery status and stale launch plans")
+    if m2_wu6.get("launcher_can_mutate_setup") is not False or m2_wu6.get("setup_mutation_owner") != "universal-setup":
+        problems.append("M2-WU6 must keep setup mutation authority outside Universal Launcher")
+    if m2_wu6.get("operator_verdict") != "pending" or m2_wu6.get("automation_can_record_operator_verdict") is not False:
+        problems.append("M2-WU6 automation must preserve a separate pending operator verdict")
+    if m2_wu6.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2-WU6 must not promote ordinary live apply before a human Pass")
+    if m2_wu6.get("execution_authority") is not False or m2_wu6.get("h1_inference") != "none":
+        problems.append("M2-WU6 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

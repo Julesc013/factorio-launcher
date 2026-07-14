@@ -123,6 +123,11 @@ facman_apply_policies(facman_isolation_probe)
 facman_native_test(facman_abi_layout_smoke facman_abi_layout_smoke.cpp "contract;platform")
 target_compile_features(facman_abi_layout_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_abi_layout_smoke PRIVATE flb_factorio_static facman_client_static)
+facman_native_test(
+  m2_wu6_launcher_handoff_smoke
+  m2_wu6_launcher_handoff_smoke.c
+  "contract;integration;setup")
+target_link_libraries(m2_wu6_launcher_handoff_smoke PRIVATE ulk_static)
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 set(FACMAN_ABI_SYMBOL_ARGS)

@@ -51,3 +51,9 @@ items:
     title: M2 WU5 live interruption and recovery
     task: .aide/queue/active/M2-WU5-LIVE-INTERRUPTION-RECOVERY-01/task.yaml
     evidence: .aide/queue/active/M2-WU5-LIVE-INTERRUPTION-RECOVERY-01/evidence
+  - id: M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01
+    status: active
+    lifecycle_state: active
+    title: M2 WU6 Universal Launcher live setup handoff
+    task: .aide/queue/active/M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01/task.yaml
+    evidence: .aide/queue/active/M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01/evidence
