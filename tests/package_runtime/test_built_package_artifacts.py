@@ -53,6 +53,8 @@ class BuiltPackageArtifactTests(unittest.TestCase):
             "content/factorio",
             "docs",
             "licenses/LICENSE",
+            "licenses/UniversalLauncher.txt",
+            "licenses/UniversalSetup.txt",
             "licenses/Miniz.txt",
             "licenses/PicoJSON.txt",
             "licenses/THIRD_PARTY_NOTICES.md",
@@ -65,6 +67,8 @@ class BuiltPackageArtifactTests(unittest.TestCase):
         for relative in required:
             self.assertTrue((self.portable_cli / relative).exists(), relative)
         for packaged, vendored in (
+            ("licenses/UniversalLauncher.txt", "LICENSES/UniversalLauncher.txt"),
+            ("licenses/UniversalSetup.txt", "LICENSES/UniversalSetup.txt"),
             ("licenses/Miniz.txt", "external/miniz/LICENSE"),
             ("licenses/PicoJSON.txt", "external/picojson/LICENSE"),
         ):

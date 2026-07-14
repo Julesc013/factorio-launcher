@@ -106,6 +106,23 @@ def validate() -> list[str]:
     decision = ROOT / "docs" / "quality" / "operator-decisions" / "universal-repository-license.md"
     if not decision.is_file() or "Status: accepted" not in decision.read_text(encoding="utf-8"):
         problems.append("accepted Universal repository license operator decision is missing")
+    required_provider_notices = {
+        "LICENSES/UniversalLauncher.txt",
+        "LICENSES/UniversalSetup.txt",
+    }
+    for profile_path in sorted((ROOT / "release" / "profiles").glob("*/profile.toml")):
+        with profile_path.open("rb") as handle:
+            profile = tomllib.load(handle)
+        for label, values in (
+            ("profile", profile.get("licenses", [])),
+            ("required_components", profile.get("required_components", {}).get("licenses", [])),
+        ):
+            missing = required_provider_notices - set(values)
+            if missing:
+                problems.append(
+                    f"{profile_path.relative_to(ROOT)} {label} omits provider notices: "
+                    + ", ".join(sorted(missing))
+                )
     builder = (ROOT / "tools" / "provenance_build.py").read_text(encoding="utf-8")
     for anchor in ("built_component_package", "verify_sbom_component_coverage", '"CONTAINS"'):
         if anchor not in builder:
