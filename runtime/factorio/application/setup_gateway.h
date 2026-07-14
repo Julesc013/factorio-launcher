@@ -29,6 +29,9 @@ struct PackageVerifyResult {
 };
 
 struct InstallPlanRequest {
+    std::string request_id;
+    std::string install_id;
+    std::string created_at;
     std::string version;
     std::filesystem::path archive;
     std::filesystem::path target;
@@ -38,6 +41,8 @@ struct InstallPlan {
     bool archive_inspected = false;
     bool product_layout_verified = false;
     bool inputs_confirmed = false;
+    std::string plan_id;
+    std::string plan_digest;
     std::string provider_response;
 };
 

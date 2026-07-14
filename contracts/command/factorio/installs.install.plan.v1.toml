@@ -9,5 +9,5 @@ diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
 dry_run_default = true
 executes_process = false
 mutates_workspace = false
-availability = "unavailable_until_gateway"
+availability = "implemented"
 golden_refusal = "tests/golden/commands/installs.install.plan.refusal.json"

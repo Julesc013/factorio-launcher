@@ -449,7 +449,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1, stderr)
             canonical_plan = json.loads(stdout)
             self.assertEqual(canonical_plan["operation"], "installs.install.plan")
-            self.assertEqual(canonical_plan["refusal"]["code"], "setup_plan_inputs_not_confirmed")
+            self.assertEqual(canonical_plan["refusal"]["code"], "live_target_acceptance_required")
             self.assertFalse(target.exists())
 
             digest = "0" * 64
@@ -471,7 +471,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1)
             apply_refusal = json.loads(stdout)
             self.assertEqual(apply_refusal["operation"], "installs.install.apply")
-            self.assertEqual(apply_refusal["refusal"]["code"], "setup_apply_not_authorized")
+            self.assertEqual(apply_refusal["refusal"]["code"], "live_target_acceptance_required")
             self.assertFalse(target.exists())
 
             code, _stdout, _stderr = invoke(
@@ -500,7 +500,7 @@ class CliTests(unittest.TestCase):
             code, stdout, stderr = invoke(["--workspace", tmp, "installs", "verify", "fixture", "--json"])
             self.assertEqual(code, 1, stderr)
             verify = json.loads(stdout)
-            self.assertEqual(verify["refusal"]["code"], "setup_verification_not_implemented")
+            self.assertEqual(verify["refusal"]["code"], "live_target_acceptance_required")
 
             code, stdout, _stderr = invoke(["--workspace", tmp, "installs", "repair", "fixture", "--json"])
             self.assertEqual(code, 1)
@@ -533,7 +533,7 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(code, 1)
             recovery = json.loads(stdout)
-            self.assertEqual(recovery["refusal"]["code"], "setup_recovery_not_available")
+            self.assertEqual(recovery["refusal"]["code"], "live_target_acceptance_required")
 
     def test_saves_backup_clone_and_instance_export_are_portable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

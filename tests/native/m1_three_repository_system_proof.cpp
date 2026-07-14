@@ -135,9 +135,16 @@ proof::LauncherReference prove_install(
         inspected.value().publisher_authenticity_proven || inspected.value().mutation_executed) {
         throw std::runtime_error("synthetic Factorio archive inspection failed");
     }
-    auto preview = gateway->plan_install({"2.0.77", archive.path, target});
-    if (!preview || preview.value().inputs_confirmed || fs::exists(target)) {
-        throw std::runtime_error("FacMan setup preview overstated apply readiness");
+    application::InstallPlanRequest preview_request;
+    preview_request.request_id = "plan.m1.facman-preview";
+    preview_request.install_id = "managed-factorio-2-0-77";
+    preview_request.created_at = "2026-07-14T01:00:00Z";
+    preview_request.version = "2.0.77";
+    preview_request.archive = archive.path;
+    preview_request.target = target;
+    auto preview = gateway->plan_install(preview_request);
+    if (preview || preview.error().code != "live_target_acceptance_required" || fs::exists(target)) {
+        throw std::runtime_error("FacMan setup preview escaped the M2 live-target gate");
     }
     const auto plan = usk::lifecycle::plan_install(
         "plan.m1.install", "managed-factorio-2-0-77", "2026-07-14T01:00:00Z",
