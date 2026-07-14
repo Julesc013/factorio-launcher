@@ -145,7 +145,14 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m2_wu4["execution_authority"])
         self.assertEqual("none", m2_wu4["h1_inference"])
         m2_wu5 = data["m2_wu5_interruption_recovery"]
-        self.assertEqual("provider_integrated_live_run_proven_pending_dev_integration", m2_wu5["status"])
+        self.assertEqual("accepted_dev_integration_proof_pending_operator_verdict", m2_wu5["status"])
+        self.assertEqual(19, m2_wu5["facman_reviewed_pr"])
+        self.assertEqual("a6cfe28c704df68025094f29be85f8961f745cd1", m2_wu5["facman_task_head_revision"])
+        self.assertEqual(m2_wu5["facman_task_tree"], m2_wu5["facman_dev_tree"])
+        self.assertEqual("f4b02ac022ee676ca5fdd5d8f31b44709a2c3277", m2_wu5["facman_dev_integration_revision"])
+        self.assertEqual("29341098765", m2_wu5["facman_dev_ci_run"])
+        self.assertEqual("29341101347", m2_wu5["facman_dev_code_security_run"])
+        self.assertEqual("29341100659", m2_wu5["facman_dev_security_policy_run"])
         self.assertEqual(data["provider_pins"]["universal_setup"]["revision"], m2_wu5["universal_setup_main_revision"])
         self.assertEqual(11, m2_wu5["case_count"])
         self.assertEqual([1, 4, 3, 3], [m2_wu5["unchanged_count"], m2_wu5["rolled_back_count"], m2_wu5["completed_count"], m2_wu5["recovery_required_count"]])
@@ -174,6 +181,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("unavailable_pending_operator_acceptance", m2_wu6["ordinary_live_apply"])
         self.assertFalse(m2_wu6["execution_authority"])
         self.assertEqual("none", m2_wu6["h1_inference"])
+        self.assertEqual(41, m2_wu6["native_test_count"])
+        self.assertEqual(339, m2_wu6["python_test_count"])
+        self.assertEqual(1, m2_wu6["python_opt_in_skip_count"])
+        self.assertEqual(14, m2_wu6["required_windows_package_tests"])
+        self.assertEqual(0, m2_wu6["required_windows_package_skips"])
+        self.assertEqual(390, m2_wu6["package_tree_file_count"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",

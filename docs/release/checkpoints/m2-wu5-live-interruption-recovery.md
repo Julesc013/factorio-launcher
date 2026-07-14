@@ -6,8 +6,24 @@
 ## Verdict
 
 The WU5 provider implementation and authorized synthetic interruption run are
-proven. FacMan integration is locally proven and awaits reviewed `dev`
-integration. This checkpoint does not record the M2 human verdict.
+proven. FacMan integration is accepted on exact `dev`. This checkpoint does
+not record the M2 human verdict.
+
+## FacMan integration identities
+
+| Evidence | Identity |
+| --- | --- |
+| reviewed PR | `#19` |
+| task head | `a6cfe28c704df68025094f29be85f8961f745cd1` |
+| task tree | `0bc4e45755a3547b2d6ccde68a1693e2c970ee67` |
+| `dev` merge | `f4b02ac022ee676ca5fdd5d8f31b44709a2c3277` |
+| `dev` tree | `0bc4e45755a3547b2d6ccde68a1693e2c970ee67` |
+| exact-`dev` CI | `29341098765` |
+| exact-`dev` CodeQL | `29341101347` |
+| exact-`dev` security policy | `29341100659` |
+
+The task and merge trees are identical and every exact-`dev` workflow passed.
+This accepts integration without creating the pending human verdict.
 
 ## Immutable identities
 

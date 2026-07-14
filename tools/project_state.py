@@ -537,6 +537,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU5 interruption recovery must record a recognized monotonic proof state")
+    if m2_wu5.get("status") == "accepted_dev_integration_proof_pending_operator_verdict":
+        expected_wu5_integration = {
+            "facman_reviewed_pr": 19,
+            "facman_task_head_revision": "a6cfe28c704df68025094f29be85f8961f745cd1",
+            "facman_task_tree": "0bc4e45755a3547b2d6ccde68a1693e2c970ee67",
+            "facman_dev_integration_revision": "f4b02ac022ee676ca5fdd5d8f31b44709a2c3277",
+            "facman_dev_tree": "0bc4e45755a3547b2d6ccde68a1693e2c970ee67",
+            "facman_dev_ci_run": "29341098765",
+            "facman_dev_code_security_run": "29341101347",
+            "facman_dev_security_policy_run": "29341100659",
+        }
+        if any(m2_wu5.get(key) != value for key, value in expected_wu5_integration.items()):
+            problems.append("accepted M2-WU5 integration must bind PR 19, identical trees, and exact-dev workflows")
     if m2_wu5.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
         problems.append("M2-WU5 must bind the exact current Universal Setup provider pin")
     if m2_wu5.get("acceptance_root") != r"D:\FacMan-Live-Acceptance\M2":
@@ -573,6 +586,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU6 must expose structured recovery status and stale launch plans")
     if m2_wu6.get("launcher_can_mutate_setup") is not False or m2_wu6.get("setup_mutation_owner") != "universal-setup":
         problems.append("M2-WU6 must keep setup mutation authority outside Universal Launcher")
+    if m2_wu6.get("native_test_count") != 41 or m2_wu6.get("python_test_count") != 339:
+        problems.append("M2-WU6 must bind the complete local native and Python proof counts")
+    if m2_wu6.get("required_windows_package_tests") != 14 or m2_wu6.get("required_windows_package_skips") != 0:
+        problems.append("M2-WU6 must bind the required zero-skip Windows package proof")
+    if m2_wu6.get("package_tree_file_count") != 390:
+        problems.append("M2-WU6 must bind the complete reproducible selected package tree")
     if m2_wu6.get("operator_verdict") != "pending" or m2_wu6.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU6 automation must preserve a separate pending operator verdict")
     if m2_wu6.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
