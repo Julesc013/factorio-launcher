@@ -20,9 +20,9 @@ def facman_executable() -> Path:
         raise AssertionError(f"FACMAN_CLI_EXE does not point to a file: {path}")
 
     preferred = [
-        ROOT / "build" / "Debug" / "facman.exe",
         ROOT / "build" / "native-smoke" / "Debug" / "facman.exe",
         ROOT / "build" / "native-smoke" / "facman",
+        ROOT / "build" / "Debug" / "facman.exe",
     ]
     for path in preferred:
         if path.is_file():

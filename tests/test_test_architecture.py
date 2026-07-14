@@ -7,7 +7,9 @@ import unittest
 import json
 import tempfile
 from pathlib import Path
+from unittest import mock
 
+import native_cli
 from tools import coverage_policy_check, dev, test_architecture_check
 
 
@@ -35,6 +37,21 @@ class TestArchitectureTests(unittest.TestCase):
         source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
         self.assertIn('f"{configuration}/facman.exe"', source)
         self.assertIn("native_executable(build_root, args.configuration)", source)
+
+    def test_raw_python_runner_prefers_canonical_native_smoke_binary(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            legacy = root / "build" / "Debug" / "facman.exe"
+            canonical = root / "build" / "native-smoke" / "Debug" / "facman.exe"
+            legacy.parent.mkdir(parents=True)
+            canonical.parent.mkdir(parents=True)
+            legacy.write_bytes(b"legacy")
+            canonical.write_bytes(b"canonical")
+            with (
+                mock.patch.object(native_cli, "ROOT", root),
+                mock.patch.dict("os.environ", {"FACMAN_CLI_EXE": ""}),
+            ):
+                self.assertEqual(canonical, native_cli.facman_executable())
 
     def test_operator_category_cannot_be_automatically_passed(self) -> None:
         self.assertFalse(dev.load_impact()["operator"]["automated"])
