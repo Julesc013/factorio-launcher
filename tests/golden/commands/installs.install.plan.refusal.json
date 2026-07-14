@@ -4,8 +4,8 @@
   "status": "refused",
   "refusal": {
     "schema": "common.refusal.v1",
-    "code": "setup_plan_inputs_not_confirmed",
-    "reason": "The archive, target, recipe, and provider identities are not yet bound by an authoritative setup plan.",
-    "recoverable": true
+    "code": "live_target_acceptance_required",
+    "reason": "Explicit M2 setup state, acceptance-root, and policy activation are required before a target-bound plan is available.",
+    "recoverable": false
   }
 }

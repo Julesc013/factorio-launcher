@@ -102,6 +102,11 @@
       "limitation": "human verdict pending; managed and recovery apply unavailable"
     },
     {
+      "claim": "FacMan portable install plan",
+      "level": "target-bound read-only candidate",
+      "limitation": "candidate config required; apply awaits human M2 Pass"
+    },
+    {
       "claim": "Package hashes authenticate publisher",
       "level": "not claimed",
       "limitation": "signatures or trusted external metadata required"
@@ -133,9 +138,9 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222",
+    "catalog_digest": "e613b3450dab908322e3c7eb2e0d51e658f12cc1b113e8ffe8cb8663d8dd0982",
     "contracts": 121,
-    "refusal_codes": 216,
+    "refusal_codes": 217,
     "registered_routes": 119,
     "schemas": 228
   },
@@ -145,7 +150,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu6-universal-launcher-live-handoff",
+  "current_checkpoint": "m2-wu7-facman-live-portable-workflow",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -163,7 +168,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
+  "last_closed_work_unit": "M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -425,7 +430,15 @@
     "dependent_instance_status": "managed_install_recovery_required",
     "execution_authority": false,
     "facman_binding_abi_version": "1.3",
+    "facman_dev_ci_run": "29344174316",
+    "facman_dev_codeql_run": "29344174402",
+    "facman_dev_integration_revision": "8c1ed53511332da2d9c2fbf04abb2d5e91c4df6c",
+    "facman_dev_security_policy_run": "29344174517",
+    "facman_dev_tree": "12160f23f78095ab09f8b5fe91960bad87a967c7",
     "facman_provider_integration_revision": "480a58ca4c10b82cf81034e00139cb78f73914bd",
+    "facman_pull_request": "20",
+    "facman_task_head_revision": "f0b27c2e7f2117f9df0a98edb2264608ab75b664",
+    "facman_task_tree": "12160f23f78095ab09f8b5fe91960bad87a967c7",
     "factorio_archive_acceptance": "unavailable",
     "focused_native_test_count": 6,
     "h1_inference": "none",
@@ -446,10 +459,43 @@
     "required_windows_package_tests": 14,
     "sbom_sha256": "0f35b6be81e81fedcc2e12268c8192f752eca4f283d54856d604e3a916ffa722",
     "setup_mutation_owner": "universal-setup",
-    "status": "provider_integrated_local_handoff_proven_pending_dev_integration",
+    "status": "accepted_dev_integration_proof_pending_operator_verdict",
     "universal_launcher_main_ci_run": "29337737777",
     "universal_launcher_main_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
     "universal_launcher_task_revision": "43115d50822ac5a3ab0c51801873ff9a230408dd"
+  },
+  "m2_wu7_facman_live_portable_workflow": {
+    "active_work_unit": "",
+    "apply_enabled": false,
+    "apply_refusal": "live_target_acceptance_required",
+    "automation_can_record_operator_verdict": false,
+    "configured_cli_plan_proven": true,
+    "default_refusal": "live_target_acceptance_required",
+    "execution_authority": false,
+    "facman_implementation_revision": "00ca569368dd0498d5002e8dc9cd832385490482",
+    "facman_package_proof_revision": "0e50b6fe0e90707926bf71940db6507aa8580a80",
+    "factorio_archive_acceptance": "unavailable",
+    "h1_inference": "none",
+    "native_test_count": 41,
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "package_archive_sha256": "8899dec862a6dd2558603e8be3a47ebd7380e7eae77f58e892cb8226630576e0",
+    "package_tree_file_count": 391,
+    "package_tree_sha256": "ae2b34f3ed610a4bdde3228e6452343b9b32e3993bb6d057f6f01c5fed761bb6",
+    "plan_binds_source_recipe_target_and_provider": true,
+    "plan_is_read_only": true,
+    "policy_activation": "operator_acceptance_candidate",
+    "provenance_sha256": "ebb7d31f17babec6f6949fa86e24026eb5da6841bb472151abd79f1b8225c960",
+    "python_opt_in_skip_count": 1,
+    "python_test_count": 339,
+    "required_windows_package_skips": 0,
+    "required_windows_package_tests": 14,
+    "sbom_sha256": "7aa4fb5be301133a2611918bf9bad842642da931140cc46543bd25f2ccacb671",
+    "setup_command": "install_local.plan",
+    "status": "provider_integrated_local_plan_proven_pending_dev_integration_and_operator_verdict",
+    "target_class": "operator_acceptance",
+    "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "universal_setup_revision": "e1ce68e9593ae8d9a35cc0821b5e42c798524453"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",

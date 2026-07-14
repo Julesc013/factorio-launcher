@@ -34,6 +34,7 @@ reported as stronger runtime evidence.
 | Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and live-target setup acceptance remain unproven |
 | Managed portable install lifecycle | fixture-proven across 3 repos | synthetic install, verify, move, repair, uninstall, recovery, and reference refresh | ordinary FacMan apply awaits live-target acceptance; no Factorio execution |
 | Public setup lifecycle | implementation-proven candidate | exact Setup CI; inspect, plan, revalidate, lifecycle, cross-repo and package proof | human verdict pending; managed and recovery apply unavailable |
+| FacMan portable install plan | target-bound read-only candidate | CLI/provider plan binds source, recipe, target, policy, and provider | candidate config required; apply awaits human M2 Pass |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |

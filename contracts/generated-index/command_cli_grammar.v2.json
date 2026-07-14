@@ -638,7 +638,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -723,7 +723,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_plan_inputs_not_confirmed",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -888,7 +888,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -973,7 +973,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1041,7 +1041,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1126,7 +1126,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_recovery_not_available",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1234,7 +1234,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1319,7 +1319,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1491,7 +1491,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1576,7 +1576,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -1630,7 +1630,7 @@
     },
     {
       "aliases": [],
-      "availability_refusal_code": "setup_verification_not_implemented",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli_grammar": {
         "internal": false,
@@ -8141,5 +8141,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222"
+  "source_digest": "e613b3450dab908322e3c7eb2e0d51e658f12cc1b113e8ffe8cb8663d8dd0982"
 }

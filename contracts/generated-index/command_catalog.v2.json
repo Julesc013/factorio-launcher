@@ -896,7 +896,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
       "cli_grammar": {
@@ -999,8 +999,8 @@
     },
     {
       "aliases": [],
-      "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_plan_inputs_not_confirmed",
+      "availability": "implemented",
+      "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json",
       "cli_grammar": {
@@ -1051,6 +1051,7 @@
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.install.plan.refusal.json",
+      "golden_success": "tests/golden/commands/installs.install.plan.success.json",
       "localization_keys": [
         "command.installs.install.plan.title",
         "command.installs.install.plan.description"
@@ -1201,7 +1202,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
       "cli_grammar": {
@@ -1305,7 +1306,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs move plan <install-id> --target <path> --json",
       "cli_grammar": {
@@ -1391,7 +1392,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
       "cli_grammar": {
@@ -1495,7 +1496,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_recovery_not_available",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs recovery inspect <transaction-id> --json",
       "cli_grammar": {
@@ -1640,7 +1641,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
       "cli_grammar": {
@@ -1744,7 +1745,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs repair plan <install-id> --archive <path> --json",
       "cli_grammar": {
@@ -1971,7 +1972,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_apply_not_authorized",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs uninstall apply <plan-id> --digest <sha256> --confirm <APPLY> --json",
       "cli_grammar": {
@@ -2075,7 +2076,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs uninstall plan <install-id> --json",
       "cli_grammar": {
@@ -2147,7 +2148,7 @@
     {
       "aliases": [],
       "availability": "unavailable_until_gateway",
-      "availability_refusal_code": "setup_verification_not_implemented",
+      "availability_refusal_code": "live_target_acceptance_required",
       "binding": "flb.factorio",
       "cli": "facman installs verify <install-id> --json",
       "cli_grammar": {
@@ -10368,6 +10369,6 @@
   ],
   "owner": "factorio-launcher",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222",
+  "source_digest": "e613b3450dab908322e3c7eb2e0d51e658f12cc1b113e8ffe8cb8663d8dd0982",
   "version": "facman-0.1.0+dev.contract"
 }

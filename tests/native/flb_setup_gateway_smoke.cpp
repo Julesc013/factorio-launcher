@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -15,11 +16,42 @@
 namespace fs = std::filesystem;
 namespace application = facman::factorio::application;
 
+void set_environment(const char* name, const std::string& value)
+{
+#if defined(_WIN32)
+    if (_putenv_s(name, value.c_str()) != 0) throw std::runtime_error("cannot set test environment");
+#else
+    if (setenv(name, value.c_str(), 1) != 0) throw std::runtime_error("cannot set test environment");
+#endif
+}
+
+void clear_environment(const char* name)
+{
+#if defined(_WIN32)
+    if (_putenv_s(name, "") != 0) throw std::runtime_error("cannot clear test environment");
+#else
+    if (unsetenv(name) != 0) throw std::runtime_error("cannot clear test environment");
+#endif
+}
+
 struct ZipEntry {
     std::string path;
     std::string data;
     std::uint32_t local_offset = 0;
+    std::uint32_t crc32 = 0;
 };
+
+std::uint32_t crc32(const std::string& value)
+{
+    std::uint32_t crc = 0xffffffffu;
+    for (unsigned char byte : value) {
+        crc ^= byte;
+        for (int bit = 0; bit < 8; ++bit) {
+            crc = (crc >> 1) ^ (0xedb88320u & (0u - (crc & 1u)));
+        }
+    }
+    return ~crc;
+}
 
 void append16(std::vector<unsigned char>& output, std::uint16_t value)
 {
@@ -67,7 +99,7 @@ fs::path make_archive(
     std::vector<ZipEntry> entries;
     entries.push_back({
         "factorio/bin/x64/factorio.exe",
-        "synthetic executable fixture"});
+        "harmless non-executable fixture bytes"});
     if (include_base) {
         entries.push_back({
             "factorio/data/base/info.json",
@@ -81,13 +113,14 @@ fs::path make_archive(
     std::vector<unsigned char> bytes;
     for (ZipEntry& entry : entries) {
         entry.local_offset = static_cast<std::uint32_t>(bytes.size());
+        entry.crc32 = crc32(entry.data);
         append32(bytes, 0x04034b50u);
         append16(bytes, 20);
         append16(bytes, 0);
         append16(bytes, 0);
         append16(bytes, 0);
         append16(bytes, 0);
-        append32(bytes, 0);
+        append32(bytes, entry.crc32);
         append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
         append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
         append16(bytes, static_cast<std::uint16_t>(entry.path.size()));
@@ -104,7 +137,7 @@ fs::path make_archive(
         append16(bytes, 0);
         append16(bytes, 0);
         append16(bytes, 0);
-        append32(bytes, 0);
+        append32(bytes, entry.crc32);
         append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
         append32(bytes, static_cast<std::uint32_t>(entry.data.size()));
         append16(bytes, static_cast<std::uint16_t>(entry.path.size()));
@@ -165,30 +198,63 @@ int main()
     }
 
     application::InstallPlanRequest plan_request;
+    plan_request.request_id = "plan.factorio.2-0-77";
+    plan_request.install_id = "managed-factorio-2-0-77";
+    plan_request.created_at = "2026-07-14T01:00:00Z";
     plan_request.version = "2.0.77";
     plan_request.archive = valid;
     plan_request.target = fixture.root / "owned-target";
-    auto plan = gateway->plan_install(plan_request);
-    if (!plan || !plan.value().archive_inspected ||
-        !plan.value().product_layout_verified || plan.value().inputs_confirmed ||
-        plan.value().provider_response.find(
-            "\"schema\":\"facman.factorio.archive_assessment.v1\"") == std::string::npos ||
+    clear_environment("FACMAN_SETUP_STATE_ROOT");
+    clear_environment("FACMAN_SETUP_ACCEPTANCE_ROOT");
+    clear_environment("FACMAN_SETUP_POLICY_ACTIVATION");
+    auto gated = gateway->plan_install(plan_request);
+    if (gated || gated.error().code != "live_target_acceptance_required" ||
         fs::exists(plan_request.target)) {
         return 2;
+    }
+
+    const fs::path setup_state = fixture.root / "setup-state";
+    set_environment("FACMAN_SETUP_STATE_ROOT", setup_state.string());
+    set_environment("FACMAN_SETUP_ACCEPTANCE_ROOT", fixture.root.string());
+    set_environment("FACMAN_SETUP_POLICY_ACTIVATION", "operator_acceptance_candidate");
+    auto plan = gateway->plan_install(plan_request);
+    clear_environment("FACMAN_SETUP_STATE_ROOT");
+    clear_environment("FACMAN_SETUP_ACCEPTANCE_ROOT");
+    clear_environment("FACMAN_SETUP_POLICY_ACTIVATION");
+    if (!plan) {
+        std::fprintf(
+            stderr,
+            "configured plan refused: %s: %s\n%s\n",
+            plan.error().code.c_str(),
+            plan.error().message.c_str(),
+            plan.error().detail.c_str());
+        return 3;
+    }
+    if (!plan || !plan.value().archive_inspected ||
+        !plan.value().product_layout_verified || !plan.value().inputs_confirmed ||
+        plan.value().plan_id != plan_request.request_id ||
+        plan.value().plan_digest.size() != 64 ||
+        plan.value().provider_response.find(
+            "\"schema\":\"usk.install_plan.v1\"") == std::string::npos ||
+        plan.value().provider_response.find(
+            "\"refuse_existing_target\":true") == std::string::npos ||
+        fs::exists(setup_state) ||
+        fs::exists(plan_request.target)) {
+        return 3;
     }
 
     const fs::path incomplete = make_archive(fixture.root, "incomplete", false, false);
     request.archive = incomplete;
     auto refused = gateway->inspect_install_archive(request);
-    if (refused || refused.error().code != "factorio_required_path_missing") return 3;
+    if (refused || refused.error().code != "factorio_required_path_missing") return 4;
 
     request.archive = fixture.root / "missing.zip";
     auto missing = gateway->inspect_install_archive(request);
-    if (missing || missing.error().code != "archive_inspection_refused") return 4;
+    if (missing || missing.error().code != "archive_inspection_refused") return 5;
 
     request.archive = valid;
     request.version = "latest";
     auto floating = gateway->inspect_install_archive(request);
-    if (floating || floating.error().code != "factorio_archive_binding_invalid") return 5;
+    if (floating || floating.error().code != "factorio_archive_binding_invalid") return 6;
     return 0;
 }
