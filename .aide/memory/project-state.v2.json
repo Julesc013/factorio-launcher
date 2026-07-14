@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01",
+  "active_work_unit": null,
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -178,7 +178,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01",
+  "last_closed_work_unit": "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -572,7 +572,7 @@
     "workflow_step_count": 10
   },
   "m2_wu9_cross_platform_adversarial_proof": {
-    "active_work_unit": "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01",
+    "active_work_unit": "",
     "automation_can_record_operator_verdict": false,
     "baseline_dev_revision": "f1a9996d391ba19a4c5ce4e418193e6067bfd722",
     "baseline_dev_tree": "24deb7a6a18547a188f0dd6da6838abccaf7005d",

@@ -51,14 +51,14 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["active_work_unit"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "automated_live_lifecycle_complete_pending_operator_verdict",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
-            "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01",
+            "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
@@ -258,8 +258,8 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m2_wu9["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu9["execution_authority"])
         self.assertEqual("m2-wu9-cross-platform-adversarial-proof", data["current_checkpoint"])
-        self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["active_work_unit"])
-        self.assertEqual("M2-WU8-GENERATED-FRONTEND-WORKFLOW-01", data["last_closed_work_unit"])
+        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
