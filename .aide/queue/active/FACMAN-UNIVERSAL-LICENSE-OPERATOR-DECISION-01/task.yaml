@@ -1,17 +1,35 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01
 title: Choose licenses for Universal repositories
-status: planned
-lifecycle_state: planned
-planning_state: planned
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-11T23:03:13Z
 owner: unassigned
 objective: >
-  Record the operator license choice for Universal Launcher and Universal Setup; preserve NOASSERTION and prepare no provider patch until the operator explicitly selects a license.
+  Record the operator-authorized MIT choice for Universal Launcher and Universal Setup, bind the licensed provider revisions, and replace NOASSERTION throughout package, SBOM, provenance, notice, and project truth.
 allowed_paths:
+  - .aide/memory/**
+  - .aide/queue/**
+  - .gitattributes
+  - LICENSES/UniversalLauncher.txt
+  - LICENSES/UniversalSetup.txt
+  - THIRD_PARTY_NOTICES.md
+  - cmake/FacManInstall.cmake
+  - docs/architecture/sbom-and-provenance.v1.md
   - docs/quality/operator-decisions/**
-  - release/index/dependency_lock.v1.toml
-  - release/index/sbom.components.v1.json
+  - docs/quality/safety_claim_ledger.md
+  - docs/release/checkpoints/**
+  - release/index/**
+  - release/profiles/**
+  - runtime/base/CMakeLists.txt
+  - runtime/base/fl_local_operation_lock.cpp
+  - runtime/base/fl_path_safety.cpp
+  - runtime/factorio/application/handlers/intelligence.cpp
+  - runtime/platform/fl_file_io.cpp
+  - runtime/platform/fl_windows_path.h
+  - tests/**
+  - tools/**
 forbidden_paths:
   - .git/**
   - .aide.local/**
@@ -51,3 +69,9 @@ closeout_checklist:
   - full promotion requirements recorded honestly
   - claim ledger and project state reconciled
   - structured commit check passed
+active_at: 2026-07-14T06:32:54Z
+verified_at: 2026-07-14T07:10:43Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-14T07:12:34Z
+closed_at: 2026-07-14T07:13:58Z

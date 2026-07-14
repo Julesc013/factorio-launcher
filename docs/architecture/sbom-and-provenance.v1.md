@@ -9,18 +9,18 @@ CMake install tree, and the pinned Universal Launcher, Universal Setup, Miniz,
 and PicoJSON dependencies. `CONTAINS` relationships close the installed
 component set; independent verification reconstructs that set from the
 installed bundle manifest and rejects a missing package or relationship.
-FacMan and Miniz have MIT license records, and PicoJSON has a BSD-2-Clause
-record. Built contracts and Factorio content declare MIT. Linked executables
-and libraries remain `NOASSERTION` while either provider's license is unknown,
-so aggregation cannot silently overstate their licensing.
+FacMan, Universal Launcher, Universal Setup, and Miniz have MIT license
+records, and PicoJSON has a BSD-2-Clause record. Built contracts and Factorio
+content declare MIT. The Universal license values are accepted only at the
+pinned revisions whose exact license-file digests are recorded in the lock.
 
 First-party source headers are managed by `tools/apply_spdx_headers.py`, and
 `REUSE.toml` records generated and third-party trees. Packages carry the exact
 vendored Miniz and PicoJSON notices as `licenses/Miniz.txt` and
-`licenses/PicoJSON.txt`. Their contents and the vendored Miniz source/license
-digests are machine-checked. Universal Launcher and Universal Setup continue
-to use `NOASSERTION`: selecting or patching those repositories' licenses is a
-pending operator decision, not an automated compliance action.
+`licenses/PicoJSON.txt`. Packages also carry exact Universal Launcher and
+Universal Setup MIT notices. Their contents and all recorded license digests
+are machine-checked. The operator decision is recorded separately and does not
+imply signing, publication, or publisher authenticity.
 
 ## Artifact binding
 

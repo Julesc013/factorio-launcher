@@ -104,6 +104,7 @@ def collect() -> dict[str, Any]:
         "r3_8_public_integration": status["r3_8_public_integration"],
         "m1_managed_portable_install": status["m1_managed_portable_install"],
         "m1_public_integration": status["m1_public_integration"],
+        "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
         "execution": status["execution"],
@@ -167,6 +168,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"ordinary setup apply: `{data['m1_managed_portable_install']['ordinary_setup_apply']}`.",
         f"- M1 public integration: `{data['m1_public_integration']['status']}` at canonical main "
         f"`{data['m1_public_integration']['canonical_main_revision']}`.",
+        f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
+        f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
         "R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. "
         "M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, "
@@ -385,6 +388,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M1 public integration must bind canonical main ancestry into dev")
     if m1_integration.get("authority_promotion") is not False:
         problems.append("M1 public integration proof must not promote authority")
+    licenses = status.get("universal_repository_licenses", {})
+    if licenses.get("status") != "accepted_mit":
+        problems.append("Universal repository license decision must record accepted MIT")
+    if licenses.get("spdx_license_expression") != "MIT":
+        problems.append("Universal repository license expression must be MIT")
+    if licenses.get("publication_authority") is not False:
+        problems.append("Universal repository licensing must not imply publication authority")
     execution = status.get("execution", {})
     if execution.get("status") != "unavailable":
         problems.append("canonical status must keep execution unavailable")

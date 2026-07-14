@@ -14,11 +14,11 @@ pin_kind = "historical_proof_baseline"
 [[component]]
 id = "universal_launcher"
 source = "universal-launcher"
-pin = "c43d390efe0db17480f9d0262827659b4ae242dd"
+pin = "6d41e07b76cd19b2a7630835e05ac3aa125d57b8"
 path = "../universal-launcher"
 
 [[component]]
 id = "universal_setup"
 source = "universal-setup"
-pin = "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
+pin = "264bb1939a67231878313155157abd0f83d24c13"
 path = "../universal-setup"

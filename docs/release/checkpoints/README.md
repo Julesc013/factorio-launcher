@@ -47,6 +47,12 @@ implementation, final `dev` checkpoint, canonical `main` promotion, identical
 tree identities, and exact successful `dev` and `main` workflows. It does not
 change M1's fixture-only mutation authority.
 
+The subsequent
+[`Universal MIT license integration`](universal-mit-license-integration.md)
+checkpoint binds the operator-authorized provider licenses, retained notices,
+final provider pins, and a fresh clean package reproducibility proof. It grants
+no signing, publication, live-target setup, execution, or H1 authority.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

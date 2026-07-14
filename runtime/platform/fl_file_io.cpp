@@ -3,6 +3,8 @@
 
 #include "fl_file_io.h"
 
+#include "fl_windows_path.h"
+
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
@@ -93,8 +95,9 @@ IoStatus StableInputFile::open_no_follow(const std::filesystem::path& path)
 {
     if (open()) return IoStatus::failure("input_already_open", path_to_utf8(path));
 #ifdef _WIN32
+    const std::wstring native_path = windows_extended_path(path);
     impl_->handle = CreateFileW(
-        path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+        native_path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_RANDOM_ACCESS, nullptr);
     if (impl_->handle == kInvalidHandle) return IoStatus::failure("input_open_failed", windows_error("CreateFileW"));
     BY_HANDLE_FILE_INFORMATION info {};
@@ -189,7 +192,8 @@ IoStatus DurableOutputFile::create_exclusive(const std::filesystem::path& path, 
 {
     if (impl_->handle != kInvalidHandle) return IoStatus::failure("output_already_open", path_to_utf8(path));
 #ifdef _WIN32
-    impl_->handle = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+    const std::wstring native_path = windows_extended_path(path);
+    impl_->handle = CreateFileW(native_path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (impl_->handle == kInvalidHandle) return IoStatus::failure("output_create_failed", windows_error("CreateFileW"));
 #else
     impl_->handle = ::open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
@@ -248,7 +252,9 @@ const std::filesystem::path& DurableOutputFile::path() const noexcept { return i
 IoStatus commit_no_replace(const std::filesystem::path& source, const std::filesystem::path& destination)
 {
 #ifdef _WIN32
-    if (!MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_WRITE_THROUGH)) {
+    const std::wstring native_source = windows_extended_path(source);
+    const std::wstring native_destination = windows_extended_path(destination);
+    if (!MoveFileExW(native_source.c_str(), native_destination.c_str(), MOVEFILE_WRITE_THROUGH)) {
         return IoStatus::failure("commit_no_replace_failed", windows_error("MoveFileExW"));
     }
     return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
@@ -265,7 +271,9 @@ IoStatus commit_no_replace(const std::filesystem::path& source, const std::files
 IoStatus replace_existing_durable(const std::filesystem::path& source, const std::filesystem::path& destination)
 {
 #ifdef _WIN32
-    if (!MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+    const std::wstring native_source = windows_extended_path(source);
+    const std::wstring native_destination = windows_extended_path(destination);
+    if (!MoveFileExW(native_source.c_str(), native_destination.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
         return IoStatus::failure("replace_existing_failed", windows_error("MoveFileExW"));
     }
     return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
@@ -287,7 +295,8 @@ IoStatus remove_exact_object(const std::filesystem::path& path, const FileIdenti
     if (!status.ok()) return status;
     if (!current.identity().same_object(expected)) return IoStatus::failure("remove_identity_mismatch", path_to_utf8(path));
 #ifdef _WIN32
-    if (!DeleteFileW(path.c_str())) return IoStatus::failure("remove_failed", windows_error("DeleteFileW"));
+    const std::wstring native_path = windows_extended_path(path);
+    if (!DeleteFileW(native_path.c_str())) return IoStatus::failure("remove_failed", windows_error("DeleteFileW"));
 #else
     if (::unlink(path.c_str()) != 0) return IoStatus::failure("remove_failed", std::strerror(errno));
     return flush_directory(path.parent_path());

@@ -1,7 +1,7 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "r3.7"
-current_checkpoint = "m1-public-integration-proof"
+current_checkpoint = "universal-mit-license-integration"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "73bec99916d509b0ab055a43562e93ef20a6b4b7"
@@ -15,7 +15,6 @@ known_blockers = [
   "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
-  "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.",
 ]
 
 quarantined_capabilities = [
@@ -34,6 +33,26 @@ dev_integration_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
 operator_verdict = "Fail"
 standalone_manual_isolation = "unproven"
 authority_promotion = false
+
+[universal_repository_licenses]
+status = "accepted_mit"
+decision_work_unit = "FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01"
+universal_launcher_revision = "6d41e07b76cd19b2a7630835e05ac3aa125d57b8"
+universal_launcher_ci_run = "29311615251"
+universal_setup_revision = "264bb1939a67231878313155157abd0f83d24c13"
+universal_setup_ci_run = "29311599523"
+spdx_license_expression = "MIT"
+license_file_sha256 = "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53"
+facman_task_revision = "c253e05d882c0822bb33da1ae92e7d047ee92f68"
+facman_task_tree = "023f24e8b380d1e44bc835a3ee56e9388cd47920"
+clean_reconstruction = "passed"
+reproducibility_status = "accepted"
+package_archive_sha256 = "993bf60ddd4332abdab1950d3df4220235314dac959806a1c2fa3dbf80267706"
+package_tree_file_count = 383
+package_tree_sha256 = "81eab95e8cf0731932723e8a96ea75ad80c9a6f72502a78c54a60f8227031f44"
+sbom_sha256 = "9b1939cb56f3e735c0bba733190f7f4dea827c8e95dd5868b7bf6eb26c53c872"
+provenance_sha256 = "52a2e9fd637d78609671cff2baba3adbb7f063068c9a0b8d2e355ff39d58f03d"
+publication_authority = false
 
 [r3_8_public_integration]
 status = "accepted"

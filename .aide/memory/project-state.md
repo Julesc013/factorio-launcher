@@ -8,14 +8,14 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `m1-public-integration-proof`;
+- checkpoint: `universal-mit-license-integration`;
 - active WorkUnit: `none`;
 - last closed WorkUnit: `M1-PUBLIC-INTEGRATION-PROOF-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `73bec99916d509b0ab055a43562e93ef20a6b4b7`;
-- Universal Launcher pin: `c43d390efe0db17480f9d0262827659b4ae242dd`;
-- Universal Setup pin: `2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7`;
+- Universal Launcher pin: `6d41e07b76cd19b2a7630835e05ac3aa125d57b8`;
+- Universal Setup pin: `264bb1939a67231878313155157abd0f83d24c13`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
 - operator verdict: `Fail`;
 - Safe beta: `false`;
@@ -23,6 +23,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - public SDK: `experimental_installed`; stable compatibility is not promised.
 - M1 managed portable install: `fixture_proven`; ordinary setup apply: `unavailable_pending_live_target_acceptance`.
 - M1 public integration: `accepted` at canonical main `73bec99916d509b0ab055a43562e93ef20a6b4b7`.
+- Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
 
@@ -67,7 +68,6 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is in
 - H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
-- Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.
 
 ## Authorities
 

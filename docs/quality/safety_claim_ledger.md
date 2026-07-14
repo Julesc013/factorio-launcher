@@ -34,7 +34,7 @@ reported as stronger runtime evidence.
 | Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and live-target setup acceptance remain unproven |
 | Managed portable install lifecycle | fixture-proven across 3 repos | synthetic install, verify, move, repair, uninstall, recovery, and reference refresh | ordinary FacMan apply awaits live-target acceptance; no Factorio execution |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
-| Package inputs and provenance are recorded | target CI proven | SPDX component closure, licenses, identities, and digests | provider licenses are `NOASSERTION`; unsigned evidence is not publisher authentication |
+| Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |
 | CLI uses only the client boundary | regression-proven | include/link checker, direct transport smoke, parity tests | process and daemon transports remain unavailable |
 | Install-tree archives reproduce | Windows digest-proven | independent roots, normalized metadata, dirty refusal | other targets need per-revision CI; output is unsigned |
