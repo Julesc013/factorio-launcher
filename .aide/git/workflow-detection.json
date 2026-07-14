@@ -1,9 +1,9 @@
 {
-  "branch_role_for_current_branch": "integration",
+  "branch_role_for_current_branch": "task",
   "canonical_branch": "main",
   "confidence": "high",
-  "current_branch": "dev",
-  "current_commit": "d96384bf8f48230256d35fa7015cbc7374e83319",
+  "current_branch": "task/m2-wu2-public-lifecycle",
+  "current_commit": "effce1f71784517ad4fc7e0af2d31e16bdad59aa",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
@@ -22,6 +22,7 @@
     "task/m1-wu0-r3.8-closeout-main-promotion",
     "task/m1-wu9-factorio-setup-gateway",
     "task/m1-wu9-factorio-setup-gateway-q27",
+    "task/m2-wu2-public-lifecycle",
     "task/macos-runner-ci-fix",
     "task/package-smoke-01",
     "task/r3-final-evidence",
@@ -40,7 +41,7 @@
     "task/universal-mit-license-integration-q27"
   ],
   "non_mutating": true,
-  "recommended_next_action": "use dev only for integration repair or explicitly scoped work; normal work should use a task branch",
+  "recommended_next_action": "continue bounded task work, validate locally, and plan future landing to dev",
   "remote_branches": [
     "origin/dev",
     "origin/evidence/r3.6-real-factorio-isolation-baseline",
