@@ -13,6 +13,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class SourceFormatCheckTests(unittest.TestCase):
+    def test_precommit_discovery_includes_untracked_nonignored_files(self) -> None:
+        source = (ROOT / "tools" / "source_format_check.py").read_text(encoding="utf-8")
+        self.assertIn('"--others"', source)
+        self.assertIn('"--exclude-standard"', source)
+
     def test_large_one_line_python_file_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "collapsed.py"

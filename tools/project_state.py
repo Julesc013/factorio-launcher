@@ -102,6 +102,7 @@ def collect() -> dict[str, Any]:
         "last_closed_work_unit": status.get("last_closed_work_unit", "") or None,
         "r3_8_repair": status["r3_8_repair"],
         "r3_8_public_integration": status["r3_8_public_integration"],
+        "m1_managed_portable_install": status["m1_managed_portable_install"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
         "execution": status["execution"],
@@ -161,9 +162,12 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
         f"- public SDK: `{data['release']['public_sdk']}`; stable compatibility is not promised.",
+        f"- M1 managed portable install: `{data['m1_managed_portable_install']['status']}`; "
+        f"ordinary setup apply: `{data['m1_managed_portable_install']['ordinary_setup_apply']}`.",
         "",
         "R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. "
-        "No execution, Safe beta, stable SDK, daemon, setup, networking, credential, signing, "
+        "M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, "
+        "stable SDK, daemon, live-target setup, networking, credential, signing, "
         "or publication authority is inferred from the completed non-execution proof.",
         "",
         "## Contract and validation identity",
@@ -220,6 +224,8 @@ def readme_status(data: dict[str, Any]) -> str:
         f"The next authority gate is **{data['next_authority_gate']}**. `run.execute` remains "
         f"`{data['execution']['status']}` with `{data['execution']['reason']}`.",
         f"The operator verdict is `{data['execution']['operator_verdict']}` and Safe beta remains unpromoted.",
+        f"M1 managed portable setup is `{data['m1_managed_portable_install']['status']}` in bounded fixture, "
+        "disposable, and package-proof roots; ordinary live-target apply remains unavailable.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
         "neither carries a stable compatibility promise.",
     ])
@@ -254,7 +260,8 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "- H1 Inconclusive routes to improved observation and a repeat.",
         "",
         *gate_detail,
-        "Execution, Safe beta, setup mutation, networking, credentials, server processes, daemon publication, "
+        "M1 fixture-backed managed setup is complete. Ordinary live-target setup apply remains unavailable.",
+        "Execution, Safe beta, networking, credentials, server processes, daemon publication, "
         "signing, and publication remain unavailable.",
         "Truth/conformance and public-boundary hardening may continue without changing the frozen H1 runtime.",
     ])
@@ -334,10 +341,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
+    m1_closeout_id = "M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
-    if status.get("last_closed_work_unit") != repair_id:
-        problems.append("canonical status must bind the closed R3.8 repair WorkUnit")
+    if status.get("last_closed_work_unit") != m1_closeout_id:
+        problems.append("canonical status must bind the closed M1 WU12 WorkUnit")
     repair = status.get("r3_8_repair", {})
     if repair.get("status") != "closed":
         problems.append("canonical status must record the R3.8 repair as closed")
@@ -354,6 +362,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("R3.8 public integration proof must not promote authority")
     if not integration.get("main_dev_synchronized_at_proof"):
         problems.append("R3.8 public integration proof must bind synchronized main/dev ancestry")
+    m1 = status.get("m1_managed_portable_install", {})
+    if m1.get("status") != "fixture_proven":
+        problems.append("canonical status must record fixture-proven M1 managed setup")
+    if m1.get("ordinary_setup_apply") != "unavailable_pending_live_target_acceptance":
+        problems.append("canonical status must keep ordinary setup apply unavailable")
+    if m1.get("authority_promotion") is not False:
+        problems.append("M1 closeout must not promote execution or live-target authority")
     execution = status.get("execution", {})
     if execution.get("status") != "unavailable":
         problems.append("canonical status must keep execution unavailable")

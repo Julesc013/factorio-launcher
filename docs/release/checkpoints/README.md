@@ -35,6 +35,12 @@ repair and WU0 closeout chain to canonical `main` revision
 `53ffbd6e02f098e0eacda9392131592ba421b90a` and its exact successful workflows.
 It is a bookkeeping successor on `dev`, not self-validating product evidence.
 
+The independent
+[`M1 Managed Portable Install Foundation`](m1-managed-portable-install-foundation.md)
+checkpoint records the fixture-backed local-archive lifecycle across Universal
+Setup, Universal Launcher, and FacMan. It does not replace the frozen R3.7 H1
+candidate, promote ordinary live-target setup apply, or infer an H1 Pass.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)
