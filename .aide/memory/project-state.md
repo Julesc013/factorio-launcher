@@ -26,11 +26,11 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execu
 
 ## Contract and validation identity
 
-- command contracts: `111`;
-- registered routes: `109`;
-- schemas: `218`;
-- refusal codes: `213`;
-- command catalog digest: `43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86`;
+- command contracts: `121`;
+- registered routes: `119`;
+- schemas: `228`;
+- refusal codes: `216`;
+- command catalog digest: `76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222`;
 - accepted CI revision: `53ffbd6e02f098e0eacda9392131592ba421b90a`;
 - CI / CodeQL / security / schema runs: `29282101200` / `29282101171` / `29282101155` / `29282101110`;
 - accepted matrix counts: `23` native and `330` Python tests.

@@ -298,4 +298,54 @@ ApplicationResult apply_install(ApplicationContext& context, const ServiceOperat
     return setup_apply_not_authorized(context, "installs.install.apply");
 }
 
+bool is_setup_command(CommandId command) noexcept
+{
+    switch (command) {
+    case CommandId::setup_preview:
+    case CommandId::package_verify:
+    case CommandId::installs_install_plan:
+    case CommandId::installs_install_apply:
+    case CommandId::installs_install_version:
+    case CommandId::installs_verify:
+    case CommandId::installs_repair_plan:
+    case CommandId::installs_repair_apply:
+    case CommandId::installs_repair:
+    case CommandId::installs_move_plan:
+    case CommandId::installs_move_apply:
+    case CommandId::installs_uninstall_plan:
+    case CommandId::installs_uninstall_apply:
+    case CommandId::installs_uninstall:
+    case CommandId::installs_recovery_inspect:
+    case CommandId::installs_recovery_apply:
+        return true;
+    default:
+        return false;
+    }
+}
+
+ApplicationResult dispatch_setup(ApplicationContext& context, const ApplicationRequest& request)
+{
+    if (request.command == CommandId::setup_preview) return preview_setup(context);
+    const auto& operation = std::get<ServiceOperationRequest>(request.payload);
+    switch (request.command) {
+    case CommandId::package_verify: return verify_package(context, operation);
+    case CommandId::installs_install_plan: return plan_install(context, operation);
+    case CommandId::installs_install_apply: return apply_install(context, operation);
+    case CommandId::installs_install_version: return install_version(context, operation);
+    case CommandId::installs_verify: return verify_install(context, operation);
+    case CommandId::installs_repair_plan: return plan_repair_install(context, operation);
+    case CommandId::installs_repair_apply: return apply_repair_install(context, operation);
+    case CommandId::installs_repair: return repair_install(context, operation);
+    case CommandId::installs_move_plan: return plan_move_install(context, operation);
+    case CommandId::installs_move_apply: return apply_move_install(context, operation);
+    case CommandId::installs_uninstall_plan: return plan_uninstall_install(context, operation);
+    case CommandId::installs_uninstall_apply: return apply_uninstall_install(context, operation);
+    case CommandId::installs_uninstall: return uninstall_install(context, operation);
+    case CommandId::installs_recovery_inspect: return inspect_install_recovery(context, operation);
+    case CommandId::installs_recovery_apply: return apply_install_recovery(context, operation);
+    default:
+        return unavailable(context, "setup.dispatch", "invalid_request", "Command is not a setup workflow");
+    }
+}
+
 } // namespace facman::factorio::application::handlers

@@ -8,6 +8,8 @@
 #include "application_types.h"
 
 namespace facman::factorio::application::handlers {
+bool is_setup_command(CommandId command) noexcept;
+ApplicationResult dispatch_setup(ApplicationContext& context, const ApplicationRequest& request);
 ApplicationResult preview_setup(ApplicationContext& context);
 ApplicationResult verify_package(ApplicationContext& context, const ServiceOperationRequest& request);
 ApplicationResult install_version(ApplicationContext& context, const ServiceOperationRequest& request);

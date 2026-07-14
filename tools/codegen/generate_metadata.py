@@ -855,7 +855,19 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         "application_writes": "\n".join(application_writes),
         "application_request_contracts": "\n".join(application_request_contracts),
         "grammar_json": json.dumps({"schema": "facman.command_cli_grammar.v2", "source_digest": digest, "commands": grammars}, indent=2, sort_keys=True) + "\n",
-        "frontend_json": json.dumps({"schema": "facman.frontend_command_catalog.v1", "source_digest": digest, "commands": [value for value in catalog_commands if value["registered"] and value["runtime_id"] not in LEGACY_SETUP_COMMANDS]}, indent=2, sort_keys=True) + "\n",
+        "frontend_json": json.dumps(
+            {
+                "schema": "facman.frontend_command_catalog.v1",
+                "source_digest": digest,
+                "commands": [
+                    value
+                    for value in catalog_commands
+                    if value["registered"] and value["runtime_id"] not in LEGACY_SETUP_COMMANDS
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        ) + "\n",
     }
     appkit_header, appkit_implementation = render_appkit_catalog(commands, digest)
     rendered.update({
