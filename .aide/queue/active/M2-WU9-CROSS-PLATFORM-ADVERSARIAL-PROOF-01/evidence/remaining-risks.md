@@ -4,8 +4,8 @@
   or Inconclusive.
 - Ordinary live apply remains `unavailable_pending_operator_acceptance` and
   refuses with `live_target_acceptance_required`.
-- FacMan exact-head, pull-request, and exact-`dev` hosted workflows remain
-  pending until reviewed integration completes.
+- FacMan exact-head, pull-request, and exact-`dev` hosted integration passed;
+  WU10's separate human verdict remains the next M2 authority boundary.
 - Windows and macOS actual multi-volume observations require separately
   provisioned approved volumes; their generic cross-device strategy is covered
   without claiming those unavailable observations.

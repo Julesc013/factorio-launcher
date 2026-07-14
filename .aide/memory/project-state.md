@@ -32,7 +32,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - M2-WU6 Launcher handoff: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Launcher main `7bd4425f0c35414f738159b45d8bec42edf70235`; recovery status: `managed_install_recovery_required`; operator verdict: `pending`.
 - M2-WU7 FacMan portable workflow: `accepted_dev_integration_proof_pending_operator_verdict`; plan: `install_local.plan`; apply: `unavailable_pending_operator_acceptance`; operator verdict: `pending`.
 - M2-WU8 generated frontend workflow: `accepted_dev_integration_proof_pending_operator_verdict`; clients: `cli, tui, winforms, appkit`; apply: `unavailable_pending_operator_acceptance`; operator verdict: `pending`.
-- M2-WU9 adversarial proof: `facman_local_proof_passed_pending_dev_integration_and_operator_verdict`; cases: `16`; Setup main: `3f8489275077347c2918f3bb03614ec6431362ff`; operator verdict: `pending`.
+- M2-WU9 adversarial proof: `accepted_dev_integration_proof_pending_operator_verdict`; cases: `16`; Setup main: `3f8489275077347c2918f3bb03614ec6431362ff`; operator verdict: `pending`.
 - Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
