@@ -1,6 +1,6 @@
 {
   "schema": "factorio.m2_adversarial_corpus.v1",
-  "status": "provider_passed_consumer_candidate",
+  "status": "accepted_dev_integration_pending_operator_verdict",
   "setup_provider": {
     "task_head": "682eede3a954d9603b29308fcc28cc87c911aa37",
     "task_tree": "8861d0d640af8dc24e774f5ff934ad67f8a5d5cd",

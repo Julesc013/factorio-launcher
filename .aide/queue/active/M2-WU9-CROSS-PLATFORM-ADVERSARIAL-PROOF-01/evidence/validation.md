@@ -21,5 +21,11 @@
   `ca04bbf34554b8ed66a15ad9d66d822bd9a7826e6b41066cd1eb97e08a626713`.
 - Initial push CI `29358809851` and PR CI `29358824982`: Windows-only
   manifest checkout-identity failure; all other platform/analysis lanes PASS.
-- LF/CRLF remediation focused suite: 8/8 PASS; replacement hosted runs pending.
+- LF/CRLF remediation focused suite: 8/8 PASS; replacement hosted runs PASS.
+- Replacement task push CI `29360424668`, CodeQL `29360424648`, and security
+  `29360424632`: PASS.
+- Replacement PR CI `29360426297`, CodeQL `29360426365`, security
+  `29360426450`, and schema `29360426425`: PASS.
+- Exact-`dev` CI `29361218441`, CodeQL `29361218988`, security `29361218569`,
+  and schema `29361219348`: PASS.
 - Every WU9 commit message was checked against the structured AIDE policy.

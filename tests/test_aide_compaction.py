@@ -242,7 +242,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(392, m2_wu8["package_tree_file_count"])
         m2_wu9 = data["m2_wu9_cross_platform_adversarial_proof"]
         self.assertEqual(
-            "facman_local_proof_passed_pending_dev_integration_and_operator_verdict",
+            "accepted_dev_integration_proof_pending_operator_verdict",
             m2_wu9["status"],
         )
         self.assertEqual(["windows", "linux", "macos"], m2_wu9["required_platforms"])
@@ -254,6 +254,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual([14, 0], [m2_wu9["required_windows_package_tests"], m2_wu9["required_windows_package_skips"]])
         self.assertEqual(395, m2_wu9["package_tree_file_count"])
         self.assertEqual("not_proven", m2_wu9["publisher_authenticity"])
+        self.assertEqual(23, m2_wu9["facman_reviewed_pr"])
+        self.assertEqual(m2_wu9["facman_task_tree"], m2_wu9["facman_dev_integration_tree"])
+        self.assertEqual(
+            ["29361218441", "29361218988", "29361218569", "29361219348"],
+            [m2_wu9["dev_ci_run"], m2_wu9["dev_code_security_run"], m2_wu9["dev_security_policy_run"], m2_wu9["dev_schema_check_run"]],
+        )
         self.assertEqual("pending", m2_wu9["operator_verdict"])
         self.assertFalse(m2_wu9["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu9["execution_authority"])

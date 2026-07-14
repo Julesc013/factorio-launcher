@@ -725,6 +725,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             problems.append("M2-WU9 must bind its exact clean package source and complete tree")
         if m2_wu9.get("publisher_authenticity") != "not_proven":
             problems.append("M2-WU9 must not infer publisher authenticity from reproducibility")
+    if m2_wu9.get("status") == "accepted_dev_integration_proof_pending_operator_verdict":
+        if m2_wu9.get("facman_reviewed_pr") != 23:
+            problems.append("M2-WU9 must bind reviewed FacMan PR 23")
+        if m2_wu9.get("facman_task_tree") != m2_wu9.get("facman_dev_integration_tree"):
+            problems.append("M2-WU9 task and dev integration trees must be identical")
+        if [
+            m2_wu9.get("dev_ci_run"),
+            m2_wu9.get("dev_code_security_run"),
+            m2_wu9.get("dev_security_policy_run"),
+            m2_wu9.get("dev_schema_check_run"),
+        ] != ["29361218441", "29361218988", "29361218569", "29361219348"]:
+            problems.append("M2-WU9 must bind the complete successful exact-dev workflow set")
     if m2_wu9.get("operator_verdict") != "pending" or m2_wu9.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU9 automation must preserve the separate pending operator verdict")
     if m2_wu9.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":

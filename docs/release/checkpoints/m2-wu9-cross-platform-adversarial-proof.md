@@ -3,9 +3,10 @@
 
 # M2-WU9 Cross-Platform Adversarial Proof
 
-Status: Universal Setup exact-main provider proof passed on Linux, macOS, and
-Windows; the FacMan consumer, package, and local adversarial proof also passed.
-Reviewed `dev` integration and the operator verdict remain pending.
+Status: accepted `dev` integration proof. Universal Setup exact-main provider
+proof passed on Linux, macOS, and Windows; the FacMan consumer, package, local,
+reviewed-PR, and exact-`dev` adversarial proof also passed. The operator verdict
+remains `pending`.
 
 ## Universal Setup integration
 
@@ -88,6 +89,25 @@ files byte-for-byte.
 
 Reproducibility does not prove publisher authenticity. The package remains
 unsigned and unpublished.
+
+## Reviewed FacMan integration
+
+PR #23 retained the complete nine-commit task series and merged task head
+`d57cc60209512f8f1e1b4095abddf9925cc84bcc` into `dev` as
+`389f9266673431ba35a66bdf5956bae2a53f8a8f`. Both revisions resolve to the
+identical tree `9f820c4d709b8b4d4e11e300d5d1bad4df9c5940`.
+
+| Exact-head workflow | Push | Pull request | Exact `dev` |
+| --- | --- | --- | --- |
+| CI | `29360424668` | `29360426297` | `29361218441` |
+| CodeQL | `29360424648` | `29360426365` | `29361218988` |
+| security policy | `29360424632` | `29360426450` | `29361218569` |
+| schema check | path-filtered | `29360426425` | `29361219348` |
+
+Every listed run completed successfully. The final task push did not trigger a
+schema-only push workflow because its two-file remediation did not match that
+workflow's push path filter; the exact-head PR and exact-`dev` schema runs both
+passed.
 
 ## Authority boundary
 

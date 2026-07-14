@@ -16,3 +16,7 @@
   Setup and cancellation/process-tree termination to the FacMan consumer.
 - Historical WU5/WU7 provider revisions remain immutable; only current provider
   truth advances to the repaired Universal Setup revision.
+- FacMan PR #23 merged exact task head
+  `d57cc60209512f8f1e1b4095abddf9925cc84bcc` into `dev` as
+  `389f9266673431ba35a66bdf5956bae2a53f8a8f` with identical tree
+  `9f820c4d709b8b4d4e11e300d5d1bad4df9c5940`.
