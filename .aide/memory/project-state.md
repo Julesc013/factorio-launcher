@@ -9,8 +9,8 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
 - checkpoint: `m2-wu2-public-setup-lifecycle`;
-- active WorkUnit: `M2-WU2-PUBLIC-SETUP-LIFECYCLE-01`;
-- last closed WorkUnit: `M2-WU1-LIVE-TARGET-POLICY-01`;
+- active WorkUnit: `none`;
+- last closed WorkUnit: `M2-WU2-PUBLIC-SETUP-LIFECYCLE-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `73bec99916d509b0ab055a43562e93ef20a6b4b7`;

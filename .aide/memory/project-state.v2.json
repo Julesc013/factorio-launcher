@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
+  "active_work_unit": null,
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -163,7 +163,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU1-LIVE-TARGET-POLICY-01",
+  "last_closed_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -197,7 +197,7 @@
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
   "m2_live_portable_setup": {
-    "active_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
+    "active_work_unit": "",
     "authorized_acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
     "autonomous_archive_scope": "non_proprietary_synthetic_only",
     "execution_authority": false,
@@ -228,7 +228,7 @@
     "universal_setup_task_revision": "804ae1ea2f9fdb78525a0a3ef09069b51d8bb1c1"
   },
   "m2_wu2_public_lifecycle": {
-    "active_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
+    "active_work_unit": "",
     "apply_requires_exact_plan": true,
     "clean_reconstruction": "passed_at_provider_integration_revision",
     "execution_authority": false,
