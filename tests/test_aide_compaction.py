@@ -279,6 +279,10 @@ class AideCompactionTests(unittest.TestCase):
             m2_wu10["final_recovery_status"],
         ])
         self.assertEqual(11, m2_wu10["interruption_case_count"])
+        self.assertEqual([41, 345, 1, 231], [
+            m2_wu10["native_test_count"], m2_wu10["python_test_count"],
+            m2_wu10["python_opt_in_skip_count"], m2_wu10["schema_count"],
+        ])
         self.assertEqual("pending", m2_wu10["operator_verdict"])
         self.assertFalse(m2_wu10["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu10["execution_authority"])

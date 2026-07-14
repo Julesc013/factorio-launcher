@@ -776,6 +776,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU10 must preserve the reviewed move and uninstall result")
     if [m2_wu10.get("interruption_run_id"), m2_wu10.get("interruption_case_count")] != ["m2wu5-20260714-01", 11]:
         problems.append("M2-WU10 must include the accepted interruption and recovery proof")
+    if [m2_wu10.get("native_test_count"), m2_wu10.get("python_test_count"), m2_wu10.get("python_opt_in_skip_count"), m2_wu10.get("schema_count")] != [41, 345, 1, 231]:
+        problems.append("M2-WU10 must bind the complete local native, Python, and schema proof counts")
     if m2_wu10.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU10 automation must not record the operator verdict")
     if m2_wu10.get("operator_verdict") == "pending" and m2_wu10.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":

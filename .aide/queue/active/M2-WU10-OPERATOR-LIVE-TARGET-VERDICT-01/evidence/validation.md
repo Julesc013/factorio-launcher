@@ -17,6 +17,10 @@ Machine preparation result: `PASS`.
 - `py -3 tools/schema_validate.py`: PASS, 231 schemas.
 - `py -3 tools/source_format_check.py`: PASS.
 - `py -3 tools/strict_check.py`: PASS.
+- `ctest --test-dir build\m2-wu9 -C Release --output-on-failure`: PASS,
+  41 of 41 native tests.
+- `py -3 -m unittest discover -s tests -p "test_*.py"`: PASS, 345 tests
+  with one intentional opt-in skip; the full suite completed in 415.455 s.
 - `git diff --check`: PASS.
 
 The retained run contains 26 files, 14 directories, 40,105 bytes, zero
