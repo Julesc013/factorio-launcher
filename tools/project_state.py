@@ -417,8 +417,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if m2_wu1.get("execution_authority") is not False or m2_wu1.get("h1_inference") != "none":
         problems.append("M2-WU1 must not promote execution or infer H1")
     m2_wu2 = status.get("m2_wu2_public_lifecycle", {})
-    if m2_wu2.get("status") != "provider_integrated_candidate":
-        problems.append("M2-WU2 public lifecycle must record the provider-integrated candidate")
+    if m2_wu2.get("status") not in {
+        "provider_integrated_candidate",
+        "implementation_proven_pending_dev_integration",
+        "accepted_dev_integration_proof",
+    }:
+        problems.append("M2-WU2 public lifecycle must record a recognized monotonic proof state")
     if m2_wu2.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
         problems.append("M2-WU2 must bind the exact pinned Universal Setup main revision")
     if m2_wu2.get("plan_commands_read_only") is not True or m2_wu2.get("apply_requires_exact_plan") is not True:

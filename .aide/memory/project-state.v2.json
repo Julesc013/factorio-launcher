@@ -97,9 +97,9 @@
       "limitation": "ordinary FacMan apply awaits live-target acceptance; no Factorio execution"
     },
     {
-      "claim": "Live target policy",
-      "level": "provider-integrated; mutation off",
-      "limitation": "host inspection/apply are WU2; human verdict pending"
+      "claim": "Public setup lifecycle",
+      "level": "implementation-proven candidate",
+      "limitation": "human verdict pending; managed and recovery apply unavailable"
     },
     {
       "claim": "Package hashes authenticate publisher",
@@ -145,7 +145,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu1-live-target-policy",
+  "current_checkpoint": "m2-wu2-public-setup-lifecycle",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -205,7 +205,7 @@
     "h1_inference": "none",
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
-    "status": "active_public_lifecycle_activation"
+    "status": "public_lifecycle_implementation_proven"
   },
   "m2_wu1_target_policy": {
     "execution_authority": false,
@@ -230,16 +230,29 @@
   "m2_wu2_public_lifecycle": {
     "active_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
     "apply_requires_exact_plan": true,
+    "clean_reconstruction": "passed_at_provider_integration_revision",
     "execution_authority": false,
+    "facman_provider_integration_revision": "d16e71357f13382c43b68b8de99bbd8758d97c8b",
+    "facman_validation_remediation_revision": "316ee8efec5b962e6c2ed8419c0453c0c6062654",
     "h1_inference": "none",
+    "native_test_count": 38,
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "package_archive_sha256": "355c2ef881c97f65d1c630eb7c62809caa657934196bd328be7bebc121d6762c",
+    "package_tree_file_count": 385,
+    "package_tree_sha256": "c5a970504e9c33462db313bfa63be7b0d3f2a1d8a8994bc5220ce5224027edd2",
     "plan_commands_read_only": true,
     "pre_verdict_target_class": "operator_acceptance",
+    "provenance_sha256": "adf4b71a66cef4e7c1b7d9adfa6eaae2bcac5b8e39fd5228eb2f83cbbfbcd4f6",
     "public_install_repair_move_uninstall": "operator_acceptance_candidate_only",
+    "python_opt_in_skip_count": 1,
+    "python_test_count": 339,
     "recovery_apply": "unavailable_pending_wu5",
     "recovery_inspect_plan": "available_read_only",
-    "status": "provider_integrated_candidate",
+    "required_windows_package_skips": 0,
+    "required_windows_package_tests": 14,
+    "sbom_sha256": "2279534491de1a27b028f55cd9b470c40705eea1c2c642f3f2c6a1bf35f9ef72",
+    "status": "implementation_proven_pending_dev_integration",
     "universal_setup_main_ci_run": "29322161463",
     "universal_setup_main_revision": "aa4d8cec93f265893f246d217ee94c03073899a3",
     "universal_setup_pr_ci_run": "29321009637",

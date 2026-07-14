@@ -27,6 +27,8 @@ class AideCompactionTests(unittest.TestCase):
             "r3_8_repair", "r3_8_public_integration", "m1_managed_portable_install",
             "m1_public_integration",
             "m2_live_portable_setup",
+            "m2_wu1_target_policy",
+            "m2_wu2_public_lifecycle",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -36,15 +38,15 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_wu1_closeout_preserves_provider_gate_and_catalog_truth(self) -> None:
+    def test_m2_wu2_implementation_preserves_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu1-live-target-policy", data["current_checkpoint"])
+        self.assertEqual("m2-wu2-public-setup-lifecycle", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("M2-WU2-PUBLIC-SETUP-LIFECYCLE-01", data["active_work_unit"])
         self.assertEqual(
-            "active_public_lifecycle_activation",
+            "public_lifecycle_implementation_proven",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
@@ -56,9 +58,19 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(data["m2_wu1_target_policy"]["mutation_authority"])
         self.assertEqual("d96384bf8f48230256d35fa7015cbc7374e83319", data["m2_wu1_target_policy"]["facman_dev_integration_revision"])
         self.assertEqual("29318247825", data["m2_wu1_target_policy"]["facman_dev_ci_run"])
-        self.assertEqual("provider_integrated_candidate", data["m2_wu2_public_lifecycle"]["status"])
-        self.assertTrue(data["m2_wu2_public_lifecycle"]["plan_commands_read_only"])
-        self.assertFalse(data["m2_wu2_public_lifecycle"]["execution_authority"])
+        m2_wu2 = data["m2_wu2_public_lifecycle"]
+        self.assertEqual("implementation_proven_pending_dev_integration", m2_wu2["status"])
+        self.assertEqual(
+            "316ee8efec5b962e6c2ed8419c0453c0c6062654",
+            m2_wu2["facman_validation_remediation_revision"],
+        )
+        self.assertEqual(38, m2_wu2["native_test_count"])
+        self.assertEqual(339, m2_wu2["python_test_count"])
+        self.assertEqual(14, m2_wu2["required_windows_package_tests"])
+        self.assertTrue(m2_wu2["plan_commands_read_only"])
+        self.assertEqual("unavailable_pending_wu5", m2_wu2["recovery_apply"])
+        self.assertEqual("pending", m2_wu2["operator_verdict"])
+        self.assertFalse(m2_wu2["execution_authority"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",

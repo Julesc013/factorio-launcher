@@ -33,7 +33,7 @@ reported as stronger runtime evidence.
 | macOS x64 CLI tarball runs after relocation | target CI proven | Mach-O, deployment, integrity, relocation | Intel runner and target 13.0 only; no Apple Silicon, AppKit runtime, signing, or publication claim |
 | Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and live-target setup acceptance remain unproven |
 | Managed portable install lifecycle | fixture-proven across 3 repos | synthetic install, verify, move, repair, uninstall, recovery, and reference refresh | ordinary FacMan apply awaits live-target acceptance; no Factorio execution |
-| Live target policy | provider-integrated; mutation off | exact Setup CI; 13-branch digest-bound policy proof | host inspection/apply are WU2; human verdict pending |
+| Public setup lifecycle | implementation-proven candidate | exact Setup CI; inspect, plan, revalidate, lifecycle, cross-repo and package proof | human verdict pending; managed and recovery apply unavailable |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |
