@@ -269,6 +269,16 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("D:\\FacMan-Live-Acceptance\\M2", m2_wu10["acceptance_root"])
         self.assertEqual("m2wu10-20260715-01", m2_wu10["run_id"])
         self.assertEqual(["Pass", "Fail", "Inconclusive"], m2_wu10["verdict_choices"])
+        self.assertEqual([10, 4, 26, 14, 40105, 0], [
+            m2_wu10["lifecycle_step_count"], m2_wu10["evidence_packet_count"],
+            m2_wu10["retained_file_count"], m2_wu10["retained_directory_count"],
+            m2_wu10["retained_total_bytes"], m2_wu10["retained_reparse_point_count"],
+        ])
+        self.assertEqual([5, "removed", "not_required"], [
+            m2_wu10["audit_event_count"], m2_wu10["final_committed_closure"],
+            m2_wu10["final_recovery_status"],
+        ])
+        self.assertEqual(11, m2_wu10["interruption_case_count"])
         self.assertEqual("pending", m2_wu10["operator_verdict"])
         self.assertFalse(m2_wu10["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu10["execution_authority"])

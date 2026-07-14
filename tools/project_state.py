@@ -759,6 +759,23 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU10 must bind the exact current Universal Setup provider pin")
     if m2_wu10.get("verdict_choices") != ["Pass", "Fail", "Inconclusive"]:
         problems.append("M2-WU10 must expose the complete human verdict set")
+    if m2_wu10.get("record_schema") != "factorio.m2_operator_acceptance_record.v1":
+        problems.append("M2-WU10 must bind the reviewed acceptance record contract")
+    if [
+        m2_wu10.get("lifecycle_step_count"),
+        m2_wu10.get("evidence_packet_count"),
+        m2_wu10.get("retained_file_count"),
+        m2_wu10.get("retained_directory_count"),
+        m2_wu10.get("retained_total_bytes"),
+        m2_wu10.get("retained_reparse_point_count"),
+    ] != [10, 4, 26, 14, 40105, 0]:
+        problems.append("M2-WU10 must bind the complete retained lifecycle tree")
+    if [m2_wu10.get("audit_event_count"), m2_wu10.get("final_committed_closure"), m2_wu10.get("final_recovery_status")] != [5, "removed", "not_required"]:
+        problems.append("M2-WU10 must bind the final audit, closure, and recovery state")
+    if [m2_wu10.get("old_root"), m2_wu10.get("current_root")] != ["retained_for_review", "removed_by_clean_uninstall"]:
+        problems.append("M2-WU10 must preserve the reviewed move and uninstall result")
+    if [m2_wu10.get("interruption_run_id"), m2_wu10.get("interruption_case_count")] != ["m2wu5-20260714-01", 11]:
+        problems.append("M2-WU10 must include the accepted interruption and recovery proof")
     if m2_wu10.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU10 automation must not record the operator verdict")
     if m2_wu10.get("operator_verdict") == "pending" and m2_wu10.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
