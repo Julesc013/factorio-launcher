@@ -609,6 +609,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU7 FacMan workflow must record a recognized monotonic proof state")
+    if m2_wu7.get("status") == "accepted_dev_integration_proof_pending_operator_verdict":
+        expected_integration = {
+            "facman_task_head_revision": "1b029ead969e3b68387fcbaef71458ba99f0c33e",
+            "facman_task_tree": "a638e5d078a28751fa12ede205b48595986e5b0f",
+            "facman_pull_request": 21,
+            "facman_dev_integration_revision": "37c83c6538822a57bf96e03f03c48536f2b97e47",
+            "facman_dev_tree": "a638e5d078a28751fa12ede205b48595986e5b0f",
+            "facman_dev_ci_run": "29347961199",
+            "facman_dev_codeql_run": "29347961372",
+            "facman_dev_security_policy_run": "29347960097",
+        }
+        if any(m2_wu7.get(key) != value for key, value in expected_integration.items()):
+            problems.append("M2-WU7 accepted dev integration proof must bind exact immutable task, tree, PR, and workflow identities")
     if m2_wu7.get("universal_setup_revision") != provider_pins()["universal_setup"]["revision"] or m2_wu7.get("universal_launcher_revision") != provider_pins()["universal_launcher"]["revision"]:
         problems.append("M2-WU7 must bind the exact current Universal provider pins")
     if m2_wu7.get("setup_command") != "install_local.plan" or m2_wu7.get("target_class") != "operator_acceptance":

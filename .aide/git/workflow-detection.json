@@ -1,9 +1,9 @@
 {
-  "branch_role_for_current_branch": "task",
+  "branch_role_for_current_branch": "integration",
   "canonical_branch": "main",
   "confidence": "high",
-  "current_branch": "task/m2-wu7-facman-live-portable-workflow",
-  "current_commit": "526d6f5a2d1c5793bd7ccf5f2e8e81764b67fe40",
+  "current_branch": "dev",
+  "current_commit": "37c83c6538822a57bf96e03f03c48536f2b97e47",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
@@ -46,7 +46,7 @@
     "task/universal-mit-license-integration-q27"
   ],
   "non_mutating": true,
-  "recommended_next_action": "continue bounded task work, validate locally, and plan future landing to dev",
+  "recommended_next_action": "use dev only for integration repair or explicitly scoped work; normal work should use a task branch",
   "remote_branches": [
     "origin/dev",
     "origin/evidence/r3.6-real-factorio-isolation-baseline",
@@ -58,6 +58,7 @@
     "origin/task/m2-wu2-public-lifecycle",
     "origin/task/m2-wu5-live-interruption-recovery",
     "origin/task/m2-wu6-universal-launcher-handoff",
+    "origin/task/m2-wu7-facman-live-portable-workflow",
     "origin/task/r3.2-isolation-foundation",
     "origin/task/r3.3-data-integrity-recovery",
     "origin/task/r3.5-zero-exception-productization",

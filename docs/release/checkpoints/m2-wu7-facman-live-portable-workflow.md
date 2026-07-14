@@ -3,8 +3,8 @@
 
 # M2-WU7 FacMan Live Portable Workflow
 
-Status: provider-integrated local plan proof passed; `dev` integration and the
-human M2 live-target verdict remain pending.
+Status: accepted exact-`dev` integration proof; the human M2 live-target verdict
+remains pending.
 
 FacMan implementation `00ca569368dd0498d5002e8dc9cd832385490482` consumes
 Universal Setup `e1ce68e9593ae8d9a35cc0821b5e42c798524453` and Universal
@@ -39,6 +39,23 @@ Validation passed:
 - required Windows package proof: 14/14 with zero skips; and
 - selected 391-file package reproducibility at source revision
   `0e50b6fe0e90707926bf71940db6507aa8580a80`.
+
+## Immutable `dev` integration evidence
+
+| Identity | Value |
+| --- | --- |
+| task head | `1b029ead969e3b68387fcbaef71458ba99f0c33e` |
+| task tree | `a638e5d078a28751fa12ede205b48595986e5b0f` |
+| reviewed PR | `#21` |
+| `dev` merge | `37c83c6538822a57bf96e03f03c48536f2b97e47` |
+| `dev` tree | `a638e5d078a28751fa12ede205b48595986e5b0f` |
+| exact-`dev` CI | `29347961199` |
+| exact-`dev` CodeQL | `29347961372` |
+| exact-`dev` security policy | `29347960097` |
+
+The task and merge trees are identical. This proves reviewed integration of the
+bounded planning candidate; it does not create the missing human verdict or any
+live apply authority.
 
 | Evidence | SHA-256 |
 | --- | --- |

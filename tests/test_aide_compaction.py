@@ -196,9 +196,17 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(390, m2_wu6["package_tree_file_count"])
         m2_wu7 = data["m2_wu7_facman_live_portable_workflow"]
         self.assertEqual(
-            "provider_integrated_local_plan_proven_pending_dev_integration_and_operator_verdict",
+            "accepted_dev_integration_proof_pending_operator_verdict",
             m2_wu7["status"],
         )
+        self.assertEqual("1b029ead969e3b68387fcbaef71458ba99f0c33e", m2_wu7["facman_task_head_revision"])
+        self.assertEqual("a638e5d078a28751fa12ede205b48595986e5b0f", m2_wu7["facman_task_tree"])
+        self.assertEqual(21, m2_wu7["facman_pull_request"])
+        self.assertEqual("37c83c6538822a57bf96e03f03c48536f2b97e47", m2_wu7["facman_dev_integration_revision"])
+        self.assertEqual(m2_wu7["facman_task_tree"], m2_wu7["facman_dev_tree"])
+        self.assertEqual("29347961199", m2_wu7["facman_dev_ci_run"])
+        self.assertEqual("29347961372", m2_wu7["facman_dev_codeql_run"])
+        self.assertEqual("29347960097", m2_wu7["facman_dev_security_policy_run"])
         self.assertEqual("install_local.plan", m2_wu7["setup_command"])
         self.assertEqual("operator_acceptance", m2_wu7["target_class"])
         self.assertTrue(m2_wu7["plan_is_read_only"])

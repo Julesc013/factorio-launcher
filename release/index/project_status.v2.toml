@@ -255,9 +255,17 @@ execution_authority = false
 h1_inference = "none"
 
 [m2_wu7_facman_live_portable_workflow]
-status = "provider_integrated_local_plan_proven_pending_dev_integration_and_operator_verdict"
+status = "accepted_dev_integration_proof_pending_operator_verdict"
 active_work_unit = ""
 facman_implementation_revision = "00ca569368dd0498d5002e8dc9cd832385490482"
+facman_task_head_revision = "1b029ead969e3b68387fcbaef71458ba99f0c33e"
+facman_task_tree = "a638e5d078a28751fa12ede205b48595986e5b0f"
+facman_pull_request = 21
+facman_dev_integration_revision = "37c83c6538822a57bf96e03f03c48536f2b97e47"
+facman_dev_tree = "a638e5d078a28751fa12ede205b48595986e5b0f"
+facman_dev_ci_run = "29347961199"
+facman_dev_codeql_run = "29347961372"
+facman_dev_security_policy_run = "29347960097"
 universal_launcher_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
 universal_setup_revision = "e1ce68e9593ae8d9a35cc0821b5e42c798524453"
 setup_command = "install_local.plan"
