@@ -1,9 +1,13 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-11T23:03:13Z
-result: PENDING
+result: PASS
 evidence_path: .aide/queue/active/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/evidence/
 active_at: 2026-07-14T06:32:54Z
+verified_at: 2026-07-14T07:10:43Z
+implementation_state: implemented
+reviewed_at: 2026-07-14T07:12:34Z
+closed_at: 2026-07-14T07:13:58Z

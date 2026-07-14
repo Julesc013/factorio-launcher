@@ -8,7 +8,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `m1-public-integration-proof`;
+- checkpoint: `universal-mit-license-integration`;
 - active WorkUnit: `none`;
 - last closed WorkUnit: `M1-PUBLIC-INTEGRATION-PROOF-01`;
 - next authority gate: `H1`;
