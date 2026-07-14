@@ -3,24 +3,24 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/m2-wu2-dev-integration-proof
-- current_commit: cad50062c955324f7660b20c4b786da9fc78a0fa
+- current_branch: task/m2-wu3-live-target-evidence
+- current_commit: 461251d7fd3d73e904df3d7040999588d6cd7725
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
 - canonical_branch: main
 - integration_branch: dev
-- recommended_next_action: continue bounded task work, validate locally, and plan future landing to dev
+- recommended_next_action: classify dirty tree before branch-sensitive work
 
 ## Branch Summary
 
-- local_branches: 31
-- remote_branches: 19
+- local_branches: 32
+- remote_branches: 20
 - tags_count: 2
 
 ## Warnings
 
-- none
+- dirty_tree_detected
 
 ## Q28 Boundary
 

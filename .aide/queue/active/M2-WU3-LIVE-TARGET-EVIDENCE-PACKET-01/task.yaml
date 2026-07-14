@@ -1,0 +1,71 @@
+schema_version: aide.queue-task.v1
+id: M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01
+title: M2 live-target evidence packet
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-14T11:25:16Z
+owner: unassigned
+objective: >
+  Define and prove a sanitized immutable live-target evidence packet that binds setup revisions, contract and ABI versions, source recipe target filesystem plan closure installed-state ownership audit recovery and a distinct human operator verdict.
+allowed_paths:
+  - .aide/**
+  - THIRD_PARTY_NOTICES.md
+  - docs/**
+  - release/**
+  - runtime/factorio/application/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - usk_live_evidence_smoke
+  - usk_public_lifecycle_smoke
+  - flb_setup_gateway_smoke
+  - m1_three_repository_system_proof
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_m1_system_proof
+  - tests.test_setup_package_routing
+  - Universal Setup contract and structure suites
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/m1_system_proof_check.py
+  - tools/package_check.py
+  - tools/project_state.py
+  - Universal Setup strict_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - automation may classify findings but cannot create Pass, Fail, or Inconclusive
+  - evidence packets are sanitized, immutable, deterministic, and digest-bound
+  - public evidence generation does not widen setup mutation authority
+  - Universal Setup remains product-neutral and Universal Launcher remains non-mutating
+  - no packet field authorizes product execution, networking, registry, elevation, signing, or publication
+multi_repository_scope:
+  universal_setup: versioned evidence contract, deterministic producer, validation, and lifecycle bindings
+  universal_launcher: no change in WU3
+  factorio_launcher: WorkUnit truth, provider integration evidence, and package propagation
+authorized_acceptance_root: D:\FacMan-Live-Acceptance\M2
+operator_verdict: pending
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-14T11:25:16Z
+verified_at: 2026-07-14T12:12:31Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-14T12:12:32Z
+closed_at: 2026-07-14T12:12:32Z

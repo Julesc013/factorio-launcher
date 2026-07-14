@@ -1,16 +1,18 @@
 # Malformed Commits
 
-source_range: 29cf22fa..HEAD
-malformed_count: 8
+source_range: facman-r2-local-alpha-proof-0..HEAD
+malformed_count: 10
 
-- bb3814a49053 land: task/r3.7-instance-content-lifecycle into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- d00456069eb5 promote: dev into main: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 19e8fa6e5ef1 land: task/r3.7-public-integration-proof into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 2a991df21fd8 promote: dev into main: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 6581d19e269f land: task/r3.7-public-integration-proof-ci-fix into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- eb629caaec9d promote: dev into main: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 9d3ccd663e9d land: task/r3.7-truth-conformance-repair into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- f10aef03517a land: R3.8 Steam external-state isolation repair into dev: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 842ee9fa36e7 merge(m1-wu9): bind Factorio portable setup recipe: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 96a559ffba4b merge(m1-wu10): generate guarded setup workflows: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 13319e4f9e51 merge(m1-wu11): prove managed lifecycle integration: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 307690ad9bbb chore(m2): open live-target evidence packet work unit: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 2e6012e0b14c build(provider): pin Universal Setup M2-WU3 main: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- ecec3a46e78a docs(state): bind M2-WU3 provider implementation proof: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 057b4be50e43 docs(evidence): checkpoint WU3 implementation and package proof: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 2678e1e23576 chore(m2): close WU3 without authority promotion: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 461251d7fd3d fix(state): advance latest closed WorkUnit validator to WU3: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 4360d0f40c38 chore(state): bind WU3 closeout and branch identity: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 
 release_promotion_requires_review: true
 history_rewritten: false

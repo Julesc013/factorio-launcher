@@ -67,6 +67,13 @@ fresh three-repository/package proof. Its reviewed `dev` merge and exact hosted
 workflows are accepted; the separate human live-target verdict remains pending,
 and ordinary managed-portable apply and `recovery.apply` are not promoted.
 
+The bounded
+[`M2-WU3 live target evidence`](m2-wu3-live-target-evidence.md) checkpoint adds
+immutable sanitized evidence packets, exact setup-owned state/journal binding,
+pre/post target snapshots, and a separate human-verdict recording boundary.
+It is fixture/proof-root implementation evidence only; the live acceptance
+root is untouched and the operator verdict remains pending.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

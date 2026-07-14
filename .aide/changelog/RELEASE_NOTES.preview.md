@@ -2,126 +2,147 @@
 
 This is a deterministic preview only. It does not publish a release.
 
-source_range: 29cf22fa..HEAD
-source_head: 2671ca55d91d87e32f48b28890768339820b2d5d
+source_range: facman-r2-local-alpha-proof-0..HEAD
+source_head: 4360d0f40c38d9e7f0c69151f57fd0a9ee7a92b5
 preview_only: true
 
 ## Highlights
 
-- Security: Raw Steam evidence, account identifiers, absolute local paths, credentials, and proprietary binaries remain outside Git. (6d3c61c009ab)
-- Security: Identifier shape validation remains before application dispatch. (514413661f13)
-- Security: run.execute still cannot start Factorio and now distinguishes the known Steam isolation failure. (a06669155e57)
-- Security: user-data roots are redirected and raw process output, absolute paths, credentials, and binaries are not persisted. (e74255d5209c)
-- Security: preserved credentials, download tokens, proprietary binaries, and raw local evidence outside Git. (7502462385d0)
-- Security: lifecycle-generated launch references preserve external-state domains and eligibility instead of defaulting them. (21ae0f68ed30)
-- Security: only an allowlisted external component is staged and its destination remains traversal-validated. (b6006e514d03)
-- Security: Real content changes remain SHA-256 detected after deterministic text normalization. (91b5985b818f)
-- Security: H1 remains Fail; standalone/manual isolation remains unproven; authority promotion remains false. (2671ca55d91d)
-- Added: stable, local-only mod inventory and verification commands for R3.7. (8335fde1ba12)
-- Added: deterministic bounded local dependency plans and transactional modset apply and rollback. (b93d7376c625)
-- Added: bounded save indexing, sidecar association, drift detection, structural diff, and reversible retention. (2e9a66f8a4bd)
-- Added: secret-free dedicated-server planning and portable export bundles. (578bfb57bf82)
-- Added: generated guided operational forms and cross-frontend result visualizations. (dedadfa2f95e)
-- Added: Cross-transport lifecycle, adversarial, and release-scale R3.7 proof coverage. (625a964355d0)
-- Added: Required Linux Release build and CTest evidence to the cross-platform closeout matrix. (81abee2fb122)
-- Added: Exact R3.7 lifecycle checkpoint with target-native evidence and honest authority boundaries. (6cce8ed15a8f)
-- Added: Generated R3.7 review and branch-workflow evidence. (1f840e533774)
-- Added: Canonical machine-readable R3.7 and H1-pending project status. (9539338419c5)
-- Added: Declarative request-field contracts and generated native boundary validators. (49101f7acfba)
-- Added: experimental relocatable FLB 1.2 installed SDK and compatibility metadata. (2f4f7b5460b2)
-- Added: Sanitized, digest-bound H1 operator verdict and checkpoint. (6d3c61c009ab)
-- Added: explicit install-origin and external-state isolation metadata. (08cf8a58fb17)
-- Added: Steam external-state refusal and explicit preview/preflight write-domain policy. (a06669155e57)
-- Added: sanitized Factorio version capability corpus tooling and contract. (e74255d5209c)
-- Changed: R3.7 wave state now records local mod inventory as closed and verified. (05a93277d739)
-- Changed: R3.7 wave state now records the local modset solver as closed and verified. (7ad66aea23d7)
-- Changed: R3.7 wave state now records structural save intelligence as closed and verified. (b30e4a70272e)
-- Changed: R3.7 wave state now records server planning as closed. (d90d461a99dd)
-- Changed: R3.7 wave state now records operational UX as closed. (9af53a736f47)
-- Changed: R3.7 wave state now records WU10 as closed with advisory-only evidence. (b6e8e6200b9e)
-- Changed: R3.7 AIDE state is closed with advisory-only evidence and no automatic human or release promotion. (dcd9a6cbb0d2)
-- Changed: Current status and platform claims are generated and evidence-qualified. (9539338419c5)
-- Changed: Command schemas and frontend catalogs derive field constraints from the same source. (49101f7acfba)
-- Changed: client transports are independently linkable and daemon IPC remains explicitly unavailable. (6dce5c194457)
-- Changed: Canonical status now reports the Steam-backed H1 Fail and active narrow repair. (6d3c61c009ab)
-- Changed: Steam, standalone, archive, manual, and package installs now receive conservative isolation classifications. (08cf8a58fb17)
-- Changed: Steam preflight is refused even when instance-local config routing is structurally valid. (a06669155e57)
-- Changed: Canonical project truth now records no active WorkUnit and the closed repair identity. (2671ca55d91d)
-- Fixed: Cross-workunit lifecycle correctness and generated-client compatibility defects found by R3.7 end-to-end proof. (9fea4325129c)
-- Fixed: Native transaction smoke no longer leaves an empty source-tree directory after passing. (8556b05e033a)
-- Fixed: Linux and macOS warnings-as-errors portability failures in preferences and modset planning. (4d542308f806)
-- Fixed: Linux and macOS launch-reference compilation no longer depends on omitted aggregate fields. (02398db38063)
-- Fixed: Cross-platform TUI smoke compilation now matches the complete generated-client invocation shape. (681a614ea193)
-- Fixed: Profile archive now uses a directory-safe atomic no-clobber move on POSIX. (774628f442b0)
-- Fixed: Made the R3.7 public-integration addendum satisfy Linux source-format policy. (2190b044ad86)
-- Fixed: Coverage is aggregated by module and release structure is no longer called readiness. (9539338419c5)
-- Fixed: `modsets.rollback` now enforces its required lowercase SHA-256 transaction identity at the native boundary. (49101f7acfba)
-- Fixed: Cross-platform safety refusals retain invalid_identifier instead of degrading to invalid_request. (514413661f13)
-- Fixed: relocated SDK sanitizer runtime ordering in Linux CI. (aa794491ad68)
-- Fixed: slash-rooted transaction paths are refused consistently on Windows and POSIX. (c4d8ee0f4d54)
-- Fixed: cross-platform lifecycle builds now initialize the complete isolation contract. (21ae0f68ed30)
-- Fixed: the Windows legacy compatibility package again includes the separately built WinForms shell. (b6006e514d03)
-- Fixed: Evidence-only compacted queue placeholders no longer block lifecycle indexing. (d365ceaf7cda)
-- Fixed: Newly archived Windows lifecycle evidence no longer reports false line-ending drift. (91b5985b818f)
-- Docs: Added the accepted R3.7 public-integration evidence layer. (6619c04c9c1a)
-- Docs: No evidence meaning or product claim changed. (2190b044ad86)
-- Docs: Daemon and frontend capability descriptions now match implemented transport reality. (9539338419c5)
-- Docs: added the bounded R3.8 isolation-repair and standalone-acquisition handoff. (7502462385d0)
-- Docs: Bound the exact R3.8 implementation and dev integration evidence. (2671ca55d91d)
-- Tests: Every registered command is differentially checked against its generated request schema through the live CLI. (49101f7acfba)
-- Tests: Added native coverage for a path-escape identifier. (514413661f13)
-- Tests: added parent-cache propagation coverage. (aa794491ad68)
-- Tests: expanded transaction state-machine and relative-path contract coverage. (c4d8ee0f4d54)
-- Tests: added Steam and standalone classification assertions plus import/inspect persistence checks. (08cf8a58fb17)
-- Tests: added end-to-end Steam preview, preflight, refusal, and no-side-effect proof. (a06669155e57)
-- Tests: added parsing, capability, tree-fingerprint, metadata-fallback, and executable-discovery coverage. (e74255d5209c)
-- Tests: reproduced the hosted compiler failure with GCC and reran Windows native plus focused lifecycle suites. (21ae0f68ed30)
-- Tests: added focused external-component staging and path-refusal coverage. (b6006e514d03)
-- Tests: Partial live records remain fail-closed. (d365ceaf7cda)
-- Tests: Added data-level assertions for the closed repair and refreshed validation identity. (2671ca55d91d)
+- Security: apply contracts remain unavailable and digest/confirmation bound. (d1fb7f97572a)
+- Security: no apply route mutates setup state or enables Factorio execution. (7850424d3e35)
+- Security: reference consumption does not grant setup mutation or execution authority. (0ce7802d9f5b)
+- Security: all writes stay below an exclusive disposable root; foreign content is retained and reported. (f4fdafead6a0)
+- Security: Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries. (34e025540fe2)
+- Security: Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed. (efe06f385795)
+- Security: verify exact provider notice digests and source identities. (b1fd720013ed)
+- Security: prevent SBOM/package claims without retained provider notices. (71dacb277dc8)
+- Security: long-path operations retain no-follow, no-clobber, and identity checks. (c253e05d882c)
+- Security: retain unsigned/unpublished and no-authority boundaries explicitly. (0b4e1688b4fc)
+- Security: ordinary live apply remains unavailable and execution authority remains false. (df0e42b6131f)
+- Security: no live mutation authority is enabled by this pin update. (dfa0d8ad3c4c)
+- Security: mutation authority remains false and the human verdict remains pending. (b1a1795c90e2)
+- Security: plan remains read-only, apply remains exact-plan-gated, and the human verdict remains pending. (effce1f71784)
+- Security: no target or execution authority is promoted by the pin alone. (cfb70ab88de3)
+- Security: ordinary live apply, execution, H1, signing, and publication remain unavailable. (57b175ab9378)
+- Security: actual current capacity is still revalidated and insufficient space still refuses. (d16e71357f13)
+- Security: recovery.apply and ordinary live apply remain unavailable. (129f70d13058)
+- Security: pending human verdict, ordinary live apply hold, recovery hold, and execution ban are unchanged. (e4b03c82b649)
+- Security: ordinary managed apply, recovery apply, execution, and publication remain unavailable. (182ada6be86d)
+- Security: all human, recovery, execution, and publication holds remain unchanged. (cad50062c955)
+- Added: explicit generated managed-setup lifecycle workflows. (d1fb7f97572a)
+- Added: canonical CLI plan/apply/recovery grammar. (7850424d3e35)
+- Added: exact managed setup-state identity on FacMan install references. (0ce7802d9f5b)
+- Added: reproducible synthetic three-repository managed lifecycle proof. (f4fdafead6a0)
+- Added: Complete selected-package reproducibility proof. (34e025540fe2)
+- Added: Revision-pinned M1 managed portable-install checkpoint. (efe06f385795)
+- Added: explicit M2 live portable setup state with a pending human gate. (df0e42b6131f)
+- Added: immutable M2-WU1 live-target policy checkpoint. (b1a1795c90e2)
+- Added: bounded M2-WU2 public lifecycle activation WorkUnit. (effce1f71784)
+- Added: immutable M2-WU2 implementation and package proof. (129f70d13058)
+- Added: evidence-only WU2 dev integration closeout lane. (2c55d1d111a2)
+- Added: immutable exact-dev WU2 integration evidence. (182ada6be86d)
+- Changed: setup requests now use typed target, plan, digest, and confirmation fields. (7850424d3e35)
+- Changed: setup lifecycle commands now compose through their owning application handler. (d72c56b6802e)
+- Changed: Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory. (efe06f385795)
+- Changed: Universal provider license identity from NOASSERTION to MIT at pinned revisions. (b1fd720013ed)
+- Changed: both Universal dependencies now have accepted MIT and reproducibility truth. (0b4e1688b4fc)
+- Changed: current Universal Setup provider identity now includes the fail-closed M2 target policy. (dfa0d8ad3c4c)
+- Changed: project truth now records WU1 policy proof and WU2 public-activation handoff. (b1a1795c90e2)
+- Changed: WU1 now records accepted dev integration proof. (effce1f71784)
+- Changed: bundled Universal Setup provider identity now names the M2-WU2 canonical main merge. (cfb70ab88de3)
+- Changed: canonical project truth now identifies the public lifecycle provider candidate. (57b175ab9378)
+- Changed: project truth now distinguishes implementation proof from dev integration and human acceptance. (129f70d13058)
+- Changed: WU2 is closed locally pending reviewed dev integration. (e4b03c82b649)
+- Changed: branch governance evidence now reflects the completed WU2 head. (f051731b80b5)
+- Changed: public lifecycle is dev-integrated pending operator acceptance. (182ada6be86d)
+- Changed: WU2 exact-dev integration is fully closed. (cad50062c955)
+- Changed: publication governance reports now match the closed evidence head. (53ebb488daad)
+- Fixed: FacMan now consumes the scheduler-independent Universal Setup proof head. (c24237e82245)
+- Fixed: legacy repair and uninstall grammar remains unambiguous beside phase subcommands. (7850424d3e35)
+- Fixed: Reproducibility proof no longer treats the owned-output marker as a package archive. (2f13923a9cbd)
+- Fixed: New non-ignored source files are now checked before their first commit. (5b01b36fb989)
+- Fixed: M1 checkpoint satisfies the repository line-length policy. (5b01b36fb989)
+- Fixed: complete provider license closure in built packages. (71dacb277dc8)
+- Fixed: workspace status now reports the exact current Universal provider pins. (724246e53b57)
+- Fixed: durable transaction journals no longer fail at legacy MAX_PATH. (c253e05d882c)
+- Fixed: closeout truth retains frozen M1 identities while recording the later license proof separately. (0b4e1688b4fc)
+- Fixed: project-state compaction test now recognizes the accepted license checkpoint. (2b5098b076ab)
+- Fixed: adequate capacity fluctuations no longer invalidate a reviewed plan. (d16e71357f13)
+- Fixed: raw Python tests now use the canonical current native-smoke CLI by default. (316ee8efec5b)
+- Deprecated: legacy setup verbs are internal compatibility aliases. (d1fb7f97572a)
+- Docs: records the managed setup frontend command law. (7850424d3e35)
+- Docs: project truth reflects 121 commands, 228 schemas, and 216 refusal codes. (d72c56b6802e)
+- Docs: records the exact fixture journey and non-authority claims. (f4fdafead6a0)
+- Docs: Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply. (efe06f385795)
+- Docs: bind M1 canonical public integration evidence. (92da90101342)
+- Docs: record the accepted operator decision and retained redistribution notices. (b1fd720013ed)
+- Docs: add immutable license integration checkpoint and complete queue evidence. (0b4e1688b4fc)
+- Docs: generated project truth now reports the active bounded WorkUnit. (df0e42b6131f)
+- Tests: adds a strict generated workflow guard. (d1fb7f97572a)
+- Tests: managed install identities now round-trip through the native workspace repository. (0ce7802d9f5b)
+- Tests: launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed. (f4fdafead6a0)
+- Tests: Windows CI now executes two independent package builds and compares their complete evidence closure. (34e025540fe2)
+- Tests: Added artifact-classification regression coverage. (2f13923a9cbd)
+- Tests: Added pre-commit file-discovery regression coverage. (5b01b36fb989)
+- Tests: protect additive public-integration truth and unchanged authority boundaries. (92da90101342)
+- Tests: preserve historical M1 provider identities separately from current pins. (b1fd720013ed)
+- Tests: exercise portable CLI, TUI, WinForms, relocation, tamper, SBOM, and provenance lanes. (71dacb277dc8)
+- Tests: preserve lock/runtime revision parity. (724246e53b57)
+- Tests: enforce the extended-path native I/O contract on Windows. (c253e05d882c)
+- Tests: retain independent assertions for frozen M1 implementation and public integration records. (2b5098b076ab)
+- Tests: provider and project-state assertions follow the canonical merge. (dfa0d8ad3c4c)
+- Tests: target policy adds one integrated native test, bringing this build to 36/36. (b1a1795c90e2)
 
 ## Validation Summary
 
-- f40e9d31f940: `py -3 .aide/scripts/aide_lite.py test`: PASS.
-- 8335fde1ba12: PASS: py -3 tools/dev.py test --full --build-root build --configuration Release.
-- 05a93277d739: PASS: AIDE Lite wave verify.
-- b93d7376c625: PASS: py -3 tools/dev.py test --full --build-root build --configuration Release.
-- 7ad66aea23d7: PASS: AIDE Lite wave verify.
-- 2e9a66f8a4bd: PASS: py -3 tools/dev.py test --full --build-root build --configuration Release.
-- b30e4a70272e: PASS: AIDE Lite wave verify.
-- 578bfb57bf82: PASS: py -3 tools/dev.py test --full --build-root build --configuration Release
-- d90d461a99dd: PASS: py -3 .aide/scripts/aide_lite.py wave verify for nine WU8 gates.
-- dedadfa2f95e: PASS: py -3 tools/dev.py test --full --build-root build --configuration Release.
+- c24237e82245: Setup exact-main CI 29293560341 test, sanitizer, and fuzz-smoke: PASS.
+- d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
+- d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
+- d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
+- d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
+- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
+- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
+- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
+- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
+- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
 
 ## Known Risks
 
-- f40e9d31f940: Process execution and human acceptance remain separate, unpromoted authorities.
-- 8335fde1ba12: Archive metadata parsing remains intentionally bounded and does not claim portal availability or installation readiness.
-- 05a93277d739: This records machine-verifiable evidence only and does not grant portal, publication, or human acceptance claims.
-- b93d7376c625: Optional dependencies are not silently installed; they constrain the plan only when already requested or selected.
-- 7ad66aea23d7: This ledger records machine evidence only and does not grant real Factorio, setup, network, signing, publication, or human-acceptance authority.
-- 2e9a66f8a4bd: Deep Factorio save metadata remains explicitly unsupported.
-- b30e4a70272e: This ledger records machine evidence only and does not claim deep save semantics, real Factorio execution, publication, or human acceptance.
-- 578bfb57bf82: LOW: execution remains unavailable and exports exclude saves unless explicitly requested.
-- d90d461a99dd: LOW: this commit changes report-only AIDE state and no product behavior.
-- dedadfa2f95e: LOW: frontend controls submit the same generated request fields and backend validation remains authoritative.
+- c24237e82245: FacMan hosted cross-platform confirmation remains required at the new exact head.
+- d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
+- d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
+- d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
+- d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
+- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
+- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
+- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
+- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
+- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
 
 ## Follow-up
 
-- f40e9d31f940: Start FACMAN-LOCAL-MOD-INVENTORY-02 from the closed customization baseline.
-- 8335fde1ba12: Use these stable inventory identities as the evidence input for the deterministic modset solver workunit.
-- 05a93277d739: Start FACMAN-LOCAL-MODSET-SOLVER-01 using the committed inventory identities as local evidence.
-- b93d7376c625: Reproduce this exact commit from a clean three-repository workspace and close FACMAN-LOCAL-MODSET-SOLVER-01.
-- 7ad66aea23d7: Start FACMAN-SAVE-INDEX-AND-RETENTION-02.
-- 2e9a66f8a4bd: Reproduce this exact commit from a clean three-repository workspace and close FACMAN-SAVE-INDEX-AND-RETENTION-02.
-- b30e4a70272e: Start FACMAN-SERVER-PLAN-02.
-- 578bfb57bf82: Implement grammar-generated operational UX in the next R3.7 work unit.
-- d90d461a99dd: Start FACMAN-OPERATIONAL-UX-03 from the generated command grammar.
-- dedadfa2f95e: Prove the full reversible lifecycle across direct, stdio, CLI, TUI, desktop, and package transports in WU10.
+- c24237e82245: Rebuild the complete FacMan matrix and update PR #5.
+- d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
+- d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
+- d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
+- d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
+- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
+- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
+- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
+- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
+- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
 
 ## Warnings
 
-- 8 malformed or legacy commits require review
+- 10b1caa915ed merge commit ignored
+- cfd30b769cc9 merge commit ignored
+- 73bec99916d5 merge commit ignored
+- cc4d79fec9d0 merge commit ignored
+- a5e1461ac46d merge commit ignored
+- d96384bf8f48 merge commit ignored
+- 747b4442cf22 merge commit ignored
+- 178de3192f3c merge commit ignored
+- 10 malformed or legacy commits require review
 
 ## Preview Caveat
 

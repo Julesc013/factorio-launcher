@@ -29,6 +29,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_live_portable_setup",
             "m2_wu1_target_policy",
             "m2_wu2_public_lifecycle",
+            "m2_wu3_live_evidence",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -38,20 +39,20 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_wu2_implementation_preserves_human_and_execution_gates(self) -> None:
+    def test_m2_wu3_implementation_preserves_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu2-public-setup-lifecycle", data["current_checkpoint"])
+        self.assertEqual("m2-wu3-live-target-evidence", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "public_lifecycle_dev_integrated_pending_operator_acceptance",
+            "live_evidence_provider_integrated_pending_operator_acceptance",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
-            "M2-WU2-DEV-INTEGRATION-PROOF-01",
+            "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
@@ -78,6 +79,20 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("unavailable_pending_wu5", m2_wu2["recovery_apply"])
         self.assertEqual("pending", m2_wu2["operator_verdict"])
         self.assertFalse(m2_wu2["execution_authority"])
+        m2_wu3 = data["m2_wu3_live_evidence"]
+        self.assertEqual("implementation_proven_pending_dev_integration", m2_wu3["status"])
+        self.assertEqual(
+            data["provider_pins"]["universal_setup"]["revision"],
+            m2_wu3["universal_setup_main_revision"],
+        )
+        self.assertEqual("pending", m2_wu3["operator_verdict"])
+        self.assertFalse(m2_wu3["automation_can_record_operator_verdict"])
+        self.assertTrue(m2_wu3["setup_owned_evidence_write"])
+        self.assertTrue(m2_wu3["plan_pre_snapshot"])
+        self.assertTrue(m2_wu3["capture_recomputes_post_snapshot"])
+        self.assertEqual("unavailable_pending_operator_acceptance", m2_wu3["ordinary_live_apply"])
+        self.assertFalse(m2_wu3["execution_authority"])
+        self.assertEqual("none", m2_wu3["h1_inference"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
@@ -143,7 +158,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "aa4d8cec93f265893f246d217ee94c03073899a3",
+            "fbbeb762f25921ae05945206fd0c004a52239c13",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])
