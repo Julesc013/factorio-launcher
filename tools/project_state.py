@@ -364,11 +364,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU2-DEV-INTEGRATION-PROOF-01"
+    latest_closeout_id = "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
     if status.get("last_closed_work_unit") != latest_closeout_id:
-        problems.append("canonical status must bind the closed M2-WU2 integration proof")
+        problems.append("canonical status must bind the latest closed M2 WorkUnit")
     repair = status.get("r3_8_repair", {})
     if repair.get("status") != "closed":
         problems.append("canonical status must record the R3.8 repair as closed")
