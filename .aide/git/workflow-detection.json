@@ -3,7 +3,7 @@
   "canonical_branch": "main",
   "confidence": "high",
   "current_branch": "task/m2-wu2-public-lifecycle",
-  "current_commit": "effce1f71784517ad4fc7e0af2d31e16bdad59aa",
+  "current_commit": "e4b03c82b649e6e8e842700413bd31010aa52017",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
