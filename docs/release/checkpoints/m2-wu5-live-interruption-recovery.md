@@ -44,7 +44,14 @@ three completed install finalizations, and three visible
 - Universal Setup: 16/16 native, 21/21 Python, strict PASS.
 - Provider exact-main sanitizer and fuzz jobs: PASS.
 - Combined exact-pin three-repository Release CTest: 40/40 PASS.
-- FacMan strict validation: PASS.
+- Complete FacMan Python suite: 339 PASS, one opt-in skip.
+- FacMan strict and AIDE portable validation: PASS.
+- Required Windows package proof: 14/14 PASS, zero skips.
+- Reproducible package tree: 389 files, archive
+  `42156c1a2f37f5fc5e9df6a487b593902e3f98e349ed2cfd386a674099136903`,
+  tree `28b275dfab572293755291d15f84598cb24f03675a202be2ee621c56c03a6e7c`,
+  SBOM `f63be981fb9cad5f72760905b7bec66afe8c624cff0134a3e6f8780429e62414`,
+  provenance `b4e8fd67ac3e255278eed4a10dcb2504b4ae21d9fd17c0476d6b7c1b3cedef86`.
 
 ## Authority boundary
 

@@ -527,6 +527,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU5 must bind the retained interruption summary identity")
     if [m2_wu5.get(key) for key in ("case_count", "unchanged_count", "rolled_back_count", "completed_count", "recovery_required_count")] != [11, 1, 4, 3, 3]:
         problems.append("M2-WU5 must bind the complete eleven-case outcome partition")
+    if m2_wu5.get("native_test_count") != 40 or m2_wu5.get("python_test_count") != 339:
+        problems.append("M2-WU5 must bind the complete local native and Python proof counts")
+    if m2_wu5.get("required_windows_package_tests") != 14 or m2_wu5.get("required_windows_package_skips") != 0:
+        problems.append("M2-WU5 must bind the required zero-skip Windows package proof")
     if m2_wu5.get("public_recovery_apply") != "exact_staged_rollback_only":
         problems.append("M2-WU5 must not overstate public recovery apply")
     if m2_wu5.get("operator_verdict") != "pending" or m2_wu5.get("automation_can_record_operator_verdict") is not False:
