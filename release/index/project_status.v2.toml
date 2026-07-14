@@ -127,11 +127,19 @@ execution_authority = false
 h1_inference = "none"
 
 [m2_wu2_public_lifecycle]
-status = "active"
+status = "provider_integrated_candidate"
 active_work_unit = "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01"
+universal_setup_task_revision = "9baacd5547ddd7fe2705d3749059f7cb22a86e38"
+universal_setup_main_revision = "17db1bd9a680d97611fa73f7639c38e1c9472680"
+universal_setup_push_ci_run = "29321006210"
+universal_setup_pr_ci_run = "29321009637"
+universal_setup_main_ci_run = "29321082725"
 plan_commands_read_only = true
 apply_requires_exact_plan = true
 pre_verdict_target_class = "operator_acceptance"
+public_install_repair_move_uninstall = "operator_acceptance_candidate_only"
+recovery_inspect_plan = "available_read_only"
+recovery_apply = "unavailable_pending_wu5"
 ordinary_live_apply = "unavailable_pending_operator_acceptance"
 operator_verdict = "pending"
 execution_authority = false

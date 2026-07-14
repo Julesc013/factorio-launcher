@@ -417,12 +417,16 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if m2_wu1.get("execution_authority") is not False or m2_wu1.get("h1_inference") != "none":
         problems.append("M2-WU1 must not promote execution or infer H1")
     m2_wu2 = status.get("m2_wu2_public_lifecycle", {})
-    if m2_wu2.get("status") != "active":
-        problems.append("M2-WU2 public lifecycle must be the active bounded WorkUnit")
+    if m2_wu2.get("status") != "provider_integrated_candidate":
+        problems.append("M2-WU2 public lifecycle must record the provider-integrated candidate")
+    if m2_wu2.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
+        problems.append("M2-WU2 must bind the exact pinned Universal Setup main revision")
     if m2_wu2.get("plan_commands_read_only") is not True or m2_wu2.get("apply_requires_exact_plan") is not True:
         problems.append("M2-WU2 must retain read-only planning and exact-plan apply")
     if m2_wu2.get("operator_verdict") != "pending":
         problems.append("M2-WU2 automation must preserve the pending human verdict")
+    if m2_wu2.get("recovery_apply") != "unavailable_pending_wu5":
+        problems.append("M2-WU2 must not overstate restart-safe recovery apply")
     if m2_wu2.get("execution_authority") is not False or m2_wu2.get("h1_inference") != "none":
         problems.append("M2-WU2 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})

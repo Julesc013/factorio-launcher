@@ -150,7 +150,7 @@
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
-    "universal_setup": "f322655fa8fa287a400f7afb6c661eade30d707b"
+    "universal_setup": "17db1bd9a680d97611fa73f7639c38e1c9472680"
   },
   "execution": {
     "operator_verdict": "Fail",
@@ -236,7 +236,15 @@
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
     "plan_commands_read_only": true,
     "pre_verdict_target_class": "operator_acceptance",
-    "status": "active"
+    "public_install_repair_move_uninstall": "operator_acceptance_candidate_only",
+    "recovery_apply": "unavailable_pending_wu5",
+    "recovery_inspect_plan": "available_read_only",
+    "status": "provider_integrated_candidate",
+    "universal_setup_main_ci_run": "29321082725",
+    "universal_setup_main_revision": "17db1bd9a680d97611fa73f7639c38e1c9472680",
+    "universal_setup_pr_ci_run": "29321009637",
+    "universal_setup_push_ci_run": "29321006210",
+    "universal_setup_task_revision": "9baacd5547ddd7fe2705d3749059f7cb22a86e38"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",
@@ -370,7 +378,7 @@
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
-      "revision": "f322655fa8fa287a400f7afb6c661eade30d707b",
+      "revision": "17db1bd9a680d97611fa73f7639c38e1c9472680",
       "source": "universal-setup"
     }
   },

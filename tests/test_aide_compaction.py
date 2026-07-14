@@ -56,7 +56,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(data["m2_wu1_target_policy"]["mutation_authority"])
         self.assertEqual("d96384bf8f48230256d35fa7015cbc7374e83319", data["m2_wu1_target_policy"]["facman_dev_integration_revision"])
         self.assertEqual("29318247825", data["m2_wu1_target_policy"]["facman_dev_ci_run"])
-        self.assertEqual("active", data["m2_wu2_public_lifecycle"]["status"])
+        self.assertEqual("provider_integrated_candidate", data["m2_wu2_public_lifecycle"]["status"])
         self.assertTrue(data["m2_wu2_public_lifecycle"]["plan_commands_read_only"])
         self.assertFalse(data["m2_wu2_public_lifecycle"]["execution_authority"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
