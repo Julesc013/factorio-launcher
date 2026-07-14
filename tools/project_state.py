@@ -114,6 +114,7 @@ def collect() -> dict[str, Any]:
         "m2_wu7_facman_live_portable_workflow": status["m2_wu7_facman_live_portable_workflow"],
         "m2_wu8_generated_frontend_workflow": status["m2_wu8_generated_frontend_workflow"],
         "m2_wu9_cross_platform_adversarial_proof": status["m2_wu9_cross_platform_adversarial_proof"],
+        "m2_wu10_operator_live_target_verdict": status["m2_wu10_operator_live_target_verdict"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -215,6 +216,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"cases: `{data['m2_wu9_cross_platform_adversarial_proof']['case_count']}`; Setup main: "
         f"`{data['m2_wu9_cross_platform_adversarial_proof']['universal_setup_main_revision']}`; operator verdict: "
         f"`{data['m2_wu9_cross_platform_adversarial_proof']['operator_verdict']}`.",
+        f"- M2-WU10 operator acceptance: `{data['m2_wu10_operator_live_target_verdict']['status']}`; "
+        f"run: `{data['m2_wu10_operator_live_target_verdict']['run_id']}`; operator verdict: "
+        f"`{data['m2_wu10_operator_live_target_verdict']['operator_verdict']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -743,6 +747,24 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU9 must not promote ordinary live apply before a human Pass")
     if m2_wu9.get("execution_authority") is not False or m2_wu9.get("h1_inference") != "none":
         problems.append("M2-WU9 must not promote execution or infer H1")
+    m2_wu10 = status.get("m2_wu10_operator_live_target_verdict", {})
+    if m2_wu10.get("status") not in {
+        "active_machine_evidence_ready_pending_operator_verdict",
+        "operator_verdict_recorded",
+    }:
+        problems.append("M2-WU10 must record a recognized operator-acceptance state")
+    if m2_wu10.get("acceptance_root") != r"D:\FacMan-Live-Acceptance\M2":
+        problems.append("M2-WU10 must bind only the authorized acceptance root")
+    if m2_wu10.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
+        problems.append("M2-WU10 must bind the exact current Universal Setup provider pin")
+    if m2_wu10.get("verdict_choices") != ["Pass", "Fail", "Inconclusive"]:
+        problems.append("M2-WU10 must expose the complete human verdict set")
+    if m2_wu10.get("automation_can_record_operator_verdict") is not False:
+        problems.append("M2-WU10 automation must not record the operator verdict")
+    if m2_wu10.get("operator_verdict") == "pending" and m2_wu10.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2-WU10 pending review must keep ordinary live apply unavailable")
+    if m2_wu10.get("execution_authority") is not False or m2_wu10.get("h1_inference") != "none":
+        problems.append("M2-WU10 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

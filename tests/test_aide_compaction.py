@@ -36,6 +36,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu7_facman_live_portable_workflow",
             "m2_wu8_generated_frontend_workflow",
             "m2_wu9_cross_platform_adversarial_proof",
+            "m2_wu10_operator_live_target_verdict",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -47,11 +48,11 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_m2_workflows_preserve_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu9-cross-platform-adversarial-proof", data["current_checkpoint"])
+        self.assertEqual("m2-wu10-operator-live-target-verdict", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01", data["active_work_unit"])
         self.assertEqual(
             "automated_live_lifecycle_complete_pending_operator_verdict",
             data["m2_live_portable_setup"]["status"],
@@ -263,8 +264,16 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("pending", m2_wu9["operator_verdict"])
         self.assertFalse(m2_wu9["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu9["execution_authority"])
-        self.assertEqual("m2-wu9-cross-platform-adversarial-proof", data["current_checkpoint"])
-        self.assertIsNone(data["active_work_unit"])
+        m2_wu10 = data["m2_wu10_operator_live_target_verdict"]
+        self.assertEqual("active_machine_evidence_ready_pending_operator_verdict", m2_wu10["status"])
+        self.assertEqual("D:\\FacMan-Live-Acceptance\\M2", m2_wu10["acceptance_root"])
+        self.assertEqual("m2wu10-20260715-01", m2_wu10["run_id"])
+        self.assertEqual(["Pass", "Fail", "Inconclusive"], m2_wu10["verdict_choices"])
+        self.assertEqual("pending", m2_wu10["operator_verdict"])
+        self.assertFalse(m2_wu10["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu10["execution_authority"])
+        self.assertEqual("m2-wu10-operator-live-target-verdict", data["current_checkpoint"])
+        self.assertEqual("M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01", data["active_work_unit"])
         self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(

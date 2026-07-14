@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -160,7 +160,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu9-cross-platform-adversarial-proof",
+  "current_checkpoint": "m2-wu10-operator-live-target-verdict",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -221,6 +221,27 @@
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
     "status": "automated_live_lifecycle_complete_pending_operator_verdict"
+  },
+  "m2_wu10_operator_live_target_verdict": {
+    "acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
+    "active_work_unit": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01",
+    "automation_can_record_operator_verdict": false,
+    "execution_authority": false,
+    "facman_evidence_baseline_revision": "384c2569c84696c5fce02802684e30fad44f9ee0",
+    "factorio_archive_acceptance": "unavailable",
+    "h1_inference": "none",
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "run_id": "m2wu10-20260715-01",
+    "run_summary_sha256": "3a0b7e080e83bd3bcb72c3e2198de1dc040e20e46d0e33ea1df11bd7967bec25",
+    "status": "active_machine_evidence_ready_pending_operator_verdict",
+    "synthetic_archive_sha256": "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf",
+    "universal_setup_main_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "verdict_choices": [
+      "Pass",
+      "Fail",
+      "Inconclusive"
+    ]
   },
   "m2_wu1_target_policy": {
     "execution_authority": false,
