@@ -695,6 +695,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if m2_wu9.get("status") not in {
         "active",
         "provider_integrated_cross_platform_proof_pending_facman_dev_integration_and_operator_verdict",
+        "facman_local_proof_passed_pending_dev_integration_and_operator_verdict",
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU9 must record a recognized monotonic adversarial proof state")
@@ -708,6 +709,20 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU9 must require Windows, Linux, and macOS evidence")
     if m2_wu9.get("target_ancestor_identity_bound") is not True:
         problems.append("M2-WU9 must retain the target ancestor identity remediation")
+    if m2_wu9.get("status") in {
+        "facman_local_proof_passed_pending_dev_integration_and_operator_verdict",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        if m2_wu9.get("facman_native_test_count") != 41 or m2_wu9.get("facman_python_test_count") != 343:
+            problems.append("M2-WU9 must bind the complete local native and Python proof counts")
+        if m2_wu9.get("python_opt_in_skip_count") != 1:
+            problems.append("M2-WU9 must retain the explicit opt-in performance skip count")
+        if m2_wu9.get("required_windows_package_tests") != 14 or m2_wu9.get("required_windows_package_skips") != 0:
+            problems.append("M2-WU9 must bind the required zero-skip Windows package proof")
+        if m2_wu9.get("package_proof_revision") != "eff0f9146e6a28fcee484f72d7d2d7e691bade92" or m2_wu9.get("package_tree_file_count") != 395:
+            problems.append("M2-WU9 must bind its exact clean package source and complete tree")
+        if m2_wu9.get("publisher_authenticity") != "not_proven":
+            problems.append("M2-WU9 must not infer publisher authenticity from reproducibility")
     if m2_wu9.get("operator_verdict") != "pending" or m2_wu9.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU9 automation must preserve the separate pending operator verdict")
     if m2_wu9.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
