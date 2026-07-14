@@ -21,11 +21,11 @@ static_assert(sizeof(flb_config_v1) == sizeof(ulk_size) + 2 * sizeof(ulk_string_
 int main()
 {
     facman_client_initialize_process(nullptr);
-    if (flb_abi_version_v1() != FLB_ABI_VERSION || FLB_ABI_VERSION != 0x00010002u) return 1;
-    if (flb_required_ulk_abi_v1() != 0x00010002u) return 2;
+    if (flb_abi_version_v1() != FLB_ABI_VERSION || FLB_ABI_VERSION != 0x00010003u) return 1;
+    if (flb_required_ulk_abi_v1() != 0x00010003u) return 2;
     if (!flb_abi_is_compatible_v1(0x00010000u) ||
         !flb_abi_is_compatible_v1(0x00010001u) ||
         !flb_abi_is_compatible_v1(FLB_ABI_VERSION)) return 3;
-    if (flb_abi_is_compatible_v1(0x00010003u) || flb_abi_is_compatible_v1(0x00020000u)) return 4;
+    if (flb_abi_is_compatible_v1(0x00010004u) || flb_abi_is_compatible_v1(0x00020000u)) return 4;
     return 0;
 }

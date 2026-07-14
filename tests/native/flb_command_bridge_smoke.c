@@ -170,7 +170,8 @@ int main(void)
     if (flb_abi_version_v1() != FLB_ABI_VERSION ||
         flb_required_ulk_abi_v1() != ((ULK_API_VERSION_MAJOR << 16) | ULK_API_VERSION_MINOR) ||
         !flb_abi_is_compatible_v1(0x00010001u) ||
-        flb_abi_is_compatible_v1(0x00010003u)) {
+        !flb_abi_is_compatible_v1(0x00010003u) ||
+        flb_abi_is_compatible_v1(0x00010004u)) {
         return 11;
     }
 

@@ -80,6 +80,12 @@ checkpoint binds eleven deterministic crash windows, exact staged rollback,
 idempotent install finalization, and explicitly retained repair/move/uninstall
 recovery-required states. It does not create the pending human verdict.
 
+The bounded
+[`M2-WU6 Universal Launcher live setup handoff`](m2-wu6-universal-launcher-live-handoff.md)
+checkpoint binds the additive Launcher 1.3 recovery projection, including the
+no-reference interruption case and stable dependent-instance status. Launcher
+remains unable to mutate setup and the human verdict remains pending.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

@@ -1,54 +1,6 @@
 {
   "follow_up": [
     {
-      "commit": "efe06f385795",
-      "summary": "Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Push the remediation and require a new exact-head hosted matrix before merging PR #9."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Push the remediation and require a new exact-head hosted matrix before merging PR #9."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Push the remediation and require a new exact-head hosted matrix before merging PR #9."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment."
-    },
-    {
       "commit": "b1fd720013ed",
       "summary": "Close package-license inclusion and produce a dedicated reproducibility checkpoint."
     },
@@ -367,16 +319,21 @@
     {
       "commit": "a286b5c42736",
       "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+    },
+    {
+      "commit": "a6cfe28c704d",
+      "summary": "Merge WU5 recovery proof into dev and bind its exact integration workflows."
+    },
+    {
+      "commit": "480a58ca4c10",
+      "summary": "Run the complete exact-pin validation matrix and close WU6 through reviewed dev integration."
+    },
+    {
+      "commit": "d746454ca850",
+      "summary": "Close the WU6 task, publish its PR, and bind exact-dev workflows after merge."
     }
   ],
   "highlights": [
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "efe06f385795",
-      "subject": "docs(m1): bind managed portable foundation closeout",
-      "summary": "Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed."
-    },
     {
       "breaking": false,
       "category": "Security",
@@ -485,13 +442,6 @@
     {
       "breaking": false,
       "category": "Added",
-      "commit": "efe06f385795",
-      "subject": "docs(m1): bind managed portable foundation closeout",
-      "summary": "Revision-pinned M1 managed portable-install checkpoint."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
       "commit": "df0e42b6131f",
       "subject": "chore(m2): open live-target policy WorkUnit",
       "summary": "explicit M2 live portable setup state with a pending human gate."
@@ -540,10 +490,10 @@
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "efe06f385795",
-      "subject": "docs(m1): bind managed portable foundation closeout",
-      "summary": "Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory."
+      "category": "Added",
+      "commit": "480a58ca4c10",
+      "subject": "feat(handoff): integrate Launcher recovery projection",
+      "summary": "stable managed_install_recovery_required handoff with stale launch-plan projection."
     },
     {
       "breaking": false,
@@ -646,20 +596,6 @@
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "5b01b36fb989",
-      "subject": "fix(validation): inspect new source files before commit",
-      "summary": "New non-ignored source files are now checked before their first commit."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "5b01b36fb989",
-      "subject": "fix(validation): inspect new source files before commit",
-      "summary": "M1 checkpoint satisfies the repository line-length policy."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
       "commit": "71dacb277dc8",
       "subject": "fix(package): retain Universal MIT notices in every profile",
       "summary": "complete provider license closure in built packages."
@@ -716,20 +652,6 @@
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "efe06f385795",
-      "subject": "docs(m1): bind managed portable foundation closeout",
-      "summary": "Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply."
-    },
-    {
-      "breaking": false,
-      "category": "Docs",
-      "commit": "92da90101342",
-      "subject": "chore(release): bind canonical M1 public integration proof",
-      "summary": "bind M1 canonical public integration evidence."
-    },
-    {
-      "breaking": false,
-      "category": "Docs",
       "commit": "b1fd720013ed",
       "subject": "chore(license): bind Universal MIT provider truth",
       "summary": "record the accepted operator decision and retained redistribution notices."
@@ -764,17 +686,10 @@
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "5b01b36fb989",
-      "subject": "fix(validation): inspect new source files before commit",
-      "summary": "Added pre-commit file-discovery regression coverage."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "92da90101342",
-      "subject": "chore(release): bind canonical M1 public integration proof",
-      "summary": "protect additive public-integration truth and unchanged authority boundaries."
+      "category": "Docs",
+      "commit": "a6cfe28c704d",
+      "subject": "docs(state): accept exact-dev WU4 integration",
+      "summary": "WU4 is now accepted as dev-integrated while its human verdict remains pending."
     },
     {
       "breaking": false,
@@ -838,58 +753,17 @@
       "commit": "a286b5c42736",
       "subject": "chore(m2): close WU4 live synthetic acceptance proof",
       "summary": "enforce pending verdict and zero authority promotion."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "d746454ca850",
+      "subject": "test(proof): bind complete WU6 validation identities",
+      "summary": "complete Launcher handoff proof and immutable WU5 dev evidence are now recorded."
     }
   ],
   "preview_only": true,
   "risk_summary": [
-    {
-      "commit": "efe06f385795",
-      "summary": "Synthetic and disposable-root proof is not live Factorio install acceptance."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "Synthetic and disposable-root proof is not live Factorio install acceptance."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "Synthetic and disposable-root proof is not live Factorio install acceptance."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "Synthetic and disposable-root proof is not live Factorio install acceptance."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable."
-    },
     {
       "commit": "b1fd720013ed",
       "summary": "None beyond the unchanged unsigned and unpublished distribution boundary."
@@ -1209,60 +1083,24 @@
     {
       "commit": "a286b5c42736",
       "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "a6cfe28c704d",
+      "summary": "Ordinary live apply and every excluded execution or system authority remain unavailable."
+    },
+    {
+      "commit": "480a58ca4c10",
+      "summary": "Full repository, package, reproducibility, and hosted integration proof remain pending; human verdict and ordinary live apply remain unavailable."
+    },
+    {
+      "commit": "d746454ca850",
+      "summary": "WU6 still requires reviewed hosted integration; the M2 human verdict and ordinary live apply remain pending."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff",
+  "source_head": "d746454ca85090eff7d9e4c6a1723f495da596d1",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
-    {
-      "commit": "efe06f385795",
-      "summary": "py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds."
-    },
-    {
-      "commit": "efe06f385795",
-      "summary": "py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS."
-    },
-    {
-      "commit": "5b01b36fb989",
-      "summary": "Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction`: PASS."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction`: PASS."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction`: PASS."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction`: PASS."
-    },
-    {
-      "commit": "92da90101342",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction`: PASS."
-    },
     {
       "commit": "b1fd720013ed",
       "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
@@ -1582,11 +1420,21 @@
     {
       "commit": "a286b5c42736",
       "summary": "combined Release CTest 39/39: PASS."
+    },
+    {
+      "commit": "a6cfe28c704d",
+      "summary": "project_state.py, test_aide_compaction, and strict_check.py: PASS."
+    },
+    {
+      "commit": "480a58ca4c10",
+      "summary": "Six focused exact-pin native and SDK tests, project-state checks, and strict validation: PASS."
+    },
+    {
+      "commit": "d746454ca850",
+      "summary": "Native 41/41, Python 339 plus one opt-in skip, Windows package 14/14, AIDE, strict, and byte reproducibility: PASS."
     }
   ],
   "warnings": [
-    "cfd30b769cc9 merge commit ignored",
-    "73bec99916d5 merge commit ignored",
     "cc4d79fec9d0 merge commit ignored",
     "a5e1461ac46d merge commit ignored",
     "d96384bf8f48 merge commit ignored",
@@ -1595,6 +1443,7 @@
     "a8b298a35cd1 merge commit ignored",
     "476813e6fc74 merge commit ignored",
     "5563e3b8de43 merge commit ignored",
-    "13 malformed or legacy commits require review"
+    "f4b02ac022ee merge commit ignored",
+    "14 malformed or legacy commits require review"
   ]
 }

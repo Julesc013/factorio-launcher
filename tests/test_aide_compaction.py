@@ -32,6 +32,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu3_live_evidence",
             "m2_wu4_live_acceptance",
             "m2_wu5_interruption_recovery",
+            "m2_wu6_launcher_handoff",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -41,9 +42,9 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_wu5_recovery_preserves_human_and_execution_gates(self) -> None:
+    def test_m2_wu6_handoff_preserves_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu5-live-interruption-recovery", data["current_checkpoint"])
+        self.assertEqual("m2-wu6-universal-launcher-live-handoff", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
@@ -54,7 +55,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
-            "M2-WU5-LIVE-INTERRUPTION-RECOVERY-01",
+            "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
@@ -144,7 +145,14 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m2_wu4["execution_authority"])
         self.assertEqual("none", m2_wu4["h1_inference"])
         m2_wu5 = data["m2_wu5_interruption_recovery"]
-        self.assertEqual("provider_integrated_live_run_proven_pending_dev_integration", m2_wu5["status"])
+        self.assertEqual("accepted_dev_integration_proof_pending_operator_verdict", m2_wu5["status"])
+        self.assertEqual(19, m2_wu5["facman_reviewed_pr"])
+        self.assertEqual("a6cfe28c704df68025094f29be85f8961f745cd1", m2_wu5["facman_task_head_revision"])
+        self.assertEqual(m2_wu5["facman_task_tree"], m2_wu5["facman_dev_tree"])
+        self.assertEqual("f4b02ac022ee676ca5fdd5d8f31b44709a2c3277", m2_wu5["facman_dev_integration_revision"])
+        self.assertEqual("29341098765", m2_wu5["facman_dev_ci_run"])
+        self.assertEqual("29341101347", m2_wu5["facman_dev_code_security_run"])
+        self.assertEqual("29341100659", m2_wu5["facman_dev_security_policy_run"])
         self.assertEqual(data["provider_pins"]["universal_setup"]["revision"], m2_wu5["universal_setup_main_revision"])
         self.assertEqual(11, m2_wu5["case_count"])
         self.assertEqual([1, 4, 3, 3], [m2_wu5["unchanged_count"], m2_wu5["rolled_back_count"], m2_wu5["completed_count"], m2_wu5["recovery_required_count"]])
@@ -158,6 +166,27 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m2_wu5["automation_can_record_operator_verdict"])
         self.assertEqual("unavailable_pending_operator_acceptance", m2_wu5["ordinary_live_apply"])
         self.assertFalse(m2_wu5["execution_authority"])
+        m2_wu6 = data["m2_wu6_launcher_handoff"]
+        self.assertEqual("provider_integrated_local_handoff_proven_pending_dev_integration", m2_wu6["status"])
+        self.assertEqual(data["provider_pins"]["universal_launcher"]["revision"], m2_wu6["universal_launcher_main_revision"])
+        self.assertEqual("1.3", m2_wu6["launcher_abi_version"])
+        self.assertEqual("1.3", m2_wu6["facman_binding_abi_version"])
+        self.assertTrue(m2_wu6["recovery_without_install_reference"])
+        self.assertEqual("managed_install_recovery_required", m2_wu6["dependent_instance_status"])
+        self.assertEqual("stale", m2_wu6["launch_plan_status"])
+        self.assertFalse(m2_wu6["launcher_can_mutate_setup"])
+        self.assertEqual("universal-setup", m2_wu6["setup_mutation_owner"])
+        self.assertEqual("pending", m2_wu6["operator_verdict"])
+        self.assertFalse(m2_wu6["automation_can_record_operator_verdict"])
+        self.assertEqual("unavailable_pending_operator_acceptance", m2_wu6["ordinary_live_apply"])
+        self.assertFalse(m2_wu6["execution_authority"])
+        self.assertEqual("none", m2_wu6["h1_inference"])
+        self.assertEqual(41, m2_wu6["native_test_count"])
+        self.assertEqual(339, m2_wu6["python_test_count"])
+        self.assertEqual(1, m2_wu6["python_opt_in_skip_count"])
+        self.assertEqual(14, m2_wu6["required_windows_package_tests"])
+        self.assertEqual(0, m2_wu6["required_windows_package_skips"])
+        self.assertEqual(390, m2_wu6["package_tree_file_count"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
@@ -185,7 +214,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+            "7bd4425f0c35414f738159b45d8bec42edf70235",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]

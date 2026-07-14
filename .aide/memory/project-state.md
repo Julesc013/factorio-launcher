@@ -8,13 +8,13 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `m2-wu5-live-interruption-recovery`;
+- checkpoint: `m2-wu6-universal-launcher-live-handoff`;
 - active WorkUnit: `none`;
-- last closed WorkUnit: `M2-WU5-LIVE-INTERRUPTION-RECOVERY-01`;
+- last closed WorkUnit: `M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `73bec99916d509b0ab055a43562e93ef20a6b4b7`;
-- Universal Launcher pin: `6d41e07b76cd19b2a7630835e05ac3aa125d57b8`;
+- Universal Launcher pin: `7bd4425f0c35414f738159b45d8bec42edf70235`;
 - Universal Setup pin: `e1ce68e9593ae8d9a35cc0821b5e42c798524453`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
 - operator verdict: `Fail`;
@@ -28,7 +28,8 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - M2-WU2 public lifecycle: `accepted_dev_integration_proof`; operator verdict: `pending`; execution authority: `false`.
 - M2-WU3 live evidence: `accepted_dev_integration_proof` at Universal Setup main `fbbeb762f25921ae05945206fd0c004a52239c13`; operator verdict: `pending`; automated verdict authority: `false`.
 - M2-WU4 live acceptance: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Setup main `9b8196437e41e45bd8d5a613246dabe5b8cdb968`; run: `m2wu4-20260714-01`; operator verdict: `pending`.
-- M2-WU5 interruption recovery: `provider_integrated_live_run_proven_pending_dev_integration` at Universal Setup main `e1ce68e9593ae8d9a35cc0821b5e42c798524453`; run: `m2wu5-20260714-01`; operator verdict: `pending`.
+- M2-WU5 interruption recovery: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Setup main `e1ce68e9593ae8d9a35cc0821b5e42c798524453`; run: `m2wu5-20260714-01`; operator verdict: `pending`.
+- M2-WU6 Launcher handoff: `provider_integrated_local_handoff_proven_pending_dev_integration` at Universal Launcher main `7bd4425f0c35414f738159b45d8bec42edf70235`; recovery status: `managed_install_recovery_required`; operator verdict: `pending`.
 - Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.

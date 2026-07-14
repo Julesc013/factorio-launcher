@@ -1,0 +1,60 @@
+schema_version: aide.queue-task.v1
+id: M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01
+title: M2 WU6 Universal Launcher live setup handoff
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-14T14:30:19Z
+owner: unassigned
+objective: >
+  Integrate the reviewed Launcher 1.3 recovery-required handoff without granting setup mutation authority.
+allowed_paths:
+  - .aide/**
+  - THIRD_PARTY_NOTICES.md
+  - docs/**
+  - include/flb/**
+  - release/**
+  - runtime/factorio/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - m2_wu6_launcher_handoff_smoke
+  - facman_abi_layout_smoke
+  - facman_abi_symbol_smoke
+  - facman_installed_sdk_smoke
+  - flb_command_bridge_smoke
+  - ulk_setup_handoff_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  - facman-windows-native
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-14T14:30:25Z
+verified_at: 2026-07-14T14:56:35Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-14T14:56:35Z
+closed_at: 2026-07-14T14:56:36Z

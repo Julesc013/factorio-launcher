@@ -145,11 +145,11 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu5-live-interruption-recovery",
+  "current_checkpoint": "m2-wu6-universal-launcher-live-handoff",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "universal_launcher": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+    "universal_launcher": "7bd4425f0c35414f738159b45d8bec42edf70235",
     "universal_setup": "e1ce68e9593ae8d9a35cc0821b5e42c798524453"
   },
   "execution": {
@@ -163,7 +163,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU5-LIVE-INTERRUPTION-RECOVERY-01",
+  "last_closed_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -380,6 +380,14 @@
     "case_count": 11,
     "completed_count": 3,
     "execution_authority": false,
+    "facman_dev_ci_run": "29341098765",
+    "facman_dev_code_security_run": "29341101347",
+    "facman_dev_integration_revision": "f4b02ac022ee676ca5fdd5d8f31b44709a2c3277",
+    "facman_dev_security_policy_run": "29341100659",
+    "facman_dev_tree": "0bc4e45755a3547b2d6ccde68a1693e2c970ee67",
+    "facman_reviewed_pr": 19,
+    "facman_task_head_revision": "a6cfe28c704df68025094f29be85f8961f745cd1",
+    "facman_task_tree": "0bc4e45755a3547b2d6ccde68a1693e2c970ee67",
     "factorio_archive_acceptance": "unavailable",
     "h1_inference": "none",
     "journal_count": 14,
@@ -402,7 +410,7 @@
     "run_id": "m2wu5-20260714-01",
     "run_summary_sha256": "c64ddfaa38bde351002d2840999b3ba74173cde8c76d3e6aa21891b5d169f6c1",
     "sbom_sha256": "f63be981fb9cad5f72760905b7bec66afe8c624cff0134a3e6f8780429e62414",
-    "status": "provider_integrated_live_run_proven_pending_dev_integration",
+    "status": "accepted_dev_integration_proof_pending_operator_verdict",
     "unchanged_count": 1,
     "universal_setup_main_ci_run": "29337717932",
     "universal_setup_main_revision": "e1ce68e9593ae8d9a35cc0821b5e42c798524453",
@@ -410,6 +418,38 @@
     "universal_setup_push_ci_run": "29337549251",
     "universal_setup_task_head_revision": "ebc87c78cf0254242adfd5337c3ce2fa89b9a2ca",
     "visible_target_finalization": "internal_exact_original_install_plan_only"
+  },
+  "m2_wu6_launcher_handoff": {
+    "active_work_unit": "",
+    "automation_can_record_operator_verdict": false,
+    "dependent_instance_status": "managed_install_recovery_required",
+    "execution_authority": false,
+    "facman_binding_abi_version": "1.3",
+    "facman_provider_integration_revision": "480a58ca4c10b82cf81034e00139cb78f73914bd",
+    "factorio_archive_acceptance": "unavailable",
+    "focused_native_test_count": 6,
+    "h1_inference": "none",
+    "launch_plan_status": "stale",
+    "launcher_abi_version": "1.3",
+    "launcher_can_mutate_setup": false,
+    "native_test_count": 41,
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "package_archive_sha256": "3a50263dde4871efc042d9289bef78b7abd6c364719b74ef18c91b8247c62fa8",
+    "package_tree_file_count": 390,
+    "package_tree_sha256": "c71458a16c201bf03fcd988795d44cc18564c63e7ef9c35b79dda108dcdaf470",
+    "provenance_sha256": "0a5f36d9c637d20d9cb9139d94438a4d73efff27cc969f4b88829c7a15bd78c1",
+    "python_opt_in_skip_count": 1,
+    "python_test_count": 339,
+    "recovery_without_install_reference": true,
+    "required_windows_package_skips": 0,
+    "required_windows_package_tests": 14,
+    "sbom_sha256": "0f35b6be81e81fedcc2e12268c8192f752eca4f283d54856d604e3a916ffa722",
+    "setup_mutation_owner": "universal-setup",
+    "status": "provider_integrated_local_handoff_proven_pending_dev_integration",
+    "universal_launcher_main_ci_run": "29337737777",
+    "universal_launcher_main_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "universal_launcher_task_revision": "43115d50822ac5a3ab0c51801873ff9a230408dd"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",
@@ -538,7 +578,7 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+      "revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
       "source": "universal-launcher"
     },
     "universal_setup": {

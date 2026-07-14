@@ -20,7 +20,7 @@
       "version": "0.1.0-dev",
       "type": "library",
       "source": "https://github.com/Julesc013/universal-launcher",
-      "commit": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+      "commit": "7bd4425f0c35414f738159b45d8bec42edf70235",
       "license": "MIT",
       "linkage": "bundled_runtime",
       "bundled_source": false,
