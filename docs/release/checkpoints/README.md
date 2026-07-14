@@ -53,6 +53,12 @@ checkpoint binds the operator-authorized provider licenses, retained notices,
 final provider pins, and a fresh clean package reproducibility proof. It grants
 no signing, publication, live-target setup, execution, or H1 authority.
 
+The bounded
+[`M2-WU1 live target policy`](m2-wu1-live-target-policy.md) checkpoint binds the
+product-neutral target taxonomy, fail-closed decision law, canonical Universal
+Setup provider merge, and a fresh FacMan package proof. It performs no host
+inspection, activates no public apply command, and records no human verdict.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "M2-WU1-LIVE-TARGET-POLICY-01",
+  "active_work_unit": "none",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -97,6 +97,11 @@
       "limitation": "ordinary FacMan apply awaits live-target acceptance; no Factorio execution"
     },
     {
+      "claim": "Live target policy",
+      "level": "provider-integrated; mutation off",
+      "limitation": "host inspection/apply are WU2; human verdict pending"
+    },
+    {
       "claim": "Package hashes authenticate publisher",
       "level": "not claimed",
       "limitation": "signatures or trusted external metadata required"
@@ -158,7 +163,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M1-PUBLIC-INTEGRATION-PROOF-01",
+  "last_closed_work_unit": "M2-WU1-LIVE-TARGET-POLICY-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -192,7 +197,7 @@
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
   "m2_live_portable_setup": {
-    "active_work_unit": "M2-WU1-LIVE-TARGET-POLICY-01",
+    "active_work_unit": "none",
     "authorized_acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
     "autonomous_archive_scope": "non_proprietary_synthetic_only",
     "execution_authority": false,
@@ -200,7 +205,22 @@
     "h1_inference": "none",
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
-    "status": "active_policy_contract"
+    "status": "wu1_policy_proven_public_activation_pending"
+  },
+  "m2_wu1_target_policy": {
+    "execution_authority": false,
+    "h1_inference": "none",
+    "mutation_authority": false,
+    "operator_verdict": "pending",
+    "status": "accepted_policy_proof",
+    "target_decision_contract": "usk.target_policy_decision.v1",
+    "target_evidence_contract": "usk.target_evidence.v1",
+    "target_policy_contract": "usk.target_policy.v1",
+    "universal_setup_main_ci_run": "29316660078",
+    "universal_setup_main_revision": "f322655fa8fa287a400f7afb6c661eade30d707b",
+    "universal_setup_pr_ci_run": "29316591892",
+    "universal_setup_push_ci_run": "29316580182",
+    "universal_setup_task_revision": "804ae1ea2f9fdb78525a0a3ef09069b51d8bb1c1"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",
