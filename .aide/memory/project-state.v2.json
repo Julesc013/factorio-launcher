@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-WU1-LIVE-TARGET-POLICY-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -190,6 +190,17 @@
     "wu12_dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
     "wu12_task_head_revision": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
+  },
+  "m2_live_portable_setup": {
+    "active_work_unit": "M2-WU1-LIVE-TARGET-POLICY-01",
+    "authorized_acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
+    "autonomous_archive_scope": "non_proprietary_synthetic_only",
+    "execution_authority": false,
+    "factorio_archive_acceptance": "unavailable",
+    "h1_inference": "none",
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "status": "active_policy_contract"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",

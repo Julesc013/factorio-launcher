@@ -1,0 +1,63 @@
+schema_version: aide.queue-task.v1
+id: M2-WU1-LIVE-TARGET-POLICY-01
+title: M2 live-target policy contract
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-14T07:52:17Z
+owner: unassigned
+objective: >
+  Define fail-closed live target classes, accepted roots, filesystem and path classification, immutable plan bindings, and the operator-acceptance gate without enabling live mutation.
+allowed_paths:
+  - .aide/memory/**
+  - .aide/queue/**
+  - contracts/setup/**
+  - docs/architecture/**
+  - docs/quality/**
+  - docs/release/checkpoints/**
+  - release/index/project_status.v2.toml
+  - tests/**
+  - tools/project_state.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_abi_layout_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_refusal_contract
+  - tests.test_schema_tools
+affected_strict_validators:
+  - tools/command_contract_check.py
+  - tools/refusal_contract_check.py
+  - tools/schema_validate.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - Universal Setup owns target classification and install mutation policy
+  - Universal Launcher remains product-neutral and non-mutating
+  - FacMan supplies product binding without enabling run.execute or H1
+multi_repository_scope:
+  universal_setup: authoritative target policy contract and evaluator
+  universal_launcher: no change in WU1
+  factorio_launcher: governance, product boundary, and provider integration
+authorized_acceptance_root: D:\FacMan-Live-Acceptance\M2
+operator_verdict: pending
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-14T07:52:17Z

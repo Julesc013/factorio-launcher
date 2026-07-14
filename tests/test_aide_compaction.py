@@ -26,6 +26,7 @@ class AideCompactionTests(unittest.TestCase):
             "current_revisions", "active_work_unit", "last_closed_work_unit",
             "r3_8_repair", "r3_8_public_integration", "m1_managed_portable_install",
             "m1_public_integration",
+            "m2_live_portable_setup",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -41,7 +42,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("M2-WU1-LIVE-TARGET-POLICY-01", data["active_work_unit"])
+        self.assertEqual(
+            "active_policy_contract",
+            data["m2_live_portable_setup"]["status"],
+        )
+        self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
             "M1-PUBLIC-INTEGRATION-PROOF-01",
             data["last_closed_work_unit"],
