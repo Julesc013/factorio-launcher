@@ -129,9 +129,17 @@ int prove_session_and_commit(const fs::path& workspace)
     auto result = tx::TransactionSession::begin(workspace, std::move(record));
     if (!result) return 21;
     tx::TransactionSession session = result.take_value();
+    const bool validated = session.validated();
+    const bool planned = validated && session.planned();
     if (session.record().transaction_id.size() != 35 || session.record().transaction_id.rfind("tx-", 0) != 0 ||
         session.record().marker_nonce.size() != 38 || session.record().marker_nonce.rfind("nonce-", 0) != 0 ||
-        !session.validated() || !session.planned()) return 22;
+        !validated || !planned) {
+        std::cerr << "session-identity transaction-id-size=" << session.record().transaction_id.size()
+                  << " marker-nonce-size=" << session.record().marker_nonce.size()
+                  << " validated=" << validated << " planned=" << planned
+                  << " detail=" << session.detail() << "\n";
+        return 29;
+    }
     auto archive_status = facman::archive::create_owned_staging_root(staging);
     if (!archive_status.ok() || !session.staging()) return 23;
     const fs::path marker = staging / tx::transaction_staging_marker_name();

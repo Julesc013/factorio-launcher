@@ -4,6 +4,7 @@
 #include "fl_local_operation_lock.h"
 
 #include "fl_path_safety.h"
+#include "fl_windows_path.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -46,8 +47,9 @@ std::string system_error_text(const std::string& prefix)
 StableLockResult supported_local_filesystem(const fs::path& path)
 {
 #ifdef _WIN32
+    const std::wstring native_path = facman::platform::windows_extended_path(path);
     std::wstring volume_path(32768, L'\0');
-    if (!GetVolumePathNameW(path.wstring().c_str(), volume_path.data(),
+    if (!GetVolumePathNameW(native_path.c_str(), volume_path.data(),
             static_cast<DWORD>(volume_path.size()))) {
         return {StableLockCode::unsupported_filesystem,
             system_error_text("cannot classify lock filesystem")};
@@ -168,8 +170,9 @@ StableLockResult StableLocalLock::create(const fs::path& path)
     StableLockResult filesystem = supported_local_filesystem(path.parent_path());
     if (!filesystem.acquired()) return filesystem;
 #ifdef _WIN32
+    const std::wstring native_path = facman::platform::windows_extended_path(path);
     HANDLE handle = CreateFileW(
-        path.wstring().c_str(),
+        native_path.c_str(),
         GENERIC_READ | GENERIC_WRITE | DELETE,
         FILE_SHARE_READ,
         nullptr,
@@ -220,8 +223,9 @@ StableLockResult StableLocalLock::open_existing(
     StableLockResult filesystem = supported_local_filesystem(path.parent_path());
     if (!filesystem.acquired()) return filesystem;
 #ifdef _WIN32
+    const std::wstring native_path = facman::platform::windows_extended_path(path);
     HANDLE handle = CreateFileW(
-        path.wstring().c_str(),
+        native_path.c_str(),
         GENERIC_READ | GENERIC_WRITE | DELETE,
         FILE_SHARE_READ,
         nullptr,
@@ -440,8 +444,9 @@ bool StableLocalLock::identity_matches_path(std::string& detail) const
 {
     if (!open() || !current_identity_matches(detail)) return false;
 #ifdef _WIN32
+    const std::wstring native_path = facman::platform::windows_extended_path(path_);
     HANDLE path_handle = CreateFileW(
-        path_.wstring().c_str(),
+        native_path.c_str(),
         GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         nullptr,

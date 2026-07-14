@@ -33,6 +33,26 @@ int main()
     if (input.read_at(0, read.data(), read.size()) != read.size() || read != payload) return 6;
     if (!input.revalidate().ok()) return 7;
     if (!facman::platform::remove_exact_object(destination, input.identity()).ok()) return 8;
+#ifdef _WIN32
+    const std::size_t root_length = fs::absolute(root).native().size();
+    const std::size_t padding = root_length < 235 ? 235 - root_length : 80;
+    const fs::path long_parent = root / std::string(padding, 'p');
+    fs::create_directory(long_parent, error);
+    if (error) return 12;
+    const fs::path long_staging = long_parent / (std::string(70, 's') + ".tmp");
+    const fs::path long_destination = long_parent / (std::string(70, 'd') + ".txt");
+    if (fs::absolute(long_staging).native().size() <= 260) return 13;
+    facman::platform::DurableOutputFile long_output;
+    status = long_output.create_exclusive(long_staging, 1024);
+    if (!status.ok() || long_output.write_at(0, payload.data(), payload.size()) != payload.size() ||
+        !long_output.flush_file_and_parent().ok()) return 14;
+    if (!facman::platform::commit_no_replace(long_staging, long_destination).ok()) return 15;
+    facman::platform::StableInputFile long_input;
+    if (!long_input.open_no_follow(long_destination).ok() ||
+        !facman::platform::remove_exact_object(long_destination, long_input.identity()).ok()) return 16;
+    fs::remove(long_parent, error);
+    if (error) return 17;
+#endif
     facman::platform::RandomIdGenerator ids;
     const std::string first = ids.next("tx");
     const std::string second = ids.next("tx");
