@@ -3,8 +3,8 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/r3.7-truth-conformance-repair
-- current_commit: eb629caaec9d62536a272336e940c0d3003fdaae
+- current_branch: task/m2-wu2-public-lifecycle
+- current_commit: e4b03c82b649e6e8e842700413bd31010aa52017
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
@@ -14,8 +14,8 @@
 
 ## Branch Summary
 
-- local_branches: 23
-- remote_branches: 11
+- local_branches: 30
+- remote_branches: 18
 - tags_count: 2
 
 ## Warnings

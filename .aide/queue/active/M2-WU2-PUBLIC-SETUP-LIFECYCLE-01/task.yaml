@@ -1,0 +1,69 @@
+schema_version: aide.queue-task.v1
+id: M2-WU2-PUBLIC-SETUP-LIFECYCLE-01
+title: M2 public Universal Setup lifecycle activation
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-14T08:40:36Z
+owner: unassigned
+objective: >
+  Connect the fixture-proven install, inspect, verify, repair, move, uninstall, audit, and recovery lifecycle to explicit descriptor-driven public plan/apply commands with exact-plan revalidation and no authority outside the operator-acceptance lane.
+allowed_paths:
+  - .aide/git/**
+  - .aide/memory/**
+  - .aide/queue/**
+  - THIRD_PARTY_NOTICES.md
+  - docs/architecture/**
+  - docs/quality/**
+  - docs/release/checkpoints/**
+  - release/index/**
+  - runtime/factorio/application/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - usk_command_graph_smoke
+  - usk_public_lifecycle_smoke
+  - flb_setup_gateway_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_setup_package_routing
+  - Universal Setup contract and structure suites
+affected_strict_validators:
+  - tools/project_state.py
+  - Universal Setup strict_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - plan commands are read-only and apply requires the reviewed exact plan identity
+  - Universal Setup owns lifecycle mutation and Universal Launcher remains non-mutating
+  - operator acceptance is the only pre-verdict live target class
+  - public activation never enables product execution, networking, registry, elevation, or publication
+multi_repository_scope:
+  universal_setup: public lifecycle contracts, dispatch, revalidation, and operator-acceptance mutation
+  universal_launcher: no change in WU2
+  factorio_launcher: integration evidence, provider pin, and authority truth only
+authorized_acceptance_root: D:\FacMan-Live-Acceptance\M2
+operator_verdict: pending
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-14T08:40:37Z
+verified_at: 2026-07-14T10:23:23Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-14T10:23:24Z
+closed_at: 2026-07-14T10:23:24Z

@@ -59,6 +59,14 @@ product-neutral target taxonomy, fail-closed decision law, canonical Universal
 Setup provider merge, and a fresh FacMan package proof. It performs no host
 inspection, activates no public apply command, and records no human verdict.
 
+The subsequent
+[`M2-WU2 public setup lifecycle`](m2-wu2-public-setup-lifecycle.md) checkpoint
+binds explicit public plan/apply dispatch, exact-plan revalidation, owned-state
+repair/move/uninstall behavior, read-only recovery inspection/planning, and a
+fresh three-repository/package proof. It remains pending `dev` integration and
+the separate human live-target verdict; ordinary managed-portable apply and
+`recovery.apply` are not promoted.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

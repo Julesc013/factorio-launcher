@@ -8,14 +8,14 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `m2-wu1-live-target-policy`;
+- checkpoint: `m2-wu2-public-setup-lifecycle`;
 - active WorkUnit: `none`;
-- last closed WorkUnit: `M2-WU1-LIVE-TARGET-POLICY-01`;
+- last closed WorkUnit: `M2-WU2-PUBLIC-SETUP-LIFECYCLE-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `73bec99916d509b0ab055a43562e93ef20a6b4b7`;
 - Universal Launcher pin: `6d41e07b76cd19b2a7630835e05ac3aa125d57b8`;
-- Universal Setup pin: `f322655fa8fa287a400f7afb6c661eade30d707b`;
+- Universal Setup pin: `aa4d8cec93f265893f246d217ee94c03073899a3`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
 - operator verdict: `Fail`;
 - Safe beta: `false`;
@@ -23,8 +23,9 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - public SDK: `experimental_installed`; stable compatibility is not promised.
 - M1 managed portable install: `fixture_proven`; ordinary setup apply: `unavailable_pending_live_target_acceptance`.
 - M1 public integration: `accepted` at canonical main `73bec99916d509b0ab055a43562e93ef20a6b4b7`.
-- M2 live portable setup: `wu1_policy_proven_public_activation_pending`; operator verdict: `pending`; ordinary live apply: `unavailable_pending_operator_acceptance`.
-- M2-WU1 target policy: `accepted_policy_proof` at Universal Setup main `f322655fa8fa287a400f7afb6c661eade30d707b`; mutation authority: `false`.
+- M2 live portable setup: `public_lifecycle_implementation_proven`; operator verdict: `pending`; ordinary live apply: `unavailable_pending_operator_acceptance`.
+- M2-WU1 target policy: `accepted_dev_integration_proof` at Universal Setup main `f322655fa8fa287a400f7afb6c661eade30d707b`; mutation authority: `false`.
+- M2-WU2 public lifecycle: `implementation_proven_pending_dev_integration`; operator verdict: `pending`; execution authority: `false`.
 - Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.

@@ -33,7 +33,7 @@
       "version": "0.1.0-dev",
       "type": "library",
       "source": "https://github.com/Julesc013/universal-setup",
-      "commit": "f322655fa8fa287a400f7afb6c661eade30d707b",
+      "commit": "aa4d8cec93f265893f246d217ee94c03073899a3",
       "license": "MIT",
       "linkage": "bundled_runtime",
       "bundled_source": false,
