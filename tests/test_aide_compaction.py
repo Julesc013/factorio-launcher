@@ -37,7 +37,7 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_m1_closeout_preserves_provider_gate_and_catalog_truth(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m1-public-integration-proof", data["current_checkpoint"])
+        self.assertEqual("universal-mit-license-integration", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
