@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -145,7 +145,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu2-public-setup-lifecycle",
+  "current_checkpoint": "m2-wu3-live-target-evidence",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -197,7 +197,7 @@
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
   "m2_live_portable_setup": {
-    "active_work_unit": "",
+    "active_work_unit": "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01",
     "authorized_acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
     "autonomous_archive_scope": "non_proprietary_synthetic_only",
     "execution_authority": false,
@@ -205,7 +205,7 @@
     "h1_inference": "none",
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
-    "status": "public_lifecycle_dev_integrated_pending_operator_acceptance"
+    "status": "live_evidence_provider_integrated_pending_operator_acceptance"
   },
   "m2_wu1_target_policy": {
     "execution_authority": false,
@@ -267,6 +267,27 @@
     "universal_setup_remediation_push_ci_run": "29322088318",
     "universal_setup_remediation_revision": "1ac39871120364ba554a8831d0d0860e2078ad35",
     "universal_setup_task_revision": "9baacd5547ddd7fe2705d3749059f7cb22a86e38"
+  },
+  "m2_wu3_live_evidence": {
+    "active_work_unit": "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01",
+    "automation_can_record_operator_verdict": false,
+    "capture_command": "live_evidence.capture",
+    "capture_contract": "usk.live_target_evidence_capture_request.v1",
+    "capture_recomputes_post_snapshot": true,
+    "execution_authority": false,
+    "facman_provider_integration_revision": "2e6012e0b14c738ce83753e9fc9e70c62622d269",
+    "h1_inference": "none",
+    "operator_verdict": "pending",
+    "operator_verdict_contract": "usk.operator_verdict_record_request.v1",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "packet_contract": "usk.live_target_evidence_packet.v1",
+    "plan_pre_snapshot": true,
+    "setup_owned_evidence_write": true,
+    "status": "implementation_proven_pending_dev_integration",
+    "universal_setup_main_ci_run": "29329946351",
+    "universal_setup_main_revision": "fbbeb762f25921ae05945206fd0c004a52239c13",
+    "universal_setup_task_head_revision": "42ff66f8502bf6fea2996c96a56b9762fa6a7e9a",
+    "verdict_command": "live_evidence.verdict.record"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",

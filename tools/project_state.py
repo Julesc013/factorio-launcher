@@ -107,6 +107,7 @@ def collect() -> dict[str, Any]:
         "m2_live_portable_setup": status["m2_live_portable_setup"],
         "m2_wu1_target_policy": status["m2_wu1_target_policy"],
         "m2_wu2_public_lifecycle": status["m2_wu2_public_lifecycle"],
+        "m2_wu3_live_evidence": status["m2_wu3_live_evidence"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -180,6 +181,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"- M2-WU2 public lifecycle: `{data['m2_wu2_public_lifecycle']['status']}`; "
         f"operator verdict: `{data['m2_wu2_public_lifecycle']['operator_verdict']}`; "
         f"execution authority: `{str(data['m2_wu2_public_lifecycle']['execution_authority']).lower()}`.",
+        f"- M2-WU3 live evidence: `{data['m2_wu3_live_evidence']['status']}` at Universal Setup main "
+        f"`{data['m2_wu3_live_evidence']['universal_setup_main_revision']}`; operator verdict: "
+        f"`{data['m2_wu3_live_evidence']['operator_verdict']}`; automated verdict authority: "
+        f"`{str(data['m2_wu3_live_evidence']['automation_can_record_operator_verdict']).lower()}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -433,6 +438,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU2 must not overstate restart-safe recovery apply")
     if m2_wu2.get("execution_authority") is not False or m2_wu2.get("h1_inference") != "none":
         problems.append("M2-WU2 must not promote execution or infer H1")
+    m2_wu3 = status.get("m2_wu3_live_evidence", {})
+    if m2_wu3.get("status") not in {
+        "provider_integrated_candidate",
+        "implementation_proven_pending_dev_integration",
+        "accepted_dev_integration_proof",
+    }:
+        problems.append("M2-WU3 live evidence must record a recognized monotonic proof state")
+    if m2_wu3.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
+        problems.append("M2-WU3 must bind the exact current Universal Setup provider pin")
+    if m2_wu3.get("operator_verdict") != "pending" or m2_wu3.get("automation_can_record_operator_verdict") is not False:
+        problems.append("M2-WU3 automation must preserve a separate pending operator verdict")
+    if m2_wu3.get("setup_owned_evidence_write") is not True:
+        problems.append("M2-WU3 evidence writes must remain setup-owned")
+    if m2_wu3.get("plan_pre_snapshot") is not True or m2_wu3.get("capture_recomputes_post_snapshot") is not True:
+        problems.append("M2-WU3 must bind plan pre-state and independently recomputed post-state")
+    if m2_wu3.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2-WU3 must not promote ordinary live apply before a human Pass")
+    if m2_wu3.get("execution_authority") is not False or m2_wu3.get("h1_inference") != "none":
+        problems.append("M2-WU3 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

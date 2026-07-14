@@ -1,12 +1,12 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "r3.7"
-current_checkpoint = "m2-wu2-public-setup-lifecycle"
+current_checkpoint = "m2-wu3-live-target-evidence"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "73bec99916d509b0ab055a43562e93ef20a6b4b7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
+active_work_unit = "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01"
 last_closed_work_unit = "M2-WU2-DEV-INTEGRATION-PROOF-01"
 next_authority_gate = "H1"
 safe_beta = false
@@ -96,8 +96,8 @@ main_dev_synchronized_at_proof = true
 authority_promotion = false
 
 [m2_live_portable_setup]
-status = "public_lifecycle_dev_integrated_pending_operator_acceptance"
-active_work_unit = ""
+status = "live_evidence_provider_integrated_pending_operator_acceptance"
+active_work_unit = "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01"
 authorized_acceptance_root = "D:\\FacMan-Live-Acceptance\\M2"
 autonomous_archive_scope = "non_proprietary_synthetic_only"
 operator_verdict = "pending"
@@ -164,6 +164,27 @@ recovery_inspect_plan = "available_read_only"
 recovery_apply = "unavailable_pending_wu5"
 ordinary_live_apply = "unavailable_pending_operator_acceptance"
 operator_verdict = "pending"
+execution_authority = false
+h1_inference = "none"
+
+[m2_wu3_live_evidence]
+status = "implementation_proven_pending_dev_integration"
+active_work_unit = "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01"
+universal_setup_task_head_revision = "42ff66f8502bf6fea2996c96a56b9762fa6a7e9a"
+universal_setup_main_revision = "fbbeb762f25921ae05945206fd0c004a52239c13"
+universal_setup_main_ci_run = "29329946351"
+facman_provider_integration_revision = "2e6012e0b14c738ce83753e9fc9e70c62622d269"
+packet_contract = "usk.live_target_evidence_packet.v1"
+capture_contract = "usk.live_target_evidence_capture_request.v1"
+operator_verdict_contract = "usk.operator_verdict_record_request.v1"
+capture_command = "live_evidence.capture"
+verdict_command = "live_evidence.verdict.record"
+setup_owned_evidence_write = true
+plan_pre_snapshot = true
+capture_recomputes_post_snapshot = true
+automation_can_record_operator_verdict = false
+operator_verdict = "pending"
+ordinary_live_apply = "unavailable_pending_operator_acceptance"
 execution_authority = false
 h1_inference = "none"
 
