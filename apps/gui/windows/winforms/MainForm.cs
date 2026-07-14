@@ -64,7 +64,7 @@ namespace FacMan.WinForms
 
             AddDashboardTab(tabs);
             AddDoctorTab(tabs);
-            AddGeneratedCategoryTab(tabs, "Installs", "install_refs.", "installs.", "setup.");
+            AddInstallsTab(tabs);
             AddGeneratedCategoryTab(tabs, "Instances", "instance.");
             AddGeneratedCategoryTab(tabs, "Snapshots", "snapshots.");
             AddGeneratedCategoryTab(tabs, "Profiles", "profiles.", "templates.");
@@ -227,6 +227,36 @@ namespace FacMan.WinForms
             TabPage page = CreateTab(tabs, title);
             TableLayoutPanel form = CreateFormPanel();
             page.Controls.Add(form);
+            AddGeneratedCommands(form, prefixes);
+        }
+
+        private void AddInstallsTab(TabControl tabs)
+        {
+            TabPage page = CreateTab(tabs, "Installs");
+            TableLayoutPanel layout = new TableLayoutPanel();
+            layout.Dock = DockStyle.Fill;
+            layout.RowCount = 2;
+            layout.ColumnCount = 1;
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 280));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            page.Controls.Add(layout);
+
+            TextBox workflow = new TextBox();
+            workflow.Multiline = true;
+            workflow.ReadOnly = true;
+            workflow.ScrollBars = ScrollBars.Vertical;
+            workflow.Dock = DockStyle.Fill;
+            workflow.AccessibleName = "Managed portable setup workflow";
+            workflow.Text = GeneratedCommandCatalog.SetupWorkflowText.Replace("\n", "\r\n");
+            layout.Controls.Add(workflow, 0, 0);
+
+            TableLayoutPanel form = CreateFormPanel();
+            layout.Controls.Add(form, 0, 1);
+            AddGeneratedCommands(form, "install_refs.", "installs.", "setup.");
+        }
+
+        private void AddGeneratedCommands(TableLayoutPanel form, params string[] prefixes)
+        {
             foreach (CommandDefinition command in commandCatalog)
             {
                 bool included = false;

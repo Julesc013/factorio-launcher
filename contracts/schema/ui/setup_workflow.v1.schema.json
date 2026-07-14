@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/ui/setup_workflow.v1.schema.json",
+  "title": "FacMan setup workflow presentation contract",
+  "type": "object",
+  "required": [
+    "schema", "workflow_id", "title", "policy_owner", "frontend_policy",
+    "confirmation_literal", "apply_availability", "operator_verdict", "steps",
+    "always_visible_fields", "warnings", "progress_states", "risk_labels"
+  ],
+  "properties": {
+    "schema": {"const": "facman.setup_workflow.v1"},
+    "workflow_id": {"const": "live_portable_setup"},
+    "title": {"type": "string", "minLength": 1},
+    "policy_owner": {"const": "universal-setup"},
+    "frontend_policy": {"const": false},
+    "confirmation_literal": {"const": "APPLY"},
+    "apply_availability": {"const": "live_target_acceptance_required"},
+    "operator_verdict": {"const": "pending"},
+    "steps": {"type": "array", "minItems": 10, "maxItems": 10, "items": {"$ref": "#/$defs/labeledCommand"}},
+    "always_visible_fields": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/labeled"}},
+    "warnings": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/warning"}},
+    "progress_states": {"type": "array", "minItems": 7, "items": {"$ref": "#/$defs/labeled"}},
+    "risk_labels": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/labeled"}}
+  },
+  "$defs": {
+    "labeled": {
+      "type": "object", "required": ["id", "label"],
+      "properties": {"id": {"type": "string", "minLength": 1}, "label": {"type": "string", "minLength": 1}},
+      "additionalProperties": false
+    },
+    "labeledCommand": {
+      "type": "object", "required": ["id", "label", "command"],
+      "properties": {"id": {"type": "string", "minLength": 1}, "label": {"type": "string", "minLength": 1}, "command": {"type": "string", "minLength": 1}},
+      "additionalProperties": false
+    },
+    "warning": {
+      "type": "object", "required": ["code", "label"],
+      "properties": {"code": {"type": "string", "minLength": 1}, "label": {"type": "string", "minLength": 1}},
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

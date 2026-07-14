@@ -249,6 +249,9 @@ int run_guided(
                 category = categories[number - 1];
             } catch (...) { continue; }
         }
+        if (category == "installs") {
+            output << "\n" << kGeneratedSetupWorkflowText << "\n";
+        }
         for (;;) {
             const auto commands = matching(category, query);
             output << "\nCommands" << (category.empty() ? " matching search" : " in " + category) << "\n--------\n";

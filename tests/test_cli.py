@@ -33,6 +33,29 @@ def tree_snapshot(root: Path) -> dict[str, str]:
 
 
 class CliTests(unittest.TestCase):
+    def test_generated_setup_workflow_is_policy_neutral_and_human_gated(self) -> None:
+        code, stdout, stderr = invoke(["installs", "workflow", "--json"])
+        self.assertEqual(code, 0, stderr)
+        workflow = json.loads(stdout)
+        self.assertEqual("facman.setup_workflow.v1", workflow["schema"])
+        self.assertEqual("universal-setup", workflow["policy_owner"])
+        self.assertFalse(workflow["frontend_policy"])
+        self.assertEqual("live_target_acceptance_required", workflow["apply_availability"])
+        self.assertEqual("pending", workflow["operator_verdict"])
+        self.assertEqual("APPLY", workflow["confirmation_literal"])
+        self.assertEqual(
+            {"source_path", "target_path", "product_version", "archive_sha256"},
+            {field["id"] for field in workflow["always_visible_fields"]},
+        )
+        self.assertIn("recovery_required", {state["id"] for state in workflow["progress_states"]})
+
+        code, text, stderr = invoke(["installs", "workflow"])
+        self.assertEqual(code, 0, stderr)
+        self.assertIn("Choose archive", text)
+        self.assertIn("Unknown files are retained and reported.", text)
+        self.assertIn("Recovery required is a distinct state, not a generic failure.", text)
+        self.assertIn("Apply availability: live_target_acceptance_required", text)
+
     def test_version(self) -> None:
         code, stdout, stderr = invoke(["--version"])
         self.assertEqual(code, 0, stderr)

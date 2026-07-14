@@ -142,6 +142,21 @@ discovery logic, no setup mutation, no Mod Portal network behavior, no server or
 developer execution, no modset resolver, no save/export/import implementation,
 and no credentials in the frontend.
 
+## Generated managed-setup workflow
+
+`contracts/command/frontend/setup.workflow.v1.json` is the single presentation
+law for the managed portable setup review sequence. The metadata generator
+embeds the identical workflow in the CLI, TUI, WinForms, AppKit, and generated
+frontend JSON catalog. It keeps source and target paths, exact product version,
+and archive SHA-256 visible; labels overwrite, foreign-content, cancellation,
+and recovery risks; and requires the literal `APPLY` confirmation.
+
+The workflow is presentation metadata only. `policy_owner` remains
+`universal-setup`, `frontend_policy` remains false, apply availability remains
+`live_target_acceptance_required`, and automation cannot replace the pending
+human verdict. A frontend may render the sequence but may not reinterpret target
+classes, plan validity, ownership, recovery, or mutation authority.
+
 Validate the contract with:
 
 ```powershell
