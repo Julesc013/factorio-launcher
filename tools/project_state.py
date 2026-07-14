@@ -112,6 +112,7 @@ def collect() -> dict[str, Any]:
         "m2_wu5_interruption_recovery": status["m2_wu5_interruption_recovery"],
         "m2_wu6_launcher_handoff": status["m2_wu6_launcher_handoff"],
         "m2_wu7_facman_live_portable_workflow": status["m2_wu7_facman_live_portable_workflow"],
+        "m2_wu8_generated_frontend_workflow": status["m2_wu8_generated_frontend_workflow"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -205,6 +206,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"plan: `{data['m2_wu7_facman_live_portable_workflow']['setup_command']}`; apply: "
         f"`{data['m2_wu7_facman_live_portable_workflow']['ordinary_live_apply']}`; operator verdict: "
         f"`{data['m2_wu7_facman_live_portable_workflow']['operator_verdict']}`.",
+        f"- M2-WU8 generated frontend workflow: `{data['m2_wu8_generated_frontend_workflow']['status']}`; "
+        f"clients: `{', '.join(data['m2_wu8_generated_frontend_workflow']['clients'])}`; apply: "
+        f"`{data['m2_wu8_generated_frontend_workflow']['ordinary_live_apply']}`; operator verdict: "
+        f"`{data['m2_wu8_generated_frontend_workflow']['operator_verdict']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -384,7 +389,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01"
+    latest_closeout_id = "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
     if status.get("last_closed_work_unit") != latest_closeout_id:
@@ -609,6 +614,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU7 FacMan workflow must record a recognized monotonic proof state")
+    if m2_wu7.get("status") == "accepted_dev_integration_proof_pending_operator_verdict":
+        expected_integration = {
+            "facman_task_head_revision": "1b029ead969e3b68387fcbaef71458ba99f0c33e",
+            "facman_task_tree": "a638e5d078a28751fa12ede205b48595986e5b0f",
+            "facman_pull_request": 21,
+            "facman_dev_integration_revision": "37c83c6538822a57bf96e03f03c48536f2b97e47",
+            "facman_dev_tree": "a638e5d078a28751fa12ede205b48595986e5b0f",
+            "facman_dev_ci_run": "29347961199",
+            "facman_dev_codeql_run": "29347961372",
+            "facman_dev_security_policy_run": "29347960097",
+        }
+        if any(m2_wu7.get(key) != value for key, value in expected_integration.items()):
+            problems.append("M2-WU7 accepted dev integration proof must bind exact immutable task, tree, PR, and workflow identities")
     if m2_wu7.get("universal_setup_revision") != provider_pins()["universal_setup"]["revision"] or m2_wu7.get("universal_launcher_revision") != provider_pins()["universal_launcher"]["revision"]:
         problems.append("M2-WU7 must bind the exact current Universal provider pins")
     if m2_wu7.get("setup_command") != "install_local.plan" or m2_wu7.get("target_class") != "operator_acceptance":
@@ -629,6 +647,45 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU7 must not promote ordinary live apply before a human Pass")
     if m2_wu7.get("execution_authority") is not False or m2_wu7.get("h1_inference") != "none":
         problems.append("M2-WU7 must not promote execution or infer H1")
+    m2_wu8 = status.get("m2_wu8_generated_frontend_workflow", {})
+    if m2_wu8.get("status") not in {
+        "four_frontend_workflow_proven_pending_dev_integration_and_operator_verdict",
+        "four_frontend_workflow_and_package_proven_pending_dev_integration_and_operator_verdict",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        problems.append("M2-WU8 must record a recognized monotonic workflow proof state")
+    if m2_wu8.get("workflow_schema") != "facman.setup_workflow.v1" or m2_wu8.get("workflow_id") != "live_portable_setup":
+        problems.append("M2-WU8 must bind the canonical generated setup workflow")
+    if m2_wu8.get("implementation_revision") != "991ff78c5cc349dfcd8400f585d319b830d2c922":
+        problems.append("M2-WU8 must bind the exact generated workflow implementation revision")
+    if m2_wu8.get("policy_owner") != "universal-setup" or m2_wu8.get("frontend_policy") is not False:
+        problems.append("M2-WU8 must keep mutation policy out of every frontend")
+    if m2_wu8.get("clients") != ["cli", "tui", "winforms", "appkit"]:
+        problems.append("M2-WU8 must bind the four generated client consumers")
+    if m2_wu8.get("workflow_step_count") != 10 or m2_wu8.get("always_visible_field_count") != 4 or m2_wu8.get("warning_count") != 4:
+        problems.append("M2-WU8 must preserve the complete reviewed sequence, visible identities, and warnings")
+    if m2_wu8.get("confirmation_literal") != "APPLY" or m2_wu8.get("recovery_required_is_distinct") is not True:
+        problems.append("M2-WU8 must label exact confirmation and recovery-required state")
+    if m2_wu8.get("apply_refusal") != "live_target_acceptance_required" or m2_wu8.get("apply_enabled") is not False:
+        problems.append("M2-WU8 must keep live apply behind the human acceptance gate")
+    if m2_wu8.get("native_test_count") != 41 or m2_wu8.get("python_test_count") != 340 or m2_wu8.get("python_opt_in_skip_count") != 1:
+        problems.append("M2-WU8 must bind the complete local native and Python proof counts")
+    if m2_wu8.get("status") in {
+        "four_frontend_workflow_and_package_proven_pending_dev_integration_and_operator_verdict",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        if m2_wu8.get("validation_remediation_revision") != "d59d22a27b088e75931eb3ff8005e59a20ff806e":
+            problems.append("M2-WU8 must bind the supervision deadline remediation revision")
+        if m2_wu8.get("required_windows_package_tests") != 14 or m2_wu8.get("required_windows_package_skips") != 0:
+            problems.append("M2-WU8 must bind the required zero-skip Windows package proof")
+        if m2_wu8.get("package_proof_revision") != "d59d22a27b088e75931eb3ff8005e59a20ff806e" or m2_wu8.get("package_tree_file_count") != 392:
+            problems.append("M2-WU8 must bind the clean selected package source and complete tree")
+    if m2_wu8.get("operator_verdict") != "pending" or m2_wu8.get("automation_can_record_operator_verdict") is not False:
+        problems.append("M2-WU8 automation must preserve the separate pending operator verdict")
+    if m2_wu8.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2-WU8 must not promote ordinary live apply before a human Pass")
+    if m2_wu8.get("execution_authority") is not False or m2_wu8.get("h1_inference") != "none":
+        problems.append("M2-WU8 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

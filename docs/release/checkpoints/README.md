@@ -92,6 +92,13 @@ checkpoint binds a real read-only Factorio recipe plan through Universal Setup,
 plus the uniform `live_target_acceptance_required` apply gate. It does not
 record the pending human verdict or enable mutation.
 
+The bounded
+[`M2-WU8 generated frontend workflow`](m2-wu8-generated-frontend-workflow.md)
+checkpoint binds one presentation contract across CLI, TUI, WinForms, and
+AppKit, including exact identities, warnings, confirmation, progress, and
+recovery labels. Universal Setup remains the policy owner and ordinary apply
+remains unavailable pending the separate human verdict.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

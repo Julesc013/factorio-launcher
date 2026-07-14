@@ -568,7 +568,16 @@ def supervise_process(
     try:
         while process.poll() is None:
             now = time.monotonic()
-            if now >= next_observation:
+            elapsed = now - started_monotonic
+            if elapsed >= timeout_seconds:
+                timed_out = True
+                terminate_process()
+                break
+            remaining = timeout_seconds - elapsed
+            # The Windows CIM process query is independently bounded but can still
+            # consume several seconds on a busy host. Do not start it when the
+            # supervision deadline is too close to preserve the primary timeout.
+            if now >= next_observation and remaining > max(1.0, termination_grace_seconds):
                 observation = observe_windows_children(process.pid)
                 child_observation_status = observation["status"]
                 for child in observation["processes"]:
@@ -579,7 +588,7 @@ def supervise_process(
                 timed_out = True
                 terminate_process()
                 break
-            time.sleep(0.1)
+            time.sleep(min(0.1, max(0.0, timeout_seconds - (now - started_monotonic))))
     except KeyboardInterrupt:
         operator_interrupted = True
         if process.poll() is None:

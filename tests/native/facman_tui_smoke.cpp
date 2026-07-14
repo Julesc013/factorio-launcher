@@ -17,6 +17,10 @@ int main()
     using facman::tui::Invocation;
 
     static_assert(facman::tui::kGeneratedCommandCount >= 56, "generated TUI catalog is incomplete");
+    if (std::string(facman::tui::kGeneratedSetupWorkflowJson).find("facman.setup_workflow.v1") == std::string::npos ||
+        std::string(facman::tui::kGeneratedSetupWorkflowText).find("Choose archive") == std::string::npos ||
+        std::string(facman::tui::kGeneratedSetupWorkflowText).find("Recovery required is a distinct state") == std::string::npos ||
+        std::string(facman::tui::kGeneratedSetupWorkflowText).find("live_target_acceptance_required") == std::string::npos) return 8;
     const auto* status_command = facman::tui::find_command("workspace.status");
     const auto* diagnostics = facman::tui::find_command("diagnostics.export");
     if (status_command == nullptr || diagnostics == nullptr) return 2;

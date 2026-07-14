@@ -406,6 +406,10 @@ int command_installs(const Options& options)
 {
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
+    if (action == "workflow") {
+        std::cout << (flag(options.args, "--json") ? kGeneratedSetupWorkflowJson : kGeneratedSetupWorkflowText) << '\n';
+        return 0;
+    }
     if (action == "list") {
         auto response = call(options, "install_refs.list");
         if (flag(options.args, "--json") && response && response.value().ok()) {
@@ -931,6 +935,7 @@ int usage()
 {
     std::cout << "facman " << FACMAN_VERSION_SEMVER << "\n";
     for (const char* line : kGeneratedCommandHelp) std::cout << "  " << line << '\n';
+    std::cout << "  installs workflow [--json] (generated setup review sequence)\n";
     std::cout << "  rpc --stdio (bounded machine transport)\n";
     return 0;
 }
