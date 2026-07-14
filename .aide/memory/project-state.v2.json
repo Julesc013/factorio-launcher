@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "M2-WU2-DEV-INTEGRATION-PROOF-01",
+  "active_work_unit": null,
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -163,7 +163,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
+  "last_closed_work_unit": "M2-WU2-DEV-INTEGRATION-PROOF-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",

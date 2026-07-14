@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: M2-WU2-DEV-INTEGRATION-PROOF-01
 title: M2 WU2 dev integration proof
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-14T10:48:51Z
 owner: unassigned
 objective: >
@@ -60,3 +60,8 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-14T10:48:52Z
+verified_at: 2026-07-14T10:52:52Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-14T10:52:52Z
+closed_at: 2026-07-14T10:52:53Z
