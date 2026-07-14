@@ -66,7 +66,7 @@ def build_once(profile_id: str, build_root: Path, root: Path) -> dict[str, Path]
     artifacts = [
         path
         for path in dist_root.iterdir()
-        if path.is_file() and not path.name.endswith(".provenance.v1.json")
+        if path.is_file() and archive_suffix(path) in {".zip", ".tar.gz"}
     ]
     if len(artifacts) != 1:
         raise ValueError(f"expected exactly one package artifact, found {len(artifacts)}")
@@ -150,6 +150,10 @@ def snapshot_digest(snapshot: dict[str, str]) -> str:
 
 def file_identity(path: Path, digest: str) -> dict[str, Any]:
     return {"name": path.name, "size": path.stat().st_size, "sha256": digest}
+
+
+def archive_suffix(path: Path) -> str:
+    return ".tar.gz" if path.name.endswith(".tar.gz") else path.suffix.lower()
 
 
 if __name__ == "__main__":

@@ -40,6 +40,22 @@ class PackagePipelineArchitectureTests(unittest.TestCase):
             second = package_reproducibility_proof.tree_snapshot(root)
             self.assertNotEqual(first, second)
 
+    def test_reproducibility_artifact_filter_excludes_ownership_metadata(self) -> None:
+        self.assertEqual(
+            package_reproducibility_proof.archive_suffix(Path("facman.zip")),
+            ".zip",
+        )
+        self.assertEqual(
+            package_reproducibility_proof.archive_suffix(Path("facman.tar.gz")),
+            ".tar.gz",
+        )
+        self.assertEqual(
+            package_reproducibility_proof.archive_suffix(
+                Path(".facman-owned-output.v1.json")
+            ),
+            ".json",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
