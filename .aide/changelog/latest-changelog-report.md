@@ -1,23 +1,23 @@
 # Latest Changelog Report
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6
+source_head: 7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff
 commit_count: 50
-entry_count: 97
-malformed_count: 10
-highlight_count: 74
+entry_count: 92
+malformed_count: 13
+highlight_count: 67
 
 ## Category Counts
 
-- Added: 10
-- Changed: 14
+- Added: 8
+- Changed: 15
 - Fixed: 10
-- Security: 19
+- Security: 16
 - Docs: 7
-- Tests: 14
+- Tests: 11
 - Internal: 4
-- Risks: 7
-- Follow-up: 12
+- Risks: 8
+- Follow-up: 13
 
 ## Outputs
 

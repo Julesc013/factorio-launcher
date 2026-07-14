@@ -47,14 +47,14 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertEqual("M2-WU5-LIVE-INTERRUPTION-RECOVERY-01", data["active_work_unit"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "automated_live_lifecycle_complete_pending_operator_verdict",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
-            "M2-WU4-LIVE-INSTALL-ACCEPTANCE-01",
+            "M2-WU5-LIVE-INTERRUPTION-RECOVERY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])

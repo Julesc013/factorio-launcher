@@ -1,54 +1,6 @@
 {
   "follow_up": [
     {
-      "commit": "0ce7802d9f5b",
-      "summary": "Bind these identities in the full synthetic three-repository lifecycle proof."
-    },
-    {
-      "commit": "0ce7802d9f5b",
-      "summary": "Bind these identities in the full synthetic three-repository lifecycle proof."
-    },
-    {
-      "commit": "0ce7802d9f5b",
-      "summary": "Bind these identities in the full synthetic three-repository lifecycle proof."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "Run clean package and dependency-pinned reproduction evidence for M1-WU12."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "Run clean package and dependency-pinned reproduction evidence for M1-WU12."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "Run clean package and dependency-pinned reproduction evidence for M1-WU12."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "Run clean package and dependency-pinned reproduction evidence for M1-WU12."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence."
-    },
-    {
-      "commit": "2f13923a9cbd",
-      "summary": "Rerun the complete proof from this clean revision and bind its exact evidence."
-    },
-    {
-      "commit": "2f13923a9cbd",
-      "summary": "Rerun the complete proof from this clean revision and bind its exact evidence."
-    },
-    {
       "commit": "efe06f385795",
       "summary": "Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization."
     },
@@ -387,30 +339,37 @@
     {
       "commit": "067397e592ce",
       "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
     }
   ],
   "highlights": [
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "0ce7802d9f5b",
-      "subject": "feat(install-refs): retain managed setup state identity",
-      "summary": "reference consumption does not grant setup mutation or execution authority."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "f4fdafead6a0",
-      "subject": "test(system-proof): exercise managed lifecycle across repositories",
-      "summary": "all writes stay below an exclusive disposable root; foreign content is retained and reported."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "34e025540fe2",
-      "subject": "test(package): make full archive reproducibility executable",
-      "summary": "Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries."
-    },
     {
       "breaking": false,
       "category": "Security",
@@ -526,27 +485,6 @@
     {
       "breaking": false,
       "category": "Added",
-      "commit": "0ce7802d9f5b",
-      "subject": "feat(install-refs): retain managed setup state identity",
-      "summary": "exact managed setup-state identity on FacMan install references."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "f4fdafead6a0",
-      "subject": "test(system-proof): exercise managed lifecycle across repositories",
-      "summary": "reproducible synthetic three-repository managed lifecycle proof."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "34e025540fe2",
-      "subject": "test(package): make full archive reproducibility executable",
-      "summary": "Complete selected-package reproducibility proof."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
       "commit": "efe06f385795",
       "subject": "docs(m1): bind managed portable foundation closeout",
       "summary": "Revision-pinned M1 managed portable-install checkpoint."
@@ -592,6 +530,13 @@
       "commit": "182ada6be86d",
       "subject": "docs(m2): bind the exact WU2 dev integration",
       "summary": "immutable exact-dev WU2 integration evidence."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "retained live synthetic install lifecycle evidence."
     },
     {
       "breaking": false,
@@ -693,10 +638,10 @@
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "2f13923a9cbd",
-      "subject": "fix(package): distinguish archives from ownership metadata",
-      "summary": "Reproducibility proof no longer treats the owned-output marker as a package archive."
+      "category": "Changed",
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "project truth now points at the canonical WU4 provider."
     },
     {
       "breaking": false,
@@ -763,10 +708,10 @@
     },
     {
       "breaking": false,
-      "category": "Docs",
-      "commit": "f4fdafead6a0",
-      "subject": "test(system-proof): exercise managed lifecycle across repositories",
-      "summary": "records the exact fixture journey and non-authority claims."
+      "category": "Fixed",
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "rebuilt preferred native CLI to align runtime status with provider lock."
     },
     {
       "breaking": false,
@@ -812,31 +757,10 @@
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "0ce7802d9f5b",
-      "subject": "feat(install-refs): retain managed setup state identity",
-      "summary": "managed install identities now round-trip through the native workspace repository."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "f4fdafead6a0",
-      "subject": "test(system-proof): exercise managed lifecycle across repositories",
-      "summary": "launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "34e025540fe2",
-      "subject": "test(package): make full archive reproducibility executable",
-      "summary": "Windows CI now executes two independent package builds and compares their complete evidence closure."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "2f13923a9cbd",
-      "subject": "fix(package): distinguish archives from ownership metadata",
-      "summary": "Added artifact-classification regression coverage."
+      "category": "Docs",
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "bind run, packet, journal, audit, state, and package identities."
     },
     {
       "breaking": false,
@@ -907,58 +831,17 @@
       "commit": "067397e592ce",
       "subject": "docs(m2): bind WU3 exact-dev integration proof",
       "summary": "enforce immutable integration identities and retained human gate."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "enforce pending verdict and zero authority promotion."
     }
   ],
   "preview_only": true,
   "risk_summary": [
-    {
-      "commit": "0ce7802d9f5b",
-      "summary": "FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots."
-    },
-    {
-      "commit": "0ce7802d9f5b",
-      "summary": "FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots."
-    },
-    {
-      "commit": "0ce7802d9f5b",
-      "summary": "FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "Adds two package staging operations to the Windows job; native compilation is reused."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "Adds two package staging operations to the Windows job; native compilation is reused."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "Adds two package staging operations to the Windows job; native compilation is reused."
-    },
-    {
-      "commit": "2f13923a9cbd",
-      "summary": "None; unsupported artifact suffixes still fail closed through the exactly-one check."
-    },
-    {
-      "commit": "2f13923a9cbd",
-      "summary": "None; unsupported artifact suffixes still fail closed through the exactly-one check."
-    },
     {
       "commit": "efe06f385795",
       "summary": "Synthetic and disposable-root proof is not live Factorio install acceptance."
@@ -1298,60 +1181,40 @@
     {
       "commit": "067397e592ce",
       "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6",
+  "source_head": "7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
-    {
-      "commit": "0ce7802d9f5b",
-      "summary": "cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS."
-    },
-    {
-      "commit": "0ce7802d9f5b",
-      "summary": "cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS."
-    },
-    {
-      "commit": "0ce7802d9f5b",
-      "summary": "cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "m1_three_repository_system_proof.exe: PASS."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "m1_three_repository_system_proof.exe: PASS."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "m1_three_repository_system_proof.exe: PASS."
-    },
-    {
-      "commit": "f4fdafead6a0",
-      "summary": "m1_three_repository_system_proof.exe: PASS."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests)."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests)."
-    },
-    {
-      "commit": "34e025540fe2",
-      "summary": "py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests)."
-    },
-    {
-      "commit": "2f13923a9cbd",
-      "summary": "py -3 -m unittest tests.test_package_pipeline_architecture -v: PASS (4 tests)."
-    },
-    {
-      "commit": "2f13923a9cbd",
-      "summary": "py -3 -m unittest tests.test_package_pipeline_architecture -v: PASS (4 tests)."
-    },
     {
       "commit": "efe06f385795",
       "summary": "py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds."
@@ -1691,10 +1554,37 @@
     {
       "commit": "067397e592ce",
       "summary": "exact-dev CI 29332570822: PASS."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
+    },
+    {
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
     }
   ],
   "warnings": [
-    "10b1caa915ed merge commit ignored",
     "cfd30b769cc9 merge commit ignored",
     "73bec99916d5 merge commit ignored",
     "cc4d79fec9d0 merge commit ignored",
@@ -1704,6 +1594,7 @@
     "178de3192f3c merge commit ignored",
     "a8b298a35cd1 merge commit ignored",
     "476813e6fc74 merge commit ignored",
-    "10 malformed or legacy commits require review"
+    "5563e3b8de43 merge commit ignored",
+    "13 malformed or legacy commits require review"
   ]
 }

@@ -3,14 +3,11 @@
 This is a deterministic preview only. It does not publish a release.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6
+source_head: 7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff
 preview_only: true
 
 ## Highlights
 
-- Security: reference consumption does not grant setup mutation or execution authority. (0ce7802d9f5b)
-- Security: all writes stay below an exclusive disposable root; foreign content is retained and reported. (f4fdafead6a0)
-- Security: Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries. (34e025540fe2)
 - Security: Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed. (efe06f385795)
 - Security: verify exact provider notice digests and source identities. (b1fd720013ed)
 - Security: prevent SBOM/package claims without retained provider notices. (71dacb277dc8)
@@ -27,9 +24,6 @@ preview_only: true
 - Security: pending human verdict, ordinary live apply hold, recovery hold, and execution ban are unchanged. (e4b03c82b649)
 - Security: ordinary managed apply, recovery apply, execution, and publication remain unavailable. (182ada6be86d)
 - Security: all human, recovery, execution, and publication holds remain unchanged. (cad50062c955)
-- Added: exact managed setup-state identity on FacMan install references. (0ce7802d9f5b)
-- Added: reproducible synthetic three-repository managed lifecycle proof. (f4fdafead6a0)
-- Added: Complete selected-package reproducibility proof. (34e025540fe2)
 - Added: Revision-pinned M1 managed portable-install checkpoint. (efe06f385795)
 - Added: explicit M2 live portable setup state with a pending human gate. (df0e42b6131f)
 - Added: immutable M2-WU1 live-target policy checkpoint. (b1a1795c90e2)
@@ -37,6 +31,7 @@ preview_only: true
 - Added: immutable M2-WU2 implementation and package proof. (129f70d13058)
 - Added: evidence-only WU2 dev integration closeout lane. (2c55d1d111a2)
 - Added: immutable exact-dev WU2 integration evidence. (182ada6be86d)
+- Added: retained live synthetic install lifecycle evidence. (a286b5c42736)
 - Changed: Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory. (efe06f385795)
 - Changed: Universal provider license identity from NOASSERTION to MIT at pinned revisions. (b1fd720013ed)
 - Changed: both Universal dependencies now have accepted MIT and reproducibility truth. (0b4e1688b4fc)
@@ -51,7 +46,7 @@ preview_only: true
 - Changed: public lifecycle is dev-integrated pending operator acceptance. (182ada6be86d)
 - Changed: WU2 exact-dev integration is fully closed. (cad50062c955)
 - Changed: publication governance reports now match the closed evidence head. (53ebb488daad)
-- Fixed: Reproducibility proof no longer treats the owned-output marker as a package archive. (2f13923a9cbd)
+- Changed: project truth now points at the canonical WU4 provider. (a286b5c42736)
 - Fixed: New non-ignored source files are now checked before their first commit. (5b01b36fb989)
 - Fixed: M1 checkpoint satisfies the repository line-length policy. (5b01b36fb989)
 - Fixed: complete provider license closure in built packages. (71dacb277dc8)
@@ -61,17 +56,14 @@ preview_only: true
 - Fixed: project-state compaction test now recognizes the accepted license checkpoint. (2b5098b076ab)
 - Fixed: adequate capacity fluctuations no longer invalidate a reviewed plan. (d16e71357f13)
 - Fixed: raw Python tests now use the canonical current native-smoke CLI by default. (316ee8efec5b)
-- Docs: records the exact fixture journey and non-authority claims. (f4fdafead6a0)
+- Fixed: rebuilt preferred native CLI to align runtime status with provider lock. (a286b5c42736)
 - Docs: Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply. (efe06f385795)
 - Docs: bind M1 canonical public integration evidence. (92da90101342)
 - Docs: record the accepted operator decision and retained redistribution notices. (b1fd720013ed)
 - Docs: add immutable license integration checkpoint and complete queue evidence. (0b4e1688b4fc)
 - Docs: generated project truth now reports the active bounded WorkUnit. (df0e42b6131f)
 - Docs: accepted WU3 reviewed dev integration evidence. (067397e592ce)
-- Tests: managed install identities now round-trip through the native workspace repository. (0ce7802d9f5b)
-- Tests: launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed. (f4fdafead6a0)
-- Tests: Windows CI now executes two independent package builds and compares their complete evidence closure. (34e025540fe2)
-- Tests: Added artifact-classification regression coverage. (2f13923a9cbd)
+- Docs: bind run, packet, journal, audit, state, and package identities. (a286b5c42736)
 - Tests: Added pre-commit file-discovery regression coverage. (5b01b36fb989)
 - Tests: protect additive public-integration truth and unchanged authority boundaries. (92da90101342)
 - Tests: preserve historical M1 provider identities separately from current pins. (b1fd720013ed)
@@ -82,49 +74,49 @@ preview_only: true
 - Tests: provider and project-state assertions follow the canonical merge. (dfa0d8ad3c4c)
 - Tests: target policy adds one integrated native test, bringing this build to 36/36. (b1a1795c90e2)
 - Tests: enforce immutable integration identities and retained human gate. (067397e592ce)
+- Tests: enforce pending verdict and zero authority promotion. (a286b5c42736)
 
 ## Validation Summary
 
-- 0ce7802d9f5b: cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.
-- 0ce7802d9f5b: cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.
-- 0ce7802d9f5b: cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.
-- f4fdafead6a0: m1_three_repository_system_proof.exe: PASS.
-- f4fdafead6a0: m1_three_repository_system_proof.exe: PASS.
-- f4fdafead6a0: m1_three_repository_system_proof.exe: PASS.
-- f4fdafead6a0: m1_three_repository_system_proof.exe: PASS.
-- 34e025540fe2: py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).
-- 34e025540fe2: py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).
-- 34e025540fe2: py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).
+- efe06f385795: py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.
+- efe06f385795: py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.
+- efe06f385795: py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.
+- efe06f385795: py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.
+- 5b01b36fb989: Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.
+- 5b01b36fb989: Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.
+- 5b01b36fb989: Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.
+- 92da90101342: `py -3 -m unittest tests.test_aide_compaction`: PASS.
+- 92da90101342: `py -3 -m unittest tests.test_aide_compaction`: PASS.
+- 92da90101342: `py -3 -m unittest tests.test_aide_compaction`: PASS.
 
 ## Known Risks
 
-- 0ce7802d9f5b: FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.
-- 0ce7802d9f5b: FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.
-- 0ce7802d9f5b: FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.
-- f4fdafead6a0: The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.
-- f4fdafead6a0: The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.
-- f4fdafead6a0: The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.
-- f4fdafead6a0: The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.
-- 34e025540fe2: Adds two package staging operations to the Windows job; native compilation is reused.
-- 34e025540fe2: Adds two package staging operations to the Windows job; native compilation is reused.
-- 34e025540fe2: Adds two package staging operations to the Windows job; native compilation is reused.
+- efe06f385795: Synthetic and disposable-root proof is not live Factorio install acceptance.
+- efe06f385795: Synthetic and disposable-root proof is not live Factorio install acceptance.
+- efe06f385795: Synthetic and disposable-root proof is not live Factorio install acceptance.
+- efe06f385795: Synthetic and disposable-root proof is not live Factorio install acceptance.
+- 5b01b36fb989: Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.
+- 5b01b36fb989: Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.
+- 5b01b36fb989: Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.
+- 92da90101342: None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.
+- 92da90101342: None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.
+- 92da90101342: None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.
 
 ## Follow-up
 
-- 0ce7802d9f5b: Bind these identities in the full synthetic three-repository lifecycle proof.
-- 0ce7802d9f5b: Bind these identities in the full synthetic three-repository lifecycle proof.
-- 0ce7802d9f5b: Bind these identities in the full synthetic three-repository lifecycle proof.
-- f4fdafead6a0: Run clean package and dependency-pinned reproduction evidence for M1-WU12.
-- f4fdafead6a0: Run clean package and dependency-pinned reproduction evidence for M1-WU12.
-- f4fdafead6a0: Run clean package and dependency-pinned reproduction evidence for M1-WU12.
-- f4fdafead6a0: Run clean package and dependency-pinned reproduction evidence for M1-WU12.
-- 34e025540fe2: Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.
-- 34e025540fe2: Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.
-- 34e025540fe2: Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.
+- efe06f385795: Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.
+- efe06f385795: Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.
+- efe06f385795: Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.
+- efe06f385795: Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.
+- 5b01b36fb989: Push the remediation and require a new exact-head hosted matrix before merging PR #9.
+- 5b01b36fb989: Push the remediation and require a new exact-head hosted matrix before merging PR #9.
+- 5b01b36fb989: Push the remediation and require a new exact-head hosted matrix before merging PR #9.
+- 92da90101342: Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.
+- 92da90101342: Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.
+- 92da90101342: Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.
 
 ## Warnings
 
-- 10b1caa915ed merge commit ignored
 - cfd30b769cc9 merge commit ignored
 - 73bec99916d5 merge commit ignored
 - cc4d79fec9d0 merge commit ignored
@@ -134,7 +126,8 @@ preview_only: true
 - 178de3192f3c merge commit ignored
 - a8b298a35cd1 merge commit ignored
 - 476813e6fc74 merge commit ignored
-- 10 malformed or legacy commits require review
+- 5563e3b8de43 merge commit ignored
+- 13 malformed or legacy commits require review
 
 ## Preview Caveat
 

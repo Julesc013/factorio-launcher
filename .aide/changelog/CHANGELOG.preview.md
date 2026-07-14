@@ -3,29 +3,26 @@
 This file is generated from local Git history and is a preview only.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6
+source_head: 7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff
 commit_count: 50
-malformed_count: 10
+malformed_count: 13
 preview_only: true
 release_publishing: false
 
 ## Summary
 
-- Added: 10
-- Changed: 14
+- Added: 8
+- Changed: 15
 - Fixed: 10
-- Security: 19
+- Security: 16
 - Docs: 7
-- Tests: 14
+- Tests: 11
 - Internal: 4
-- Risks: 7
-- Follow-up: 12
+- Risks: 8
+- Follow-up: 13
 
 ## Added
 
-- exact managed setup-state identity on FacMan install references. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
-- reproducible synthetic three-repository managed lifecycle proof. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
-- Complete selected-package reproducibility proof. (34e025540fe2 test(package): make full archive reproducibility executable)
 - Revision-pinned M1 managed portable-install checkpoint. (efe06f385795 docs(m1): bind managed portable foundation closeout)
 - explicit M2 live portable setup state with a pending human gate. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
 - immutable M2-WU1 live-target policy checkpoint. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
@@ -33,6 +30,7 @@ release_publishing: false
 - immutable M2-WU2 implementation and package proof. (129f70d13058 docs(m2): bind the public lifecycle proof)
 - evidence-only WU2 dev integration closeout lane. (2c55d1d111a2 chore(m2): open the WU2 dev integration proof)
 - immutable exact-dev WU2 integration evidence. (182ada6be86d docs(m2): bind the exact WU2 dev integration)
+- retained live synthetic install lifecycle evidence. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
 
 ## Changed
 
@@ -50,10 +48,10 @@ release_publishing: false
 - public lifecycle is dev-integrated pending operator acceptance. (182ada6be86d docs(m2): bind the exact WU2 dev integration)
 - WU2 exact-dev integration is fully closed. (cad50062c955 chore(m2): close the WU2 dev integration proof)
 - publication governance reports now match the closed evidence head. (53ebb488daad chore(aide): refresh the integration proof branch)
+- project truth now points at the canonical WU4 provider. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
 
 ## Fixed
 
-- Reproducibility proof no longer treats the owned-output marker as a package archive. (2f13923a9cbd fix(package): distinguish archives from ownership metadata)
 - New non-ignored source files are now checked before their first commit. (5b01b36fb989 fix(validation): inspect new source files before commit)
 - M1 checkpoint satisfies the repository line-length policy. (5b01b36fb989 fix(validation): inspect new source files before commit)
 - complete provider license closure in built packages. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
@@ -63,12 +61,10 @@ release_publishing: false
 - project-state compaction test now recognizes the accepted license checkpoint. (2b5098b076ab fix(test): accept the later MIT checkpoint)
 - adequate capacity fluctuations no longer invalidate a reviewed plan. (d16e71357f13 fix(m2): bind the stable capacity provider)
 - raw Python tests now use the canonical current native-smoke CLI by default. (316ee8efec5b test(m2): prefer the canonical native smoke CLI)
+- rebuilt preferred native CLI to align runtime status with provider lock. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
 
 ## Security
 
-- reference consumption does not grant setup mutation or execution authority. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
-- all writes stay below an exclusive disposable root; foreign content is retained and reported. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
-- Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries. (34e025540fe2 test(package): make full archive reproducibility executable)
 - Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed. (efe06f385795 docs(m1): bind managed portable foundation closeout)
 - verify exact provider notice digests and source identities. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - prevent SBOM/package claims without retained provider notices. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
@@ -88,20 +84,16 @@ release_publishing: false
 
 ## Docs
 
-- records the exact fixture journey and non-authority claims. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
 - Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply. (efe06f385795 docs(m1): bind managed portable foundation closeout)
 - bind M1 canonical public integration evidence. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - record the accepted operator decision and retained redistribution notices. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - add immutable license integration checkpoint and complete queue evidence. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
 - generated project truth now reports the active bounded WorkUnit. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
 - accepted WU3 reviewed dev integration evidence. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
+- bind run, packet, journal, audit, state, and package identities. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
 
 ## Tests
 
-- managed install identities now round-trip through the native workspace repository. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
-- launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
-- Windows CI now executes two independent package builds and compares their complete evidence closure. (34e025540fe2 test(package): make full archive reproducibility executable)
-- Added artifact-classification regression coverage. (2f13923a9cbd fix(package): distinguish archives from ownership metadata)
 - Added pre-commit file-discovery regression coverage. (5b01b36fb989 fix(validation): inspect new source files before commit)
 - protect additive public-integration truth and unchanged authority boundaries. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - preserve historical M1 provider identities separately from current pins. (b1fd720013ed chore(license): bind Universal MIT provider truth)
@@ -112,6 +104,7 @@ release_publishing: false
 - provider and project-state assertions follow the canonical merge. (dfa0d8ad3c4c chore(m2): bind target policy provider integration)
 - target policy adds one integrated native test, bringing this build to 36/36. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
 - enforce immutable integration identities and retained human gate. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
+- enforce pending verdict and zero authority promotion. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
 
 ## Internal
 
@@ -129,6 +122,7 @@ release_publishing: false
 - Windows native path conversion changes all covered low-level path calls. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
 - test-only truth expectation; no runtime or package behavior changes. (2b5098b076ab fix(test): accept the later MIT checkpoint)
 - no live acceptance or ordinary apply authority is inferred. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
+- cross-volume and interruption recovery remain unproven. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
 
 ## Follow-up
 
@@ -144,10 +138,10 @@ release_publishing: false
 - rerun clean workspace and reproducible-package proof, then close WU2. (57b175ab9378 chore(m2): reconcile public lifecycle truth)
 - rerun clean three-repository and selected-package proofs. (d16e71357f13 fix(m2): bind the stable capacity provider)
 - run WU4 only with a harmless synthetic archive below D:\FacMan-Live-Acceptance\M2. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
+- merge reviewed WU4 into dev, then open WU5 interruption/recovery. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
 
 ## Malformed Commits
 
-- 13319e4f9e51 merge(m1-wu11): prove managed lifecycle integration: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 307690ad9bbb chore(m2): open live-target evidence packet work unit: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 2e6012e0b14c build(provider): pin Universal Setup M2-WU3 main: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - ecec3a46e78a docs(state): bind M2-WU3 provider implementation proof: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
@@ -157,6 +151,10 @@ release_publishing: false
 - 4360d0f40c38 chore(state): bind WU3 closeout and branch identity: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 2d8b723ef048 build(provider): pin Universal Setup M2-WU4 main: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
 - b203574a8aa4 docs(m2): bind WU4 retained live lifecycle evidence: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
+- 61cdb5190d8e build(setup): pin Universal Setup WU5 recovery main: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
+- a056c4a62343 docs(state): bind WU5 interruption and recovery evidence: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
+- aa0aa89b4564 fix(status): report the locked WU5 setup revision: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
+- 7cc7ca39792e test(proof): bind complete WU5 validation identities: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
 
 ## Release Caveat
 

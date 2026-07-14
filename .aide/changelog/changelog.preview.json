@@ -2,81 +2,6 @@
   "categories": {
     "Added": [
       {
-        "aide_phase": "managed-install-reference-consumption",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Added",
-        "commit": "0ce7802d9f5b",
-        "commit_sha": "0ce7802d9f5bce2110d965005977aa99f740f9c9",
-        "entry": "exact managed setup-state identity on FacMan install references.",
-        "follow_up": "- Bind these identities in the full synthetic three-repository lifecycle proof.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: managed-install-reference-consumption\nAIDE-Result: PASS\nAIDE-Scope: FacMan install reference model and workspace persistence\nAIDE-Token-Impact: additive setup state identity fields\nAIDE-Quality-Gate: native workspace plus focused Python and schema validation green",
-        "risks": "- FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.",
-        "scope": "install-refs",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(install-refs): retain managed setup state identity",
-        "summary": "exact managed setup-state identity on FacMan install references.",
-        "type": "feat",
-        "validation": "- cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.\n- ctest -R fl_workspace_store_smoke: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- git diff --cached --check: PASS."
-      },
-      {
-        "aide_phase": "fixture-lifecycle-system-proof",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Added",
-        "commit": "f4fdafead6a0",
-        "commit_sha": "f4fdafead6a0be4810d8c9722d8d8f521870d73d",
-        "entry": "reproducible synthetic three-repository managed lifecycle proof.",
-        "follow_up": "- Run clean package and dependency-pinned reproduction evidence for M1-WU12.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: fixture-lifecycle-system-proof\nAIDE-Result: PASS\nAIDE-Scope: Setup Launcher FacMan synthetic integration\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: native 35/35 strict and focused Python green",
-        "risks": "- The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.",
-        "scope": "system-proof",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "test(system-proof): exercise managed lifecycle across repositories",
-        "summary": "reproducible synthetic three-repository managed lifecycle proof.",
-        "type": "test",
-        "validation": "- m1_three_repository_system_proof.exe: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (35/35).\n- py -3 tools/m1_system_proof_check.py: PASS.\n- py -3 tools/test_architecture_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- git diff --cached --check: PASS."
-      },
-      {
-        "aide_phase": "package-reproducibility",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Added",
-        "commit": "34e025540fe2",
-        "commit_sha": "34e025540fe2d94e21f1546f29be6e603ad39725",
-        "entry": "Complete selected-package reproducibility proof.",
-        "follow_up": "- Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility\nAIDE-Result: PASS\nAIDE-Scope: packaging, CI, tests\nAIDE-Token-Impact: durable full-package proof\nAIDE-Quality-Gate: focused unit and policy checks pass",
-        "risks": "- Adds two package staging operations to the Windows job; native compilation is reused.",
-        "scope": "package",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "test(package): make full archive reproducibility executable",
-        "summary": "Complete selected-package reproducibility proof.",
-        "type": "test",
-        "validation": "- py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).\n- py -3 tools/ci_proof_check.py: PASS.\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS."
-      },
-      {
         "aide_phase": "evidence-closeout",
         "aide_result": "PASS",
         "breaking": false,
@@ -250,6 +175,31 @@
         "summary": "immutable exact-dev WU2 integration evidence.",
         "type": "docs",
         "validation": "- Exact dev CI 29326004461: PASS.\n- Exact dev CodeQL 29326004230: PASS for C/C++, C#, and Python.\n- Exact dev security policy 29326004219: PASS.\n- Local strict validation and AIDE Lite: PASS."
+      },
+      {
+        "aide_phase": "implementation-closeout",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Added",
+        "commit": "a286b5c42736",
+        "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+        "entry": "retained live synthetic install lifecycle evidence.",
+        "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+        "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+        "scope": "m2",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+        "summary": "retained live synthetic install lifecycle evidence.",
+        "type": "chore",
+        "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
       }
     ],
     "Changed": [
@@ -602,20 +552,18 @@
         "summary": "publication governance reports now match the closed evidence head.",
         "type": "chore",
         "validation": "- AIDE git detect: PASS.\n- Branch role and dev integration branch: PASS.\n- git diff --check: PASS."
-      }
-    ],
-    "Docs": [
+      },
       {
-        "aide_phase": "fixture-lifecycle-system-proof",
+        "aide_phase": "implementation-closeout",
         "aide_result": "PASS",
         "breaking": false,
-        "category": "Docs",
-        "commit": "f4fdafead6a0",
-        "commit_sha": "f4fdafead6a0be4810d8c9722d8d8f521870d73d",
-        "entry": "records the exact fixture journey and non-authority claims.",
-        "follow_up": "- Run clean package and dependency-pinned reproduction evidence for M1-WU12.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: fixture-lifecycle-system-proof\nAIDE-Result: PASS\nAIDE-Scope: Setup Launcher FacMan synthetic integration\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: native 35/35 strict and focused Python green",
-        "risks": "- The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.",
-        "scope": "system-proof",
+        "category": "Changed",
+        "commit": "a286b5c42736",
+        "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+        "entry": "project truth now points at the canonical WU4 provider.",
+        "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+        "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+        "scope": "m2",
         "source_sections_present": [
           "## Summary",
           "## Why",
@@ -625,11 +573,13 @@
           "## Risks",
           "## Follow-up"
         ],
-        "subject": "test(system-proof): exercise managed lifecycle across repositories",
-        "summary": "records the exact fixture journey and non-authority claims.",
-        "type": "test",
-        "validation": "- m1_three_repository_system_proof.exe: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (35/35).\n- py -3 tools/m1_system_proof_check.py: PASS.\n- py -3 tools/test_architecture_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- git diff --cached --check: PASS."
-      },
+        "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+        "summary": "project truth now points at the canonical WU4 provider.",
+        "type": "chore",
+        "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+      }
+    ],
+    "Docs": [
       {
         "aide_phase": "evidence-closeout",
         "aide_result": "PASS",
@@ -779,20 +729,18 @@
         "summary": "accepted WU3 reviewed dev integration evidence.",
         "type": "docs",
         "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
-      }
-    ],
-    "Fixed": [
+      },
       {
-        "aide_phase": "package-reproducibility-remediation",
+        "aide_phase": "implementation-closeout",
         "aide_result": "PASS",
         "breaking": false,
-        "category": "Fixed",
-        "commit": "2f13923a9cbd",
-        "commit_sha": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
-        "entry": "Reproducibility proof no longer treats the owned-output marker as a package archive.",
-        "follow_up": "- Rerun the complete proof from this clean revision and bind its exact evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility-remediation\nAIDE-Result: PASS\nAIDE-Scope: package proof artifact discovery\nAIDE-Token-Impact: closes live proof defect\nAIDE-Quality-Gate: focused unit and format checks pass",
-        "risks": "- None; unsupported artifact suffixes still fail closed through the exactly-one check.",
-        "scope": "package",
+        "category": "Docs",
+        "commit": "a286b5c42736",
+        "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+        "entry": "bind run, packet, journal, audit, state, and package identities.",
+        "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+        "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+        "scope": "m2",
         "source_sections_present": [
           "## Summary",
           "## Why",
@@ -802,11 +750,13 @@
           "## Risks",
           "## Follow-up"
         ],
-        "subject": "fix(package): distinguish archives from ownership metadata",
-        "summary": "Reproducibility proof no longer treats the owned-output marker as a package archive.",
-        "type": "fix",
-        "validation": "- py -3 -m unittest tests.test_package_pipeline_architecture -v: PASS (4 tests).\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS.\n- Initial end-to-end proof: FAIL as designed, exposing ownership-marker misclassification."
-      },
+        "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+        "summary": "bind run, packet, journal, audit, state, and package identities.",
+        "type": "chore",
+        "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+      }
+    ],
+    "Fixed": [
       {
         "aide_phase": "hosted-closeout-remediation",
         "aide_result": "PASS",
@@ -1031,6 +981,31 @@
         "summary": "raw Python tests now use the canonical current native-smoke CLI by default.",
         "type": "test",
         "validation": "- Previously failing install-gate, request-schema, and provider-truth tests: PASS.\n- Test architecture policy: PASS.\n- git diff --check: PASS."
+      },
+      {
+        "aide_phase": "implementation-closeout",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Fixed",
+        "commit": "a286b5c42736",
+        "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+        "entry": "rebuilt preferred native CLI to align runtime status with provider lock.",
+        "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+        "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+        "scope": "m2",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+        "summary": "rebuilt preferred native CLI to align runtime status with provider lock.",
+        "type": "chore",
+        "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
       }
     ],
     "Follow-up": [
@@ -1333,6 +1308,31 @@
         "summary": "run WU4 only with a harmless synthetic archive below D:\\FacMan-Live-Acceptance\\M2.",
         "type": "docs",
         "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+      },
+      {
+        "aide_phase": "implementation-closeout",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Follow-up",
+        "commit": "a286b5c42736",
+        "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+        "entry": "merge reviewed WU4 into dev, then open WU5 interruption/recovery.",
+        "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+        "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+        "scope": "m2",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+        "summary": "merge reviewed WU4 into dev, then open WU5 interruption/recovery.",
+        "type": "chore",
+        "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
       }
     ],
     "Internal": [
@@ -1612,84 +1612,34 @@
         "summary": "no live acceptance or ordinary apply authority is inferred.",
         "type": "docs",
         "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+      },
+      {
+        "aide_phase": "implementation-closeout",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Risks",
+        "commit": "a286b5c42736",
+        "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+        "entry": "cross-volume and interruption recovery remain unproven.",
+        "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+        "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+        "scope": "m2",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+        "summary": "cross-volume and interruption recovery remain unproven.",
+        "type": "chore",
+        "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
       }
     ],
     "Security": [
-      {
-        "aide_phase": "managed-install-reference-consumption",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Security",
-        "commit": "0ce7802d9f5b",
-        "commit_sha": "0ce7802d9f5bce2110d965005977aa99f740f9c9",
-        "entry": "reference consumption does not grant setup mutation or execution authority.",
-        "follow_up": "- Bind these identities in the full synthetic three-repository lifecycle proof.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: managed-install-reference-consumption\nAIDE-Result: PASS\nAIDE-Scope: FacMan install reference model and workspace persistence\nAIDE-Token-Impact: additive setup state identity fields\nAIDE-Quality-Gate: native workspace plus focused Python and schema validation green",
-        "risks": "- FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.",
-        "scope": "install-refs",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(install-refs): retain managed setup state identity",
-        "summary": "reference consumption does not grant setup mutation or execution authority.",
-        "type": "feat",
-        "validation": "- cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.\n- ctest -R fl_workspace_store_smoke: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- git diff --cached --check: PASS."
-      },
-      {
-        "aide_phase": "fixture-lifecycle-system-proof",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Security",
-        "commit": "f4fdafead6a0",
-        "commit_sha": "f4fdafead6a0be4810d8c9722d8d8f521870d73d",
-        "entry": "all writes stay below an exclusive disposable root; foreign content is retained and reported.",
-        "follow_up": "- Run clean package and dependency-pinned reproduction evidence for M1-WU12.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: fixture-lifecycle-system-proof\nAIDE-Result: PASS\nAIDE-Scope: Setup Launcher FacMan synthetic integration\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: native 35/35 strict and focused Python green",
-        "risks": "- The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.",
-        "scope": "system-proof",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "test(system-proof): exercise managed lifecycle across repositories",
-        "summary": "all writes stay below an exclusive disposable root; foreign content is retained and reported.",
-        "type": "test",
-        "validation": "- m1_three_repository_system_proof.exe: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (35/35).\n- py -3 tools/m1_system_proof_check.py: PASS.\n- py -3 tools/test_architecture_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- git diff --cached --check: PASS."
-      },
-      {
-        "aide_phase": "package-reproducibility",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Security",
-        "commit": "34e025540fe2",
-        "commit_sha": "34e025540fe2d94e21f1546f29be6e603ad39725",
-        "entry": "Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries.",
-        "follow_up": "- Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility\nAIDE-Result: PASS\nAIDE-Scope: packaging, CI, tests\nAIDE-Token-Impact: durable full-package proof\nAIDE-Quality-Gate: focused unit and policy checks pass",
-        "risks": "- Adds two package staging operations to the Windows job; native compilation is reused.",
-        "scope": "package",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "test(package): make full archive reproducibility executable",
-        "summary": "Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries.",
-        "type": "test",
-        "validation": "- py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).\n- py -3 tools/ci_proof_check.py: PASS.\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS."
-      },
       {
         "aide_phase": "evidence-closeout",
         "aide_result": "PASS",
@@ -2093,106 +2043,6 @@
     ],
     "Tests": [
       {
-        "aide_phase": "managed-install-reference-consumption",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Tests",
-        "commit": "0ce7802d9f5b",
-        "commit_sha": "0ce7802d9f5bce2110d965005977aa99f740f9c9",
-        "entry": "managed install identities now round-trip through the native workspace repository.",
-        "follow_up": "- Bind these identities in the full synthetic three-repository lifecycle proof.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: managed-install-reference-consumption\nAIDE-Result: PASS\nAIDE-Scope: FacMan install reference model and workspace persistence\nAIDE-Token-Impact: additive setup state identity fields\nAIDE-Quality-Gate: native workspace plus focused Python and schema validation green",
-        "risks": "- FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.",
-        "scope": "install-refs",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(install-refs): retain managed setup state identity",
-        "summary": "managed install identities now round-trip through the native workspace repository.",
-        "type": "feat",
-        "validation": "- cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.\n- ctest -R fl_workspace_store_smoke: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- git diff --cached --check: PASS."
-      },
-      {
-        "aide_phase": "fixture-lifecycle-system-proof",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Tests",
-        "commit": "f4fdafead6a0",
-        "commit_sha": "f4fdafead6a0be4810d8c9722d8d8f521870d73d",
-        "entry": "launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed.",
-        "follow_up": "- Run clean package and dependency-pinned reproduction evidence for M1-WU12.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: fixture-lifecycle-system-proof\nAIDE-Result: PASS\nAIDE-Scope: Setup Launcher FacMan synthetic integration\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: native 35/35 strict and focused Python green",
-        "risks": "- The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.",
-        "scope": "system-proof",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "test(system-proof): exercise managed lifecycle across repositories",
-        "summary": "launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed.",
-        "type": "test",
-        "validation": "- m1_three_repository_system_proof.exe: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (35/35).\n- py -3 tools/m1_system_proof_check.py: PASS.\n- py -3 tools/test_architecture_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- git diff --cached --check: PASS."
-      },
-      {
-        "aide_phase": "package-reproducibility",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Tests",
-        "commit": "34e025540fe2",
-        "commit_sha": "34e025540fe2d94e21f1546f29be6e603ad39725",
-        "entry": "Windows CI now executes two independent package builds and compares their complete evidence closure.",
-        "follow_up": "- Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility\nAIDE-Result: PASS\nAIDE-Scope: packaging, CI, tests\nAIDE-Token-Impact: durable full-package proof\nAIDE-Quality-Gate: focused unit and policy checks pass",
-        "risks": "- Adds two package staging operations to the Windows job; native compilation is reused.",
-        "scope": "package",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "test(package): make full archive reproducibility executable",
-        "summary": "Windows CI now executes two independent package builds and compares their complete evidence closure.",
-        "type": "test",
-        "validation": "- py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).\n- py -3 tools/ci_proof_check.py: PASS.\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS."
-      },
-      {
-        "aide_phase": "package-reproducibility-remediation",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Tests",
-        "commit": "2f13923a9cbd",
-        "commit_sha": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
-        "entry": "Added artifact-classification regression coverage.",
-        "follow_up": "- Rerun the complete proof from this clean revision and bind its exact evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility-remediation\nAIDE-Result: PASS\nAIDE-Scope: package proof artifact discovery\nAIDE-Token-Impact: closes live proof defect\nAIDE-Quality-Gate: focused unit and format checks pass",
-        "risks": "- None; unsupported artifact suffixes still fail closed through the exactly-one check.",
-        "scope": "package",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "fix(package): distinguish archives from ownership metadata",
-        "summary": "Added artifact-classification regression coverage.",
-        "type": "fix",
-        "validation": "- py -3 -m unittest tests.test_package_pipeline_architecture -v: PASS (4 tests).\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS.\n- Initial end-to-end proof: FAIL as designed, exposing ownership-marker misclassification."
-      },
-      {
         "aide_phase": "hosted-closeout-remediation",
         "aide_result": "PASS",
         "breaking": false,
@@ -2441,322 +2291,47 @@
         "summary": "enforce immutable integration identities and retained human gate.",
         "type": "docs",
         "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+      },
+      {
+        "aide_phase": "implementation-closeout",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Tests",
+        "commit": "a286b5c42736",
+        "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+        "entry": "enforce pending verdict and zero authority promotion.",
+        "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+        "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+        "scope": "m2",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+        "summary": "enforce pending verdict and zero authority promotion.",
+        "type": "chore",
+        "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
       }
     ]
   },
   "category_counts": {
-    "Added": 10,
-    "Changed": 14,
+    "Added": 8,
+    "Changed": 15,
     "Docs": 7,
     "Fixed": 10,
-    "Follow-up": 12,
+    "Follow-up": 13,
     "Internal": 4,
-    "Risks": 7,
-    "Security": 19,
-    "Tests": 14
+    "Risks": 8,
+    "Security": 16,
+    "Tests": 11
   },
   "commit_count": 50,
   "entries": [
-    {
-      "aide_phase": "managed-install-reference-consumption",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Added",
-      "commit": "0ce7802d9f5b",
-      "commit_sha": "0ce7802d9f5bce2110d965005977aa99f740f9c9",
-      "entry": "exact managed setup-state identity on FacMan install references.",
-      "follow_up": "- Bind these identities in the full synthetic three-repository lifecycle proof.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: managed-install-reference-consumption\nAIDE-Result: PASS\nAIDE-Scope: FacMan install reference model and workspace persistence\nAIDE-Token-Impact: additive setup state identity fields\nAIDE-Quality-Gate: native workspace plus focused Python and schema validation green",
-      "risks": "- FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.",
-      "scope": "install-refs",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(install-refs): retain managed setup state identity",
-      "summary": "exact managed setup-state identity on FacMan install references.",
-      "type": "feat",
-      "validation": "- cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.\n- ctest -R fl_workspace_store_smoke: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- git diff --cached --check: PASS."
-    },
-    {
-      "aide_phase": "managed-install-reference-consumption",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Security",
-      "commit": "0ce7802d9f5b",
-      "commit_sha": "0ce7802d9f5bce2110d965005977aa99f740f9c9",
-      "entry": "reference consumption does not grant setup mutation or execution authority.",
-      "follow_up": "- Bind these identities in the full synthetic three-repository lifecycle proof.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: managed-install-reference-consumption\nAIDE-Result: PASS\nAIDE-Scope: FacMan install reference model and workspace persistence\nAIDE-Token-Impact: additive setup state identity fields\nAIDE-Quality-Gate: native workspace plus focused Python and schema validation green",
-      "risks": "- FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.",
-      "scope": "install-refs",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(install-refs): retain managed setup state identity",
-      "summary": "reference consumption does not grant setup mutation or execution authority.",
-      "type": "feat",
-      "validation": "- cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.\n- ctest -R fl_workspace_store_smoke: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- git diff --cached --check: PASS."
-    },
-    {
-      "aide_phase": "managed-install-reference-consumption",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Tests",
-      "commit": "0ce7802d9f5b",
-      "commit_sha": "0ce7802d9f5bce2110d965005977aa99f740f9c9",
-      "entry": "managed install identities now round-trip through the native workspace repository.",
-      "follow_up": "- Bind these identities in the full synthetic three-repository lifecycle proof.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: managed-install-reference-consumption\nAIDE-Result: PASS\nAIDE-Scope: FacMan install reference model and workspace persistence\nAIDE-Token-Impact: additive setup state identity fields\nAIDE-Quality-Gate: native workspace plus focused Python and schema validation green",
-      "risks": "- FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.",
-      "scope": "install-refs",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(install-refs): retain managed setup state identity",
-      "summary": "managed install identities now round-trip through the native workspace repository.",
-      "type": "feat",
-      "validation": "- cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.\n- ctest -R fl_workspace_store_smoke: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- git diff --cached --check: PASS."
-    },
-    {
-      "aide_phase": "fixture-lifecycle-system-proof",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Added",
-      "commit": "f4fdafead6a0",
-      "commit_sha": "f4fdafead6a0be4810d8c9722d8d8f521870d73d",
-      "entry": "reproducible synthetic three-repository managed lifecycle proof.",
-      "follow_up": "- Run clean package and dependency-pinned reproduction evidence for M1-WU12.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: fixture-lifecycle-system-proof\nAIDE-Result: PASS\nAIDE-Scope: Setup Launcher FacMan synthetic integration\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: native 35/35 strict and focused Python green",
-      "risks": "- The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.",
-      "scope": "system-proof",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "test(system-proof): exercise managed lifecycle across repositories",
-      "summary": "reproducible synthetic three-repository managed lifecycle proof.",
-      "type": "test",
-      "validation": "- m1_three_repository_system_proof.exe: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (35/35).\n- py -3 tools/m1_system_proof_check.py: PASS.\n- py -3 tools/test_architecture_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- git diff --cached --check: PASS."
-    },
-    {
-      "aide_phase": "fixture-lifecycle-system-proof",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Security",
-      "commit": "f4fdafead6a0",
-      "commit_sha": "f4fdafead6a0be4810d8c9722d8d8f521870d73d",
-      "entry": "all writes stay below an exclusive disposable root; foreign content is retained and reported.",
-      "follow_up": "- Run clean package and dependency-pinned reproduction evidence for M1-WU12.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: fixture-lifecycle-system-proof\nAIDE-Result: PASS\nAIDE-Scope: Setup Launcher FacMan synthetic integration\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: native 35/35 strict and focused Python green",
-      "risks": "- The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.",
-      "scope": "system-proof",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "test(system-proof): exercise managed lifecycle across repositories",
-      "summary": "all writes stay below an exclusive disposable root; foreign content is retained and reported.",
-      "type": "test",
-      "validation": "- m1_three_repository_system_proof.exe: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (35/35).\n- py -3 tools/m1_system_proof_check.py: PASS.\n- py -3 tools/test_architecture_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- git diff --cached --check: PASS."
-    },
-    {
-      "aide_phase": "fixture-lifecycle-system-proof",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Docs",
-      "commit": "f4fdafead6a0",
-      "commit_sha": "f4fdafead6a0be4810d8c9722d8d8f521870d73d",
-      "entry": "records the exact fixture journey and non-authority claims.",
-      "follow_up": "- Run clean package and dependency-pinned reproduction evidence for M1-WU12.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: fixture-lifecycle-system-proof\nAIDE-Result: PASS\nAIDE-Scope: Setup Launcher FacMan synthetic integration\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: native 35/35 strict and focused Python green",
-      "risks": "- The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.",
-      "scope": "system-proof",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "test(system-proof): exercise managed lifecycle across repositories",
-      "summary": "records the exact fixture journey and non-authority claims.",
-      "type": "test",
-      "validation": "- m1_three_repository_system_proof.exe: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (35/35).\n- py -3 tools/m1_system_proof_check.py: PASS.\n- py -3 tools/test_architecture_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- git diff --cached --check: PASS."
-    },
-    {
-      "aide_phase": "fixture-lifecycle-system-proof",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Tests",
-      "commit": "f4fdafead6a0",
-      "commit_sha": "f4fdafead6a0be4810d8c9722d8d8f521870d73d",
-      "entry": "launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed.",
-      "follow_up": "- Run clean package and dependency-pinned reproduction evidence for M1-WU12.\n\nAIDE-Task: M1-WU11-THREE-REPOSITORY-SYSTEM-PROOF\nAIDE-Phase: fixture-lifecycle-system-proof\nAIDE-Result: PASS\nAIDE-Scope: Setup Launcher FacMan synthetic integration\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: native 35/35 strict and focused Python green",
-      "risks": "- The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.",
-      "scope": "system-proof",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "test(system-proof): exercise managed lifecycle across repositories",
-      "summary": "launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed.",
-      "type": "test",
-      "validation": "- m1_three_repository_system_proof.exe: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (35/35).\n- py -3 tools/m1_system_proof_check.py: PASS.\n- py -3 tools/test_architecture_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- focused discovery and workspace Python tests: PASS (13/13).\n- git diff --cached --check: PASS."
-    },
-    {
-      "aide_phase": "package-reproducibility",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Added",
-      "commit": "34e025540fe2",
-      "commit_sha": "34e025540fe2d94e21f1546f29be6e603ad39725",
-      "entry": "Complete selected-package reproducibility proof.",
-      "follow_up": "- Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility\nAIDE-Result: PASS\nAIDE-Scope: packaging, CI, tests\nAIDE-Token-Impact: durable full-package proof\nAIDE-Quality-Gate: focused unit and policy checks pass",
-      "risks": "- Adds two package staging operations to the Windows job; native compilation is reused.",
-      "scope": "package",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "test(package): make full archive reproducibility executable",
-      "summary": "Complete selected-package reproducibility proof.",
-      "type": "test",
-      "validation": "- py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).\n- py -3 tools/ci_proof_check.py: PASS.\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "package-reproducibility",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Security",
-      "commit": "34e025540fe2",
-      "commit_sha": "34e025540fe2d94e21f1546f29be6e603ad39725",
-      "entry": "Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries.",
-      "follow_up": "- Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility\nAIDE-Result: PASS\nAIDE-Scope: packaging, CI, tests\nAIDE-Token-Impact: durable full-package proof\nAIDE-Quality-Gate: focused unit and policy checks pass",
-      "risks": "- Adds two package staging operations to the Windows job; native compilation is reused.",
-      "scope": "package",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "test(package): make full archive reproducibility executable",
-      "summary": "Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries.",
-      "type": "test",
-      "validation": "- py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).\n- py -3 tools/ci_proof_check.py: PASS.\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "package-reproducibility",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Tests",
-      "commit": "34e025540fe2",
-      "commit_sha": "34e025540fe2d94e21f1546f29be6e603ad39725",
-      "entry": "Windows CI now executes two independent package builds and compares their complete evidence closure.",
-      "follow_up": "- Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility\nAIDE-Result: PASS\nAIDE-Scope: packaging, CI, tests\nAIDE-Token-Impact: durable full-package proof\nAIDE-Quality-Gate: focused unit and policy checks pass",
-      "risks": "- Adds two package staging operations to the Windows job; native compilation is reused.",
-      "scope": "package",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "test(package): make full archive reproducibility executable",
-      "summary": "Windows CI now executes two independent package builds and compares their complete evidence closure.",
-      "type": "test",
-      "validation": "- py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).\n- py -3 tools/ci_proof_check.py: PASS.\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "package-reproducibility-remediation",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "2f13923a9cbd",
-      "commit_sha": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
-      "entry": "Reproducibility proof no longer treats the owned-output marker as a package archive.",
-      "follow_up": "- Rerun the complete proof from this clean revision and bind its exact evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility-remediation\nAIDE-Result: PASS\nAIDE-Scope: package proof artifact discovery\nAIDE-Token-Impact: closes live proof defect\nAIDE-Quality-Gate: focused unit and format checks pass",
-      "risks": "- None; unsupported artifact suffixes still fail closed through the exactly-one check.",
-      "scope": "package",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "fix(package): distinguish archives from ownership metadata",
-      "summary": "Reproducibility proof no longer treats the owned-output marker as a package archive.",
-      "type": "fix",
-      "validation": "- py -3 -m unittest tests.test_package_pipeline_architecture -v: PASS (4 tests).\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS.\n- Initial end-to-end proof: FAIL as designed, exposing ownership-marker misclassification."
-    },
-    {
-      "aide_phase": "package-reproducibility-remediation",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Tests",
-      "commit": "2f13923a9cbd",
-      "commit_sha": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
-      "entry": "Added artifact-classification regression coverage.",
-      "follow_up": "- Rerun the complete proof from this clean revision and bind its exact evidence.\n\nAIDE-Task: M1-WU12\nAIDE-Phase: package-reproducibility-remediation\nAIDE-Result: PASS\nAIDE-Scope: package proof artifact discovery\nAIDE-Token-Impact: closes live proof defect\nAIDE-Quality-Gate: focused unit and format checks pass",
-      "risks": "- None; unsupported artifact suffixes still fail closed through the exactly-one check.",
-      "scope": "package",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "fix(package): distinguish archives from ownership metadata",
-      "summary": "Added artifact-classification regression coverage.",
-      "type": "fix",
-      "validation": "- py -3 -m unittest tests.test_package_pipeline_architecture -v: PASS (4 tests).\n- py -3 tools/source_format_check.py: PASS.\n- git diff --check: PASS.\n- Initial end-to-end proof: FAIL as designed, exposing ownership-marker misclassification."
-    },
     {
       "aide_phase": "evidence-closeout",
       "aide_result": "PASS",
@@ -4881,22 +4456,185 @@
       "summary": "run WU4 only with a harmless synthetic archive below D:\\FacMan-Live-Acceptance\\M2.",
       "type": "docs",
       "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+    },
+    {
+      "aide_phase": "implementation-closeout",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Added",
+      "commit": "a286b5c42736",
+      "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+      "entry": "retained live synthetic install lifecycle evidence.",
+      "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+      "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "retained live synthetic install lifecycle evidence.",
+      "type": "chore",
+      "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+    },
+    {
+      "aide_phase": "implementation-closeout",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Changed",
+      "commit": "a286b5c42736",
+      "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+      "entry": "project truth now points at the canonical WU4 provider.",
+      "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+      "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "project truth now points at the canonical WU4 provider.",
+      "type": "chore",
+      "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+    },
+    {
+      "aide_phase": "implementation-closeout",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "a286b5c42736",
+      "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+      "entry": "rebuilt preferred native CLI to align runtime status with provider lock.",
+      "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+      "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "rebuilt preferred native CLI to align runtime status with provider lock.",
+      "type": "chore",
+      "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+    },
+    {
+      "aide_phase": "implementation-closeout",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Docs",
+      "commit": "a286b5c42736",
+      "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+      "entry": "bind run, packet, journal, audit, state, and package identities.",
+      "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+      "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "bind run, packet, journal, audit, state, and package identities.",
+      "type": "chore",
+      "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+    },
+    {
+      "aide_phase": "implementation-closeout",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Tests",
+      "commit": "a286b5c42736",
+      "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+      "entry": "enforce pending verdict and zero authority promotion.",
+      "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+      "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "enforce pending verdict and zero authority promotion.",
+      "type": "chore",
+      "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+    },
+    {
+      "aide_phase": "implementation-closeout",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Risks",
+      "commit": "a286b5c42736",
+      "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+      "entry": "cross-volume and interruption recovery remain unproven.",
+      "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+      "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "cross-volume and interruption recovery remain unproven.",
+      "type": "chore",
+      "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+    },
+    {
+      "aide_phase": "implementation-closeout",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Follow-up",
+      "commit": "a286b5c42736",
+      "commit_sha": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+      "entry": "merge reviewed WU4 into dev, then open WU5 interruption/recovery.",
+      "follow_up": "- Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery.\n\nAIDE-Task: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01\nAIDE-Phase: implementation-closeout\nAIDE-Result: PASS\nAIDE-Scope: provider pin live synthetic lifecycle evidence and package proof\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: 39 native 339 Python 14 package strict AIDE reproducibility and provider CI passed",
+      "risks": "- Human verdict remains pending and ordinary live apply remains unavailable.\n- recovery.apply, real Factorio archives, execution, Steam, network, registry, elevation, signing, and publication remain unavailable.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "merge reviewed WU4 into dev, then open WU5 interruption/recovery.",
+      "type": "chore",
+      "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
     }
   ],
   "generated_by": "aide-lite",
   "malformed_commits": [
-    {
-      "commit": "13319e4f9e51",
-      "commit_sha": "13319e4f9e51bd8687829262edcfa120e488990d",
-      "ignored": false,
-      "legacy": false,
-      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category",
-      "reasons": [
-        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
-        "missing_changelog_category"
-      ],
-      "subject": "merge(m1-wu11): prove managed lifecycle integration"
-    },
     {
       "commit": "307690ad9bbb",
       "commit_sha": "307690ad9bbb82f78c5598dc3b3783fab59bcaf2",
@@ -5006,18 +4744,69 @@
         "legacy_semi_structured_body"
       ],
       "subject": "docs(m2): bind WU4 retained live lifecycle evidence"
+    },
+    {
+      "commit": "61cdb5190d8e",
+      "commit_sha": "61cdb5190d8eb41f36405908d84ffe8c1f7108af",
+      "ignored": false,
+      "legacy": true,
+      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body",
+      "reasons": [
+        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
+        "missing_changelog_category",
+        "legacy_semi_structured_body"
+      ],
+      "subject": "build(setup): pin Universal Setup WU5 recovery main"
+    },
+    {
+      "commit": "a056c4a62343",
+      "commit_sha": "a056c4a62343a84ba9e8095f1af0cbfd25c82bb1",
+      "ignored": false,
+      "legacy": true,
+      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body",
+      "reasons": [
+        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
+        "missing_changelog_category",
+        "legacy_semi_structured_body"
+      ],
+      "subject": "docs(state): bind WU5 interruption and recovery evidence"
+    },
+    {
+      "commit": "aa0aa89b4564",
+      "commit_sha": "aa0aa89b456401490d1a7ebfd85c420d2b9f1948",
+      "ignored": false,
+      "legacy": true,
+      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body",
+      "reasons": [
+        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
+        "missing_changelog_category",
+        "legacy_semi_structured_body"
+      ],
+      "subject": "fix(status): report the locked WU5 setup revision"
+    },
+    {
+      "commit": "7cc7ca39792e",
+      "commit_sha": "7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff",
+      "ignored": false,
+      "legacy": true,
+      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body",
+      "reasons": [
+        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
+        "missing_changelog_category",
+        "legacy_semi_structured_body"
+      ],
+      "subject": "test(proof): bind complete WU5 validation identities"
     }
   ],
-  "malformed_count": 10,
+  "malformed_count": 13,
   "network_calls": "none",
   "preview_only": true,
   "provider_or_model_calls": "none",
   "release_publishing": false,
   "schema_version": "aide.changelog-preview.v0",
-  "source_head": "b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6",
+  "source_head": "7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "warnings": [
-    "10b1caa915ed merge commit ignored",
     "cfd30b769cc9 merge commit ignored",
     "73bec99916d5 merge commit ignored",
     "cc4d79fec9d0 merge commit ignored",
@@ -5026,6 +4815,7 @@
     "747b4442cf22 merge commit ignored",
     "178de3192f3c merge commit ignored",
     "a8b298a35cd1 merge commit ignored",
-    "476813e6fc74 merge commit ignored"
+    "476813e6fc74 merge commit ignored",
+    "5563e3b8de43 merge commit ignored"
   ]
 }
