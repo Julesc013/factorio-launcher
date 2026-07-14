@@ -40,7 +40,7 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is in
 - registered routes: `119`;
 - schemas: `228`;
 - refusal codes: `217`;
-- command catalog digest: `837929297b544fd140a94de62caadab24aa139118ccd95be6893584e5ef5869f`;
+- command catalog digest: `e613b3450dab908322e3c7eb2e0d51e658f12cc1b113e8ffe8cb8663d8dd0982`;
 - accepted CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - CI / CodeQL / security / schema runs: `29299245206` / `29299245093` / `29299245082` / `29297933368`;
 - accepted matrix counts: `35` native and `337` Python tests.

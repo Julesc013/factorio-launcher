@@ -1050,6 +1050,7 @@
       "executes_process": false,
       "frontend_category": "installs",
       "golden_refusal": "tests/golden/commands/installs.install.plan.refusal.json",
+      "golden_success": "tests/golden/commands/installs.install.plan.success.json",
       "localization_keys": [
         "command.installs.install.plan.title",
         "command.installs.install.plan.description"
@@ -9889,5 +9890,5 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "837929297b544fd140a94de62caadab24aa139118ccd95be6893584e5ef5869f"
+  "source_digest": "e613b3450dab908322e3c7eb2e0d51e658f12cc1b113e8ffe8cb8663d8dd0982"
 }

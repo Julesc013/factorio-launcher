@@ -10,4 +10,5 @@ dry_run_default = true
 executes_process = false
 mutates_workspace = false
 availability = "implemented"
+golden_success = "tests/golden/commands/installs.install.plan.success.json"
 golden_refusal = "tests/golden/commands/installs.install.plan.refusal.json"

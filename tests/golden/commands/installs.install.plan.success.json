@@ -1,0 +1,36 @@
+{
+  "schema": "usk.install_plan.v1",
+  "command": "installs.install.plan",
+  "status": "planned",
+  "operation": "install_local",
+  "plan_id": "plan.factorio.2-0-77",
+  "plan_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "input_identity": {
+    "recipe_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "source_digest": "3333333333333333333333333333333333333333333333333333333333333333",
+    "policy_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+    "provider_revision": "facman.factorio.recipe.v1"
+  },
+  "source": {
+    "path": "D:/FacMan-Live-Acceptance/M2/source/factorio-2.0.77.zip",
+    "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "target": {
+    "root": "D:/FacMan-Live-Acceptance/M2/managed-factorio-2.0.77",
+    "must_not_exist": true,
+    "classification": "operator_selected_owned_target"
+  },
+  "totals": {
+    "file_count": 3,
+    "directory_count": 5,
+    "uncompressed_bytes": 128
+  },
+  "refusal_policy": {
+    "refuse_existing_target": true,
+    "refuse_elevation": true,
+    "refuse_installer_execution": true,
+    "refuse_network": true,
+    "refuse_package_manager": true,
+    "refuse_registry": true
+  }
+}
