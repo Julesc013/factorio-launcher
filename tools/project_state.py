@@ -109,6 +109,7 @@ def collect() -> dict[str, Any]:
         "m2_wu2_public_lifecycle": status["m2_wu2_public_lifecycle"],
         "m2_wu3_live_evidence": status["m2_wu3_live_evidence"],
         "m2_wu4_live_acceptance": status["m2_wu4_live_acceptance"],
+        "m2_wu5_interruption_recovery": status["m2_wu5_interruption_recovery"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -190,6 +191,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"`{data['m2_wu4_live_acceptance']['universal_setup_main_revision']}`; run: "
         f"`{data['m2_wu4_live_acceptance']['run_id']}`; operator verdict: "
         f"`{data['m2_wu4_live_acceptance']['operator_verdict']}`.",
+        f"- M2-WU5 interruption recovery: `{data['m2_wu5_interruption_recovery']['status']}` at Universal Setup main "
+        f"`{data['m2_wu5_interruption_recovery']['universal_setup_main_revision']}`; run: "
+        f"`{data['m2_wu5_interruption_recovery']['run_id']}`; operator verdict: "
+        f"`{data['m2_wu5_interruption_recovery']['operator_verdict']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -482,8 +487,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU4 live acceptance must record a recognized monotonic proof state")
-    if m2_wu4.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU4 must bind the exact current Universal Setup provider pin")
+    if m2_wu4.get("universal_setup_main_revision") != "9b8196437e41e45bd8d5a613246dabe5b8cdb968":
+        problems.append("M2-WU4 must preserve its accepted historical Universal Setup revision")
     if m2_wu4.get("universal_setup_runner_revision") != "6209385f25db1824bcbb7ec599cf2152606be89b":
         problems.append("M2-WU4 must bind the exact live runner revision")
     if m2_wu4.get("acceptance_root") != r"D:\FacMan-Live-Acceptance\M2":
@@ -508,6 +513,28 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU4 must not promote recovery apply before WU5")
     if m2_wu4.get("execution_authority") is not False or m2_wu4.get("h1_inference") != "none":
         problems.append("M2-WU4 must not promote execution or infer H1")
+    m2_wu5 = status.get("m2_wu5_interruption_recovery", {})
+    if m2_wu5.get("status") not in {
+        "provider_integrated_live_run_proven_pending_dev_integration",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        problems.append("M2-WU5 interruption recovery must record a recognized monotonic proof state")
+    if m2_wu5.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
+        problems.append("M2-WU5 must bind the exact current Universal Setup provider pin")
+    if m2_wu5.get("acceptance_root") != r"D:\FacMan-Live-Acceptance\M2":
+        problems.append("M2-WU5 must remain confined to the authorized acceptance root")
+    if m2_wu5.get("run_summary_sha256") != "c64ddfaa38bde351002d2840999b3ba74173cde8c76d3e6aa21891b5d169f6c1":
+        problems.append("M2-WU5 must bind the retained interruption summary identity")
+    if [m2_wu5.get(key) for key in ("case_count", "unchanged_count", "rolled_back_count", "completed_count", "recovery_required_count")] != [11, 1, 4, 3, 3]:
+        problems.append("M2-WU5 must bind the complete eleven-case outcome partition")
+    if m2_wu5.get("public_recovery_apply") != "exact_staged_rollback_only":
+        problems.append("M2-WU5 must not overstate public recovery apply")
+    if m2_wu5.get("operator_verdict") != "pending" or m2_wu5.get("automation_can_record_operator_verdict") is not False:
+        problems.append("M2-WU5 automation must preserve a separate pending operator verdict")
+    if m2_wu5.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2-WU5 must not promote ordinary live apply before a human Pass")
+    if m2_wu5.get("execution_authority") is not False or m2_wu5.get("h1_inference") != "none":
+        problems.append("M2-WU5 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

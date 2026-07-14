@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: M2-WU5-LIVE-INTERRUPTION-RECOVERY-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-14T13:46:17Z
+result: PENDING
+evidence_path: .aide/queue/active/M2-WU5-LIVE-INTERRUPTION-RECOVERY-01/evidence/
+active_at: 2026-07-14T13:46:17Z

@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-WU5-LIVE-INTERRUPTION-RECOVERY-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -145,12 +145,12 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu4-live-install-acceptance",
+  "current_checkpoint": "m2-wu5-live-interruption-recovery",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
-    "universal_setup": "9b8196437e41e45bd8d5a613246dabe5b8cdb968"
+    "universal_setup": "e1ce68e9593ae8d9a35cc0821b5e42c798524453"
   },
   "execution": {
     "operator_verdict": "Fail",
@@ -365,6 +365,34 @@
     "universal_setup_runner_revision": "6209385f25db1824bcbb7ec599cf2152606be89b",
     "universal_setup_task_head_revision": "169d4da80b886ed96f1e5450ddc5a3be1a44c085"
   },
+  "m2_wu5_interruption_recovery": {
+    "acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
+    "active_work_unit": "M2-WU5-LIVE-INTERRUPTION-RECOVERY-01",
+    "automation_can_record_operator_verdict": false,
+    "case_count": 11,
+    "completed_count": 3,
+    "execution_authority": false,
+    "factorio_archive_acceptance": "unavailable",
+    "h1_inference": "none",
+    "journal_count": 14,
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "public_recovery_apply": "exact_staged_rollback_only",
+    "recovery_required_count": 3,
+    "repair_move_uninstall_recovery": "visible_recovery_required",
+    "retained_file_count": 61,
+    "rolled_back_count": 4,
+    "run_id": "m2wu5-20260714-01",
+    "run_summary_sha256": "c64ddfaa38bde351002d2840999b3ba74173cde8c76d3e6aa21891b5d169f6c1",
+    "status": "provider_integrated_live_run_proven_pending_dev_integration",
+    "unchanged_count": 1,
+    "universal_setup_main_ci_run": "29337717932",
+    "universal_setup_main_revision": "e1ce68e9593ae8d9a35cc0821b5e42c798524453",
+    "universal_setup_pr_ci_run": "29337549896",
+    "universal_setup_push_ci_run": "29337549251",
+    "universal_setup_task_head_revision": "ebc87c78cf0254242adfd5337c3ce2fa89b9a2ca",
+    "visible_target_finalization": "internal_exact_original_install_plan_only"
+  },
   "machine_protocol": {
     "daemon_transport": "unavailable",
     "status": "implemented",
@@ -497,7 +525,7 @@
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
-      "revision": "9b8196437e41e45bd8d5a613246dabe5b8cdb968",
+      "revision": "e1ce68e9593ae8d9a35cc0821b5e42c798524453",
       "source": "universal-setup"
     }
   },
