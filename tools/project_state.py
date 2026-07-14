@@ -487,6 +487,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU4 live acceptance must record a recognized monotonic proof state")
+    if m2_wu4.get("status") == "accepted_dev_integration_proof_pending_operator_verdict":
+        expected_wu4_integration = {
+            "facman_reviewed_pr": 18,
+            "facman_task_head_revision": "a286b5c42736e1a4189030a51e9b1e5c397552eb",
+            "facman_task_tree": "8027f6fe9a54e1b845842934d21fa142895b50f9",
+            "facman_dev_integration_revision": "5563e3b8de4363d1d42cc2ba6f5829aed0c7405e",
+            "facman_dev_tree": "8027f6fe9a54e1b845842934d21fa142895b50f9",
+            "facman_dev_ci_run": "29337542209",
+            "facman_dev_code_security_run": "29337541636",
+            "facman_dev_security_policy_run": "29337541937",
+        }
+        if any(m2_wu4.get(key) != value for key, value in expected_wu4_integration.items()):
+            problems.append("accepted M2-WU4 integration must bind PR 18, identical trees, and exact-dev workflows")
     if m2_wu4.get("universal_setup_main_revision") != "9b8196437e41e45bd8d5a613246dabe5b8cdb968":
         problems.append("M2-WU4 must preserve its accepted historical Universal Setup revision")
     if m2_wu4.get("universal_setup_runner_revision") != "6209385f25db1824bcbb7ec599cf2152606be89b":

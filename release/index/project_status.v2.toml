@@ -107,7 +107,7 @@ execution_authority = false
 h1_inference = "none"
 
 [m2_wu4_live_acceptance]
-status = "provider_integrated_live_run_proven_pending_dev_integration"
+status = "accepted_dev_integration_proof_pending_operator_verdict"
 active_work_unit = ""
 universal_setup_runner_revision = "6209385f25db1824bcbb7ec599cf2152606be89b"
 universal_setup_task_head_revision = "169d4da80b886ed96f1e5450ddc5a3be1a44c085"
@@ -117,6 +117,14 @@ universal_setup_pr_ci_run = "29334556981"
 universal_setup_main_ci_run = "29334632894"
 facman_provider_integration_revision = "2d8b723ef04868063f8668810b9be68e542f9f03"
 facman_validation_revision = "b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6"
+facman_reviewed_pr = 18
+facman_task_head_revision = "a286b5c42736e1a4189030a51e9b1e5c397552eb"
+facman_task_tree = "8027f6fe9a54e1b845842934d21fa142895b50f9"
+facman_dev_integration_revision = "5563e3b8de4363d1d42cc2ba6f5829aed0c7405e"
+facman_dev_tree = "8027f6fe9a54e1b845842934d21fa142895b50f9"
+facman_dev_ci_run = "29337542209"
+facman_dev_code_security_run = "29337541636"
+facman_dev_security_policy_run = "29337541937"
 acceptance_root = "D:\\FacMan-Live-Acceptance\\M2"
 run_id = "m2wu4-20260714-01"
 run_summary_sha256 = "0d42f22f40aa2b92df49b8bd872db9ad2367c5000d615a6d982f25e4ee0a0507"
