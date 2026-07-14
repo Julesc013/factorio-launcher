@@ -146,10 +146,20 @@ private:
                 : handlers::refuse_execute(context_, std::get<ExecuteRunRequest>(request.payload));
         case CommandId::setup_preview: return handlers::preview_setup(context_);
         case CommandId::package_verify: return handlers::verify_package(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_install_plan: return handlers::plan_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_install_apply: return handlers::apply_install(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_install_version: return handlers::install_version(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_verify: return handlers::verify_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_repair_plan: return handlers::plan_repair_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_repair_apply: return handlers::apply_repair_install(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_repair: return handlers::repair_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_move_plan: return handlers::plan_move_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_move_apply: return handlers::apply_move_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_uninstall_plan: return handlers::plan_uninstall_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_uninstall_apply: return handlers::apply_uninstall_install(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::installs_uninstall: return handlers::uninstall_install(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_recovery_inspect: return handlers::inspect_install_recovery(context_, std::get<ServiceOperationRequest>(request.payload));
+        case CommandId::installs_recovery_apply: return handlers::apply_install_recovery(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::mods_search: case CommandId::mods_install:
         case CommandId::mods_update: return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::servers_list: return handlers::list_servers(context_);
