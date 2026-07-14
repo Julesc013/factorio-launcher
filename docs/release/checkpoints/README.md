@@ -41,6 +41,12 @@ checkpoint records the fixture-backed local-archive lifecycle across Universal
 Setup, Universal Launcher, and FacMan. It does not replace the frozen R3.7 H1
 candidate, promote ordinary live-target setup apply, or infer an H1 Pass.
 
+The evidence-only
+[`M1 Public Integration Proof`](m1-public-integration-proof.md) binds the WU12
+implementation, final `dev` checkpoint, canonical `main` promotion, identical
+tree identities, and exact successful `dev` and `main` workflows. It does not
+change M1's fixture-only mutation authority.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

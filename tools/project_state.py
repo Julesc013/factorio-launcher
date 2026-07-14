@@ -103,6 +103,7 @@ def collect() -> dict[str, Any]:
         "r3_8_repair": status["r3_8_repair"],
         "r3_8_public_integration": status["r3_8_public_integration"],
         "m1_managed_portable_install": status["m1_managed_portable_install"],
+        "m1_public_integration": status["m1_public_integration"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
         "execution": status["execution"],
@@ -164,6 +165,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- public SDK: `{data['release']['public_sdk']}`; stable compatibility is not promised.",
         f"- M1 managed portable install: `{data['m1_managed_portable_install']['status']}`; "
         f"ordinary setup apply: `{data['m1_managed_portable_install']['ordinary_setup_apply']}`.",
+        f"- M1 public integration: `{data['m1_public_integration']['status']}` at canonical main "
+        f"`{data['m1_public_integration']['canonical_main_revision']}`.",
         "",
         "R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. "
         "M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, "
@@ -341,7 +344,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    m1_closeout_id = "M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT"
+    m1_closeout_id = "M1-PUBLIC-INTEGRATION-PROOF-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
     if status.get("last_closed_work_unit") != m1_closeout_id:
@@ -369,6 +372,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical status must keep ordinary setup apply unavailable")
     if m1.get("authority_promotion") is not False:
         problems.append("M1 closeout must not promote execution or live-target authority")
+    m1_integration = status.get("m1_public_integration", {})
+    if m1_integration.get("status") != "accepted":
+        problems.append("canonical status must record accepted M1 public integration proof")
+    if m1_integration.get("canonical_main_revision") != status.get("accepted_integration_revision"):
+        problems.append("M1 public integration must bind the accepted canonical main revision")
+    if m1_integration.get("dev_tree_identity") != m1_integration.get("main_tree_identity"):
+        problems.append("M1 dev and main integration trees must be identical")
+    if m1_integration.get("checkpoint_tree_identity") != m1_integration.get("main_tree_identity"):
+        problems.append("M1 checkpoint and canonical main trees must be identical")
+    if not m1_integration.get("main_dev_synchronized_at_proof"):
+        problems.append("M1 public integration must bind canonical main ancestry into dev")
+    if m1_integration.get("authority_promotion") is not False:
+        problems.append("M1 public integration proof must not promote authority")
     execution = status.get("execution", {})
     if execution.get("status") != "unavailable":
         problems.append("canonical status must keep execution unavailable")

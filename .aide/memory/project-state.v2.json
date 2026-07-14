@@ -140,9 +140,9 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m1-managed-portable-install-foundation",
+  "current_checkpoint": "m1-public-integration-proof",
   "current_revisions": {
-    "accepted_integration": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
+    "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "c43d390efe0db17480f9d0262827659b4ae242dd",
     "universal_setup": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
@@ -159,7 +159,7 @@
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision."
   ],
-  "last_closed_work_unit": "M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT",
+  "last_closed_work_unit": "M1-PUBLIC-INTEGRATION-PROOF-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -169,6 +169,28 @@
     "status": "fixture_proven",
     "universal_launcher_revision": "c43d390efe0db17480f9d0262827659b4ae242dd",
     "universal_setup_revision": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
+  },
+  "m1_public_integration": {
+    "authority_promotion": false,
+    "canonical_main_revision": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
+    "checkpoint_dev_integration_revision": "cfd30b769cc97e3703da4027aee8078ddf320dc6",
+    "checkpoint_tree_identity": "8a9c9dc29849db0922b7a0ffa337903c9f011e01",
+    "dev_tree_identity": "8a9c9dc29849db0922b7a0ffa337903c9f011e01",
+    "final_dev_ci_run": "29301453095",
+    "final_dev_code_security_run": "29301453067",
+    "final_dev_release_policy_run": "29301469120",
+    "final_dev_security_policy_run": "29301453099",
+    "final_main_ci_run": "29310497458",
+    "final_main_code_security_run": "29310497459",
+    "final_main_release_policy_run": "29310506019",
+    "final_main_schema_check_run": "29310497454",
+    "final_main_security_policy_run": "29310497496",
+    "main_dev_synchronized_at_proof": true,
+    "main_tree_identity": "8a9c9dc29849db0922b7a0ffa337903c9f011e01",
+    "status": "accepted",
+    "wu12_dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
+    "wu12_task_head_revision": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
+    "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",

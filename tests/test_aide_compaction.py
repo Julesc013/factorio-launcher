@@ -25,6 +25,7 @@ class AideCompactionTests(unittest.TestCase):
         for key in (
             "current_revisions", "active_work_unit", "last_closed_work_unit",
             "r3_8_repair", "r3_8_public_integration", "m1_managed_portable_install",
+            "m1_public_integration",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
@@ -35,13 +36,13 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_m1_closeout_preserves_provider_gate_and_catalog_truth(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m1-managed-portable-install-foundation", data["current_checkpoint"])
+        self.assertEqual("m1-public-integration-proof", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT",
+            "M1-PUBLIC-INTEGRATION-PROOF-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -93,6 +94,19 @@ class AideCompactionTests(unittest.TestCase):
             m1["ordinary_setup_apply"],
         )
         self.assertFalse(m1["authority_promotion"])
+        public_integration = data["m1_public_integration"]
+        self.assertEqual("accepted", public_integration["status"])
+        self.assertEqual(
+            "73bec99916d509b0ab055a43562e93ef20a6b4b7",
+            public_integration["canonical_main_revision"],
+        )
+        self.assertEqual(
+            public_integration["dev_tree_identity"],
+            public_integration["main_tree_identity"],
+        )
+        self.assertEqual("29310497458", public_integration["final_main_ci_run"])
+        self.assertTrue(public_integration["main_dev_synchronized_at_proof"])
+        self.assertFalse(public_integration["authority_promotion"])
         catalog = json.loads(
             (project_state.ROOT / "contracts/generated-index/command_catalog.v2.json").read_text(encoding="utf-8")
         )
