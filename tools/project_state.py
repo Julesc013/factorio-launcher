@@ -364,7 +364,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01"
+    latest_closeout_id = "M2-WU3-DEV-INTEGRATION-PROOF-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
     if status.get("last_closed_work_unit") != latest_closeout_id:
@@ -445,6 +445,20 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof",
     }:
         problems.append("M2-WU3 live evidence must record a recognized monotonic proof state")
+    if m2_wu3.get("status") == "accepted_dev_integration_proof":
+        if m2_wu3.get("facman_reviewed_pr") != 16:
+            problems.append("M2-WU3 accepted integration must bind reviewed PR 16")
+        if m2_wu3.get("facman_task_tree_identity") != m2_wu3.get("facman_dev_tree_identity"):
+            problems.append("M2-WU3 task and reviewed dev merge must preserve identical trees")
+        for field in (
+            "facman_task_head_revision",
+            "facman_dev_integration_revision",
+            "facman_dev_ci_run",
+            "facman_dev_code_security_run",
+            "facman_dev_security_policy_run",
+        ):
+            if not m2_wu3.get(field):
+                problems.append(f"M2-WU3 accepted integration must bind {field}")
     if m2_wu3.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
         problems.append("M2-WU3 must bind the exact current Universal Setup provider pin")
     if m2_wu3.get("operator_verdict") != "pending" or m2_wu3.get("automation_can_record_operator_verdict") is not False:

@@ -47,12 +47,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "live_evidence_provider_integrated_pending_operator_acceptance",
+            "live_evidence_dev_integrated_pending_operator_acceptance",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
-            "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01",
+            "M2-WU3-DEV-INTEGRATION-PROOF-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
@@ -80,7 +80,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("pending", m2_wu2["operator_verdict"])
         self.assertFalse(m2_wu2["execution_authority"])
         m2_wu3 = data["m2_wu3_live_evidence"]
-        self.assertEqual("implementation_proven_pending_dev_integration", m2_wu3["status"])
+        self.assertEqual("accepted_dev_integration_proof", m2_wu3["status"])
         self.assertEqual(
             data["provider_pins"]["universal_setup"]["revision"],
             m2_wu3["universal_setup_main_revision"],
@@ -90,6 +90,22 @@ class AideCompactionTests(unittest.TestCase):
         self.assertTrue(m2_wu3["setup_owned_evidence_write"])
         self.assertTrue(m2_wu3["plan_pre_snapshot"])
         self.assertTrue(m2_wu3["capture_recomputes_post_snapshot"])
+        self.assertEqual(16, m2_wu3["facman_reviewed_pr"])
+        self.assertEqual(
+            "5f93f42f97089ae367e718d3466f4421abf43625",
+            m2_wu3["facman_task_head_revision"],
+        )
+        self.assertEqual(
+            m2_wu3["facman_task_tree_identity"],
+            m2_wu3["facman_dev_tree_identity"],
+        )
+        self.assertEqual(
+            "a8b298a35cd1587cea566886b5a3891153a2b7f2",
+            m2_wu3["facman_dev_integration_revision"],
+        )
+        self.assertEqual("29332570822", m2_wu3["facman_dev_ci_run"])
+        self.assertEqual("29332570777", m2_wu3["facman_dev_code_security_run"])
+        self.assertEqual("29332570776", m2_wu3["facman_dev_security_policy_run"])
         self.assertEqual("unavailable_pending_operator_acceptance", m2_wu3["ordinary_live_apply"])
         self.assertFalse(m2_wu3["execution_authority"])
         self.assertEqual("none", m2_wu3["h1_inference"])

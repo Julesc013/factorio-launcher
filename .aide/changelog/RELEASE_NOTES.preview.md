@@ -3,7 +3,7 @@
 This is a deterministic preview only. It does not publish a release.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: 4360d0f40c38d9e7f0c69151f57fd0a9ee7a92b5
+source_head: a8b298a35cd1587cea566886b5a3891153a2b7f2
 preview_only: true
 
 ## Highlights
@@ -57,7 +57,6 @@ preview_only: true
 - Changed: public lifecycle is dev-integrated pending operator acceptance. (182ada6be86d)
 - Changed: WU2 exact-dev integration is fully closed. (cad50062c955)
 - Changed: publication governance reports now match the closed evidence head. (53ebb488daad)
-- Fixed: FacMan now consumes the scheduler-independent Universal Setup proof head. (c24237e82245)
 - Fixed: legacy repair and uninstall grammar remains unambiguous beside phase subcommands. (7850424d3e35)
 - Fixed: Reproducibility proof no longer treats the owned-output marker as a package archive. (2f13923a9cbd)
 - Fixed: New non-ignored source files are now checked before their first commit. (5b01b36fb989)
@@ -95,7 +94,6 @@ preview_only: true
 
 ## Validation Summary
 
-- c24237e82245: Setup exact-main CI 29293560341 test, sanitizer, and fuzz-smoke: PASS.
 - d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
 - d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
 - d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
@@ -105,10 +103,10 @@ preview_only: true
 - 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
 - 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
 - 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
+- d72c56b6802e: py -3 tools/strict_check.py: PASS.
 
 ## Known Risks
 
-- c24237e82245: FacMan hosted cross-platform confirmation remains required at the new exact head.
 - d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
 - d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
 - d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
@@ -118,10 +116,10 @@ preview_only: true
 - 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
 - 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
 - 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
+- d72c56b6802e: Ordinary setup apply remains intentionally unavailable; no H1 authority changes.
 
 ## Follow-up
 
-- c24237e82245: Rebuild the complete FacMan matrix and update PR #5.
 - d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
 - d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
 - d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
@@ -131,6 +129,7 @@ preview_only: true
 - 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
 - 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
 - 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
+- d72c56b6802e: Publish WU10 for exact-head CI and merge to dev.
 
 ## Warnings
 
@@ -142,7 +141,8 @@ preview_only: true
 - d96384bf8f48 merge commit ignored
 - 747b4442cf22 merge commit ignored
 - 178de3192f3c merge commit ignored
-- 10 malformed or legacy commits require review
+- a8b298a35cd1 merge commit ignored
+- 9 malformed or legacy commits require review
 
 ## Preview Caveat
 

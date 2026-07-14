@@ -1,9 +1,9 @@
 {
-  "branch_role_for_current_branch": "task",
+  "branch_role_for_current_branch": "integration",
   "canonical_branch": "main",
   "confidence": "high",
-  "current_branch": "task/m2-wu3-live-target-evidence",
-  "current_commit": "461251d7fd3d73e904df3d7040999588d6cd7725",
+  "current_branch": "dev",
+  "current_commit": "a8b298a35cd1587cea566886b5a3891153a2b7f2",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
@@ -24,7 +24,6 @@
     "task/m1-wu9-factorio-setup-gateway-q27",
     "task/m2-wu2-dev-integration-proof",
     "task/m2-wu2-public-lifecycle",
-    "task/m2-wu3-live-target-evidence",
     "task/macos-runner-ci-fix",
     "task/package-smoke-01",
     "task/r3-final-evidence",
@@ -43,7 +42,7 @@
     "task/universal-mit-license-integration-q27"
   ],
   "non_mutating": true,
-  "recommended_next_action": "classify dirty tree before branch-sensitive work",
+  "recommended_next_action": "use dev only for integration repair or explicitly scoped work; normal work should use a task branch",
   "remote_branches": [
     "origin/dev",
     "origin/evidence/r3.6-real-factorio-isolation-baseline",
@@ -55,6 +54,7 @@
     "origin/task/m2-wu1-live-target-policy",
     "origin/task/m2-wu2-dev-integration-proof",
     "origin/task/m2-wu2-public-lifecycle",
+    "origin/task/m2-wu3-live-target-evidence",
     "origin/task/r3.2-isolation-foundation",
     "origin/task/r3.3-data-integrity-recovery",
     "origin/task/r3.5-zero-exception-productization",
@@ -76,8 +76,6 @@
       "facman-r2-local-alpha-proof-0"
     ]
   },
-  "warnings": [
-    "dirty_tree_detected"
-  ],
-  "worktree_dirty": true
+  "warnings": [],
+  "worktree_dirty": false
 }
