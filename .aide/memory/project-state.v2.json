@@ -150,7 +150,7 @@
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
-    "universal_setup": "17db1bd9a680d97611fa73f7639c38e1c9472680"
+    "universal_setup": "aa4d8cec93f265893f246d217ee94c03073899a3"
   },
   "execution": {
     "operator_verdict": "Fail",
@@ -240,10 +240,13 @@
     "recovery_apply": "unavailable_pending_wu5",
     "recovery_inspect_plan": "available_read_only",
     "status": "provider_integrated_candidate",
-    "universal_setup_main_ci_run": "29321082725",
-    "universal_setup_main_revision": "17db1bd9a680d97611fa73f7639c38e1c9472680",
+    "universal_setup_main_ci_run": "29322161463",
+    "universal_setup_main_revision": "aa4d8cec93f265893f246d217ee94c03073899a3",
     "universal_setup_pr_ci_run": "29321009637",
     "universal_setup_push_ci_run": "29321006210",
+    "universal_setup_remediation_pr_ci_run": "29322092513",
+    "universal_setup_remediation_push_ci_run": "29322088318",
+    "universal_setup_remediation_revision": "1ac39871120364ba554a8831d0d0860e2078ad35",
     "universal_setup_task_revision": "9baacd5547ddd7fe2705d3749059f7cb22a86e38"
   },
   "machine_protocol": {
@@ -378,7 +381,7 @@
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
-      "revision": "17db1bd9a680d97611fa73f7639c38e1c9472680",
+      "revision": "aa4d8cec93f265893f246d217ee94c03073899a3",
       "source": "universal-setup"
     }
   },
