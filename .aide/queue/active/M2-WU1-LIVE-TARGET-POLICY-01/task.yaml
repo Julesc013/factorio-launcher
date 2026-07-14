@@ -9,15 +9,22 @@ owner: unassigned
 objective: >
   Define fail-closed live target classes, accepted roots, filesystem and path classification, immutable plan bindings, and the operator-acceptance gate without enabling live mutation.
 allowed_paths:
+  - THIRD_PARTY_NOTICES.md
   - .aide/memory/**
   - .aide/queue/**
   - contracts/setup/**
   - docs/architecture/**
   - docs/quality/**
   - docs/release/checkpoints/**
+  - release/index/dependency_lock.v1.toml
   - release/index/project_status.v2.toml
+  - release/index/sbom.components.v1.json
+  - release/index/workspace_lock.v1.toml
+  - runtime/factorio/application/handlers/intelligence.cpp
   - tests/**
+  - tools/compliance_check.py
   - tools/project_state.py
+  - tools/validators/release/check_dependency_lock.py
 forbidden_paths:
   - .git/**
   - .aide.local/**
@@ -31,12 +38,15 @@ affected_python_tests:
   - tests.test_contract_truth
   - tests.test_refusal_contract
   - tests.test_schema_tools
+  - tests.test_setup_package_routing
 affected_strict_validators:
   - tools/command_contract_check.py
   - tools/refusal_contract_check.py
   - tools/schema_validate.py
 affected_package_profiles:
-  []
+  - portable-cli
+  - portable-tui
+  - windows-x64-static-cli
 architecture_invariants:
   - frontends depend on runtime/client, not backend implementations
   - AIDE remains development-only and is excluded from product packages

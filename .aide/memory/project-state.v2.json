@@ -140,12 +140,12 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "universal-mit-license-integration",
+  "current_checkpoint": "m2-wu1-live-target-policy",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
-    "universal_setup": "264bb1939a67231878313155157abd0f83d24c13"
+    "universal_setup": "f322655fa8fa287a400f7afb6c661eade30d707b"
   },
   "execution": {
     "operator_verdict": "Fail",
@@ -334,7 +334,7 @@
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
-      "revision": "264bb1939a67231878313155157abd0f83d24c13",
+      "revision": "f322655fa8fa287a400f7afb6c661eade30d707b",
       "source": "universal-setup"
     }
   },

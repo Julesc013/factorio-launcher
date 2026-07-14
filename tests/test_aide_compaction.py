@@ -38,7 +38,7 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_m1_closeout_preserves_provider_gate_and_catalog_truth(self) -> None:
         data = project_state.collect()
-        self.assertEqual("universal-mit-license-integration", data["current_checkpoint"])
+        self.assertEqual("m2-wu1-live-target-policy", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
@@ -117,7 +117,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "264bb1939a67231878313155157abd0f83d24c13",
+            "f322655fa8fa287a400f7afb6c661eade30d707b",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

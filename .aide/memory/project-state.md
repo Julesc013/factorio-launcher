@@ -8,14 +8,14 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `universal-mit-license-integration`;
+- checkpoint: `m2-wu1-live-target-policy`;
 - active WorkUnit: `M2-WU1-LIVE-TARGET-POLICY-01`;
 - last closed WorkUnit: `M1-PUBLIC-INTEGRATION-PROOF-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `73bec99916d509b0ab055a43562e93ef20a6b4b7`;
 - Universal Launcher pin: `6d41e07b76cd19b2a7630835e05ac3aa125d57b8`;
-- Universal Setup pin: `264bb1939a67231878313155157abd0f83d24c13`;
+- Universal Setup pin: `f322655fa8fa287a400f7afb6c661eade30d707b`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
 - operator verdict: `Fail`;
 - Safe beta: `false`;
