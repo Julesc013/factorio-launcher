@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "none",
+  "active_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -197,7 +197,7 @@
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
   "m2_live_portable_setup": {
-    "active_work_unit": "none",
+    "active_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
     "authorized_acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
     "autonomous_archive_scope": "non_proprietary_synthetic_only",
     "execution_authority": false,
@@ -205,14 +205,19 @@
     "h1_inference": "none",
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
-    "status": "wu1_policy_proven_public_activation_pending"
+    "status": "active_public_lifecycle_activation"
   },
   "m2_wu1_target_policy": {
     "execution_authority": false,
+    "facman_dev_ci_run": "29318247825",
+    "facman_dev_code_security_run": "29318247952",
+    "facman_dev_integration_revision": "d96384bf8f48230256d35fa7015cbc7374e83319",
+    "facman_dev_security_policy_run": "29318247752",
+    "facman_task_head_revision": "b1a1795c90e2045876431b2ed372abd558eb517d",
     "h1_inference": "none",
     "mutation_authority": false,
     "operator_verdict": "pending",
-    "status": "accepted_policy_proof",
+    "status": "accepted_dev_integration_proof",
     "target_decision_contract": "usk.target_policy_decision.v1",
     "target_evidence_contract": "usk.target_evidence.v1",
     "target_policy_contract": "usk.target_policy.v1",
@@ -221,6 +226,17 @@
     "universal_setup_pr_ci_run": "29316591892",
     "universal_setup_push_ci_run": "29316580182",
     "universal_setup_task_revision": "804ae1ea2f9fdb78525a0a3ef09069b51d8bb1c1"
+  },
+  "m2_wu2_public_lifecycle": {
+    "active_work_unit": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01",
+    "apply_requires_exact_plan": true,
+    "execution_authority": false,
+    "h1_inference": "none",
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "plan_commands_read_only": true,
+    "pre_verdict_target_class": "operator_acceptance",
+    "status": "active"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",

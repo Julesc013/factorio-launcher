@@ -6,7 +6,7 @@ implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "73bec99916d509b0ab055a43562e93ef20a6b4b7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "none"
+active_work_unit = "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01"
 last_closed_work_unit = "M2-WU1-LIVE-TARGET-POLICY-01"
 next_authority_gate = "H1"
 safe_beta = false
@@ -96,8 +96,8 @@ main_dev_synchronized_at_proof = true
 authority_promotion = false
 
 [m2_live_portable_setup]
-status = "wu1_policy_proven_public_activation_pending"
-active_work_unit = "none"
+status = "active_public_lifecycle_activation"
+active_work_unit = "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01"
 authorized_acceptance_root = "D:\\FacMan-Live-Acceptance\\M2"
 autonomous_archive_scope = "non_proprietary_synthetic_only"
 operator_verdict = "pending"
@@ -107,16 +107,32 @@ execution_authority = false
 h1_inference = "none"
 
 [m2_wu1_target_policy]
-status = "accepted_policy_proof"
+status = "accepted_dev_integration_proof"
 universal_setup_task_revision = "804ae1ea2f9fdb78525a0a3ef09069b51d8bb1c1"
 universal_setup_main_revision = "f322655fa8fa287a400f7afb6c661eade30d707b"
 universal_setup_push_ci_run = "29316580182"
 universal_setup_pr_ci_run = "29316591892"
 universal_setup_main_ci_run = "29316660078"
+facman_task_head_revision = "b1a1795c90e2045876431b2ed372abd558eb517d"
+facman_dev_integration_revision = "d96384bf8f48230256d35fa7015cbc7374e83319"
+facman_dev_ci_run = "29318247825"
+facman_dev_code_security_run = "29318247952"
+facman_dev_security_policy_run = "29318247752"
 target_policy_contract = "usk.target_policy.v1"
 target_evidence_contract = "usk.target_evidence.v1"
 target_decision_contract = "usk.target_policy_decision.v1"
 mutation_authority = false
+operator_verdict = "pending"
+execution_authority = false
+h1_inference = "none"
+
+[m2_wu2_public_lifecycle]
+status = "active"
+active_work_unit = "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01"
+plan_commands_read_only = true
+apply_requires_exact_plan = true
+pre_verdict_target_class = "operator_acceptance"
+ordinary_live_apply = "unavailable_pending_operator_acceptance"
 operator_verdict = "pending"
 execution_authority = false
 h1_inference = "none"
