@@ -46,14 +46,14 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertEqual("M2-WU4-LIVE-INSTALL-ACCEPTANCE-01", data["active_work_unit"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "automated_live_lifecycle_complete_pending_operator_verdict",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
         self.assertEqual(
-            "M2-WU3-DEV-INTEGRATION-PROOF-01",
+            "M2-WU4-LIVE-INSTALL-ACCEPTANCE-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
@@ -117,6 +117,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(4, m2_wu4["evidence_packet_count"])
         self.assertEqual(4, m2_wu4["journal_count"])
         self.assertEqual(5, m2_wu4["audit_event_count"])
+        self.assertEqual(39, m2_wu4["native_test_count"])
+        self.assertEqual(339, m2_wu4["python_test_count"])
+        self.assertEqual(1, m2_wu4["python_opt_in_skip_count"])
+        self.assertEqual(14, m2_wu4["required_windows_package_tests"])
+        self.assertEqual(0, m2_wu4["required_windows_package_skips"])
+        self.assertEqual(388, m2_wu4["package_tree_file_count"])
         self.assertEqual("expected_fail_observed", m2_wu4["damaged_owned_file_detection"])
         self.assertEqual("pass_old_root_retained", m2_wu4["same_volume_move"])
         self.assertEqual("not_attempted_no_second_authorized_volume", m2_wu4["cross_volume_move"])

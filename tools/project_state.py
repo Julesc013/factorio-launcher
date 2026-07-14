@@ -369,7 +369,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU3-DEV-INTEGRATION-PROOF-01"
+    latest_closeout_id = "M2-WU4-LIVE-INSTALL-ACCEPTANCE-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
     if status.get("last_closed_work_unit") != latest_closeout_id:
@@ -492,6 +492,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU4 must bind the retained live summary identity")
     if m2_wu4.get("evidence_packet_count") != 4 or m2_wu4.get("journal_count") != 4:
         problems.append("M2-WU4 must bind four operation packets and four completed journals")
+    if m2_wu4.get("native_test_count") != 39 or m2_wu4.get("python_test_count") != 339:
+        problems.append("M2-WU4 must bind the complete local native and Python proof counts")
+    if m2_wu4.get("required_windows_package_tests") != 14 or m2_wu4.get("required_windows_package_skips") != 0:
+        problems.append("M2-WU4 must bind the required zero-skip Windows package proof")
     if m2_wu4.get("synthetic_archive_contains_executable_code") is not False:
         problems.append("M2-WU4 autonomous archive must remain non-executable synthetic content")
     if m2_wu4.get("cross_volume_move") != "not_attempted_no_second_authorized_volume":

@@ -2,56 +2,6 @@
   "categories": {
     "Added": [
       {
-        "aide_phase": "M1-WU10",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Added",
-        "commit": "d1fb7f97572a",
-        "commit_sha": "d1fb7f97572a24143b6ebfde4bf370481f89dcdb",
-        "entry": "explicit generated managed-setup lifecycle workflows.",
-        "follow_up": "- Route the canonical descriptors through the application boundary and prove frontend refusal behavior.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: setup command contracts and generated frontends\nAIDE-Token-Impact: additive explicit lifecycle grammar\nAIDE-Quality-Gate: generated metadata schemas native 34/34 PASS",
-        "risks": "- No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.",
-        "scope": "setup-workflows",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-        "summary": "explicit generated managed-setup lifecycle workflows.",
-        "type": "feat",
-        "validation": "- py -3 tools/codegen/generate_metadata.py --check: PASS.\n- py -3 tools/setup_workflow_check.py: PASS (4 plans, 5 guarded applies, 2 reads).\n- py -3 tools/command_contract_check.py: PASS (121 commands).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34)."
-      },
-      {
-        "aide_phase": "M1-WU10",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Added",
-        "commit": "7850424d3e35",
-        "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-        "entry": "canonical CLI plan/apply/recovery grammar.",
-        "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-        "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-        "scope": "setup-gateway",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-        "summary": "canonical CLI plan/apply/recovery grammar.",
-        "type": "feat",
-        "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-      },
-      {
         "aide_phase": "managed-install-reference-consumption",
         "aide_result": "PASS",
         "breaking": false,
@@ -303,56 +253,6 @@
       }
     ],
     "Changed": [
-      {
-        "aide_phase": "M1-WU10",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Changed",
-        "commit": "7850424d3e35",
-        "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-        "entry": "setup requests now use typed target, plan, digest, and confirmation fields.",
-        "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-        "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-        "scope": "setup-gateway",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-        "summary": "setup requests now use typed target, plan, digest, and confirmation fields.",
-        "type": "feat",
-        "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-      },
-      {
-        "aide_phase": "generated-frontend-workflows",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Changed",
-        "commit": "d72c56b6802e",
-        "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-        "entry": "setup lifecycle commands now compose through their owning application handler.",
-        "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-        "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-        "scope": "setup-routing",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "refactor(setup-routing): preserve application composition boundary",
-        "summary": "setup lifecycle commands now compose through their owning application handler.",
-        "type": "refactor",
-        "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-      },
       {
         "aide_phase": "evidence-closeout",
         "aide_result": "PASS",
@@ -704,84 +604,7 @@
         "validation": "- AIDE git detect: PASS.\n- Branch role and dev integration branch: PASS.\n- git diff --check: PASS."
       }
     ],
-    "Deprecated": [
-      {
-        "aide_phase": "M1-WU10",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Deprecated",
-        "commit": "d1fb7f97572a",
-        "commit_sha": "d1fb7f97572a24143b6ebfde4bf370481f89dcdb",
-        "entry": "legacy setup verbs are internal compatibility aliases.",
-        "follow_up": "- Route the canonical descriptors through the application boundary and prove frontend refusal behavior.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: setup command contracts and generated frontends\nAIDE-Token-Impact: additive explicit lifecycle grammar\nAIDE-Quality-Gate: generated metadata schemas native 34/34 PASS",
-        "risks": "- No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.",
-        "scope": "setup-workflows",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-        "summary": "legacy setup verbs are internal compatibility aliases.",
-        "type": "feat",
-        "validation": "- py -3 tools/codegen/generate_metadata.py --check: PASS.\n- py -3 tools/setup_workflow_check.py: PASS (4 plans, 5 guarded applies, 2 reads).\n- py -3 tools/command_contract_check.py: PASS (121 commands).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34)."
-      }
-    ],
     "Docs": [
-      {
-        "aide_phase": "M1-WU10",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Docs",
-        "commit": "7850424d3e35",
-        "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-        "entry": "records the managed setup frontend command law.",
-        "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-        "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-        "scope": "setup-gateway",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-        "summary": "records the managed setup frontend command law.",
-        "type": "feat",
-        "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-      },
-      {
-        "aide_phase": "generated-frontend-workflows",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Docs",
-        "commit": "d72c56b6802e",
-        "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-        "entry": "project truth reflects 121 commands, 228 schemas, and 216 refusal codes.",
-        "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-        "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-        "scope": "setup-routing",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "refactor(setup-routing): preserve application composition boundary",
-        "summary": "project truth reflects 121 commands, 228 schemas, and 216 refusal codes.",
-        "type": "refactor",
-        "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-      },
       {
         "aide_phase": "fixture-lifecycle-system-proof",
         "aide_result": "PASS",
@@ -931,20 +754,18 @@
         "summary": "generated project truth now reports the active bounded WorkUnit.",
         "type": "chore",
         "validation": "- focused project-state and AIDE truth tests: 15/15 PASS.\n- py -3 tools/strict_check.py: PASS.\n- py -3 .aide/scripts/aide_lite.py test: PASS."
-      }
-    ],
-    "Fixed": [
+      },
       {
-        "aide_phase": "M1-WU10",
+        "aide_phase": "dev-integration",
         "aide_result": "PASS",
         "breaking": false,
-        "category": "Fixed",
-        "commit": "7850424d3e35",
-        "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-        "entry": "legacy repair and uninstall grammar remains unambiguous beside phase subcommands.",
-        "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-        "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-        "scope": "setup-gateway",
+        "category": "Docs",
+        "commit": "067397e592ce",
+        "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+        "entry": "accepted WU3 reviewed dev integration evidence.",
+        "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+        "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+        "scope": "m2",
         "source_sections_present": [
           "## Summary",
           "## Why",
@@ -954,11 +775,13 @@
           "## Risks",
           "## Follow-up"
         ],
-        "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-        "summary": "legacy repair and uninstall grammar remains unambiguous beside phase subcommands.",
-        "type": "feat",
-        "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-      },
+        "subject": "docs(m2): bind WU3 exact-dev integration proof",
+        "summary": "accepted WU3 reviewed dev integration evidence.",
+        "type": "docs",
+        "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+      }
+    ],
+    "Fixed": [
       {
         "aide_phase": "package-reproducibility-remediation",
         "aide_result": "PASS",
@@ -1211,31 +1034,6 @@
       }
     ],
     "Follow-up": [
-      {
-        "aide_phase": "generated-frontend-workflows",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Follow-up",
-        "commit": "d72c56b6802e",
-        "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-        "entry": "publish WU10 for exact-head CI and merge to dev.",
-        "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-        "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-        "scope": "setup-routing",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "refactor(setup-routing): preserve application composition boundary",
-        "summary": "publish WU10 for exact-head CI and merge to dev.",
-        "type": "refactor",
-        "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-      },
       {
         "aide_phase": "canonical-closeout",
         "aide_result": "PASS",
@@ -1510,20 +1308,18 @@
         "summary": "rerun clean three-repository and selected-package proofs.",
         "type": "fix",
         "validation": "- Universal Setup exact-head and exact-main test/sanitizer/fuzz: PASS.\n- project-state generation and validation: PASS.\n- focused provider/AIDE tests: PASS (8/8).\n- compliance and dependency-lock checks: PASS.\n- git diff --check: PASS."
-      }
-    ],
-    "Internal": [
+      },
       {
-        "aide_phase": "generated-frontend-workflows",
+        "aide_phase": "dev-integration",
         "aide_result": "PASS",
         "breaking": false,
-        "category": "Internal",
-        "commit": "d72c56b6802e",
-        "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-        "entry": "generated frontend metadata excludes deprecated setup aliases without removing ABI compatibility.",
-        "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-        "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-        "scope": "setup-routing",
+        "category": "Follow-up",
+        "commit": "067397e592ce",
+        "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+        "entry": "run WU4 only with a harmless synthetic archive below D:\\FacMan-Live-Acceptance\\M2.",
+        "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+        "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+        "scope": "m2",
         "source_sections_present": [
           "## Summary",
           "## Why",
@@ -1533,11 +1329,13 @@
           "## Risks",
           "## Follow-up"
         ],
-        "subject": "refactor(setup-routing): preserve application composition boundary",
-        "summary": "generated frontend metadata excludes deprecated setup aliases without removing ABI compatibility.",
-        "type": "refactor",
-        "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-      },
+        "subject": "docs(m2): bind WU3 exact-dev integration proof",
+        "summary": "run WU4 only with a harmless synthetic archive below D:\\FacMan-Live-Acceptance\\M2.",
+        "type": "docs",
+        "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+      }
+    ],
+    "Internal": [
       {
         "aide_phase": "canonical-closeout",
         "aide_result": "PASS",
@@ -1612,20 +1410,18 @@
         "summary": "refreshed WU3 review-only changelog artifacts.",
         "type": "chore",
         "validation": "- AIDE Lite test: PASS.\n- Project state validation: PASS.\n- WU3 native, Python, package, reproducibility, and clean reconstruction gates: PASS."
-      }
-    ],
-    "Risks": [
+      },
       {
-        "aide_phase": "generated-frontend-workflows",
+        "aide_phase": "dev-integration",
         "aide_result": "PASS",
         "breaking": false,
-        "category": "Risks",
-        "commit": "d72c56b6802e",
-        "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-        "entry": "ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-        "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-        "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-        "scope": "setup-routing",
+        "category": "Internal",
+        "commit": "067397e592ce",
+        "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+        "entry": "refresh generated project state and AIDE review artifacts.",
+        "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+        "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+        "scope": "m2",
         "source_sections_present": [
           "## Summary",
           "## Why",
@@ -1635,11 +1431,13 @@
           "## Risks",
           "## Follow-up"
         ],
-        "subject": "refactor(setup-routing): preserve application composition boundary",
-        "summary": "ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-        "type": "refactor",
-        "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-      },
+        "subject": "docs(m2): bind WU3 exact-dev integration proof",
+        "summary": "refresh generated project state and AIDE review artifacts.",
+        "type": "docs",
+        "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+      }
+    ],
+    "Risks": [
       {
         "aide_phase": "canonical-closeout",
         "aide_result": "PASS",
@@ -1789,59 +1587,34 @@
         "summary": "test-only truth expectation; no runtime or package behavior changes.",
         "type": "fix",
         "validation": "- exact failing Linux assertion reproduced from jobs 87023693849 and 87023751441.\n- full Python corpus against clean reconstructed binaries: 338 run, 337 PASS, one intentional opt-in skip.\n- py -3 tools/strict_check.py: PASS.\n- py -3 .aide/scripts/aide_lite.py test: PASS."
+      },
+      {
+        "aide_phase": "dev-integration",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Risks",
+        "commit": "067397e592ce",
+        "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+        "entry": "no live acceptance or ordinary apply authority is inferred.",
+        "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+        "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+        "scope": "m2",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "docs(m2): bind WU3 exact-dev integration proof",
+        "summary": "no live acceptance or ordinary apply authority is inferred.",
+        "type": "docs",
+        "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
       }
     ],
     "Security": [
-      {
-        "aide_phase": "M1-WU10",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Security",
-        "commit": "d1fb7f97572a",
-        "commit_sha": "d1fb7f97572a24143b6ebfde4bf370481f89dcdb",
-        "entry": "apply contracts remain unavailable and digest/confirmation bound.",
-        "follow_up": "- Route the canonical descriptors through the application boundary and prove frontend refusal behavior.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: setup command contracts and generated frontends\nAIDE-Token-Impact: additive explicit lifecycle grammar\nAIDE-Quality-Gate: generated metadata schemas native 34/34 PASS",
-        "risks": "- No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.",
-        "scope": "setup-workflows",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-        "summary": "apply contracts remain unavailable and digest/confirmation bound.",
-        "type": "feat",
-        "validation": "- py -3 tools/codegen/generate_metadata.py --check: PASS.\n- py -3 tools/setup_workflow_check.py: PASS (4 plans, 5 guarded applies, 2 reads).\n- py -3 tools/command_contract_check.py: PASS (121 commands).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34)."
-      },
-      {
-        "aide_phase": "M1-WU10",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Security",
-        "commit": "7850424d3e35",
-        "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-        "entry": "no apply route mutates setup state or enables Factorio execution.",
-        "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-        "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-        "scope": "setup-gateway",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-        "summary": "no apply route mutates setup state or enables Factorio execution.",
-        "type": "feat",
-        "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-      },
       {
         "aide_phase": "managed-install-reference-consumption",
         "aide_result": "PASS",
@@ -2320,31 +2093,6 @@
     ],
     "Tests": [
       {
-        "aide_phase": "M1-WU10",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Tests",
-        "commit": "d1fb7f97572a",
-        "commit_sha": "d1fb7f97572a24143b6ebfde4bf370481f89dcdb",
-        "entry": "adds a strict generated workflow guard.",
-        "follow_up": "- Route the canonical descriptors through the application boundary and prove frontend refusal behavior.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: setup command contracts and generated frontends\nAIDE-Token-Impact: additive explicit lifecycle grammar\nAIDE-Quality-Gate: generated metadata schemas native 34/34 PASS",
-        "risks": "- No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.",
-        "scope": "setup-workflows",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-        "summary": "adds a strict generated workflow guard.",
-        "type": "feat",
-        "validation": "- py -3 tools/codegen/generate_metadata.py --check: PASS.\n- py -3 tools/setup_workflow_check.py: PASS (4 plans, 5 guarded applies, 2 reads).\n- py -3 tools/command_contract_check.py: PASS (121 commands).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34)."
-      },
-      {
         "aide_phase": "managed-install-reference-consumption",
         "aide_result": "PASS",
         "breaking": false,
@@ -2668,373 +2416,47 @@
         "summary": "target policy adds one integrated native test, bringing this build to 36/36.",
         "type": "docs",
         "validation": "- Universal Setup push, PR, and exact-main CI: PASS.\n- FacMan integrated native CTest: PASS (36/36).\n- Focused Python closeout tests: PASS (8/8; earlier contract slice 20/20).\n- Required Windows package proof: PASS (14/14, zero skips).\n- byte-for-byte package reproducibility: PASS.\n- `py -3 tools/strict_check.py`: PASS."
+      },
+      {
+        "aide_phase": "dev-integration",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Tests",
+        "commit": "067397e592ce",
+        "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+        "entry": "enforce immutable integration identities and retained human gate.",
+        "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+        "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+        "scope": "m2",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "docs(m2): bind WU3 exact-dev integration proof",
+        "summary": "enforce immutable integration identities and retained human gate.",
+        "type": "docs",
+        "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
       }
     ]
   },
   "category_counts": {
-    "Added": 12,
-    "Changed": 16,
-    "Deprecated": 1,
-    "Docs": 8,
-    "Fixed": 11,
+    "Added": 10,
+    "Changed": 14,
+    "Docs": 7,
+    "Fixed": 10,
     "Follow-up": 12,
     "Internal": 4,
     "Risks": 7,
-    "Security": 21,
+    "Security": 19,
     "Tests": 14
   },
   "commit_count": 50,
   "entries": [
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Added",
-      "commit": "d1fb7f97572a",
-      "commit_sha": "d1fb7f97572a24143b6ebfde4bf370481f89dcdb",
-      "entry": "explicit generated managed-setup lifecycle workflows.",
-      "follow_up": "- Route the canonical descriptors through the application boundary and prove frontend refusal behavior.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: setup command contracts and generated frontends\nAIDE-Token-Impact: additive explicit lifecycle grammar\nAIDE-Quality-Gate: generated metadata schemas native 34/34 PASS",
-      "risks": "- No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.",
-      "scope": "setup-workflows",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-      "summary": "explicit generated managed-setup lifecycle workflows.",
-      "type": "feat",
-      "validation": "- py -3 tools/codegen/generate_metadata.py --check: PASS.\n- py -3 tools/setup_workflow_check.py: PASS (4 plans, 5 guarded applies, 2 reads).\n- py -3 tools/command_contract_check.py: PASS (121 commands).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34)."
-    },
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Deprecated",
-      "commit": "d1fb7f97572a",
-      "commit_sha": "d1fb7f97572a24143b6ebfde4bf370481f89dcdb",
-      "entry": "legacy setup verbs are internal compatibility aliases.",
-      "follow_up": "- Route the canonical descriptors through the application boundary and prove frontend refusal behavior.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: setup command contracts and generated frontends\nAIDE-Token-Impact: additive explicit lifecycle grammar\nAIDE-Quality-Gate: generated metadata schemas native 34/34 PASS",
-      "risks": "- No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.",
-      "scope": "setup-workflows",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-      "summary": "legacy setup verbs are internal compatibility aliases.",
-      "type": "feat",
-      "validation": "- py -3 tools/codegen/generate_metadata.py --check: PASS.\n- py -3 tools/setup_workflow_check.py: PASS (4 plans, 5 guarded applies, 2 reads).\n- py -3 tools/command_contract_check.py: PASS (121 commands).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34)."
-    },
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Security",
-      "commit": "d1fb7f97572a",
-      "commit_sha": "d1fb7f97572a24143b6ebfde4bf370481f89dcdb",
-      "entry": "apply contracts remain unavailable and digest/confirmation bound.",
-      "follow_up": "- Route the canonical descriptors through the application boundary and prove frontend refusal behavior.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: setup command contracts and generated frontends\nAIDE-Token-Impact: additive explicit lifecycle grammar\nAIDE-Quality-Gate: generated metadata schemas native 34/34 PASS",
-      "risks": "- No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.",
-      "scope": "setup-workflows",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-      "summary": "apply contracts remain unavailable and digest/confirmation bound.",
-      "type": "feat",
-      "validation": "- py -3 tools/codegen/generate_metadata.py --check: PASS.\n- py -3 tools/setup_workflow_check.py: PASS (4 plans, 5 guarded applies, 2 reads).\n- py -3 tools/command_contract_check.py: PASS (121 commands).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34)."
-    },
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Tests",
-      "commit": "d1fb7f97572a",
-      "commit_sha": "d1fb7f97572a24143b6ebfde4bf370481f89dcdb",
-      "entry": "adds a strict generated workflow guard.",
-      "follow_up": "- Route the canonical descriptors through the application boundary and prove frontend refusal behavior.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: setup command contracts and generated frontends\nAIDE-Token-Impact: additive explicit lifecycle grammar\nAIDE-Quality-Gate: generated metadata schemas native 34/34 PASS",
-      "risks": "- No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.",
-      "scope": "setup-workflows",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-      "summary": "adds a strict generated workflow guard.",
-      "type": "feat",
-      "validation": "- py -3 tools/codegen/generate_metadata.py --check: PASS.\n- py -3 tools/setup_workflow_check.py: PASS (4 plans, 5 guarded applies, 2 reads).\n- py -3 tools/command_contract_check.py: PASS (121 commands).\n- py -3 tools/schema_validate.py: PASS (228 schemas).\n- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34)."
-    },
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Added",
-      "commit": "7850424d3e35",
-      "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-      "entry": "canonical CLI plan/apply/recovery grammar.",
-      "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-      "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-      "scope": "setup-gateway",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "canonical CLI plan/apply/recovery grammar.",
-      "type": "feat",
-      "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-    },
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Changed",
-      "commit": "7850424d3e35",
-      "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-      "entry": "setup requests now use typed target, plan, digest, and confirmation fields.",
-      "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-      "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-      "scope": "setup-gateway",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "setup requests now use typed target, plan, digest, and confirmation fields.",
-      "type": "feat",
-      "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-    },
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "7850424d3e35",
-      "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-      "entry": "legacy repair and uninstall grammar remains unambiguous beside phase subcommands.",
-      "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-      "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-      "scope": "setup-gateway",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "legacy repair and uninstall grammar remains unambiguous beside phase subcommands.",
-      "type": "feat",
-      "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-    },
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Security",
-      "commit": "7850424d3e35",
-      "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-      "entry": "no apply route mutates setup state or enables Factorio execution.",
-      "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-      "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-      "scope": "setup-gateway",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "no apply route mutates setup state or enables Factorio execution.",
-      "type": "feat",
-      "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-    },
-    {
-      "aide_phase": "M1-WU10",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Docs",
-      "commit": "7850424d3e35",
-      "commit_sha": "7850424d3e35372517745b35a6517200ba230804",
-      "entry": "records the managed setup frontend command law.",
-      "follow_up": "- Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.\n\nAIDE-Task: M1-WU10-MANAGED-SETUP-WORKFLOWS\nAIDE-Phase: M1-WU10\nAIDE-Result: PASS\nAIDE-Scope: FacMan CLI application and setup gateway\nAIDE-Token-Impact: typed explicit lifecycle routing\nAIDE-Quality-Gate: native 34/34 and CLI 13/13 PASS",
-      "risks": "- Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.",
-      "scope": "setup-gateway",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "records the managed setup frontend command law.",
-      "type": "feat",
-      "validation": "- cmake --build build/m1-wu10 --config Debug --parallel: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- py -3 -m unittest discover -s tests -p test_cli.py -v: PASS (13/13).\n- py -3 tools/setup_workflow_check.py: PASS."
-    },
-    {
-      "aide_phase": "generated-frontend-workflows",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Changed",
-      "commit": "d72c56b6802e",
-      "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-      "entry": "setup lifecycle commands now compose through their owning application handler.",
-      "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-      "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-      "scope": "setup-routing",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "refactor(setup-routing): preserve application composition boundary",
-      "summary": "setup lifecycle commands now compose through their owning application handler.",
-      "type": "refactor",
-      "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "generated-frontend-workflows",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Docs",
-      "commit": "d72c56b6802e",
-      "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-      "entry": "project truth reflects 121 commands, 228 schemas, and 216 refusal codes.",
-      "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-      "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-      "scope": "setup-routing",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "refactor(setup-routing): preserve application composition boundary",
-      "summary": "project truth reflects 121 commands, 228 schemas, and 216 refusal codes.",
-      "type": "refactor",
-      "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "generated-frontend-workflows",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Internal",
-      "commit": "d72c56b6802e",
-      "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-      "entry": "generated frontend metadata excludes deprecated setup aliases without removing ABI compatibility.",
-      "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-      "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-      "scope": "setup-routing",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "refactor(setup-routing): preserve application composition boundary",
-      "summary": "generated frontend metadata excludes deprecated setup aliases without removing ABI compatibility.",
-      "type": "refactor",
-      "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "generated-frontend-workflows",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Risks",
-      "commit": "d72c56b6802e",
-      "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-      "entry": "ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-      "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-      "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-      "scope": "setup-routing",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "refactor(setup-routing): preserve application composition boundary",
-      "summary": "ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-      "type": "refactor",
-      "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "generated-frontend-workflows",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Follow-up",
-      "commit": "d72c56b6802e",
-      "commit_sha": "d72c56b6802e5db423a71c2997fd67d3dcc90111",
-      "entry": "publish WU10 for exact-head CI and merge to dev.",
-      "follow_up": "- Publish WU10 for exact-head CI and merge to dev.\n\nAIDE-Task: M1-WU10\nAIDE-Phase: generated-frontend-workflows\nAIDE-Result: PASS\nAIDE-Scope: setup-routing-generated-truth\nAIDE-Token-Impact: no provider or model usage\nAIDE-Quality-Gate: strict plus native plus Python plus TUI stress green",
-      "risks": "- Ordinary setup apply remains intentionally unavailable; no H1 authority changes.",
-      "scope": "setup-routing",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "refactor(setup-routing): preserve application composition boundary",
-      "summary": "publish WU10 for exact-head CI and merge to dev.",
-      "type": "refactor",
-      "validation": "- py -3 tools/strict_check.py: PASS.\n- ctest --test-dir build/m1-wu10 -C Debug --output-on-failure: PASS (34/34).\n- facman_tui_smoke stress loop: PASS (100/100).\n- py -3 -m unittest discover -s tests -q: PASS (333 tests, 1 intentional skip).\n- git diff --check: PASS."
-    },
     {
       "aide_phase": "managed-install-reference-consumption",
       "aide_result": "PASS",
@@ -5334,22 +4756,135 @@
       "summary": "refreshed WU3 review-only changelog artifacts.",
       "type": "chore",
       "validation": "- AIDE Lite test: PASS.\n- Project state validation: PASS.\n- WU3 native, Python, package, reproducibility, and clean reconstruction gates: PASS."
+    },
+    {
+      "aide_phase": "dev-integration",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Docs",
+      "commit": "067397e592ce",
+      "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+      "entry": "accepted WU3 reviewed dev integration evidence.",
+      "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+      "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "accepted WU3 reviewed dev integration evidence.",
+      "type": "docs",
+      "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+    },
+    {
+      "aide_phase": "dev-integration",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Tests",
+      "commit": "067397e592ce",
+      "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+      "entry": "enforce immutable integration identities and retained human gate.",
+      "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+      "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "enforce immutable integration identities and retained human gate.",
+      "type": "docs",
+      "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+    },
+    {
+      "aide_phase": "dev-integration",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Internal",
+      "commit": "067397e592ce",
+      "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+      "entry": "refresh generated project state and AIDE review artifacts.",
+      "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+      "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "refresh generated project state and AIDE review artifacts.",
+      "type": "docs",
+      "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+    },
+    {
+      "aide_phase": "dev-integration",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Risks",
+      "commit": "067397e592ce",
+      "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+      "entry": "no live acceptance or ordinary apply authority is inferred.",
+      "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+      "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "no live acceptance or ordinary apply authority is inferred.",
+      "type": "docs",
+      "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
+    },
+    {
+      "aide_phase": "dev-integration",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Follow-up",
+      "commit": "067397e592ce",
+      "commit_sha": "067397e592ce503f558f1a2da550ebea0c2fad6f",
+      "entry": "run WU4 only with a harmless synthetic archive below D:\\FacMan-Live-Acceptance\\M2.",
+      "follow_up": "- Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root.\n\nAIDE-Task: M2-WU3-DEV-INTEGRATION-PROOF-01\nAIDE-Phase: dev-integration\nAIDE-Result: PASS\nAIDE-Scope: evidence-only WU3 integration truth\nAIDE-Token-Impact: none\nAIDE-Quality-Gate: exact-dev CI CodeQL security and local truth gates passed",
+      "risks": "- Human M2 verdict remains pending; recovery.apply remains unavailable.\n- Real Factorio archives, execution, Steam, networking, registry, elevation, signing, and publication remain excluded.",
+      "scope": "m2",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "run WU4 only with a harmless synthetic archive below D:\\FacMan-Live-Acceptance\\M2.",
+      "type": "docs",
+      "validation": "- exact-dev CI 29332570822: PASS.\n- exact-dev CodeQL 29332570777: PASS.\n- exact-dev security policy 29332570776: PASS.\n- focused project-state, compaction, target-truth, and architecture tests: PASS.\n- AIDE Lite portable validation: PASS."
     }
   ],
   "generated_by": "aide-lite",
   "malformed_commits": [
-    {
-      "commit": "96a559ffba4b",
-      "commit_sha": "96a559ffba4b24e11e6ad71e4d4809dc50726d9f",
-      "ignored": false,
-      "legacy": false,
-      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category",
-      "reasons": [
-        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
-        "missing_changelog_category"
-      ],
-      "subject": "merge(m1-wu10): generate guarded setup workflows"
-    },
     {
       "commit": "13319e4f9e51",
       "commit_sha": "13319e4f9e51bd8687829262edcfa120e488990d",
@@ -5445,15 +4980,41 @@
         "missing_changelog_category"
       ],
       "subject": "chore(state): bind WU3 closeout and branch identity"
+    },
+    {
+      "commit": "2d8b723ef048",
+      "commit_sha": "2d8b723ef04868063f8668810b9be68e542f9f03",
+      "ignored": false,
+      "legacy": true,
+      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body",
+      "reasons": [
+        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
+        "missing_changelog_category",
+        "legacy_semi_structured_body"
+      ],
+      "subject": "build(provider): pin Universal Setup M2-WU4 main"
+    },
+    {
+      "commit": "b203574a8aa4",
+      "commit_sha": "b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6",
+      "ignored": false,
+      "legacy": true,
+      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body",
+      "reasons": [
+        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
+        "missing_changelog_category",
+        "legacy_semi_structured_body"
+      ],
+      "subject": "docs(m2): bind WU4 retained live lifecycle evidence"
     }
   ],
-  "malformed_count": 9,
+  "malformed_count": 10,
   "network_calls": "none",
   "preview_only": true,
   "provider_or_model_calls": "none",
   "release_publishing": false,
   "schema_version": "aide.changelog-preview.v0",
-  "source_head": "a8b298a35cd1587cea566886b5a3891153a2b7f2",
+  "source_head": "b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "warnings": [
     "10b1caa915ed merge commit ignored",
@@ -5464,6 +5025,7 @@
     "d96384bf8f48 merge commit ignored",
     "747b4442cf22 merge commit ignored",
     "178de3192f3c merge commit ignored",
-    "a8b298a35cd1 merge commit ignored"
+    "a8b298a35cd1 merge commit ignored",
+    "476813e6fc74 merge commit ignored"
   ]
 }

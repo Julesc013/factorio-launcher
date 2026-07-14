@@ -3,13 +3,11 @@
 This is a deterministic preview only. It does not publish a release.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: a8b298a35cd1587cea566886b5a3891153a2b7f2
+source_head: b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6
 preview_only: true
 
 ## Highlights
 
-- Security: apply contracts remain unavailable and digest/confirmation bound. (d1fb7f97572a)
-- Security: no apply route mutates setup state or enables Factorio execution. (7850424d3e35)
 - Security: reference consumption does not grant setup mutation or execution authority. (0ce7802d9f5b)
 - Security: all writes stay below an exclusive disposable root; foreign content is retained and reported. (f4fdafead6a0)
 - Security: Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries. (34e025540fe2)
@@ -29,8 +27,6 @@ preview_only: true
 - Security: pending human verdict, ordinary live apply hold, recovery hold, and execution ban are unchanged. (e4b03c82b649)
 - Security: ordinary managed apply, recovery apply, execution, and publication remain unavailable. (182ada6be86d)
 - Security: all human, recovery, execution, and publication holds remain unchanged. (cad50062c955)
-- Added: explicit generated managed-setup lifecycle workflows. (d1fb7f97572a)
-- Added: canonical CLI plan/apply/recovery grammar. (7850424d3e35)
 - Added: exact managed setup-state identity on FacMan install references. (0ce7802d9f5b)
 - Added: reproducible synthetic three-repository managed lifecycle proof. (f4fdafead6a0)
 - Added: Complete selected-package reproducibility proof. (34e025540fe2)
@@ -41,8 +37,6 @@ preview_only: true
 - Added: immutable M2-WU2 implementation and package proof. (129f70d13058)
 - Added: evidence-only WU2 dev integration closeout lane. (2c55d1d111a2)
 - Added: immutable exact-dev WU2 integration evidence. (182ada6be86d)
-- Changed: setup requests now use typed target, plan, digest, and confirmation fields. (7850424d3e35)
-- Changed: setup lifecycle commands now compose through their owning application handler. (d72c56b6802e)
 - Changed: Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory. (efe06f385795)
 - Changed: Universal provider license identity from NOASSERTION to MIT at pinned revisions. (b1fd720013ed)
 - Changed: both Universal dependencies now have accepted MIT and reproducibility truth. (0b4e1688b4fc)
@@ -57,7 +51,6 @@ preview_only: true
 - Changed: public lifecycle is dev-integrated pending operator acceptance. (182ada6be86d)
 - Changed: WU2 exact-dev integration is fully closed. (cad50062c955)
 - Changed: publication governance reports now match the closed evidence head. (53ebb488daad)
-- Fixed: legacy repair and uninstall grammar remains unambiguous beside phase subcommands. (7850424d3e35)
 - Fixed: Reproducibility proof no longer treats the owned-output marker as a package archive. (2f13923a9cbd)
 - Fixed: New non-ignored source files are now checked before their first commit. (5b01b36fb989)
 - Fixed: M1 checkpoint satisfies the repository line-length policy. (5b01b36fb989)
@@ -68,16 +61,13 @@ preview_only: true
 - Fixed: project-state compaction test now recognizes the accepted license checkpoint. (2b5098b076ab)
 - Fixed: adequate capacity fluctuations no longer invalidate a reviewed plan. (d16e71357f13)
 - Fixed: raw Python tests now use the canonical current native-smoke CLI by default. (316ee8efec5b)
-- Deprecated: legacy setup verbs are internal compatibility aliases. (d1fb7f97572a)
-- Docs: records the managed setup frontend command law. (7850424d3e35)
-- Docs: project truth reflects 121 commands, 228 schemas, and 216 refusal codes. (d72c56b6802e)
 - Docs: records the exact fixture journey and non-authority claims. (f4fdafead6a0)
 - Docs: Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply. (efe06f385795)
 - Docs: bind M1 canonical public integration evidence. (92da90101342)
 - Docs: record the accepted operator decision and retained redistribution notices. (b1fd720013ed)
 - Docs: add immutable license integration checkpoint and complete queue evidence. (0b4e1688b4fc)
 - Docs: generated project truth now reports the active bounded WorkUnit. (df0e42b6131f)
-- Tests: adds a strict generated workflow guard. (d1fb7f97572a)
+- Docs: accepted WU3 reviewed dev integration evidence. (067397e592ce)
 - Tests: managed install identities now round-trip through the native workspace repository. (0ce7802d9f5b)
 - Tests: launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed. (f4fdafead6a0)
 - Tests: Windows CI now executes two independent package builds and compares their complete evidence closure. (34e025540fe2)
@@ -91,45 +81,46 @@ preview_only: true
 - Tests: retain independent assertions for frozen M1 implementation and public integration records. (2b5098b076ab)
 - Tests: provider and project-state assertions follow the canonical merge. (dfa0d8ad3c4c)
 - Tests: target policy adds one integrated native test, bringing this build to 36/36. (b1a1795c90e2)
+- Tests: enforce immutable integration identities and retained human gate. (067397e592ce)
 
 ## Validation Summary
 
-- d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
-- d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
-- d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
-- d1fb7f97572a: py -3 tools/codegen/generate_metadata.py --check: PASS.
-- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
-- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
-- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
-- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
-- 7850424d3e35: cmake --build build/m1-wu10 --config Debug --parallel: PASS.
-- d72c56b6802e: py -3 tools/strict_check.py: PASS.
+- 0ce7802d9f5b: cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.
+- 0ce7802d9f5b: cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.
+- 0ce7802d9f5b: cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS.
+- f4fdafead6a0: m1_three_repository_system_proof.exe: PASS.
+- f4fdafead6a0: m1_three_repository_system_proof.exe: PASS.
+- f4fdafead6a0: m1_three_repository_system_proof.exe: PASS.
+- f4fdafead6a0: m1_three_repository_system_proof.exe: PASS.
+- 34e025540fe2: py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).
+- 34e025540fe2: py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).
+- 34e025540fe2: py -3 -m unittest tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (6 tests).
 
 ## Known Risks
 
-- d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
-- d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
-- d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
-- d1fb7f97572a: No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work.
-- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
-- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
-- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
-- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
-- 7850424d3e35: Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active.
-- d72c56b6802e: Ordinary setup apply remains intentionally unavailable; no H1 authority changes.
+- 0ce7802d9f5b: FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.
+- 0ce7802d9f5b: FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.
+- 0ce7802d9f5b: FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots.
+- f4fdafead6a0: The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.
+- f4fdafead6a0: The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.
+- f4fdafead6a0: The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.
+- f4fdafead6a0: The proof uses synthetic payload bytes and does not authorize a live install target or licensed standalone H1 rerun.
+- 34e025540fe2: Adds two package staging operations to the Windows job; native compilation is reused.
+- 34e025540fe2: Adds two package staging operations to the Windows job; native compilation is reused.
+- 34e025540fe2: Adds two package staging operations to the Windows job; native compilation is reused.
 
 ## Follow-up
 
-- d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
-- d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
-- d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
-- d1fb7f97572a: Route the canonical descriptors through the application boundary and prove frontend refusal behavior.
-- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
-- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
-- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
-- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
-- 7850424d3e35: Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references.
-- d72c56b6802e: Publish WU10 for exact-head CI and merge to dev.
+- 0ce7802d9f5b: Bind these identities in the full synthetic three-repository lifecycle proof.
+- 0ce7802d9f5b: Bind these identities in the full synthetic three-repository lifecycle proof.
+- 0ce7802d9f5b: Bind these identities in the full synthetic three-repository lifecycle proof.
+- f4fdafead6a0: Run clean package and dependency-pinned reproduction evidence for M1-WU12.
+- f4fdafead6a0: Run clean package and dependency-pinned reproduction evidence for M1-WU12.
+- f4fdafead6a0: Run clean package and dependency-pinned reproduction evidence for M1-WU12.
+- f4fdafead6a0: Run clean package and dependency-pinned reproduction evidence for M1-WU12.
+- 34e025540fe2: Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.
+- 34e025540fe2: Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.
+- 34e025540fe2: Execute the proof from the clean WU12 revision, record exact digests, then bind the full three-repository and target-native closeout evidence.
 
 ## Warnings
 
@@ -142,7 +133,8 @@ preview_only: true
 - 747b4442cf22 merge commit ignored
 - 178de3192f3c merge commit ignored
 - a8b298a35cd1 merge commit ignored
-- 9 malformed or legacy commits require review
+- 476813e6fc74 merge commit ignored
+- 10 malformed or legacy commits require review
 
 ## Preview Caveat
 

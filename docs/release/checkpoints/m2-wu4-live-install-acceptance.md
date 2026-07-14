@@ -49,6 +49,24 @@ is `retired` with recovery `not_required`.
 Cross-volume move was not attempted because no second volume is authorized.
 That is an explicit unproven lane, not a skipped success.
 
+## Repository and package proof
+
+- combined Release CTest passed 39/39;
+- the complete Python suite passed 339 cases with one opt-in skip;
+- strict and AIDE portable validation passed;
+- required Windows package proof passed 14/14 with zero skips;
+- reproducibility passed over a 388-file selected package tree.
+
+| Reproducible evidence | SHA-256 |
+| --- | --- |
+| archive | `9a26fa612773108ae4e2f2f1762f9561df3f850459065abdfc2f9e608bc1ca55` |
+| package tree | `4dcf73452223cede21d24a74b5637289dc8b1509e1e72957f8f7f13d61389195` |
+| SBOM | `1589f6c625a3580fc5264e887f5260917bd428124573cac060c35aae1c975f82` |
+| provenance | `a9be745af843b98b30cedd72f0359f131c98f87f1d5ddc190a19f717f30771c4` |
+
+The package remains unsigned and unpublished; its reproducibility and
+integrity do not prove publisher authenticity.
+
 ## Authority retained
 
 - every evidence packet has a pending operator verdict;

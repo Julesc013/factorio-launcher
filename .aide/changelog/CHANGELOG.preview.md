@@ -3,20 +3,19 @@
 This file is generated from local Git history and is a preview only.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: a8b298a35cd1587cea566886b5a3891153a2b7f2
+source_head: b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6
 commit_count: 50
-malformed_count: 9
+malformed_count: 10
 preview_only: true
 release_publishing: false
 
 ## Summary
 
-- Added: 12
-- Changed: 16
-- Fixed: 11
-- Deprecated: 1
-- Security: 21
-- Docs: 8
+- Added: 10
+- Changed: 14
+- Fixed: 10
+- Security: 19
+- Docs: 7
 - Tests: 14
 - Internal: 4
 - Risks: 7
@@ -24,8 +23,6 @@ release_publishing: false
 
 ## Added
 
-- explicit generated managed-setup lifecycle workflows. (d1fb7f97572a feat(setup-workflows): generate lifecycle plan/apply commands)
-- canonical CLI plan/apply/recovery grammar. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
 - exact managed setup-state identity on FacMan install references. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
 - reproducible synthetic three-repository managed lifecycle proof. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
 - Complete selected-package reproducibility proof. (34e025540fe2 test(package): make full archive reproducibility executable)
@@ -39,8 +36,6 @@ release_publishing: false
 
 ## Changed
 
-- setup requests now use typed target, plan, digest, and confirmation fields. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
-- setup lifecycle commands now compose through their owning application handler. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
 - Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory. (efe06f385795 docs(m1): bind managed portable foundation closeout)
 - Universal provider license identity from NOASSERTION to MIT at pinned revisions. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - both Universal dependencies now have accepted MIT and reproducibility truth. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
@@ -58,7 +53,6 @@ release_publishing: false
 
 ## Fixed
 
-- legacy repair and uninstall grammar remains unambiguous beside phase subcommands. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
 - Reproducibility proof no longer treats the owned-output marker as a package archive. (2f13923a9cbd fix(package): distinguish archives from ownership metadata)
 - New non-ignored source files are now checked before their first commit. (5b01b36fb989 fix(validation): inspect new source files before commit)
 - M1 checkpoint satisfies the repository line-length policy. (5b01b36fb989 fix(validation): inspect new source files before commit)
@@ -70,14 +64,8 @@ release_publishing: false
 - adequate capacity fluctuations no longer invalidate a reviewed plan. (d16e71357f13 fix(m2): bind the stable capacity provider)
 - raw Python tests now use the canonical current native-smoke CLI by default. (316ee8efec5b test(m2): prefer the canonical native smoke CLI)
 
-## Deprecated
-
-- legacy setup verbs are internal compatibility aliases. (d1fb7f97572a feat(setup-workflows): generate lifecycle plan/apply commands)
-
 ## Security
 
-- apply contracts remain unavailable and digest/confirmation bound. (d1fb7f97572a feat(setup-workflows): generate lifecycle plan/apply commands)
-- no apply route mutates setup state or enables Factorio execution. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
 - reference consumption does not grant setup mutation or execution authority. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
 - all writes stay below an exclusive disposable root; foreign content is retained and reported. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
 - Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries. (34e025540fe2 test(package): make full archive reproducibility executable)
@@ -100,18 +88,16 @@ release_publishing: false
 
 ## Docs
 
-- records the managed setup frontend command law. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
-- project truth reflects 121 commands, 228 schemas, and 216 refusal codes. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
 - records the exact fixture journey and non-authority claims. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
 - Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply. (efe06f385795 docs(m1): bind managed portable foundation closeout)
 - bind M1 canonical public integration evidence. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - record the accepted operator decision and retained redistribution notices. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - add immutable license integration checkpoint and complete queue evidence. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
 - generated project truth now reports the active bounded WorkUnit. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
+- accepted WU3 reviewed dev integration evidence. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
 
 ## Tests
 
-- adds a strict generated workflow guard. (d1fb7f97572a feat(setup-workflows): generate lifecycle plan/apply commands)
 - managed install identities now round-trip through the native workspace repository. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
 - launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
 - Windows CI now executes two independent package builds and compares their complete evidence closure. (34e025540fe2 test(package): make full archive reproducibility executable)
@@ -125,27 +111,27 @@ release_publishing: false
 - retain independent assertions for frozen M1 implementation and public integration records. (2b5098b076ab fix(test): accept the later MIT checkpoint)
 - provider and project-state assertions follow the canonical merge. (dfa0d8ad3c4c chore(m2): bind target policy provider integration)
 - target policy adds one integrated native test, bringing this build to 36/36. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
+- enforce immutable integration identities and retained human gate. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
 
 ## Internal
 
-- generated frontend metadata excludes deprecated setup aliases without removing ABI compatibility. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
 - prepare dev ancestry synchronization from canonical main. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - no product command changed in this opening commit. (effce1f71784 chore(m2): open public setup lifecycle WorkUnit)
 - refreshed WU3 review-only changelog artifacts. (5f93f42f9708 chore(aide): refresh WU3 integration changelog preview)
+- refresh generated project state and AIDE review artifacts. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
 
 ## Risks
 
-- ordinary setup apply remains intentionally unavailable; no H1 authority changes. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
 - none; no product behavior or authority changes. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - artifacts remain unsigned and unpublished. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - package tree identities change and require fresh reproducibility evidence. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
 - read-only reporting identity only; no setup or execution authority changes. (724246e53b57 fix(status): report licensed provider revisions)
 - Windows native path conversion changes all covered low-level path calls. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
 - test-only truth expectation; no runtime or package behavior changes. (2b5098b076ab fix(test): accept the later MIT checkpoint)
+- no live acceptance or ordinary apply authority is inferred. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
 
 ## Follow-up
 
-- publish WU10 for exact-head CI and merge to dev. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
 - merge to dev, verify exact-dev checks, then resolve authorized Universal MIT licensing. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - carry provider notices into every package profile and rerun reproducibility proof. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - run the clean three-repository package proof and bind new identities. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
@@ -157,10 +143,10 @@ release_publishing: false
 - reproduce the complete package and bind WU2 integration evidence. (cfb70ab88de3 chore(m2): pin the public lifecycle provider)
 - rerun clean workspace and reproducible-package proof, then close WU2. (57b175ab9378 chore(m2): reconcile public lifecycle truth)
 - rerun clean three-repository and selected-package proofs. (d16e71357f13 fix(m2): bind the stable capacity provider)
+- run WU4 only with a harmless synthetic archive below D:\FacMan-Live-Acceptance\M2. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
 
 ## Malformed Commits
 
-- 96a559ffba4b merge(m1-wu10): generate guarded setup workflows: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 13319e4f9e51 merge(m1-wu11): prove managed lifecycle integration: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 307690ad9bbb chore(m2): open live-target evidence packet work unit: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 2e6012e0b14c build(provider): pin Universal Setup M2-WU3 main: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
@@ -169,6 +155,8 @@ release_publishing: false
 - 2678e1e23576 chore(m2): close WU3 without authority promotion: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 461251d7fd3d fix(state): advance latest closed WorkUnit validator to WU3: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 - 4360d0f40c38 chore(state): bind WU3 closeout and branch identity: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 2d8b723ef048 build(provider): pin Universal Setup M2-WU4 main: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
+- b203574a8aa4 docs(m2): bind WU4 retained live lifecycle evidence: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
 
 ## Release Caveat
 
