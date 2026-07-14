@@ -60,7 +60,7 @@ def validate() -> list[str]:
         "Universal Launcher",
         "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
         "Universal Setup",
-        "9b8196437e41e45bd8d5a613246dabe5b8cdb968",
+        "e1ce68e9593ae8d9a35cc0821b5e42c798524453",
         "Miniz 3.1.2",
         "external/miniz/LICENSE",
         "PicoJSON",

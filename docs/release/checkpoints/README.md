@@ -74,6 +74,12 @@ pre/post target snapshots, and a separate human-verdict recording boundary.
 It is fixture/proof-root implementation evidence only; the live acceptance
 root is untouched and the operator verdict remains pending.
 
+The retained
+[`M2-WU5 live interruption and recovery`](m2-wu5-live-interruption-recovery.md)
+checkpoint binds eleven deterministic crash windows, exact staged rollback,
+idempotent install finalization, and explicitly retained repair/move/uninstall
+recovery-required states. It does not create the pending human verdict.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

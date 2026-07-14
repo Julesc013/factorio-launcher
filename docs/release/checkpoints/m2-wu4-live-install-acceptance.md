@@ -3,8 +3,8 @@
 
 # M2-WU4 Live Synthetic Install Acceptance
 
-Status: provider integrated and retained live lifecycle machine proof recorded;
-`dev` integration pending; human verdict `pending`.
+Status: accepted exact-`dev` integration proof and retained live lifecycle
+machine proof recorded; human verdict `pending`.
 
 This checkpoint binds the first authorized synthetic-product lifecycle below
 `D:\FacMan-Live-Acceptance\M2`. It is not a human `Pass`, ordinary live apply
@@ -23,6 +23,23 @@ authority.
 | provider exact-main CI | `29334632894` |
 | FacMan consumer revision used live | `a8b298a35cd1587cea566886b5a3891153a2b7f2` |
 | FacMan provider-pin commit | `2d8b723ef04868063f8668810b9be68e542f9f03` |
+
+## FacMan integration identities
+
+| Evidence | Identity |
+| --- | --- |
+| reviewed PR | `#18` |
+| task head | `a286b5c42736e1a4189030a51e9b1e5c397552eb` |
+| task tree | `8027f6fe9a54e1b845842934d21fa142895b50f9` |
+| `dev` merge | `5563e3b8de4363d1d42cc2ba6f5829aed0c7405e` |
+| `dev` tree | `8027f6fe9a54e1b845842934d21fa142895b50f9` |
+| exact-`dev` CI | `29337542209` |
+| exact-`dev` CodeQL | `29337541636` |
+| exact-`dev` security policy | `29337541937` |
+
+The task and merge trees are identical. All three exact-`dev` workflow runs
+completed successfully; this accepts integration without changing the pending
+human verdict or any setup/execution authority.
 
 ## Retained live run
 

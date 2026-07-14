@@ -143,7 +143,7 @@ def validate_universal_provider(
             "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
         },
         "universal_setup": {
-            "pin": "9b8196437e41e45bd8d5a613246dabe5b8cdb968",
+            "pin": "e1ce68e9593ae8d9a35cc0821b5e42c798524453",
             "license": "MIT",
             "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
         },
