@@ -61,6 +61,17 @@ std::string install_json(const std::string& id, const fs::path& root)
         "\"source\":\"test\",\"platform\":\"windows\",\"verification\":{\"status\":\"structural\"}}";
 }
 
+std::string managed_install_json(const std::string& id, const fs::path& root)
+{
+    return "{\"schema\":\"factorio.install_ref.v1\",\"install_id\":\"" + id +
+        "\",\"root\":" + facman::core::json::escape_string(facman::platform::path_to_utf8(root)) +
+        ",\"executable\":\"factorio.exe\",\"version\":\"2.0.77\",\"ownership\":\"managed\","
+        "\"source\":\"universal-setup\",\"platform\":\"windows\","
+        "\"setup_state_ref\":\"state/managed.json\",\"lifecycle_status\":\"active\","
+        "\"last_verification_identity\":\"verify-managed\",\"state_revision\":\"revision-managed\","
+        "\"verification\":{\"status\":\"structural\"}}";
+}
+
 std::string instance_json(const std::string& id, const std::string& install, const std::string& schema = "factorio.instance.v1")
 {
     return "{\"schema\":\"" + schema + "\",\"instance_id\":\"" + id +
@@ -91,6 +102,17 @@ int prove_store(const fs::path& root)
     auto loaded = installs.load(InstallId::parse("fixture").value());
     if (!written || !loaded || loaded.value().root != install_root || loaded.value().legacy_path ||
         loaded.value().verification_status != "structural") return 12;
+
+    InstallRecord managed;
+    managed.id = InstallId::parse("managed-fixture").take_value();
+    auto managed_written = installs.create(
+        managed, managed_install_json("managed-fixture", install_root));
+    auto managed_loaded = installs.load(InstallId::parse("managed-fixture").value());
+    if (!managed_written || !managed_loaded || managed_loaded.value().ownership != "managed" ||
+        managed_loaded.value().setup_state_ref != "state/managed.json" ||
+        managed_loaded.value().lifecycle_status != "active" ||
+        managed_loaded.value().last_verification_identity != "verify-managed" ||
+        managed_loaded.value().state_revision != "revision-managed") return 26;
 
     auto instance_path = layout.instance_manifest(InstanceId::parse("main").value());
     if (!instance_path || !write_file(instance_path.value(), instance_json("main", "fixture"))) return 13;

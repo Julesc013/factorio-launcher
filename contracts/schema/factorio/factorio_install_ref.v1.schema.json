@@ -22,6 +22,10 @@
       "type": "array",
       "items": { "enum": ["default_factorio_data", "steam_cloud"] }
     },
+    "setup_state_ref": { "type": "string" },
+    "lifecycle_status": { "type": "string" },
+    "last_verification_identity": { "type": "string" },
+    "state_revision": { "type": "string" },
     "executable": { "type": "string" },
     "app_dir": { "type": "string" },
     "capabilities": { "type": "array", "items": { "type": "string" } },

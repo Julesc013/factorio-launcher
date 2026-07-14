@@ -25,6 +25,10 @@ struct InstallRef {
     std::string strict_isolation_eligibility;
     std::vector<std::string> external_state_domains;
     std::vector<std::string> capabilities;
+    std::string setup_state_ref;
+    std::string lifecycle_status;
+    std::string last_verification_identity;
+    std::string state_revision;
     std::string verification_status;
     std::string diagnostic_code;
     std::string executable_path_kind;
