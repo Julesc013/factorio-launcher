@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "installs.repair.plan",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "setup_lifecycle_fixture_proof_required",
+    "reason": "Managed repair planning remains unavailable until the fixture-backed setup lifecycle proof is complete.",
+    "recoverable": false
+  }
+}

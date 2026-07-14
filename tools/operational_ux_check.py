@@ -35,6 +35,7 @@ def validate() -> list[str]:
         "audio": ["enabled", "disabled"],
         "selection_mode": ["none", "load-save", "benchmark-save"],
         "launch_mode": ["gui", "headless-plan", "benchmark-preview"],
+        "confirmation": ["APPLY"],
     }
     for name, choices in expected_choices.items():
         if enum_fields.get(name) != choices:

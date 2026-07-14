@@ -1,0 +1,13 @@
+command_id = "installs.repair.apply"
+cli = "facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+effects = ["workspace_write", "setup_preview"]
+request_schema = "contracts/schema/command/installs.repair.apply.request.v1.schema.json"
+response_schema = "contracts/schema/common/result.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = false
+executes_process = false
+mutates_workspace = true
+availability = "unavailable_until_gateway"
+golden_refusal = "tests/golden/commands/installs.repair.apply.refusal.json"
