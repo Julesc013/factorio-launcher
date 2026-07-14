@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86`.
+Source digest: `76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -20,10 +20,20 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `install_refs.list` | `install_refs.list` | `install_list` | no | install-refs.list | available | workspace_read | `facman installs list --json` |
 | `installs.import` | `install_refs.import` | `install_import` | yes | install-refs.import | available | workspace_read, workspace_write | `facman installs import <factorio-dir> --id <install-id> --json` |
 | `installs.inspect` | `install_refs.inspect` | `install_inspect` | no | install-refs.inspect | available | workspace_read | `facman installs inspect <install-id> --json` |
+| `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.install.plan` | `installs.install.plan` | `installs_install_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json` |
 | `installs.install_version` | `installs.install_version` | `installs_install_version` | no | installs.install-version | unavailable_until_gateway | setup_preview | `facman installs install-version <version> --archive <path> --json` |
+| `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.move.plan` | `installs.move.plan` | `installs_move_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs move plan <install-id> --target <path> --json` |
+| `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.recovery.inspect` | `installs.recovery.inspect` | `installs_recovery_inspect` | no | - | unavailable_until_gateway | setup_preview | `facman installs recovery inspect <transaction-id> --json` |
 | `installs.repair` | `installs.repair` | `installs_repair` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs repair <install-id> --json` |
+| `installs.repair.apply` | `installs.repair.apply` | `installs_repair_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.repair.plan` | `installs.repair.plan` | `installs_repair_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs repair plan <install-id> --archive <path> --json` |
 | `installs.scan` | `install_refs.scan` | `install_scan` | no | install-refs.scan | available | workspace_read | `facman installs scan --json` |
 | `installs.uninstall` | `installs.uninstall` | `installs_uninstall` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs uninstall <install-id> --json` |
+| `installs.uninstall.apply` | `installs.uninstall.apply` | `installs_uninstall_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs uninstall apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
+| `installs.uninstall.plan` | `installs.uninstall.plan` | `installs_uninstall_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs uninstall plan <install-id> --json` |
 | `installs.verify` | `installs.verify` | `installs_verify` | no | - | unavailable_until_gateway | setup_preview | `facman installs verify <install-id> --json` |
 | `instance.export` | `instance.export` | `instance_export` | yes | - | available | workspace_read, workspace_write | `facman export instance <instance-id> <pack.zip> --json` |
 | `instance.import` | `instance.import` | `instance_import` | yes | - | available | workspace_read, workspace_write | `facman import instance <pack.zip> --json` |

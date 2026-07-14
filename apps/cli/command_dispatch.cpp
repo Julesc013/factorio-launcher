@@ -428,6 +428,84 @@ int command_installs(const Options& options)
         return 0;
     }
     if (action == "inspect" && options.args.size() >= 3) return emit_basic(call(options, "install_refs.inspect", exact_fields_payload({{"install_id", options.args[2]}})), flag(options.args, "--json"), "Install inspected");
+    if (action == "install" && options.args.size() >= 4) {
+        const std::string phase = options.args[2];
+        if (phase == "plan") {
+            const std::string archive = option(options.args, "--archive");
+            const std::string target = option(options.args, "--target");
+            const std::string install_id = option(options.args, "--id");
+            if (archive.empty() || target.empty() || install_id.empty()) return 2;
+            return emit_basic(
+                call(options, "installs.install.plan", exact_fields_payload({
+                    {"version", options.args[3]}, {"archive", archive},
+                    {"target_root", target}, {"install_id", install_id}})),
+                flag(options.args, "--json"),
+                "Managed install plan reviewed through Universal Setup.");
+        }
+        if (phase == "apply") {
+            const std::string digest = option(options.args, "--digest");
+            const std::string confirmation = option(options.args, "--confirm");
+            if (digest.empty() || confirmation != "APPLY") return 2;
+            return emit_basic(
+                call(options, "installs.install.apply", exact_fields_payload({
+                    {"plan_id", options.args[3]}, {"plan_digest", digest},
+                    {"confirmation", confirmation}}), false),
+                flag(options.args, "--json"),
+                "Managed install apply dispatched.");
+        }
+        return 2;
+    }
+    if ((action == "repair" || action == "move" || action == "uninstall") && options.args.size() >= 4 &&
+        (options.args[2] == "plan" || options.args[2] == "apply")) {
+        const std::string phase = options.args[2];
+        if (phase == "plan") {
+            std::vector<std::pair<std::string, std::string>> fields = {{"install_id", options.args[3]}};
+            if (action == "repair") fields.push_back({"archive", option(options.args, "--archive")});
+            if (action == "move") {
+                const std::string target = option(options.args, "--target");
+                if (target.empty()) return 2;
+                fields.push_back({"target_root", target});
+            }
+            return emit_basic(
+                call(options, "installs." + action + ".plan", exact_fields_payload(fields)),
+                flag(options.args, "--json"),
+                "Managed " + action + " plan reviewed through Universal Setup.");
+        }
+        if (phase == "apply") {
+            const std::string digest = option(options.args, "--digest");
+            const std::string confirmation = option(options.args, "--confirm");
+            if (digest.empty() || confirmation != "APPLY") return 2;
+            return emit_basic(
+                call(options, "installs." + action + ".apply", exact_fields_payload({
+                    {"plan_id", options.args[3]}, {"plan_digest", digest},
+                    {"confirmation", confirmation}}), false),
+                flag(options.args, "--json"),
+                "Managed " + action + " apply dispatched.");
+        }
+        return 2;
+    }
+    if (action == "recovery" && options.args.size() >= 4) {
+        const std::string phase = options.args[2];
+        if (phase == "inspect") {
+            return emit_basic(
+                call(options, "installs.recovery.inspect", exact_fields_payload({
+                    {"transaction_id", options.args[3]}})),
+                flag(options.args, "--json"),
+                "Setup recovery state inspected.");
+        }
+        if (phase == "apply") {
+            const std::string digest = option(options.args, "--digest");
+            const std::string confirmation = option(options.args, "--confirm");
+            if (digest.empty() || confirmation != "APPLY") return 2;
+            return emit_basic(
+                call(options, "installs.recovery.apply", exact_fields_payload({
+                    {"plan_id", options.args[3]}, {"plan_digest", digest},
+                    {"confirmation", confirmation}}), false),
+                flag(options.args, "--json"),
+                "Setup recovery apply dispatched.");
+        }
+        return 2;
+    }
     if (action == "install-version" && options.args.size() >= 3) {
         const std::string archive = option(options.args, "--archive");
         return emit_basic(

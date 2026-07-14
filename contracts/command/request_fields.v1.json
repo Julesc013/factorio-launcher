@@ -52,6 +52,45 @@
         "required": false
       }
     ],
+    "installs.install.apply": [
+      {
+        "kind": "identifier",
+        "name": "plan_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      }
+    ],
+    "installs.install.plan": [
+      {
+        "kind": "string",
+        "name": "version",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "archive",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "target_root",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      }
+    ],
     "installs.install_version": [
       {
         "kind": "string",
@@ -64,6 +103,59 @@
         "required": false
       }
     ],
+    "installs.move.apply": [
+      {
+        "kind": "identifier",
+        "name": "plan_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      }
+    ],
+    "installs.move.plan": [
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "target_root",
+        "required": true
+      }
+    ],
+    "installs.recovery.apply": [
+      {
+        "kind": "identifier",
+        "name": "plan_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      }
+    ],
+    "installs.recovery.inspect": [
+      {
+        "kind": "identifier",
+        "name": "transaction_id",
+        "required": true
+      }
+    ],
     "installs.repair": [
       {
         "kind": "identifier",
@@ -71,10 +163,63 @@
         "required": true
       }
     ],
+    "installs.repair.apply": [
+      {
+        "kind": "identifier",
+        "name": "plan_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      }
+    ],
+    "installs.repair.plan": [
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      },
+      {
+        "kind": "path",
+        "name": "archive",
+        "required": false
+      }
+    ],
     "installs.uninstall": [
       {
         "kind": "identifier",
         "name": "id",
+        "required": true
+      }
+    ],
+    "installs.uninstall.apply": [
+      {
+        "kind": "identifier",
+        "name": "plan_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      }
+    ],
+    "installs.uninstall.plan": [
+      {
+        "kind": "identifier",
+        "name": "install_id",
         "required": true
       }
     ],

@@ -79,7 +79,7 @@ def validate() -> list[str]:
         "handlers::onboarding_plan(",
         "handlers::list_installs(",
         "handlers::list_instances(",
-        "handlers::preview_setup(",
+        "handlers::dispatch_setup(",
         "handlers::unavailable(",
     ):
         if anchor not in entrypoint:

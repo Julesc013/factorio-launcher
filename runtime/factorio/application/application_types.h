@@ -73,6 +73,12 @@ struct ServiceOperationRequest {
     std::string query;
     std::string version;
     std::string archive;
+    std::string target_root;
+    std::string install_id;
+    std::string plan_id;
+    std::string plan_digest;
+    std::string confirmation;
+    std::string transaction_id;
 };
 
 using ImportModRequest = modsets::ImportRequest;

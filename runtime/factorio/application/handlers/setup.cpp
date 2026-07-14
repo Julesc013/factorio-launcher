@@ -142,11 +142,21 @@ ApplicationResult managed_install_policy(
     const char* operation)
 {
 #if FACMAN_WITH_SETUP
-    auto parsed_id = facman::core::InstallId::parse_legacy(request.id);
+    const std::string& install_id = request.install_id.empty() ? request.id : request.install_id;
+    auto parsed_id = facman::core::InstallId::parse_legacy(install_id);
     if (!parsed_id) return refused(safety_refusal(operation, parsed_id.error().code, "Install id is invalid", parsed_id.error().message, false), parsed_id.error().code, parsed_id.error().message);
     auto install = context.installs().load(parsed_id.value());
-    if (!install) return refused(safety_refusal(operation, "unknown_install", "Install reference is not registered", request.id, true), "unknown_install", "Install reference is not registered");
-    const std::string action = std::string(operation).substr(9);
+    if (!install) return refused(safety_refusal(operation, "unknown_install", "Install reference is not registered", install_id, true), "unknown_install", "Install reference is not registered");
+    std::string action = std::string(operation).substr(9);
+    const std::size_t suffix = action.find(".plan");
+    if (suffix != std::string::npos) action.erase(suffix);
+    if (install.value().ownership == "managed") {
+        return unavailable(
+            context,
+            operation,
+            "setup_lifecycle_fixture_proof_required",
+            "Managed " + action + " planning remains unavailable until the fixture-backed setup lifecycle proof is complete");
+    }
     const std::string reason = "setup may not " + action + " " + install.value().ownership + " installs";
     ApplicationResult result;
     result.status = ULK_STATUS_ERROR;
@@ -159,12 +169,14 @@ ApplicationResult managed_install_policy(
     refusal.add_bool("recoverable", true);
     facman::core::json::ObjectBuilder output;
     output.add_string("schema", "factorio.managed_install_refusal.v1");
-    output.add_string("operation", action);
+    output.add_string("operation", std::string(operation).find(".plan") == std::string::npos
+        ? action
+        : std::string(operation));
     output.add_string("status", "refused");
     output.add_string("setup_authority", "universal-setup");
     output.add_string("setup_command", "policy.inspect");
     output.add_bool("mutates_install", false);
-    output.add_string("install_id", request.id);
+    output.add_string("install_id", install_id);
     output.add_string("ownership", install.value().ownership);
     output.add_object("refusal", refusal);
     result.output = output.serialize();
@@ -174,6 +186,47 @@ ApplicationResult managed_install_policy(
     return unavailable(context, operation, "setup_unavailable", "Universal Setup support is disabled in this build");
 #endif
 }
+
+ApplicationResult install_plan_impl(
+    ApplicationContext& context,
+    const ServiceOperationRequest& request,
+    const char* operation)
+{
+#if FACMAN_WITH_SETUP
+    InstallPlanRequest plan_request;
+    plan_request.version = request.version;
+    plan_request.archive = facman::platform::path_from_utf8(request.archive);
+    if (!request.target_root.empty()) {
+        plan_request.target = facman::platform::path_from_utf8(request.target_root);
+    }
+    auto plan = context.setup().plan_install(plan_request);
+    if (!plan) return unavailable(context, operation, plan.error().code, plan.error().message);
+    if (!plan.value().inputs_confirmed) {
+        return unavailable(
+            context,
+            operation,
+            "setup_plan_inputs_not_confirmed",
+            plan.value().archive_inspected && plan.value().product_layout_verified
+                ? "The archive passed Universal Setup inspection and the Factorio recipe, but no authoritative target-bound setup plan is available"
+                : "Universal Setup did not return a typed confirmation for the requested version, archive, target, and install identity");
+    }
+    return unavailable(context, operation, "setup_apply_not_authorized", "Ordinary setup apply remains unavailable");
+#else
+    (void)request;
+    return unavailable(context, operation, "setup_unavailable", "Universal Setup support is disabled in this build");
+#endif
+}
+
+ApplicationResult setup_apply_not_authorized(
+    ApplicationContext& context,
+    const char* operation)
+{
+    return unavailable(
+        context,
+        operation,
+        "setup_apply_not_authorized",
+        "Ordinary setup apply remains unavailable until fixture proof and separate live-target acceptance");
+}
 }
 
 ApplicationResult repair_install(ApplicationContext& context, const ServiceOperationRequest& request)
@@ -181,33 +234,118 @@ ApplicationResult repair_install(ApplicationContext& context, const ServiceOpera
     return managed_install_policy(context, request, "installs.repair");
 }
 
+ApplicationResult plan_repair_install(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return managed_install_policy(context, request, "installs.repair.plan");
+}
+
+ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest&)
+{
+    return setup_apply_not_authorized(context, "installs.repair.apply");
+}
+
+ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return managed_install_policy(context, request, "installs.move.plan");
+}
+
+ApplicationResult apply_move_install(ApplicationContext& context, const ServiceOperationRequest&)
+{
+    return setup_apply_not_authorized(context, "installs.move.apply");
+}
+
 ApplicationResult uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request)
 {
     return managed_install_policy(context, request, "installs.uninstall");
 }
 
+ApplicationResult plan_uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return managed_install_policy(context, request, "installs.uninstall.plan");
+}
+
+ApplicationResult apply_uninstall_install(ApplicationContext& context, const ServiceOperationRequest&)
+{
+    return setup_apply_not_authorized(context, "installs.uninstall.apply");
+}
+
+ApplicationResult inspect_install_recovery(ApplicationContext& context, const ServiceOperationRequest&)
+{
+    return unavailable(
+        context,
+        "installs.recovery.inspect",
+        "setup_recovery_not_available",
+        "No setup-owned recovery report is available through the FacMan gateway");
+}
+
+ApplicationResult apply_install_recovery(ApplicationContext& context, const ServiceOperationRequest&)
+{
+    return setup_apply_not_authorized(context, "installs.recovery.apply");
+}
+
 ApplicationResult install_version(ApplicationContext& context, const ServiceOperationRequest& request)
 {
-#if FACMAN_WITH_SETUP
-    InstallPlanRequest plan_request;
-    plan_request.version = request.version;
-    plan_request.archive = facman::platform::path_from_utf8(request.archive);
-    auto plan = context.setup().plan_install(plan_request);
-    if (!plan) return unavailable(context, "installs.install_version", plan.error().code, plan.error().message);
-    if (!plan.value().inputs_confirmed) {
-        return unavailable(
-            context,
-            "installs.install_version",
-            "setup_plan_inputs_not_confirmed",
-            plan.value().archive_inspected && plan.value().product_layout_verified
-                ? "The archive passed Universal Setup inspection and the Factorio recipe, but no authoritative target-bound setup plan is available"
-                : "Universal Setup did not return a typed confirmation for the requested version, archive, and target");
+    return install_plan_impl(context, request, "installs.install_version");
+}
+
+ApplicationResult plan_install(ApplicationContext& context, const ServiceOperationRequest& request)
+{
+    return install_plan_impl(context, request, "installs.install.plan");
+}
+
+ApplicationResult apply_install(ApplicationContext& context, const ServiceOperationRequest&)
+{
+    return setup_apply_not_authorized(context, "installs.install.apply");
+}
+
+bool is_setup_command(CommandId command) noexcept
+{
+    switch (command) {
+    case CommandId::setup_preview:
+    case CommandId::package_verify:
+    case CommandId::installs_install_plan:
+    case CommandId::installs_install_apply:
+    case CommandId::installs_install_version:
+    case CommandId::installs_verify:
+    case CommandId::installs_repair_plan:
+    case CommandId::installs_repair_apply:
+    case CommandId::installs_repair:
+    case CommandId::installs_move_plan:
+    case CommandId::installs_move_apply:
+    case CommandId::installs_uninstall_plan:
+    case CommandId::installs_uninstall_apply:
+    case CommandId::installs_uninstall:
+    case CommandId::installs_recovery_inspect:
+    case CommandId::installs_recovery_apply:
+        return true;
+    default:
+        return false;
     }
-    return unavailable(context, "installs.install_version", "setup_mutation_not_implemented", "Setup mutation remains unavailable");
-#else
-    (void)request;
-    return unavailable(context, "installs.install_version", "setup_unavailable", "Universal Setup support is disabled in this build");
-#endif
+}
+
+ApplicationResult dispatch_setup(ApplicationContext& context, const ApplicationRequest& request)
+{
+    if (request.command == CommandId::setup_preview) return preview_setup(context);
+    const auto& operation = std::get<ServiceOperationRequest>(request.payload);
+    switch (request.command) {
+    case CommandId::package_verify: return verify_package(context, operation);
+    case CommandId::installs_install_plan: return plan_install(context, operation);
+    case CommandId::installs_install_apply: return apply_install(context, operation);
+    case CommandId::installs_install_version: return install_version(context, operation);
+    case CommandId::installs_verify: return verify_install(context, operation);
+    case CommandId::installs_repair_plan: return plan_repair_install(context, operation);
+    case CommandId::installs_repair_apply: return apply_repair_install(context, operation);
+    case CommandId::installs_repair: return repair_install(context, operation);
+    case CommandId::installs_move_plan: return plan_move_install(context, operation);
+    case CommandId::installs_move_apply: return apply_move_install(context, operation);
+    case CommandId::installs_uninstall_plan: return plan_uninstall_install(context, operation);
+    case CommandId::installs_uninstall_apply: return apply_uninstall_install(context, operation);
+    case CommandId::installs_uninstall: return uninstall_install(context, operation);
+    case CommandId::installs_recovery_inspect: return inspect_install_recovery(context, operation);
+    case CommandId::installs_recovery_apply: return apply_install_recovery(context, operation);
+    default:
+        return unavailable(context, "setup.dispatch", "invalid_request", "Command is not a setup workflow");
+    }
 }
 
 } // namespace facman::factorio::application::handlers
