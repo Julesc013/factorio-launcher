@@ -621,7 +621,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU7 must bind the complete native and Python proof counts")
     if m2_wu7.get("required_windows_package_tests") != 14 or m2_wu7.get("required_windows_package_skips") != 0:
         problems.append("M2-WU7 must bind the required zero-skip Windows package proof")
-    if m2_wu7.get("package_tree_file_count") != 390:
+    if m2_wu7.get("package_tree_file_count") != 391:
         problems.append("M2-WU7 must bind the complete reproducible selected package tree")
     if m2_wu7.get("operator_verdict") != "pending" or m2_wu7.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU7 automation must preserve a separate pending operator verdict")

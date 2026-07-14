@@ -37,14 +37,15 @@ Validation passed:
 - complete Python suite: 339 pass plus one unchanged opt-in skip;
 - strict validation and AIDE Lite;
 - required Windows package proof: 14/14 with zero skips; and
-- selected 390-file package reproducibility.
+- selected 391-file package reproducibility at source revision
+  `0e50b6fe0e90707926bf71940db6507aa8580a80`.
 
 | Evidence | SHA-256 |
 | --- | --- |
-| archive | `965c3588fb9ead5cf826f3489b7c09f7b32e6f1a1e2a7f38bebb216054919fb2` |
-| package tree | `5df6d578c8a1054a9d24f8bc0641c692f8420ee062901177546b1fa0692fae25` |
-| SBOM | `e684549e9d0f861c4188114eb8b707864b5015d0a30a1d9f66e33d6c3e47d40f` |
-| provenance | `39235fb79ad15afb8350d20368b1e2cb3e96fd28219ebca432741a3a9f2daefc` |
+| archive | `8899dec862a6dd2558603e8be3a47ebd7380e7eae77f58e892cb8226630576e0` |
+| package tree | `ae2b34f3ed610a4bdde3228e6452343b9b32e3993bb6d057f6f01c5fed761bb6` |
+| SBOM | `7aa4fb5be301133a2611918bf9bad842642da931140cc46543bd25f2ccacb671` |
+| provenance | `ebb7d31f17babec6f6949fa86e24026eb5da6841bb472151abd79f1b8225c960` |
 
 No proprietary Factorio archive was used or accepted. No setup apply,
 `run.execute`, H1, registry, elevation, networking, credential, signing,
