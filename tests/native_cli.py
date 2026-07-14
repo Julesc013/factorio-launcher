@@ -6,13 +6,14 @@ from __future__ import annotations
 import os
 import subprocess
 import unittest
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def facman_executable() -> Path:
-    explicit = os.environ.get("FACMAN_CLI_EXE")
+@lru_cache(maxsize=16)
+def _discover_facman_executable(root: Path, explicit: str) -> Path:
     if explicit:
         path = Path(explicit)
         if path.is_file():
@@ -20,20 +21,29 @@ def facman_executable() -> Path:
         raise AssertionError(f"FACMAN_CLI_EXE does not point to a file: {path}")
 
     preferred = [
-        ROOT / "build" / "native-smoke" / "Debug" / "facman.exe",
-        ROOT / "build" / "native-smoke" / "facman",
-        ROOT / "build" / "Debug" / "facman.exe",
+        root / "build" / "native-smoke" / "Debug" / "facman.exe",
+        root / "build" / "native-smoke" / "facman",
+        root / "build" / "Debug" / "facman.exe",
     ]
-    for path in preferred:
-        if path.is_file():
-            return path
     candidates: list[Path] = []
     for pattern in ("build/**/facman.exe", "build/**/facman"):
-        candidates.extend(path for path in ROOT.glob(pattern) if path.is_file())
+        candidates.extend(path for path in root.glob(pattern) if path.is_file())
     if candidates:
-        return sorted(candidates, key=lambda path: path.stat().st_mtime, reverse=True)[0]
+        ranks = {path: index for index, path in enumerate(preferred)}
+        unique = set(candidates)
+        return max(
+            unique,
+            key=lambda path: (path.stat().st_mtime_ns, -ranks.get(path, len(preferred))),
+        )
 
     raise unittest.SkipTest("native facman executable has not been built")
+
+
+def facman_executable() -> Path:
+    # Raw unittest discovery does not rebuild the native CLI. Cache the bounded
+    # selection for the process so each CLI-backed case does not recursively
+    # rescan a potentially large historical build tree.
+    return _discover_facman_executable(ROOT, os.environ.get("FACMAN_CLI_EXE", ""))
 
 
 def invoke(args: list[str], env: dict[str, str] | None = None) -> tuple[int, str, str]:

@@ -36,6 +36,7 @@ reported as stronger runtime evidence.
 | Public setup lifecycle | implementation-proven candidate | exact Setup CI; inspect, plan, revalidate, lifecycle, cross-repo and package proof | human verdict pending; managed and recovery apply unavailable |
 | FacMan portable install plan | target-bound read-only candidate | CLI/provider plan binds source, recipe, target, policy, and provider | candidate config required; apply awaits human M2 Pass |
 | Generated portable setup review | four-client candidate | shared contract covers sequence, identities, warnings, confirmation, progress, and recovery | presentation only; Setup owns policy; apply awaits human M2 Pass |
+| Portable setup adversarial corpus | cross-platform candidate | 16 cases; Setup on three targets; FacMan cancellation/termination | exact-dev and human verdict pending; Windows/macOS multi-volume unproven |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |

@@ -94,6 +94,8 @@ record the pending human verdict or enable mutation.
 
 The bounded
 [`M2-WU8 generated frontend workflow`](m2-wu8-generated-frontend-workflow.md)
+
+[`M2-WU9 cross-platform adversarial proof`](m2-wu9-cross-platform-adversarial-proof.md)
 checkpoint binds one presentation contract across CLI, TUI, WinForms, and
 AppKit, including exact identities, warnings, confirmation, progress, and
 recovery labels. Universal Setup remains the policy owner and ordinary apply

@@ -3,8 +3,8 @@
 
 # M2-WU8 Generated Frontend Workflow
 
-Status: four-client local and package proof passed; reviewed `dev` integration
-and the human M2 live-target verdict remain pending.
+Status: accepted `dev` integration proof; the human M2 live-target verdict
+remains pending.
 
 ## Implementation
 
@@ -27,6 +27,25 @@ may reinterpret mutation authority.
 | supervision deadline remediation | `d59d22a27b088e75931eb3ff8005e59a20ff806e` |
 | Universal Launcher pin | `7bd4425f0c35414f738159b45d8bec42edf70235` |
 | Universal Setup pin | `e1ce68e9593ae8d9a35cc0821b5e42c798524453` |
+
+## Reviewed integration
+
+PR #22 retained all six structured task commits and merged task head
+`d40596f0654b21e30876d6f45b65e652f863eef4` into `dev` as
+`f1a9996d391ba19a4c5ce4e418193e6067bfd722`. Both revisions resolve to the
+identical Git tree `24deb7a6a18547a188f0dd6da6838abccaf7005d`; the merge introduced
+no content drift.
+
+| Exact-head workflow | Push | Pull request | Exact `dev` |
+| --- | --- | --- | --- |
+| CI | `29351870100` | `29351889341` | `29352793723` |
+| CodeQL | `29351869994` | `29351889688` | `29352793794` |
+| security policy | `29351869953` | `29351889727` | `29352793672` |
+| schema check | `29351869949` | `29351889343` | `29352793737` |
+
+Every listed run completed successfully. This binds implementation proof,
+reviewed integration, and exact integration-branch validation without
+converting the still-pending human acceptance verdict into automation.
 
 The full aggregate run exposed a host-load timing flaw in protected-root
 process supervision: a Windows CIM child query could begin immediately before a

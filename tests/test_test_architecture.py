@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import unittest
 import json
+import os
 import tempfile
 from pathlib import Path
 from unittest import mock
@@ -52,6 +53,43 @@ class TestArchitectureTests(unittest.TestCase):
                 mock.patch.dict("os.environ", {"FACMAN_CLI_EXE": ""}),
             ):
                 self.assertEqual(canonical, native_cli.facman_executable())
+
+    def test_raw_python_runner_rejects_a_stale_canonical_binary(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            canonical = root / "build" / "native-smoke" / "Debug" / "facman.exe"
+            current = root / "build" / "m2-wu9" / "Release" / "facman.exe"
+            canonical.parent.mkdir(parents=True)
+            current.parent.mkdir(parents=True)
+            canonical.write_bytes(b"stale")
+            current.write_bytes(b"current")
+            os.utime(canonical, ns=(1_000_000_000, 1_000_000_000))
+            os.utime(current, ns=(2_000_000_000, 2_000_000_000))
+            with (
+                mock.patch.object(native_cli, "ROOT", root),
+                mock.patch.dict("os.environ", {"FACMAN_CLI_EXE": ""}),
+            ):
+                self.assertEqual(current, native_cli.facman_executable())
+
+    def test_raw_python_runner_caches_build_tree_discovery(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            current = root / "build" / "m2-wu9" / "Release" / "facman.exe"
+            current.parent.mkdir(parents=True)
+            current.write_bytes(b"current")
+            with (
+                mock.patch.object(native_cli, "ROOT", root),
+                mock.patch.dict("os.environ", {"FACMAN_CLI_EXE": ""}),
+                mock.patch.object(
+                    Path,
+                    "glob",
+                    autospec=True,
+                    wraps=Path.glob,
+                ) as glob,
+            ):
+                self.assertEqual(current, native_cli.facman_executable())
+                self.assertEqual(current, native_cli.facman_executable())
+                self.assertEqual(glob.call_count, 2)
 
     def test_operator_category_cannot_be_automatically_passed(self) -> None:
         self.assertFalse(dev.load_impact()["operator"]["automated"])

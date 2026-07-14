@@ -30,7 +30,7 @@ int main(void)
     plan.input_identity_digest = view("sha256:reviewed-inputs");
     plan.product_id = view("synthetic.m2");
     plan.setup_provider = view("universal-setup");
-    plan.provider_revision = view("e1ce68e9593ae8d9a35cc0821b5e42c798524453");
+    plan.provider_revision = view("3f8489275077347c2918f3bb03614ec6431362ff");
     plan.reviewed = 1;
 
     memset(&result, 0, sizeof(result));
