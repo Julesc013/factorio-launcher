@@ -23,6 +23,18 @@ Machine preparation result: `PASS`.
   with one intentional opt-in skip; the full suite completed in 415.455 s.
 - `git diff --check`: PASS.
 
+Hosted validation at exact revision
+`980d5b9e3113a673782d6efde74291b0c477f14b` is complete:
+
+- push CI `29364492582`: PASS;
+- push CodeQL `29364492665`: PASS;
+- push security policy `29364491886`: PASS;
+- push schema check `29364492053`: PASS;
+- draft PR #25 CI `29364494313`: PASS;
+- draft PR #25 CodeQL `29364495679`: PASS;
+- draft PR #25 security policy `29364495081`: PASS;
+- draft PR #25 schema check `29364494922`: PASS.
+
 The retained run contains 26 files, 14 directories, 40,105 bytes, zero
 reparse points, four evidence packets, and five audit events. The current
 moved target is removed; the pre-move root remains intentionally retained.

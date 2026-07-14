@@ -283,6 +283,16 @@ class AideCompactionTests(unittest.TestCase):
             m2_wu10["native_test_count"], m2_wu10["python_test_count"],
             m2_wu10["python_opt_in_skip_count"], m2_wu10["schema_count"],
         ])
+        self.assertEqual("980d5b9e3113a673782d6efde74291b0c477f14b", m2_wu10["hosted_validation_revision"])
+        self.assertEqual(25, m2_wu10["draft_pull_request"])
+        self.assertEqual(
+            ["29364492582", "29364492665", "29364491886", "29364492053",
+             "29364494313", "29364495679", "29364495081", "29364494922"],
+            [m2_wu10["task_push_ci_run"], m2_wu10["task_push_code_security_run"],
+             m2_wu10["task_push_security_policy_run"], m2_wu10["task_push_schema_check_run"],
+             m2_wu10["task_pr_ci_run"], m2_wu10["task_pr_code_security_run"],
+             m2_wu10["task_pr_security_policy_run"], m2_wu10["task_pr_schema_check_run"]],
+        )
         self.assertEqual("pending", m2_wu10["operator_verdict"])
         self.assertFalse(m2_wu10["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu10["execution_authority"])

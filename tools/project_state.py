@@ -778,6 +778,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU10 must include the accepted interruption and recovery proof")
     if [m2_wu10.get("native_test_count"), m2_wu10.get("python_test_count"), m2_wu10.get("python_opt_in_skip_count"), m2_wu10.get("schema_count")] != [41, 345, 1, 231]:
         problems.append("M2-WU10 must bind the complete local native, Python, and schema proof counts")
+    if m2_wu10.get("hosted_validation_revision") != "980d5b9e3113a673782d6efde74291b0c477f14b" or m2_wu10.get("draft_pull_request") != 25:
+        problems.append("M2-WU10 must bind the reviewed draft and exact hosted validation revision")
+    if [
+        m2_wu10.get("task_push_ci_run"),
+        m2_wu10.get("task_push_code_security_run"),
+        m2_wu10.get("task_push_security_policy_run"),
+        m2_wu10.get("task_push_schema_check_run"),
+        m2_wu10.get("task_pr_ci_run"),
+        m2_wu10.get("task_pr_code_security_run"),
+        m2_wu10.get("task_pr_security_policy_run"),
+        m2_wu10.get("task_pr_schema_check_run"),
+    ] != [
+        "29364492582", "29364492665", "29364491886", "29364492053",
+        "29364494313", "29364495679", "29364495081", "29364494922",
+    ]:
+        problems.append("M2-WU10 must bind the complete successful push and PR workflow sets")
     if m2_wu10.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU10 automation must not record the operator verdict")
     if m2_wu10.get("operator_verdict") == "pending" and m2_wu10.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
