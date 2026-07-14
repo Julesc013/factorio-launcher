@@ -30,6 +30,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu1_target_policy",
             "m2_wu2_public_lifecycle",
             "m2_wu3_live_evidence",
+            "m2_wu4_live_acceptance",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -39,15 +40,15 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_wu3_implementation_preserves_human_and_execution_gates(self) -> None:
+    def test_m2_wu4_live_acceptance_preserves_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu3-live-target-evidence", data["current_checkpoint"])
+        self.assertEqual("m2-wu4-live-install-acceptance", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("M2-WU4-LIVE-INSTALL-ACCEPTANCE-01", data["active_work_unit"])
         self.assertEqual(
-            "live_evidence_dev_integrated_pending_operator_acceptance",
+            "automated_live_lifecycle_complete_pending_operator_verdict",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
@@ -82,7 +83,7 @@ class AideCompactionTests(unittest.TestCase):
         m2_wu3 = data["m2_wu3_live_evidence"]
         self.assertEqual("accepted_dev_integration_proof", m2_wu3["status"])
         self.assertEqual(
-            data["provider_pins"]["universal_setup"]["revision"],
+            "fbbeb762f25921ae05945206fd0c004a52239c13",
             m2_wu3["universal_setup_main_revision"],
         )
         self.assertEqual("pending", m2_wu3["operator_verdict"])
@@ -109,6 +110,25 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("unavailable_pending_operator_acceptance", m2_wu3["ordinary_live_apply"])
         self.assertFalse(m2_wu3["execution_authority"])
         self.assertEqual("none", m2_wu3["h1_inference"])
+        m2_wu4 = data["m2_wu4_live_acceptance"]
+        self.assertEqual("provider_integrated_live_run_proven_pending_dev_integration", m2_wu4["status"])
+        self.assertEqual(data["provider_pins"]["universal_setup"]["revision"], m2_wu4["universal_setup_main_revision"])
+        self.assertEqual("6209385f25db1824bcbb7ec599cf2152606be89b", m2_wu4["universal_setup_runner_revision"])
+        self.assertEqual(4, m2_wu4["evidence_packet_count"])
+        self.assertEqual(4, m2_wu4["journal_count"])
+        self.assertEqual(5, m2_wu4["audit_event_count"])
+        self.assertEqual("expected_fail_observed", m2_wu4["damaged_owned_file_detection"])
+        self.assertEqual("pass_old_root_retained", m2_wu4["same_volume_move"])
+        self.assertEqual("not_attempted_no_second_authorized_volume", m2_wu4["cross_volume_move"])
+        self.assertEqual("refused_and_retained", m2_wu4["foreign_content_uninstall"])
+        self.assertEqual("retired", m2_wu4["final_lifecycle_status"])
+        self.assertEqual("not_required", m2_wu4["final_recovery_status"])
+        self.assertEqual("pending", m2_wu4["operator_verdict"])
+        self.assertFalse(m2_wu4["automation_can_record_operator_verdict"])
+        self.assertEqual("unavailable_pending_operator_acceptance", m2_wu4["ordinary_live_apply"])
+        self.assertEqual("unavailable_pending_wu5", m2_wu4["recovery_apply"])
+        self.assertFalse(m2_wu4["execution_authority"])
+        self.assertEqual("none", m2_wu4["h1_inference"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
