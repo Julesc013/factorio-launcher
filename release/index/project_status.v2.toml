@@ -6,8 +6,8 @@ implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "73bec99916d509b0ab055a43562e93ef20a6b4b7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01"
-last_closed_work_unit = "M2-WU5-LIVE-INTERRUPTION-RECOVERY-01"
+active_work_unit = ""
+last_closed_work_unit = "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01"
 next_authority_gate = "H1"
 safe_beta = false
 
@@ -97,7 +97,7 @@ authority_promotion = false
 
 [m2_live_portable_setup]
 status = "automated_live_lifecycle_complete_pending_operator_verdict"
-active_work_unit = "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01"
+active_work_unit = ""
 authorized_acceptance_root = "D:\\FacMan-Live-Acceptance\\M2"
 autonomous_archive_scope = "non_proprietary_synthetic_only"
 operator_verdict = "pending"
@@ -216,7 +216,7 @@ h1_inference = "none"
 
 [m2_wu6_launcher_handoff]
 status = "provider_integrated_local_handoff_proven_pending_dev_integration"
-active_work_unit = "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01"
+active_work_unit = ""
 universal_launcher_task_revision = "43115d50822ac5a3ab0c51801873ff9a230408dd"
 universal_launcher_main_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
 universal_launcher_main_ci_run = "29337737777"

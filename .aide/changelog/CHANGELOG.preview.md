@@ -3,27 +3,26 @@
 This file is generated from local Git history and is a preview only.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: 7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff
+source_head: d746454ca85090eff7d9e4c6a1723f495da596d1
 commit_count: 50
-malformed_count: 13
+malformed_count: 14
 preview_only: true
 release_publishing: false
 
 ## Summary
 
 - Added: 8
-- Changed: 15
-- Fixed: 10
-- Security: 16
-- Docs: 7
-- Tests: 11
-- Internal: 4
-- Risks: 8
-- Follow-up: 13
+- Changed: 14
+- Fixed: 8
+- Security: 15
+- Docs: 6
+- Tests: 10
+- Internal: 3
+- Risks: 7
+- Follow-up: 12
 
 ## Added
 
-- Revision-pinned M1 managed portable-install checkpoint. (efe06f385795 docs(m1): bind managed portable foundation closeout)
 - explicit M2 live portable setup state with a pending human gate. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
 - immutable M2-WU1 live-target policy checkpoint. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
 - bounded M2-WU2 public lifecycle activation WorkUnit. (effce1f71784 chore(m2): open public setup lifecycle WorkUnit)
@@ -31,10 +30,10 @@ release_publishing: false
 - evidence-only WU2 dev integration closeout lane. (2c55d1d111a2 chore(m2): open the WU2 dev integration proof)
 - immutable exact-dev WU2 integration evidence. (182ada6be86d docs(m2): bind the exact WU2 dev integration)
 - retained live synthetic install lifecycle evidence. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
+- stable managed_install_recovery_required handoff with stale launch-plan projection. (480a58ca4c10 feat(handoff): integrate Launcher recovery projection)
 
 ## Changed
 
-- Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory. (efe06f385795 docs(m1): bind managed portable foundation closeout)
 - Universal provider license identity from NOASSERTION to MIT at pinned revisions. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - both Universal dependencies now have accepted MIT and reproducibility truth. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
 - current Universal Setup provider identity now includes the fail-closed M2 target policy. (dfa0d8ad3c4c chore(m2): bind target policy provider integration)
@@ -52,8 +51,6 @@ release_publishing: false
 
 ## Fixed
 
-- New non-ignored source files are now checked before their first commit. (5b01b36fb989 fix(validation): inspect new source files before commit)
-- M1 checkpoint satisfies the repository line-length policy. (5b01b36fb989 fix(validation): inspect new source files before commit)
 - complete provider license closure in built packages. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
 - workspace status now reports the exact current Universal provider pins. (724246e53b57 fix(status): report licensed provider revisions)
 - durable transaction journals no longer fail at legacy MAX_PATH. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
@@ -65,7 +62,6 @@ release_publishing: false
 
 ## Security
 
-- Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed. (efe06f385795 docs(m1): bind managed portable foundation closeout)
 - verify exact provider notice digests and source identities. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - prevent SBOM/package claims without retained provider notices. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
 - long-path operations retain no-follow, no-clobber, and identity checks. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
@@ -84,18 +80,15 @@ release_publishing: false
 
 ## Docs
 
-- Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply. (efe06f385795 docs(m1): bind managed portable foundation closeout)
-- bind M1 canonical public integration evidence. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - record the accepted operator decision and retained redistribution notices. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - add immutable license integration checkpoint and complete queue evidence. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
 - generated project truth now reports the active bounded WorkUnit. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
 - accepted WU3 reviewed dev integration evidence. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
 - bind run, packet, journal, audit, state, and package identities. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
+- WU4 is now accepted as dev-integrated while its human verdict remains pending. (a6cfe28c704d docs(state): accept exact-dev WU4 integration)
 
 ## Tests
 
-- Added pre-commit file-discovery regression coverage. (5b01b36fb989 fix(validation): inspect new source files before commit)
-- protect additive public-integration truth and unchanged authority boundaries. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - preserve historical M1 provider identities separately from current pins. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - exercise portable CLI, TUI, WinForms, relocation, tamper, SBOM, and provenance lanes. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
 - preserve lock/runtime revision parity. (724246e53b57 fix(status): report licensed provider revisions)
@@ -105,17 +98,16 @@ release_publishing: false
 - target policy adds one integrated native test, bringing this build to 36/36. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
 - enforce immutable integration identities and retained human gate. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
 - enforce pending verdict and zero authority promotion. (a286b5c42736 chore(m2): close WU4 live synthetic acceptance proof)
+- complete Launcher handoff proof and immutable WU5 dev evidence are now recorded. (d746454ca850 test(proof): bind complete WU6 validation identities)
 
 ## Internal
 
-- prepare dev ancestry synchronization from canonical main. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - no product command changed in this opening commit. (effce1f71784 chore(m2): open public setup lifecycle WorkUnit)
 - refreshed WU3 review-only changelog artifacts. (5f93f42f9708 chore(aide): refresh WU3 integration changelog preview)
 - refresh generated project state and AIDE review artifacts. (067397e592ce docs(m2): bind WU3 exact-dev integration proof)
 
 ## Risks
 
-- none; no product behavior or authority changes. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - artifacts remain unsigned and unpublished. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - package tree identities change and require fresh reproducibility evidence. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
 - read-only reporting identity only; no setup or execution authority changes. (724246e53b57 fix(status): report licensed provider revisions)
@@ -126,7 +118,6 @@ release_publishing: false
 
 ## Follow-up
 
-- merge to dev, verify exact-dev checks, then resolve authorized Universal MIT licensing. (92da90101342 chore(release): bind canonical M1 public integration proof)
 - carry provider notices into every package profile and rerun reproducibility proof. (b1fd720013ed chore(license): bind Universal MIT provider truth)
 - run the clean three-repository package proof and bind new identities. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
 - rerun the complete clean reproduction from an empty output root. (724246e53b57 fix(status): report licensed provider revisions)
@@ -155,6 +146,7 @@ release_publishing: false
 - a056c4a62343 docs(state): bind WU5 interruption and recovery evidence: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
 - aa0aa89b4564 fix(status): report the locked WU5 setup revision: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
 - 7cc7ca39792e test(proof): bind complete WU5 validation identities: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
+- 7a14314940b3 chore(aide): close WU5 recovery integration proof: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
 
 ## Release Caveat
 

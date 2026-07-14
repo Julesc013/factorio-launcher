@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
+  "active_work_unit": null,
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -163,7 +163,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU5-LIVE-INTERRUPTION-RECOVERY-01",
+  "last_closed_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -197,7 +197,7 @@
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
   "m2_live_portable_setup": {
-    "active_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
+    "active_work_unit": "",
     "authorized_acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
     "autonomous_archive_scope": "non_proprietary_synthetic_only",
     "execution_authority": false,
@@ -420,7 +420,7 @@
     "visible_target_finalization": "internal_exact_original_install_plan_only"
   },
   "m2_wu6_launcher_handoff": {
-    "active_work_unit": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01",
+    "active_work_unit": "",
     "automation_can_record_operator_verdict": false,
     "dependent_instance_status": "managed_install_recovery_required",
     "execution_authority": false,

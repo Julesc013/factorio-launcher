@@ -2,31 +2,6 @@
   "categories": {
     "Added": [
       {
-        "aide_phase": "evidence-closeout",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Added",
-        "commit": "efe06f385795",
-        "commit_sha": "efe06f385795ae7dc9a35ef008a66605ed48bbf1",
-        "entry": "Revision-pinned M1 managed portable-install checkpoint.",
-        "follow_up": "- Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: evidence-closeout\nAIDE-Result: PASS\nAIDE-Scope: project truth, checkpoint, generated state, safety ledger\nAIDE-Token-Impact: closes M1 without authority promotion\nAIDE-Quality-Gate: clean three-repo, package, hosted matrix, strict, and truth checks pass",
-        "risks": "- Synthetic and disposable-root proof is not live Factorio install acceptance.\n- Universal repository licenses remain NOASSERTION pending the operator decision.\n- Artifacts are unsigned and unpublished.",
-        "scope": "m1",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "docs(m1): bind managed portable foundation closeout",
-        "summary": "Revision-pinned M1 managed portable-install checkpoint.",
-        "type": "docs",
-        "validation": "- py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.\n- CTest exact build: PASS (35/35).\n- Python exact build: PASS (337 cases, one deliberate opt-in skip).\n- py -3 tools/required_package_proof.py: PASS (14 tests, zero skips).\n- py -3 tools/package_reproducibility_proof.py: PASS (379-file tree and byte-identical complete archives).\n- exact-head CI 29299245206: PASS.\n- exact-head CodeQL 29299245093: PASS.\n- security policy 29299245082: PASS.\n- release policy 29299286894: PASS.\n- py -3 -m unittest tests.test_aide_compaction tests.test_schema_tools tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (19 tests).\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-      },
-      {
         "aide_phase": "open",
         "aide_result": "PASS",
         "breaking": false,
@@ -200,20 +175,18 @@
         "summary": "retained live synthetic install lifecycle evidence.",
         "type": "chore",
         "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
-      }
-    ],
-    "Changed": [
+      },
       {
-        "aide_phase": "evidence-closeout",
+        "aide_phase": "provider-integration",
         "aide_result": "PASS",
         "breaking": false,
-        "category": "Changed",
-        "commit": "efe06f385795",
-        "commit_sha": "efe06f385795ae7dc9a35ef008a66605ed48bbf1",
-        "entry": "Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory.",
-        "follow_up": "- Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: evidence-closeout\nAIDE-Result: PASS\nAIDE-Scope: project truth, checkpoint, generated state, safety ledger\nAIDE-Token-Impact: closes M1 without authority promotion\nAIDE-Quality-Gate: clean three-repo, package, hosted matrix, strict, and truth checks pass",
-        "risks": "- Synthetic and disposable-root proof is not live Factorio install acceptance.\n- Universal repository licenses remain NOASSERTION pending the operator decision.\n- Artifacts are unsigned and unpublished.",
-        "scope": "m1",
+        "category": "Added",
+        "commit": "480a58ca4c10",
+        "commit_sha": "480a58ca4c10b82cf81034e00139cb78f73914bd",
+        "entry": "stable managed_install_recovery_required handoff with stale launch-plan projection.",
+        "follow_up": "- Run the complete exact-pin validation matrix and close WU6 through reviewed dev integration.\n\nAIDE-Task: M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01\nAIDE-Phase: provider-integration\nAIDE-Result: PASS\nAIDE-Scope: Universal Launcher 1.3 pin and recovery handoff\nAIDE-Token-Impact: additive ABI and structured recovery status only\nAIDE-Quality-Gate: focused native, installed SDK, project state, and strict validation passed",
+        "risks": "- Full repository, package, reproducibility, and hosted integration proof remain pending; human verdict and ordinary live apply remain unavailable.",
+        "scope": "handoff",
         "source_sections_present": [
           "## Summary",
           "## Why",
@@ -223,11 +196,13 @@
           "## Risks",
           "## Follow-up"
         ],
-        "subject": "docs(m1): bind managed portable foundation closeout",
-        "summary": "Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory.",
-        "type": "docs",
-        "validation": "- py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.\n- CTest exact build: PASS (35/35).\n- Python exact build: PASS (337 cases, one deliberate opt-in skip).\n- py -3 tools/required_package_proof.py: PASS (14 tests, zero skips).\n- py -3 tools/package_reproducibility_proof.py: PASS (379-file tree and byte-identical complete archives).\n- exact-head CI 29299245206: PASS.\n- exact-head CodeQL 29299245093: PASS.\n- security policy 29299245082: PASS.\n- release policy 29299286894: PASS.\n- py -3 -m unittest tests.test_aide_compaction tests.test_schema_tools tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (19 tests).\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-      },
+        "subject": "feat(handoff): integrate Launcher recovery projection",
+        "summary": "stable managed_install_recovery_required handoff with stale launch-plan projection.",
+        "type": "feat",
+        "validation": "- Six focused exact-pin native and SDK tests, project-state checks, and strict validation: PASS."
+      }
+    ],
+    "Changed": [
       {
         "aide_phase": "provider-truth",
         "aide_result": "PASS",
@@ -581,56 +556,6 @@
     ],
     "Docs": [
       {
-        "aide_phase": "evidence-closeout",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Docs",
-        "commit": "efe06f385795",
-        "commit_sha": "efe06f385795ae7dc9a35ef008a66605ed48bbf1",
-        "entry": "Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply.",
-        "follow_up": "- Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: evidence-closeout\nAIDE-Result: PASS\nAIDE-Scope: project truth, checkpoint, generated state, safety ledger\nAIDE-Token-Impact: closes M1 without authority promotion\nAIDE-Quality-Gate: clean three-repo, package, hosted matrix, strict, and truth checks pass",
-        "risks": "- Synthetic and disposable-root proof is not live Factorio install acceptance.\n- Universal repository licenses remain NOASSERTION pending the operator decision.\n- Artifacts are unsigned and unpublished.",
-        "scope": "m1",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "docs(m1): bind managed portable foundation closeout",
-        "summary": "Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply.",
-        "type": "docs",
-        "validation": "- py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.\n- CTest exact build: PASS (35/35).\n- Python exact build: PASS (337 cases, one deliberate opt-in skip).\n- py -3 tools/required_package_proof.py: PASS (14 tests, zero skips).\n- py -3 tools/package_reproducibility_proof.py: PASS (379-file tree and byte-identical complete archives).\n- exact-head CI 29299245206: PASS.\n- exact-head CodeQL 29299245093: PASS.\n- security policy 29299245082: PASS.\n- release policy 29299286894: PASS.\n- py -3 -m unittest tests.test_aide_compaction tests.test_schema_tools tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (19 tests).\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-      },
-      {
-        "aide_phase": "canonical-closeout",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Docs",
-        "commit": "92da90101342",
-        "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-        "entry": "bind M1 canonical public integration evidence.",
-        "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-        "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-        "scope": "release",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "chore(release): bind canonical M1 public integration proof",
-        "summary": "bind M1 canonical public integration evidence.",
-        "type": "chore",
-        "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-      },
-      {
         "aide_phase": "provider-truth",
         "aide_result": "PASS",
         "breaking": false,
@@ -754,59 +679,34 @@
         "summary": "bind run, packet, journal, audit, state, and package identities.",
         "type": "chore",
         "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+      },
+      {
+        "aide_phase": "integration-closeout",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Docs",
+        "commit": "a6cfe28c704d",
+        "commit_sha": "a6cfe28c704df68025094f29be85f8961f745cd1",
+        "entry": "WU4 is now accepted as dev-integrated while its human verdict remains pending.",
+        "follow_up": "- Merge WU5 recovery proof into dev and bind its exact integration workflows.\n\nAIDE-Task: M2-WU5-LIVE-INTERRUPTION-RECOVERY-01\nAIDE-Phase: integration-closeout\nAIDE-Result: PASS\nAIDE-Scope: M2-WU4 immutable integration truth\nAIDE-Token-Impact: no runtime or authority change\nAIDE-Quality-Gate: project state, compaction, and strict validation passed",
+        "risks": "- Ordinary live apply and every excluded execution or system authority remain unavailable.",
+        "scope": "state",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "docs(state): accept exact-dev WU4 integration",
+        "summary": "WU4 is now accepted as dev-integrated while its human verdict remains pending.",
+        "type": "docs",
+        "validation": "- project_state.py, test_aide_compaction, and strict_check.py: PASS."
       }
     ],
     "Fixed": [
-      {
-        "aide_phase": "hosted-closeout-remediation",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Fixed",
-        "commit": "5b01b36fb989",
-        "commit_sha": "5b01b36fb989ce00945b6dfe30edd1dd01168edf",
-        "entry": "New non-ignored source files are now checked before their first commit.",
-        "follow_up": "- Push the remediation and require a new exact-head hosted matrix before merging PR #9.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: hosted-closeout-remediation\nAIDE-Result: PASS\nAIDE-Scope: source format discovery and checkpoint evidence\nAIDE-Token-Impact: closes pre-commit validation blind spot\nAIDE-Quality-Gate: focused tests and full strict suite pass",
-        "risks": "- Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.",
-        "scope": "validation",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "fix(validation): inspect new source files before commit",
-        "summary": "New non-ignored source files are now checked before their first commit.",
-        "type": "fix",
-        "validation": "- Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.\n- py -3 -m unittest tests.test_source_format_check tests.test_schema_tools -v: PASS (17 tests).\n- py -3 tools/source_format_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-      },
-      {
-        "aide_phase": "hosted-closeout-remediation",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Fixed",
-        "commit": "5b01b36fb989",
-        "commit_sha": "5b01b36fb989ce00945b6dfe30edd1dd01168edf",
-        "entry": "M1 checkpoint satisfies the repository line-length policy.",
-        "follow_up": "- Push the remediation and require a new exact-head hosted matrix before merging PR #9.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: hosted-closeout-remediation\nAIDE-Result: PASS\nAIDE-Scope: source format discovery and checkpoint evidence\nAIDE-Token-Impact: closes pre-commit validation blind spot\nAIDE-Quality-Gate: focused tests and full strict suite pass",
-        "risks": "- Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.",
-        "scope": "validation",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "fix(validation): inspect new source files before commit",
-        "summary": "M1 checkpoint satisfies the repository line-length policy.",
-        "type": "fix",
-        "validation": "- Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.\n- py -3 -m unittest tests.test_source_format_check tests.test_schema_tools -v: PASS (17 tests).\n- py -3 tools/source_format_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-      },
       {
         "aide_phase": "package-license-closure",
         "aide_result": "PASS",
@@ -1009,31 +909,6 @@
       }
     ],
     "Follow-up": [
-      {
-        "aide_phase": "canonical-closeout",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Follow-up",
-        "commit": "92da90101342",
-        "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-        "entry": "merge to dev, verify exact-dev checks, then resolve authorized Universal MIT licensing.",
-        "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-        "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-        "scope": "release",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "chore(release): bind canonical M1 public integration proof",
-        "summary": "merge to dev, verify exact-dev checks, then resolve authorized Universal MIT licensing.",
-        "type": "chore",
-        "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-      },
       {
         "aide_phase": "provider-truth",
         "aide_result": "PASS",
@@ -1337,31 +1212,6 @@
     ],
     "Internal": [
       {
-        "aide_phase": "canonical-closeout",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Internal",
-        "commit": "92da90101342",
-        "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-        "entry": "prepare dev ancestry synchronization from canonical main.",
-        "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-        "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-        "scope": "release",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "chore(release): bind canonical M1 public integration proof",
-        "summary": "prepare dev ancestry synchronization from canonical main.",
-        "type": "chore",
-        "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-      },
-      {
         "aide_phase": "opening",
         "aide_result": "partial",
         "breaking": false,
@@ -1438,31 +1288,6 @@
       }
     ],
     "Risks": [
-      {
-        "aide_phase": "canonical-closeout",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Risks",
-        "commit": "92da90101342",
-        "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-        "entry": "none; no product behavior or authority changes.",
-        "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-        "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-        "scope": "release",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "chore(release): bind canonical M1 public integration proof",
-        "summary": "none; no product behavior or authority changes.",
-        "type": "chore",
-        "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-      },
       {
         "aide_phase": "provider-truth",
         "aide_result": "PASS",
@@ -1640,31 +1465,6 @@
       }
     ],
     "Security": [
-      {
-        "aide_phase": "evidence-closeout",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Security",
-        "commit": "efe06f385795",
-        "commit_sha": "efe06f385795ae7dc9a35ef008a66605ed48bbf1",
-        "entry": "Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed.",
-        "follow_up": "- Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: evidence-closeout\nAIDE-Result: PASS\nAIDE-Scope: project truth, checkpoint, generated state, safety ledger\nAIDE-Token-Impact: closes M1 without authority promotion\nAIDE-Quality-Gate: clean three-repo, package, hosted matrix, strict, and truth checks pass",
-        "risks": "- Synthetic and disposable-root proof is not live Factorio install acceptance.\n- Universal repository licenses remain NOASSERTION pending the operator decision.\n- Artifacts are unsigned and unpublished.",
-        "scope": "m1",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "docs(m1): bind managed portable foundation closeout",
-        "summary": "Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed.",
-        "type": "docs",
-        "validation": "- py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.\n- CTest exact build: PASS (35/35).\n- Python exact build: PASS (337 cases, one deliberate opt-in skip).\n- py -3 tools/required_package_proof.py: PASS (14 tests, zero skips).\n- py -3 tools/package_reproducibility_proof.py: PASS (379-file tree and byte-identical complete archives).\n- exact-head CI 29299245206: PASS.\n- exact-head CodeQL 29299245093: PASS.\n- security policy 29299245082: PASS.\n- release policy 29299286894: PASS.\n- py -3 -m unittest tests.test_aide_compaction tests.test_schema_tools tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (19 tests).\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-      },
       {
         "aide_phase": "provider-truth",
         "aide_result": "PASS",
@@ -2043,56 +1843,6 @@
     ],
     "Tests": [
       {
-        "aide_phase": "hosted-closeout-remediation",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Tests",
-        "commit": "5b01b36fb989",
-        "commit_sha": "5b01b36fb989ce00945b6dfe30edd1dd01168edf",
-        "entry": "Added pre-commit file-discovery regression coverage.",
-        "follow_up": "- Push the remediation and require a new exact-head hosted matrix before merging PR #9.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: hosted-closeout-remediation\nAIDE-Result: PASS\nAIDE-Scope: source format discovery and checkpoint evidence\nAIDE-Token-Impact: closes pre-commit validation blind spot\nAIDE-Quality-Gate: focused tests and full strict suite pass",
-        "risks": "- Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.",
-        "scope": "validation",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "fix(validation): inspect new source files before commit",
-        "summary": "Added pre-commit file-discovery regression coverage.",
-        "type": "fix",
-        "validation": "- Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.\n- py -3 -m unittest tests.test_source_format_check tests.test_schema_tools -v: PASS (17 tests).\n- py -3 tools/source_format_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-      },
-      {
-        "aide_phase": "canonical-closeout",
-        "aide_result": "PASS",
-        "breaking": false,
-        "category": "Tests",
-        "commit": "92da90101342",
-        "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-        "entry": "protect additive public-integration truth and unchanged authority boundaries.",
-        "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-        "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-        "scope": "release",
-        "source_sections_present": [
-          "## Summary",
-          "## Why",
-          "## Changed",
-          "## Validation",
-          "## Changelog",
-          "## Risks",
-          "## Follow-up"
-        ],
-        "subject": "chore(release): bind canonical M1 public integration proof",
-        "summary": "protect additive public-integration truth and unchanged authority boundaries.",
-        "type": "chore",
-        "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-      },
-      {
         "aide_phase": "provider-truth",
         "aide_result": "PASS",
         "breaking": false,
@@ -2316,322 +2066,47 @@
         "summary": "enforce pending verdict and zero authority promotion.",
         "type": "chore",
         "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+      },
+      {
+        "aide_phase": "complete-local-proof",
+        "aide_result": "PASS",
+        "breaking": false,
+        "category": "Tests",
+        "commit": "d746454ca850",
+        "commit_sha": "d746454ca85090eff7d9e4c6a1723f495da596d1",
+        "entry": "complete Launcher handoff proof and immutable WU5 dev evidence are now recorded.",
+        "follow_up": "- Close the WU6 task, publish its PR, and bind exact-dev workflows after merge.\n\nAIDE-Task: M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01\nAIDE-Phase: complete-local-proof\nAIDE-Result: PASS\nAIDE-Scope: WU5 exact-dev acceptance and WU6 complete package proof\nAIDE-Token-Impact: evidence and project truth only\nAIDE-Quality-Gate: 41 native, 339 Python, 14 package, strict, AIDE, and reproducibility passed",
+        "risks": "- WU6 still requires reviewed hosted integration; the M2 human verdict and ordinary live apply remain pending.",
+        "scope": "proof",
+        "source_sections_present": [
+          "## Summary",
+          "## Why",
+          "## Changed",
+          "## Validation",
+          "## Changelog",
+          "## Risks",
+          "## Follow-up"
+        ],
+        "subject": "test(proof): bind complete WU6 validation identities",
+        "summary": "complete Launcher handoff proof and immutable WU5 dev evidence are now recorded.",
+        "type": "test",
+        "validation": "- Native 41/41, Python 339 plus one opt-in skip, Windows package 14/14, AIDE, strict, and byte reproducibility: PASS."
       }
     ]
   },
   "category_counts": {
     "Added": 8,
-    "Changed": 15,
-    "Docs": 7,
-    "Fixed": 10,
-    "Follow-up": 13,
-    "Internal": 4,
-    "Risks": 8,
-    "Security": 16,
-    "Tests": 11
+    "Changed": 14,
+    "Docs": 6,
+    "Fixed": 8,
+    "Follow-up": 12,
+    "Internal": 3,
+    "Risks": 7,
+    "Security": 15,
+    "Tests": 10
   },
   "commit_count": 50,
   "entries": [
-    {
-      "aide_phase": "evidence-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Added",
-      "commit": "efe06f385795",
-      "commit_sha": "efe06f385795ae7dc9a35ef008a66605ed48bbf1",
-      "entry": "Revision-pinned M1 managed portable-install checkpoint.",
-      "follow_up": "- Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: evidence-closeout\nAIDE-Result: PASS\nAIDE-Scope: project truth, checkpoint, generated state, safety ledger\nAIDE-Token-Impact: closes M1 without authority promotion\nAIDE-Quality-Gate: clean three-repo, package, hosted matrix, strict, and truth checks pass",
-      "risks": "- Synthetic and disposable-root proof is not live Factorio install acceptance.\n- Universal repository licenses remain NOASSERTION pending the operator decision.\n- Artifacts are unsigned and unpublished.",
-      "scope": "m1",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "docs(m1): bind managed portable foundation closeout",
-      "summary": "Revision-pinned M1 managed portable-install checkpoint.",
-      "type": "docs",
-      "validation": "- py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.\n- CTest exact build: PASS (35/35).\n- Python exact build: PASS (337 cases, one deliberate opt-in skip).\n- py -3 tools/required_package_proof.py: PASS (14 tests, zero skips).\n- py -3 tools/package_reproducibility_proof.py: PASS (379-file tree and byte-identical complete archives).\n- exact-head CI 29299245206: PASS.\n- exact-head CodeQL 29299245093: PASS.\n- security policy 29299245082: PASS.\n- release policy 29299286894: PASS.\n- py -3 -m unittest tests.test_aide_compaction tests.test_schema_tools tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (19 tests).\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "evidence-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Changed",
-      "commit": "efe06f385795",
-      "commit_sha": "efe06f385795ae7dc9a35ef008a66605ed48bbf1",
-      "entry": "Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory.",
-      "follow_up": "- Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: evidence-closeout\nAIDE-Result: PASS\nAIDE-Scope: project truth, checkpoint, generated state, safety ledger\nAIDE-Token-Impact: closes M1 without authority promotion\nAIDE-Quality-Gate: clean three-repo, package, hosted matrix, strict, and truth checks pass",
-      "risks": "- Synthetic and disposable-root proof is not live Factorio install acceptance.\n- Universal repository licenses remain NOASSERTION pending the operator decision.\n- Artifacts are unsigned and unpublished.",
-      "scope": "m1",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "docs(m1): bind managed portable foundation closeout",
-      "summary": "Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory.",
-      "type": "docs",
-      "validation": "- py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.\n- CTest exact build: PASS (35/35).\n- Python exact build: PASS (337 cases, one deliberate opt-in skip).\n- py -3 tools/required_package_proof.py: PASS (14 tests, zero skips).\n- py -3 tools/package_reproducibility_proof.py: PASS (379-file tree and byte-identical complete archives).\n- exact-head CI 29299245206: PASS.\n- exact-head CodeQL 29299245093: PASS.\n- security policy 29299245082: PASS.\n- release policy 29299286894: PASS.\n- py -3 -m unittest tests.test_aide_compaction tests.test_schema_tools tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (19 tests).\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "evidence-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Security",
-      "commit": "efe06f385795",
-      "commit_sha": "efe06f385795ae7dc9a35ef008a66605ed48bbf1",
-      "entry": "Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed.",
-      "follow_up": "- Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: evidence-closeout\nAIDE-Result: PASS\nAIDE-Scope: project truth, checkpoint, generated state, safety ledger\nAIDE-Token-Impact: closes M1 without authority promotion\nAIDE-Quality-Gate: clean three-repo, package, hosted matrix, strict, and truth checks pass",
-      "risks": "- Synthetic and disposable-root proof is not live Factorio install acceptance.\n- Universal repository licenses remain NOASSERTION pending the operator decision.\n- Artifacts are unsigned and unpublished.",
-      "scope": "m1",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "docs(m1): bind managed portable foundation closeout",
-      "summary": "Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed.",
-      "type": "docs",
-      "validation": "- py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.\n- CTest exact build: PASS (35/35).\n- Python exact build: PASS (337 cases, one deliberate opt-in skip).\n- py -3 tools/required_package_proof.py: PASS (14 tests, zero skips).\n- py -3 tools/package_reproducibility_proof.py: PASS (379-file tree and byte-identical complete archives).\n- exact-head CI 29299245206: PASS.\n- exact-head CodeQL 29299245093: PASS.\n- security policy 29299245082: PASS.\n- release policy 29299286894: PASS.\n- py -3 -m unittest tests.test_aide_compaction tests.test_schema_tools tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (19 tests).\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "evidence-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Docs",
-      "commit": "efe06f385795",
-      "commit_sha": "efe06f385795ae7dc9a35ef008a66605ed48bbf1",
-      "entry": "Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply.",
-      "follow_up": "- Merge this evidence-only checkpoint to dev after exact-head review; do not open live-target setup apply or execution without a separate operator authorization.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: evidence-closeout\nAIDE-Result: PASS\nAIDE-Scope: project truth, checkpoint, generated state, safety ledger\nAIDE-Token-Impact: closes M1 without authority promotion\nAIDE-Quality-Gate: clean three-repo, package, hosted matrix, strict, and truth checks pass",
-      "risks": "- Synthetic and disposable-root proof is not live Factorio install acceptance.\n- Universal repository licenses remain NOASSERTION pending the operator decision.\n- Artifacts are unsigned and unpublished.",
-      "scope": "m1",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "docs(m1): bind managed portable foundation closeout",
-      "summary": "Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply.",
-      "type": "docs",
-      "validation": "- py -3 tools/repro_workspace_smoke.py --build --require-clean --build-root build/m1-wu12-final-repro: PASS in 392.8 seconds.\n- CTest exact build: PASS (35/35).\n- Python exact build: PASS (337 cases, one deliberate opt-in skip).\n- py -3 tools/required_package_proof.py: PASS (14 tests, zero skips).\n- py -3 tools/package_reproducibility_proof.py: PASS (379-file tree and byte-identical complete archives).\n- exact-head CI 29299245206: PASS.\n- exact-head CodeQL 29299245093: PASS.\n- security policy 29299245082: PASS.\n- release policy 29299286894: PASS.\n- py -3 -m unittest tests.test_aide_compaction tests.test_schema_tools tests.test_ci_proof tests.test_package_pipeline_architecture -v: PASS (19 tests).\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "hosted-closeout-remediation",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "5b01b36fb989",
-      "commit_sha": "5b01b36fb989ce00945b6dfe30edd1dd01168edf",
-      "entry": "New non-ignored source files are now checked before their first commit.",
-      "follow_up": "- Push the remediation and require a new exact-head hosted matrix before merging PR #9.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: hosted-closeout-remediation\nAIDE-Result: PASS\nAIDE-Scope: source format discovery and checkpoint evidence\nAIDE-Token-Impact: closes pre-commit validation blind spot\nAIDE-Quality-Gate: focused tests and full strict suite pass",
-      "risks": "- Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.",
-      "scope": "validation",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "fix(validation): inspect new source files before commit",
-      "summary": "New non-ignored source files are now checked before their first commit.",
-      "type": "fix",
-      "validation": "- Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.\n- py -3 -m unittest tests.test_source_format_check tests.test_schema_tools -v: PASS (17 tests).\n- py -3 tools/source_format_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "hosted-closeout-remediation",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "5b01b36fb989",
-      "commit_sha": "5b01b36fb989ce00945b6dfe30edd1dd01168edf",
-      "entry": "M1 checkpoint satisfies the repository line-length policy.",
-      "follow_up": "- Push the remediation and require a new exact-head hosted matrix before merging PR #9.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: hosted-closeout-remediation\nAIDE-Result: PASS\nAIDE-Scope: source format discovery and checkpoint evidence\nAIDE-Token-Impact: closes pre-commit validation blind spot\nAIDE-Quality-Gate: focused tests and full strict suite pass",
-      "risks": "- Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.",
-      "scope": "validation",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "fix(validation): inspect new source files before commit",
-      "summary": "M1 checkpoint satisfies the repository line-length policy.",
-      "type": "fix",
-      "validation": "- Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.\n- py -3 -m unittest tests.test_source_format_check tests.test_schema_tools -v: PASS (17 tests).\n- py -3 tools/source_format_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "hosted-closeout-remediation",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Tests",
-      "commit": "5b01b36fb989",
-      "commit_sha": "5b01b36fb989ce00945b6dfe30edd1dd01168edf",
-      "entry": "Added pre-commit file-discovery regression coverage.",
-      "follow_up": "- Push the remediation and require a new exact-head hosted matrix before merging PR #9.\n\nAIDE-Task: M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT\nAIDE-Phase: hosted-closeout-remediation\nAIDE-Result: PASS\nAIDE-Scope: source format discovery and checkpoint evidence\nAIDE-Token-Impact: closes pre-commit validation blind spot\nAIDE-Quality-Gate: focused tests and full strict suite pass",
-      "risks": "- Strict validation now considers all non-ignored untracked source files, so unrelated scratch files may correctly fail validation until ignored, removed, or formatted.",
-      "scope": "validation",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "fix(validation): inspect new source files before commit",
-      "summary": "Added pre-commit file-discovery regression coverage.",
-      "type": "fix",
-      "validation": "- Hosted CI 29300518491: FAIL as designed, exposing the pre-commit discovery gap consistently on Linux, Windows, and macOS.\n- py -3 -m unittest tests.test_source_format_check tests.test_schema_tools -v: PASS (17 tests).\n- py -3 tools/source_format_check.py: PASS.\n- py -3 tools/strict_check.py: PASS.\n- git diff --check: PASS."
-    },
-    {
-      "aide_phase": "canonical-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Docs",
-      "commit": "92da90101342",
-      "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-      "entry": "bind M1 canonical public integration evidence.",
-      "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-      "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-      "scope": "release",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "chore(release): bind canonical M1 public integration proof",
-      "summary": "bind M1 canonical public integration evidence.",
-      "type": "chore",
-      "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-    },
-    {
-      "aide_phase": "canonical-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Tests",
-      "commit": "92da90101342",
-      "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-      "entry": "protect additive public-integration truth and unchanged authority boundaries.",
-      "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-      "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-      "scope": "release",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "chore(release): bind canonical M1 public integration proof",
-      "summary": "protect additive public-integration truth and unchanged authority boundaries.",
-      "type": "chore",
-      "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-    },
-    {
-      "aide_phase": "canonical-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Internal",
-      "commit": "92da90101342",
-      "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-      "entry": "prepare dev ancestry synchronization from canonical main.",
-      "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-      "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-      "scope": "release",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "chore(release): bind canonical M1 public integration proof",
-      "summary": "prepare dev ancestry synchronization from canonical main.",
-      "type": "chore",
-      "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-    },
-    {
-      "aide_phase": "canonical-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Risks",
-      "commit": "92da90101342",
-      "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-      "entry": "none; no product behavior or authority changes.",
-      "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-      "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-      "scope": "release",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "chore(release): bind canonical M1 public integration proof",
-      "summary": "none; no product behavior or authority changes.",
-      "type": "chore",
-      "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-    },
-    {
-      "aide_phase": "canonical-closeout",
-      "aide_result": "PASS",
-      "breaking": false,
-      "category": "Follow-up",
-      "commit": "92da90101342",
-      "commit_sha": "92da90101342b9fb8b8b47df965c59a348b30a3e",
-      "entry": "merge to dev, verify exact-dev checks, then resolve authorized Universal MIT licensing.",
-      "follow_up": "- Merge the reviewed evidence successor into dev and verify canonical-main ancestry containment.\n\nAIDE-Task: M1-PUBLIC-INTEGRATION-PROOF-01\nAIDE-Phase: canonical-closeout\nAIDE-Result: PASS\nAIDE-Scope: release truth, immutable checkpoints, generated project state\nAIDE-Token-Impact: no runtime or contract surface change\nAIDE-Quality-Gate: exact-main hosted workflows plus local AIDE and strict suites pass",
-      "risks": "- None. Ordinary live-target setup apply, execution, H1, Safe beta, signing, and publication remain unavailable.",
-      "scope": "release",
-      "source_sections_present": [
-        "## Summary",
-        "## Why",
-        "## Changed",
-        "## Validation",
-        "## Changelog",
-        "## Risks",
-        "## Follow-up"
-      ],
-      "subject": "chore(release): bind canonical M1 public integration proof",
-      "summary": "merge to dev, verify exact-dev checks, then resolve authorized Universal MIT licensing.",
-      "type": "chore",
-      "validation": "- `py -3 -m unittest tests.test_aide_compaction`: PASS.\n- `py -3 .aide/scripts/aide_lite.py test`: PASS.\n- `py -3 tools/strict_check.py`: PASS.\n- exact-main CI/CodeQL/schema/security/release-policy runs: PASS."
-    },
     {
       "aide_phase": "provider-truth",
       "aide_result": "PASS",
@@ -4631,6 +4106,81 @@
       "summary": "merge reviewed WU4 into dev, then open WU5 interruption/recovery.",
       "type": "chore",
       "validation": "- combined Release CTest 39/39: PASS.\n- complete Python 339 with one opt-in skip: PASS.\n- strict and AIDE portable validation: PASS.\n- required Windows package proof 14/14 zero skips: PASS.\n- selected 388-file package reproducibility: PASS.\n- Universal Setup exact-main CI 29334632894: PASS."
+    },
+    {
+      "aide_phase": "integration-closeout",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Docs",
+      "commit": "a6cfe28c704d",
+      "commit_sha": "a6cfe28c704df68025094f29be85f8961f745cd1",
+      "entry": "WU4 is now accepted as dev-integrated while its human verdict remains pending.",
+      "follow_up": "- Merge WU5 recovery proof into dev and bind its exact integration workflows.\n\nAIDE-Task: M2-WU5-LIVE-INTERRUPTION-RECOVERY-01\nAIDE-Phase: integration-closeout\nAIDE-Result: PASS\nAIDE-Scope: M2-WU4 immutable integration truth\nAIDE-Token-Impact: no runtime or authority change\nAIDE-Quality-Gate: project state, compaction, and strict validation passed",
+      "risks": "- Ordinary live apply and every excluded execution or system authority remain unavailable.",
+      "scope": "state",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "docs(state): accept exact-dev WU4 integration",
+      "summary": "WU4 is now accepted as dev-integrated while its human verdict remains pending.",
+      "type": "docs",
+      "validation": "- project_state.py, test_aide_compaction, and strict_check.py: PASS."
+    },
+    {
+      "aide_phase": "provider-integration",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Added",
+      "commit": "480a58ca4c10",
+      "commit_sha": "480a58ca4c10b82cf81034e00139cb78f73914bd",
+      "entry": "stable managed_install_recovery_required handoff with stale launch-plan projection.",
+      "follow_up": "- Run the complete exact-pin validation matrix and close WU6 through reviewed dev integration.\n\nAIDE-Task: M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01\nAIDE-Phase: provider-integration\nAIDE-Result: PASS\nAIDE-Scope: Universal Launcher 1.3 pin and recovery handoff\nAIDE-Token-Impact: additive ABI and structured recovery status only\nAIDE-Quality-Gate: focused native, installed SDK, project state, and strict validation passed",
+      "risks": "- Full repository, package, reproducibility, and hosted integration proof remain pending; human verdict and ordinary live apply remain unavailable.",
+      "scope": "handoff",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "feat(handoff): integrate Launcher recovery projection",
+      "summary": "stable managed_install_recovery_required handoff with stale launch-plan projection.",
+      "type": "feat",
+      "validation": "- Six focused exact-pin native and SDK tests, project-state checks, and strict validation: PASS."
+    },
+    {
+      "aide_phase": "complete-local-proof",
+      "aide_result": "PASS",
+      "breaking": false,
+      "category": "Tests",
+      "commit": "d746454ca850",
+      "commit_sha": "d746454ca85090eff7d9e4c6a1723f495da596d1",
+      "entry": "complete Launcher handoff proof and immutable WU5 dev evidence are now recorded.",
+      "follow_up": "- Close the WU6 task, publish its PR, and bind exact-dev workflows after merge.\n\nAIDE-Task: M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01\nAIDE-Phase: complete-local-proof\nAIDE-Result: PASS\nAIDE-Scope: WU5 exact-dev acceptance and WU6 complete package proof\nAIDE-Token-Impact: evidence and project truth only\nAIDE-Quality-Gate: 41 native, 339 Python, 14 package, strict, AIDE, and reproducibility passed",
+      "risks": "- WU6 still requires reviewed hosted integration; the M2 human verdict and ordinary live apply remain pending.",
+      "scope": "proof",
+      "source_sections_present": [
+        "## Summary",
+        "## Why",
+        "## Changed",
+        "## Validation",
+        "## Changelog",
+        "## Risks",
+        "## Follow-up"
+      ],
+      "subject": "test(proof): bind complete WU6 validation identities",
+      "summary": "complete Launcher handoff proof and immutable WU5 dev evidence are now recorded.",
+      "type": "test",
+      "validation": "- Native 41/41, Python 339 plus one opt-in skip, Windows package 14/14, AIDE, strict, and byte reproducibility: PASS."
     }
   ],
   "generated_by": "aide-lite",
@@ -4796,19 +4346,30 @@
         "legacy_semi_structured_body"
       ],
       "subject": "test(proof): bind complete WU5 validation identities"
+    },
+    {
+      "commit": "7a14314940b3",
+      "commit_sha": "7a14314940b37a963708417b027909366bbbc52a",
+      "ignored": false,
+      "legacy": true,
+      "reason": "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body",
+      "reasons": [
+        "missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up",
+        "missing_changelog_category",
+        "legacy_semi_structured_body"
+      ],
+      "subject": "chore(aide): close WU5 recovery integration proof"
     }
   ],
-  "malformed_count": 13,
+  "malformed_count": 14,
   "network_calls": "none",
   "preview_only": true,
   "provider_or_model_calls": "none",
   "release_publishing": false,
   "schema_version": "aide.changelog-preview.v0",
-  "source_head": "7cc7ca39792e2b1154cbf5f1b006e6539f7a59ff",
+  "source_head": "d746454ca85090eff7d9e4c6a1723f495da596d1",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "warnings": [
-    "cfd30b769cc9 merge commit ignored",
-    "73bec99916d5 merge commit ignored",
     "cc4d79fec9d0 merge commit ignored",
     "a5e1461ac46d merge commit ignored",
     "d96384bf8f48 merge commit ignored",
@@ -4816,6 +4377,7 @@
     "178de3192f3c merge commit ignored",
     "a8b298a35cd1 merge commit ignored",
     "476813e6fc74 merge commit ignored",
-    "5563e3b8de43 merge commit ignored"
+    "5563e3b8de43 merge commit ignored",
+    "f4b02ac022ee merge commit ignored"
   ]
 }
