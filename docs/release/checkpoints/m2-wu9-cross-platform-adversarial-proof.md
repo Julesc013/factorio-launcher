@@ -57,7 +57,7 @@ observation on those targets requires separately provisioned volumes.
 
 FacMan consumes the exact repaired Universal Setup main revision and retains
 the single consumer-owned cancellation/process-tree termination case. Release
-CTest passed 41/41. Complete Python discovery passed 343 tests with one
+CTest passed 41/41. Complete Python discovery passed 344 tests with one
 unchanged opt-in bounded-scale performance skip.
 
 The aggregate Python run exposed a test-runner scaling defect: newest-binary
@@ -67,16 +67,24 @@ CLI-backed case. Revision
 the test process. Focused coverage passed 14/14 and complete discovery then
 finished in 428.384 seconds.
 
+The first hosted FacMan push and PR matrices (`29358809851` and `29358824982`)
+exposed a Windows checkout-identity defect after every Linux, macOS, coverage,
+AppKit, CodeQL, schema, and security lane passed. Windows materialized the
+accepted Setup JSON manifest with CRLF, while the checker hashed raw checkout
+bytes. Revision `77a39becc55109240abd3ee38227ded666a883fe` hashes strict UTF-8
+text with normalized newlines and adds an LF/CRLF regression. The complete
+post-remediation discovery passed 344 tests in 393.762 seconds.
+
 The required Windows package proof passed 14/14 with zero skips. Two clean
 selected-package reconstructions at the same exact revision reproduced all 395
 files byte-for-byte.
 
 | Package evidence | SHA-256 |
 | --- | --- |
-| archive | `f278288bb1dd8f184012b1bf994bac8e90a996c2c3b17ad15f04a9c20373e230` |
-| package tree | `92c0be8a0772aac4035cdc70a21d8c0da27f6b6b5d1ecc8142176e73cd29794f` |
-| SBOM | `26bc19c088b8e56cf1171efb78e236e816a30a14731870e5261b102c57d7fe15` |
-| provenance | `4425484c2a7d99e08eb39ba8fe0093f5cc094c0d1fa1fdd98cc812a9740e7aad` |
+| archive | `191cf5fc1d224bc74ac707ebff715e5166401eed9270a8c29268c2774beeb5dc` |
+| package tree | `32c76b89269266733896d9a29879f553111bda79b37fa88b2a14c69bb5aca18f` |
+| SBOM | `bdae09c3c822f13cf468b950280eca082a2c74871029e302cd032fd11c1008f3` |
+| provenance | `ca04bbf34554b8ed66a15ad9d66d822bd9a7826e6b41066cd1eb97e08a626713` |
 
 Reproducibility does not prove publisher authenticity. The package remains
 unsigned and unpublished.

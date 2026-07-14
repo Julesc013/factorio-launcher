@@ -713,13 +713,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "facman_local_proof_passed_pending_dev_integration_and_operator_verdict",
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
-        if m2_wu9.get("facman_native_test_count") != 41 or m2_wu9.get("facman_python_test_count") != 343:
+        if m2_wu9.get("facman_native_test_count") != 41 or m2_wu9.get("facman_python_test_count") != 344:
             problems.append("M2-WU9 must bind the complete local native and Python proof counts")
         if m2_wu9.get("python_opt_in_skip_count") != 1:
             problems.append("M2-WU9 must retain the explicit opt-in performance skip count")
         if m2_wu9.get("required_windows_package_tests") != 14 or m2_wu9.get("required_windows_package_skips") != 0:
             problems.append("M2-WU9 must bind the required zero-skip Windows package proof")
-        if m2_wu9.get("package_proof_revision") != "eff0f9146e6a28fcee484f72d7d2d7e691bade92" or m2_wu9.get("package_tree_file_count") != 395:
+        if m2_wu9.get("facman_hosted_ci_remediation_revision") != "77a39becc55109240abd3ee38227ded666a883fe":
+            problems.append("M2-WU9 must bind the Windows checkout identity remediation")
+        if m2_wu9.get("package_proof_revision") != "77a39becc55109240abd3ee38227ded666a883fe" or m2_wu9.get("package_tree_file_count") != 395:
             problems.append("M2-WU9 must bind its exact clean package source and complete tree")
         if m2_wu9.get("publisher_authenticity") != "not_proven":
             problems.append("M2-WU9 must not infer publisher authenticity from reproducibility")

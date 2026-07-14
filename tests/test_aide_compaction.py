@@ -250,7 +250,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("3f8489275077347c2918f3bb03614ec6431362ff", m2_wu9["universal_setup_main_revision"])
         self.assertEqual(m2_wu9["universal_setup_task_tree"], m2_wu9["universal_setup_main_tree"])
         self.assertTrue(m2_wu9["target_ancestor_identity_bound"])
-        self.assertEqual([41, 343, 1], [m2_wu9["facman_native_test_count"], m2_wu9["facman_python_test_count"], m2_wu9["python_opt_in_skip_count"]])
+        self.assertEqual([41, 344, 1], [m2_wu9["facman_native_test_count"], m2_wu9["facman_python_test_count"], m2_wu9["python_opt_in_skip_count"]])
         self.assertEqual([14, 0], [m2_wu9["required_windows_package_tests"], m2_wu9["required_windows_package_skips"]])
         self.assertEqual(395, m2_wu9["package_tree_file_count"])
         self.assertEqual("not_proven", m2_wu9["publisher_authenticity"])
