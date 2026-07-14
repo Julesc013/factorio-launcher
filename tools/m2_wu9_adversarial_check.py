@@ -35,8 +35,10 @@ EXPECTED_CASES = {
 }
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def canonical_text_sha256(path: Path) -> str:
+    # Git may materialize text with CRLF on Windows. Hash the repository text
+    # identity, not the platform checkout spelling of its line endings.
+    return hashlib.sha256(path.read_text(encoding="utf-8").encode("utf-8")).hexdigest()
 
 
 def main() -> int:
@@ -72,7 +74,7 @@ def main() -> int:
         problems.append("workspace lock must pin the accepted WU9 Universal Setup main")
 
     manifest = SETUP_ROOT / setup.get("coverage_manifest", "")
-    if manifest.is_file() and sha256(manifest) != EXPECTED_SETUP_MANIFEST_SHA256:
+    if manifest.is_file() and canonical_text_sha256(manifest) != EXPECTED_SETUP_MANIFEST_SHA256:
         problems.append("local Universal Setup coverage manifest differs from its accepted digest")
 
     platforms = {item.get("platform"): item for item in document.get("platform_evidence", [])}
