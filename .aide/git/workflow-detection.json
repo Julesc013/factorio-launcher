@@ -1,9 +1,9 @@
 {
-  "branch_role_for_current_branch": "integration",
+  "branch_role_for_current_branch": "task",
   "canonical_branch": "main",
   "confidence": "high",
-  "current_branch": "dev",
-  "current_commit": "37c83c6538822a57bf96e03f03c48536f2b97e47",
+  "current_branch": "task/m2-wu8-generated-frontend-workflow",
+  "current_commit": "79577fd7eb8a25aeb4cf20ba6f22317e85e2d3b4",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
@@ -28,6 +28,7 @@
     "task/m2-wu5-live-interruption-recovery",
     "task/m2-wu6-universal-launcher-handoff",
     "task/m2-wu7-facman-live-portable-workflow",
+    "task/m2-wu8-generated-frontend-workflow",
     "task/macos-runner-ci-fix",
     "task/package-smoke-01",
     "task/r3-final-evidence",
@@ -46,7 +47,7 @@
     "task/universal-mit-license-integration-q27"
   ],
   "non_mutating": true,
-  "recommended_next_action": "use dev only for integration repair or explicitly scoped work; normal work should use a task branch",
+  "recommended_next_action": "continue bounded task work, validate locally, and plan future landing to dev",
   "remote_branches": [
     "origin/dev",
     "origin/evidence/r3.6-real-factorio-isolation-baseline",

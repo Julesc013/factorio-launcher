@@ -3,18 +3,18 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: dev
-- current_commit: 37c83c6538822a57bf96e03f03c48536f2b97e47
-- current_branch_role: integration
+- current_branch: task/m2-wu8-generated-frontend-workflow
+- current_commit: 79577fd7eb8a25aeb4cf20ba6f22317e85e2d3b4
+- current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
 - canonical_branch: main
 - integration_branch: dev
-- recommended_next_action: use dev only for integration repair or explicitly scoped work; normal work should use a task branch
+- recommended_next_action: continue bounded task work, validate locally, and plan future landing to dev
 
 ## Branch Summary
 
-- local_branches: 35
+- local_branches: 36
 - remote_branches: 21
 - tags_count: 2
 
