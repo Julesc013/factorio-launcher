@@ -459,8 +459,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         ):
             if not m2_wu3.get(field):
                 problems.append(f"M2-WU3 accepted integration must bind {field}")
-    if m2_wu3.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU3 must bind the exact current Universal Setup provider pin")
+    if m2_wu3.get("universal_setup_main_revision") != "fbbeb762f25921ae05945206fd0c004a52239c13":
+        problems.append("M2-WU3 must preserve its accepted historical Universal Setup revision")
     if m2_wu3.get("operator_verdict") != "pending" or m2_wu3.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU3 automation must preserve a separate pending operator verdict")
     if m2_wu3.get("setup_owned_evidence_write") is not True:
