@@ -52,6 +52,7 @@ def validate() -> list[str]:
         "ctest --test-dir build/native-smoke -C Debug --output-on-failure",
         "python -m unittest discover -s tests -v",
         "python tools/required_package_proof.py",
+        "python tools/package_reproducibility_proof.py --build-root build/native-smoke",
         "--profile windows_portable_cli_x64",
         "tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify",
         "tools/package_runtime_smoke.py --root build/packages/windows_portable_cli_x64",
@@ -75,6 +76,8 @@ def validate() -> list[str]:
         problems.append("release workflow must remain an unpublished policy gate")
     if not (ROOT / "tools" / "required_package_proof.py").is_file():
         problems.append("required Windows package proof runner is missing")
+    if not (ROOT / "tools" / "package_reproducibility_proof.py").is_file():
+        problems.append("required package reproducibility proof runner is missing")
     if not (ROOT / "tools" / "linux_package_proof.py").is_file():
         problems.append("required Linux package proof runner is missing")
     if not (ROOT / "tools" / "macos_package_proof.py").is_file():
