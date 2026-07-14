@@ -16,12 +16,15 @@ does not change the R3.7 H1 candidate.
 | Universal Launcher WU8 | `c43d390efe0db17480f9d0262827659b4ae242dd` on `main` | CI `29290652251` |
 | FacMan WU9 recipe/gateway | `842ee9fa36e7d46900eab7d55bc0cc3f917913a5` on `dev` | CI `29294372585`; CodeQL `29294372612`; schema `29294372523`; policy `29294372522` |
 | FacMan WU10 generated workflows | merge `96a559ffba4b24e11e6ad71e4d4809dc50726d9f` | exact-head CI `29296336736`, `29296347817`; CodeQL `29296336781`, `29296347798` |
-| FacMan WU11 system proof | task head `f4fdafead6a0be4810d8c9722d8d8f521870d73d`; merge `13319e4f9e51bd8687829262edcfa120e488990d` | exact-head CI `29297920929`, `29297933372`; CodeQL `29297920909`, `29297933359`; schema `29297920946`, `29297933368`; policy `29297920914`, `29297933385` |
+| FacMan WU11 system proof | task head `f4fdafead6a0be4810d8c9722d8d8f521870d73d`; merge `13319e4f9e51bd8687829262edcfa120e488990d` | CI `29297933372`; CodeQL `29297933359`; schema `29297933368`; policy `29297933385` |
 | FacMan WU12 package proof | task head `2f13923a9cbdd60d47cab114ba1e280282259bb5`; merge `10b1caa915ed4ad5e934f625f3e1384ecc700eaa` | CI `29299245206`; CodeQL `29299245093`; security `29299245082`; release policy `29299286894` |
 
 The WU12 schema inputs are unchanged. Schema run `29297933368` is therefore
 the carried-forward exact WU11 schema identity; WU12's schema and strict checks
 also passed in the clean local reproduction.
+
+WU11's duplicate exact-head push runs also passed: CI `29297920929`, CodeQL
+`29297920909`, schema `29297920946`, and policy `29297920914`.
 
 ## Implemented foundation
 
