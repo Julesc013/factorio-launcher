@@ -423,8 +423,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof",
     }:
         problems.append("M2-WU2 public lifecycle must record a recognized monotonic proof state")
-    if m2_wu2.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU2 must bind the exact pinned Universal Setup main revision")
+    if m2_wu2.get("universal_setup_main_revision") != "aa4d8cec93f265893f246d217ee94c03073899a3":
+        problems.append("M2-WU2 must preserve its accepted historical Universal Setup main revision")
     if m2_wu2.get("plan_commands_read_only") is not True or m2_wu2.get("apply_requires_exact_plan") is not True:
         problems.append("M2-WU2 must retain read-only planning and exact-plan apply")
     if m2_wu2.get("operator_verdict") != "pending":

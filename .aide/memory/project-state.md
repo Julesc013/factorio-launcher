@@ -15,7 +15,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `73bec99916d509b0ab055a43562e93ef20a6b4b7`;
 - Universal Launcher pin: `6d41e07b76cd19b2a7630835e05ac3aa125d57b8`;
-- Universal Setup pin: `aa4d8cec93f265893f246d217ee94c03073899a3`;
+- Universal Setup pin: `fbbeb762f25921ae05945206fd0c004a52239c13`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
 - operator verdict: `Fail`;
 - Safe beta: `false`;

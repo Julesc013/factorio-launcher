@@ -10,6 +10,7 @@ objective: >
   Define and prove a sanitized immutable live-target evidence packet that binds setup revisions, contract and ABI versions, source recipe target filesystem plan closure installed-state ownership audit recovery and a distinct human operator verdict.
 allowed_paths:
   - .aide/**
+  - THIRD_PARTY_NOTICES.md
   - docs/**
   - release/**
   - runtime/factorio/application/**
