@@ -203,6 +203,17 @@ ApplicationResult install_plan_impl(
         plan_request.target = facman::platform::path_from_utf8(request.target_root);
     }
     if (plan_request.install_id.empty() || plan_request.target.empty()) {
+        FactorioArchiveInspectRequest inspection_request;
+        inspection_request.version = plan_request.version;
+        inspection_request.archive = plan_request.archive;
+        auto inspection = context.setup().inspect_install_archive(inspection_request);
+        if (!inspection) {
+            return unavailable(
+                context,
+                operation,
+                inspection.error().code,
+                inspection.error().message);
+        }
         return unavailable(
             context,
             operation,
