@@ -54,6 +54,10 @@ struct InstallRecord {
     std::string platform_integration;
     std::string strict_isolation_eligibility;
     std::vector<std::string> external_state_domains;
+    std::string setup_state_ref;
+    std::string lifecycle_status;
+    std::string last_verification_identity;
+    std::string state_revision;
     std::string verification_status;
     std::string schema;
     bool legacy_path = false;

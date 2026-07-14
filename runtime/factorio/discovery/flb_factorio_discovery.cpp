@@ -576,6 +576,10 @@ json::ObjectBuilder install_ref_builder(const InstallRef& install)
     output.add_string("strict_isolation_eligibility", install.strict_isolation_eligibility);
     output.add_array("external_state_domains", string_array_builder(install.external_state_domains));
     output.add_array("capabilities", string_array_builder(install.capabilities));
+    output.add_string("setup_state_ref", install.setup_state_ref);
+    output.add_string("lifecycle_status", install.lifecycle_status);
+    output.add_string("last_verification_identity", install.last_verification_identity);
+    output.add_string("state_revision", install.state_revision);
     output.add_string("executable_path_kind", install.executable_path_kind);
     output.add_string("app_dir_kind", install.app_dir_kind);
     output.add_string("diagnostic_code", install.diagnostic_code);

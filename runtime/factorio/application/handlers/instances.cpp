@@ -34,6 +34,14 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
     install.ownership = record.value().ownership;
     install.source = record.value().source;
     install.platform = record.value().platform;
+    install.distribution_origin = record.value().distribution_origin;
+    install.platform_integration = record.value().platform_integration;
+    install.strict_isolation_eligibility = record.value().strict_isolation_eligibility;
+    install.external_state_domains = record.value().external_state_domains;
+    install.setup_state_ref = record.value().setup_state_ref;
+    install.lifecycle_status = record.value().lifecycle_status;
+    install.last_verification_identity = record.value().last_verification_identity;
+    install.state_revision = record.value().state_revision;
     install.verification_status = record.value().verification_status;
     return true;
 }
