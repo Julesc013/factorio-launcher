@@ -2,133 +2,174 @@
 
 This file is generated from local Git history and is a preview only.
 
-source_range: 29cf22fa..HEAD
-source_head: 2671ca55d91d87e32f48b28890768339820b2d5d
+source_range: facman-r2-local-alpha-proof-0..HEAD
+source_head: 4360d0f40c38d9e7f0c69151f57fd0a9ee7a92b5
 commit_count: 50
-malformed_count: 8
+malformed_count: 10
 preview_only: true
 release_publishing: false
 
 ## Summary
 
-- Added: 16
-- Changed: 14
-- Fixed: 16
-- Security: 9
-- Docs: 5
-- Tests: 11
-- Internal: 2
-- Risks: 2
+- Added: 12
+- Changed: 16
+- Fixed: 12
+- Deprecated: 1
+- Security: 21
+- Docs: 8
+- Tests: 14
+- Internal: 3
+- Risks: 7
+- Follow-up: 12
 
 ## Added
 
-- stable, local-only mod inventory and verification commands for R3.7. (8335fde1ba12 feat(mods): add stable local inventory)
-- deterministic bounded local dependency plans and transactional modset apply and rollback. (b93d7376c625 feat(modsets): add bounded local solver)
-- bounded save indexing, sidecar association, drift detection, structural diff, and reversible retention. (2e9a66f8a4bd feat(saves): add structural index and retention)
-- secret-free dedicated-server planning and portable export bundles. (578bfb57bf82 feat(servers): add non-executing plan bundles)
-- generated guided operational forms and cross-frontend result visualizations. (dedadfa2f95e feat(frontends): generate guided operational forms)
-- Cross-transport lifecycle, adversarial, and release-scale R3.7 proof coverage. (625a964355d0 test(lifecycle): prove R3.7 cross-transport journey)
-- Required Linux Release build and CTest evidence to the cross-platform closeout matrix. (81abee2fb122 ci(linux): add explicit Release proof)
-- Exact R3.7 lifecycle checkpoint with target-native evidence and honest authority boundaries. (6cce8ed15a8f docs(release): freeze the R3.7 lifecycle checkpoint)
-- Generated R3.7 review and branch-workflow evidence. (1f840e533774 chore(aide): preserve R3.7 review evidence)
-- Canonical machine-readable R3.7 and H1-pending project status. (9539338419c5 fix(truth): establish the R3.7 H1-pending authority plane)
-- Declarative request-field contracts and generated native boundary validators. (49101f7acfba feat(contracts): generate and enforce native request boundary law)
-- experimental relocatable FLB 1.2 installed SDK and compatibility metadata. (2f4f7b5460b2 feat(sdk): establish the experimental FLB 1.2 consumer boundary)
-- Sanitized, digest-bound H1 operator verdict and checkpoint. (6d3c61c009ab docs(evidence): record H1 Fail for Steam-backed candidate)
-- explicit install-origin and external-state isolation metadata. (08cf8a58fb17 feat(installs): classify external-state isolation eligibility)
-- Steam external-state refusal and explicit preview/preflight write-domain policy. (a06669155e57 fix(launch): refuse Steam external state in strict mode)
-- sanitized Factorio version capability corpus tooling and contract. (e74255d5209c feat(compat): add read-only Factorio version capability corpus)
+- explicit generated managed-setup lifecycle workflows. (d1fb7f97572a feat(setup-workflows): generate lifecycle plan/apply commands)
+- canonical CLI plan/apply/recovery grammar. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
+- exact managed setup-state identity on FacMan install references. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
+- reproducible synthetic three-repository managed lifecycle proof. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
+- Complete selected-package reproducibility proof. (34e025540fe2 test(package): make full archive reproducibility executable)
+- Revision-pinned M1 managed portable-install checkpoint. (efe06f385795 docs(m1): bind managed portable foundation closeout)
+- explicit M2 live portable setup state with a pending human gate. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
+- immutable M2-WU1 live-target policy checkpoint. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
+- bounded M2-WU2 public lifecycle activation WorkUnit. (effce1f71784 chore(m2): open public setup lifecycle WorkUnit)
+- immutable M2-WU2 implementation and package proof. (129f70d13058 docs(m2): bind the public lifecycle proof)
+- evidence-only WU2 dev integration closeout lane. (2c55d1d111a2 chore(m2): open the WU2 dev integration proof)
+- immutable exact-dev WU2 integration evidence. (182ada6be86d docs(m2): bind the exact WU2 dev integration)
 
 ## Changed
 
-- R3.7 wave state now records local mod inventory as closed and verified. (05a93277d739 chore(aide): close local mod inventory workunit)
-- R3.7 wave state now records the local modset solver as closed and verified. (7ad66aea23d7 chore(aide): close local modset solver workunit)
-- R3.7 wave state now records structural save intelligence as closed and verified. (b30e4a70272e chore(aide): close save intelligence workunit)
-- R3.7 wave state now records server planning as closed. (d90d461a99dd chore(aide): close server planning workunit)
-- R3.7 wave state now records operational UX as closed. (9af53a736f47 chore(aide): close operational UX workunit)
-- R3.7 wave state now records WU10 as closed with advisory-only evidence. (b6e8e6200b9e chore(aide): close R3.7 lifecycle proof)
-- R3.7 AIDE state is closed with advisory-only evidence and no automatic human or release promotion. (dcd9a6cbb0d2 chore(aide): close the R3.7 wave)
-- Current status and platform claims are generated and evidence-qualified. (9539338419c5 fix(truth): establish the R3.7 H1-pending authority plane)
-- Command schemas and frontend catalogs derive field constraints from the same source. (49101f7acfba feat(contracts): generate and enforce native request boundary law)
-- client transports are independently linkable and daemon IPC remains explicitly unavailable. (6dce5c194457 refactor(client): separate model and transport link boundaries)
-- Canonical status now reports the Steam-backed H1 Fail and active narrow repair. (6d3c61c009ab docs(evidence): record H1 Fail for Steam-backed candidate)
-- Steam, standalone, archive, manual, and package installs now receive conservative isolation classifications. (08cf8a58fb17 feat(installs): classify external-state isolation eligibility)
-- Steam preflight is refused even when instance-local config routing is structurally valid. (a06669155e57 fix(launch): refuse Steam external state in strict mode)
-- Canonical project truth now records no active WorkUnit and the closed repair identity. (2671ca55d91d docs(closeout): bind and close the R3.8 repair)
+- setup requests now use typed target, plan, digest, and confirmation fields. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
+- setup lifecycle commands now compose through their owning application handler. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
+- Canonical project truth now records fixture-proven M1 and current 35/337 validation inventory. (efe06f385795 docs(m1): bind managed portable foundation closeout)
+- Universal provider license identity from NOASSERTION to MIT at pinned revisions. (b1fd720013ed chore(license): bind Universal MIT provider truth)
+- both Universal dependencies now have accepted MIT and reproducibility truth. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
+- current Universal Setup provider identity now includes the fail-closed M2 target policy. (dfa0d8ad3c4c chore(m2): bind target policy provider integration)
+- project truth now records WU1 policy proof and WU2 public-activation handoff. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
+- WU1 now records accepted dev integration proof. (effce1f71784 chore(m2): open public setup lifecycle WorkUnit)
+- bundled Universal Setup provider identity now names the M2-WU2 canonical main merge. (cfb70ab88de3 chore(m2): pin the public lifecycle provider)
+- canonical project truth now identifies the public lifecycle provider candidate. (57b175ab9378 chore(m2): reconcile public lifecycle truth)
+- project truth now distinguishes implementation proof from dev integration and human acceptance. (129f70d13058 docs(m2): bind the public lifecycle proof)
+- WU2 is closed locally pending reviewed dev integration. (e4b03c82b649 chore(m2): close the public lifecycle work unit)
+- branch governance evidence now reflects the completed WU2 head. (f051731b80b5 chore(aide): refresh the WU2 branch identity)
+- public lifecycle is dev-integrated pending operator acceptance. (182ada6be86d docs(m2): bind the exact WU2 dev integration)
+- WU2 exact-dev integration is fully closed. (cad50062c955 chore(m2): close the WU2 dev integration proof)
+- publication governance reports now match the closed evidence head. (53ebb488daad chore(aide): refresh the integration proof branch)
 
 ## Fixed
 
-- Cross-workunit lifecycle correctness and generated-client compatibility defects found by R3.7 end-to-end proof. (9fea4325129c fix(lifecycle): close cross-workunit integrity gaps)
-- Native transaction smoke no longer leaves an empty source-tree directory after passing. (8556b05e033a test(transaction): clean native smoke workspace)
-- Linux and macOS warnings-as-errors portability failures in preferences and modset planning. (4d542308f806 fix(portability): satisfy GCC and AppleClang warnings)
-- Linux and macOS launch-reference compilation no longer depends on omitted aggregate fields. (02398db38063 fix(portability): initialize launch profile defaults)
-- Cross-platform TUI smoke compilation now matches the complete generated-client invocation shape. (681a614ea193 test(tui): initialize complete invocation shape)
-- Profile archive now uses a directory-safe atomic no-clobber move on POSIX. (774628f442b0 fix(profiles): archive directories atomically on POSIX)
-- Made the R3.7 public-integration addendum satisfy Linux source-format policy. (2190b044ad86 docs(release): wrap R3.7 integration evidence)
-- Coverage is aggregated by module and release structure is no longer called readiness. (9539338419c5 fix(truth): establish the R3.7 H1-pending authority plane)
-- `modsets.rollback` now enforces its required lowercase SHA-256 transaction identity at the native boundary. (49101f7acfba feat(contracts): generate and enforce native request boundary law)
-- Cross-platform safety refusals retain invalid_identifier instead of degrading to invalid_request. (514413661f13 fix(contracts): preserve identifier refusal semantics at decode)
-- relocated SDK sanitizer runtime ordering in Linux CI. (aa794491ad68 fix(ci): link relocated SDK consumers to sanitizer runtimes)
-- slash-rooted transaction paths are refused consistently on Windows and POSIX. (c4d8ee0f4d54 test(transaction): cover state law and reject slash-root paths)
-- cross-platform lifecycle builds now initialize the complete isolation contract. (21ae0f68ed30 fix(launch): propagate isolation fields through lifecycle refs)
-- the Windows legacy compatibility package again includes the separately built WinForms shell. (b6006e514d03 fix(package): stage WinForms artifact into installed tree)
-- Evidence-only compacted queue placeholders no longer block lifecycle indexing. (d365ceaf7cda fix(aide): tolerate compacted queue placeholders)
-- Newly archived Windows lifecycle evidence no longer reports false line-ending drift. (91b5985b818f fix(aide): canonicalize immutable history hashes)
+- FacMan now consumes the scheduler-independent Universal Setup proof head. (c24237e82245 chore(deps): repin remediated Universal Setup main)
+- legacy repair and uninstall grammar remains unambiguous beside phase subcommands. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
+- Reproducibility proof no longer treats the owned-output marker as a package archive. (2f13923a9cbd fix(package): distinguish archives from ownership metadata)
+- New non-ignored source files are now checked before their first commit. (5b01b36fb989 fix(validation): inspect new source files before commit)
+- M1 checkpoint satisfies the repository line-length policy. (5b01b36fb989 fix(validation): inspect new source files before commit)
+- complete provider license closure in built packages. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
+- workspace status now reports the exact current Universal provider pins. (724246e53b57 fix(status): report licensed provider revisions)
+- durable transaction journals no longer fail at legacy MAX_PATH. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
+- closeout truth retains frozen M1 identities while recording the later license proof separately. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
+- project-state compaction test now recognizes the accepted license checkpoint. (2b5098b076ab fix(test): accept the later MIT checkpoint)
+- adequate capacity fluctuations no longer invalidate a reviewed plan. (d16e71357f13 fix(m2): bind the stable capacity provider)
+- raw Python tests now use the canonical current native-smoke CLI by default. (316ee8efec5b test(m2): prefer the canonical native smoke CLI)
+
+## Deprecated
+
+- legacy setup verbs are internal compatibility aliases. (d1fb7f97572a feat(setup-workflows): generate lifecycle plan/apply commands)
 
 ## Security
 
-- Raw Steam evidence, account identifiers, absolute local paths, credentials, and proprietary binaries remain outside Git. (6d3c61c009ab docs(evidence): record H1 Fail for Steam-backed candidate)
-- Identifier shape validation remains before application dispatch. (514413661f13 fix(contracts): preserve identifier refusal semantics at decode)
-- run.execute still cannot start Factorio and now distinguishes the known Steam isolation failure. (a06669155e57 fix(launch): refuse Steam external state in strict mode)
-- user-data roots are redirected and raw process output, absolute paths, credentials, and binaries are not persisted. (e74255d5209c feat(compat): add read-only Factorio version capability corpus)
-- preserved credentials, download tokens, proprietary binaries, and raw local evidence outside Git. (7502462385d0 docs(checkpoint): freeze R3.8 repair without H1 promotion)
-- lifecycle-generated launch references preserve external-state domains and eligibility instead of defaulting them. (21ae0f68ed30 fix(launch): propagate isolation fields through lifecycle refs)
-- only an allowlisted external component is staged and its destination remains traversal-validated. (b6006e514d03 fix(package): stage WinForms artifact into installed tree)
-- Real content changes remain SHA-256 detected after deterministic text normalization. (91b5985b818f fix(aide): canonicalize immutable history hashes)
-- H1 remains Fail; standalone/manual isolation remains unproven; authority promotion remains false. (2671ca55d91d docs(closeout): bind and close the R3.8 repair)
+- apply contracts remain unavailable and digest/confirmation bound. (d1fb7f97572a feat(setup-workflows): generate lifecycle plan/apply commands)
+- no apply route mutates setup state or enables Factorio execution. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
+- reference consumption does not grant setup mutation or execution authority. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
+- all writes stay below an exclusive disposable root; foreign content is retained and reported. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
+- Proof refuses dirty source state and preserves unsigned/no-execution authority boundaries. (34e025540fe2 test(package): make full archive reproducibility executable)
+- Live-target apply, execution, H1, Steam, network, registry, elevation, signing, and publication boundaries remain closed. (efe06f385795 docs(m1): bind managed portable foundation closeout)
+- verify exact provider notice digests and source identities. (b1fd720013ed chore(license): bind Universal MIT provider truth)
+- prevent SBOM/package claims without retained provider notices. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
+- long-path operations retain no-follow, no-clobber, and identity checks. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
+- retain unsigned/unpublished and no-authority boundaries explicitly. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
+- ordinary live apply remains unavailable and execution authority remains false. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
+- no live mutation authority is enabled by this pin update. (dfa0d8ad3c4c chore(m2): bind target policy provider integration)
+- mutation authority remains false and the human verdict remains pending. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
+- plan remains read-only, apply remains exact-plan-gated, and the human verdict remains pending. (effce1f71784 chore(m2): open public setup lifecycle WorkUnit)
+- no target or execution authority is promoted by the pin alone. (cfb70ab88de3 chore(m2): pin the public lifecycle provider)
+- ordinary live apply, execution, H1, signing, and publication remain unavailable. (57b175ab9378 chore(m2): reconcile public lifecycle truth)
+- actual current capacity is still revalidated and insufficient space still refuses. (d16e71357f13 fix(m2): bind the stable capacity provider)
+- recovery.apply and ordinary live apply remain unavailable. (129f70d13058 docs(m2): bind the public lifecycle proof)
+- pending human verdict, ordinary live apply hold, recovery hold, and execution ban are unchanged. (e4b03c82b649 chore(m2): close the public lifecycle work unit)
+- ordinary managed apply, recovery apply, execution, and publication remain unavailable. (182ada6be86d docs(m2): bind the exact WU2 dev integration)
+- all human, recovery, execution, and publication holds remain unchanged. (cad50062c955 chore(m2): close the WU2 dev integration proof)
 
 ## Docs
 
-- Added the accepted R3.7 public-integration evidence layer. (6619c04c9c1a docs(release): bind R3.7 public integration evidence)
-- No evidence meaning or product claim changed. (2190b044ad86 docs(release): wrap R3.7 integration evidence)
-- Daemon and frontend capability descriptions now match implemented transport reality. (9539338419c5 fix(truth): establish the R3.7 H1-pending authority plane)
-- added the bounded R3.8 isolation-repair and standalone-acquisition handoff. (7502462385d0 docs(checkpoint): freeze R3.8 repair without H1 promotion)
-- Bound the exact R3.8 implementation and dev integration evidence. (2671ca55d91d docs(closeout): bind and close the R3.8 repair)
+- records the managed setup frontend command law. (7850424d3e35 feat(setup-gateway): route guarded lifecycle workflows)
+- project truth reflects 121 commands, 228 schemas, and 216 refusal codes. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
+- records the exact fixture journey and non-authority claims. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
+- Repository front doors now distinguish the implemented fixture authority from unavailable ordinary apply. (efe06f385795 docs(m1): bind managed portable foundation closeout)
+- bind M1 canonical public integration evidence. (92da90101342 chore(release): bind canonical M1 public integration proof)
+- record the accepted operator decision and retained redistribution notices. (b1fd720013ed chore(license): bind Universal MIT provider truth)
+- add immutable license integration checkpoint and complete queue evidence. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
+- generated project truth now reports the active bounded WorkUnit. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
 
 ## Tests
 
-- Every registered command is differentially checked against its generated request schema through the live CLI. (49101f7acfba feat(contracts): generate and enforce native request boundary law)
-- Added native coverage for a path-escape identifier. (514413661f13 fix(contracts): preserve identifier refusal semantics at decode)
-- added parent-cache propagation coverage. (aa794491ad68 fix(ci): link relocated SDK consumers to sanitizer runtimes)
-- expanded transaction state-machine and relative-path contract coverage. (c4d8ee0f4d54 test(transaction): cover state law and reject slash-root paths)
-- added Steam and standalone classification assertions plus import/inspect persistence checks. (08cf8a58fb17 feat(installs): classify external-state isolation eligibility)
-- added end-to-end Steam preview, preflight, refusal, and no-side-effect proof. (a06669155e57 fix(launch): refuse Steam external state in strict mode)
-- added parsing, capability, tree-fingerprint, metadata-fallback, and executable-discovery coverage. (e74255d5209c feat(compat): add read-only Factorio version capability corpus)
-- reproduced the hosted compiler failure with GCC and reran Windows native plus focused lifecycle suites. (21ae0f68ed30 fix(launch): propagate isolation fields through lifecycle refs)
-- added focused external-component staging and path-refusal coverage. (b6006e514d03 fix(package): stage WinForms artifact into installed tree)
-- Partial live records remain fail-closed. (d365ceaf7cda fix(aide): tolerate compacted queue placeholders)
-- Added data-level assertions for the closed repair and refreshed validation identity. (2671ca55d91d docs(closeout): bind and close the R3.8 repair)
+- adds a strict generated workflow guard. (d1fb7f97572a feat(setup-workflows): generate lifecycle plan/apply commands)
+- managed install identities now round-trip through the native workspace repository. (0ce7802d9f5b feat(install-refs): retain managed setup state identity)
+- launch remains preview-only, ordinary setup apply remains unavailable, and H1 remains failed. (f4fdafead6a0 test(system-proof): exercise managed lifecycle across repositories)
+- Windows CI now executes two independent package builds and compares their complete evidence closure. (34e025540fe2 test(package): make full archive reproducibility executable)
+- Added artifact-classification regression coverage. (2f13923a9cbd fix(package): distinguish archives from ownership metadata)
+- Added pre-commit file-discovery regression coverage. (5b01b36fb989 fix(validation): inspect new source files before commit)
+- protect additive public-integration truth and unchanged authority boundaries. (92da90101342 chore(release): bind canonical M1 public integration proof)
+- preserve historical M1 provider identities separately from current pins. (b1fd720013ed chore(license): bind Universal MIT provider truth)
+- exercise portable CLI, TUI, WinForms, relocation, tamper, SBOM, and provenance lanes. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
+- preserve lock/runtime revision parity. (724246e53b57 fix(status): report licensed provider revisions)
+- enforce the extended-path native I/O contract on Windows. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
+- retain independent assertions for frozen M1 implementation and public integration records. (2b5098b076ab fix(test): accept the later MIT checkpoint)
+- provider and project-state assertions follow the canonical merge. (dfa0d8ad3c4c chore(m2): bind target policy provider integration)
+- target policy adds one integrated native test, bringing this build to 36/36. (b1a1795c90e2 docs(m2): close the live target policy WorkUnit)
 
 ## Internal
 
-- close the R3.7 profiles/templates queue item with exact green evidence. (f40e9d31f940 chore(aide): close profiles and templates workunit)
-- No product, contract, schema, runtime, frontend, provider, package, release, or H1-state change. (6619c04c9c1a docs(release): bind R3.7 public integration evidence)
+- generated frontend metadata excludes deprecated setup aliases without removing ABI compatibility. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
+- prepare dev ancestry synchronization from canonical main. (92da90101342 chore(release): bind canonical M1 public integration proof)
+- no product command changed in this opening commit. (effce1f71784 chore(m2): open public setup lifecycle WorkUnit)
 
 ## Risks
 
-- H1 has automated evidence but no reviewed operator verdict; execution remains unavailable. (9539338419c5 fix(truth): establish the R3.7 H1-pending authority plane)
-- Domain-specific cross-field policy remains intentionally hand-written after boundary validation. (49101f7acfba feat(contracts): generate and enforce native request boundary law)
+- ordinary setup apply remains intentionally unavailable; no H1 authority changes. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
+- none; no product behavior or authority changes. (92da90101342 chore(release): bind canonical M1 public integration proof)
+- artifacts remain unsigned and unpublished. (b1fd720013ed chore(license): bind Universal MIT provider truth)
+- package tree identities change and require fresh reproducibility evidence. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
+- read-only reporting identity only; no setup or execution authority changes. (724246e53b57 fix(status): report licensed provider revisions)
+- Windows native path conversion changes all covered low-level path calls. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
+- test-only truth expectation; no runtime or package behavior changes. (2b5098b076ab fix(test): accept the later MIT checkpoint)
+
+## Follow-up
+
+- publish WU10 for exact-head CI and merge to dev. (d72c56b6802e refactor(setup-routing): preserve application composition boundary)
+- merge to dev, verify exact-dev checks, then resolve authorized Universal MIT licensing. (92da90101342 chore(release): bind canonical M1 public integration proof)
+- carry provider notices into every package profile and rerun reproducibility proof. (b1fd720013ed chore(license): bind Universal MIT provider truth)
+- run the clean three-repository package proof and bind new identities. (71dacb277dc8 fix(package): retain Universal MIT notices in every profile)
+- rerun the complete clean reproduction from an empty output root. (724246e53b57 fix(status): report licensed provider revisions)
+- rerun the complete clean reconstruction from an empty root. (c253e05d882c fix(io): preserve transactions beyond MAX_PATH)
+- publish the reviewed FacMan branch to dev, verify exact-head workflows, then open M2. (0b4e1688b4fc docs(release): accept Universal MIT reproducibility proof)
+- rerun exact-head PR workflows and merge only when all matrices pass. (2b5098b076ab fix(test): accept the later MIT checkpoint)
+- implement the product-neutral target policy in Universal Setup. (df0e42b6131f chore(m2): open live-target policy WorkUnit)
+- reproduce the complete package and bind WU2 integration evidence. (cfb70ab88de3 chore(m2): pin the public lifecycle provider)
+- rerun clean workspace and reproducible-package proof, then close WU2. (57b175ab9378 chore(m2): reconcile public lifecycle truth)
+- rerun clean three-repository and selected-package proofs. (d16e71357f13 fix(m2): bind the stable capacity provider)
 
 ## Malformed Commits
 
-- bb3814a49053 land: task/r3.7-instance-content-lifecycle into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- d00456069eb5 promote: dev into main: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 19e8fa6e5ef1 land: task/r3.7-public-integration-proof into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 2a991df21fd8 promote: dev into main: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 6581d19e269f land: task/r3.7-public-integration-proof-ci-fix into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- eb629caaec9d promote: dev into main: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 9d3ccd663e9d land: task/r3.7-truth-conformance-repair into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- f10aef03517a land: R3.8 Steam external-state isolation repair into dev: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 842ee9fa36e7 merge(m1-wu9): bind Factorio portable setup recipe: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 96a559ffba4b merge(m1-wu10): generate guarded setup workflows: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 13319e4f9e51 merge(m1-wu11): prove managed lifecycle integration: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 307690ad9bbb chore(m2): open live-target evidence packet work unit: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 2e6012e0b14c build(provider): pin Universal Setup M2-WU3 main: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- ecec3a46e78a docs(state): bind M2-WU3 provider implementation proof: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 057b4be50e43 docs(evidence): checkpoint WU3 implementation and package proof: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 2678e1e23576 chore(m2): close WU3 without authority promotion: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 461251d7fd3d fix(state): advance latest closed WorkUnit validator to WU3: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 4360d0f40c38 chore(state): bind WU3 closeout and branch identity: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 
 ## Release Caveat
 
