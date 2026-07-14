@@ -113,6 +113,7 @@ def collect() -> dict[str, Any]:
         "m2_wu6_launcher_handoff": status["m2_wu6_launcher_handoff"],
         "m2_wu7_facman_live_portable_workflow": status["m2_wu7_facman_live_portable_workflow"],
         "m2_wu8_generated_frontend_workflow": status["m2_wu8_generated_frontend_workflow"],
+        "m2_wu9_cross_platform_adversarial_proof": status["m2_wu9_cross_platform_adversarial_proof"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -210,6 +211,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"clients: `{', '.join(data['m2_wu8_generated_frontend_workflow']['clients'])}`; apply: "
         f"`{data['m2_wu8_generated_frontend_workflow']['ordinary_live_apply']}`; operator verdict: "
         f"`{data['m2_wu8_generated_frontend_workflow']['operator_verdict']}`.",
+        f"- M2-WU9 adversarial proof: `{data['m2_wu9_cross_platform_adversarial_proof']['status']}`; "
+        f"cases: `{data['m2_wu9_cross_platform_adversarial_proof']['case_count']}`; Setup main: "
+        f"`{data['m2_wu9_cross_platform_adversarial_proof']['universal_setup_main_revision']}`; operator verdict: "
+        f"`{data['m2_wu9_cross_platform_adversarial_proof']['operator_verdict']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -560,8 +565,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         }
         if any(m2_wu5.get(key) != value for key, value in expected_wu5_integration.items()):
             problems.append("accepted M2-WU5 integration must bind PR 19, identical trees, and exact-dev workflows")
-    if m2_wu5.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU5 must bind the exact current Universal Setup provider pin")
+    if m2_wu5.get("universal_setup_main_revision") != "e1ce68e9593ae8d9a35cc0821b5e42c798524453":
+        problems.append("M2-WU5 must retain its exact historical Universal Setup provider pin")
     if m2_wu5.get("acceptance_root") != r"D:\FacMan-Live-Acceptance\M2":
         problems.append("M2-WU5 must remain confined to the authorized acceptance root")
     if m2_wu5.get("run_summary_sha256") != "c64ddfaa38bde351002d2840999b3ba74173cde8c76d3e6aa21891b5d169f6c1":
@@ -627,8 +632,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         }
         if any(m2_wu7.get(key) != value for key, value in expected_integration.items()):
             problems.append("M2-WU7 accepted dev integration proof must bind exact immutable task, tree, PR, and workflow identities")
-    if m2_wu7.get("universal_setup_revision") != provider_pins()["universal_setup"]["revision"] or m2_wu7.get("universal_launcher_revision") != provider_pins()["universal_launcher"]["revision"]:
-        problems.append("M2-WU7 must bind the exact current Universal provider pins")
+    if m2_wu7.get("universal_setup_revision") != "e1ce68e9593ae8d9a35cc0821b5e42c798524453" or m2_wu7.get("universal_launcher_revision") != "7bd4425f0c35414f738159b45d8bec42edf70235":
+        problems.append("M2-WU7 must retain its exact historical Universal provider pins")
     if m2_wu7.get("setup_command") != "install_local.plan" or m2_wu7.get("target_class") != "operator_acceptance":
         problems.append("M2-WU7 must route the bounded operator-acceptance install plan")
     if m2_wu7.get("plan_is_read_only") is not True or m2_wu7.get("plan_binds_source_recipe_target_and_provider") is not True:
@@ -686,6 +691,29 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU8 must not promote ordinary live apply before a human Pass")
     if m2_wu8.get("execution_authority") is not False or m2_wu8.get("h1_inference") != "none":
         problems.append("M2-WU8 must not promote execution or infer H1")
+    m2_wu9 = status.get("m2_wu9_cross_platform_adversarial_proof", {})
+    if m2_wu9.get("status") not in {
+        "active",
+        "provider_integrated_cross_platform_proof_pending_facman_dev_integration_and_operator_verdict",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        problems.append("M2-WU9 must record a recognized monotonic adversarial proof state")
+    if m2_wu9.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
+        problems.append("M2-WU9 must bind the exact current Universal Setup provider pin")
+    if m2_wu9.get("universal_setup_task_tree") != m2_wu9.get("universal_setup_main_tree"):
+        problems.append("M2-WU9 reviewed Setup task and main merge trees must be identical")
+    if [m2_wu9.get("case_count"), m2_wu9.get("setup_owned_case_count"), m2_wu9.get("consumer_case_count")] != [16, 15, 1]:
+        problems.append("M2-WU9 must bind the complete sixteen-case ownership partition")
+    if m2_wu9.get("required_platforms") != ["windows", "linux", "macos"]:
+        problems.append("M2-WU9 must require Windows, Linux, and macOS evidence")
+    if m2_wu9.get("target_ancestor_identity_bound") is not True:
+        problems.append("M2-WU9 must retain the target ancestor identity remediation")
+    if m2_wu9.get("operator_verdict") != "pending" or m2_wu9.get("automation_can_record_operator_verdict") is not False:
+        problems.append("M2-WU9 automation must preserve the separate pending operator verdict")
+    if m2_wu9.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2-WU9 must not promote ordinary live apply before a human Pass")
+    if m2_wu9.get("execution_authority") is not False or m2_wu9.get("h1_inference") != "none":
+        problems.append("M2-WU9 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

@@ -15,7 +15,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `73bec99916d509b0ab055a43562e93ef20a6b4b7`;
 - Universal Launcher pin: `7bd4425f0c35414f738159b45d8bec42edf70235`;
-- Universal Setup pin: `e1ce68e9593ae8d9a35cc0821b5e42c798524453`;
+- Universal Setup pin: `3f8489275077347c2918f3bb03614ec6431362ff`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
 - operator verdict: `Fail`;
 - Safe beta: `false`;
@@ -32,6 +32,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - M2-WU6 Launcher handoff: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Launcher main `7bd4425f0c35414f738159b45d8bec42edf70235`; recovery status: `managed_install_recovery_required`; operator verdict: `pending`.
 - M2-WU7 FacMan portable workflow: `accepted_dev_integration_proof_pending_operator_verdict`; plan: `install_local.plan`; apply: `unavailable_pending_operator_acceptance`; operator verdict: `pending`.
 - M2-WU8 generated frontend workflow: `accepted_dev_integration_proof_pending_operator_verdict`; clients: `cli, tui, winforms, appkit`; apply: `unavailable_pending_operator_acceptance`; operator verdict: `pending`.
+- M2-WU9 adversarial proof: `provider_integrated_cross_platform_proof_pending_facman_dev_integration_and_operator_verdict`; cases: `16`; Setup main: `3f8489275077347c2918f3bb03614ec6431362ff`; operator verdict: `pending`.
 - Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
@@ -40,7 +41,7 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is in
 
 - command contracts: `121`;
 - registered routes: `119`;
-- schemas: `229`;
+- schemas: `230`;
 - refusal codes: `217`;
 - command catalog digest: `7b587bd0b8f3f1317aca52509aa9996d787a075ed6d3b3837dcea44a1ce96c41`;
 - accepted CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;

@@ -35,6 +35,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu6_launcher_handoff",
             "m2_wu7_facman_live_portable_workflow",
             "m2_wu8_generated_frontend_workflow",
+            "m2_wu9_cross_platform_adversarial_proof",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -46,11 +47,11 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_m2_workflows_preserve_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu8-generated-frontend-workflow", data["current_checkpoint"])
+        self.assertEqual("m2-wu9-cross-platform-adversarial-proof", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["active_work_unit"])
         self.assertEqual(
             "automated_live_lifecycle_complete_pending_operator_verdict",
             data["m2_live_portable_setup"]["status"],
@@ -155,7 +156,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("29341098765", m2_wu5["facman_dev_ci_run"])
         self.assertEqual("29341101347", m2_wu5["facman_dev_code_security_run"])
         self.assertEqual("29341100659", m2_wu5["facman_dev_security_policy_run"])
-        self.assertEqual(data["provider_pins"]["universal_setup"]["revision"], m2_wu5["universal_setup_main_revision"])
+        self.assertEqual("e1ce68e9593ae8d9a35cc0821b5e42c798524453", m2_wu5["universal_setup_main_revision"])
         self.assertEqual(11, m2_wu5["case_count"])
         self.assertEqual([1, 4, 3, 3], [m2_wu5["unchanged_count"], m2_wu5["rolled_back_count"], m2_wu5["completed_count"], m2_wu5["recovery_required_count"]])
         self.assertEqual(40, m2_wu5["native_test_count"])
@@ -220,7 +221,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("none", m2_wu7["h1_inference"])
         m2_wu8 = data["m2_wu8_generated_frontend_workflow"]
         self.assertEqual(
-            "four_frontend_workflow_and_package_proven_pending_dev_integration_and_operator_verdict",
+            "accepted_dev_integration_proof_pending_operator_verdict",
             m2_wu8["status"],
         )
         self.assertEqual("facman.setup_workflow.v1", m2_wu8["workflow_schema"])
@@ -239,7 +240,21 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(14, m2_wu8["required_windows_package_tests"])
         self.assertEqual(0, m2_wu8["required_windows_package_skips"])
         self.assertEqual(392, m2_wu8["package_tree_file_count"])
-        self.assertEqual("m2-wu8-generated-frontend-workflow", data["current_checkpoint"])
+        m2_wu9 = data["m2_wu9_cross_platform_adversarial_proof"]
+        self.assertEqual(
+            "provider_integrated_cross_platform_proof_pending_facman_dev_integration_and_operator_verdict",
+            m2_wu9["status"],
+        )
+        self.assertEqual(["windows", "linux", "macos"], m2_wu9["required_platforms"])
+        self.assertEqual([16, 15, 1], [m2_wu9["case_count"], m2_wu9["setup_owned_case_count"], m2_wu9["consumer_case_count"]])
+        self.assertEqual("3f8489275077347c2918f3bb03614ec6431362ff", m2_wu9["universal_setup_main_revision"])
+        self.assertEqual(m2_wu9["universal_setup_task_tree"], m2_wu9["universal_setup_main_tree"])
+        self.assertTrue(m2_wu9["target_ancestor_identity_bound"])
+        self.assertEqual("pending", m2_wu9["operator_verdict"])
+        self.assertFalse(m2_wu9["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu9["execution_authority"])
+        self.assertEqual("m2-wu9-cross-platform-adversarial-proof", data["current_checkpoint"])
+        self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["active_work_unit"])
         self.assertEqual("M2-WU8-GENERATED-FRONTEND-WORKFLOW-01", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
@@ -306,7 +321,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "e1ce68e9593ae8d9a35cc0821b5e42c798524453",
+            "3f8489275077347c2918f3bb03614ec6431362ff",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

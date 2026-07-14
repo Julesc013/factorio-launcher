@@ -24,14 +24,16 @@ def facman_executable() -> Path:
         ROOT / "build" / "native-smoke" / "facman",
         ROOT / "build" / "Debug" / "facman.exe",
     ]
-    for path in preferred:
-        if path.is_file():
-            return path
     candidates: list[Path] = []
     for pattern in ("build/**/facman.exe", "build/**/facman"):
         candidates.extend(path for path in ROOT.glob(pattern) if path.is_file())
     if candidates:
-        return sorted(candidates, key=lambda path: path.stat().st_mtime, reverse=True)[0]
+        ranks = {path: index for index, path in enumerate(preferred)}
+        unique = set(candidates)
+        return max(
+            unique,
+            key=lambda path: (path.stat().st_mtime_ns, -ranks.get(path, len(preferred))),
+        )
 
     raise unittest.SkipTest("native facman executable has not been built")
 
