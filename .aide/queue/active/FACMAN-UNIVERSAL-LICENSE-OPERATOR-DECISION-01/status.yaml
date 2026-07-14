@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-11T23:03:13Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/evidence/
+active_at: 2026-07-14T06:32:54Z

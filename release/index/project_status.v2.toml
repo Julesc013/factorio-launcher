@@ -15,7 +15,6 @@ known_blockers = [
   "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
-  "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision.",
 ]
 
 quarantined_capabilities = [
@@ -34,6 +33,17 @@ dev_integration_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
 operator_verdict = "Fail"
 standalone_manual_isolation = "unproven"
 authority_promotion = false
+
+[universal_repository_licenses]
+status = "accepted_mit"
+decision_work_unit = "FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01"
+universal_launcher_revision = "6d41e07b76cd19b2a7630835e05ac3aa125d57b8"
+universal_launcher_ci_run = "29311615251"
+universal_setup_revision = "264bb1939a67231878313155157abd0f83d24c13"
+universal_setup_ci_run = "29311599523"
+spdx_license_expression = "MIT"
+license_file_sha256 = "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53"
+publication_authority = false
 
 [r3_8_public_integration]
 status = "accepted"

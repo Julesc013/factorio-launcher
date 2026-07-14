@@ -64,6 +64,8 @@ def validate() -> list[str]:
         problems.append(f"{relative(lock_path)}: universal_setup must own install mutation")
     if launcher.get("install_mutation_authority") is not False:
         problems.append(f"{relative(lock_path)}: universal_launcher must not own install mutation")
+    problems.extend(validate_universal_provider(lock_path, "universal_launcher", launcher))
+    problems.extend(validate_universal_provider(lock_path, "universal_setup", setup))
     problems.extend(validate_miniz_component(lock_path, components.get("miniz", {})))
     problems.extend(validate_picojson_component(lock_path, components.get("picojson", {})))
 
@@ -128,6 +130,29 @@ def validate_miniz_component(path: Path, component: dict[str, Any]) -> list[str]
     if component.get("install_mutation_authority") is not False:
         problems.append(f"{prefix}: install_mutation_authority must be false")
     return problems
+
+
+def validate_universal_provider(
+    path: Path, component_id: str, component: dict[str, Any]
+) -> list[str]:
+    prefix = f"{relative(path)} component {component_id}"
+    expected = {
+        "universal_launcher": {
+            "pin": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+            "license": "MIT",
+            "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
+        },
+        "universal_setup": {
+            "pin": "264bb1939a67231878313155157abd0f83d24c13",
+            "license": "MIT",
+            "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
+        },
+    }[component_id]
+    return [
+        f"{prefix}: {key} must equal {value}"
+        for key, value in expected.items()
+        if component.get(key) != value
+    ]
 
 
 def validate_picojson_component(path: Path, component: dict[str, Any]) -> list[str]:

@@ -26,6 +26,7 @@ class AideCompactionTests(unittest.TestCase):
             "current_revisions", "active_work_unit", "last_closed_work_unit",
             "r3_8_repair", "r3_8_public_integration", "m1_managed_portable_install",
             "m1_public_integration",
+            "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
@@ -72,7 +73,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "c43d390efe0db17480f9d0262827659b4ae242dd",
+            "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]
@@ -86,7 +87,7 @@ class AideCompactionTests(unittest.TestCase):
             m1["dev_integration_revision"],
         )
         self.assertEqual(
-            data["provider_pins"]["universal_setup"]["revision"],
+            "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7",
             m1["universal_setup_revision"],
         )
         self.assertEqual(
@@ -107,6 +108,14 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("29310497458", public_integration["final_main_ci_run"])
         self.assertTrue(public_integration["main_dev_synchronized_at_proof"])
         self.assertFalse(public_integration["authority_promotion"])
+        licenses = data["universal_repository_licenses"]
+        self.assertEqual("accepted_mit", licenses["status"])
+        self.assertEqual(
+            "264bb1939a67231878313155157abd0f83d24c13",
+            data["provider_pins"]["universal_setup"]["revision"],
+        )
+        self.assertEqual("MIT", licenses["spdx_license_expression"])
+        self.assertFalse(licenses["publication_authority"])
         catalog = json.loads(
             (project_state.ROOT / "contracts/generated-index/command_catalog.v2.json").read_text(encoding="utf-8")
         )

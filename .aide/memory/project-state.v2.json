@@ -104,7 +104,7 @@
     {
       "claim": "Package inputs and provenance are recorded",
       "level": "target CI proven",
-      "limitation": "provider licenses are `NOASSERTION`; unsigned evidence is not publisher authentication"
+      "limitation": "licensing is proven at pinned revisions; unsigned evidence is not publisher authentication"
     },
     {
       "claim": "Experimental FLB ABI and installed SDK have a correctness floor",
@@ -144,8 +144,8 @@
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "universal_launcher": "c43d390efe0db17480f9d0262827659b4ae242dd",
-    "universal_setup": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
+    "universal_launcher": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+    "universal_setup": "264bb1939a67231878313155157abd0f83d24c13"
   },
   "execution": {
     "operator_verdict": "Fail",
@@ -156,8 +156,7 @@
   "known_blockers": [
     "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
-    "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
-    "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision."
+    "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
   "last_closed_work_unit": "M1-PUBLIC-INTEGRATION-PROOF-01",
   "m1_managed_portable_install": {
@@ -319,12 +318,12 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "c43d390efe0db17480f9d0262827659b4ae242dd",
+      "revision": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
       "source": "universal-launcher"
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
-      "revision": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7",
+      "revision": "264bb1939a67231878313155157abd0f83d24c13",
       "source": "universal-setup"
     }
   },
@@ -366,6 +365,17 @@
     "Human acceptance is never inferred from automated checks.",
     "Compile, runtime, package, publication, and support status are separate claims."
   ],
+  "universal_repository_licenses": {
+    "decision_work_unit": "FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01",
+    "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
+    "publication_authority": false,
+    "spdx_license_expression": "MIT",
+    "status": "accepted_mit",
+    "universal_launcher_ci_run": "29311615251",
+    "universal_launcher_revision": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
+    "universal_setup_ci_run": "29311599523",
+    "universal_setup_revision": "264bb1939a67231878313155157abd0f83d24c13"
+  },
   "validation": {
     "accepted_revision": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
     "ci_run": "29299245206",
