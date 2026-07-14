@@ -258,6 +258,10 @@ Result<InstallRecord> InstallRepository::load(const InstallId& id) const
     record.platform_integration = optional_string(document.value(), "platform_integration");
     record.strict_isolation_eligibility = optional_string(document.value(), "strict_isolation_eligibility");
     record.external_state_domains = optional_strings(document.value(), "external_state_domains");
+    record.setup_state_ref = optional_string(document.value(), "setup_state_ref");
+    record.lifecycle_status = optional_string(document.value(), "lifecycle_status");
+    record.last_verification_identity = optional_string(document.value(), "last_verification_identity");
+    record.state_revision = optional_string(document.value(), "state_revision");
     record.verification_status = verification_status(document.value());
     if (record.verification_status.empty()) record.verification_status = optional_string(document.value(), "state");
     record.schema = schema.value();

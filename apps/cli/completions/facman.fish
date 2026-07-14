@@ -1,4 +1,4 @@
-# generated source-sha256: 43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86
+# generated source-sha256: 76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -13,11 +13,21 @@
 # path: import instance
 # path: installs import
 # path: installs inspect
+# path: installs install apply
+# path: installs install plan
 # path: installs install-version
 # path: installs list
+# path: installs move apply
+# path: installs move plan
+# path: installs recovery apply
+# path: installs recovery inspect
 # path: installs repair
+# path: installs repair apply
+# path: installs repair plan
 # path: installs scan
 # path: installs uninstall
+# path: installs uninstall apply
+# path: installs uninstall plan
 # path: installs verify
 # path: instances archive
 # path: instances clone
@@ -139,6 +149,7 @@ complete -c facman -f -a lock
 complete -c facman -f -a migration
 complete -c facman -f -a mods
 complete -c facman -f -a modsets
+complete -c facman -f -a move
 complete -c facman -f -a onboarding
 complete -c facman -f -a package
 complete -c facman -f -a paths

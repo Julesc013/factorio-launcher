@@ -21,6 +21,26 @@ target_link_libraries(facman_application_types_smoke PRIVATE flb_factorio_applic
 facman_native_test(flb_factorio_discovery_smoke flb_factorio_discovery_smoke.cpp "fast-unit;security;integration")
 target_compile_features(flb_factorio_discovery_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_discovery_smoke PRIVATE flb_factorio_discovery_static)
+facman_native_test(flb_factorio_setup_recipe_smoke flb_factorio_setup_recipe_smoke.cpp "fast-unit;security;contract")
+target_compile_features(flb_factorio_setup_recipe_smoke PRIVATE cxx_std_17)
+target_link_libraries(flb_factorio_setup_recipe_smoke PRIVATE flb_factorio_install_validation_static)
+if(FACMAN_WITH_SETUP)
+  facman_native_test(flb_setup_gateway_smoke flb_setup_gateway_smoke.cpp "filesystem;security;integration")
+  target_compile_features(flb_setup_gateway_smoke PRIVATE cxx_std_17)
+  target_link_libraries(flb_setup_gateway_smoke PRIVATE flb_factorio_application_static)
+  facman_native_test(
+    m1_three_repository_system_proof
+    m1_three_repository_system_proof.cpp
+    "contract;filesystem;integration;transaction")
+  target_sources(m1_three_repository_system_proof PRIVATE
+    m1_system_proof_fixture.cpp
+    m1_system_proof_launcher.cpp)
+  target_compile_features(m1_three_repository_system_proof PRIVATE cxx_std_17)
+  target_link_libraries(m1_three_repository_system_proof PRIVATE
+    flb_factorio_application_static
+    usk_lifecycle_static
+    ulk_static)
+endif()
 add_executable(facman_process_probe facman_process_probe.cpp)
 target_compile_features(facman_process_probe PRIVATE cxx_std_17)
 facman_apply_policies(facman_process_probe)

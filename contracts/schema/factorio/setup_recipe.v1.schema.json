@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/facman/factorio/setup_recipe.v1.schema.json",
+  "title": "FacMan Factorio portable setup recipe",
+  "type": "object",
+  "required": [
+    "schema",
+    "recipe_id",
+    "recipe_version",
+    "product_id",
+    "source",
+    "root_selection",
+    "required_paths",
+    "forbidden_path_prefixes",
+    "components",
+    "entrypoints",
+    "target_scope",
+    "post_stage_verification",
+    "installed_state_schema",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.factorio.setup_recipe.v1" },
+    "recipe_id": { "const": "facman.factorio.windows_zip.portable" },
+    "recipe_version": { "type": "integer", "const": 1 },
+    "product_id": { "const": "factorio" },
+    "source": {
+      "type": "object",
+      "required": ["kind", "archive_format", "archive_digest_binding", "distribution_origin"],
+      "properties": {
+        "kind": { "const": "local_archive" },
+        "archive_format": { "const": "zip" },
+        "archive_digest_binding": { "const": "exact_sha256_at_plan" },
+        "distribution_origin": { "const": "official_manual_archive_candidate" }
+      },
+      "additionalProperties": false
+    },
+    "root_selection": {
+      "type": "object",
+      "required": ["policy", "accepted_layouts", "strip_prefix_policy"],
+      "properties": {
+        "policy": { "const": "exactly_one_application_root" },
+        "accepted_layouts": {
+          "type": "array",
+          "const": ["flat", "single_prefix"]
+        },
+        "strip_prefix_policy": { "const": "strip_selected_application_root_only" }
+      },
+      "additionalProperties": false
+    },
+    "required_paths": {
+      "type": "array",
+      "const": ["bin/x64/factorio.exe", "data/base/info.json"]
+    },
+    "forbidden_path_prefixes": {
+      "type": "array",
+      "const": ["config/player-data.json", "mods/", "saves/"]
+    },
+    "components": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "object",
+          "required": ["id", "required", "marker"],
+          "properties": {
+            "id": { "const": "base" },
+            "required": { "const": true },
+            "marker": { "const": "data/base/info.json" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["id", "required", "marker"],
+          "properties": {
+            "id": { "const": "space-age" },
+            "required": { "const": false },
+            "marker": { "const": "data/space-age/info.json" }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "entrypoints": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "object",
+          "required": ["id", "relative_path", "role"],
+          "properties": {
+            "id": { "const": "primary" },
+            "relative_path": { "const": "bin/x64/factorio.exe" },
+            "role": { "const": "application" }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "items": false,
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "target_scope": { "const": "portable" },
+    "post_stage_verification": {
+      "type": "object",
+      "required": ["required_paths", "version_probe", "capability_probes", "strict_isolation_classification"],
+      "properties": {
+        "required_paths": {
+          "type": "array",
+          "const": ["bin/x64/factorio.exe", "data/base/info.json"]
+        },
+        "version_probe": {
+          "type": "object",
+          "required": ["kind", "relative_path", "json_pointer", "execution_allowed"],
+          "properties": {
+            "kind": { "const": "json_string" },
+            "relative_path": { "const": "data/base/info.json" },
+            "json_pointer": { "const": "/version" },
+            "execution_allowed": { "const": false }
+          },
+          "additionalProperties": false
+        },
+        "capability_probes": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "object",
+              "required": ["capability", "kind", "relative_path"],
+              "properties": {
+                "capability": { "const": "space-age" },
+                "kind": { "const": "path_exists" },
+                "relative_path": { "const": "data/space-age/info.json" }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "items": false,
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "strict_isolation_classification": { "const": "candidate_unproven_until_live_h1" }
+      },
+      "additionalProperties": false
+    },
+    "installed_state_schema": { "const": "usk.installed_state.v1" },
+    "authority": {
+      "type": "object",
+      "required": [
+        "network",
+        "credentials",
+        "registry",
+        "elevation",
+        "package_manager",
+        "installer_execution",
+        "shell_commands",
+        "post_install_hooks",
+        "steam_mutation",
+        "factorio_execution"
+      ],
+      "properties": {
+        "network": { "const": false },
+        "credentials": { "const": false },
+        "registry": { "const": false },
+        "elevation": { "const": false },
+        "package_manager": { "const": false },
+        "installer_execution": { "const": false },
+        "shell_commands": { "const": false },
+        "post_install_hooks": { "const": false },
+        "steam_mutation": { "const": false },
+        "factorio_execution": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

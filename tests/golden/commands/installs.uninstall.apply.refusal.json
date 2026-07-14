@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "installs.uninstall.apply",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "setup_apply_not_authorized",
+    "reason": "Ordinary setup apply remains unavailable until fixture proof and separate live-target acceptance.",
+    "recoverable": false
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$id": "https://facman.invalid/schema/command/installs.move.apply.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "confirmation": {
+      "enum": [
+        "APPLY"
+      ],
+      "minLength": 1,
+      "type": "string"
+    },
+    "plan_digest": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "plan_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "plan_id",
+    "plan_digest",
+    "confirmation"
+  ],
+  "title": "installs.move.apply request",
+  "type": "object"
+}

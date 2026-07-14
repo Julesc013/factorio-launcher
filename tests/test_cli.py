@@ -399,7 +399,98 @@ class CliTests(unittest.TestCase):
             install_plan = json.loads(stdout)
             self.assertEqual(install_plan["status"], "refused")
             self.assertEqual(install_plan["operation"], "installs.install_version")
+            self.assertEqual(install_plan["refusal"]["code"], "archive_inspection_refused")
+
+            with zipfile.ZipFile(archive, "w") as bundle:
+                bundle.writestr("factorio/bin/x64/factorio.exe", b"synthetic executable fixture")
+                bundle.writestr(
+                    "factorio/data/base/info.json",
+                    b'{"name":"base","version":"2.0.77"}',
+                )
+                bundle.writestr(
+                    "factorio/data/space-age/info.json",
+                    b'{"name":"space-age","version":"2.0.77"}',
+                )
+            target = Path(tmp) / "managed-factorio"
+            code, stdout, stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "installs",
+                    "install-version",
+                    "2.0.77",
+                    "--archive",
+                    str(archive),
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 1, stderr)
+            install_plan = json.loads(stdout)
             self.assertEqual(install_plan["refusal"]["code"], "setup_plan_inputs_not_confirmed")
+            self.assertFalse(target.exists())
+
+            code, stdout, stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "installs",
+                    "install",
+                    "plan",
+                    "2.0.77",
+                    "--archive",
+                    str(archive),
+                    "--target",
+                    str(target),
+                    "--id",
+                    "managed-fixture",
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 1, stderr)
+            canonical_plan = json.loads(stdout)
+            self.assertEqual(canonical_plan["operation"], "installs.install.plan")
+            self.assertEqual(canonical_plan["refusal"]["code"], "setup_plan_inputs_not_confirmed")
+            self.assertFalse(target.exists())
+
+            digest = "0" * 64
+            code, stdout, _stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "installs",
+                    "install",
+                    "apply",
+                    "plan.fixture",
+                    "--digest",
+                    digest,
+                    "--confirm",
+                    "APPLY",
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 1)
+            apply_refusal = json.loads(stdout)
+            self.assertEqual(apply_refusal["operation"], "installs.install.apply")
+            self.assertEqual(apply_refusal["refusal"]["code"], "setup_apply_not_authorized")
+            self.assertFalse(target.exists())
+
+            code, _stdout, _stderr = invoke(
+                [
+                    "--workspace",
+                    tmp,
+                    "installs",
+                    "install",
+                    "apply",
+                    "plan.fixture",
+                    "--digest",
+                    digest,
+                    "--confirm",
+                    "apply",
+                    "--json",
+                ]
+            )
+            self.assertEqual(code, 2)
+            self.assertFalse(target.exists())
 
             code, _stdout, stderr = invoke(
                 ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
@@ -425,6 +516,24 @@ class CliTests(unittest.TestCase):
             self.assertEqual(uninstall["status"], "refused")
             self.assertEqual(uninstall["refusal"]["code"], "ownership_denied")
             self.assertFalse(uninstall["mutates_install"])
+
+            for operation in ("repair", "move", "uninstall"):
+                args = ["--workspace", tmp, "installs", operation, "plan", "fixture"]
+                if operation == "move":
+                    args.extend(["--target", str(Path(tmp) / "moved")])
+                args.append("--json")
+                code, stdout, _stderr = invoke(args)
+                self.assertEqual(code, 1)
+                refusal = json.loads(stdout)
+                self.assertEqual(refusal["operation"], f"installs.{operation}.plan")
+                self.assertEqual(refusal["refusal"]["code"], "ownership_denied")
+
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "installs", "recovery", "inspect", "tx.fixture", "--json"]
+            )
+            self.assertEqual(code, 1)
+            recovery = json.loads(stdout)
+            self.assertEqual(recovery["refusal"]["code"], "setup_recovery_not_available")
 
     def test_saves_backup_clone_and_instance_export_are_portable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

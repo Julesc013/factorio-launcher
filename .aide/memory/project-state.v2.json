@@ -89,7 +89,12 @@
     {
       "claim": "Package verification is setup-authoritative",
       "level": "cross-repo tested",
-      "limitation": "authenticity and setup mutation remain unproven"
+      "limitation": "authenticity and live-target setup acceptance remain unproven"
+    },
+    {
+      "claim": "Managed portable install lifecycle",
+      "level": "fixture-proven across 3 repos",
+      "limitation": "ordinary FacMan apply awaits live-target acceptance; no Factorio execution"
     },
     {
       "claim": "Package hashes authenticate publisher",
@@ -123,11 +128,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86",
-    "contracts": 111,
-    "refusal_codes": 213,
-    "registered_routes": 109,
-    "schemas": 217
+    "catalog_digest": "76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222",
+    "contracts": 121,
+    "refusal_codes": 216,
+    "registered_routes": 119,
+    "schemas": 228
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -135,12 +140,12 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "r3.8-steam-external-state-isolation-repair",
+  "current_checkpoint": "m1-managed-portable-install-foundation",
   "current_revisions": {
-    "accepted_integration": "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
+    "accepted_integration": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "universal_launcher": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
-    "universal_setup": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2"
+    "universal_launcher": "c43d390efe0db17480f9d0262827659b4ae242dd",
+    "universal_setup": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
   },
   "execution": {
     "operator_verdict": "Fail",
@@ -154,7 +159,17 @@
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "Universal Launcher and Universal Setup licenses remain NOASSERTION pending an operator legal decision."
   ],
-  "last_closed_work_unit": "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01",
+  "last_closed_work_unit": "M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT",
+  "m1_managed_portable_install": {
+    "authority_promotion": false,
+    "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
+    "implementation_head_revision": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
+    "mutation_scope": "exclusive_fixture_disposable_and_package_proof_roots",
+    "ordinary_setup_apply": "unavailable_pending_live_target_acceptance",
+    "status": "fixture_proven",
+    "universal_launcher_revision": "c43d390efe0db17480f9d0262827659b4ae242dd",
+    "universal_setup_revision": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
+  },
   "machine_protocol": {
     "daemon_transport": "unavailable",
     "status": "implemented",
@@ -282,23 +297,32 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "de6c7c6cfa80c524296066bd6bb90a70ba02b760",
+      "revision": "c43d390efe0db17480f9d0262827659b4ae242dd",
       "source": "universal-launcher"
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
-      "revision": "4855e4f5dd23ae5dfa0d7f23a61ffbf46e1439d2",
+      "revision": "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7",
       "source": "universal-setup"
     }
   },
   "quarantined_capabilities": [
     "run.execute",
-    "setup mutation",
+    "setup mutation outside fixture, disposable, and package-proof roots",
     "network and credential operations",
     "server and developer process execution",
     "daemon publication",
     "release signing, notarization, publication, and publisher authenticity"
   ],
+  "r3_8_public_integration": {
+    "authority_promotion": false,
+    "canonical_main_revision": "53ffbd6e02f098e0eacda9392131592ba421b90a",
+    "closeout_task_head_revision": "cd7d8e5b87e9b7ca487030a9825a0c2a1af02cf1",
+    "dev_closeout_merge_revision": "5caa29f9e504969f8b79fe3e8e2de16fd47c118c",
+    "main_dev_synchronized_at_proof": true,
+    "shared_tree_identity": "70d04edb77525ae43945a2199acda87eaf48a469",
+    "status": "accepted"
+  },
   "r3_8_repair": {
     "authority_promotion": false,
     "dev_integration_revision": "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
@@ -321,12 +345,13 @@
     "Compile, runtime, package, publication, and support status are separate claims."
   ],
   "validation": {
-    "accepted_revision": "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
-    "ci_run": "29276953794",
-    "code_security_run": "29276954155",
-    "native_test_count": 23,
-    "python_test_count": 327,
-    "schema_check_run": "29276954191",
-    "security_policy_run": "29276954062"
+    "accepted_revision": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
+    "ci_run": "29299245206",
+    "code_security_run": "29299245093",
+    "native_test_count": 35,
+    "python_test_count": 337,
+    "release_policy_run": "29299286894",
+    "schema_check_run": "29297933368",
+    "security_policy_run": "29299245082"
   }
 }

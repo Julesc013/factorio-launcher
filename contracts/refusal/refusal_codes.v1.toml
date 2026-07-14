@@ -228,6 +228,27 @@ retryable = false
 message = "Universal Setup did not return typed evaluated inputs, so FacMan cannot claim an install plan."
 
 [[code]]
+id = "setup_lifecycle_fixture_proof_required"
+severity = "blocked"
+effect = "setup_preview"
+retryable = false
+message = "The requested managed lifecycle plan remains unavailable until fixture-backed proof is complete."
+
+[[code]]
+id = "setup_apply_not_authorized"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "Ordinary setup apply is not authorized before fixture proof and separate live-target acceptance."
+
+[[code]]
+id = "setup_recovery_not_available"
+severity = "blocked"
+effect = "setup_preview"
+retryable = true
+message = "No setup-owned recovery report is available through this gateway."
+
+[[code]]
 id = "unsupported_operation"
 severity = "blocked"
 effect = "none"

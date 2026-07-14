@@ -637,6 +637,187 @@
       "visibility": "public"
     },
     {
+      "aliases": [],
+      "availability_refusal_code": "setup_apply_not_authorized",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--confirm",
+            "repeatable": false,
+            "value": "APPLY"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "install",
+          "apply"
+        ],
+        "positionals": [
+          {
+            "name": "plan-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+      },
+      "command_id": "installs.install.apply",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.install.apply.title",
+        "command.installs.install.apply.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_install_apply",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_id",
+          "repeatable": false,
+          "request_field": "plan_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_digest",
+          "repeatable": false,
+          "request_field": "plan_digest",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [
+            "APPLY"
+          ],
+          "default": null,
+          "name": "confirmation",
+          "repeatable": false,
+          "request_field": "confirmation",
+          "required": true,
+          "type": "enum"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_write",
+        "setup_preview"
+      ],
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "installs.install.apply",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_plan_inputs_not_confirmed",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--archive",
+            "repeatable": false,
+            "value": "path"
+          },
+          {
+            "name": "--target",
+            "repeatable": false,
+            "value": "path"
+          },
+          {
+            "name": "--id",
+            "repeatable": false,
+            "value": "install-id"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "install",
+          "plan"
+        ],
+        "positionals": [
+          {
+            "name": "version",
+            "required": true
+          }
+        ],
+        "usage": "facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json"
+      },
+      "command_id": "installs.install.plan",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.install.plan.title",
+        "command.installs.install.plan.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_install_plan",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "version",
+          "repeatable": false,
+          "request_field": "version",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "archive",
+          "repeatable": false,
+          "request_field": "archive",
+          "required": true,
+          "type": "path"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "target_root",
+          "repeatable": false,
+          "request_field": "target_root",
+          "required": true,
+          "type": "path"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        }
+      ],
+      "required_capabilities": [
+        "setup_preview"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "installs.install.plan",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
       "aliases": [
         "installs.install-version"
       ],
@@ -669,7 +850,7 @@
         "usage": "facman installs install-version <version> --archive <path> --json"
       },
       "command_id": "installs.install_version",
-      "deprecation": "active",
+      "deprecation": "deprecated_compatibility",
       "frontend_category": "installs",
       "localization_keys": [
         "command.installs.install_version.title",
@@ -703,6 +884,298 @@
       "risk_tier": "read_only",
       "runtime_id": "installs.install_version",
       "schema": "facman.command.v2",
+      "visibility": "internal_compatibility"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_apply_not_authorized",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--confirm",
+            "repeatable": false,
+            "value": "APPLY"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "move",
+          "apply"
+        ],
+        "positionals": [
+          {
+            "name": "plan-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+      },
+      "command_id": "installs.move.apply",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.move.apply.title",
+        "command.installs.move.apply.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_move_apply",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_id",
+          "repeatable": false,
+          "request_field": "plan_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_digest",
+          "repeatable": false,
+          "request_field": "plan_digest",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [
+            "APPLY"
+          ],
+          "default": null,
+          "name": "confirmation",
+          "repeatable": false,
+          "request_field": "confirmation",
+          "required": true,
+          "type": "enum"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_write",
+        "setup_preview"
+      ],
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "installs.move.apply",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--target",
+            "repeatable": false,
+            "value": "path"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "move",
+          "plan"
+        ],
+        "positionals": [
+          {
+            "name": "install-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs move plan <install-id> --target <path> --json"
+      },
+      "command_id": "installs.move.plan",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.move.plan.title",
+        "command.installs.move.plan.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_move_plan",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "target_root",
+          "repeatable": false,
+          "request_field": "target_root",
+          "required": true,
+          "type": "path"
+        }
+      ],
+      "required_capabilities": [
+        "setup_preview"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "installs.move.plan",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_apply_not_authorized",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--confirm",
+            "repeatable": false,
+            "value": "APPLY"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "recovery",
+          "apply"
+        ],
+        "positionals": [
+          {
+            "name": "plan-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+      },
+      "command_id": "installs.recovery.apply",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.recovery.apply.title",
+        "command.installs.recovery.apply.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_recovery_apply",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_id",
+          "repeatable": false,
+          "request_field": "plan_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_digest",
+          "repeatable": false,
+          "request_field": "plan_digest",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [
+            "APPLY"
+          ],
+          "default": null,
+          "name": "confirmation",
+          "repeatable": false,
+          "request_field": "confirmation",
+          "required": true,
+          "type": "enum"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_write",
+        "setup_preview"
+      ],
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "installs.recovery.apply",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_recovery_not_available",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "recovery",
+          "inspect"
+        ],
+        "positionals": [
+          {
+            "name": "transaction-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs recovery inspect <transaction-id> --json"
+      },
+      "command_id": "installs.recovery.inspect",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.recovery.inspect.title",
+        "command.installs.recovery.inspect.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_recovery_inspect",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": true,
+          "type": "identifier"
+        }
+      ],
+      "required_capabilities": [
+        "setup_preview"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "installs.recovery.inspect",
+      "schema": "facman.command.v2",
       "visibility": "public"
     },
     {
@@ -731,7 +1204,7 @@
         "usage": "facman installs repair <install-id> --json"
       },
       "command_id": "installs.repair",
-      "deprecation": "active",
+      "deprecation": "deprecated_compatibility",
       "frontend_category": "installs",
       "localization_keys": [
         "command.installs.repair.title",
@@ -756,6 +1229,159 @@
       ],
       "risk_tier": "read_only",
       "runtime_id": "installs.repair",
+      "schema": "facman.command.v2",
+      "visibility": "internal_compatibility"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_apply_not_authorized",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--confirm",
+            "repeatable": false,
+            "value": "APPLY"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "repair",
+          "apply"
+        ],
+        "positionals": [
+          {
+            "name": "plan-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+      },
+      "command_id": "installs.repair.apply",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.repair.apply.title",
+        "command.installs.repair.apply.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_repair_apply",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_id",
+          "repeatable": false,
+          "request_field": "plan_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_digest",
+          "repeatable": false,
+          "request_field": "plan_digest",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [
+            "APPLY"
+          ],
+          "default": null,
+          "name": "confirmation",
+          "repeatable": false,
+          "request_field": "confirmation",
+          "required": true,
+          "type": "enum"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_write",
+        "setup_preview"
+      ],
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "installs.repair.apply",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--archive",
+            "repeatable": false,
+            "value": "path"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "repair",
+          "plan"
+        ],
+        "positionals": [
+          {
+            "name": "install-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs repair plan <install-id> --archive <path> --json"
+      },
+      "command_id": "installs.repair.plan",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.repair.plan.title",
+        "command.installs.repair.plan.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_repair_plan",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "archive",
+          "repeatable": false,
+          "request_field": "archive",
+          "required": false,
+          "type": "path"
+        }
+      ],
+      "required_capabilities": [
+        "setup_preview"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "installs.repair.plan",
       "schema": "facman.command.v2",
       "visibility": "public"
     },
@@ -835,7 +1461,7 @@
         "usage": "facman installs uninstall <install-id> --json"
       },
       "command_id": "installs.uninstall",
-      "deprecation": "active",
+      "deprecation": "deprecated_compatibility",
       "frontend_category": "installs",
       "localization_keys": [
         "command.installs.uninstall.title",
@@ -860,6 +1486,145 @@
       ],
       "risk_tier": "read_only",
       "runtime_id": "installs.uninstall",
+      "schema": "facman.command.v2",
+      "visibility": "internal_compatibility"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_apply_not_authorized",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--digest",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--confirm",
+            "repeatable": false,
+            "value": "APPLY"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "uninstall",
+          "apply"
+        ],
+        "positionals": [
+          {
+            "name": "plan-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs uninstall apply <plan-id> --digest <sha256> --confirm <APPLY> --json"
+      },
+      "command_id": "installs.uninstall.apply",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.uninstall.apply.title",
+        "command.installs.uninstall.apply.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_uninstall_apply",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_id",
+          "repeatable": false,
+          "request_field": "plan_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_digest",
+          "repeatable": false,
+          "request_field": "plan_digest",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [
+            "APPLY"
+          ],
+          "default": null,
+          "name": "confirmation",
+          "repeatable": false,
+          "request_field": "confirmation",
+          "required": true,
+          "type": "enum"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_write",
+        "setup_preview"
+      ],
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "installs.uninstall.apply",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "setup_lifecycle_fixture_proof_required",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "installs",
+          "uninstall",
+          "plan"
+        ],
+        "positionals": [
+          {
+            "name": "install-id",
+            "required": true
+          }
+        ],
+        "usage": "facman installs uninstall plan <install-id> --json"
+      },
+      "command_id": "installs.uninstall.plan",
+      "deprecation": "active",
+      "frontend_category": "installs",
+      "localization_keys": [
+        "command.installs.uninstall.plan.title",
+        "command.installs.uninstall.plan.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "installs_uninstall_plan",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "install_id",
+          "repeatable": false,
+          "request_field": "install_id",
+          "required": true,
+          "type": "identifier"
+        }
+      ],
+      "required_capabilities": [
+        "setup_preview"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "installs.uninstall.plan",
       "schema": "facman.command.v2",
       "visibility": "public"
     },
@@ -7376,5 +8141,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "43fc28256c3b14c6d4fb0c4bd7ea48fed33515878788117bc2a15e0c42f7da86"
+  "source_digest": "76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222"
 }

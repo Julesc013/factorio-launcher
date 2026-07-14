@@ -54,6 +54,7 @@ ENUM_CHOICES: dict[str, list[str]] = {
     "preferred_transport": ["direct", "process", "daemon"],
     "selection_mode": ["none", "load-save", "benchmark-save"],
     "window_mode": ["windowed", "fullscreen"],
+    "confirmation": ["APPLY"],
 }
 
 
@@ -86,6 +87,12 @@ APPLICATION_ID_OVERRIDES = {
     "workspace.migration.inspect": "migration_inspect",
     "workspace.migration.plan": "migration_plan",
     "workspace.migration.apply": "migration_apply",
+}
+
+LEGACY_SETUP_COMMANDS = {
+    "installs.install_version",
+    "installs.repair",
+    "installs.uninstall",
 }
 
 
@@ -274,7 +281,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
     effects = [str(value) for value in item.get("effects", [])]
     writes = "workspace_write" in effects
     executes = "process_execute" in effects
-    deprecated = runtime_id in {"setup.operation", "utility.operation"}
+    deprecated = runtime_id in {"setup.operation", "utility.operation"} | LEGACY_SETUP_COMMANDS
     grammar = cli_grammar(item)
     return {
         "schema": "facman.command.v2",
@@ -372,7 +379,7 @@ def render_winforms_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         "            List<CommandDefinition> commands = new List<CommandDefinition>();",
     ]
     for item in commands:
-        if not item["registered"]:
+        if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
         metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
         availability = runtime_availability(item)
@@ -435,7 +442,7 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
         "    dispatch_once(&onceToken, ^{ catalog = @[",
     ]
     for item in commands:
-        if not item["registered"]:
+        if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
         metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
         availability = runtime_availability(item)
@@ -527,7 +534,7 @@ def render_tui_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         "inline constexpr GeneratedCommand kGeneratedCommands[] = {",
     ]
     for item in commands:
-        if not item["registered"]:
+        if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
         metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
         values = [
@@ -559,7 +566,7 @@ def render_english_strings(commands: list[dict[str, Any]]) -> str:
         "risk_setup_mutation": "Setup mutation", "risk_blocked": "Blocked",
     }
     for item in commands:
-        if not item["registered"]:
+        if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
         runtime_id = str(item["runtime_id"])
         base[f"command.{runtime_id}.title"] = humanize(str(item["command_id"]))
@@ -848,7 +855,19 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         "application_writes": "\n".join(application_writes),
         "application_request_contracts": "\n".join(application_request_contracts),
         "grammar_json": json.dumps({"schema": "facman.command_cli_grammar.v2", "source_digest": digest, "commands": grammars}, indent=2, sort_keys=True) + "\n",
-        "frontend_json": json.dumps({"schema": "facman.frontend_command_catalog.v1", "source_digest": digest, "commands": [value for value in catalog_commands if value["registered"]]}, indent=2, sort_keys=True) + "\n",
+        "frontend_json": json.dumps(
+            {
+                "schema": "facman.frontend_command_catalog.v1",
+                "source_digest": digest,
+                "commands": [
+                    value
+                    for value in catalog_commands
+                    if value["registered"] and value["runtime_id"] not in LEGACY_SETUP_COMMANDS
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        ) + "\n",
     }
     appkit_header, appkit_implementation = render_appkit_catalog(commands, digest)
     rendered.update({

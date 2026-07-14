@@ -1,0 +1,11 @@
+{
+  "schema": "facman.command_golden.v1",
+  "command": "installs.recovery.inspect",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "setup_recovery_not_available",
+    "reason": "No setup-owned recovery report is available through the FacMan gateway.",
+    "recoverable": true
+  }
+}

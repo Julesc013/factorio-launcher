@@ -103,7 +103,7 @@ def main() -> int:
 
 def tracked_files() -> list[Path]:
     completed = subprocess.run(
-        ["git", "ls-files"],
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
         cwd=ROOT,
         check=True,
         text=True,

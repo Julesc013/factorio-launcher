@@ -361,6 +361,16 @@ bool decode_service_request(
     switch (command) {
     case CommandId::package_verify: allowed = {"path"}; break;
     case CommandId::installs_install_version: allowed = {"version", "archive"}; break;
+    case CommandId::installs_install_plan: allowed = {"version", "archive", "target_root", "install_id"}; break;
+    case CommandId::installs_install_apply:
+    case CommandId::installs_repair_apply:
+    case CommandId::installs_move_apply:
+    case CommandId::installs_uninstall_apply:
+    case CommandId::installs_recovery_apply: allowed = {"plan_id", "plan_digest", "confirmation"}; break;
+    case CommandId::installs_repair_plan: allowed = {"install_id", "archive"}; break;
+    case CommandId::installs_move_plan: allowed = {"install_id", "target_root"}; break;
+    case CommandId::installs_uninstall_plan: allowed = {"install_id"}; break;
+    case CommandId::installs_recovery_inspect: allowed = {"transaction_id"}; break;
     case CommandId::installs_verify:
     case CommandId::installs_repair:
     case CommandId::installs_uninstall: allowed = {"id"}; break;
@@ -387,13 +397,39 @@ bool decode_service_request(
         !optional_string(payload, "path", typed.path, detail) ||
         !optional_string(payload, "query", typed.query, detail) ||
         !optional_string(payload, "version", typed.version, detail) ||
-        !optional_string(payload, "archive", typed.archive, detail)) return false;
+        !optional_string(payload, "archive", typed.archive, detail) ||
+        !optional_string(payload, "target_root", typed.target_root, detail) ||
+        !optional_string(payload, "install_id", typed.install_id, detail) ||
+        !optional_string(payload, "plan_id", typed.plan_id, detail) ||
+        !optional_string(payload, "plan_digest", typed.plan_digest, detail) ||
+        !optional_string(payload, "confirmation", typed.confirmation, detail) ||
+        !optional_string(payload, "transaction_id", typed.transaction_id, detail)) return false;
     if (command == CommandId::installs_install_version && typed.version.empty()) {
         detail = "request payload is missing non-empty string field: version"; return false;
     }
     if ((command == CommandId::installs_verify || command == CommandId::installs_repair || command == CommandId::installs_uninstall ||
          command == CommandId::servers_start || command == CommandId::servers_stop || command == CommandId::servers_rcon) && typed.id.empty()) {
         detail = "request payload is missing non-empty string field: id"; return false;
+    }
+    if (command == CommandId::installs_install_plan &&
+        (typed.version.empty() || typed.archive.empty() || typed.target_root.empty() || typed.install_id.empty())) {
+        detail = "installs.install.plan requires version, archive, target_root, and install_id"; return false;
+    }
+    if ((command == CommandId::installs_repair_plan || command == CommandId::installs_move_plan ||
+         command == CommandId::installs_uninstall_plan) && typed.install_id.empty()) {
+        detail = "managed lifecycle plan requires a non-empty install_id"; return false;
+    }
+    if (command == CommandId::installs_move_plan && typed.target_root.empty()) {
+        detail = "installs.move.plan requires a non-empty target_root"; return false;
+    }
+    if (command == CommandId::installs_recovery_inspect && typed.transaction_id.empty()) {
+        detail = "installs.recovery.inspect requires a non-empty transaction_id"; return false;
+    }
+    if ((command == CommandId::installs_install_apply || command == CommandId::installs_repair_apply ||
+         command == CommandId::installs_move_apply || command == CommandId::installs_uninstall_apply ||
+         command == CommandId::installs_recovery_apply) &&
+        (typed.plan_id.empty() || typed.plan_digest.empty() || typed.confirmation != "APPLY")) {
+        detail = "setup apply requires a plan_id, plan_digest, and exact APPLY confirmation"; return false;
     }
     if (command == CommandId::servers_create && (typed.name.empty() || typed.instance_id.empty())) {
         detail = "servers.create requires non-empty name and instance_id fields"; return false;
@@ -536,10 +572,20 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         request.payload = std::move(typed); return true;
     }
     case CommandId::package_verify:
+    case CommandId::installs_install_plan:
+    case CommandId::installs_install_apply:
     case CommandId::installs_install_version:
     case CommandId::installs_verify:
+    case CommandId::installs_repair_plan:
+    case CommandId::installs_repair_apply:
     case CommandId::installs_repair:
+    case CommandId::installs_move_plan:
+    case CommandId::installs_move_apply:
+    case CommandId::installs_uninstall_plan:
+    case CommandId::installs_uninstall_apply:
     case CommandId::installs_uninstall:
+    case CommandId::installs_recovery_inspect:
+    case CommandId::installs_recovery_apply:
     case CommandId::mods_search:
     case CommandId::mods_install:
     case CommandId::mods_update:

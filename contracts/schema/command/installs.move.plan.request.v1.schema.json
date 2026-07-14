@@ -1,0 +1,22 @@
+{
+  "$id": "https://facman.invalid/schema/command/installs.move.plan.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "install_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "target_root": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "install_id",
+    "target_root"
+  ],
+  "title": "installs.move.plan request",
+  "type": "object"
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "facman.factorio.setup_recipe.v1",
+  "recipe_id": "facman.factorio.windows_zip.portable",
+  "recipe_version": 1,
+  "product_id": "factorio",
+  "source": {
+    "kind": "local_archive",
+    "archive_format": "zip",
+    "archive_digest_binding": "exact_sha256_at_plan",
+    "distribution_origin": "official_manual_archive_candidate"
+  },
+  "root_selection": {
+    "policy": "exactly_one_application_root",
+    "accepted_layouts": ["flat", "single_prefix"],
+    "strip_prefix_policy": "strip_selected_application_root_only"
+  },
+  "required_paths": [
+    "bin/x64/factorio.exe",
+    "data/base/info.json"
+  ],
+  "forbidden_path_prefixes": [
+    "config/player-data.json",
+    "mods/",
+    "saves/"
+  ],
+  "components": [
+    {
+      "id": "base",
+      "required": true,
+      "marker": "data/base/info.json"
+    },
+    {
+      "id": "space-age",
+      "required": false,
+      "marker": "data/space-age/info.json"
+    }
+  ],
+  "entrypoints": [
+    {
+      "id": "primary",
+      "relative_path": "bin/x64/factorio.exe",
+      "role": "application"
+    }
+  ],
+  "target_scope": "portable",
+  "post_stage_verification": {
+    "required_paths": [
+      "bin/x64/factorio.exe",
+      "data/base/info.json"
+    ],
+    "version_probe": {
+      "kind": "json_string",
+      "relative_path": "data/base/info.json",
+      "json_pointer": "/version",
+      "execution_allowed": false
+    },
+    "capability_probes": [
+      {
+        "capability": "space-age",
+        "kind": "path_exists",
+        "relative_path": "data/space-age/info.json"
+      }
+    ],
+    "strict_isolation_classification": "candidate_unproven_until_live_h1"
+  },
+  "installed_state_schema": "usk.installed_state.v1",
+  "authority": {
+    "network": false,
+    "credentials": false,
+    "registry": false,
+    "elevation": false,
+    "package_manager": false,
+    "installer_execution": false,
+    "shell_commands": false,
+    "post_install_hooks": false,
+    "steam_mutation": false,
+    "factorio_execution": false
+  }
+}

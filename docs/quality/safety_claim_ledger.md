@@ -31,7 +31,8 @@ reported as stronger runtime evidence.
 | Windows x64 static CLI package runs after relocation | host-tested built artifact | strict profile/component/lock verification and relocation matrix | local Windows x64 only; unsigned and unpublished |
 | Linux x64 CLI tarball runs after relocation | target CI proven | ELF allowlist, archive, read-only and relocation matrix | Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished |
 | macOS x64 CLI tarball runs after relocation | target CI proven | Mach-O, deployment, integrity, relocation | Intel runner and target 13.0 only; no Apple Silicon, AppKit runtime, signing, or publication claim |
-| Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and setup mutation remain unproven |
+| Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and live-target setup acceptance remain unproven |
+| Managed portable install lifecycle | fixture-proven across 3 repos | synthetic install, verify, move, repair, uninstall, recovery, and reference refresh | ordinary FacMan apply awaits live-target acceptance; no Factorio execution |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, licenses, identities, and digests | provider licenses are `NOASSERTION`; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |

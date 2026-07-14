@@ -1,13 +1,13 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "r3.7"
-current_checkpoint = "r3.8-steam-external-state-isolation-repair"
+current_checkpoint = "m1-managed-portable-install-foundation"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
-accepted_integration_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
+accepted_integration_revision = "10b1caa915ed4ad5e934f625f3e1384ecc700eaa"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
 active_work_unit = ""
-last_closed_work_unit = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
+last_closed_work_unit = "M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT"
 next_authority_gate = "H1"
 safe_beta = false
 
@@ -20,7 +20,7 @@ known_blockers = [
 
 quarantined_capabilities = [
   "run.execute",
-  "setup mutation",
+  "setup mutation outside fixture, disposable, and package-proof roots",
   "network and credential operations",
   "server and developer process execution",
   "daemon publication",
@@ -35,6 +35,25 @@ operator_verdict = "Fail"
 standalone_manual_isolation = "unproven"
 authority_promotion = false
 
+[r3_8_public_integration]
+status = "accepted"
+closeout_task_head_revision = "cd7d8e5b87e9b7ca487030a9825a0c2a1af02cf1"
+dev_closeout_merge_revision = "5caa29f9e504969f8b79fe3e8e2de16fd47c118c"
+canonical_main_revision = "53ffbd6e02f098e0eacda9392131592ba421b90a"
+shared_tree_identity = "70d04edb77525ae43945a2199acda87eaf48a469"
+main_dev_synchronized_at_proof = true
+authority_promotion = false
+
+[m1_managed_portable_install]
+status = "fixture_proven"
+implementation_head_revision = "2f13923a9cbdd60d47cab114ba1e280282259bb5"
+dev_integration_revision = "10b1caa915ed4ad5e934f625f3e1384ecc700eaa"
+universal_launcher_revision = "c43d390efe0db17480f9d0262827659b4ae242dd"
+universal_setup_revision = "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7"
+mutation_scope = "exclusive_fixture_disposable_and_package_proof_roots"
+ordinary_setup_apply = "unavailable_pending_live_target_acceptance"
+authority_promotion = false
+
 [execution]
 status = "unavailable"
 reason = "steam_external_state_not_isolated"
@@ -47,10 +66,11 @@ authenticity = "not_proven_unsigned"
 public_sdk = "experimental_installed"
 
 [validation]
-accepted_revision = "f10aef03517a86a7c9d6afaf8b75c19549b6fa51"
-ci_run = "29276953794"
-code_security_run = "29276954155"
-security_policy_run = "29276954062"
-schema_check_run = "29276954191"
-native_test_count = 23
-python_test_count = 327
+accepted_revision = "2f13923a9cbdd60d47cab114ba1e280282259bb5"
+ci_run = "29299245206"
+code_security_run = "29299245093"
+security_policy_run = "29299245082"
+schema_check_run = "29297933368"
+release_policy_run = "29299286894"
+native_test_count = 35
+python_test_count = 337

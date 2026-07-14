@@ -5,6 +5,7 @@
 #define FACMAN_FACTORIO_SETUP_GATEWAY_H
 
 #include "fl_result.h"
+#include "flb_factorio_setup_recipe.h"
 
 #include <cstdint>
 #include <filesystem>
@@ -34,8 +35,15 @@ struct InstallPlanRequest {
 };
 
 struct InstallPlan {
+    bool archive_inspected = false;
+    bool product_layout_verified = false;
     bool inputs_confirmed = false;
     std::string provider_response;
+};
+
+struct FactorioArchiveInspectRequest {
+    std::string version;
+    std::filesystem::path archive;
 };
 
 struct SetupRefusal {
@@ -47,6 +55,8 @@ class SetupGateway {
 public:
     virtual ~SetupGateway() = default;
     virtual facman::core::Result<PackageVerifyResult> verify_package(const PackageVerifyRequest& request) = 0;
+    virtual facman::core::Result<facman::factorio::setup::ArchiveAssessment> inspect_install_archive(
+        const FactorioArchiveInspectRequest& request) = 0;
     virtual facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest& request) = 0;
     virtual facman::core::Result<SetupRefusal> verify_install(const std::string& install_id) = 0;
     virtual facman::core::Result<SetupRefusal> repair_install(const std::string& install_id) = 0;
