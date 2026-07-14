@@ -215,7 +215,7 @@ execution_authority = false
 h1_inference = "none"
 
 [m2_wu6_launcher_handoff]
-status = "provider_integrated_local_handoff_proven_pending_dev_integration"
+status = "accepted_dev_integration_proof_pending_operator_verdict"
 active_work_unit = ""
 universal_launcher_task_revision = "43115d50822ac5a3ab0c51801873ff9a230408dd"
 universal_launcher_main_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
@@ -229,6 +229,14 @@ launcher_can_mutate_setup = false
 setup_mutation_owner = "universal-setup"
 focused_native_test_count = 6
 facman_provider_integration_revision = "480a58ca4c10b82cf81034e00139cb78f73914bd"
+facman_task_head_revision = "f0b27c2e7f2117f9df0a98edb2264608ab75b664"
+facman_task_tree = "12160f23f78095ab09f8b5fe91960bad87a967c7"
+facman_pull_request = "20"
+facman_dev_integration_revision = "8c1ed53511332da2d9c2fbf04abb2d5e91c4df6c"
+facman_dev_tree = "12160f23f78095ab09f8b5fe91960bad87a967c7"
+facman_dev_ci_run = "29344174316"
+facman_dev_codeql_run = "29344174402"
+facman_dev_security_policy_run = "29344174517"
 native_test_count = 41
 python_test_count = 339
 python_opt_in_skip_count = 1

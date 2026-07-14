@@ -133,9 +133,9 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222",
+    "catalog_digest": "837929297b544fd140a94de62caadab24aa139118ccd95be6893584e5ef5869f",
     "contracts": 121,
-    "refusal_codes": 216,
+    "refusal_codes": 217,
     "registered_routes": 119,
     "schemas": 228
   },
@@ -425,7 +425,15 @@
     "dependent_instance_status": "managed_install_recovery_required",
     "execution_authority": false,
     "facman_binding_abi_version": "1.3",
+    "facman_dev_ci_run": "29344174316",
+    "facman_dev_codeql_run": "29344174402",
+    "facman_dev_integration_revision": "8c1ed53511332da2d9c2fbf04abb2d5e91c4df6c",
+    "facman_dev_security_policy_run": "29344174517",
+    "facman_dev_tree": "12160f23f78095ab09f8b5fe91960bad87a967c7",
     "facman_provider_integration_revision": "480a58ca4c10b82cf81034e00139cb78f73914bd",
+    "facman_pull_request": "20",
+    "facman_task_head_revision": "f0b27c2e7f2117f9df0a98edb2264608ab75b664",
+    "facman_task_tree": "12160f23f78095ab09f8b5fe91960bad87a967c7",
     "factorio_archive_acceptance": "unavailable",
     "focused_native_test_count": 6,
     "h1_inference": "none",
@@ -446,7 +454,7 @@
     "required_windows_package_tests": 14,
     "sbom_sha256": "0f35b6be81e81fedcc2e12268c8192f752eca4f283d54856d604e3a916ffa722",
     "setup_mutation_owner": "universal-setup",
-    "status": "provider_integrated_local_handoff_proven_pending_dev_integration",
+    "status": "accepted_dev_integration_proof_pending_operator_verdict",
     "universal_launcher_main_ci_run": "29337737777",
     "universal_launcher_main_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
     "universal_launcher_task_revision": "43115d50822ac5a3ab0c51801873ff9a230408dd"

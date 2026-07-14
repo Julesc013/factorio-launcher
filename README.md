@@ -55,7 +55,7 @@ FacMan ships as the first serious Factorio product binding.
 ## Current Status
 
 R3.7 is complete and `eb629caaec9d62536a272336e940c0d3003fdaae` is the exact H1 candidate.
-The current contract surface contains 121 commands, 228 schemas, and 216 refusal codes.
+The current contract surface contains 121 commands, 228 schemas, and 217 refusal codes.
 
 The next authority gate is **H1**. `run.execute` remains `unavailable` with `steam_external_state_not_isolated`.
 The operator verdict is `Fail` and Safe beta remains unpromoted.

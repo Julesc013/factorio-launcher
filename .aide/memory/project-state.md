@@ -29,7 +29,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - M2-WU3 live evidence: `accepted_dev_integration_proof` at Universal Setup main `fbbeb762f25921ae05945206fd0c004a52239c13`; operator verdict: `pending`; automated verdict authority: `false`.
 - M2-WU4 live acceptance: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Setup main `9b8196437e41e45bd8d5a613246dabe5b8cdb968`; run: `m2wu4-20260714-01`; operator verdict: `pending`.
 - M2-WU5 interruption recovery: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Setup main `e1ce68e9593ae8d9a35cc0821b5e42c798524453`; run: `m2wu5-20260714-01`; operator verdict: `pending`.
-- M2-WU6 Launcher handoff: `provider_integrated_local_handoff_proven_pending_dev_integration` at Universal Launcher main `7bd4425f0c35414f738159b45d8bec42edf70235`; recovery status: `managed_install_recovery_required`; operator verdict: `pending`.
+- M2-WU6 Launcher handoff: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Launcher main `7bd4425f0c35414f738159b45d8bec42edf70235`; recovery status: `managed_install_recovery_required`; operator verdict: `pending`.
 - Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
@@ -39,8 +39,8 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is in
 - command contracts: `121`;
 - registered routes: `119`;
 - schemas: `228`;
-- refusal codes: `216`;
-- command catalog digest: `76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222`;
+- refusal codes: `217`;
+- command catalog digest: `837929297b544fd140a94de62caadab24aa139118ccd95be6893584e5ef5869f`;
 - accepted CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - CI / CodeQL / security / schema runs: `29299245206` / `29299245093` / `29299245082` / `29297933368`;
 - accepted matrix counts: `35` native and `337` Python tests.
