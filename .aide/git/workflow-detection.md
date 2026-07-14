@@ -4,7 +4,7 @@
 - generated_by: aide-lite
 - non_mutating: true
 - current_branch: task/m2-wu3-live-target-evidence
-- current_commit: 178de3192f3c99f2d26c0c65568f2b854b51ff90
+- current_commit: 461251d7fd3d73e904df3d7040999588d6cd7725
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
