@@ -28,8 +28,8 @@ items:
     task: .aide/queue/active/M2-WU2-PUBLIC-SETUP-LIFECYCLE-01/task.yaml
     evidence: .aide/queue/active/M2-WU2-PUBLIC-SETUP-LIFECYCLE-01/evidence
   - id: M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: M2 live-target evidence packet
     task: .aide/queue/active/M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01/task.yaml
     evidence: .aide/queue/active/M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01/evidence
