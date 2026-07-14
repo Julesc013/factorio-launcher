@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -155,7 +155,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu8-generated-frontend-workflow",
+  "current_checkpoint": "m2-wu9-cross-platform-adversarial-proof",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",

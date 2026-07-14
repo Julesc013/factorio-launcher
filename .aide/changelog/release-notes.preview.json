@@ -1,222 +1,6 @@
 {
   "follow_up": [
     {
-      "commit": "b1fd720013ed",
-      "summary": "Close package-license inclusion and produce a dedicated reproducibility checkpoint."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "Close package-license inclusion and produce a dedicated reproducibility checkpoint."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "Close package-license inclusion and produce a dedicated reproducibility checkpoint."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "Close package-license inclusion and produce a dedicated reproducibility checkpoint."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "Close package-license inclusion and produce a dedicated reproducibility checkpoint."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "Close package-license inclusion and produce a dedicated reproducibility checkpoint."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Produce and checkpoint exact clean package, SBOM, and provenance identities."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Produce and checkpoint exact clean package, SBOM, and provenance identities."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Produce and checkpoint exact clean package, SBOM, and provenance identities."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Produce and checkpoint exact clean package, SBOM, and provenance identities."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Produce and checkpoint exact clean package, SBOM, and provenance identities."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "Complete the clean package and reproducibility proof."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "Complete the clean package and reproducibility proof."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "Complete the clean package and reproducibility proof."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "Complete the clean package and reproducibility proof."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Complete package reproducibility proof and bind the license checkpoint."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Complete package reproducibility proof and bind the license checkpoint."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Complete package reproducibility proof and bind the license checkpoint."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Complete package reproducibility proof and bind the license checkpoint."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Complete package reproducibility proof and bind the license checkpoint."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Merge this evidence-preserving series to dev and begin M2 live-target policy work."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Merge this evidence-preserving series to dev and begin M2 live-target policy work."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Merge this evidence-preserving series to dev and begin M2 live-target policy work."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Merge this evidence-preserving series to dev and begin M2 live-target policy work."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Merge this evidence-preserving series to dev and begin M2 live-target policy work."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "Push the remediation and verify the replacement CI/CodeQL/security runs."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "Push the remediation and verify the replacement CI/CodeQL/security runs."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "Push the remediation and verify the replacement CI/CodeQL/security runs."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "Push the remediation and verify the replacement CI/CodeQL/security runs."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "Add target classes, evidence schema, fail-closed evaluator, and adversarial policy tests in Universal Setup."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "Add target classes, evidence schema, fail-closed evaluator, and adversarial policy tests in Universal Setup."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "Add target classes, evidence schema, fail-closed evaluator, and adversarial policy tests in Universal Setup."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "Add target classes, evidence schema, fail-closed evaluator, and adversarial policy tests in Universal Setup."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "Rebuild the pinned three-repository package, record deterministic evidence, and close M2-WU1."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "Rebuild the pinned three-repository package, record deterministic evidence, and close M2-WU1."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "Rebuild the pinned three-repository package, record deterministic evidence, and close M2-WU1."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Merge the fully green branch to dev, bind its exact workflows, then open M2-WU2."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Merge the fully green branch to dev, bind its exact workflows, then open M2-WU2."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Merge the fully green branch to dev, bind its exact workflows, then open M2-WU2."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Merge the fully green branch to dev, bind its exact workflows, then open M2-WU2."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "Add strict public request/result contracts and connect descriptor handlers to the existing lifecycle kernel."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "Add strict public request/result contracts and connect descriptor handlers to the existing lifecycle kernel."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "Add strict public request/result contracts and connect descriptor handlers to the existing lifecycle kernel."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "Add strict public request/result contracts and connect descriptor handlers to the existing lifecycle kernel."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "Run full package and clean three-repository proof, then close WU2 into dev."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "Run full package and clean three-repository proof, then close WU2 into dev."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "Run full package and clean three-repository proof, then close WU2 into dev."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "Produce immutable package and clean-workspace evidence at this committed truth revision."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "Produce immutable package and clean-workspace evidence at this committed truth revision."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "Produce immutable package and clean-workspace evidence at this committed truth revision."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Produce clean reconstruction and package identities at this exact provider pin."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Produce clean reconstruction and package identities at this exact provider pin."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Produce clean reconstruction and package identities at this exact provider pin."
-    },
-    {
-      "commit": "316ee8efec5b",
-      "summary": "Rerun the complete 339-case Python corpus and all WU2 package evidence at the final task head."
-    },
-    {
       "commit": "129f70d13058",
       "summary": "Review and close the implementation WorkUnit, merge it to dev, and bind exact hosted workflow identities separately."
     },
@@ -331,86 +115,113 @@
     {
       "commit": "d746454ca850",
       "summary": "Close the WU6 task, publish its PR, and bind exact-dev workflows after merge."
+    },
+    {
+      "commit": "f0b27c2e7f21",
+      "summary": "Publish and merge WU6 through exact-head CI, then bind the immutable dev evidence."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
+    },
+    {
+      "commit": "a64037693f4b",
+      "summary": "Complete and integrate the WU7 Factorio workflow candidate."
+    },
+    {
+      "commit": "952c46a629f0",
+      "summary": "Run the complete native, Python, strict, package, and reproducibility matrix."
+    },
+    {
+      "commit": "952c46a629f0",
+      "summary": "Run the complete native, Python, strict, package, and reproducibility matrix."
+    },
+    {
+      "commit": "00ca569368dd",
+      "summary": "Repeat the complete Python matrix, then package and reproducibility proof."
+    },
+    {
+      "commit": "00ca569368dd",
+      "summary": "Repeat the complete Python matrix, then package and reproducibility proof."
+    },
+    {
+      "commit": "0e50b6fe0e90",
+      "summary": "Regenerate final package identities at this closeout state, then open a reviewed dev PR."
+    },
+    {
+      "commit": "0e50b6fe0e90",
+      "summary": "Regenerate final package identities at this closeout state, then open a reviewed dev PR."
+    },
+    {
+      "commit": "526d6f5a2d1c",
+      "summary": "Publish the reviewed WU7 branch and merge it to dev after exact-head workflows pass."
+    },
+    {
+      "commit": "1b029ead969e",
+      "summary": "Generate the clean task-to-dev landing plan, push, and open the reviewed PR."
+    },
+    {
+      "commit": "d3b5458645e2",
+      "summary": "Generate and consume the shared setup-review workflow contract across all four clients."
+    },
+    {
+      "commit": "d3b5458645e2",
+      "summary": "Generate and consume the shared setup-review workflow contract across all four clients."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
+    },
+    {
+      "commit": "6ca7e62889f6",
+      "summary": "Rerun the complete 340-test corpus against regenerated truth and produce the zero-skip package proof."
+    },
+    {
+      "commit": "6ca7e62889f6",
+      "summary": "Rerun the complete 340-test corpus against regenerated truth and produce the zero-skip package proof."
+    },
+    {
+      "commit": "d59d22a27b08",
+      "summary": "Rerun the complete Python corpus and package proof from the remediated task head."
+    },
+    {
+      "commit": "d59d22a27b08",
+      "summary": "Rerun the complete Python corpus and package proof from the remediated task head."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
+    },
+    {
+      "commit": "d40596f0654b",
+      "summary": "Push the task branch and open the reviewed task-to-dev pull request."
     }
   ],
   "highlights": [
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "b1fd720013ed",
-      "subject": "chore(license): bind Universal MIT provider truth",
-      "summary": "verify exact provider notice digests and source identities."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "71dacb277dc8",
-      "subject": "fix(package): retain Universal MIT notices in every profile",
-      "summary": "prevent SBOM/package claims without retained provider notices."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "c253e05d882c",
-      "subject": "fix(io): preserve transactions beyond MAX_PATH",
-      "summary": "long-path operations retain no-follow, no-clobber, and identity checks."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "0b4e1688b4fc",
-      "subject": "docs(release): accept Universal MIT reproducibility proof",
-      "summary": "retain unsigned/unpublished and no-authority boundaries explicitly."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "df0e42b6131f",
-      "subject": "chore(m2): open live-target policy WorkUnit",
-      "summary": "ordinary live apply remains unavailable and execution authority remains false."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "dfa0d8ad3c4c",
-      "subject": "chore(m2): bind target policy provider integration",
-      "summary": "no live mutation authority is enabled by this pin update."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "b1a1795c90e2",
-      "subject": "docs(m2): close the live target policy WorkUnit",
-      "summary": "mutation authority remains false and the human verdict remains pending."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "effce1f71784",
-      "subject": "chore(m2): open public setup lifecycle WorkUnit",
-      "summary": "plan remains read-only, apply remains exact-plan-gated, and the human verdict remains pending."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "cfb70ab88de3",
-      "subject": "chore(m2): pin the public lifecycle provider",
-      "summary": "no target or execution authority is promoted by the pin alone."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "57b175ab9378",
-      "subject": "chore(m2): reconcile public lifecycle truth",
-      "summary": "ordinary live apply, execution, H1, signing, and publication remain unavailable."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "d16e71357f13",
-      "subject": "fix(m2): bind the stable capacity provider",
-      "summary": "actual current capacity is still revalidated and insufficient space still refuses."
-    },
     {
       "breaking": false,
       "category": "Security",
@@ -441,24 +252,38 @@
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "df0e42b6131f",
-      "subject": "chore(m2): open live-target policy WorkUnit",
-      "summary": "explicit M2 live portable setup state with a pending human gate."
+      "category": "Security",
+      "commit": "99f8cd8319ad",
+      "subject": "feat(setup): route Factorio installs through target-bound planning",
+      "summary": "No apply authority; default and incomplete configurations refuse."
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "b1a1795c90e2",
-      "subject": "docs(m2): close the live target policy WorkUnit",
-      "summary": "immutable M2-WU1 live-target policy checkpoint."
+      "category": "Security",
+      "commit": "0e50b6fe0e90",
+      "subject": "docs(checkpoint): close WU7 portable planning candidate",
+      "summary": "Human acceptance remains non-automatable and every setup apply remains blocked."
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "effce1f71784",
-      "subject": "chore(m2): open public setup lifecycle WorkUnit",
-      "summary": "bounded M2-WU2 public lifecycle activation WorkUnit."
+      "category": "Security",
+      "commit": "991ff78c5cc3",
+      "subject": "feat(frontend): generate the portable setup review workflow",
+      "summary": "retained Universal Setup policy ownership and the live_target_acceptance_required gate."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "d59d22a27b08",
+      "subject": "fix(probe): preserve supervision deadlines under host load",
+      "summary": "protected-root observation still terminates timed-out children and records the skipped observation truthfully."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "79577fd7eb8a",
+      "subject": "docs(checkpoint): close the WU8 generated workflow proof",
+      "summary": "retained Universal Setup policy ownership and human-gated apply."
     },
     {
       "breaking": false,
@@ -497,52 +322,17 @@
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "b1fd720013ed",
-      "subject": "chore(license): bind Universal MIT provider truth",
-      "summary": "Universal provider license identity from NOASSERTION to MIT at pinned revisions."
+      "category": "Added",
+      "commit": "99f8cd8319ad",
+      "subject": "feat(setup): route Factorio installs through target-bound planning",
+      "summary": "Real target-bound Factorio portable install planning."
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "0b4e1688b4fc",
-      "subject": "docs(release): accept Universal MIT reproducibility proof",
-      "summary": "both Universal dependencies now have accepted MIT and reproducibility truth."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "dfa0d8ad3c4c",
-      "subject": "chore(m2): bind target policy provider integration",
-      "summary": "current Universal Setup provider identity now includes the fail-closed M2 target policy."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "b1a1795c90e2",
-      "subject": "docs(m2): close the live target policy WorkUnit",
-      "summary": "project truth now records WU1 policy proof and WU2 public-activation handoff."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "effce1f71784",
-      "subject": "chore(m2): open public setup lifecycle WorkUnit",
-      "summary": "WU1 now records accepted dev integration proof."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "cfb70ab88de3",
-      "subject": "chore(m2): pin the public lifecycle provider",
-      "summary": "bundled Universal Setup provider identity now names the M2-WU2 canonical main merge."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "57b175ab9378",
-      "subject": "chore(m2): reconcile public lifecycle truth",
-      "summary": "canonical project truth now identifies the public lifecycle provider candidate."
+      "category": "Added",
+      "commit": "991ff78c5cc3",
+      "subject": "feat(frontend): generate the portable setup review workflow",
+      "summary": "consistent managed-portable setup review workflow across all shipped client families."
     },
     {
       "breaking": false,
@@ -596,79 +386,30 @@
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "71dacb277dc8",
-      "subject": "fix(package): retain Universal MIT notices in every profile",
-      "summary": "complete provider license closure in built packages."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "724246e53b57",
-      "subject": "fix(status): report licensed provider revisions",
-      "summary": "workspace status now reports the exact current Universal provider pins."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "c253e05d882c",
-      "subject": "fix(io): preserve transactions beyond MAX_PATH",
-      "summary": "durable transaction journals no longer fail at legacy MAX_PATH."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "0b4e1688b4fc",
-      "subject": "docs(release): accept Universal MIT reproducibility proof",
-      "summary": "closeout truth retains frozen M1 identities while recording the later license proof separately."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "2b5098b076ab",
-      "subject": "fix(test): accept the later MIT checkpoint",
-      "summary": "project-state compaction test now recognizes the accepted license checkpoint."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "d16e71357f13",
-      "subject": "fix(m2): bind the stable capacity provider",
-      "summary": "adequate capacity fluctuations no longer invalidate a reviewed plan."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "316ee8efec5b",
-      "subject": "test(m2): prefer the canonical native smoke CLI",
-      "summary": "raw Python tests now use the canonical current native-smoke CLI by default."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
       "commit": "a286b5c42736",
       "subject": "chore(m2): close WU4 live synthetic acceptance proof",
       "summary": "rebuilt preferred native CLI to align runtime status with provider lock."
     },
     {
       "breaking": false,
-      "category": "Docs",
-      "commit": "b1fd720013ed",
-      "subject": "chore(license): bind Universal MIT provider truth",
-      "summary": "record the accepted operator decision and retained redistribution notices."
+      "category": "Fixed",
+      "commit": "952c46a629f0",
+      "subject": "test(cli): prove configured setup planning stays read only",
+      "summary": "Retained precise legacy archive refusal ordering."
     },
     {
       "breaking": false,
-      "category": "Docs",
-      "commit": "0b4e1688b4fc",
-      "subject": "docs(release): accept Universal MIT reproducibility proof",
-      "summary": "add immutable license integration checkpoint and complete queue evidence."
+      "category": "Fixed",
+      "commit": "00ca569368dd",
+      "subject": "fix(contracts): complete install plan success truth",
+      "summary": "Implemented command contract now has both success and dynamic refusal evidence."
     },
     {
       "breaking": false,
-      "category": "Docs",
-      "commit": "df0e42b6131f",
-      "subject": "chore(m2): open live-target policy WorkUnit",
-      "summary": "generated project truth now reports the active bounded WorkUnit."
+      "category": "Fixed",
+      "commit": "d59d22a27b08",
+      "subject": "fix(probe): preserve supervision deadlines under host load",
+      "summary": "process supervision now honors short deadlines under a slow Windows process-query provider."
     },
     {
       "breaking": false,
@@ -693,52 +434,52 @@
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "b1fd720013ed",
-      "subject": "chore(license): bind Universal MIT provider truth",
-      "summary": "preserve historical M1 provider identities separately from current pins."
+      "category": "Docs",
+      "commit": "a64037693f4b",
+      "subject": "docs(checkpoint): bind WU6 exact dev integration evidence",
+      "summary": "WU6 now records accepted dev integration proof pending only the human M2 verdict."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "71dacb277dc8",
-      "subject": "fix(package): retain Universal MIT notices in every profile",
-      "summary": "exercise portable CLI, TUI, WinForms, relocation, tamper, SBOM, and provenance lanes."
+      "category": "Docs",
+      "commit": "00ca569368dd",
+      "subject": "fix(contracts): complete install plan success truth",
+      "summary": "WU6 compaction law now matches its accepted dev integration."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "724246e53b57",
-      "subject": "fix(status): report licensed provider revisions",
-      "summary": "preserve lock/runtime revision parity."
+      "category": "Docs",
+      "commit": "0e50b6fe0e90",
+      "subject": "docs(checkpoint): close WU7 portable planning candidate",
+      "summary": "Added the M2-WU7 immutable implementation checkpoint."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "c253e05d882c",
-      "subject": "fix(io): preserve transactions beyond MAX_PATH",
-      "summary": "enforce the extended-path native I/O contract on Windows."
+      "category": "Docs",
+      "commit": "526d6f5a2d1c",
+      "subject": "docs(evidence): bind final WU7 package identities",
+      "summary": "Final package evidence is revision-pinned and immutable."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "2b5098b076ab",
-      "subject": "fix(test): accept the later MIT checkpoint",
-      "summary": "retain independent assertions for frozen M1 implementation and public integration records."
+      "category": "Docs",
+      "commit": "d3b5458645e2",
+      "subject": "docs(checkpoint): bind WU7 exact dev integration evidence",
+      "summary": "recorded WU7 exact dev integration evidence."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "dfa0d8ad3c4c",
-      "subject": "chore(m2): bind target policy provider integration",
-      "summary": "provider and project-state assertions follow the canonical merge."
+      "category": "Docs",
+      "commit": "6ca7e62889f6",
+      "subject": "docs(state): record the WU8 four-client proof candidate",
+      "summary": "recorded the WU8 local proof candidate."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "b1a1795c90e2",
-      "subject": "docs(m2): close the live target policy WorkUnit",
-      "summary": "target policy adds one integrated native test, bringing this build to 36/36."
+      "category": "Docs",
+      "commit": "79577fd7eb8a",
+      "subject": "docs(checkpoint): close the WU8 generated workflow proof",
+      "summary": "published the local WU8 implementation and package checkpoint."
     },
     {
       "breaking": false,
@@ -760,226 +501,31 @@
       "commit": "d746454ca850",
       "subject": "test(proof): bind complete WU6 validation identities",
       "summary": "complete Launcher handoff proof and immutable WU5 dev evidence are now recorded."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "99f8cd8319ad",
+      "subject": "feat(setup): route Factorio installs through target-bound planning",
+      "summary": "Correct synthetic ZIP CRC metadata and prove planning causes no state or target creation."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "952c46a629f0",
+      "subject": "test(cli): prove configured setup planning stays read only",
+      "summary": "Added CLI-level immutable plan and no-write coverage."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "991ff78c5cc3",
+      "subject": "feat(frontend): generate the portable setup review workflow",
+      "summary": "pinned every required workflow label and authority boundary."
     }
   ],
   "preview_only": true,
   "risk_summary": [
-    {
-      "commit": "b1fd720013ed",
-      "summary": "None beyond the unchanged unsigned and unpublished distribution boundary."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "None beyond the unchanged unsigned and unpublished distribution boundary."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "None beyond the unchanged unsigned and unpublished distribution boundary."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "None beyond the unchanged unsigned and unpublished distribution boundary."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "None beyond the unchanged unsigned and unpublished distribution boundary."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "None beyond the unchanged unsigned and unpublished distribution boundary."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Expected package-tree and archive digest changes are not yet accepted until the fresh reproducibility proof completes."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Expected package-tree and archive digest changes are not yet accepted until the fresh reproducibility proof completes."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Expected package-tree and archive digest changes are not yet accepted until the fresh reproducibility proof completes."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Expected package-tree and archive digest changes are not yet accepted until the fresh reproducibility proof completes."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Expected package-tree and archive digest changes are not yet accepted until the fresh reproducibility proof completes."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "None."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "None."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "None."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "None."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Device-prefixed inputs retain their existing spelling; higher-level target classification remains responsible for refusing unowned device paths."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Device-prefixed inputs retain their existing spelling; higher-level target classification remains responsible for refusing unowned device paths."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Device-prefixed inputs retain their existing spelling; higher-level target classification remains responsible for refusing unowned device paths."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Device-prefixed inputs retain their existing spelling; higher-level target classification remains responsible for refusing unowned device paths."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "Device-prefixed inputs retain their existing spelling; higher-level target classification remains responsible for refusing unowned device paths."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Artifacts remain unsigned and unpublished; publisher authenticity is not proven."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Artifacts remain unsigned and unpublished; publisher authenticity is not proven."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Artifacts remain unsigned and unpublished; publisher authenticity is not proven."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Artifacts remain unsigned and unpublished; publisher authenticity is not proven."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "Artifacts remain unsigned and unpublished; publisher authenticity is not proven."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "None."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "None."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "None."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "None."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "This commit changes governance state only; no setup mutation path is activated."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "This commit changes governance state only; no setup mutation path is activated."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "This commit changes governance state only; no setup mutation path is activated."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "This commit changes governance state only; no setup mutation path is activated."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "Public setup apply remains unavailable; package reproducibility is validated in the next bounded commit."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "Public setup apply remains unavailable; package reproducibility is validated in the next bounded commit."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "Public setup apply remains unavailable; package reproducibility is validated in the next bounded commit."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Platform target inspection and public lifecycle dispatch remain unimplemented WU2 work."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Platform target inspection and public lifecycle dispatch remain unimplemented WU2 work."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Platform target inspection and public lifecycle dispatch remain unimplemented WU2 work."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Platform target inspection and public lifecycle dispatch remain unimplemented WU2 work."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "Public lifecycle commands are still unavailable until Universal Setup implements and proves the gateway."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "Public lifecycle commands are still unavailable until Universal Setup implements and proves the gateway."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "Public lifecycle commands are still unavailable until Universal Setup implements and proves the gateway."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "Public lifecycle commands are still unavailable until Universal Setup implements and proves the gateway."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "Public lifecycle apply remains limited by Universal Setup activation policy and the pending M2 human verdict."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "Public lifecycle apply remains limited by Universal Setup activation policy and the pending M2 human verdict."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "Public lifecycle apply remains limited by Universal Setup activation policy and the pending M2 human verdict."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "Operator verdict remains pending; recovery apply remains unavailable."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "Operator verdict remains pending; recovery apply remains unavailable."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "Operator verdict remains pending; recovery apply remains unavailable."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Human M2 verdict remains pending and ordinary managed-portable apply remains unavailable."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Human M2 verdict remains pending and ordinary managed-portable apply remains unavailable."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Human M2 verdict remains pending and ordinary managed-portable apply remains unavailable."
-    },
-    {
-      "commit": "316ee8efec5b",
-      "summary": "This changes only test executable discovery; product runtime and packaged executable selection are unchanged."
-    },
     {
       "commit": "129f70d13058",
       "summary": "Hosted FacMan dev workflows and the human live-target verdict are still pending."
@@ -1095,228 +641,116 @@
     {
       "commit": "d746454ca850",
       "summary": "WU6 still requires reviewed hosted integration; the M2 human verdict and ordinary live apply remain pending."
+    },
+    {
+      "commit": "f0b27c2e7f21",
+      "summary": "Exact-head and exact-dev hosted workflows remain required; human setup verdict remains pending."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
+    },
+    {
+      "commit": "a64037693f4b",
+      "summary": "The operator verdict remains pending and no setup mutation authority changes."
+    },
+    {
+      "commit": "952c46a629f0",
+      "summary": "Apply remains blocked; this test grants no mutation authority."
+    },
+    {
+      "commit": "952c46a629f0",
+      "summary": "Apply remains blocked; this test grants no mutation authority."
+    },
+    {
+      "commit": "00ca569368dd",
+      "summary": "No setup apply, execution, or human-verdict authority changed."
+    },
+    {
+      "commit": "00ca569368dd",
+      "summary": "No setup apply, execution, or human-verdict authority changed."
+    },
+    {
+      "commit": "0e50b6fe0e90",
+      "summary": "Dev integration, the M2 human verdict, real Factorio archive acceptance, and all execution authority remain pending."
+    },
+    {
+      "commit": "0e50b6fe0e90",
+      "summary": "Dev integration, the M2 human verdict, real Factorio archive acceptance, and all execution authority remain pending."
+    },
+    {
+      "commit": "526d6f5a2d1c",
+      "summary": "Publisher authenticity remains unproven; the evidence is unsigned and unpublished."
+    },
+    {
+      "commit": "1b029ead969e",
+      "summary": "None; this commit changes no product or authority surface."
+    },
+    {
+      "commit": "d3b5458645e2",
+      "summary": "Human M2 verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "d3b5458645e2",
+      "summary": "Human M2 verdict remains pending and ordinary live apply remains unavailable."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
+    },
+    {
+      "commit": "6ca7e62889f6",
+      "summary": "Package proof, hosted dev integration, and the human operator verdict remain pending."
+    },
+    {
+      "commit": "6ca7e62889f6",
+      "summary": "Package proof, hosted dev integration, and the human operator verdict remain pending."
+    },
+    {
+      "commit": "d59d22a27b08",
+      "summary": "Very short runs intentionally report child-process observation as not_attempted; long acceptance runs retain periodic observation."
+    },
+    {
+      "commit": "d59d22a27b08",
+      "summary": "Very short runs intentionally report child-process observation as not_attempted; long acceptance runs retain periodic observation."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
+    },
+    {
+      "commit": "d40596f0654b",
+      "summary": "Hosted branch and exact-head workflow evidence remain pending until push."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "d746454ca85090eff7d9e4c6a1723f495da596d1",
+  "source_head": "f1a9996d391ba19a4c5ce4e418193e6067bfd722",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
-    {
-      "commit": "b1fd720013ed",
-      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
-    },
-    {
-      "commit": "b1fd720013ed",
-      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Windows Release rebuild against final provider pins: PASS."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Windows Release rebuild against final provider pins: PASS."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Windows Release rebuild against final provider pins: PASS."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Windows Release rebuild against final provider pins: PASS."
-    },
-    {
-      "commit": "71dacb277dc8",
-      "summary": "Windows Release rebuild against final provider pins: PASS."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "focused workspace status/onboarding tests: 2/2 PASS."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "focused workspace status/onboarding tests: 2/2 PASS."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "focused workspace status/onboarding tests: 2/2 PASS."
-    },
-    {
-      "commit": "724246e53b57",
-      "summary": "focused workspace status/onboarding tests: 2/2 PASS."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "focused Windows Release native tests: 3/3 PASS."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "focused Windows Release native tests: 3/3 PASS."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "focused Windows Release native tests: 3/3 PASS."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "focused Windows Release native tests: 3/3 PASS."
-    },
-    {
-      "commit": "c253e05d882c",
-      "summary": "focused Windows Release native tests: 3/3 PASS."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "clean three-repository configure/build/CTest/strict/AIDE/Python reconstruction: PASS."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "clean three-repository configure/build/CTest/strict/AIDE/Python reconstruction: PASS."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "clean three-repository configure/build/CTest/strict/AIDE/Python reconstruction: PASS."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "clean three-repository configure/build/CTest/strict/AIDE/Python reconstruction: PASS."
-    },
-    {
-      "commit": "0b4e1688b4fc",
-      "summary": "clean three-repository configure/build/CTest/strict/AIDE/Python reconstruction: PASS."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "exact failing Linux assertion reproduced from jobs 87023693849 and 87023751441."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "exact failing Linux assertion reproduced from jobs 87023693849 and 87023751441."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "exact failing Linux assertion reproduced from jobs 87023693849 and 87023751441."
-    },
-    {
-      "commit": "2b5098b076ab",
-      "summary": "exact failing Linux assertion reproduced from jobs 87023693849 and 87023751441."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "focused project-state and AIDE truth tests: 15/15 PASS."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "focused project-state and AIDE truth tests: 15/15 PASS."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "focused project-state and AIDE truth tests: 15/15 PASS."
-    },
-    {
-      "commit": "df0e42b6131f",
-      "summary": "focused project-state and AIDE truth tests: 15/15 PASS."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "`py -3 -m unittest ...`: PASS (20 focused cases)."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "`py -3 -m unittest ...`: PASS (20 focused cases)."
-    },
-    {
-      "commit": "dfa0d8ad3c4c",
-      "summary": "`py -3 -m unittest ...`: PASS (20 focused cases)."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Universal Setup push, PR, and exact-main CI: PASS."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Universal Setup push, PR, and exact-main CI: PASS."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Universal Setup push, PR, and exact-main CI: PASS."
-    },
-    {
-      "commit": "b1a1795c90e2",
-      "summary": "Universal Setup push, PR, and exact-main CI: PASS."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction -v`: PASS (6/6)."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction -v`: PASS (6/6)."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction -v`: PASS (6/6)."
-    },
-    {
-      "commit": "effce1f71784",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction -v`: PASS (6/6)."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "py -3 -m unittest tests.test_setup_package_routing tests.test_aide_compaction -v: PASS (8/8)."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "py -3 -m unittest tests.test_setup_package_routing tests.test_aide_compaction -v: PASS (8/8)."
-    },
-    {
-      "commit": "cfb70ab88de3",
-      "summary": "py -3 -m unittest tests.test_setup_package_routing tests.test_aide_compaction -v: PASS (8/8)."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "py -3 tools/project_state.py: PASS."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "py -3 tools/project_state.py: PASS."
-    },
-    {
-      "commit": "57b175ab9378",
-      "summary": "py -3 tools/project_state.py: PASS."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Universal Setup exact-head and exact-main test/sanitizer/fuzz: PASS."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Universal Setup exact-head and exact-main test/sanitizer/fuzz: PASS."
-    },
-    {
-      "commit": "d16e71357f13",
-      "summary": "Universal Setup exact-head and exact-main test/sanitizer/fuzz: PASS."
-    },
-    {
-      "commit": "316ee8efec5b",
-      "summary": "Previously failing install-gate, request-schema, and provider-truth tests: PASS."
-    },
     {
       "commit": "129f70d13058",
       "summary": "Clean three-repository reconstruction: PASS."
@@ -1432,18 +866,122 @@
     {
       "commit": "d746454ca850",
       "summary": "Native 41/41, Python 339 plus one opt-in skip, Windows package 14/14, AIDE, strict, and byte reproducibility: PASS."
+    },
+    {
+      "commit": "f0b27c2e7f21",
+      "summary": "AIDE verify, review, close, project state, compaction, strict, and diff checks: PASS."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
+    },
+    {
+      "commit": "99f8cd8319ad",
+      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
+    },
+    {
+      "commit": "a64037693f4b",
+      "summary": "All three exact-dev workflow conclusions: PASS."
+    },
+    {
+      "commit": "952c46a629f0",
+      "summary": "Debug facman_cli build: PASS."
+    },
+    {
+      "commit": "952c46a629f0",
+      "summary": "Debug facman_cli build: PASS."
+    },
+    {
+      "commit": "00ca569368dd",
+      "summary": "Focused command and compaction tests: PASS."
+    },
+    {
+      "commit": "00ca569368dd",
+      "summary": "Focused command and compaction tests: PASS."
+    },
+    {
+      "commit": "0e50b6fe0e90",
+      "summary": "Release CTest 41/41: PASS."
+    },
+    {
+      "commit": "0e50b6fe0e90",
+      "summary": "Release CTest 41/41: PASS."
+    },
+    {
+      "commit": "526d6f5a2d1c",
+      "summary": "Required Windows package proof 14/14 with zero skips: PASS."
+    },
+    {
+      "commit": "1b029ead969e",
+      "summary": "AIDE git policy and workflow detection: PASS."
+    },
+    {
+      "commit": "d3b5458645e2",
+      "summary": "project state generator and validator: PASS."
+    },
+    {
+      "commit": "d3b5458645e2",
+      "summary": "project state generator and validator: PASS."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "metadata generation check: PASS."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "metadata generation check: PASS."
+    },
+    {
+      "commit": "991ff78c5cc3",
+      "summary": "metadata generation check: PASS."
+    },
+    {
+      "commit": "6ca7e62889f6",
+      "summary": "project state generator and validator: PASS."
+    },
+    {
+      "commit": "6ca7e62889f6",
+      "summary": "project state generator and validator: PASS."
+    },
+    {
+      "commit": "d59d22a27b08",
+      "summary": "timeout and termination test repeated five times: PASS at approximately 0.2 seconds each."
+    },
+    {
+      "commit": "d59d22a27b08",
+      "summary": "timeout and termination test repeated five times: PASS at approximately 0.2 seconds each."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "exact-pin Release CTest 41/41: PASS."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "exact-pin Release CTest 41/41: PASS."
+    },
+    {
+      "commit": "79577fd7eb8a",
+      "summary": "exact-pin Release CTest 41/41: PASS."
+    },
+    {
+      "commit": "d40596f0654b",
+      "summary": "AIDE git policy: PASS."
     }
   ],
   "warnings": [
-    "cc4d79fec9d0 merge commit ignored",
-    "a5e1461ac46d merge commit ignored",
-    "d96384bf8f48 merge commit ignored",
     "747b4442cf22 merge commit ignored",
     "178de3192f3c merge commit ignored",
     "a8b298a35cd1 merge commit ignored",
     "476813e6fc74 merge commit ignored",
     "5563e3b8de43 merge commit ignored",
     "f4b02ac022ee merge commit ignored",
+    "8c1ed5351133 merge commit ignored",
+    "37c83c653882 merge commit ignored",
+    "f1a9996d391b merge commit ignored",
     "14 malformed or legacy commits require review"
   ]
 }

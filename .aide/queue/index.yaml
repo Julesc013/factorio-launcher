@@ -69,3 +69,9 @@ items:
     title: M2 WU8 generated frontend workflow
     task: .aide/queue/active/M2-WU8-GENERATED-FRONTEND-WORKFLOW-01/task.yaml
     evidence: .aide/queue/active/M2-WU8-GENERATED-FRONTEND-WORKFLOW-01/evidence
+  - id: M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01
+    status: active
+    lifecycle_state: active
+    title: M2 WU9 cross-platform adversarial proof
+    task: .aide/queue/active/M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01/task.yaml
+    evidence: .aide/queue/active/M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01/evidence

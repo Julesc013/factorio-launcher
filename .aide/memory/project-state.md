@@ -8,8 +8,8 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `m2-wu8-generated-frontend-workflow`;
-- active WorkUnit: `none`;
+- checkpoint: `m2-wu9-cross-platform-adversarial-proof`;
+- active WorkUnit: `M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01`;
 - last closed WorkUnit: `M2-WU8-GENERATED-FRONTEND-WORKFLOW-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
