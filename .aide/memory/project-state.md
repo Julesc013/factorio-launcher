@@ -8,12 +8,12 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `r3.8-public-integration-proof`;
+- checkpoint: `m1-managed-portable-install-foundation`;
 - active WorkUnit: `none`;
-- last closed WorkUnit: `FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01`;
+- last closed WorkUnit: `M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
-- accepted integration evidence: `53ffbd6e02f098e0eacda9392131592ba421b90a`;
+- accepted integration evidence: `10b1caa915ed4ad5e934f625f3e1384ecc700eaa`;
 - Universal Launcher pin: `c43d390efe0db17480f9d0262827659b4ae242dd`;
 - Universal Setup pin: `2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7`;
 - execution: `unavailable` / `steam_external_state_not_isolated`;
@@ -21,8 +21,9 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 - public SDK: `experimental_installed`; stable compatibility is not promised.
+- M1 managed portable install: `fixture_proven`; ordinary setup apply: `unavailable_pending_live_target_acceptance`.
 
-R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execution, Safe beta, stable SDK, daemon, setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
+R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
 
 ## Contract and validation identity
 
@@ -31,9 +32,9 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execu
 - schemas: `228`;
 - refusal codes: `216`;
 - command catalog digest: `76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222`;
-- accepted CI revision: `53ffbd6e02f098e0eacda9392131592ba421b90a`;
-- CI / CodeQL / security / schema runs: `29282101200` / `29282101171` / `29282101155` / `29282101110`;
-- accepted matrix counts: `23` native and `330` Python tests.
+- accepted CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
+- CI / CodeQL / security / schema runs: `29299245206` / `29299245093` / `29299245082` / `29297933368`;
+- accepted matrix counts: `35` native and `337` Python tests.
 
 ## Platform proof
 
@@ -54,7 +55,7 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. No execu
 ## Quarantined capabilities
 
 - run.execute
-- setup mutation
+- setup mutation outside fixture, disposable, and package-proof roots
 - network and credential operations
 - server and developer process execution
 - daemon publication

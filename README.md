@@ -2,8 +2,8 @@
 
 FacMan is a third-party Factorio launcher focused on isolated, reproducible
 environments. It discovers existing installs, creates per-instance data roots,
-generates dry-run launch plans, and keeps install mutation behind a future
-universal setup adapter.
+generates dry-run launch plans, and delegates bounded portable-install mutation
+to Universal Setup while ordinary live-target apply remains gated.
 
 This project is not affiliated with or endorsed by Wube Software. It does not
 bundle Factorio binaries, bypass ownership checks, or use official Factorio
@@ -59,6 +59,7 @@ The current contract surface contains 121 commands, 228 schemas, and 216 refusal
 
 The next authority gate is **H1**. `run.execute` remains `unavailable` with `steam_external_state_not_isolated`.
 The operator verdict is `Fail` and Safe beta remains unpromoted.
+M1 managed portable setup is `fixture_proven` in bounded fixture, disposable, and package-proof roots; ordinary live-target apply remains unavailable.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 <!-- FACMAN-PROJECT-STATUS:END -->
 
