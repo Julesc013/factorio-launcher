@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-WU2-DEV-INTEGRATION-PROOF-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -205,7 +205,7 @@
     "h1_inference": "none",
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
-    "status": "public_lifecycle_implementation_proven"
+    "status": "public_lifecycle_dev_integrated_pending_operator_acceptance"
   },
   "m2_wu1_target_policy": {
     "execution_authority": false,
@@ -232,7 +232,13 @@
     "apply_requires_exact_plan": true,
     "clean_reconstruction": "passed_at_provider_integration_revision",
     "execution_authority": false,
+    "facman_dev_ci_run": "29326004461",
+    "facman_dev_code_security_run": "29326004230",
+    "facman_dev_integration_revision": "747b4442cf228561de9fa15834bf78b0dad72f23",
+    "facman_dev_security_policy_run": "29326004219",
     "facman_provider_integration_revision": "d16e71357f13382c43b68b8de99bbd8758d97c8b",
+    "facman_reviewed_pr": 14,
+    "facman_task_head_revision": "f051731b80b51cac2d192ddb39535485f2a9c431",
     "facman_validation_remediation_revision": "316ee8efec5b962e6c2ed8419c0453c0c6062654",
     "h1_inference": "none",
     "native_test_count": 38,
@@ -252,7 +258,7 @@
     "required_windows_package_skips": 0,
     "required_windows_package_tests": 14,
     "sbom_sha256": "2279534491de1a27b028f55cd9b470c40705eea1c2c642f3f2c6a1bf35f9ef72",
-    "status": "implementation_proven_pending_dev_integration",
+    "status": "accepted_dev_integration_proof",
     "universal_setup_main_ci_run": "29322161463",
     "universal_setup_main_revision": "aa4d8cec93f265893f246d217ee94c03073899a3",
     "universal_setup_pr_ci_run": "29321009637",

@@ -6,7 +6,7 @@ implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "73bec99916d509b0ab055a43562e93ef20a6b4b7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
+active_work_unit = "M2-WU2-DEV-INTEGRATION-PROOF-01"
 last_closed_work_unit = "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01"
 next_authority_gate = "H1"
 safe_beta = false
@@ -96,7 +96,7 @@ main_dev_synchronized_at_proof = true
 authority_promotion = false
 
 [m2_live_portable_setup]
-status = "public_lifecycle_implementation_proven"
+status = "public_lifecycle_dev_integrated_pending_operator_acceptance"
 active_work_unit = ""
 authorized_acceptance_root = "D:\\FacMan-Live-Acceptance\\M2"
 autonomous_archive_scope = "non_proprietary_synthetic_only"
@@ -127,7 +127,7 @@ execution_authority = false
 h1_inference = "none"
 
 [m2_wu2_public_lifecycle]
-status = "implementation_proven_pending_dev_integration"
+status = "accepted_dev_integration_proof"
 active_work_unit = ""
 universal_setup_task_revision = "9baacd5547ddd7fe2705d3749059f7cb22a86e38"
 universal_setup_main_revision = "aa4d8cec93f265893f246d217ee94c03073899a3"
@@ -139,6 +139,12 @@ universal_setup_remediation_push_ci_run = "29322088318"
 universal_setup_remediation_pr_ci_run = "29322092513"
 facman_provider_integration_revision = "d16e71357f13382c43b68b8de99bbd8758d97c8b"
 facman_validation_remediation_revision = "316ee8efec5b962e6c2ed8419c0453c0c6062654"
+facman_reviewed_pr = 14
+facman_task_head_revision = "f051731b80b51cac2d192ddb39535485f2a9c431"
+facman_dev_integration_revision = "747b4442cf228561de9fa15834bf78b0dad72f23"
+facman_dev_ci_run = "29326004461"
+facman_dev_code_security_run = "29326004230"
+facman_dev_security_policy_run = "29326004219"
 clean_reconstruction = "passed_at_provider_integration_revision"
 native_test_count = 38
 python_test_count = 339

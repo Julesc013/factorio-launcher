@@ -44,9 +44,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("M2-WU2-DEV-INTEGRATION-PROOF-01", data["active_work_unit"])
         self.assertEqual(
-            "public_lifecycle_implementation_proven",
+            "public_lifecycle_dev_integrated_pending_operator_acceptance",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
@@ -59,7 +59,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("d96384bf8f48230256d35fa7015cbc7374e83319", data["m2_wu1_target_policy"]["facman_dev_integration_revision"])
         self.assertEqual("29318247825", data["m2_wu1_target_policy"]["facman_dev_ci_run"])
         m2_wu2 = data["m2_wu2_public_lifecycle"]
-        self.assertEqual("implementation_proven_pending_dev_integration", m2_wu2["status"])
+        self.assertEqual("accepted_dev_integration_proof", m2_wu2["status"])
         self.assertEqual(
             "316ee8efec5b962e6c2ed8419c0453c0c6062654",
             m2_wu2["facman_validation_remediation_revision"],
@@ -67,6 +67,13 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(38, m2_wu2["native_test_count"])
         self.assertEqual(339, m2_wu2["python_test_count"])
         self.assertEqual(14, m2_wu2["required_windows_package_tests"])
+        self.assertEqual(
+            "747b4442cf228561de9fa15834bf78b0dad72f23",
+            m2_wu2["facman_dev_integration_revision"],
+        )
+        self.assertEqual("29326004461", m2_wu2["facman_dev_ci_run"])
+        self.assertEqual("29326004230", m2_wu2["facman_dev_code_security_run"])
+        self.assertEqual("29326004219", m2_wu2["facman_dev_security_policy_run"])
         self.assertTrue(m2_wu2["plan_commands_read_only"])
         self.assertEqual("unavailable_pending_wu5", m2_wu2["recovery_apply"])
         self.assertEqual("pending", m2_wu2["operator_verdict"])
