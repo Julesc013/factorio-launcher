@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools import package_pipeline_check
+from tools import package_pipeline_check, package_reproducibility_proof
 from tools.package import archive, verification
 
 
@@ -25,6 +25,20 @@ class PackagePipelineArchitectureTests(unittest.TestCase):
             first = archive.write(payload, root / "first.zip", "portable_zip", "2026-01-02T03:04:05Z")
             second = archive.write(payload, root / "second.zip", "portable_zip", "2026-01-02T03:04:05Z")
             verification.require_identical(first, second)
+
+    def test_package_tree_snapshot_is_stable_and_detects_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "nested").mkdir()
+            (root / "nested" / "payload.txt").write_text("one\n", encoding="utf-8")
+            first = package_reproducibility_proof.tree_snapshot(root)
+            self.assertEqual(
+                package_reproducibility_proof.snapshot_digest(first),
+                package_reproducibility_proof.snapshot_digest(dict(first)),
+            )
+            (root / "nested" / "payload.txt").write_text("two\n", encoding="utf-8")
+            second = package_reproducibility_proof.tree_snapshot(root)
+            self.assertNotEqual(first, second)
 
 
 if __name__ == "__main__":

@@ -195,6 +195,8 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Run required Windows package proof with zero skips
         run: python tools/required_package_proof.py
+      - name: Prove complete Windows package reproducibility
+        run: python tools/package_reproducibility_proof.py --build-root build/native-smoke
       - name: Run strict policy checks
         run: python tools/strict_check.py
       - name: Build selected Windows static package
