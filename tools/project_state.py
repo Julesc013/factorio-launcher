@@ -108,6 +108,7 @@ def collect() -> dict[str, Any]:
         "m2_wu1_target_policy": status["m2_wu1_target_policy"],
         "m2_wu2_public_lifecycle": status["m2_wu2_public_lifecycle"],
         "m2_wu3_live_evidence": status["m2_wu3_live_evidence"],
+        "m2_wu4_live_acceptance": status["m2_wu4_live_acceptance"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -185,6 +186,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"`{data['m2_wu3_live_evidence']['universal_setup_main_revision']}`; operator verdict: "
         f"`{data['m2_wu3_live_evidence']['operator_verdict']}`; automated verdict authority: "
         f"`{str(data['m2_wu3_live_evidence']['automation_can_record_operator_verdict']).lower()}`.",
+        f"- M2-WU4 live acceptance: `{data['m2_wu4_live_acceptance']['status']}` at Universal Setup main "
+        f"`{data['m2_wu4_live_acceptance']['universal_setup_main_revision']}`; run: "
+        f"`{data['m2_wu4_live_acceptance']['run_id']}`; operator verdict: "
+        f"`{data['m2_wu4_live_acceptance']['operator_verdict']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -364,7 +369,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU3-DEV-INTEGRATION-PROOF-01"
+    latest_closeout_id = "M2-WU4-LIVE-INSTALL-ACCEPTANCE-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
     if status.get("last_closed_work_unit") != latest_closeout_id:
@@ -459,8 +464,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         ):
             if not m2_wu3.get(field):
                 problems.append(f"M2-WU3 accepted integration must bind {field}")
-    if m2_wu3.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU3 must bind the exact current Universal Setup provider pin")
+    if m2_wu3.get("universal_setup_main_revision") != "fbbeb762f25921ae05945206fd0c004a52239c13":
+        problems.append("M2-WU3 must preserve its accepted historical Universal Setup revision")
     if m2_wu3.get("operator_verdict") != "pending" or m2_wu3.get("automation_can_record_operator_verdict") is not False:
         problems.append("M2-WU3 automation must preserve a separate pending operator verdict")
     if m2_wu3.get("setup_owned_evidence_write") is not True:
@@ -471,6 +476,38 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU3 must not promote ordinary live apply before a human Pass")
     if m2_wu3.get("execution_authority") is not False or m2_wu3.get("h1_inference") != "none":
         problems.append("M2-WU3 must not promote execution or infer H1")
+    m2_wu4 = status.get("m2_wu4_live_acceptance", {})
+    if m2_wu4.get("status") not in {
+        "provider_integrated_live_run_proven_pending_dev_integration",
+        "accepted_dev_integration_proof_pending_operator_verdict",
+    }:
+        problems.append("M2-WU4 live acceptance must record a recognized monotonic proof state")
+    if m2_wu4.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
+        problems.append("M2-WU4 must bind the exact current Universal Setup provider pin")
+    if m2_wu4.get("universal_setup_runner_revision") != "6209385f25db1824bcbb7ec599cf2152606be89b":
+        problems.append("M2-WU4 must bind the exact live runner revision")
+    if m2_wu4.get("acceptance_root") != r"D:\FacMan-Live-Acceptance\M2":
+        problems.append("M2-WU4 must remain confined to the authorized acceptance root")
+    if m2_wu4.get("run_summary_sha256") != "0d42f22f40aa2b92df49b8bd872db9ad2367c5000d615a6d982f25e4ee0a0507":
+        problems.append("M2-WU4 must bind the retained live summary identity")
+    if m2_wu4.get("evidence_packet_count") != 4 or m2_wu4.get("journal_count") != 4:
+        problems.append("M2-WU4 must bind four operation packets and four completed journals")
+    if m2_wu4.get("native_test_count") != 39 or m2_wu4.get("python_test_count") != 339:
+        problems.append("M2-WU4 must bind the complete local native and Python proof counts")
+    if m2_wu4.get("required_windows_package_tests") != 14 or m2_wu4.get("required_windows_package_skips") != 0:
+        problems.append("M2-WU4 must bind the required zero-skip Windows package proof")
+    if m2_wu4.get("synthetic_archive_contains_executable_code") is not False:
+        problems.append("M2-WU4 autonomous archive must remain non-executable synthetic content")
+    if m2_wu4.get("cross_volume_move") != "not_attempted_no_second_authorized_volume":
+        problems.append("M2-WU4 must not overstate cross-volume proof")
+    if m2_wu4.get("operator_verdict") != "pending" or m2_wu4.get("automation_can_record_operator_verdict") is not False:
+        problems.append("M2-WU4 automation must preserve a separate pending operator verdict")
+    if m2_wu4.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
+        problems.append("M2-WU4 must not promote ordinary live apply before a human Pass")
+    if m2_wu4.get("recovery_apply") != "unavailable_pending_wu5":
+        problems.append("M2-WU4 must not promote recovery apply before WU5")
+    if m2_wu4.get("execution_authority") is not False or m2_wu4.get("h1_inference") != "none":
+        problems.append("M2-WU4 must not promote execution or infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

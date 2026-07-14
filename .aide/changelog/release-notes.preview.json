@@ -1,62 +1,6 @@
 {
   "follow_up": [
     {
-      "commit": "d1fb7f97572a",
-      "summary": "Route the canonical descriptors through the application boundary and prove frontend refusal behavior."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "Route the canonical descriptors through the application boundary and prove frontend refusal behavior."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "Route the canonical descriptors through the application boundary and prove frontend refusal behavior."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "Route the canonical descriptors through the application boundary and prove frontend refusal behavior."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Build the cross-repository synthetic lifecycle proof and consume verified setup results through Launcher references."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Publish WU10 for exact-head CI and merge to dev."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Publish WU10 for exact-head CI and merge to dev."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Publish WU10 for exact-head CI and merge to dev."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Publish WU10 for exact-head CI and merge to dev."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Publish WU10 for exact-head CI and merge to dev."
-    },
-    {
       "commit": "0ce7802d9f5b",
       "summary": "Bind these identities in the full synthetic three-repository lifecycle proof."
     },
@@ -423,23 +367,29 @@
     {
       "commit": "5f93f42f9708",
       "summary": "Open the reviewed task-to-dev pull request and require exact-head workflows before merge."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
     }
   ],
   "highlights": [
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "d1fb7f97572a",
-      "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-      "summary": "apply contracts remain unavailable and digest/confirmation bound."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "7850424d3e35",
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "no apply route mutates setup state or enables Factorio execution."
-    },
     {
       "breaking": false,
       "category": "Security",
@@ -576,20 +526,6 @@
     {
       "breaking": false,
       "category": "Added",
-      "commit": "d1fb7f97572a",
-      "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-      "summary": "explicit generated managed-setup lifecycle workflows."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "7850424d3e35",
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "canonical CLI plan/apply/recovery grammar."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
       "commit": "0ce7802d9f5b",
       "subject": "feat(install-refs): retain managed setup state identity",
       "summary": "exact managed setup-state identity on FacMan install references."
@@ -656,20 +592,6 @@
       "commit": "182ada6be86d",
       "subject": "docs(m2): bind the exact WU2 dev integration",
       "summary": "immutable exact-dev WU2 integration evidence."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "7850424d3e35",
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "setup requests now use typed target, plan, digest, and confirmation fields."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "d72c56b6802e",
-      "subject": "refactor(setup-routing): preserve application composition boundary",
-      "summary": "setup lifecycle commands now compose through their owning application handler."
     },
     {
       "breaking": false,
@@ -772,13 +694,6 @@
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "7850424d3e35",
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "legacy repair and uninstall grammar remains unambiguous beside phase subcommands."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
       "commit": "2f13923a9cbd",
       "subject": "fix(package): distinguish archives from ownership metadata",
       "summary": "Reproducibility proof no longer treats the owned-output marker as a package archive."
@@ -848,27 +763,6 @@
     },
     {
       "breaking": false,
-      "category": "Deprecated",
-      "commit": "d1fb7f97572a",
-      "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-      "summary": "legacy setup verbs are internal compatibility aliases."
-    },
-    {
-      "breaking": false,
-      "category": "Docs",
-      "commit": "7850424d3e35",
-      "subject": "feat(setup-gateway): route guarded lifecycle workflows",
-      "summary": "records the managed setup frontend command law."
-    },
-    {
-      "breaking": false,
-      "category": "Docs",
-      "commit": "d72c56b6802e",
-      "subject": "refactor(setup-routing): preserve application composition boundary",
-      "summary": "project truth reflects 121 commands, 228 schemas, and 216 refusal codes."
-    },
-    {
-      "breaking": false,
       "category": "Docs",
       "commit": "f4fdafead6a0",
       "subject": "test(system-proof): exercise managed lifecycle across repositories",
@@ -911,10 +805,10 @@
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "d1fb7f97572a",
-      "subject": "feat(setup-workflows): generate lifecycle plan/apply commands",
-      "summary": "adds a strict generated workflow guard."
+      "category": "Docs",
+      "commit": "067397e592ce",
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "accepted WU3 reviewed dev integration evidence."
     },
     {
       "breaking": false,
@@ -1006,66 +900,17 @@
       "commit": "b1a1795c90e2",
       "subject": "docs(m2): close the live target policy WorkUnit",
       "summary": "target policy adds one integrated native test, bringing this build to 36/36."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "067397e592ce",
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "enforce immutable integration identities and retained human gate."
     }
   ],
   "preview_only": true,
   "risk_summary": [
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "No ordinary setup apply route is authorized; fixture-backed lifecycle integration remains WU11 work."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "Lifecycle operations remain deliberately unavailable to ordinary users; only their contract and refusal paths are active."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Ordinary setup apply remains intentionally unavailable; no H1 authority changes."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Ordinary setup apply remains intentionally unavailable; no H1 authority changes."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Ordinary setup apply remains intentionally unavailable; no H1 authority changes."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Ordinary setup apply remains intentionally unavailable; no H1 authority changes."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "Ordinary setup apply remains intentionally unavailable; no H1 authority changes."
-    },
     {
       "commit": "0ce7802d9f5b",
       "summary": "FacMan still has no ordinary lifecycle apply authority; WU11 exercises Setup only in disposable fixture roots."
@@ -1433,68 +1278,32 @@
     {
       "commit": "5f93f42f9708",
       "summary": "Historical malformed commit messages remain reported for review; no history was rewritten."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "a8b298a35cd1587cea566886b5a3891153a2b7f2",
+  "source_head": "b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "py -3 tools/codegen/generate_metadata.py --check: PASS."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "py -3 tools/codegen/generate_metadata.py --check: PASS."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "py -3 tools/codegen/generate_metadata.py --check: PASS."
-    },
-    {
-      "commit": "d1fb7f97572a",
-      "summary": "py -3 tools/codegen/generate_metadata.py --check: PASS."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "cmake --build build/m1-wu10 --config Debug --parallel: PASS."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "cmake --build build/m1-wu10 --config Debug --parallel: PASS."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "cmake --build build/m1-wu10 --config Debug --parallel: PASS."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "cmake --build build/m1-wu10 --config Debug --parallel: PASS."
-    },
-    {
-      "commit": "7850424d3e35",
-      "summary": "cmake --build build/m1-wu10 --config Debug --parallel: PASS."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "py -3 tools/strict_check.py: PASS."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "py -3 tools/strict_check.py: PASS."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "py -3 tools/strict_check.py: PASS."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "py -3 tools/strict_check.py: PASS."
-    },
-    {
-      "commit": "d72c56b6802e",
-      "summary": "py -3 tools/strict_check.py: PASS."
-    },
     {
       "commit": "0ce7802d9f5b",
       "summary": "cmake --build build/m1-wu10 --config Debug --target fl_workspace_store_smoke: PASS."
@@ -1862,6 +1671,26 @@
     {
       "commit": "5f93f42f9708",
       "summary": "AIDE Lite test: PASS."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
+    },
+    {
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
     }
   ],
   "warnings": [
@@ -1874,6 +1703,7 @@
     "747b4442cf22 merge commit ignored",
     "178de3192f3c merge commit ignored",
     "a8b298a35cd1 merge commit ignored",
-    "9 malformed or legacy commits require review"
+    "476813e6fc74 merge commit ignored",
+    "10 malformed or legacy commits require review"
   ]
 }

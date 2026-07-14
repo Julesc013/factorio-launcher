@@ -145,12 +145,12 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu3-live-target-evidence",
+  "current_checkpoint": "m2-wu4-live-install-acceptance",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "6d41e07b76cd19b2a7630835e05ac3aa125d57b8",
-    "universal_setup": "fbbeb762f25921ae05945206fd0c004a52239c13"
+    "universal_setup": "9b8196437e41e45bd8d5a613246dabe5b8cdb968"
   },
   "execution": {
     "operator_verdict": "Fail",
@@ -163,7 +163,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU3-DEV-INTEGRATION-PROOF-01",
+  "last_closed_work_unit": "M2-WU4-LIVE-INSTALL-ACCEPTANCE-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -205,7 +205,7 @@
     "h1_inference": "none",
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
-    "status": "live_evidence_dev_integrated_pending_operator_acceptance"
+    "status": "automated_live_lifecycle_complete_pending_operator_verdict"
   },
   "m2_wu1_target_policy": {
     "execution_authority": false,
@@ -310,6 +310,60 @@
     "universal_setup_main_revision": "fbbeb762f25921ae05945206fd0c004a52239c13",
     "universal_setup_task_head_revision": "42ff66f8502bf6fea2996c96a56b9762fa6a7e9a",
     "verdict_command": "live_evidence.verdict.record"
+  },
+  "m2_wu4_live_acceptance": {
+    "acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
+    "active_work_unit": "",
+    "audit_chain_id": "audit.synthetic.m2.m2wu4-20260714-01",
+    "audit_event_count": 5,
+    "audit_head_digest": "8228808f068e7e929d7490ce05c1e2c56e3d4155cfdfad88cd354cc070db2dc1",
+    "automation_can_record_operator_verdict": false,
+    "clean_uninstall": "pass_current_owned_root_removed",
+    "cross_volume_move": "not_attempted_no_second_authorized_volume",
+    "damaged_owned_file_detection": "expected_fail_observed",
+    "evidence_packet_count": 4,
+    "execution_authority": false,
+    "facman_provider_integration_revision": "2d8b723ef04868063f8668810b9be68e542f9f03",
+    "facman_validation_revision": "b203574a8aa46b4e28a7a1d1b00a3d6c0f1854c6",
+    "factorio_archive_acceptance": "unavailable",
+    "final_installed_state_digest": "180c9962db0346442cfdb5a404765ac8d3c8d5a01f0d4c65ad1e3f497d2a7dd0",
+    "final_lifecycle_status": "retired",
+    "final_ownership_digest": "ccd52536ea44b75f58e44b6c6035d7e213ad3724c30bd8f746c6f3a33d41ba5c",
+    "final_recovery_status": "not_required",
+    "foreign_content_uninstall": "refused_and_retained",
+    "h1_inference": "none",
+    "install_packet_digest": "b0142866654c5fcff24d4c04d8665cfc55f1e107f1cc4454f59e6e139913b225",
+    "install_verify": "pass",
+    "journal_count": 4,
+    "move_packet_digest": "7b01758b510e65a3007681c196cfd4703c1e83c6614f8edde806d9613673ef8d",
+    "native_test_count": 39,
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "package_archive_sha256": "9a26fa612773108ae4e2f2f1762f9561df3f850459065abdfc2f9e608bc1ca55",
+    "package_tree_file_count": 388,
+    "package_tree_sha256": "4dcf73452223cede21d24a74b5637289dc8b1509e1e72957f8f7f13d61389195",
+    "provenance_sha256": "a9be745af843b98b30cedd72f0359f131c98f87f1d5ddc190a19f717f30771c4",
+    "python_opt_in_skip_count": 1,
+    "python_test_count": 339,
+    "recovery_apply": "unavailable_pending_wu5",
+    "repair_packet_digest": "14eec52ae99058d93f1ad6f56ddb9cb97452503c64f92521de06a66349029ea6",
+    "repair_verify": "pass",
+    "required_windows_package_skips": 0,
+    "required_windows_package_tests": 14,
+    "run_id": "m2wu4-20260714-01",
+    "run_summary_sha256": "0d42f22f40aa2b92df49b8bd872db9ad2367c5000d615a6d982f25e4ee0a0507",
+    "same_volume_move": "pass_old_root_retained",
+    "sbom_sha256": "1589f6c625a3580fc5264e887f5260917bd428124573cac060c35aae1c975f82",
+    "status": "provider_integrated_live_run_proven_pending_dev_integration",
+    "synthetic_archive_contains_executable_code": false,
+    "synthetic_archive_sha256": "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf",
+    "uninstall_packet_digest": "1f4960afad49f519f191b2d6d5e33fb3f13adb90b4bd65fe058a43b80b798b0b",
+    "universal_setup_main_ci_run": "29334632894",
+    "universal_setup_main_revision": "9b8196437e41e45bd8d5a613246dabe5b8cdb968",
+    "universal_setup_pr_ci_run": "29334556981",
+    "universal_setup_push_ci_run": "29334554537",
+    "universal_setup_runner_revision": "6209385f25db1824bcbb7ec599cf2152606be89b",
+    "universal_setup_task_head_revision": "169d4da80b886ed96f1e5450ddc5a3be1a44c085"
   },
   "machine_protocol": {
     "daemon_transport": "unavailable",
@@ -443,7 +497,7 @@
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
-      "revision": "fbbeb762f25921ae05945206fd0c004a52239c13",
+      "revision": "9b8196437e41e45bd8d5a613246dabe5b8cdb968",
       "source": "universal-setup"
     }
   },

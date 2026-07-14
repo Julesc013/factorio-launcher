@@ -39,3 +39,9 @@ items:
     title: M2 live-target evidence packet
     task: .aide/queue/active/M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01/task.yaml
     evidence: .aide/queue/active/M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01/evidence
+  - id: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01
+    status: passed
+    lifecycle_state: closed
+    title: M2 WU4 live synthetic install acceptance
+    task: .aide/queue/active/M2-WU4-LIVE-INSTALL-ACCEPTANCE-01/task.yaml
+    evidence: .aide/queue/active/M2-WU4-LIVE-INSTALL-ACCEPTANCE-01/evidence
