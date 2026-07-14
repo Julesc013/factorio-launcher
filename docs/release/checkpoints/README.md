@@ -63,9 +63,9 @@ The subsequent
 [`M2-WU2 public setup lifecycle`](m2-wu2-public-setup-lifecycle.md) checkpoint
 binds explicit public plan/apply dispatch, exact-plan revalidation, owned-state
 repair/move/uninstall behavior, read-only recovery inspection/planning, and a
-fresh three-repository/package proof. It remains pending `dev` integration and
-the separate human live-target verdict; ordinary managed-portable apply and
-`recovery.apply` are not promoted.
+fresh three-repository/package proof. Its reviewed `dev` merge and exact hosted
+workflows are accepted; the separate human live-target verdict remains pending,
+and ordinary managed-portable apply and `recovery.apply` are not promoted.
 
 Earlier checkpoints remain revision-pinned historical evidence:
 

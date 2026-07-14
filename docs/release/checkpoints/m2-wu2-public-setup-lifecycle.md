@@ -3,8 +3,7 @@
 
 # M2-WU2 Public Setup Lifecycle
 
-Status: implementation-proven; FacMan `dev` integration and human acceptance
-pending.
+Status: accepted `dev` integration proof; human acceptance pending.
 
 This checkpoint records the bounded activation of Universal Setup's already
 fixture-proven lifecycle through explicit descriptor-driven public commands.
@@ -22,6 +21,9 @@ portable apply, accept a real Factorio archive, or authorize execution.
 | Universal Launcher retained provider | `6d41e07b76cd19b2a7630835e05ac3aa125d57b8` |
 | FacMan provider integration | `d16e71357f13382c43b68b8de99bbd8758d97c8b` |
 | FacMan validation remediation | `316ee8efec5b962e6c2ed8419c0453c0c6062654` |
+| FacMan reviewed PR head | `f051731b80b51cac2d192ddb39535485f2a9c431` |
+| FacMan preserved `dev` merge | `747b4442cf228561de9fa15834bf78b0dad72f23` |
+| FacMan exact-`dev` CI / CodeQL / security | `29326004461` / `29326004230` / `29326004219` |
 
 ## Public command law
 
@@ -58,6 +60,11 @@ inspect/plan behavior.
 
 Publisher authenticity remains unproven and the artifact remains unsigned and
 unpublished.
+
+The exact-`dev` CI run passed Linux, Windows, macOS, coverage, sanitizer,
+bounded-fuzz, package, reproducibility, WinForms, TUI, AppKit compile, and
+archive jobs. Exact-`dev` CodeQL passed C/C++, C#, and Python; security policy
+also passed. These workflows prove integration, not operator acceptance.
 
 ## Authority retained
 
