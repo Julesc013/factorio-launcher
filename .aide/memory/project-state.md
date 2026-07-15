@@ -8,8 +8,8 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `r3.7`;
-- checkpoint: `m2-wu9-cross-platform-adversarial-proof`;
-- active WorkUnit: `none`;
+- checkpoint: `m2-wu10-operator-live-target-verdict`;
+- active WorkUnit: `M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01`;
 - last closed WorkUnit: `M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
@@ -33,6 +33,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - M2-WU7 FacMan portable workflow: `accepted_dev_integration_proof_pending_operator_verdict`; plan: `install_local.plan`; apply: `unavailable_pending_operator_acceptance`; operator verdict: `pending`.
 - M2-WU8 generated frontend workflow: `accepted_dev_integration_proof_pending_operator_verdict`; clients: `cli, tui, winforms, appkit`; apply: `unavailable_pending_operator_acceptance`; operator verdict: `pending`.
 - M2-WU9 adversarial proof: `accepted_dev_integration_proof_pending_operator_verdict`; cases: `16`; Setup main: `3f8489275077347c2918f3bb03614ec6431362ff`; operator verdict: `pending`.
+- M2-WU10 operator acceptance: `active_machine_evidence_ready_pending_operator_verdict`; run: `m2wu10-20260715-01`; operator verdict: `pending`.
 - Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.
@@ -41,7 +42,7 @@ R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is in
 
 - command contracts: `121`;
 - registered routes: `119`;
-- schemas: `230`;
+- schemas: `231`;
 - refusal codes: `217`;
 - command catalog digest: `7b587bd0b8f3f1317aca52509aa9996d787a075ed6d3b3837dcea44a1ce96c41`;
 - accepted CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;

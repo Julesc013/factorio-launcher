@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.m2_operator_acceptance_record.v1.schema.json",
+  "title": "M2 operator live-target acceptance record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "work_unit", "acceptance_run", "interruption_recovery", "operator_review", "authority"],
+  "properties": {
+    "schema": {"const": "factorio.m2_operator_acceptance_record.v1"},
+    "status": {"enum": ["machine_evidence_ready_pending_operator_verdict", "operator_verdict_recorded"]},
+    "work_unit": {"const": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01"},
+    "acceptance_run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acceptance_root", "run_id", "summary_relative_path", "summary_sha256", "completed_at", "source_revisions", "synthetic_archive", "retained_tree", "steps", "evidence_packets", "final_state"],
+      "properties": {
+        "acceptance_root": {"const": "D:\\FacMan-Live-Acceptance\\M2"},
+        "run_id": {"type": "string", "pattern": "^m2wu10-[0-9]{8}-[0-9]{2}$"},
+        "summary_relative_path": {"const": "acceptance-summary.json"},
+        "summary_sha256": {"$ref": "#/$defs/sha256"},
+        "completed_at": {"type": "string", "format": "date-time"},
+        "source_revisions": {
+          "type": "object", "additionalProperties": false,
+          "required": ["universal_setup", "factorio_launcher"],
+          "properties": {
+            "universal_setup": {"$ref": "#/$defs/revision"},
+            "factorio_launcher": {"$ref": "#/$defs/revision"}
+          }
+        },
+        "synthetic_archive": {
+          "type": "object", "additionalProperties": false,
+          "required": ["relative_path", "sha256", "contains_executable_code"],
+          "properties": {
+            "relative_path": {"const": "synthetic-product.zip"},
+            "sha256": {"$ref": "#/$defs/sha256"},
+            "contains_executable_code": {"const": false}
+          }
+        },
+        "retained_tree": {
+          "type": "object", "additionalProperties": false,
+          "required": ["file_count", "directory_count", "total_bytes", "reparse_point_count"],
+          "properties": {
+            "file_count": {"type": "integer", "minimum": 1},
+            "directory_count": {"type": "integer", "minimum": 1},
+            "total_bytes": {"type": "integer", "minimum": 1},
+            "reparse_point_count": {"const": 0}
+          }
+        },
+        "steps": {
+          "type": "array", "minItems": 10, "maxItems": 10,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["name", "status"],
+            "properties": {"name": {"type": "string", "minLength": 1}, "status": {"type": "string", "minLength": 1}}
+          }
+        },
+        "evidence_packets": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["operation", "relative_path", "packet_id", "packet_digest", "file_sha256", "plan_digest"],
+            "properties": {
+              "operation": {"enum": ["install_local", "repair", "move", "uninstall"]},
+              "relative_path": {"type": "string", "minLength": 1},
+              "packet_id": {"type": "string", "minLength": 1},
+              "packet_digest": {"$ref": "#/$defs/sha256"},
+              "file_sha256": {"$ref": "#/$defs/sha256"},
+              "plan_digest": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        },
+        "final_state": {
+          "type": "object", "additionalProperties": false,
+          "required": ["installed_state_digest", "ownership_digest", "audit_chain_id", "audit_head_digest", "audit_event_count", "committed_closure", "recovery_status", "old_root", "current_root"],
+          "properties": {
+            "installed_state_digest": {"$ref": "#/$defs/sha256"},
+            "ownership_digest": {"$ref": "#/$defs/sha256"},
+            "audit_chain_id": {"type": "string", "minLength": 1},
+            "audit_head_digest": {"$ref": "#/$defs/sha256"},
+            "audit_event_count": {"const": 5},
+            "committed_closure": {"const": "removed"},
+            "recovery_status": {"const": "not_required"},
+            "old_root": {"const": "retained_for_review"},
+            "current_root": {"const": "removed_by_clean_uninstall"}
+          }
+        }
+      }
+    },
+    "interruption_recovery": {
+      "type": "object", "additionalProperties": false,
+      "required": ["accepted_run_id", "summary_sha256", "case_count", "unchanged", "rolled_back", "completed", "recovery_required", "operator_verdict"],
+      "properties": {
+        "accepted_run_id": {"const": "m2wu5-20260714-01"},
+        "summary_sha256": {"$ref": "#/$defs/sha256"},
+        "case_count": {"const": 11},
+        "unchanged": {"const": 1},
+        "rolled_back": {"const": 4},
+        "completed": {"const": 3},
+        "recovery_required": {"const": 3},
+        "operator_verdict": {"const": "pending"}
+      }
+    },
+    "operator_review": {
+      "type": "object", "additionalProperties": false,
+      "required": ["allowed_verdicts", "operator_verdict", "automation_can_record_operator_verdict", "recorded_at", "recorded_by", "statement_digest"],
+      "properties": {
+        "allowed_verdicts": {"const": ["Pass", "Fail", "Inconclusive"]},
+        "operator_verdict": {"enum": ["pending", "Pass", "Fail", "Inconclusive"]},
+        "automation_can_record_operator_verdict": {"const": false},
+        "recorded_at": {"type": ["string", "null"], "format": "date-time"},
+        "recorded_by": {"type": ["string", "null"]},
+        "statement_digest": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
+      }
+    },
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ordinary_live_apply", "factorio_archive_acceptance", "existing_factorio_mutation", "steam_mutation", "network", "registry", "elevation", "run_execute", "h1_inference", "publication"],
+      "properties": {
+        "ordinary_live_apply": {"const": "unavailable_pending_operator_acceptance"},
+        "factorio_archive_acceptance": {"const": "unavailable"},
+        "existing_factorio_mutation": {"const": false},
+        "steam_mutation": {"const": false},
+        "network": {"const": false},
+        "registry": {"const": false},
+        "elevation": {"const": false},
+        "run_execute": {"const": false},
+        "h1_inference": {"const": "none"},
+        "publication": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

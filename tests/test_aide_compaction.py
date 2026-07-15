@@ -36,6 +36,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu7_facman_live_portable_workflow",
             "m2_wu8_generated_frontend_workflow",
             "m2_wu9_cross_platform_adversarial_proof",
+            "m2_wu10_operator_live_target_verdict",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -47,11 +48,11 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_m2_workflows_preserve_human_and_execution_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu9-cross-platform-adversarial-proof", data["current_checkpoint"])
+        self.assertEqual("m2-wu10-operator-live-target-verdict", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01", data["active_work_unit"])
         self.assertEqual(
             "automated_live_lifecycle_complete_pending_operator_verdict",
             data["m2_live_portable_setup"]["status"],
@@ -263,8 +264,40 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("pending", m2_wu9["operator_verdict"])
         self.assertFalse(m2_wu9["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu9["execution_authority"])
-        self.assertEqual("m2-wu9-cross-platform-adversarial-proof", data["current_checkpoint"])
-        self.assertIsNone(data["active_work_unit"])
+        m2_wu10 = data["m2_wu10_operator_live_target_verdict"]
+        self.assertEqual("active_machine_evidence_ready_pending_operator_verdict", m2_wu10["status"])
+        self.assertEqual("D:\\FacMan-Live-Acceptance\\M2", m2_wu10["acceptance_root"])
+        self.assertEqual("m2wu10-20260715-01", m2_wu10["run_id"])
+        self.assertEqual(["Pass", "Fail", "Inconclusive"], m2_wu10["verdict_choices"])
+        self.assertEqual([10, 4, 26, 14, 40105, 0], [
+            m2_wu10["lifecycle_step_count"], m2_wu10["evidence_packet_count"],
+            m2_wu10["retained_file_count"], m2_wu10["retained_directory_count"],
+            m2_wu10["retained_total_bytes"], m2_wu10["retained_reparse_point_count"],
+        ])
+        self.assertEqual([5, "removed", "not_required"], [
+            m2_wu10["audit_event_count"], m2_wu10["final_committed_closure"],
+            m2_wu10["final_recovery_status"],
+        ])
+        self.assertEqual(11, m2_wu10["interruption_case_count"])
+        self.assertEqual([41, 345, 1, 231], [
+            m2_wu10["native_test_count"], m2_wu10["python_test_count"],
+            m2_wu10["python_opt_in_skip_count"], m2_wu10["schema_count"],
+        ])
+        self.assertEqual("980d5b9e3113a673782d6efde74291b0c477f14b", m2_wu10["hosted_validation_revision"])
+        self.assertEqual(25, m2_wu10["draft_pull_request"])
+        self.assertEqual(
+            ["29364492582", "29364492665", "29364491886", "29364492053",
+             "29364494313", "29364495679", "29364495081", "29364494922"],
+            [m2_wu10["task_push_ci_run"], m2_wu10["task_push_code_security_run"],
+             m2_wu10["task_push_security_policy_run"], m2_wu10["task_push_schema_check_run"],
+             m2_wu10["task_pr_ci_run"], m2_wu10["task_pr_code_security_run"],
+             m2_wu10["task_pr_security_policy_run"], m2_wu10["task_pr_schema_check_run"]],
+        )
+        self.assertEqual("pending", m2_wu10["operator_verdict"])
+        self.assertFalse(m2_wu10["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu10["execution_authority"])
+        self.assertEqual("m2-wu10-operator-live-target-verdict", data["current_checkpoint"])
+        self.assertEqual("M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01", data["active_work_unit"])
         self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(

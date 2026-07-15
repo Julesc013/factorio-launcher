@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -117,6 +117,11 @@
       "limitation": "exact-dev and human verdict pending; Windows/macOS multi-volume unproven"
     },
     {
+      "claim": "Operator live-target setup",
+      "level": "machine evidence ready",
+      "limitation": "human verdict pending; no ordinary apply, Factorio, execution, H1, or external authority"
+    },
+    {
       "claim": "Package hashes authenticate publisher",
       "level": "not claimed",
       "limitation": "signatures or trusted external metadata required"
@@ -152,7 +157,7 @@
     "contracts": 121,
     "refusal_codes": 217,
     "registered_routes": 119,
-    "schemas": 230
+    "schemas": 231
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -160,7 +165,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu9-cross-platform-adversarial-proof",
+  "current_checkpoint": "m2-wu10-operator-live-target-verdict",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -221,6 +226,62 @@
     "operator_verdict": "pending",
     "ordinary_live_apply": "unavailable_pending_operator_acceptance",
     "status": "automated_live_lifecycle_complete_pending_operator_verdict"
+  },
+  "m2_wu10_operator_live_target_verdict": {
+    "acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
+    "active_work_unit": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01",
+    "audit_chain_id": "audit.synthetic.m2.m2wu10-20260715-01",
+    "audit_event_count": 5,
+    "audit_head_digest": "bd8a64adcea1e9e9c29810a287316a2a65147726c42d5e5d360ec3c8e950007a",
+    "automation_can_record_operator_verdict": false,
+    "completed_at": "2026-07-14T19:47:42Z",
+    "current_root": "removed_by_clean_uninstall",
+    "draft_pull_request": 25,
+    "evidence_packet_count": 4,
+    "execution_authority": false,
+    "facman_evidence_baseline_revision": "384c2569c84696c5fce02802684e30fad44f9ee0",
+    "factorio_archive_acceptance": "unavailable",
+    "final_committed_closure": "removed",
+    "final_installed_state_digest": "12455bd93c60092a59908a71aa40f44a3470ab377bd9a64d78be5df0fbe7a0b2",
+    "final_ownership_digest": "4623ad7f321e299770fadd8faac51349b3accc1b65fe47479c40053a009d76ec",
+    "final_recovery_status": "not_required",
+    "h1_inference": "none",
+    "hosted_validation_revision": "980d5b9e3113a673782d6efde74291b0c477f14b",
+    "interruption_case_count": 11,
+    "interruption_run_id": "m2wu5-20260714-01",
+    "interruption_summary_sha256": "c64ddfaa38bde351002d2840999b3ba74173cde8c76d3e6aa21891b5d169f6c1",
+    "lifecycle_step_count": 10,
+    "native_test_count": 41,
+    "old_root": "retained_for_review",
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "python_opt_in_skip_count": 1,
+    "python_test_count": 345,
+    "record_path": "tests/fixtures/m2_wu10/operator-acceptance.pending.v1.json",
+    "record_schema": "factorio.m2_operator_acceptance_record.v1",
+    "retained_directory_count": 14,
+    "retained_file_count": 26,
+    "retained_reparse_point_count": 0,
+    "retained_total_bytes": 40105,
+    "run_id": "m2wu10-20260715-01",
+    "run_summary_sha256": "3a0b7e080e83bd3bcb72c3e2198de1dc040e20e46d0e33ea1df11bd7967bec25",
+    "schema_count": 231,
+    "status": "active_machine_evidence_ready_pending_operator_verdict",
+    "synthetic_archive_sha256": "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf",
+    "task_pr_ci_run": "29364494313",
+    "task_pr_code_security_run": "29364495679",
+    "task_pr_schema_check_run": "29364494922",
+    "task_pr_security_policy_run": "29364495081",
+    "task_push_ci_run": "29364492582",
+    "task_push_code_security_run": "29364492665",
+    "task_push_schema_check_run": "29364492053",
+    "task_push_security_policy_run": "29364491886",
+    "universal_setup_main_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "verdict_choices": [
+      "Pass",
+      "Fail",
+      "Inconclusive"
+    ]
   },
   "m2_wu1_target_policy": {
     "execution_authority": false,
