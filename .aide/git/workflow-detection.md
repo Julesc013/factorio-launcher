@@ -3,24 +3,24 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/m2-wu10-policy-journal-format-correction
-- current_commit: 7a3f812ab0f81fb35e2e6104bd573d8832a44e59
+- current_branch: task/m2-wu10-record-machine-pass
+- current_commit: 26eb7056984b42859e377c1ffd0ffb7c80488078
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
 - canonical_branch: main
 - integration_branch: dev
-- recommended_next_action: classify dirty tree before branch-sensitive work
+- recommended_next_action: continue bounded task work, validate locally, and plan future landing to dev
 
 ## Branch Summary
 
-- local_branches: 41
-- remote_branches: 26
+- local_branches: 42
+- remote_branches: 27
 - tags_count: 2
 
 ## Warnings
 
-- dirty_tree_detected
+- none
 
 ## Q28 Boundary
 

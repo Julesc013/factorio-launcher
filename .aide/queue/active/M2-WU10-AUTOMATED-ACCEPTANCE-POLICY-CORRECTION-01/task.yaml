@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01
 title: M2 WU10 native journal verifier policy correction
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-17T05:34:40Z
 owner: unassigned
 objective: >
@@ -49,3 +49,5 @@ active_at: 2026-07-17T05:34:41Z
 verified_at: 2026-07-17T06:00:47Z
 implementation_state: implemented
 result: PASS
+reviewed_at: 2026-07-17T06:23:49Z
+closed_at: 2026-07-17T06:23:49Z

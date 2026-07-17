@@ -119,6 +119,14 @@ retaining schema, chain, digest, root-containment, negative-control, no-result,
 and excluded-authority requirements. Another independently revision-bound
 fresh run remains mandatory after this correction merges.
 
+The
+[`M2-WU10 machine-acceptance candidate`](m2-wu10-machine-acceptance-candidate.md)
+checkpoint binds a new post-correction lifecycle and interruption pair to the
+unchanged accepted verifier. It records `EvidencePass` and the exact
+observation digest, but deliberately withholds `MachinePass` and authority
+until complete local proof and hosted validation of a separate candidate
+revision are available.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

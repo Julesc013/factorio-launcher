@@ -29,6 +29,10 @@ PRODUCT_BYTES = {
     "data/payload.dat": b"synthetic-data-v1\n",
 }
 SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "contracts/schema/release"
+RECORDED_OBSERVATION = (
+    Path(__file__).resolve().parents[1]
+    / "docs/quality/evidence/m2/m2-wu10-machine-acceptance.observation.v1.json"
+)
 
 
 def canonical(value: object) -> bytes:
@@ -440,6 +444,33 @@ class M2Wu10MachineAcceptanceTests(unittest.TestCase):
         }
         result_schema = json.loads((SCHEMA_ROOT / "m2_machine_acceptance_result.v1.schema.json").read_text(encoding="utf-8"))
         jsonschema.Draft202012Validator(result_schema).validate(recorded)
+
+    def test_recorded_observation_binds_corrected_policy_and_fresh_evidence(self) -> None:
+        raw = RECORDED_OBSERVATION.read_bytes()
+        self.assertEqual(
+            "fb0fcb58eec795d45a56cb48773d74ed74a38d4b14834a4921c1542310777181",
+            digest(raw),
+        )
+        observation = json.loads(raw)
+        schema = json.loads(
+            (SCHEMA_ROOT / "m2_machine_acceptance_observation.v1.schema.json").read_text(
+                encoding="utf-8",
+            )
+        )
+        jsonschema.Draft202012Validator(schema).validate(observation)
+        technical = observation["technical_acceptance"]
+        self.assertEqual("EvidencePass", technical["result"])
+        self.assertEqual(
+            "26eb7056984b42859e377c1ffd0ffb7c80488078",
+            technical["policy_revision"],
+        )
+        self.assertEqual(technical["policy_revision"], technical["verifier_revision"])
+        self.assertEqual(
+            "3f8489275077347c2918f3bb03614ec6431362ff",
+            technical["runner_revision"],
+        )
+        self.assertEqual("m2wu10-20260717-02", observation["evidence"]["run_id"])
+        self.assertFalse(observation["authority"]["run_execute"])
 
     def test_required_negative_controls_fail_closed(self) -> None:
         controls = {

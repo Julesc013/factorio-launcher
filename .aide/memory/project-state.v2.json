@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01",
+  "active_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -123,8 +123,8 @@
     },
     {
       "claim": "Automated synthetic setup acceptance",
-      "level": "verifier correction pending; no result",
-      "limitation": "first fresh attempt failed closed; merge correction and rerun; no authority"
+      "level": "EvidencePass; MachinePass pending",
+      "limitation": "complete local and hosted candidate proof still required; no authority promoted"
     },
     {
       "claim": "Package hashes authenticate publisher",
@@ -170,7 +170,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu10-native-journal-policy-correction",
+  "current_checkpoint": "m2-wu10-machine-acceptance-candidate",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -184,7 +184,7 @@
     "status": "unavailable"
   },
   "known_blockers": [
-    "The first post-policy M2 result attempt failed closed because the verifier required sorted-key journal bytes that Universal Setup does not emit; a policy-only correction and another fresh rerun are required.",
+    "The first post-policy M2 result attempt failed closed on native journal ordering; the correction is accepted and a new EvidencePass now awaits complete MachinePass validation.",
     "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
@@ -231,7 +231,7 @@
     "h1_inference": "none",
     "human_review": "not_required_for_synthetic_non_executable_lane",
     "ordinary_live_apply": "unavailable_pending_machine_acceptance",
-    "status": "accepted_policy_verifier_correction_pending_new_fresh_rerun",
+    "status": "fresh_evidence_pass_pending_machine_pass_validation",
     "technical_acceptance": "pending"
   },
   "m2_wu10_automated_acceptance_policy": {
@@ -246,13 +246,21 @@
     "accepted_policy_push_schema_run": "29556764598",
     "accepted_policy_push_security_policy_run": "29556764637",
     "accepted_policy_revision": "7a3f812ab0f81fb35e2e6104bd573d8832a44e59",
-    "active_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01",
-    "correction_revision": "pending_independent_merge",
+    "active_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02",
+    "correction_head_revision": "58e3fa7fca3e94d8dc645393efd74db6fd6a88e3",
+    "correction_pr": 27,
+    "correction_pr_ci_run": "29559315835",
+    "correction_pr_code_security_run": "29559315836",
+    "correction_pr_security_policy_run": "29559315828",
+    "correction_push_ci_run": "29559298734",
+    "correction_push_code_security_run": "29559298713",
+    "correction_push_security_policy_run": "29559298772",
+    "correction_revision": "26eb7056984b42859e377c1ffd0ffb7c80488078",
     "elevation": false,
     "existing_factorio_mutation": false,
     "factorio_archive_acceptance": false,
-    "fresh_interruption_rerun_required": true,
-    "fresh_lifecycle_rerun_required": true,
+    "fresh_interruption_rerun_required": false,
+    "fresh_lifecycle_rerun_required": false,
     "h1_inference": "none",
     "human_review": "not_required_for_synthetic_non_executable_lane",
     "local_managed_portable_setup": "not_promoted",
@@ -267,9 +275,9 @@
     "registry": false,
     "result_schema": "factorio.m2_machine_acceptance_result.v1",
     "run_execute": false,
-    "status": "accepted_policy_pending_native_journal_correction_no_result",
+    "status": "accepted_corrected_policy_evidence_pass_no_machine_result",
     "steam_mutation": false,
-    "technical_acceptance": "not_recorded",
+    "technical_acceptance": "evidence_pass_pending_machine_pass",
     "verifier_path": "tools/m2_wu10_machine_acceptance_check.py"
   },
   "m2_wu10_automated_acceptance_result_attempt": {
@@ -286,6 +294,30 @@
     "status": "blocked_before_evidence_pass",
     "verifier_result": "fail_closed",
     "work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01"
+  },
+  "m2_wu10_machine_acceptance_candidate": {
+    "archive_sha256": "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf",
+    "authority_promotion": false,
+    "contract_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
+    "evidence_digest": "4de3e83c0abbe8b63f76cc6e31ece8ba2b6c052ab4cd1a94f56c76479ae502d2",
+    "evidence_result": "EvidencePass",
+    "hosted_validation": "pending_candidate_revision",
+    "human_review": "not_required_for_synthetic_non_executable_lane",
+    "interruption_run_id": "m2wu10-20260717-02-interruptions",
+    "interruption_summary_sha256": "bb3f4d0827f3550da6ad0d50af7b5565c60e07f1350453986de30ec83b9a6785",
+    "local_validation": "pending_complete_matrix",
+    "machine_pass": false,
+    "observation_path": "docs/quality/evidence/m2/m2-wu10-machine-acceptance.observation.v1.json",
+    "observation_sha256": "fb0fcb58eec795d45a56cb48773d74ed74a38d4b14834a4921c1542310777181",
+    "policy_id": "facman.m2.synthetic_portable_acceptance.v1",
+    "policy_revision": "26eb7056984b42859e377c1ffd0ffb7c80488078",
+    "run_id": "m2wu10-20260717-02",
+    "runner_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "status": "evidence_pass_pending_complete_validation",
+    "summary_sha256": "58c6d6568c3434c872d8efb9a39c3da20979bd8aa407cfb3d23b11a231e5fc74",
+    "verified_at": "2026-07-17T06:25:00Z",
+    "verifier_revision": "26eb7056984b42859e377c1ffd0ffb7c80488078",
+    "work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
   },
   "m2_wu10_operator_live_target_verdict": {
     "acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",

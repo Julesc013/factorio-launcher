@@ -1,18 +1,18 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "r3.7"
-current_checkpoint = "m2-wu10-native-journal-policy-correction"
+current_checkpoint = "m2-wu10-machine-acceptance-candidate"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "73bec99916d509b0ab055a43562e93ef20a6b4b7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01"
+active_work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
 last_closed_work_unit = "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01"
 next_authority_gate = "H1"
 safe_beta = false
 
 known_blockers = [
-  "The first post-policy M2 result attempt failed closed because the verifier required sorted-key journal bytes that Universal Setup does not emit; a policy-only correction and another fresh rerun are required.",
+  "The first post-policy M2 result attempt failed closed on native journal ordering; the correction is accepted and a new EvidencePass now awaits complete MachinePass validation.",
   "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -97,7 +97,7 @@ main_dev_synchronized_at_proof = true
 authority_promotion = false
 
 [m2_live_portable_setup]
-status = "accepted_policy_verifier_correction_pending_new_fresh_rerun"
+status = "fresh_evidence_pass_pending_machine_pass_validation"
 active_work_unit = ""
 authorized_acceptance_root = "D:\\FacMan-Live-Acceptance\\M2"
 autonomous_archive_scope = "non_proprietary_synthetic_only"
@@ -466,8 +466,8 @@ execution_authority = false
 h1_inference = "none"
 
 [m2_wu10_automated_acceptance_policy]
-status = "accepted_policy_pending_native_journal_correction_no_result"
-active_work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01"
+status = "accepted_corrected_policy_evidence_pass_no_machine_result"
+active_work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
 policy_id = "facman.m2.synthetic_portable_acceptance.v1"
 policy_schema = "factorio.m2_synthetic_portable_acceptance_policy.v1"
 policy_path = "contracts/policy/m2_synthetic_portable_acceptance_policy.v1.json"
@@ -485,11 +485,19 @@ accepted_policy_pr_ci_run = "29556778901"
 accepted_policy_pr_code_security_run = "29556778911"
 accepted_policy_pr_schema_run = "29556778917"
 accepted_policy_pr_security_policy_run = "29556778919"
-correction_revision = "pending_independent_merge"
-technical_acceptance = "not_recorded"
+correction_revision = "26eb7056984b42859e377c1ffd0ffb7c80488078"
+correction_head_revision = "58e3fa7fca3e94d8dc645393efd74db6fd6a88e3"
+correction_pr = 27
+correction_push_ci_run = "29559298734"
+correction_push_code_security_run = "29559298713"
+correction_push_security_policy_run = "29559298772"
+correction_pr_ci_run = "29559315835"
+correction_pr_code_security_run = "29559315836"
+correction_pr_security_policy_run = "29559315828"
+technical_acceptance = "evidence_pass_pending_machine_pass"
 human_review = "not_required_for_synthetic_non_executable_lane"
-fresh_lifecycle_rerun_required = true
-fresh_interruption_rerun_required = true
+fresh_lifecycle_rerun_required = false
+fresh_interruption_rerun_required = false
 negative_control_count = 12
 ordinary_live_apply = "unavailable_pending_machine_acceptance"
 local_managed_portable_setup = "not_promoted"
@@ -516,6 +524,30 @@ verifier_result = "fail_closed"
 failure_classification = "native_journal_field_order_rejected_by_sorted_key_requirement"
 observation_written = false
 machine_pass = false
+authority_promotion = false
+
+[m2_wu10_machine_acceptance_candidate]
+status = "evidence_pass_pending_complete_validation"
+work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
+contract_work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01"
+policy_id = "facman.m2.synthetic_portable_acceptance.v1"
+policy_revision = "26eb7056984b42859e377c1ffd0ffb7c80488078"
+runner_revision = "3f8489275077347c2918f3bb03614ec6431362ff"
+verifier_revision = "26eb7056984b42859e377c1ffd0ffb7c80488078"
+run_id = "m2wu10-20260717-02"
+interruption_run_id = "m2wu10-20260717-02-interruptions"
+verified_at = "2026-07-17T06:25:00Z"
+observation_path = "docs/quality/evidence/m2/m2-wu10-machine-acceptance.observation.v1.json"
+observation_sha256 = "fb0fcb58eec795d45a56cb48773d74ed74a38d4b14834a4921c1542310777181"
+evidence_digest = "4de3e83c0abbe8b63f76cc6e31ece8ba2b6c052ab4cd1a94f56c76479ae502d2"
+summary_sha256 = "58c6d6568c3434c872d8efb9a39c3da20979bd8aa407cfb3d23b11a231e5fc74"
+interruption_summary_sha256 = "bb3f4d0827f3550da6ad0d50af7b5565c60e07f1350453986de30ec83b9a6785"
+archive_sha256 = "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf"
+evidence_result = "EvidencePass"
+machine_pass = false
+local_validation = "pending_complete_matrix"
+hosted_validation = "pending_candidate_revision"
+human_review = "not_required_for_synthetic_non_executable_lane"
 authority_promotion = false
 
 [m2_wu1_target_policy]
