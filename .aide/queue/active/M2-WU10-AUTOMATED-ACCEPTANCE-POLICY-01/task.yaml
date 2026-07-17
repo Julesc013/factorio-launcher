@@ -1,0 +1,53 @@
+schema_version: aide.queue-task.v1
+id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01
+title: M2 WU10 automated synthetic acceptance policy
+status: verified
+lifecycle_state: verified
+planning_state: verified
+created_at: 2026-07-17T04:09:54Z
+owner: unassigned
+objective: >
+  Freeze a versioned MachinePass policy, independent retained-evidence verifier, and negative controls for non-executable synthetic portable setup within D:\FacMan-Live-Acceptance\M2 without recording a current result or promoting authority.
+allowed_paths:
+  - .aide/**
+  - contracts/**
+  - docs/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  []
+affected_python_tests:
+  - tests.test_m2_wu10_machine_acceptance
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+affected_strict_validators:
+  - tools/m2_wu10_machine_acceptance_check.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - deterministic non-executable synthetic acceptance records MachinePass, never a human Pass
+  - H1 and every real Factorio, existing-installation, Steam, execution, external-mutation, signing, and publication gate remain human-authorized
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-17T04:09:55Z
+verified_at: 2026-07-17T05:02:56Z
+implementation_state: implemented
+result: PASS

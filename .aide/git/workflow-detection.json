@@ -2,8 +2,8 @@
   "branch_role_for_current_branch": "task",
   "canonical_branch": "main",
   "confidence": "high",
-  "current_branch": "task/m2-wu10-operator-verdict",
-  "current_commit": "384c2569c84696c5fce02802684e30fad44f9ee0",
+  "current_branch": "task/m2-wu10-automated-acceptance-policy",
+  "current_commit": "1d3f3c12136a06b27eb92607ea521edc8a7a3600",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
@@ -22,6 +22,7 @@
     "task/m1-wu0-r3.8-closeout-main-promotion",
     "task/m1-wu9-factorio-setup-gateway",
     "task/m1-wu9-factorio-setup-gateway-q27",
+    "task/m2-wu10-automated-acceptance-policy",
     "task/m2-wu10-operator-verdict",
     "task/m2-wu2-dev-integration-proof",
     "task/m2-wu2-public-lifecycle",
@@ -50,7 +51,7 @@
     "task/universal-mit-license-integration-q27"
   ],
   "non_mutating": true,
-  "recommended_next_action": "continue bounded task work, validate locally, and plan future landing to dev",
+  "recommended_next_action": "classify dirty tree before branch-sensitive work",
   "remote_branches": [
     "origin/dev",
     "origin/evidence/r3.6-real-factorio-isolation-baseline",
@@ -58,6 +59,7 @@
     "origin/task/m1-wu0-public-integration-checkpoint",
     "origin/task/m1-wu0-r3.8-closeout-main-promotion",
     "origin/task/m1-wu9-factorio-setup-gateway-q27",
+    "origin/task/m2-wu10-operator-verdict",
     "origin/task/m2-wu2-dev-integration-proof",
     "origin/task/m2-wu2-public-lifecycle",
     "origin/task/m2-wu5-live-interruption-recovery",
@@ -87,6 +89,8 @@
       "facman-r2-local-alpha-proof-0"
     ]
   },
-  "warnings": [],
-  "worktree_dirty": false
+  "warnings": [
+    "dirty_tree_detected"
+  ],
+  "worktree_dirty": true
 }

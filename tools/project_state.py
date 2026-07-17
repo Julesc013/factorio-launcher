@@ -115,6 +115,7 @@ def collect() -> dict[str, Any]:
         "m2_wu8_generated_frontend_workflow": status["m2_wu8_generated_frontend_workflow"],
         "m2_wu9_cross_platform_adversarial_proof": status["m2_wu9_cross_platform_adversarial_proof"],
         "m2_wu10_operator_live_target_verdict": status["m2_wu10_operator_live_target_verdict"],
+        "m2_wu10_automated_acceptance_policy": status["m2_wu10_automated_acceptance_policy"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -180,7 +181,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- M1 public integration: `{data['m1_public_integration']['status']}` at canonical main "
         f"`{data['m1_public_integration']['canonical_main_revision']}`.",
         f"- M2 live portable setup: `{data['m2_live_portable_setup']['status']}`; "
-        f"operator verdict: `{data['m2_live_portable_setup']['operator_verdict']}`; "
+        f"technical acceptance: `{data['m2_live_portable_setup']['technical_acceptance']}`; "
+        f"human review: `{data['m2_live_portable_setup']['human_review']}`; "
         f"ordinary live apply: `{data['m2_live_portable_setup']['ordinary_live_apply']}`.",
         f"- M2-WU1 target policy: `{data['m2_wu1_target_policy']['status']}` at Universal Setup "
         f"main `{data['m2_wu1_target_policy']['universal_setup_main_revision']}`; "
@@ -219,6 +221,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"- M2-WU10 operator acceptance: `{data['m2_wu10_operator_live_target_verdict']['status']}`; "
         f"run: `{data['m2_wu10_operator_live_target_verdict']['run_id']}`; operator verdict: "
         f"`{data['m2_wu10_operator_live_target_verdict']['operator_verdict']}`.",
+        f"- M2-WU10 automated acceptance policy: `{data['m2_wu10_automated_acceptance_policy']['status']}`; "
+        f"technical acceptance: `{data['m2_wu10_automated_acceptance_policy']['technical_acceptance']}`; "
+        f"human review: `{data['m2_wu10_automated_acceptance_policy']['human_review']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -440,10 +445,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if m1_integration.get("authority_promotion") is not False:
         problems.append("M1 public integration proof must not promote authority")
     m2 = status.get("m2_live_portable_setup", {})
-    if m2.get("operator_verdict") not in {"pending", "Pass", "Fail", "Inconclusive"}:
-        problems.append("M2 live setup must use the human verdict vocabulary")
-    if m2.get("operator_verdict") != "Pass" and m2.get("ordinary_live_apply") != "unavailable_pending_operator_acceptance":
-        problems.append("M2 must keep ordinary live apply unavailable before a human Pass")
+    if m2.get("technical_acceptance") != "pending":
+        problems.append("M2 technical acceptance must remain pending until the frozen rerun")
+    if m2.get("human_review") != "not_required_for_synthetic_non_executable_lane":
+        problems.append("M2 synthetic human-review policy changed")
+    if m2.get("ordinary_live_apply") != "unavailable_pending_machine_acceptance":
+        problems.append("M2 must keep ordinary live apply unavailable before MachinePass")
     if m2.get("execution_authority") is not False or m2.get("h1_inference") != "none":
         problems.append("M2 must not promote execution or infer H1")
     m2_wu1 = status.get("m2_wu1_target_policy", {})
@@ -749,7 +756,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU9 must not promote execution or infer H1")
     m2_wu10 = status.get("m2_wu10_operator_live_target_verdict", {})
     if m2_wu10.get("status") not in {
-        "active_machine_evidence_ready_pending_operator_verdict",
+        "historical_machine_evidence_ready_pending_operator_verdict",
         "operator_verdict_recorded",
     }:
         problems.append("M2-WU10 must record a recognized operator-acceptance state")
@@ -800,6 +807,38 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU10 pending review must keep ordinary live apply unavailable")
     if m2_wu10.get("execution_authority") is not False or m2_wu10.get("h1_inference") != "none":
         problems.append("M2-WU10 must not promote execution or infer H1")
+    machine_policy = status.get("m2_wu10_automated_acceptance_policy", {})
+    if [
+        machine_policy.get("status"), machine_policy.get("active_work_unit"),
+        machine_policy.get("policy_id"), machine_policy.get("technical_acceptance"),
+        machine_policy.get("human_review"), machine_policy.get("negative_control_count"),
+    ] != [
+        "active_policy_frozen_no_result", "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01",
+        "facman.m2.synthetic_portable_acceptance.v1", "not_recorded",
+        "not_required_for_synthetic_non_executable_lane", 12,
+    ]:
+        problems.append("M2-WU10 automated policy must remain frozen with no result")
+    if [
+        machine_policy.get("policy_schema"), machine_policy.get("observation_schema"),
+        machine_policy.get("result_schema"), machine_policy.get("accepted_policy_revision"),
+    ] != [
+        "factorio.m2_synthetic_portable_acceptance_policy.v1",
+        "factorio.m2_machine_acceptance_observation.v1",
+        "factorio.m2_machine_acceptance_result.v1", "pending_independent_merge",
+    ]:
+        problems.append("M2-WU10 automated policy schema or revision separation changed")
+    if not machine_policy.get("fresh_lifecycle_rerun_required") or not machine_policy.get("fresh_interruption_rerun_required"):
+        problems.append("M2-WU10 automated policy must require fresh lifecycle and interruption reruns")
+    if machine_policy.get("ordinary_live_apply") != "unavailable_pending_machine_acceptance" or machine_policy.get("local_managed_portable_setup") != "not_promoted":
+        problems.append("M2-WU10 policy-only revision must not promote managed setup")
+    for key in [
+        "factorio_archive_acceptance", "existing_factorio_mutation", "steam_mutation",
+        "network", "registry", "elevation", "run_execute", "publication",
+    ]:
+        if machine_policy.get(key) is not False:
+            problems.append(f"M2-WU10 policy-only revision must keep {key} excluded")
+    if machine_policy.get("h1_inference") != "none":
+        problems.append("M2-WU10 policy-only revision must not infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

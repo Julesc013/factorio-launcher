@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.m2_machine_acceptance_observation.v1.schema.json",
+  "title": "M2 synthetic portable machine acceptance observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "work_unit", "technical_acceptance", "evidence", "human_review", "authority"],
+  "properties": {
+    "schema": {"const": "factorio.m2_machine_acceptance_observation.v1"},
+    "work_unit": {"const": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01"},
+    "technical_acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_id", "result", "policy_revision", "runner_revision", "verifier_revision", "verified_at", "evidence_digest"],
+      "properties": {
+        "policy_id": {"const": "facman.m2.synthetic_portable_acceptance.v1"},
+        "result": {"const": "EvidencePass"},
+        "policy_revision": {"$ref": "#/$defs/revision"},
+        "runner_revision": {"$ref": "#/$defs/revision"},
+        "verifier_revision": {"$ref": "#/$defs/revision"},
+        "verified_at": {"type": "string", "format": "date-time"},
+        "evidence_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "evidence": {"type": "object", "minProperties": 1},
+    "human_review": {
+      "const": {"requirement": "not_required_for_synthetic_non_executable_lane", "result": "not_required"}
+    },
+    "authority": {"type": "object", "minProperties": 1}
+  },
+  "$defs": {
+    "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

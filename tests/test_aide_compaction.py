@@ -37,6 +37,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu8_generated_frontend_workflow",
             "m2_wu9_cross_platform_adversarial_proof",
             "m2_wu10_operator_live_target_verdict",
+            "m2_wu10_automated_acceptance_policy",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -46,18 +47,26 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_workflows_preserve_human_and_execution_gates(self) -> None:
+    def test_m2_workflows_preserve_machine_and_higher_risk_human_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu10-operator-live-target-verdict", data["current_checkpoint"])
+        self.assertEqual("m2-wu10-automated-acceptance-policy", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertEqual("M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01", data["active_work_unit"])
+        self.assertEqual("M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01", data["active_work_unit"])
         self.assertEqual(
-            "automated_live_lifecycle_complete_pending_operator_verdict",
+            "automated_acceptance_policy_frozen_pending_fresh_rerun",
             data["m2_live_portable_setup"]["status"],
         )
-        self.assertEqual("pending", data["m2_live_portable_setup"]["operator_verdict"])
+        self.assertEqual("pending", data["m2_live_portable_setup"]["technical_acceptance"])
+        self.assertEqual(
+            "not_required_for_synthetic_non_executable_lane",
+            data["m2_live_portable_setup"]["human_review"],
+        )
+        self.assertEqual(
+            "unavailable_pending_machine_acceptance",
+            data["m2_live_portable_setup"]["ordinary_live_apply"],
+        )
         self.assertEqual(
             "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01",
             data["last_closed_work_unit"],
@@ -265,7 +274,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m2_wu9["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu9["execution_authority"])
         m2_wu10 = data["m2_wu10_operator_live_target_verdict"]
-        self.assertEqual("active_machine_evidence_ready_pending_operator_verdict", m2_wu10["status"])
+        self.assertEqual("historical_machine_evidence_ready_pending_operator_verdict", m2_wu10["status"])
         self.assertEqual("D:\\FacMan-Live-Acceptance\\M2", m2_wu10["acceptance_root"])
         self.assertEqual("m2wu10-20260715-01", m2_wu10["run_id"])
         self.assertEqual(["Pass", "Fail", "Inconclusive"], m2_wu10["verdict_choices"])
@@ -296,8 +305,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("pending", m2_wu10["operator_verdict"])
         self.assertFalse(m2_wu10["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu10["execution_authority"])
-        self.assertEqual("m2-wu10-operator-live-target-verdict", data["current_checkpoint"])
-        self.assertEqual("M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01", data["active_work_unit"])
+        machine_policy = data["m2_wu10_automated_acceptance_policy"]
+        self.assertEqual("active_policy_frozen_no_result", machine_policy["status"])
+        self.assertEqual("not_recorded", machine_policy["technical_acceptance"])
+        self.assertEqual("pending_independent_merge", machine_policy["accepted_policy_revision"])
+        self.assertTrue(machine_policy["fresh_lifecycle_rerun_required"])
+        self.assertTrue(machine_policy["fresh_interruption_rerun_required"])
+        self.assertEqual(12, machine_policy["negative_control_count"])
+        self.assertEqual("m2-wu10-automated-acceptance-policy", data["current_checkpoint"])
+        self.assertEqual("M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01", data["active_work_unit"])
         self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
