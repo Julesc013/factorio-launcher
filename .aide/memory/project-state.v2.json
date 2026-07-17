@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "M2-CLOSEOUT-CANONICAL-PROMOTION-01",
+  "active_work_unit": null,
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -128,12 +128,12 @@
     },
     {
       "claim": "M2 technical wave",
-      "level": "canonically promoted",
-      "limitation": "merge the public record and synchronize `dev` before WorkUnit closure"
+      "level": "accepted public integration",
+      "limitation": "synthetic/local managed candidate only; every higher-risk authority remains excluded"
     },
     {
       "claim": "Existing-portable adoption",
-      "level": "M3 authorized-next pending synchronized closeout",
+      "level": "M3 active read-only/plan-only",
       "limitation": "no adoption apply, deletion, mutation, Steam adoption, execution, or external authority"
     },
     {
@@ -180,7 +180,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-public-integration-proof",
+  "current_checkpoint": "m3-existing-portable-adoption-plan-only",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -194,12 +194,11 @@
     "status": "unavailable"
   },
   "known_blockers": [
-    "M2 is canonically promoted and exact-main proof is green; the public-integration record and post-promotion dev synchronization remain to be merged and verified.",
     "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02",
+  "last_closed_work_unit": "M2-CLOSEOUT-CANONICAL-PROMOTION-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -238,7 +237,15 @@
     "closeout_task_revision": "3fc80882e7da0e38cddd901dfc965775281b0411",
     "credentials": false,
     "dev_integration_revision": "4afab65448831b05ab790957abf0e1798074ad1a",
-    "dev_synchronization": "pending_public_record_and_main_to_dev_sync",
+    "dev_synchronization": "accepted_exact_dev_head",
+    "dev_synchronization_ci_run": "29573335555",
+    "dev_synchronization_code_security_run": "29573335458",
+    "dev_synchronization_main_ancestor": true,
+    "dev_synchronization_pull_request": 32,
+    "dev_synchronization_revision": "51977de8120202958fc35776d284077b1fc027d3",
+    "dev_synchronization_security_policy_run": "29573335488",
+    "dev_synchronization_task_revision": "6fb4a0c96503f32ad9070a5c557f2fa1a31209c8",
+    "dev_synchronization_tree_identity": "8487c87a097395186cccbcd13d929dd88d3b16fa",
     "elevation": false,
     "exact_dev_ci_run": "29567550655",
     "exact_dev_code_security_run": "29567550714",
@@ -262,7 +269,14 @@
     "promotion_pr_schema_check_run": "29568218137",
     "promotion_pr_security_policy_run": "29568218125",
     "promotion_pull_request": 30,
-    "public_integration": "record_candidate_exact_main_proof_bound",
+    "public_integration": "accepted_exact_dev_checkpoint",
+    "public_integration_dev_ci_run": "29571806755",
+    "public_integration_dev_code_security_run": "29571806753",
+    "public_integration_dev_revision": "1678cb6d3c9545f09c4ae729054f68cf0fbc7bf2",
+    "public_integration_dev_security_policy_run": "29571806738",
+    "public_integration_pull_request": 31,
+    "public_integration_task_revision": "44687765815174db8afc1da6fa768f7a655a6290",
+    "public_integration_tree_identity": "8487c87a097395186cccbcd13d929dd88d3b16fa",
     "publication": false,
     "registry": false,
     "result_path": "docs/quality/evidence/m2/m2-wu10-machine-acceptance.pass.v1.json",
@@ -271,7 +285,7 @@
     "shared_promoted_tree_identity": "ee54dc220ed5fd80a9f450988033c5e29599a326",
     "shortcuts": false,
     "signing": false,
-    "status": "canonically_promoted_public_integration_pending_dev_synchronization",
+    "status": "accepted_public_integration_dev_synchronized",
     "steam_cloud_mutation": false,
     "steam_mutation": false,
     "system_wide_installation": false,
@@ -904,11 +918,12 @@
     "existing_installation_mutation": false,
     "existing_portable_inspection": true,
     "network": false,
+    "opened_after_m2_dev_revision": "51977de8120202958fc35776d284077b1fc027d3",
     "publication": false,
     "registry": false,
     "run_execute": false,
     "scope": "read_only_and_plan_only",
-    "status": "authorized_next_wave_pending_m2_dev_synchronization",
+    "status": "active_read_only_and_plan_only",
     "steam_adoption": false,
     "steam_mutation": false
   },

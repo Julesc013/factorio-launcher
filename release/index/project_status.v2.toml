@@ -1,18 +1,17 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "m2-public-integration-proof"
+current_checkpoint = "m3-existing-portable-adoption-plan-only"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
-last_closed_work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
+active_work_unit = ""
+last_closed_work_unit = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
 next_authority_gate = "H1"
 safe_beta = false
 
 known_blockers = [
-  "M2 is canonically promoted and exact-main proof is green; the public-integration record and post-promotion dev synchronization remain to be merged and verified.",
   "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -512,7 +511,7 @@ h1_inference = "none"
 publication = false
 
 [m2_closeout_candidate]
-status = "canonically_promoted_public_integration_pending_dev_synchronization"
+status = "accepted_public_integration_dev_synchronized"
 work_unit = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
 wu10_pull_request = 28
 wu10_dev_merge_revision = "5250db1d17ac330f5ae0b672ccc7466431a1e4a2"
@@ -540,8 +539,23 @@ exact_main_ci_run = "29569007275"
 exact_main_code_security_run = "29569007270"
 exact_main_schema_check_run = "29569007323"
 exact_main_security_policy_run = "29569007290"
-public_integration = "record_candidate_exact_main_proof_bound"
-dev_synchronization = "pending_public_record_and_main_to_dev_sync"
+public_integration = "accepted_exact_dev_checkpoint"
+public_integration_task_revision = "44687765815174db8afc1da6fa768f7a655a6290"
+public_integration_pull_request = 31
+public_integration_dev_revision = "1678cb6d3c9545f09c4ae729054f68cf0fbc7bf2"
+public_integration_tree_identity = "8487c87a097395186cccbcd13d929dd88d3b16fa"
+public_integration_dev_ci_run = "29571806755"
+public_integration_dev_code_security_run = "29571806753"
+public_integration_dev_security_policy_run = "29571806738"
+dev_synchronization = "accepted_exact_dev_head"
+dev_synchronization_task_revision = "6fb4a0c96503f32ad9070a5c557f2fa1a31209c8"
+dev_synchronization_pull_request = 32
+dev_synchronization_revision = "51977de8120202958fc35776d284077b1fc027d3"
+dev_synchronization_tree_identity = "8487c87a097395186cccbcd13d929dd88d3b16fa"
+dev_synchronization_main_ancestor = true
+dev_synchronization_ci_run = "29573335555"
+dev_synchronization_code_security_run = "29573335458"
+dev_synchronization_security_policy_run = "29573335488"
 local_managed_portable_setup = "candidate"
 factorio_archive_acceptance = false
 existing_factorio_mutation = false
@@ -560,8 +574,9 @@ signing = false
 publication = false
 
 [m3_existing_portable_adoption]
-status = "authorized_next_wave_pending_m2_dev_synchronization"
+status = "active_read_only_and_plan_only"
 scope = "read_only_and_plan_only"
+opened_after_m2_dev_revision = "51977de8120202958fc35776d284077b1fc027d3"
 existing_portable_inspection = true
 adoption_plan = true
 adoption_apply = false

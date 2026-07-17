@@ -8,9 +8,9 @@ inputs, then run `py -3 tools/project_state.py --write`.
 
 - product version: `0.1.0-dev`;
 - completed wave: `m2`;
-- checkpoint: `m2-public-integration-proof`;
-- active WorkUnit: `M2-CLOSEOUT-CANONICAL-PROMOTION-01`;
-- last closed WorkUnit: `M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02`;
+- checkpoint: `m3-existing-portable-adoption-plan-only`;
+- active WorkUnit: `none`;
+- last closed WorkUnit: `M2-CLOSEOUT-CANONICAL-PROMOTION-01`;
 - next authority gate: `H1`;
 - H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
 - accepted integration evidence: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
@@ -38,8 +38,8 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - M2-WU10 first automated result attempt: `blocked_before_evidence_pass`; verifier: `fail_closed`; MachinePass: `false`.
 - M2-WU10 corrected acceptance candidate: `hosted_validation_passed_bound_to_separate_machine_result`; evidence: `EvidencePass`; MachinePass: `false`.
 - M2-WU10 machine acceptance result: `MachinePass`; human review: `not_required_for_synthetic_non_executable_lane`; managed setup: `candidate`.
-- M2 closeout: `canonically_promoted_public_integration_pending_dev_synchronization`; dev merge: `5250db1d17ac330f5ae0b672ccc7466431a1e4a2`; canonical main: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`.
-- M3 existing-portable adoption: `authorized_next_wave_pending_m2_dev_synchronization`; scope: `read_only_and_plan_only`; adoption apply: `false`.
+- M2 closeout: `accepted_public_integration_dev_synchronized`; dev merge: `5250db1d17ac330f5ae0b672ccc7466431a1e4a2`; canonical main: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`.
+- M3 existing-portable adoption: `active_read_only_and_plan_only`; scope: `read_only_and_plan_only`; adoption apply: `false`.
 - Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7, M1, and the bounded M2 technical wave are complete. The exact R3.7 runtime is frozen as the H1 candidate. M2-WU10 records a bounded MachinePass for newly created policy-approved managed targets. No execution, Safe beta, stable SDK, daemon, real-Factorio archive, existing-installation, networking, credential, signing, or publication authority is inferred from that synthetic proof.
@@ -82,7 +82,6 @@ R3.7, M1, and the bounded M2 technical wave are complete. The exact R3.7 runtime
 
 ## Known blockers
 
-- M2 is canonically promoted and exact-main proof is green; the public-integration record and post-promotion dev synchronization remain to be merged and verified.
 - H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
