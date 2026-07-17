@@ -2,8 +2,8 @@
   "branch_role_for_current_branch": "task",
   "canonical_branch": "main",
   "confidence": "high",
-  "current_branch": "task/m2-wu10-record-machine-pass",
-  "current_commit": "26eb7056984b42859e377c1ffd0ffb7c80488078",
+  "current_branch": "task/m2-closeout-canonical-promotion",
+  "current_commit": "5250db1d17ac330f5ae0b672ccc7466431a1e4a2",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
@@ -22,6 +22,7 @@
     "task/m1-wu0-r3.8-closeout-main-promotion",
     "task/m1-wu9-factorio-setup-gateway",
     "task/m1-wu9-factorio-setup-gateway-q27",
+    "task/m2-closeout-canonical-promotion",
     "task/m2-wu10-automated-acceptance-policy",
     "task/m2-wu10-operator-verdict",
     "task/m2-wu10-policy-journal-format-correction",
@@ -53,7 +54,7 @@
     "task/universal-mit-license-integration-q27"
   ],
   "non_mutating": true,
-  "recommended_next_action": "continue bounded task work, validate locally, and plan future landing to dev",
+  "recommended_next_action": "classify dirty tree before branch-sensitive work",
   "remote_branches": [
     "origin/dev",
     "origin/evidence/r3.6-real-factorio-isolation-baseline",
@@ -64,6 +65,7 @@
     "origin/task/m2-wu10-automated-acceptance-policy",
     "origin/task/m2-wu10-operator-verdict",
     "origin/task/m2-wu10-policy-journal-format-correction",
+    "origin/task/m2-wu10-record-machine-pass",
     "origin/task/m2-wu2-dev-integration-proof",
     "origin/task/m2-wu2-public-lifecycle",
     "origin/task/m2-wu5-live-interruption-recovery",
@@ -93,6 +95,8 @@
       "facman-r2-local-alpha-proof-0"
     ]
   },
-  "warnings": [],
-  "worktree_dirty": false
+  "warnings": [
+    "dirty_tree_detected"
+  ],
+  "worktree_dirty": true
 }

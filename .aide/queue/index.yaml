@@ -9,6 +9,12 @@ items:
     title: Choose licenses for Universal repositories
     task: .aide/queue/active/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/evidence
+  - id: M2-CLOSEOUT-CANONICAL-PROMOTION-01
+    status: active
+    lifecycle_state: active
+    title: M2 closeout and canonical promotion
+    task: .aide/queue/active/M2-CLOSEOUT-CANONICAL-PROMOTION-01/task.yaml
+    evidence: .aide/queue/active/M2-CLOSEOUT-CANONICAL-PROMOTION-01/evidence
   - id: M2-WU1-LIVE-TARGET-POLICY-01
     status: passed
     lifecycle_state: closed

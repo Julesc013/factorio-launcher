@@ -1,0 +1,50 @@
+schema_version: aide.queue-task.v1
+id: M2-CLOSEOUT-CANONICAL-PROMOTION-01
+title: M2 closeout and canonical promotion
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-17T07:56:49Z
+owner: unassigned
+objective: >
+  Record the durable M2 MachinePass closeout, validate the exact dev integration revision, promote dev to main only after all reviewed gates pass, verify exact main and public integration, synchronize dev, and open M3 strictly read-only and plan-only.
+allowed_paths:
+  - .aide/**
+  - README.md
+  - docs/**
+  - release/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  []
+affected_python_tests:
+  - tests.test_aide_target_truth
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_target_truth_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - MachinePass is technical acceptance and never a human Pass
+  - M2 promotes only bounded managed-setup candidacy for new policy-approved targets
+  - real Factorio, existing-installation, Steam, execution, H1, network, credential, registry, elevation, signing, and publication authority remain excluded
+  - canonical promotion requires exact-dev and exact-main hosted proof plus public integration and dev synchronization
+  - M3 begins read-only and plan-only with no adoption apply, deletion, or existing-install mutation
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-17T07:56:49Z

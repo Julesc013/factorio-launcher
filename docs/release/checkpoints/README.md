@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The accepted non-execution product wave is `r3.7`. The exact H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the operator verdict remains `Fail`.
+The accepted non-execution product wave is `m2`. The exact H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the operator verdict remains `Fail`.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -134,6 +134,13 @@ push/PR workflows for candidate revision `ff883cd`. It closes WU10 with a
 technical `MachinePass`, never a human `Pass`, and promotes only bounded local
 managed portable setup candidacy. M2 closeout and canonical promotion remain a
 separate checkpoint.
+
+The
+[`M2 closeout candidate`](m2-closeout-candidate.md) marks the bounded technical
+wave complete from merged `dev` revision `5250db1`, preserves every higher-risk
+exclusion, and freezes M3 as read-only and plan-only. Exact-`dev`, canonical
+`main`, public-integration, and post-promotion `dev` synchronization evidence
+remain pending.
 
 Earlier checkpoints remain revision-pinned historical evidence:
 
