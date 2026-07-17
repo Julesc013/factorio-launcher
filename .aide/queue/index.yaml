@@ -22,8 +22,8 @@ items:
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01
-    status: active
-    lifecycle_state: active
+    status: verified
+    lifecycle_state: verified
     title: M2 WU10 native journal verifier policy correction
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01/evidence

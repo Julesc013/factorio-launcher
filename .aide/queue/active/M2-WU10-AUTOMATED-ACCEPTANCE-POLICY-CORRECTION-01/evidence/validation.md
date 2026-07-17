@@ -1,8 +1,7 @@
 # Validation
 
-Correction repository validation passes; clean-checkout package and
-reproducibility proof remain pending. No live `EvidencePass` or `MachinePass`
-is recorded in this policy-only WorkUnit.
+Correction local validation passes. No live `EvidencePass` or `MachinePass` is
+recorded in this policy-only WorkUnit.
 
 Completed focused checks:
 
@@ -18,6 +17,10 @@ Completed focused checks:
   41/41 native tests.
 - `py -3 -m unittest discover -s tests -p test_*.py`: PASS, 348 tests with
   one skip.
+- `py -3 tools/required_package_proof.py`: PASS, 14 package-runtime tests with
+  zero skips.
+- `py -3 tools/repro_workspace_smoke.py --require-clean --build --python
+  "py -3"`: PASS; clean three-repository configure, build, CTest, strict,
+  AIDE, and Python matrix.
 
-Required package, clean-workspace reproducibility, and hosted exact-head proof
-remain required before independent merge.
+Hosted exact-head proof remains required before independent merge.
