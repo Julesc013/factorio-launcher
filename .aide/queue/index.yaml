@@ -16,11 +16,23 @@ items:
     task: .aide/queue/active/M2-WU1-LIVE-TARGET-POLICY-01/task.yaml
     evidence: .aide/queue/active/M2-WU1-LIVE-TARGET-POLICY-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01
-    status: verified
-    lifecycle_state: verified
+    status: passed
+    lifecycle_state: closed
     title: M2 WU10 automated synthetic acceptance policy
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/evidence
+  - id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01
+    status: active
+    lifecycle_state: active
+    title: M2 WU10 native journal verifier policy correction
+    task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01/task.yaml
+    evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01/evidence
+  - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
+    status: blocked
+    lifecycle_state: blocked
+    title: M2 WU10 automated synthetic acceptance result
+    task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/task.yaml
+    evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/evidence
   - id: M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01
     status: verified
     lifecycle_state: verified

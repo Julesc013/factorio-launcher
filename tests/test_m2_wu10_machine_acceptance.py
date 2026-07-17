@@ -44,6 +44,12 @@ def write_json(path: Path, value: dict[str, object], *, newline: bool = True) ->
     path.write_bytes(canonical(value) + (b"\n" if newline else b""))
 
 
+def write_native_order_json(path: Path, value: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rendered = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    path.write_bytes(rendered + b"\n")
+
+
 def snapshot(root: Path) -> str:
     if not root.exists():
         return digest(canonical({"entries": [], "state": "nonexistent"}))
@@ -176,7 +182,9 @@ def make_bundle(base: Path) -> tuple[Path, dict[str, object]]:
             "install_local" if operation == "install" else operation, run_root, target,
         )
         journal_docs[operation] = doc
-        write_json(run_root / "setup-state/state/transactions" / journal_names[operation], doc)
+        write_native_order_json(
+            run_root / "setup-state/state/transactions" / journal_names[operation], doc,
+        )
 
     ownership_docs: dict[str, dict[str, object]] = {}
     ownership_names: dict[str, str] = {}
@@ -360,7 +368,9 @@ def make_bundle(base: Path) -> tuple[Path, dict[str, object]]:
         tx = f"tx.interruption.{index}"
         plan = f"plan.interruption.{index}"
         document = journal_document(tx, plan, digest(plan.encode()), "install_local", interruption_root, interruption_root / f"target-{index}")
-        write_json(interruption_root / f"case-{index}/state/{tx}.journal.json", document)
+        write_native_order_json(
+            interruption_root / f"case-{index}/state/{tx}.journal.json", document,
+        )
 
     policy = copy.deepcopy(verifier.load_policy())
     policy["scope"]["acceptance_root"] = str(acceptance_root)
@@ -396,6 +406,12 @@ class M2Wu10MachineAcceptanceTests(unittest.TestCase):
     def test_independent_fixture_derives_evidence_pass(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root, policy = make_bundle(Path(temporary))
+            journals = sorted(root.rglob("*.journal.json"))
+            self.assertEqual(18, len(journals))
+            for path in journals:
+                raw = path.read_bytes()
+                value = json.loads(raw)
+                self.assertNotIn(raw, {canonical(value), canonical(value) + b"\n"})
             result, problems = run_verifier(root, policy)
         self.assertEqual([], problems)
         self.assertIsNotNone(result)

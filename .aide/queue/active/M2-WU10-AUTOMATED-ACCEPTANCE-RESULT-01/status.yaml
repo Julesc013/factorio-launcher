@@ -1,0 +1,10 @@
+schema_version: aide.queue-status.v1
+task_id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
+status: blocked
+lifecycle_state: blocked
+planning_state: blocked
+created_at: 2026-07-17T05:30:03Z
+result: PENDING
+evidence_path: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/evidence/
+active_at: 2026-07-17T05:30:04Z
+blocked_at: 2026-07-17T05:34:39Z
