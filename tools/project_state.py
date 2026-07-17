@@ -531,6 +531,31 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             problems.append("M2 canonical promotion or exact-main proof identity changed")
         if status.get("accepted_integration_revision") != closeout.get("canonical_main_revision"):
             problems.append("accepted integration must bind the canonical M2 main revision")
+    if closeout_status == "accepted_public_integration_dev_synchronized":
+        if [
+            closeout.get("public_integration"), closeout.get("public_integration_task_revision"),
+            closeout.get("public_integration_pull_request"), closeout.get("public_integration_dev_revision"),
+            closeout.get("public_integration_tree_identity"), closeout.get("public_integration_dev_ci_run"),
+            closeout.get("public_integration_dev_code_security_run"),
+            closeout.get("public_integration_dev_security_policy_run"),
+            closeout.get("dev_synchronization"), closeout.get("dev_synchronization_task_revision"),
+            closeout.get("dev_synchronization_pull_request"), closeout.get("dev_synchronization_revision"),
+            closeout.get("dev_synchronization_tree_identity"),
+            closeout.get("dev_synchronization_main_ancestor"),
+            closeout.get("dev_synchronization_ci_run"),
+            closeout.get("dev_synchronization_code_security_run"),
+            closeout.get("dev_synchronization_security_policy_run"),
+        ] != [
+            "accepted_exact_dev_checkpoint", "44687765815174db8afc1da6fa768f7a655a6290",
+            31, "1678cb6d3c9545f09c4ae729054f68cf0fbc7bf2",
+            "8487c87a097395186cccbcd13d929dd88d3b16fa", "29571806755",
+            "29571806753", "29571806738", "accepted_exact_dev_head",
+            "6fb4a0c96503f32ad9070a5c557f2fa1a31209c8", 32,
+            "51977de8120202958fc35776d284077b1fc027d3",
+            "8487c87a097395186cccbcd13d929dd88d3b16fa", True,
+            "29573335555", "29573335458", "29573335488",
+        ]:
+            problems.append("M2 public integration or dev synchronization proof identity changed")
     if closeout.get("local_validation") not in {"pending_complete_matrix", "pass_complete_matrix"}:
         problems.append("M2 closeout must record a recognized local validation state")
     for key in [
@@ -563,6 +588,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "read_only_and_plan_only", True, True, False, False, False, False, False, False,
     ]:
         problems.append("M3 must remain in its phase-appropriate read-only and plan-only state")
+    if expected_m3_status == "active_read_only_and_plan_only":
+        if m3.get("opened_after_m2_dev_revision") != "51977de8120202958fc35776d284077b1fc027d3":
+            problems.append("active M3 must bind the accepted synchronized M2 dev revision")
     m2_wu1 = status.get("m2_wu1_target_policy", {})
     if m2_wu1.get("status") != "accepted_dev_integration_proof":
         problems.append("M2-WU1 target policy must record the accepted dev integration proof")

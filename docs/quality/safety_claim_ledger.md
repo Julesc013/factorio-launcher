@@ -39,8 +39,8 @@ reported as stronger runtime evidence.
 | Portable setup adversarial corpus | cross-platform machine proof | 16 cases; Setup on three targets; FacMan cancellation/termination | bounded synthetic lane only; Windows/macOS multi-volume and real archives unproven |
 | Operator live-target setup | historical pending record | retained first synthetic lifecycle, audit, and interruption matrix | superseded only for the automated synthetic lane; no human Pass claimed |
 | Automated synthetic setup acceptance | MachinePass | frozen verifier, fresh run, 12 controls, full local/hosted proof | managed candidate only; no Factorio, existing install, execution, H1, or external authority |
-| M2 technical wave | canonically promoted | MachinePass, exact-`dev`, PR #30, and exact-`main` `bd06429` | merge the public record and synchronize `dev` before WorkUnit closure |
-| Existing-portable adoption | M3 authorized-next pending synchronized closeout | read-only inspection and plan generation only | no adoption apply, deletion, mutation, Steam adoption, execution, or external authority |
+| M2 technical wave | accepted public integration | MachinePass, canonical `bd06429`, synchronized `dev` `51977de` | synthetic/local managed candidate only; every higher-risk authority remains excluded |
+| Existing-portable adoption | M3 active read-only/plan-only | inspection and plan generation after synchronized M2 closeout | no adoption apply, deletion, mutation, Steam adoption, execution, or external authority |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |

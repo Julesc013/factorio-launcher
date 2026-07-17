@@ -146,9 +146,11 @@ The evidence-only
 [`M2 public integration proof`](m2-public-integration-proof.md) binds the
 MachinePass closeout, exact-`dev` workflows, reviewed promotion PR #30,
 canonical `main` revision `bd064295`, and its four exact successful workflow
-families. It does not broaden M2 authority. The closeout WorkUnit and M3 remain
-pending until this record is merged and canonical `main` is synchronized back
-into `dev` with exact-head proof.
+families. PR #31 accepted the public record and PR #32 synchronized canonical
+ancestry back into `dev`; exact synchronized-`dev` workflows passed at
+`51977de`. The M2 closeout WorkUnit is closed. M3 is active only for read-only
+existing-portable inspection and plan generation, with every apply, deletion,
+mutation, Steam, execution, and external authority still excluded.
 
 Earlier checkpoints remain revision-pinned historical evidence:
 

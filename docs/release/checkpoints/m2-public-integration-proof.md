@@ -1,7 +1,6 @@
 # M2 Public Integration Proof
 
-Status: canonical M2 promotion proven; public record and `dev` synchronization
-pending.
+Status: accepted; M2 closed; M3 opened read-only and plan-only.
 
 ## Accepted Chain
 
@@ -55,9 +54,26 @@ adoption, Steam or Steam Cloud mutation, network, credentials, registry,
 shortcuts, elevation, system-wide installation, execution, `run.execute`, H1,
 signing, publication, Safe beta, or any broader authority.
 
-M3 remains authorized-next and limited to read-only existing-portable
-inspection and plan generation. Adoption apply, deletion, existing-install
-mutation, and Steam adoption remain false. The active M2 closeout WorkUnit is
-not closed by this candidate record; this record must first merge into `dev`,
-then canonical `main` must be synchronized into `dev` and verified at the exact
-sync revision.
+M3 is limited to read-only existing-portable inspection and plan generation.
+Adoption apply, deletion, existing-install mutation, and Steam adoption remain
+false.
+
+## Public Record and Dev Synchronization
+
+PR #31 bound this public-integration record at task revision
+`44687765815174db8afc1da6fa768f7a655a6290` and merged it into `dev` at
+`1678cb6d3c9545f09c4ae729054f68cf0fbc7bf2`. That exact merge passed CI
+`29571806755`, code-security `29571806753`, and security-policy `29571806738`.
+
+PR #32 then merged ancestry-only synchronization candidate
+`6fb4a0c96503f32ad9070a5c557f2fa1a31209c8`. The pre/post synchronization tree
+remained `8487c87a097395186cccbcd13d929dd88d3b16fa`, while canonical `main`
+became an ancestor of `dev`. The reviewed candidate passed push runs
+`29572580045`, `29572580070`, and `29572580032`, plus PR runs `29572594866`,
+`29572594857`, and `29572594830`.
+
+The synchronized `dev` merge is
+`51977de8120202958fc35776d284077b1fc027d3`. Its exact CI `29573335555`,
+code-security `29573335458`, and security-policy `29573335488` all succeeded.
+This completes M2 closeout and permits M3 to begin only within its read-only and
+plan-only boundary.

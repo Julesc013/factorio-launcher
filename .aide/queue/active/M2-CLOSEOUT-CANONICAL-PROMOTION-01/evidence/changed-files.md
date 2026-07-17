@@ -1,12 +1,10 @@
 # Changed Files
 
-- `docs/release/checkpoints/m2-public-integration-proof.md` binds the accepted
-  MachinePass chain, exact-`dev`, promotion PR, canonical merge, identical tree,
-  and exact-`main` workflow identities.
+- `docs/release/checkpoints/m2-public-integration-proof.md` binds the complete
+  MachinePass, canonical promotion, public-record, synchronization, identical
+  tree, and exact hosted workflow chain.
 - `release/index/project_status.v2.toml` and generated project-state surfaces
-  advance M2 to canonical promotion while keeping public-record merge and
-  post-promotion `dev` synchronization pending.
+  close M2 and open M3 only for read-only inspection and plan generation.
 - `tools/project_state.py` and its compaction tests recognize only the defined
   monotonic closeout phases and keep every higher-risk authority excluded.
-- M3 remains authorized-next only, read-only, and plan-only until `dev`
-  synchronization is independently merged and verified.
+- The M2 closeout task moves to closed history after verification and review.
