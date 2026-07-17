@@ -1,6 +1,6 @@
 # Remaining Risks
 
-- The closeout task branch has not passed its complete local and hosted matrix.
+- The closeout task branch has not passed its hosted matrix.
 - The closeout has not independently merged into `dev` or passed exact-`dev`
   workflows.
 - `main` still points at the M1 promotion; M2 canonical promotion, exact-main

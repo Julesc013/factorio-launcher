@@ -361,6 +361,7 @@ class AideCompactionTests(unittest.TestCase):
             closeout["wu10_dev_merge_revision"],
         )
         self.assertEqual("pending_dev_to_main_promotion", closeout["canonical_main_revision"])
+        self.assertEqual("pass_complete_matrix", closeout["local_validation"])
         self.assertFalse(closeout["run_execute"])
         m3 = data["m3_existing_portable_adoption"]
         self.assertEqual("read_only_and_plan_only", m3["scope"])

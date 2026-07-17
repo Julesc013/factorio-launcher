@@ -245,7 +245,7 @@
     "hosted_validation": "pending_task_revision",
     "human_review": "not_required_for_synthetic_non_executable_lane",
     "local_managed_portable_setup": "candidate",
-    "local_validation": "pending_complete_matrix",
+    "local_validation": "pass_complete_matrix",
     "network": false,
     "public_integration": "pending_exact_main_proof",
     "publication": false,
