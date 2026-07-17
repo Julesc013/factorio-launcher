@@ -119,6 +119,22 @@ retaining schema, chain, digest, root-containment, negative-control, no-result,
 and excluded-authority requirements. Another independently revision-bound
 fresh run remains mandatory after this correction merges.
 
+The
+[`M2-WU10 machine-acceptance candidate`](m2-wu10-machine-acceptance-candidate.md)
+checkpoint binds a new post-correction lifecycle and interruption pair to the
+unchanged accepted verifier. It records `EvidencePass` and the exact
+observation digest, but deliberately withholds `MachinePass` and authority
+until complete local proof and hosted validation of a separate candidate
+revision are available.
+
+The separate
+[`M2-WU10 MachinePass`](m2-wu10-machine-pass.md) checkpoint binds the accepted
+policy/verifier, fresh observation, complete local matrix, and six successful
+push/PR workflows for candidate revision `ff883cd`. It closes WU10 with a
+technical `MachinePass`, never a human `Pass`, and promotes only bounded local
+managed portable setup candidacy. M2 closeout and canonical promotion remain a
+separate checkpoint.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

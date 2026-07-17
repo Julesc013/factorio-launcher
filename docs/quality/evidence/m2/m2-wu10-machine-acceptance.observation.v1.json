@@ -1,0 +1,133 @@
+{
+  "authority": {
+    "credentials": false,
+    "elevation": false,
+    "existing_factorio_mutation": false,
+    "existing_installation_adoption": false,
+    "facman_local_managed_setup_candidate": true,
+    "factorio_archive_acceptance": false,
+    "h1_inference": "none",
+    "local_managed_portable_setup": "candidate",
+    "network": false,
+    "publication": false,
+    "registry": false,
+    "run_execute": false,
+    "shortcuts": false,
+    "signing": false,
+    "steam_cloud_mutation": false,
+    "steam_mutation": false,
+    "system_wide_installation": false,
+    "verified_launcher_handoff": "candidate"
+  },
+  "evidence": {
+    "acceptance_root": "D:/FacMan-Live-Acceptance/M2",
+    "archive": {
+      "contains_executable_code": false,
+      "entries": [
+        {
+          "path": "product/README.txt",
+          "sha256": "85b5051362ff0e52688756d1054f0a0857a4334f97408c737b704e1ab887a9ba",
+          "size_bytes": 48
+        },
+        {
+          "path": "product/config/settings.ini",
+          "sha256": "839de304a01dfeac9ae13fc74dff983142b97cc5fba70fa4881fa29857741033",
+          "size_bytes": 29
+        },
+        {
+          "path": "product/data/payload.dat",
+          "sha256": "3b631c7346704df508f535d800fe5f052d5ef39b026885937e221bb81aa729d9",
+          "size_bytes": 18
+        }
+      ],
+      "sha256": "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf"
+    },
+    "audit": {
+      "chain_id": "audit.synthetic.m2.m2wu10-20260717-02",
+      "event_count": 5,
+      "head_digest": "786bbe7c83831c5fdf7f3494c511eb7b35b7301c124ee0da07320d0dd73d01cc"
+    },
+    "evidence_packets": [
+      {
+        "file_sha256": "a38aed2de749fea800dff7f40efc02632c0c807465f88ce8aa12c086305fd656",
+        "operation": "install_local",
+        "packet_digest": "2d06ca4d2d067d1887d996772e3107c9fdf1d8cfb979771dc4e89164c4c6dd63",
+        "plan_digest": "43743c8d6a5c155670b8218cc7bc0a8a7f0c3b7b75acce23145fb7a70d3cc08b",
+        "relative_path": "setup-state/evidence/packets/evidence.install.m2wu10-20260717-02.json"
+      },
+      {
+        "file_sha256": "cfb60693860fe5bef3db34fdca77748580ca26d71a6d19405eb0102ac0eb8093",
+        "operation": "repair",
+        "packet_digest": "462d8623264906548df9e0ab3bf20f5b93c5ffcaa47788d8370079b26b13267f",
+        "plan_digest": "0b9af3eb04ccc6fa5acae0d69611cd43e6c928420d3423691a318ab903bcc0e7",
+        "relative_path": "setup-state/evidence/packets/evidence.repair.m2wu10-20260717-02.json"
+      },
+      {
+        "file_sha256": "486c304702b98b3a3c6a27061056e4ab2d9295c59369c8bf0aa4f5586ba8b185",
+        "operation": "move",
+        "packet_digest": "84bc09393e548e3edef6e154fa38466c56890219e2769ab793b2671d22963909",
+        "plan_digest": "47e34f6a8f23454a899ab5c50b8f3160bc4216c5d390261178b39e305e050811",
+        "relative_path": "setup-state/evidence/packets/evidence.move.m2wu10-20260717-02.json"
+      },
+      {
+        "file_sha256": "216c4dae7bd3ef38c0a203989767ea114c60fdf98ca1dd62d5c22f4492fd188e",
+        "operation": "uninstall",
+        "packet_digest": "f1dac6faaf22343aa234f50dd96a6af8904d4c24dfd0441690d26086a14d0cd6",
+        "plan_digest": "9d56b014cfbe228e835d1f1626e74d6ca86a2e9121cabf356f2ddd81a84621d0",
+        "relative_path": "setup-state/evidence/packets/evidence.uninstall.m2wu10-20260717-02.json"
+      }
+    ],
+    "final_state": {
+      "committed_closure": "removed",
+      "installed_product": "present_exact_owned_closure",
+      "moved_product": "absent_after_clean_uninstall",
+      "recovery_status": "not_required"
+    },
+    "interruption_recovery": {
+      "case_count": 11,
+      "journal_count": 14,
+      "summary_sha256": "bb3f4d0827f3550da6ad0d50af7b5565c60e07f1350453986de30ec83b9a6785"
+    },
+    "interruption_run_id": "m2wu10-20260717-02-interruptions",
+    "product_files": [
+      {
+        "path": "README.txt",
+        "sha256": "85b5051362ff0e52688756d1054f0a0857a4334f97408c737b704e1ab887a9ba",
+        "size_bytes": 48
+      },
+      {
+        "path": "config/settings.ini",
+        "sha256": "839de304a01dfeac9ae13fc74dff983142b97cc5fba70fa4881fa29857741033",
+        "size_bytes": 29
+      },
+      {
+        "path": "data/payload.dat",
+        "sha256": "3b631c7346704df508f535d800fe5f052d5ef39b026885937e221bb81aa729d9",
+        "size_bytes": 18
+      }
+    ],
+    "retained_tree": {
+      "directory_count": 14,
+      "file_count": 26,
+      "reparse_point_count": 0,
+      "total_bytes": 40105
+    },
+    "run_id": "m2wu10-20260717-02",
+    "summary_sha256": "58c6d6568c3434c872d8efb9a39c3da20979bd8aa407cfb3d23b11a231e5fc74"
+  },
+  "human_review": {
+    "requirement": "not_required_for_synthetic_non_executable_lane",
+    "result": "not_required"
+  },
+  "schema": "factorio.m2_machine_acceptance_observation.v1",
+  "technical_acceptance": {
+    "evidence_digest": "4de3e83c0abbe8b63f76cc6e31ece8ba2b6c052ab4cd1a94f56c76479ae502d2",
+    "policy_id": "facman.m2.synthetic_portable_acceptance.v1",
+    "policy_revision": "26eb7056984b42859e377c1ffd0ffb7c80488078",
+    "result": "EvidencePass",
+    "runner_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "verified_at": "2026-07-17T06:25:00Z",
+    "verifier_revision": "26eb7056984b42859e377c1ffd0ffb7c80488078"
+  },
+  "work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01"
+}
