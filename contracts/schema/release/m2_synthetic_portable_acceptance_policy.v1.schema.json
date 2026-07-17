@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.m2_synthetic_portable_acceptance_policy.v1.schema.json",
+  "title": "M2 synthetic portable automated acceptance policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "policy_id", "status", "scope", "revision_binding", "synthetic_archive", "retained_lifecycle", "interruption_recovery", "required_validation", "technical_acceptance", "authority_on_machine_pass", "required_negative_controls"],
+  "properties": {
+    "schema": {"const": "factorio.m2_synthetic_portable_acceptance_policy.v1"},
+    "policy_id": {"const": "facman.m2.synthetic_portable_acceptance.v1"},
+    "status": {"const": "frozen_criteria_no_result"},
+    "scope": {"type": "object"},
+    "revision_binding": {"type": "object"},
+    "synthetic_archive": {"type": "object"},
+    "retained_lifecycle": {"type": "object"},
+    "interruption_recovery": {"type": "object"},
+    "required_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exact_head_required", "local", "hosted"],
+      "properties": {
+        "exact_head_required": {"const": true},
+        "local": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"type": "string"}, "uniqueItems": true},
+        "hosted": {"type": "array", "minItems": 10, "maxItems": 10, "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "technical_acceptance": {"type": "object"},
+    "authority_on_machine_pass": {"type": "object"},
+    "required_negative_controls": {"type": "array", "minItems": 12, "maxItems": 12, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  }
+}

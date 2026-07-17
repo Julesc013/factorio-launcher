@@ -15,6 +15,12 @@ items:
     title: M2 live-target policy contract
     task: .aide/queue/active/M2-WU1-LIVE-TARGET-POLICY-01/task.yaml
     evidence: .aide/queue/active/M2-WU1-LIVE-TARGET-POLICY-01/evidence
+  - id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01
+    status: active
+    lifecycle_state: active
+    title: M2 WU10 automated synthetic acceptance policy
+    task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/task.yaml
+    evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/evidence
   - id: M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01
     status: verified
     lifecycle_state: verified
