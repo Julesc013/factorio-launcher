@@ -1,6 +1,7 @@
 # M2-WU10 Machine-Acceptance Candidate
 
-Status: `EvidencePass`; complete validation and `MachinePass` pending.
+Status: `EvidencePass`; local validation passed; hosted validation and
+`MachinePass` pending.
 
 ## Accepted Identities
 
@@ -50,8 +51,11 @@ corpus.
 ## Candidate, Not Verdict
 
 `EvidencePass` is the accepted verifier's filesystem observation. It is not the
-technical acceptance verdict. This candidate revision must first pass the
-complete local matrix and both push and pull-request hosted workflow sets.
+technical acceptance verdict. The complete local matrix passed: 19 focused
+tests, 234-schema strict validation, AIDE Lite, 41 native tests, 349 Python
+tests with one expected opt-in skip, 14 clean-checkout package-runtime tests
+with zero skips, and the clean three-repository reconstruction. This candidate
+revision must still pass both push and pull-request hosted workflow sets.
 
 After candidate CI passes, a later result commit may bind the candidate
 revision, observation digest, local commands, PR number, and workflow run IDs.

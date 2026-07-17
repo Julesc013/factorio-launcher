@@ -881,13 +881,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         candidate.get("run_id"), candidate.get("evidence_result"),
         candidate.get("machine_pass"), candidate.get("authority_promotion"),
     ] != [
-        "evidence_pass_pending_complete_validation",
+        "evidence_pass_local_validation_pass_hosted_pending",
         "26eb7056984b42859e377c1ffd0ffb7c80488078",
         "3f8489275077347c2918f3bb03614ec6431362ff",
         "26eb7056984b42859e377c1ffd0ffb7c80488078",
         "m2wu10-20260717-02", "EvidencePass", False, False,
     ]:
-        problems.append("M2-WU10 candidate must remain EvidencePass without authority")
+        problems.append("M2-WU10 candidate must remain locally validated EvidencePass without authority")
     if candidate.get("observation_sha256") != "fb0fcb58eec795d45a56cb48773d74ed74a38d4b14834a4921c1542310777181":
         problems.append("M2-WU10 candidate observation identity changed")
     licenses = status.get("universal_repository_licenses", {})

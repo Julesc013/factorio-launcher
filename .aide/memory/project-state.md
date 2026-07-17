@@ -36,7 +36,7 @@ inputs, then run `py -3 tools/project_state.py --write`.
 - M2-WU10 operator acceptance: `historical_machine_evidence_ready_pending_operator_verdict`; run: `m2wu10-20260715-01`; operator verdict: `pending`.
 - M2-WU10 automated acceptance policy: `accepted_corrected_policy_evidence_pass_no_machine_result`; technical acceptance: `evidence_pass_pending_machine_pass`; human review: `not_required_for_synthetic_non_executable_lane`.
 - M2-WU10 first automated result attempt: `blocked_before_evidence_pass`; verifier: `fail_closed`; MachinePass: `false`.
-- M2-WU10 corrected acceptance candidate: `evidence_pass_pending_complete_validation`; evidence: `EvidencePass`; MachinePass: `false`.
+- M2-WU10 corrected acceptance candidate: `evidence_pass_local_validation_pass_hosted_pending`; evidence: `EvidencePass`; MachinePass: `false`.
 - Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
 R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, stable SDK, daemon, live-target setup, networking, credential, signing, or publication authority is inferred from the completed non-execution proof.

@@ -527,7 +527,7 @@ machine_pass = false
 authority_promotion = false
 
 [m2_wu10_machine_acceptance_candidate]
-status = "evidence_pass_pending_complete_validation"
+status = "evidence_pass_local_validation_pass_hosted_pending"
 work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
 contract_work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01"
 policy_id = "facman.m2.synthetic_portable_acceptance.v1"
@@ -545,7 +545,7 @@ interruption_summary_sha256 = "bb3f4d0827f3550da6ad0d50af7b5565c60e07f1350453986
 archive_sha256 = "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf"
 evidence_result = "EvidencePass"
 machine_pass = false
-local_validation = "pending_complete_matrix"
+local_validation = "pass_complete_matrix"
 hosted_validation = "pending_candidate_revision"
 human_review = "not_required_for_synthetic_non_executable_lane"
 authority_promotion = false

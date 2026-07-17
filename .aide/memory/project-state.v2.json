@@ -124,7 +124,7 @@
     {
       "claim": "Automated synthetic setup acceptance",
       "level": "EvidencePass; MachinePass pending",
-      "limitation": "complete local and hosted candidate proof still required; no authority promoted"
+      "limitation": "hosted candidate proof still required; no authority promoted"
     },
     {
       "claim": "Package hashes authenticate publisher",
@@ -305,7 +305,7 @@
     "human_review": "not_required_for_synthetic_non_executable_lane",
     "interruption_run_id": "m2wu10-20260717-02-interruptions",
     "interruption_summary_sha256": "bb3f4d0827f3550da6ad0d50af7b5565c60e07f1350453986de30ec83b9a6785",
-    "local_validation": "pending_complete_matrix",
+    "local_validation": "pass_complete_matrix",
     "machine_pass": false,
     "observation_path": "docs/quality/evidence/m2/m2-wu10-machine-acceptance.observation.v1.json",
     "observation_sha256": "fb0fcb58eec795d45a56cb48773d74ed74a38d4b14834a4921c1542310777181",
@@ -313,7 +313,7 @@
     "policy_revision": "26eb7056984b42859e377c1ffd0ffb7c80488078",
     "run_id": "m2wu10-20260717-02",
     "runner_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
-    "status": "evidence_pass_pending_complete_validation",
+    "status": "evidence_pass_local_validation_pass_hosted_pending",
     "summary_sha256": "58c6d6568c3434c872d8efb9a39c3da20979bd8aa407cfb3d23b11a231e5fc74",
     "verified_at": "2026-07-17T06:25:00Z",
     "verifier_revision": "26eb7056984b42859e377c1ffd0ffb7c80488078",

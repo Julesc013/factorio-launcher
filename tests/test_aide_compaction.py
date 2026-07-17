@@ -334,7 +334,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(result_attempt["machine_pass"])
         self.assertFalse(result_attempt["authority_promotion"])
         candidate = data["m2_wu10_machine_acceptance_candidate"]
-        self.assertEqual("evidence_pass_pending_complete_validation", candidate["status"])
+        self.assertEqual(
+            "evidence_pass_local_validation_pass_hosted_pending",
+            candidate["status"],
+        )
+        self.assertEqual("pass_complete_matrix", candidate["local_validation"])
         self.assertEqual("EvidencePass", candidate["evidence_result"])
         self.assertFalse(candidate["machine_pass"])
         self.assertFalse(candidate["authority_promotion"])
