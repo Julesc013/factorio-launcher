@@ -128,12 +128,12 @@
     },
     {
       "claim": "M2 technical wave",
-      "level": "closeout candidate",
-      "limitation": "canonical main, public integration, and dev synchronization pending"
+      "level": "canonically promoted",
+      "limitation": "merge the public record and synchronize `dev` before WorkUnit closure"
     },
     {
       "claim": "Existing-portable adoption",
-      "level": "M3 authorized-next",
+      "level": "M3 authorized-next pending synchronized closeout",
       "limitation": "no adoption apply, deletion, mutation, Steam adoption, execution, or external authority"
     },
     {
@@ -180,9 +180,9 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-closeout-candidate",
+  "current_checkpoint": "m2-public-integration-proof",
   "current_revisions": {
-    "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
+    "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "universal_launcher": "7bd4425f0c35414f738159b45d8bec42edf70235",
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
@@ -194,7 +194,7 @@
     "status": "unavailable"
   },
   "known_blockers": [
-    "M2 MachinePass closeout is recorded on a task branch; exact-dev proof, canonical main promotion, public integration, and dev synchronization remain incomplete.",
+    "M2 is canonically promoted and exact-main proof is green; the public-integration record and post-promotion dev synchronization remain to be merged and verified.",
     "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
@@ -233,29 +233,45 @@
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
   "m2_closeout_candidate": {
-    "canonical_main_revision": "pending_dev_to_main_promotion",
+    "canonical_main_revision": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
+    "closeout_pull_request": 29,
+    "closeout_task_revision": "3fc80882e7da0e38cddd901dfc965775281b0411",
     "credentials": false,
-    "dev_integration_revision": "pending_independent_merge",
-    "dev_synchronization": "pending_canonical_promotion",
+    "dev_integration_revision": "4afab65448831b05ab790957abf0e1798074ad1a",
+    "dev_synchronization": "pending_public_record_and_main_to_dev_sync",
     "elevation": false,
+    "exact_dev_ci_run": "29567550655",
+    "exact_dev_code_security_run": "29567550714",
+    "exact_dev_security_policy_run": "29567550663",
+    "exact_main_ci_run": "29569007275",
+    "exact_main_code_security_run": "29569007270",
+    "exact_main_schema_check_run": "29569007323",
+    "exact_main_security_policy_run": "29569007290",
     "existing_factorio_mutation": false,
     "existing_installation_adoption": false,
     "factorio_archive_acceptance": false,
     "h1_inference": "none",
-    "hosted_validation": "pending_task_revision",
+    "hosted_validation": "pass_exact_dev_promotion_pr_and_exact_main",
     "human_review": "not_required_for_synthetic_non_executable_lane",
     "local_managed_portable_setup": "candidate",
     "local_validation": "pass_complete_matrix",
     "network": false,
-    "public_integration": "pending_exact_main_proof",
+    "promotion_head_revision": "4afab65448831b05ab790957abf0e1798074ad1a",
+    "promotion_pr_ci_run": "29568218139",
+    "promotion_pr_code_security_run": "29568218162",
+    "promotion_pr_schema_check_run": "29568218137",
+    "promotion_pr_security_policy_run": "29568218125",
+    "promotion_pull_request": 30,
+    "public_integration": "record_candidate_exact_main_proof_bound",
     "publication": false,
     "registry": false,
     "result_path": "docs/quality/evidence/m2/m2-wu10-machine-acceptance.pass.v1.json",
     "result_sha256": "a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa",
     "run_execute": false,
+    "shared_promoted_tree_identity": "ee54dc220ed5fd80a9f450988033c5e29599a326",
     "shortcuts": false,
     "signing": false,
-    "status": "machine_pass_closeout_pending_exact_dev_and_main_promotion",
+    "status": "canonically_promoted_public_integration_pending_dev_synchronization",
     "steam_cloud_mutation": false,
     "steam_mutation": false,
     "system_wide_installation": false,
@@ -273,7 +289,7 @@
     "h1_inference": "none",
     "human_review": "not_required_for_synthetic_non_executable_lane",
     "ordinary_live_apply": "candidate_within_machine_accepted_policy_scope",
-    "status": "complete_machine_pass_pending_canonical_promotion",
+    "status": "complete_machine_pass_canonically_promoted",
     "technical_acceptance": "MachinePass"
   },
   "m2_wu10_automated_acceptance_policy": {
@@ -892,7 +908,7 @@
     "registry": false,
     "run_execute": false,
     "scope": "read_only_and_plan_only",
-    "status": "authorized_next_wave_pending_m2_canonical_promotion",
+    "status": "authorized_next_wave_pending_m2_dev_synchronization",
     "steam_adoption": false,
     "steam_mutation": false
   },
