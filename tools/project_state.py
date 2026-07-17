@@ -119,6 +119,8 @@ def collect() -> dict[str, Any]:
         "m2_wu10_automated_acceptance_result_attempt": status["m2_wu10_automated_acceptance_result_attempt"],
         "m2_wu10_machine_acceptance_candidate": status["m2_wu10_machine_acceptance_candidate"],
         "m2_wu10_machine_acceptance_result": status["m2_wu10_machine_acceptance_result"],
+        "m2_closeout_candidate": status["m2_closeout_candidate"],
+        "m3_existing_portable_adoption": status["m3_existing_portable_adoption"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -239,11 +241,17 @@ def markdown(data: dict[str, Any]) -> str:
         f"`{data['m2_wu10_machine_acceptance_result']['status']}`; human review: "
         f"`{data['m2_wu10_machine_acceptance_result']['human_review']}`; managed setup: "
         f"`{data['m2_wu10_machine_acceptance_result']['local_managed_portable_setup']}`.",
+        f"- M2 closeout: `{data['m2_closeout_candidate']['status']}`; dev merge: "
+        f"`{data['m2_closeout_candidate']['wu10_dev_merge_revision']}`; canonical main: "
+        f"`{data['m2_closeout_candidate']['canonical_main_revision']}`.",
+        f"- M3 existing-portable adoption: `{data['m3_existing_portable_adoption']['status']}`; "
+        f"scope: `{data['m3_existing_portable_adoption']['scope']}`; adoption apply: "
+        f"`{str(data['m3_existing_portable_adoption']['adoption_apply']).lower()}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
-        "R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. "
-        "M1 is independently fixture-proven and M2-WU10 records a bounded MachinePass for "
+        "R3.7, M1, and the bounded M2 technical wave are complete. The exact R3.7 runtime is "
+        "frozen as the H1 candidate. M2-WU10 records a bounded MachinePass for "
         "newly created policy-approved managed targets. No execution, Safe beta, stable SDK, "
         "daemon, real-Factorio archive, existing-installation, networking, credential, signing, "
         "or publication authority is inferred from that synthetic proof.",
@@ -412,20 +420,24 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     problems = []
     if status.get("schema") != "facman.project_status.v2":
         problems.append("canonical status has the wrong schema")
-    if status.get("completed_wave") != "r3.7":
-        problems.append("canonical status must record completed R3.7")
+    if status.get("completed_wave") != "m2":
+        problems.append("canonical status must record completed M2 technical wave")
     if status.get("next_authority_gate") != "H1":
         problems.append("canonical status must route the next authority gate to H1")
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
+    latest_wu10_id = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
+    m2_closeout_id = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
-    if status.get("active_work_unit"):
-        problems.append("M2-WU10 MachinePass closeout must leave no active WorkUnit")
-    if status.get("last_closed_work_unit") != latest_closeout_id:
-        problems.append("canonical status must bind the latest closed M2 WorkUnit")
+    if status.get("active_work_unit") == m2_closeout_id:
+        if status.get("last_closed_work_unit") != latest_wu10_id:
+            problems.append("active M2 closeout must preserve WU10 as the latest closed WorkUnit")
+    elif status.get("active_work_unit"):
+        problems.append("only the M2 closeout WorkUnit may be active")
+    elif status.get("last_closed_work_unit") != m2_closeout_id:
+        problems.append("closed M2 closeout must be the latest closed WorkUnit")
     repair = status.get("r3_8_repair", {})
     if repair.get("status") != "closed":
         problems.append("canonical status must record the R3.8 repair as closed")
@@ -463,6 +475,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if m1_integration.get("authority_promotion") is not False:
         problems.append("M1 public integration proof must not promote authority")
     m2 = status.get("m2_live_portable_setup", {})
+    if m2.get("status") != "complete_machine_pass_pending_canonical_promotion":
+        problems.append("M2 must remain complete with canonical promotion pending")
     if m2.get("technical_acceptance") != "MachinePass":
         problems.append("M2 technical acceptance must record the bounded MachinePass")
     if m2.get("human_review") != "not_required_for_synthetic_non_executable_lane":
@@ -471,6 +485,45 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2 ordinary setup must remain only a bounded MachinePass candidate")
     if m2.get("execution_authority") is not False or m2.get("h1_inference") != "none":
         problems.append("M2 must not promote execution or infer H1")
+    closeout = status.get("m2_closeout_candidate", {})
+    if [
+        closeout.get("status"), closeout.get("work_unit"),
+        closeout.get("wu10_pull_request"), closeout.get("wu10_dev_merge_revision"),
+        closeout.get("technical_acceptance"), closeout.get("human_review"),
+        closeout.get("result_sha256"), closeout.get("canonical_main_revision"),
+        closeout.get("local_managed_portable_setup"),
+    ] != [
+        "machine_pass_closeout_pending_exact_dev_and_main_promotion",
+        "M2-CLOSEOUT-CANONICAL-PROMOTION-01", 28,
+        "5250db1d17ac330f5ae0b672ccc7466431a1e4a2", "MachinePass",
+        "not_required_for_synthetic_non_executable_lane",
+        "a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa",
+        "pending_dev_to_main_promotion", "candidate",
+    ]:
+        problems.append("M2 closeout candidate identity or scope changed")
+    if closeout.get("local_validation") not in {"pending_complete_matrix", "pass_complete_matrix"}:
+        problems.append("M2 closeout must record a recognized local validation state")
+    for key in [
+        "factorio_archive_acceptance", "existing_factorio_mutation",
+        "existing_installation_adoption", "steam_mutation", "steam_cloud_mutation",
+        "network", "credentials", "registry", "shortcuts", "elevation",
+        "system_wide_installation", "run_execute", "signing", "publication",
+    ]:
+        if closeout.get(key) is not False:
+            problems.append(f"M2 closeout must keep {key} excluded")
+    if closeout.get("h1_inference") != "none":
+        problems.append("M2 closeout must not infer H1")
+    m3 = status.get("m3_existing_portable_adoption", {})
+    if [
+        m3.get("status"), m3.get("scope"), m3.get("existing_portable_inspection"),
+        m3.get("adoption_plan"), m3.get("adoption_apply"),
+        m3.get("deletion_authority"), m3.get("existing_installation_mutation"),
+        m3.get("steam_adoption"), m3.get("steam_mutation"), m3.get("run_execute"),
+    ] != [
+        "authorized_next_wave_pending_m2_canonical_promotion",
+        "read_only_and_plan_only", True, True, False, False, False, False, False, False,
+    ]:
+        problems.append("M3 must remain authorized-next, read-only, and plan-only")
     m2_wu1 = status.get("m2_wu1_target_policy", {})
     if m2_wu1.get("status") != "accepted_dev_integration_proof":
         problems.append("M2-WU1 target policy must record the accepted dev integration proof")

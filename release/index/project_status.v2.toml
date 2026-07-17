@@ -1,18 +1,18 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
-completed_wave = "r3.7"
-current_checkpoint = "m2-wu10-machine-pass"
+completed_wave = "m2"
+current_checkpoint = "m2-closeout-candidate"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "73bec99916d509b0ab055a43562e93ef20a6b4b7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
+active_work_unit = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
 last_closed_work_unit = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
 next_authority_gate = "H1"
 safe_beta = false
 
 known_blockers = [
-  "M2 MachinePass is bounded to synthetic and newly created policy-approved managed targets; M2 closeout and canonical promotion remain incomplete.",
+  "M2 MachinePass closeout is recorded on a task branch; exact-dev proof, canonical main promotion, public integration, and dev synchronization remain incomplete.",
   "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -20,7 +20,7 @@ known_blockers = [
 
 quarantined_capabilities = [
   "run.execute",
-  "setup mutation outside fixture, disposable, and package-proof roots",
+  "setup mutation outside newly created, explicitly selected, policy-approved managed targets",
   "network and credential operations",
   "server and developer process execution",
   "daemon publication",
@@ -97,7 +97,7 @@ main_dev_synchronized_at_proof = true
 authority_promotion = false
 
 [m2_live_portable_setup]
-status = "machine_pass_bounded_candidate_pending_m2_closeout"
+status = "complete_machine_pass_pending_canonical_promotion"
 active_work_unit = ""
 authorized_acceptance_root = "D:\\FacMan-Live-Acceptance\\M2"
 autonomous_archive_scope = "non_proprietary_synthetic_only"
@@ -509,6 +509,54 @@ registry = false
 elevation = false
 run_execute = false
 h1_inference = "none"
+publication = false
+
+[m2_closeout_candidate]
+status = "machine_pass_closeout_pending_exact_dev_and_main_promotion"
+work_unit = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
+wu10_pull_request = 28
+wu10_dev_merge_revision = "5250db1d17ac330f5ae0b672ccc7466431a1e4a2"
+technical_acceptance = "MachinePass"
+human_review = "not_required_for_synthetic_non_executable_lane"
+result_path = "docs/quality/evidence/m2/m2-wu10-machine-acceptance.pass.v1.json"
+result_sha256 = "a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa"
+local_validation = "pass_complete_matrix"
+hosted_validation = "pending_task_revision"
+dev_integration_revision = "pending_independent_merge"
+canonical_main_revision = "pending_dev_to_main_promotion"
+public_integration = "pending_exact_main_proof"
+dev_synchronization = "pending_canonical_promotion"
+local_managed_portable_setup = "candidate"
+factorio_archive_acceptance = false
+existing_factorio_mutation = false
+existing_installation_adoption = false
+steam_mutation = false
+steam_cloud_mutation = false
+network = false
+credentials = false
+registry = false
+shortcuts = false
+elevation = false
+system_wide_installation = false
+run_execute = false
+h1_inference = "none"
+signing = false
+publication = false
+
+[m3_existing_portable_adoption]
+status = "authorized_next_wave_pending_m2_canonical_promotion"
+scope = "read_only_and_plan_only"
+existing_portable_inspection = true
+adoption_plan = true
+adoption_apply = false
+deletion_authority = false
+existing_installation_mutation = false
+steam_adoption = false
+steam_mutation = false
+run_execute = false
+network = false
+registry = false
+elevation = false
 publication = false
 
 [m2_wu10_automated_acceptance_result_attempt]

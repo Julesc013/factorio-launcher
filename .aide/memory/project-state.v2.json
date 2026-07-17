@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "M2-CLOSEOUT-CANONICAL-PROMOTION-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -127,6 +127,16 @@
       "limitation": "managed candidate only; no Factorio, existing install, execution, H1, or external authority"
     },
     {
+      "claim": "M2 technical wave",
+      "level": "closeout candidate",
+      "limitation": "canonical main, public integration, and dev synchronization pending"
+    },
+    {
+      "claim": "Existing-portable adoption",
+      "level": "M3 authorized-next",
+      "limitation": "no adoption apply, deletion, mutation, Steam adoption, execution, or external authority"
+    },
+    {
       "claim": "Package hashes authenticate publisher",
       "level": "not claimed",
       "limitation": "signatures or trusted external metadata required"
@@ -166,11 +176,11 @@
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
-    "id": "r3.7",
+    "id": "m2",
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu10-machine-pass",
+  "current_checkpoint": "m2-closeout-candidate",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -184,7 +194,7 @@
     "status": "unavailable"
   },
   "known_blockers": [
-    "M2 MachinePass is bounded to synthetic and newly created policy-approved managed targets; M2 closeout and canonical promotion remain incomplete.",
+    "M2 MachinePass closeout is recorded on a task branch; exact-dev proof, canonical main promotion, public integration, and dev synchronization remain incomplete.",
     "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
@@ -222,6 +232,38 @@
     "wu12_task_head_revision": "2f13923a9cbdd60d47cab114ba1e280282259bb5",
     "wu12_tree_identity": "e45dc68be8b2cad93814d57c9de6f4f2863019ec"
   },
+  "m2_closeout_candidate": {
+    "canonical_main_revision": "pending_dev_to_main_promotion",
+    "credentials": false,
+    "dev_integration_revision": "pending_independent_merge",
+    "dev_synchronization": "pending_canonical_promotion",
+    "elevation": false,
+    "existing_factorio_mutation": false,
+    "existing_installation_adoption": false,
+    "factorio_archive_acceptance": false,
+    "h1_inference": "none",
+    "hosted_validation": "pending_task_revision",
+    "human_review": "not_required_for_synthetic_non_executable_lane",
+    "local_managed_portable_setup": "candidate",
+    "local_validation": "pass_complete_matrix",
+    "network": false,
+    "public_integration": "pending_exact_main_proof",
+    "publication": false,
+    "registry": false,
+    "result_path": "docs/quality/evidence/m2/m2-wu10-machine-acceptance.pass.v1.json",
+    "result_sha256": "a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa",
+    "run_execute": false,
+    "shortcuts": false,
+    "signing": false,
+    "status": "machine_pass_closeout_pending_exact_dev_and_main_promotion",
+    "steam_cloud_mutation": false,
+    "steam_mutation": false,
+    "system_wide_installation": false,
+    "technical_acceptance": "MachinePass",
+    "work_unit": "M2-CLOSEOUT-CANONICAL-PROMOTION-01",
+    "wu10_dev_merge_revision": "5250db1d17ac330f5ae0b672ccc7466431a1e4a2",
+    "wu10_pull_request": 28
+  },
   "m2_live_portable_setup": {
     "active_work_unit": "",
     "authorized_acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
@@ -231,7 +273,7 @@
     "h1_inference": "none",
     "human_review": "not_required_for_synthetic_non_executable_lane",
     "ordinary_live_apply": "candidate_within_machine_accepted_policy_scope",
-    "status": "machine_pass_bounded_candidate_pending_m2_closeout",
+    "status": "complete_machine_pass_pending_canonical_promotion",
     "technical_acceptance": "MachinePass"
   },
   "m2_wu10_automated_acceptance_policy": {
@@ -838,6 +880,22 @@
     "universal_setup_task_tree": "8861d0d640af8dc24e774f5ff934ad67f8a5d5cd",
     "windows_macos_cross_device_observation": "requires_separately_provisioned_volume"
   },
+  "m3_existing_portable_adoption": {
+    "adoption_apply": false,
+    "adoption_plan": true,
+    "deletion_authority": false,
+    "elevation": false,
+    "existing_installation_mutation": false,
+    "existing_portable_inspection": true,
+    "network": false,
+    "publication": false,
+    "registry": false,
+    "run_execute": false,
+    "scope": "read_only_and_plan_only",
+    "status": "authorized_next_wave_pending_m2_canonical_promotion",
+    "steam_adoption": false,
+    "steam_mutation": false
+  },
   "machine_protocol": {
     "daemon_transport": "unavailable",
     "status": "implemented",
@@ -976,7 +1034,7 @@
   },
   "quarantined_capabilities": [
     "run.execute",
-    "setup mutation outside fixture, disposable, and package-proof roots",
+    "setup mutation outside newly created, explicitly selected, policy-approved managed targets",
     "network and credential operations",
     "server and developer process execution",
     "daemon publication",

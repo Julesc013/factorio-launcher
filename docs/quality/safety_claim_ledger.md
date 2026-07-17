@@ -39,6 +39,8 @@ reported as stronger runtime evidence.
 | Portable setup adversarial corpus | cross-platform machine proof | 16 cases; Setup on three targets; FacMan cancellation/termination | bounded synthetic lane only; Windows/macOS multi-volume and real archives unproven |
 | Operator live-target setup | historical pending record | retained first synthetic lifecycle, audit, and interruption matrix | superseded only for the automated synthetic lane; no human Pass claimed |
 | Automated synthetic setup acceptance | MachinePass | frozen verifier, fresh run, 12 controls, full local/hosted proof | managed candidate only; no Factorio, existing install, execution, H1, or external authority |
+| M2 technical wave | closeout candidate | WU1-WU10 and merged MachinePass at `5250db1` | canonical main, public integration, and dev synchronization pending |
+| Existing-portable adoption | M3 authorized-next | read-only inspection and plan generation only | no adoption apply, deletion, mutation, Steam adoption, execution, or external authority |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |

@@ -3,24 +3,24 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/m2-wu10-record-machine-pass
-- current_commit: 26eb7056984b42859e377c1ffd0ffb7c80488078
+- current_branch: task/m2-closeout-canonical-promotion
+- current_commit: 5250db1d17ac330f5ae0b672ccc7466431a1e4a2
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
 - canonical_branch: main
 - integration_branch: dev
-- recommended_next_action: continue bounded task work, validate locally, and plan future landing to dev
+- recommended_next_action: classify dirty tree before branch-sensitive work
 
 ## Branch Summary
 
-- local_branches: 42
-- remote_branches: 27
+- local_branches: 43
+- remote_branches: 28
 - tags_count: 2
 
 ## Warnings
 
-- none
+- dirty_tree_detected
 
 ## Q28 Boundary
 
