@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01
 title: M2 WU10 automated synthetic acceptance policy
-status: active
-lifecycle_state: active
-planning_state: active
+status: verified
+lifecycle_state: verified
+planning_state: verified
 created_at: 2026-07-17T04:09:54Z
 owner: unassigned
 objective: >
@@ -48,3 +48,6 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-17T04:09:55Z
+verified_at: 2026-07-17T05:02:56Z
+implementation_state: implemented
+result: PASS

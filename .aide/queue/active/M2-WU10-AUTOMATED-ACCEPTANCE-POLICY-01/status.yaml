@@ -1,9 +1,11 @@
 schema_version: aide.queue-status.v1
 task_id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: verified
+lifecycle_state: verified
+planning_state: verified
 created_at: 2026-07-17T04:09:54Z
-result: PENDING
+result: PASS
 evidence_path: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/evidence/
 active_at: 2026-07-17T04:09:55Z
+verified_at: 2026-07-17T05:02:56Z
+implementation_state: implemented

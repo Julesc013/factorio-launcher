@@ -1,7 +1,6 @@
 # Validation
 
-Policy implementation result: implementation and repository validation pass;
-clean-checkout package and reproducibility proof remain pending. No acceptance
+Policy implementation result: complete local validation pass. No acceptance
 result is recorded.
 
 Completed focused checks:
@@ -23,11 +22,16 @@ Completed focused checks:
   41/41 native tests.
 - `py -3 -m unittest discover -s tests -p test_*.py`: PASS, 348 tests with
   one skip.
+- `py -3 tools/required_package_proof.py`: PASS, 14 package-runtime tests with
+  zero skips.
+- `py -3 tools/repro_workspace_smoke.py --require-clean --build --python
+  "py -3"`: PASS; clean three-repository configure, build, CTest, strict,
+  AIDE, and Python matrix.
 
 The earlier strict run reached every check but correctly failed after detecting
 stale generated project state and the initially misplaced `contracts/release`
 policy directory. Project state was regenerated and the policy moved to the
 existing `contracts/policy` authority root. The corrected strict, portable
-AIDE, native, and Python runs above are terminal passes. Required package and
-clean-workspace reproducibility validation will run only after the branch is
-committed and clean, then the WorkUnit can be verified.
+AIDE, native, Python, required-package, and clean-workspace reproduction runs
+above are terminal passes. These validate PR A only; they do not evaluate a
+fresh acceptance root or record `EvidencePass` or `MachinePass`.
