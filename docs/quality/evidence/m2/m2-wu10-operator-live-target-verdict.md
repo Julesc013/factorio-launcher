@@ -5,6 +5,11 @@
 
 Status: machine evidence ready; human verdict `pending`.
 
+This is the immutable historical preparation record merged by PR #25. The
+later automated-acceptance policy does not rewrite this record or treat this
+run as its sole passing result. A separate fresh run and result record are
+required before `MachinePass` can be recorded.
+
 Universal Setup completed the harmless synthetic lifecycle in the exclusively
 created root below. Automation found no lifecycle failure, but that finding is
 not a human `Pass` and does not enable ordinary live apply.

@@ -38,6 +38,7 @@ reported as stronger runtime evidence.
 | Generated portable setup review | four-client candidate | shared contract covers sequence, identities, warnings, confirmation, progress, and recovery | presentation only; Setup owns policy; apply awaits human M2 Pass |
 | Portable setup adversarial corpus | cross-platform candidate | 16 cases; Setup on three targets; FacMan cancellation/termination | exact-dev and human verdict pending; Windows/macOS multi-volume unproven |
 | Operator live-target setup | machine evidence ready | retained synthetic lifecycle, audit, and interruption matrix | human verdict pending; no ordinary apply, Factorio, execution, H1, or external authority |
+| Automated synthetic setup acceptance | policy frozen; no result | independent verifier, revision binding, 12 negative controls | fresh lifecycle and interruption reruns plus a later result required; no authority promoted |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |

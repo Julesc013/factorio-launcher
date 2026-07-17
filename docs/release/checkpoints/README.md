@@ -101,6 +101,15 @@ AppKit, including exact identities, warnings, confirmation, progress, and
 recovery labels. Universal Setup remains the policy owner and ordinary apply
 remains unavailable pending the separate human verdict.
 
+The policy-only
+[`M2-WU10 automated synthetic acceptance`](m2-wu10-automated-acceptance-policy.md)
+checkpoint freezes a separate standard-library verifier, twelve negative
+controls, exact revision/evidence binding, and the `MachinePass` result name for
+the deterministic non-executable synthetic lane. It records no current result,
+does not reuse the historical run as the sole acceptance result, and promotes
+no authority. H1 and all real Factorio, existing-installation, Steam, external
+mutation, signing, and publication gates remain human-authorized.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)
