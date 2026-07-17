@@ -142,6 +142,14 @@ exclusion, and freezes M3 as read-only and plan-only. Exact-`dev`, canonical
 `main`, public-integration, and post-promotion `dev` synchronization evidence
 remain pending.
 
+The evidence-only
+[`M2 public integration proof`](m2-public-integration-proof.md) binds the
+MachinePass closeout, exact-`dev` workflows, reviewed promotion PR #30,
+canonical `main` revision `bd064295`, and its four exact successful workflow
+families. It does not broaden M2 authority. The closeout WorkUnit and M3 remain
+pending until this record is merged and canonical `main` is synchronized back
+into `dev` with exact-head proof.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

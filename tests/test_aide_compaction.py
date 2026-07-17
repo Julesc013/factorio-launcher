@@ -54,13 +54,13 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_m2_workflows_preserve_machine_and_higher_risk_human_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-closeout-candidate", data["current_checkpoint"])
+        self.assertEqual("m2-public-integration-proof", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("M2-CLOSEOUT-CANONICAL-PROMOTION-01", data["active_work_unit"])
         self.assertEqual(
-            "complete_machine_pass_pending_canonical_promotion",
+            "complete_machine_pass_canonically_promoted",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("MachinePass", data["m2_live_portable_setup"]["technical_acceptance"])
@@ -353,24 +353,39 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("none", result["h1_inference"])
         closeout = data["m2_closeout_candidate"]
         self.assertEqual(
-            "machine_pass_closeout_pending_exact_dev_and_main_promotion",
+            "canonically_promoted_public_integration_pending_dev_synchronization",
             closeout["status"],
         )
         self.assertEqual(
             "5250db1d17ac330f5ae0b672ccc7466431a1e4a2",
             closeout["wu10_dev_merge_revision"],
         )
-        self.assertEqual("pending_dev_to_main_promotion", closeout["canonical_main_revision"])
+        self.assertEqual(
+            "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
+            closeout["canonical_main_revision"],
+        )
+        self.assertEqual(
+            "ee54dc220ed5fd80a9f450988033c5e29599a326",
+            closeout["shared_promoted_tree_identity"],
+        )
+        self.assertEqual("29569007275", closeout["exact_main_ci_run"])
+        self.assertEqual("29569007270", closeout["exact_main_code_security_run"])
+        self.assertEqual("29569007323", closeout["exact_main_schema_check_run"])
+        self.assertEqual("29569007290", closeout["exact_main_security_policy_run"])
         self.assertEqual("pass_complete_matrix", closeout["local_validation"])
         self.assertFalse(closeout["run_execute"])
         m3 = data["m3_existing_portable_adoption"]
+        self.assertEqual(
+            "authorized_next_wave_pending_m2_dev_synchronization",
+            m3["status"],
+        )
         self.assertEqual("read_only_and_plan_only", m3["scope"])
         self.assertTrue(m3["existing_portable_inspection"])
         self.assertTrue(m3["adoption_plan"])
         self.assertFalse(m3["adoption_apply"])
         self.assertFalse(m3["existing_installation_mutation"])
         self.assertFalse(m3["steam_adoption"])
-        self.assertEqual("m2-closeout-candidate", data["current_checkpoint"])
+        self.assertEqual("m2-public-integration-proof", data["current_checkpoint"])
         self.assertEqual("M2-CLOSEOUT-CANONICAL-PROMOTION-01", data["active_work_unit"])
         self.assertEqual("M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])

@@ -1,9 +1,8 @@
 # Remaining Risks
 
-- The closeout task branch has not passed its hosted matrix.
-- The closeout has not independently merged into `dev` or passed exact-`dev`
-  workflows.
-- `main` still points at the M1 promotion; M2 canonical promotion, exact-main
-  proof, public integration, and dev synchronization remain pending.
+- This public-integration record has not yet merged into `dev` or passed its
+  exact-head hosted matrix.
+- Canonical `main` revision `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`
+  has not yet been synchronized back into `dev` after this record.
 - M3 is not active and has no adoption apply, deletion, mutation, Steam,
   execution, network, registry, elevation, signing, or publication authority.

@@ -464,8 +464,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     m1_integration = status.get("m1_public_integration", {})
     if m1_integration.get("status") != "accepted":
         problems.append("canonical status must record accepted M1 public integration proof")
-    if m1_integration.get("canonical_main_revision") != status.get("accepted_integration_revision"):
-        problems.append("M1 public integration must bind the accepted canonical main revision")
+    if m1_integration.get("canonical_main_revision") != "73bec99916d509b0ab055a43562e93ef20a6b4b7":
+        problems.append("M1 public integration must preserve its accepted canonical main revision")
     if m1_integration.get("dev_tree_identity") != m1_integration.get("main_tree_identity"):
         problems.append("M1 dev and main integration trees must be identical")
     if m1_integration.get("checkpoint_tree_identity") != m1_integration.get("main_tree_identity"):
@@ -475,8 +475,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if m1_integration.get("authority_promotion") is not False:
         problems.append("M1 public integration proof must not promote authority")
     m2 = status.get("m2_live_portable_setup", {})
-    if m2.get("status") != "complete_machine_pass_pending_canonical_promotion":
-        problems.append("M2 must remain complete with canonical promotion pending")
+    if m2.get("status") not in {
+        "complete_machine_pass_pending_canonical_promotion",
+        "complete_machine_pass_canonically_promoted",
+    }:
+        problems.append("M2 must remain complete at a recognized canonical-promotion state")
     if m2.get("technical_acceptance") != "MachinePass":
         problems.append("M2 technical acceptance must record the bounded MachinePass")
     if m2.get("human_review") != "not_required_for_synthetic_non_executable_lane":
@@ -487,20 +490,47 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2 must not promote execution or infer H1")
     closeout = status.get("m2_closeout_candidate", {})
     if [
-        closeout.get("status"), closeout.get("work_unit"),
+        closeout.get("work_unit"),
         closeout.get("wu10_pull_request"), closeout.get("wu10_dev_merge_revision"),
         closeout.get("technical_acceptance"), closeout.get("human_review"),
-        closeout.get("result_sha256"), closeout.get("canonical_main_revision"),
-        closeout.get("local_managed_portable_setup"),
+        closeout.get("result_sha256"), closeout.get("local_managed_portable_setup"),
     ] != [
-        "machine_pass_closeout_pending_exact_dev_and_main_promotion",
         "M2-CLOSEOUT-CANONICAL-PROMOTION-01", 28,
         "5250db1d17ac330f5ae0b672ccc7466431a1e4a2", "MachinePass",
         "not_required_for_synthetic_non_executable_lane",
         "a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa",
-        "pending_dev_to_main_promotion", "candidate",
+        "candidate",
     ]:
         problems.append("M2 closeout candidate identity or scope changed")
+    closeout_status = closeout.get("status")
+    if closeout_status not in {
+        "machine_pass_closeout_pending_exact_dev_and_main_promotion",
+        "canonically_promoted_public_integration_pending_dev_synchronization",
+        "accepted_public_integration_dev_synchronized",
+    }:
+        problems.append("M2 closeout must record a recognized monotonic promotion state")
+    if closeout_status == "machine_pass_closeout_pending_exact_dev_and_main_promotion":
+        if closeout.get("canonical_main_revision") != "pending_dev_to_main_promotion":
+            problems.append("pending M2 closeout must not claim a canonical revision")
+    else:
+        if [
+            closeout.get("closeout_pull_request"), closeout.get("closeout_task_revision"),
+            closeout.get("dev_integration_revision"), closeout.get("shared_promoted_tree_identity"),
+            closeout.get("promotion_pull_request"), closeout.get("promotion_head_revision"),
+            closeout.get("canonical_main_revision"), closeout.get("exact_main_ci_run"),
+            closeout.get("exact_main_code_security_run"), closeout.get("exact_main_schema_check_run"),
+            closeout.get("exact_main_security_policy_run"),
+        ] != [
+            29, "3fc80882e7da0e38cddd901dfc965775281b0411",
+            "4afab65448831b05ab790957abf0e1798074ad1a",
+            "ee54dc220ed5fd80a9f450988033c5e29599a326", 30,
+            "4afab65448831b05ab790957abf0e1798074ad1a",
+            "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
+            "29569007275", "29569007270", "29569007323", "29569007290",
+        ]:
+            problems.append("M2 canonical promotion or exact-main proof identity changed")
+        if status.get("accepted_integration_revision") != closeout.get("canonical_main_revision"):
+            problems.append("accepted integration must bind the canonical M2 main revision")
     if closeout.get("local_validation") not in {"pending_complete_matrix", "pass_complete_matrix"}:
         problems.append("M2 closeout must record a recognized local validation state")
     for key in [
@@ -514,16 +544,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if closeout.get("h1_inference") != "none":
         problems.append("M2 closeout must not infer H1")
     m3 = status.get("m3_existing_portable_adoption", {})
+    expected_m3_status = (
+        "active_read_only_and_plan_only"
+        if closeout_status == "accepted_public_integration_dev_synchronized"
+        else (
+            "authorized_next_wave_pending_m2_dev_synchronization"
+            if closeout_status == "canonically_promoted_public_integration_pending_dev_synchronization"
+            else "authorized_next_wave_pending_m2_canonical_promotion"
+        )
+    )
     if [
         m3.get("status"), m3.get("scope"), m3.get("existing_portable_inspection"),
         m3.get("adoption_plan"), m3.get("adoption_apply"),
         m3.get("deletion_authority"), m3.get("existing_installation_mutation"),
         m3.get("steam_adoption"), m3.get("steam_mutation"), m3.get("run_execute"),
     ] != [
-        "authorized_next_wave_pending_m2_canonical_promotion",
+        expected_m3_status,
         "read_only_and_plan_only", True, True, False, False, False, False, False, False,
     ]:
-        problems.append("M3 must remain authorized-next, read-only, and plan-only")
+        problems.append("M3 must remain in its phase-appropriate read-only and plan-only state")
     m2_wu1 = status.get("m2_wu1_target_policy", {})
     if m2_wu1.get("status") != "accepted_dev_integration_proof":
         problems.append("M2-WU1 target policy must record the accepted dev integration proof")
