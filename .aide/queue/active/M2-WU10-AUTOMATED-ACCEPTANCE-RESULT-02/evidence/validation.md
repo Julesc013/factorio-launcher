@@ -28,5 +28,17 @@ Complete local candidate validation:
   "py -3"`: PASS; clean three-repository configure, build, CTest, strict,
   AIDE, and Python matrix.
 
-Hosted candidate validation remains pending. This evidence file must not be
-read as a final technical acceptance verdict.
+Hosted candidate validation at exact revision
+`ff883cd7b88dda07c0a336ced267cbe1f9f2746f`:
+
+- push CI `29562177050`: PASS.
+- push code-security `29562177030`: PASS.
+- push security-policy `29562177062`: PASS.
+- PR CI `29562194145`: PASS.
+- PR code-security `29562194103`: PASS.
+- PR security-policy `29562194153`: PASS.
+
+The separate result record is `MachinePass`, SHA-256
+`a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa`.
+The final result head still requires independent exact-head hosted workflows
+before PR #28 may merge.

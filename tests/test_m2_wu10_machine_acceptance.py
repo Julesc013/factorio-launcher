@@ -33,6 +33,10 @@ RECORDED_OBSERVATION = (
     Path(__file__).resolve().parents[1]
     / "docs/quality/evidence/m2/m2-wu10-machine-acceptance.observation.v1.json"
 )
+RECORDED_RESULT = (
+    Path(__file__).resolve().parents[1]
+    / "docs/quality/evidence/m2/m2-wu10-machine-acceptance.pass.v1.json"
+)
 
 
 def canonical(value: object) -> bytes:
@@ -471,6 +475,60 @@ class M2Wu10MachineAcceptanceTests(unittest.TestCase):
         )
         self.assertEqual("m2wu10-20260717-02", observation["evidence"]["run_id"])
         self.assertFalse(observation["authority"]["run_execute"])
+
+    def test_recorded_machine_pass_binds_candidate_validation_without_human_pass(self) -> None:
+        raw = RECORDED_RESULT.read_bytes()
+        self.assertEqual(
+            "a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa",
+            digest(raw),
+        )
+        result = json.loads(raw)
+        schema = json.loads(
+            (SCHEMA_ROOT / "m2_machine_acceptance_result.v1.schema.json").read_text(
+                encoding="utf-8",
+            )
+        )
+        jsonschema.Draft202012Validator(schema).validate(result)
+        observation = json.loads(RECORDED_OBSERVATION.read_text(encoding="utf-8"))
+        self.assertEqual(observation["evidence"], result["evidence"])
+        self.assertEqual(observation["authority"], result["authority"])
+        self.assertEqual("MachinePass", result["technical_acceptance"]["result"])
+        self.assertEqual(
+            digest(canonical(result["evidence"])),
+            result["technical_acceptance"]["evidence_digest"],
+        )
+        self.assertEqual(
+            digest(RECORDED_OBSERVATION.read_bytes()),
+            result["technical_acceptance"]["observation_sha256"],
+        )
+        hosted = result["validation"]["hosted"]
+        self.assertEqual(
+            "ff883cd7b88dda07c0a336ced267cbe1f9f2746f",
+            hosted["validated_revision"],
+        )
+        self.assertEqual(28, hosted["pull_request"])
+        self.assertEqual(
+            {
+                "ci (push)": "29562177050",
+                "code-security (push)": "29562177030",
+                "security-policy (push)": "29562177062",
+                "ci (pull_request)": "29562194145",
+                "code-security (pull_request)": "29562194103",
+                "security-policy (pull_request)": "29562194153",
+            },
+            {entry["name"]: entry["run_id"] for entry in hosted["workflows"]},
+        )
+        self.assertEqual("not_required", result["human_review"]["result"])
+        self.assertEqual("candidate", result["authority"]["local_managed_portable_setup"])
+        for excluded in (
+            "credentials", "elevation", "existing_factorio_mutation",
+            "existing_installation_adoption", "factorio_archive_acceptance",
+            "network", "publication", "registry", "run_execute", "shortcuts",
+            "signing", "steam_cloud_mutation", "steam_mutation",
+            "system_wide_installation",
+        ):
+            self.assertFalse(result["authority"][excluded], excluded)
+        self.assertEqual("none", result["authority"]["h1_inference"])
 
     def test_required_negative_controls_fail_closed(self) -> None:
         controls = {

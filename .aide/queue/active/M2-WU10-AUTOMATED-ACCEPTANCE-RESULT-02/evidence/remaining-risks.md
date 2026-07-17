@@ -1,9 +1,8 @@
 # Remaining Risks
 
-- The tracked observation has not yet passed the complete candidate-branch
-  local and hosted validation matrix.
-- `MachinePass` must be a later result commit that binds candidate validation;
-  the observation alone cannot promote authority.
 - The final result head must independently pass exact-head hosted workflows.
-- WU10 closeout, ordinary setup candidacy, and every broader authority remain
-  unavailable.
+- M2 durable closeout, canonical promotion, exact-main proof, public
+  integration, and `dev` synchronization remain separate work.
+- Real Factorio archives, existing installations, Steam, execution, H1,
+  network, credentials, registry, shortcuts, elevation, signing, publication,
+  and every broader authority remain unavailable.

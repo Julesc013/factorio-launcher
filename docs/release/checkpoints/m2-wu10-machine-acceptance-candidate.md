@@ -65,6 +65,13 @@ may say `MachinePass`.
 No human `Pass` is claimed. Human review is not required for this bounded
 synthetic non-executable lane.
 
+## Subsequent Result
+
+Candidate revision `ff883cd7b88dda07c0a336ced267cbe1f9f2746f` passed all six
+push/PR CI, code-security, and security-policy workflows. The later versioned
+result is recorded in [`M2-WU10 MachinePass`](m2-wu10-machine-pass.md). This
+candidate remains historical `EvidencePass`; it did not certify itself.
+
 ## Authority Boundary
 
 The observation repeats the policy's authority *if* a final `MachinePass` is

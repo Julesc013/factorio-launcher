@@ -118,6 +118,7 @@ def collect() -> dict[str, Any]:
         "m2_wu10_automated_acceptance_policy": status["m2_wu10_automated_acceptance_policy"],
         "m2_wu10_automated_acceptance_result_attempt": status["m2_wu10_automated_acceptance_result_attempt"],
         "m2_wu10_machine_acceptance_candidate": status["m2_wu10_machine_acceptance_candidate"],
+        "m2_wu10_machine_acceptance_result": status["m2_wu10_machine_acceptance_result"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -234,13 +235,18 @@ def markdown(data: dict[str, Any]) -> str:
         f"`{data['m2_wu10_machine_acceptance_candidate']['status']}`; evidence: "
         f"`{data['m2_wu10_machine_acceptance_candidate']['evidence_result']}`; MachinePass: "
         f"`{str(data['m2_wu10_machine_acceptance_candidate']['machine_pass']).lower()}`.",
+        f"- M2-WU10 machine acceptance result: "
+        f"`{data['m2_wu10_machine_acceptance_result']['status']}`; human review: "
+        f"`{data['m2_wu10_machine_acceptance_result']['human_review']}`; managed setup: "
+        f"`{data['m2_wu10_machine_acceptance_result']['local_managed_portable_setup']}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
         "R3.7 is complete. The exact R3.7 runtime is frozen as the H1 candidate. "
-        "M1 is independently fixture-proven for managed portable setup. No execution, Safe beta, "
-        "stable SDK, daemon, live-target setup, networking, credential, signing, "
-        "or publication authority is inferred from the completed non-execution proof.",
+        "M1 is independently fixture-proven and M2-WU10 records a bounded MachinePass for "
+        "newly created policy-approved managed targets. No execution, Safe beta, stable SDK, "
+        "daemon, real-Factorio archive, existing-installation, networking, credential, signing, "
+        "or publication authority is inferred from that synthetic proof.",
         "",
         "## Contract and validation identity",
         "",
@@ -413,9 +419,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_closeout_id = "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01"
+    latest_closeout_id = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
     if status.get("active_work_unit") == repair_id:
         problems.append("closed R3.8 repair must not remain the active WorkUnit")
+    if status.get("active_work_unit"):
+        problems.append("M2-WU10 MachinePass closeout must leave no active WorkUnit")
     if status.get("last_closed_work_unit") != latest_closeout_id:
         problems.append("canonical status must bind the latest closed M2 WorkUnit")
     repair = status.get("r3_8_repair", {})
@@ -455,12 +463,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if m1_integration.get("authority_promotion") is not False:
         problems.append("M1 public integration proof must not promote authority")
     m2 = status.get("m2_live_portable_setup", {})
-    if m2.get("technical_acceptance") != "pending":
-        problems.append("M2 technical acceptance must remain pending until the frozen rerun")
+    if m2.get("technical_acceptance") != "MachinePass":
+        problems.append("M2 technical acceptance must record the bounded MachinePass")
     if m2.get("human_review") != "not_required_for_synthetic_non_executable_lane":
         problems.append("M2 synthetic human-review policy changed")
-    if m2.get("ordinary_live_apply") != "unavailable_pending_machine_acceptance":
-        problems.append("M2 must keep ordinary live apply unavailable before MachinePass")
+    if m2.get("ordinary_live_apply") != "candidate_within_machine_accepted_policy_scope":
+        problems.append("M2 ordinary setup must remain only a bounded MachinePass candidate")
     if m2.get("execution_authority") is not False or m2.get("h1_inference") != "none":
         problems.append("M2 must not promote execution or infer H1")
     m2_wu1 = status.get("m2_wu1_target_policy", {})
@@ -823,13 +831,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         machine_policy.get("policy_id"), machine_policy.get("technical_acceptance"),
         machine_policy.get("human_review"), machine_policy.get("negative_control_count"),
     ] != [
-        "accepted_corrected_policy_evidence_pass_no_machine_result",
-        "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02",
+        "accepted_corrected_policy_with_bound_machine_pass",
+        "",
         "facman.m2.synthetic_portable_acceptance.v1",
-        "evidence_pass_pending_machine_pass",
+        "MachinePass",
         "not_required_for_synthetic_non_executable_lane", 12,
     ]:
-        problems.append("M2-WU10 automated policy must remain frozen with no result")
+        problems.append("M2-WU10 automated policy must remain frozen and bind MachinePass separately")
     if [
         machine_policy.get("policy_schema"), machine_policy.get("observation_schema"),
         machine_policy.get("result_schema"), machine_policy.get("accepted_policy_revision"),
@@ -842,8 +850,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU10 automated policy schema or revision separation changed")
     if machine_policy.get("fresh_lifecycle_rerun_required") or machine_policy.get("fresh_interruption_rerun_required"):
         problems.append("M2-WU10 corrected fresh reruns must be complete before the candidate")
-    if machine_policy.get("ordinary_live_apply") != "unavailable_pending_machine_acceptance" or machine_policy.get("local_managed_portable_setup") != "not_promoted":
-        problems.append("M2-WU10 policy-only revision must not promote managed setup")
+    if machine_policy.get("ordinary_live_apply") != "candidate_within_machine_accepted_policy_scope" or machine_policy.get("local_managed_portable_setup") != "candidate":
+        problems.append("M2-WU10 MachinePass must promote only bounded managed-setup candidacy")
     for key in [
         "factorio_archive_acceptance", "existing_factorio_mutation", "steam_mutation",
         "network", "registry", "elevation", "run_execute", "publication",
@@ -881,15 +889,49 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         candidate.get("run_id"), candidate.get("evidence_result"),
         candidate.get("machine_pass"), candidate.get("authority_promotion"),
     ] != [
-        "evidence_pass_local_validation_pass_hosted_pending",
+        "hosted_validation_passed_bound_to_separate_machine_result",
         "26eb7056984b42859e377c1ffd0ffb7c80488078",
         "3f8489275077347c2918f3bb03614ec6431362ff",
         "26eb7056984b42859e377c1ffd0ffb7c80488078",
         "m2wu10-20260717-02", "EvidencePass", False, False,
     ]:
-        problems.append("M2-WU10 candidate must remain locally validated EvidencePass without authority")
+        problems.append("M2-WU10 candidate must remain a separately validated EvidencePass without authority")
     if candidate.get("observation_sha256") != "fb0fcb58eec795d45a56cb48773d74ed74a38d4b14834a4921c1542310777181":
         problems.append("M2-WU10 candidate observation identity changed")
+    if [
+        candidate.get("candidate_revision"), candidate.get("pull_request"),
+        candidate.get("hosted_validation"), candidate.get("pr_ci_run"),
+    ] != [
+        "ff883cd7b88dda07c0a336ced267cbe1f9f2746f", 28,
+        "pass_exact_candidate_revision", "29562194145",
+    ]:
+        problems.append("M2-WU10 candidate hosted-validation binding changed")
+    machine_result = status.get("m2_wu10_machine_acceptance_result", {})
+    if [
+        machine_result.get("status"), machine_result.get("policy_revision"),
+        machine_result.get("runner_revision"), machine_result.get("verifier_revision"),
+        machine_result.get("candidate_revision"), machine_result.get("pull_request"),
+        machine_result.get("result_sha256"), machine_result.get("human_review"),
+        machine_result.get("local_managed_portable_setup"),
+    ] != [
+        "MachinePass", "26eb7056984b42859e377c1ffd0ffb7c80488078",
+        "3f8489275077347c2918f3bb03614ec6431362ff",
+        "26eb7056984b42859e377c1ffd0ffb7c80488078",
+        "ff883cd7b88dda07c0a336ced267cbe1f9f2746f", 28,
+        "a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa",
+        "not_required_for_synthetic_non_executable_lane", "candidate",
+    ]:
+        problems.append("M2-WU10 MachinePass identity or bounded authority changed")
+    for key in [
+        "factorio_archive_acceptance", "existing_factorio_mutation",
+        "existing_installation_adoption", "steam_mutation", "steam_cloud_mutation",
+        "network", "credentials", "registry", "shortcuts", "elevation",
+        "system_wide_installation", "run_execute", "signing", "publication",
+    ]:
+        if machine_result.get(key) is not False:
+            problems.append(f"M2-WU10 MachinePass must keep {key} excluded")
+    if machine_result.get("h1_inference") != "none":
+        problems.append("M2-WU10 MachinePass must not infer H1")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")
