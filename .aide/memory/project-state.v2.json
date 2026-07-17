@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01",
+  "active_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01",
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -123,8 +123,8 @@
     },
     {
       "claim": "Automated synthetic setup acceptance",
-      "level": "policy frozen; no result",
-      "limitation": "fresh lifecycle and interruption reruns plus a later result required; no authority promoted"
+      "level": "verifier correction pending; no result",
+      "limitation": "first fresh attempt failed closed; merge correction and rerun; no authority"
     },
     {
       "claim": "Package hashes authenticate publisher",
@@ -170,7 +170,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m2-wu10-automated-acceptance-policy",
+  "current_checkpoint": "m2-wu10-native-journal-policy-correction",
   "current_revisions": {
     "accepted_integration": "73bec99916d509b0ab055a43562e93ef20a6b4b7",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -184,6 +184,7 @@
     "status": "unavailable"
   },
   "known_blockers": [
+    "The first post-policy M2 result attempt failed closed because the verifier required sorted-key journal bytes that Universal Setup does not emit; a policy-only correction and another fresh rerun are required.",
     "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
@@ -230,12 +231,23 @@
     "h1_inference": "none",
     "human_review": "not_required_for_synthetic_non_executable_lane",
     "ordinary_live_apply": "unavailable_pending_machine_acceptance",
-    "status": "automated_acceptance_policy_frozen_pending_fresh_rerun",
+    "status": "accepted_policy_verifier_correction_pending_new_fresh_rerun",
     "technical_acceptance": "pending"
   },
   "m2_wu10_automated_acceptance_policy": {
-    "accepted_policy_revision": "pending_independent_merge",
-    "active_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01",
+    "accepted_policy_head_revision": "7847b506a93d719c42d45d11cd145083e425b8a9",
+    "accepted_policy_pr": 26,
+    "accepted_policy_pr_ci_run": "29556778901",
+    "accepted_policy_pr_code_security_run": "29556778911",
+    "accepted_policy_pr_schema_run": "29556778917",
+    "accepted_policy_pr_security_policy_run": "29556778919",
+    "accepted_policy_push_ci_run": "29556764607",
+    "accepted_policy_push_code_security_run": "29556764580",
+    "accepted_policy_push_schema_run": "29556764598",
+    "accepted_policy_push_security_policy_run": "29556764637",
+    "accepted_policy_revision": "7a3f812ab0f81fb35e2e6104bd573d8832a44e59",
+    "active_work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01",
+    "correction_revision": "pending_independent_merge",
     "elevation": false,
     "existing_factorio_mutation": false,
     "factorio_archive_acceptance": false,
@@ -255,10 +267,25 @@
     "registry": false,
     "result_schema": "factorio.m2_machine_acceptance_result.v1",
     "run_execute": false,
-    "status": "active_policy_frozen_no_result",
+    "status": "accepted_policy_pending_native_journal_correction_no_result",
     "steam_mutation": false,
     "technical_acceptance": "not_recorded",
     "verifier_path": "tools/m2_wu10_machine_acceptance_check.py"
+  },
+  "m2_wu10_automated_acceptance_result_attempt": {
+    "authority_promotion": false,
+    "failure_classification": "native_journal_field_order_rejected_by_sorted_key_requirement",
+    "interruption_run_id": "m2wu10-20260717-01-interruptions",
+    "machine_pass": false,
+    "observation_written": false,
+    "policy_revision": "7a3f812ab0f81fb35e2e6104bd573d8832a44e59",
+    "run_id": "m2wu10-20260717-01",
+    "runner_interruption": "pass",
+    "runner_lifecycle": "pass",
+    "runner_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "status": "blocked_before_evidence_pass",
+    "verifier_result": "fail_closed",
+    "work_unit": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01"
   },
   "m2_wu10_operator_live_target_verdict": {
     "acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",

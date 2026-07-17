@@ -1,0 +1,45 @@
+schema_version: aide.queue-task.v1
+id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
+title: M2 WU10 automated synthetic acceptance result
+status: blocked
+lifecycle_state: blocked
+planning_state: blocked
+created_at: 2026-07-17T05:30:03Z
+owner: unassigned
+objective: >
+  Rerun the frozen synthetic lifecycle and interruption corpus from accepted policy revision 7a3f812ab0f81fb35e2e6104bd573d8832a44e59, independently derive EvidencePass, and record MachinePass only after complete local and hosted validation without promoting excluded authority.
+allowed_paths:
+  - .aide/**
+  - docs/**
+  - release/**
+  - tests/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - usk_live_acceptance
+  - usk_interruption_recovery_smoke
+affected_python_tests:
+  - tests.test_m2_wu10_machine_acceptance
+affected_strict_validators:
+  - tools/m2_wu10_machine_acceptance_check.py
+affected_package_profiles: []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - EvidencePass is derived only by the verifier frozen at the accepted policy revision
+  - MachinePass is never recorded after a verifier failure
+  - higher-risk human authorization and every excluded authority remain unchanged
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-17T05:30:04Z
+blocked_at: 2026-07-17T05:34:39Z

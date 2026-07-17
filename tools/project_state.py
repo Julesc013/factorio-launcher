@@ -116,6 +116,7 @@ def collect() -> dict[str, Any]:
         "m2_wu9_cross_platform_adversarial_proof": status["m2_wu9_cross_platform_adversarial_proof"],
         "m2_wu10_operator_live_target_verdict": status["m2_wu10_operator_live_target_verdict"],
         "m2_wu10_automated_acceptance_policy": status["m2_wu10_automated_acceptance_policy"],
+        "m2_wu10_automated_acceptance_result_attempt": status["m2_wu10_automated_acceptance_result_attempt"],
         "universal_repository_licenses": status["universal_repository_licenses"],
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
@@ -224,6 +225,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"- M2-WU10 automated acceptance policy: `{data['m2_wu10_automated_acceptance_policy']['status']}`; "
         f"technical acceptance: `{data['m2_wu10_automated_acceptance_policy']['technical_acceptance']}`; "
         f"human review: `{data['m2_wu10_automated_acceptance_policy']['human_review']}`.",
+        f"- M2-WU10 first automated result attempt: "
+        f"`{data['m2_wu10_automated_acceptance_result_attempt']['status']}`; verifier: "
+        f"`{data['m2_wu10_automated_acceptance_result_attempt']['verifier_result']}`; MachinePass: "
+        f"`{str(data['m2_wu10_automated_acceptance_result_attempt']['machine_pass']).lower()}`.",
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
@@ -813,7 +818,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         machine_policy.get("policy_id"), machine_policy.get("technical_acceptance"),
         machine_policy.get("human_review"), machine_policy.get("negative_control_count"),
     ] != [
-        "active_policy_frozen_no_result", "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01",
+        "accepted_policy_pending_native_journal_correction_no_result",
+        "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01",
         "facman.m2.synthetic_portable_acceptance.v1", "not_recorded",
         "not_required_for_synthetic_non_executable_lane", 12,
     ]:
@@ -824,7 +830,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     ] != [
         "factorio.m2_synthetic_portable_acceptance_policy.v1",
         "factorio.m2_machine_acceptance_observation.v1",
-        "factorio.m2_machine_acceptance_result.v1", "pending_independent_merge",
+        "factorio.m2_machine_acceptance_result.v1",
+        "7a3f812ab0f81fb35e2e6104bd573d8832a44e59",
     ]:
         problems.append("M2-WU10 automated policy schema or revision separation changed")
     if not machine_policy.get("fresh_lifecycle_rerun_required") or not machine_policy.get("fresh_interruption_rerun_required"):
@@ -839,6 +846,28 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             problems.append(f"M2-WU10 policy-only revision must keep {key} excluded")
     if machine_policy.get("h1_inference") != "none":
         problems.append("M2-WU10 policy-only revision must not infer H1")
+    if machine_policy.get("correction_revision") != "pending_independent_merge":
+        problems.append("M2-WU10 native-journal correction must merge before another accepted run")
+    if [
+        machine_policy.get("accepted_policy_head_revision"), machine_policy.get("accepted_policy_pr"),
+        machine_policy.get("accepted_policy_push_ci_run"), machine_policy.get("accepted_policy_pr_ci_run"),
+    ] != [
+        "7847b506a93d719c42d45d11cd145083e425b8a9", 26,
+        "29556764607", "29556778901",
+    ]:
+        problems.append("M2-WU10 accepted policy merge or hosted proof identity changed")
+    result_attempt = status.get("m2_wu10_automated_acceptance_result_attempt", {})
+    if [
+        result_attempt.get("status"), result_attempt.get("policy_revision"),
+        result_attempt.get("runner_revision"), result_attempt.get("verifier_result"),
+        result_attempt.get("observation_written"), result_attempt.get("machine_pass"),
+        result_attempt.get("authority_promotion"),
+    ] != [
+        "blocked_before_evidence_pass", "7a3f812ab0f81fb35e2e6104bd573d8832a44e59",
+        "3f8489275077347c2918f3bb03614ec6431362ff", "fail_closed",
+        False, False, False,
+    ]:
+        problems.append("M2-WU10 blocked result attempt must remain non-accepting")
     licenses = status.get("universal_repository_licenses", {})
     if licenses.get("status") != "accepted_mit":
         problems.append("Universal repository license decision must record accepted MIT")

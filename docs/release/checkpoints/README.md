@@ -110,6 +110,15 @@ does not reuse the historical run as the sole acceptance result, and promotes
 no authority. H1 and all real Factorio, existing-installation, Steam, external
 mutation, signing, and publication gates remain human-authorized.
 
+The policy-only
+[`M2-WU10 native-journal verifier correction`](m2-wu10-native-journal-policy-correction.md)
+checkpoint records that the first fresh result attempt failed closed before
+`EvidencePass`: native Universal Setup journals use deterministic field order,
+not sorted-key file bytes. The correction changes only journal parsing while
+retaining schema, chain, digest, root-containment, negative-control, no-result,
+and excluded-authority requirements. Another independently revision-bound
+fresh run remains mandatory after this correction merges.
+
 Earlier checkpoints remain revision-pinned historical evidence:
 
 - [R3.6 product readiness](r3.6-product-readiness.md)

@@ -38,6 +38,7 @@ class AideCompactionTests(unittest.TestCase):
             "m2_wu9_cross_platform_adversarial_proof",
             "m2_wu10_operator_live_target_verdict",
             "m2_wu10_automated_acceptance_policy",
+            "m2_wu10_automated_acceptance_result_attempt",
             "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -49,13 +50,13 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_m2_workflows_preserve_machine_and_higher_risk_human_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-wu10-automated-acceptance-policy", data["current_checkpoint"])
+        self.assertEqual("m2-wu10-native-journal-policy-correction", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertEqual("M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01", data["active_work_unit"])
+        self.assertEqual("M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01", data["active_work_unit"])
         self.assertEqual(
-            "automated_acceptance_policy_frozen_pending_fresh_rerun",
+            "accepted_policy_verifier_correction_pending_new_fresh_rerun",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("pending", data["m2_live_portable_setup"]["technical_acceptance"])
@@ -306,14 +307,30 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m2_wu10["automation_can_record_operator_verdict"])
         self.assertFalse(m2_wu10["execution_authority"])
         machine_policy = data["m2_wu10_automated_acceptance_policy"]
-        self.assertEqual("active_policy_frozen_no_result", machine_policy["status"])
+        self.assertEqual(
+            "accepted_policy_pending_native_journal_correction_no_result",
+            machine_policy["status"],
+        )
         self.assertEqual("not_recorded", machine_policy["technical_acceptance"])
-        self.assertEqual("pending_independent_merge", machine_policy["accepted_policy_revision"])
+        self.assertEqual(
+            "7a3f812ab0f81fb35e2e6104bd573d8832a44e59",
+            machine_policy["accepted_policy_revision"],
+        )
+        self.assertEqual("pending_independent_merge", machine_policy["correction_revision"])
         self.assertTrue(machine_policy["fresh_lifecycle_rerun_required"])
         self.assertTrue(machine_policy["fresh_interruption_rerun_required"])
         self.assertEqual(12, machine_policy["negative_control_count"])
-        self.assertEqual("m2-wu10-automated-acceptance-policy", data["current_checkpoint"])
-        self.assertEqual("M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01", data["active_work_unit"])
+        result_attempt = data["m2_wu10_automated_acceptance_result_attempt"]
+        self.assertEqual("blocked_before_evidence_pass", result_attempt["status"])
+        self.assertEqual("fail_closed", result_attempt["verifier_result"])
+        self.assertFalse(result_attempt["observation_written"])
+        self.assertFalse(result_attempt["machine_pass"])
+        self.assertFalse(result_attempt["authority_promotion"])
+        self.assertEqual("m2-wu10-native-journal-policy-correction", data["current_checkpoint"])
+        self.assertEqual(
+            "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01",
+            data["active_work_unit"],
+        )
         self.assertEqual("M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(

@@ -299,7 +299,13 @@ def _declared_path(value: Any, run_root: Path, label: str, problems: list[str]) 
     return path
 
 
-def _load_canonical_json(path: Path, label: str, problems: list[str]) -> dict[str, Any] | None:
+def _load_canonical_json(
+    path: Path,
+    label: str,
+    problems: list[str],
+    *,
+    require_canonical: bool = True,
+) -> dict[str, Any] | None:
     try:
         raw = path.read_bytes()
         value = json.loads(raw.decode("utf-8"))
@@ -309,7 +315,10 @@ def _load_canonical_json(path: Path, label: str, problems: list[str]) -> dict[st
     if not isinstance(value, dict):
         problems.append(f"{label} must be a JSON object")
         return None
-    if raw not in {canonical_bytes(value), canonical_bytes(value) + b"\n", canonical_bytes(value) + b"\r\n"}:
+    if require_canonical and raw not in {
+        canonical_bytes(value), canonical_bytes(value) + b"\n",
+        canonical_bytes(value) + b"\r\n",
+    }:
         problems.append(f"{label} is not canonical JSON")
     return value
 
@@ -416,7 +425,13 @@ def _verify_journal(
     *,
     require_completed: bool = True,
 ) -> dict[str, Any] | None:
-    document = _load_canonical_json(path, f"journal {path.name}", problems)
+    # Universal Setup journals use a deterministic native field order rather
+    # than sorted-key canonical JSON. Their authority comes from the parsed
+    # schema, transition chain, contained roots, and recomputed journal digest,
+    # all of which are checked below.
+    document = _load_canonical_json(
+        path, f"journal {path.name}", problems, require_canonical=False,
+    )
     if document is None:
         return None
     transitions = document.get("transitions")
