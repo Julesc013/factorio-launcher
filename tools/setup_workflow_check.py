@@ -46,8 +46,13 @@ def validate() -> list[str]:
 
     for command_id in sorted(expected & commands.keys()):
         command = commands[command_id]
-        if command.get("availability") != "unavailable_until_gateway":
-            problems.append(f"{command_id}: ordinary lifecycle authority must remain unavailable")
+        expected_availability = (
+            "implemented" if command_id == "installs.install.plan" else "unavailable_until_gateway"
+        )
+        if command.get("availability") != expected_availability:
+            problems.append(
+                f"{command_id}: expected {expected_availability} during the pre-verdict M2 gateway stage"
+            )
         if command.get("executes_process"):
             problems.append(f"{command_id}: setup workflows must never execute Factorio")
         effects = set(command.get("effects", []))
@@ -86,8 +91,8 @@ def validate() -> list[str]:
     for command_id in sorted(expected):
         if f'"{command_id}"' not in cli + handler:
             problems.append(f"{command_id}: explicit CLI/application route is missing")
-    if "setup_apply_not_authorized" not in handler:
-        problems.append("setup apply authority guard is missing")
+    if handler.count("live_target_acceptance_required") < 6:
+        problems.append("M2 human-verdict guard is not uniform across setup apply routes")
 
     run_execute = commands.get("run.execute")
     if run_execute is None or run_execute.get("availability_refusal_code") != "isolation_not_proven":

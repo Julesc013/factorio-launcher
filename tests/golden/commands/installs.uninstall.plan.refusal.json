@@ -4,8 +4,8 @@
   "status": "refused",
   "refusal": {
     "schema": "common.refusal.v1",
-    "code": "setup_lifecycle_fixture_proof_required",
-    "reason": "Managed uninstall planning remains unavailable until the fixture-backed setup lifecycle proof is complete.",
+    "code": "live_target_acceptance_required",
+    "reason": "A human M2 live-target acceptance Pass is required before managed uninstall planning is activated.",
     "recoverable": false
   }
 }

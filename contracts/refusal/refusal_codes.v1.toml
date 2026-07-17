@@ -242,6 +242,13 @@ retryable = false
 message = "Ordinary setup apply is not authorized before fixture proof and separate live-target acceptance."
 
 [[code]]
+id = "live_target_acceptance_required"
+severity = "blocked"
+effect = "workspace_write"
+retryable = false
+message = "A human M2 live-target acceptance Pass is required before FacMan setup mutation is activated."
+
+[[code]]
 id = "setup_recovery_not_available"
 severity = "blocked"
 effect = "setup_preview"

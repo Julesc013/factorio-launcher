@@ -1,0 +1,11 @@
+schema_version: aide.queue-status.v1
+task_id: M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01
+status: verified
+lifecycle_state: verified
+planning_state: verified
+created_at: 2026-07-14T19:46:52Z
+result: PASS
+evidence_path: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/evidence/
+active_at: 2026-07-14T19:46:52Z
+verified_at: 2026-07-14T19:58:10Z
+implementation_state: implemented

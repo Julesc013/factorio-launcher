@@ -4,8 +4,8 @@
   "status": "refused",
   "refusal": {
     "schema": "common.refusal.v1",
-    "code": "setup_apply_not_authorized",
-    "reason": "Ordinary setup apply remains unavailable until fixture proof and separate live-target acceptance.",
+    "code": "live_target_acceptance_required",
+    "reason": "A human M2 live-target acceptance Pass is required before FacMan setup apply is available.",
     "recoverable": false
   }
 }

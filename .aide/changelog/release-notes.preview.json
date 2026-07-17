@@ -1,1414 +1,987 @@
 {
   "follow_up": [
     {
-      "commit": "f40e9d31f940",
-      "summary": "Start FACMAN-LOCAL-MOD-INVENTORY-02 from the closed customization baseline."
+      "commit": "129f70d13058",
+      "summary": "Review and close the implementation WorkUnit, merge it to dev, and bind exact hosted workflow identities separately."
     },
     {
-      "commit": "8335fde1ba12",
-      "summary": "Use these stable inventory identities as the evidence input for the deterministic modset solver workunit."
+      "commit": "129f70d13058",
+      "summary": "Review and close the implementation WorkUnit, merge it to dev, and bind exact hosted workflow identities separately."
     },
     {
-      "commit": "05a93277d739",
-      "summary": "Start FACMAN-LOCAL-MODSET-SOLVER-01 using the committed inventory identities as local evidence."
+      "commit": "129f70d13058",
+      "summary": "Review and close the implementation WorkUnit, merge it to dev, and bind exact hosted workflow identities separately."
     },
     {
-      "commit": "b93d7376c625",
-      "summary": "Reproduce this exact commit from a clean three-repository workspace and close FACMAN-LOCAL-MODSET-SOLVER-01."
+      "commit": "e4b03c82b649",
+      "summary": "Push the reviewed branch, merge it to dev after green checks, and add a separate exact-dev integration record."
     },
     {
-      "commit": "7ad66aea23d7",
-      "summary": "Start FACMAN-SAVE-INDEX-AND-RETENTION-02."
+      "commit": "e4b03c82b649",
+      "summary": "Push the reviewed branch, merge it to dev after green checks, and add a separate exact-dev integration record."
     },
     {
-      "commit": "2e9a66f8a4bd",
-      "summary": "Reproduce this exact commit from a clean three-repository workspace and close FACMAN-SAVE-INDEX-AND-RETENTION-02."
+      "commit": "f051731b80b5",
+      "summary": "Re-run the helper plan from a clean tree, then push and open the reviewed dev PR."
     },
     {
-      "commit": "b30e4a70272e",
-      "summary": "Start FACMAN-SERVER-PLAN-02."
+      "commit": "2c55d1d111a2",
+      "summary": "Bind merge/run identities, validate project truth, close the task, and land the record on dev."
     },
     {
-      "commit": "578bfb57bf82",
-      "summary": "Implement grammar-generated operational UX in the next R3.7 work unit."
+      "commit": "182ada6be86d",
+      "summary": "Review and close this evidence WorkUnit, land it on dev, then open WU3 live evidence packet work."
     },
     {
-      "commit": "d90d461a99dd",
-      "summary": "Start FACMAN-OPERATIONAL-UX-03 from the generated command grammar."
+      "commit": "182ada6be86d",
+      "summary": "Review and close this evidence WorkUnit, land it on dev, then open WU3 live evidence packet work."
     },
     {
-      "commit": "dedadfa2f95e",
-      "summary": "Prove the full reversible lifecycle across direct, stdio, CLI, TUI, desktop, and package transports in WU10."
+      "commit": "182ada6be86d",
+      "summary": "Review and close this evidence WorkUnit, land it on dev, then open WU3 live evidence packet work."
     },
     {
-      "commit": "9af53a736f47",
-      "summary": "Execute FACMAN-R3.7-END-TO-END-LIFECYCLE-01 across supported transports and packages."
+      "commit": "cad50062c955",
+      "summary": "Land this evidence-only record on dev and then open WU3 for the sanitized live evidence packet."
     },
     {
-      "commit": "9fea4325129c",
-      "summary": "Land the independent cross-transport journey and performance proof."
+      "commit": "cad50062c955",
+      "summary": "Land this evidence-only record on dev and then open WU3 for the sanitized live evidence packet."
     },
     {
-      "commit": "625a964355d0",
-      "summary": "Reproduce both implementation and proof commits from a clean three-repository workspace."
+      "commit": "53ebb488daad",
+      "summary": "Run the clean helper plan, push, and merge the evidence-only PR after exact-head checks."
     },
     {
-      "commit": "8556b05e033a",
-      "summary": "Rerun the complete clean three-repository reproduction from a fresh short build root."
+      "commit": "5f93f42f9708",
+      "summary": "Open the reviewed task-to-dev pull request and require exact-head workflows before merge."
     },
     {
-      "commit": "b6e8e6200b9e",
-      "summary": "Execute the R3.7 closeout target matrix and preserve human acceptance as a separate operator verdict."
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
     },
     {
-      "commit": "4d542308f806",
-      "summary": "Require the exact-sha GitHub Actions matrix to pass before freezing the R3.7 checkpoint."
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
     },
     {
-      "commit": "02398db38063",
-      "summary": "Require exact-head CI, CodeQL, package, sanitizer, fuzzer, coverage, and AppKit compile results to pass."
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
     },
     {
-      "commit": "681a614ea193",
-      "summary": "Require exact-head Linux, macOS, sanitizer, fuzzer, package, coverage, AppKit, and CodeQL lanes to pass before closeout."
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
     },
     {
-      "commit": "774628f442b0",
-      "summary": "Require exact-head hosted Linux, macOS, Windows, sanitizer, fuzzer, package, coverage, AppKit, and CodeQL completion."
+      "commit": "067397e592ce",
+      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
     },
     {
-      "commit": "81abee2fb122",
-      "summary": "Require the exact workflow commit to pass Linux Debug/Release, sanitizers, fuzzers, coverage, packages, and all other target jobs."
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
     },
     {
-      "commit": "6cce8ed15a8f",
-      "summary": "Close the AIDE work unit, synchronize the stable branch chain, and hand H1 to the operator as the exact next authority gate."
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
     },
     {
-      "commit": "1f840e533774",
-      "summary": "Refresh AIDE wave verification at this evidence commit and close the work unit."
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
     },
     {
-      "commit": "dcd9a6cbb0d2",
-      "summary": "Synchronize the validated task commit chain to dev and main without force push, then report the exact remote SHAs."
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
     },
     {
-      "commit": "6619c04c9c1a",
-      "summary": "Run the operator-owned FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 procedure without inferring its verdict from automated evidence."
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
     },
     {
-      "commit": "6619c04c9c1a",
-      "summary": "Run the operator-owned FACMAN-REAL-FACTORIO-ISOLATION-SMOKE-01 procedure without inferring its verdict from automated evidence."
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
     },
     {
-      "commit": "2190b044ad86",
-      "summary": "Confirm the replacement hosted CI run is terminal and green before closing the evidence task."
+      "commit": "a286b5c42736",
+      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
     },
     {
-      "commit": "2190b044ad86",
-      "summary": "Confirm the replacement hosted CI run is terminal and green before closing the evidence task."
+      "commit": "a6cfe28c704d",
+      "summary": "Merge WU5 recovery proof into dev and bind its exact integration workflows."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Obtain the operator-owned H1 verdict and route Pass, Fail, or Inconclusive exactly as documented."
+      "commit": "480a58ca4c10",
+      "summary": "Run the complete exact-pin validation matrix and close WU6 through reviewed dev integration."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Obtain the operator-owned H1 verdict and route Pass, Fail, or Inconclusive exactly as documented."
+      "commit": "d746454ca850",
+      "summary": "Close the WU6 task, publish its PR, and bind exact-dev workflows after merge."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Obtain the operator-owned H1 verdict and route Pass, Fail, or Inconclusive exactly as documented."
+      "commit": "f0b27c2e7f21",
+      "summary": "Publish and merge WU6 through exact-head CI, then bind the immutable dev evidence."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Obtain the operator-owned H1 verdict and route Pass, Fail, or Inconclusive exactly as documented."
+      "commit": "99f8cd8319ad",
+      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Obtain the operator-owned H1 verdict and route Pass, Fail, or Inconclusive exactly as documented."
+      "commit": "99f8cd8319ad",
+      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Define explicit command/schema compatibility rules before promising a stable public SDK."
+      "commit": "99f8cd8319ad",
+      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Define explicit command/schema compatibility rules before promising a stable public SDK."
+      "commit": "a64037693f4b",
+      "summary": "Complete and integrate the WU7 Factorio workflow candidate."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Define explicit command/schema compatibility rules before promising a stable public SDK."
+      "commit": "952c46a629f0",
+      "summary": "Run the complete native, Python, strict, package, and reproducibility matrix."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Define explicit command/schema compatibility rules before promising a stable public SDK."
+      "commit": "952c46a629f0",
+      "summary": "Run the complete native, Python, strict, package, and reproducibility matrix."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Define explicit command/schema compatibility rules before promising a stable public SDK."
+      "commit": "00ca569368dd",
+      "summary": "Repeat the complete Python matrix, then package and reproducibility proof."
     },
     {
-      "commit": "2f4f7b5460b2",
-      "summary": "Split client transports into independently linkable targets without changing H1 execution authority."
+      "commit": "00ca569368dd",
+      "summary": "Repeat the complete Python matrix, then package and reproducibility proof."
     },
     {
-      "commit": "6dce5c194457",
-      "summary": "Package individual transport targets only when a concrete external frontend requires them."
+      "commit": "0e50b6fe0e90",
+      "summary": "Regenerate final package identities at this closeout state, then open a reviewed dev PR."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "Implement install-origin and integration classification, strict-mode refusal, and standalone H1 preparation."
+      "commit": "0e50b6fe0e90",
+      "summary": "Regenerate final package identities at this closeout state, then open a reviewed dev PR."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "Implement install-origin and integration classification, strict-mode refusal, and standalone H1 preparation."
+      "commit": "526d6f5a2d1c",
+      "summary": "Publish the reviewed WU7 branch and merge it to dev after exact-head workflows pass."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "Implement install-origin and integration classification, strict-mode refusal, and standalone H1 preparation."
+      "commit": "1b029ead969e",
+      "summary": "Generate the clean task-to-dev landing plan, push, and open the reviewed PR."
     },
     {
-      "commit": "514413661f13",
-      "summary": "Reconcile the separately discovered request-schema/runtime mismatches."
+      "commit": "d3b5458645e2",
+      "summary": "Generate and consume the shared setup-review workflow contract across all four clients."
     },
     {
-      "commit": "514413661f13",
-      "summary": "Reconcile the separately discovered request-schema/runtime mismatches."
+      "commit": "d3b5458645e2",
+      "summary": "Generate and consume the shared setup-review workflow contract across all four clients."
     },
     {
-      "commit": "514413661f13",
-      "summary": "Reconcile the separately discovered request-schema/runtime mismatches."
+      "commit": "991ff78c5cc3",
+      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
     },
     {
-      "commit": "aa794491ad68",
-      "summary": "Reproduce and repair the Linux transaction branch-coverage shortfall."
+      "commit": "991ff78c5cc3",
+      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
     },
     {
-      "commit": "aa794491ad68",
-      "summary": "Reproduce and repair the Linux transaction branch-coverage shortfall."
+      "commit": "991ff78c5cc3",
+      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
     },
     {
-      "commit": "c4d8ee0f4d54",
-      "summary": "Confirm the expected coverage result in exact-head GitHub Actions after the complete repair series is published."
+      "commit": "6ca7e62889f6",
+      "summary": "Rerun the complete 340-test corpus against regenerated truth and produce the zero-skip package proof."
     },
     {
-      "commit": "c4d8ee0f4d54",
-      "summary": "Confirm the expected coverage result in exact-head GitHub Actions after the complete repair series is published."
+      "commit": "6ca7e62889f6",
+      "summary": "Rerun the complete 340-test corpus against regenerated truth and produce the zero-skip package proof."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "Surface these classifications in preview/preflight and return the Steam-specific execution refusal."
+      "commit": "d59d22a27b08",
+      "summary": "Rerun the complete Python corpus and package proof from the remediated task head."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "Surface these classifications in preview/preflight and return the Steam-specific execution refusal."
+      "commit": "d59d22a27b08",
+      "summary": "Rerun the complete Python corpus and package proof from the remediated task head."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "Surface these classifications in preview/preflight and return the Steam-specific execution refusal."
+      "commit": "79577fd7eb8a",
+      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "Build and run the read-only multi-version capability corpus, then prepare the standalone H1 retest path."
+      "commit": "79577fd7eb8a",
+      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "Build and run the read-only multi-version capability corpus, then prepare the standalone H1 retest path."
+      "commit": "79577fd7eb8a",
+      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "Build and run the read-only multi-version capability corpus, then prepare the standalone H1 retest path."
-    },
-    {
-      "commit": "a06669155e57",
-      "summary": "Build and run the read-only multi-version capability corpus, then prepare the standalone H1 retest path."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "Acquire an authenticated official standalone 2.0.77 archive outside the repository before any controlled H1 retest."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "Acquire an authenticated official standalone 2.0.77 archive outside the repository before any controlled H1 retest."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "Acquire an authenticated official standalone 2.0.77 archive outside the repository before any controlled H1 retest."
-    },
-    {
-      "commit": "7502462385d0",
-      "summary": "Obtain the official licensed 2.0.77 expansion Windows manual ZIP through an authenticated browser session, verify its publisher checksum, and run H1 as a separate human-reviewed gate."
-    },
-    {
-      "commit": "7502462385d0",
-      "summary": "Obtain the official licensed 2.0.77 expansion Windows manual ZIP through an authenticated browser session, verify its publisher checksum, and run H1 as a separate human-reviewed gate."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "Push the new exact head and require all hosted Linux, macOS, Windows, coverage, schema, and security workflows to pass before dev integration."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "Push the new exact head and require all hosted Linux, macOS, Windows, coverage, schema, and security workflows to pass before dev integration."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "Push the new exact head and require all hosted Linux, macOS, Windows, coverage, schema, and security workflows to pass before dev integration."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "Push the combined compiler and package repairs and require the next exact-head hosted matrix to pass before dev integration."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "Push the combined compiler and package repairs and require the next exact-head hosted matrix to pass before dev integration."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "Push the combined compiler and package repairs and require the next exact-head hosted matrix to pass before dev integration."
-    },
-    {
-      "commit": "d365ceaf7cda",
-      "summary": "Complete and archive the R3.8 repair WorkUnit using the repaired lifecycle path."
-    },
-    {
-      "commit": "d365ceaf7cda",
-      "summary": "Complete and archive the R3.8 repair WorkUnit using the repaired lifecycle path."
-    },
-    {
-      "commit": "91b5985b818f",
-      "summary": "Commit the now-valid R3.8 closeout record and canonical project truth."
-    },
-    {
-      "commit": "91b5985b818f",
-      "summary": "Commit the now-valid R3.8 closeout record and canonical project truth."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "Land this closeout on dev, promote dev to main through reviewed CI, record canonical main evidence, synchronize dev, then open M1."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "Land this closeout on dev, promote dev to main through reviewed CI, record canonical main evidence, synchronize dev, then open M1."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "Land this closeout on dev, promote dev to main through reviewed CI, record canonical main evidence, synchronize dev, then open M1."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "Land this closeout on dev, promote dev to main through reviewed CI, record canonical main evidence, synchronize dev, then open M1."
+      "commit": "d40596f0654b",
+      "summary": "Push the task branch and open the reviewed task-to-dev pull request."
     }
   ],
   "highlights": [
     {
       "breaking": false,
       "category": "Security",
-      "commit": "6d3c61c009ab",
-      "subject": "docs(evidence): record H1 Fail for Steam-backed candidate",
-      "summary": "Raw Steam evidence, account identifiers, absolute local paths, credentials, and proprietary binaries remain outside Git."
+      "commit": "129f70d13058",
+      "subject": "docs(m2): bind the public lifecycle proof",
+      "summary": "recovery.apply and ordinary live apply remain unavailable."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "514413661f13",
-      "subject": "fix(contracts): preserve identifier refusal semantics at decode",
-      "summary": "Identifier shape validation remains before application dispatch."
+      "commit": "e4b03c82b649",
+      "subject": "chore(m2): close the public lifecycle work unit",
+      "summary": "pending human verdict, ordinary live apply hold, recovery hold, and execution ban are unchanged."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "a06669155e57",
-      "subject": "fix(launch): refuse Steam external state in strict mode",
-      "summary": "run.execute still cannot start Factorio and now distinguishes the known Steam isolation failure."
+      "commit": "182ada6be86d",
+      "subject": "docs(m2): bind the exact WU2 dev integration",
+      "summary": "ordinary managed apply, recovery apply, execution, and publication remain unavailable."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "e74255d5209c",
-      "subject": "feat(compat): add read-only Factorio version capability corpus",
-      "summary": "user-data roots are redirected and raw process output, absolute paths, credentials, and binaries are not persisted."
+      "commit": "cad50062c955",
+      "subject": "chore(m2): close the WU2 dev integration proof",
+      "summary": "all human, recovery, execution, and publication holds remain unchanged."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "7502462385d0",
-      "subject": "docs(checkpoint): freeze R3.8 repair without H1 promotion",
-      "summary": "preserved credentials, download tokens, proprietary binaries, and raw local evidence outside Git."
+      "commit": "99f8cd8319ad",
+      "subject": "feat(setup): route Factorio installs through target-bound planning",
+      "summary": "No apply authority; default and incomplete configurations refuse."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "21ae0f68ed30",
-      "subject": "fix(launch): propagate isolation fields through lifecycle refs",
-      "summary": "lifecycle-generated launch references preserve external-state domains and eligibility instead of defaulting them."
+      "commit": "0e50b6fe0e90",
+      "subject": "docs(checkpoint): close WU7 portable planning candidate",
+      "summary": "Human acceptance remains non-automatable and every setup apply remains blocked."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "b6006e514d03",
-      "subject": "fix(package): stage WinForms artifact into installed tree",
-      "summary": "only an allowlisted external component is staged and its destination remains traversal-validated."
+      "commit": "991ff78c5cc3",
+      "subject": "feat(frontend): generate the portable setup review workflow",
+      "summary": "retained Universal Setup policy ownership and the live_target_acceptance_required gate."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "91b5985b818f",
-      "subject": "fix(aide): canonicalize immutable history hashes",
-      "summary": "Real content changes remain SHA-256 detected after deterministic text normalization."
+      "commit": "d59d22a27b08",
+      "subject": "fix(probe): preserve supervision deadlines under host load",
+      "summary": "protected-root observation still terminates timed-out children and records the skipped observation truthfully."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "2671ca55d91d",
-      "subject": "docs(closeout): bind and close the R3.8 repair",
-      "summary": "H1 remains Fail; standalone/manual isolation remains unproven; authority promotion remains false."
+      "commit": "79577fd7eb8a",
+      "subject": "docs(checkpoint): close the WU8 generated workflow proof",
+      "summary": "retained Universal Setup policy ownership and human-gated apply."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "8335fde1ba12",
-      "subject": "feat(mods): add stable local inventory",
-      "summary": "stable, local-only mod inventory and verification commands for R3.7."
+      "commit": "129f70d13058",
+      "subject": "docs(m2): bind the public lifecycle proof",
+      "summary": "immutable M2-WU2 implementation and package proof."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "b93d7376c625",
-      "subject": "feat(modsets): add bounded local solver",
-      "summary": "deterministic bounded local dependency plans and transactional modset apply and rollback."
+      "commit": "2c55d1d111a2",
+      "subject": "chore(m2): open the WU2 dev integration proof",
+      "summary": "evidence-only WU2 dev integration closeout lane."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "2e9a66f8a4bd",
-      "subject": "feat(saves): add structural index and retention",
-      "summary": "bounded save indexing, sidecar association, drift detection, structural diff, and reversible retention."
+      "commit": "182ada6be86d",
+      "subject": "docs(m2): bind the exact WU2 dev integration",
+      "summary": "immutable exact-dev WU2 integration evidence."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "578bfb57bf82",
-      "subject": "feat(servers): add non-executing plan bundles",
-      "summary": "secret-free dedicated-server planning and portable export bundles."
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "retained live synthetic install lifecycle evidence."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "dedadfa2f95e",
-      "subject": "feat(frontends): generate guided operational forms",
-      "summary": "generated guided operational forms and cross-frontend result visualizations."
+      "commit": "480a58ca4c10",
+      "subject": "feat(handoff): integrate Launcher recovery projection",
+      "summary": "stable managed_install_recovery_required handoff with stale launch-plan projection."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "625a964355d0",
-      "subject": "test(lifecycle): prove R3.7 cross-transport journey",
-      "summary": "Cross-transport lifecycle, adversarial, and release-scale R3.7 proof coverage."
+      "commit": "99f8cd8319ad",
+      "subject": "feat(setup): route Factorio installs through target-bound planning",
+      "summary": "Real target-bound Factorio portable install planning."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "81abee2fb122",
-      "subject": "ci(linux): add explicit Release proof",
-      "summary": "Required Linux Release build and CTest evidence to the cross-platform closeout matrix."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "6cce8ed15a8f",
-      "subject": "docs(release): freeze the R3.7 lifecycle checkpoint",
-      "summary": "Exact R3.7 lifecycle checkpoint with target-native evidence and honest authority boundaries."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "1f840e533774",
-      "subject": "chore(aide): preserve R3.7 review evidence",
-      "summary": "Generated R3.7 review and branch-workflow evidence."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "9539338419c5",
-      "subject": "fix(truth): establish the R3.7 H1-pending authority plane",
-      "summary": "Canonical machine-readable R3.7 and H1-pending project status."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "49101f7acfba",
-      "subject": "feat(contracts): generate and enforce native request boundary law",
-      "summary": "Declarative request-field contracts and generated native boundary validators."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "2f4f7b5460b2",
-      "subject": "feat(sdk): establish the experimental FLB 1.2 consumer boundary",
-      "summary": "experimental relocatable FLB 1.2 installed SDK and compatibility metadata."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "6d3c61c009ab",
-      "subject": "docs(evidence): record H1 Fail for Steam-backed candidate",
-      "summary": "Sanitized, digest-bound H1 operator verdict and checkpoint."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "08cf8a58fb17",
-      "subject": "feat(installs): classify external-state isolation eligibility",
-      "summary": "explicit install-origin and external-state isolation metadata."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "a06669155e57",
-      "subject": "fix(launch): refuse Steam external state in strict mode",
-      "summary": "Steam external-state refusal and explicit preview/preflight write-domain policy."
-    },
-    {
-      "breaking": false,
-      "category": "Added",
-      "commit": "e74255d5209c",
-      "subject": "feat(compat): add read-only Factorio version capability corpus",
-      "summary": "sanitized Factorio version capability corpus tooling and contract."
+      "commit": "991ff78c5cc3",
+      "subject": "feat(frontend): generate the portable setup review workflow",
+      "summary": "consistent managed-portable setup review workflow across all shipped client families."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "05a93277d739",
-      "subject": "chore(aide): close local mod inventory workunit",
-      "summary": "R3.7 wave state now records local mod inventory as closed and verified."
+      "commit": "129f70d13058",
+      "subject": "docs(m2): bind the public lifecycle proof",
+      "summary": "project truth now distinguishes implementation proof from dev integration and human acceptance."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "7ad66aea23d7",
-      "subject": "chore(aide): close local modset solver workunit",
-      "summary": "R3.7 wave state now records the local modset solver as closed and verified."
+      "commit": "e4b03c82b649",
+      "subject": "chore(m2): close the public lifecycle work unit",
+      "summary": "WU2 is closed locally pending reviewed dev integration."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "b30e4a70272e",
-      "subject": "chore(aide): close save intelligence workunit",
-      "summary": "R3.7 wave state now records structural save intelligence as closed and verified."
+      "commit": "f051731b80b5",
+      "subject": "chore(aide): refresh the WU2 branch identity",
+      "summary": "branch governance evidence now reflects the completed WU2 head."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "d90d461a99dd",
-      "subject": "chore(aide): close server planning workunit",
-      "summary": "R3.7 wave state now records server planning as closed."
+      "commit": "182ada6be86d",
+      "subject": "docs(m2): bind the exact WU2 dev integration",
+      "summary": "public lifecycle is dev-integrated pending operator acceptance."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "9af53a736f47",
-      "subject": "chore(aide): close operational UX workunit",
-      "summary": "R3.7 wave state now records operational UX as closed."
+      "commit": "cad50062c955",
+      "subject": "chore(m2): close the WU2 dev integration proof",
+      "summary": "WU2 exact-dev integration is fully closed."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "b6e8e6200b9e",
-      "subject": "chore(aide): close R3.7 lifecycle proof",
-      "summary": "R3.7 wave state now records WU10 as closed with advisory-only evidence."
+      "commit": "53ebb488daad",
+      "subject": "chore(aide): refresh the integration proof branch",
+      "summary": "publication governance reports now match the closed evidence head."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "dcd9a6cbb0d2",
-      "subject": "chore(aide): close the R3.7 wave",
-      "summary": "R3.7 AIDE state is closed with advisory-only evidence and no automatic human or release promotion."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "9539338419c5",
-      "subject": "fix(truth): establish the R3.7 H1-pending authority plane",
-      "summary": "Current status and platform claims are generated and evidence-qualified."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "49101f7acfba",
-      "subject": "feat(contracts): generate and enforce native request boundary law",
-      "summary": "Command schemas and frontend catalogs derive field constraints from the same source."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "6dce5c194457",
-      "subject": "refactor(client): separate model and transport link boundaries",
-      "summary": "client transports are independently linkable and daemon IPC remains explicitly unavailable."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "6d3c61c009ab",
-      "subject": "docs(evidence): record H1 Fail for Steam-backed candidate",
-      "summary": "Canonical status now reports the Steam-backed H1 Fail and active narrow repair."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "08cf8a58fb17",
-      "subject": "feat(installs): classify external-state isolation eligibility",
-      "summary": "Steam, standalone, archive, manual, and package installs now receive conservative isolation classifications."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "a06669155e57",
-      "subject": "fix(launch): refuse Steam external state in strict mode",
-      "summary": "Steam preflight is refused even when instance-local config routing is structurally valid."
-    },
-    {
-      "breaking": false,
-      "category": "Changed",
-      "commit": "2671ca55d91d",
-      "subject": "docs(closeout): bind and close the R3.8 repair",
-      "summary": "Canonical project truth now records no active WorkUnit and the closed repair identity."
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "project truth now points at the canonical WU4 provider."
     },
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "9fea4325129c",
-      "subject": "fix(lifecycle): close cross-workunit integrity gaps",
-      "summary": "Cross-workunit lifecycle correctness and generated-client compatibility defects found by R3.7 end-to-end proof."
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "rebuilt preferred native CLI to align runtime status with provider lock."
     },
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "8556b05e033a",
-      "subject": "test(transaction): clean native smoke workspace",
-      "summary": "Native transaction smoke no longer leaves an empty source-tree directory after passing."
+      "commit": "952c46a629f0",
+      "subject": "test(cli): prove configured setup planning stays read only",
+      "summary": "Retained precise legacy archive refusal ordering."
     },
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "4d542308f806",
-      "subject": "fix(portability): satisfy GCC and AppleClang warnings",
-      "summary": "Linux and macOS warnings-as-errors portability failures in preferences and modset planning."
+      "commit": "00ca569368dd",
+      "subject": "fix(contracts): complete install plan success truth",
+      "summary": "Implemented command contract now has both success and dynamic refusal evidence."
     },
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "02398db38063",
-      "subject": "fix(portability): initialize launch profile defaults",
-      "summary": "Linux and macOS launch-reference compilation no longer depends on omitted aggregate fields."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "681a614ea193",
-      "subject": "test(tui): initialize complete invocation shape",
-      "summary": "Cross-platform TUI smoke compilation now matches the complete generated-client invocation shape."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "774628f442b0",
-      "subject": "fix(profiles): archive directories atomically on POSIX",
-      "summary": "Profile archive now uses a directory-safe atomic no-clobber move on POSIX."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "2190b044ad86",
-      "subject": "docs(release): wrap R3.7 integration evidence",
-      "summary": "Made the R3.7 public-integration addendum satisfy Linux source-format policy."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "9539338419c5",
-      "subject": "fix(truth): establish the R3.7 H1-pending authority plane",
-      "summary": "Coverage is aggregated by module and release structure is no longer called readiness."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "49101f7acfba",
-      "subject": "feat(contracts): generate and enforce native request boundary law",
-      "summary": "`modsets.rollback` now enforces its required lowercase SHA-256 transaction identity at the native boundary."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "514413661f13",
-      "subject": "fix(contracts): preserve identifier refusal semantics at decode",
-      "summary": "Cross-platform safety refusals retain invalid_identifier instead of degrading to invalid_request."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "aa794491ad68",
-      "subject": "fix(ci): link relocated SDK consumers to sanitizer runtimes",
-      "summary": "relocated SDK sanitizer runtime ordering in Linux CI."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "c4d8ee0f4d54",
-      "subject": "test(transaction): cover state law and reject slash-root paths",
-      "summary": "slash-rooted transaction paths are refused consistently on Windows and POSIX."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "21ae0f68ed30",
-      "subject": "fix(launch): propagate isolation fields through lifecycle refs",
-      "summary": "cross-platform lifecycle builds now initialize the complete isolation contract."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "b6006e514d03",
-      "subject": "fix(package): stage WinForms artifact into installed tree",
-      "summary": "the Windows legacy compatibility package again includes the separately built WinForms shell."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "d365ceaf7cda",
-      "subject": "fix(aide): tolerate compacted queue placeholders",
-      "summary": "Evidence-only compacted queue placeholders no longer block lifecycle indexing."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "91b5985b818f",
-      "subject": "fix(aide): canonicalize immutable history hashes",
-      "summary": "Newly archived Windows lifecycle evidence no longer reports false line-ending drift."
+      "commit": "d59d22a27b08",
+      "subject": "fix(probe): preserve supervision deadlines under host load",
+      "summary": "process supervision now honors short deadlines under a slow Windows process-query provider."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "6619c04c9c1a",
-      "subject": "docs(release): bind R3.7 public integration evidence",
-      "summary": "Added the accepted R3.7 public-integration evidence layer."
+      "commit": "067397e592ce",
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "accepted WU3 reviewed dev integration evidence."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "2190b044ad86",
-      "subject": "docs(release): wrap R3.7 integration evidence",
-      "summary": "No evidence meaning or product claim changed."
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "bind run, packet, journal, audit, state, and package identities."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "9539338419c5",
-      "subject": "fix(truth): establish the R3.7 H1-pending authority plane",
-      "summary": "Daemon and frontend capability descriptions now match implemented transport reality."
+      "commit": "a6cfe28c704d",
+      "subject": "docs(state): accept exact-dev WU4 integration",
+      "summary": "WU4 is now accepted as dev-integrated while its human verdict remains pending."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "7502462385d0",
-      "subject": "docs(checkpoint): freeze R3.8 repair without H1 promotion",
-      "summary": "added the bounded R3.8 isolation-repair and standalone-acquisition handoff."
+      "commit": "a64037693f4b",
+      "subject": "docs(checkpoint): bind WU6 exact dev integration evidence",
+      "summary": "WU6 now records accepted dev integration proof pending only the human M2 verdict."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "2671ca55d91d",
-      "subject": "docs(closeout): bind and close the R3.8 repair",
-      "summary": "Bound the exact R3.8 implementation and dev integration evidence."
+      "commit": "00ca569368dd",
+      "subject": "fix(contracts): complete install plan success truth",
+      "summary": "WU6 compaction law now matches its accepted dev integration."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "0e50b6fe0e90",
+      "subject": "docs(checkpoint): close WU7 portable planning candidate",
+      "summary": "Added the M2-WU7 immutable implementation checkpoint."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "526d6f5a2d1c",
+      "subject": "docs(evidence): bind final WU7 package identities",
+      "summary": "Final package evidence is revision-pinned and immutable."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "d3b5458645e2",
+      "subject": "docs(checkpoint): bind WU7 exact dev integration evidence",
+      "summary": "recorded WU7 exact dev integration evidence."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "6ca7e62889f6",
+      "subject": "docs(state): record the WU8 four-client proof candidate",
+      "summary": "recorded the WU8 local proof candidate."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "79577fd7eb8a",
+      "subject": "docs(checkpoint): close the WU8 generated workflow proof",
+      "summary": "published the local WU8 implementation and package checkpoint."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "49101f7acfba",
-      "subject": "feat(contracts): generate and enforce native request boundary law",
-      "summary": "Every registered command is differentially checked against its generated request schema through the live CLI."
+      "commit": "067397e592ce",
+      "subject": "docs(m2): bind WU3 exact-dev integration proof",
+      "summary": "enforce immutable integration identities and retained human gate."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "514413661f13",
-      "subject": "fix(contracts): preserve identifier refusal semantics at decode",
-      "summary": "Added native coverage for a path-escape identifier."
+      "commit": "a286b5c42736",
+      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
+      "summary": "enforce pending verdict and zero authority promotion."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "aa794491ad68",
-      "subject": "fix(ci): link relocated SDK consumers to sanitizer runtimes",
-      "summary": "added parent-cache propagation coverage."
+      "commit": "d746454ca850",
+      "subject": "test(proof): bind complete WU6 validation identities",
+      "summary": "complete Launcher handoff proof and immutable WU5 dev evidence are now recorded."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "c4d8ee0f4d54",
-      "subject": "test(transaction): cover state law and reject slash-root paths",
-      "summary": "expanded transaction state-machine and relative-path contract coverage."
+      "commit": "99f8cd8319ad",
+      "subject": "feat(setup): route Factorio installs through target-bound planning",
+      "summary": "Correct synthetic ZIP CRC metadata and prove planning causes no state or target creation."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "08cf8a58fb17",
-      "subject": "feat(installs): classify external-state isolation eligibility",
-      "summary": "added Steam and standalone classification assertions plus import/inspect persistence checks."
+      "commit": "952c46a629f0",
+      "subject": "test(cli): prove configured setup planning stays read only",
+      "summary": "Added CLI-level immutable plan and no-write coverage."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "a06669155e57",
-      "subject": "fix(launch): refuse Steam external state in strict mode",
-      "summary": "added end-to-end Steam preview, preflight, refusal, and no-side-effect proof."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "e74255d5209c",
-      "subject": "feat(compat): add read-only Factorio version capability corpus",
-      "summary": "added parsing, capability, tree-fingerprint, metadata-fallback, and executable-discovery coverage."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "21ae0f68ed30",
-      "subject": "fix(launch): propagate isolation fields through lifecycle refs",
-      "summary": "reproduced the hosted compiler failure with GCC and reran Windows native plus focused lifecycle suites."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "b6006e514d03",
-      "subject": "fix(package): stage WinForms artifact into installed tree",
-      "summary": "added focused external-component staging and path-refusal coverage."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "d365ceaf7cda",
-      "subject": "fix(aide): tolerate compacted queue placeholders",
-      "summary": "Partial live records remain fail-closed."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "2671ca55d91d",
-      "subject": "docs(closeout): bind and close the R3.8 repair",
-      "summary": "Added data-level assertions for the closed repair and refreshed validation identity."
+      "commit": "991ff78c5cc3",
+      "subject": "feat(frontend): generate the portable setup review workflow",
+      "summary": "pinned every required workflow label and authority boundary."
     }
   ],
   "preview_only": true,
   "risk_summary": [
     {
-      "commit": "f40e9d31f940",
-      "summary": "Process execution and human acceptance remain separate, unpromoted authorities."
+      "commit": "129f70d13058",
+      "summary": "Hosted FacMan dev workflows and the human live-target verdict are still pending."
     },
     {
-      "commit": "8335fde1ba12",
-      "summary": "Archive metadata parsing remains intentionally bounded and does not claim portal availability or installation readiness."
+      "commit": "129f70d13058",
+      "summary": "Hosted FacMan dev workflows and the human live-target verdict are still pending."
     },
     {
-      "commit": "05a93277d739",
-      "summary": "This records machine-verifiable evidence only and does not grant portal, publication, or human acceptance claims."
+      "commit": "129f70d13058",
+      "summary": "Hosted FacMan dev workflows and the human live-target verdict are still pending."
     },
     {
-      "commit": "b93d7376c625",
-      "summary": "Optional dependencies are not silently installed; they constrain the plan only when already requested or selected."
+      "commit": "e4b03c82b649",
+      "summary": "Hosted PR and exact dev workflow evidence remain unavailable until publication and merge."
     },
     {
-      "commit": "7ad66aea23d7",
-      "summary": "This ledger records machine evidence only and does not grant real Factorio, setup, network, signing, publication, or human-acceptance authority."
+      "commit": "e4b03c82b649",
+      "summary": "Hosted PR and exact dev workflow evidence remain unavailable until publication and merge."
     },
     {
-      "commit": "2e9a66f8a4bd",
-      "summary": "Deep Factorio save metadata remains explicitly unsupported."
+      "commit": "f051731b80b5",
+      "summary": "No remote branch, pull request, or repository setting has changed in this commit."
     },
     {
-      "commit": "b30e4a70272e",
-      "summary": "This ledger records machine evidence only and does not claim deep save semantics, real Factorio execution, publication, or human acceptance."
+      "commit": "2c55d1d111a2",
+      "summary": "No product behavior or authority changes; the human M2 verdict remains pending."
     },
     {
-      "commit": "578bfb57bf82",
-      "summary": "LOW: execution remains unavailable and exports exclude saves unless explicitly requested."
+      "commit": "182ada6be86d",
+      "summary": "The human M2 verdict remains pending and no live acceptance lifecycle has run."
     },
     {
-      "commit": "d90d461a99dd",
-      "summary": "LOW: this commit changes report-only AIDE state and no product behavior."
+      "commit": "182ada6be86d",
+      "summary": "The human M2 verdict remains pending and no live acceptance lifecycle has run."
     },
     {
-      "commit": "dedadfa2f95e",
-      "summary": "LOW: frontend controls submit the same generated request fields and backend validation remains authoritative."
+      "commit": "182ada6be86d",
+      "summary": "The human M2 verdict remains pending and no live acceptance lifecycle has run."
     },
     {
-      "commit": "9af53a736f47",
-      "summary": "LOW: this commit changes report-only AIDE state and no product behavior."
+      "commit": "cad50062c955",
+      "summary": "M2 live operator acceptance remains future WU3-WU10 work."
     },
     {
-      "commit": "9fea4325129c",
-      "summary": "Restore and retention paths perform additional validation and may refuse previously ambiguous or corrupted state."
+      "commit": "cad50062c955",
+      "summary": "M2 live operator acceptance remains future WU3-WU10 work."
     },
     {
-      "commit": "625a964355d0",
-      "summary": "The full-scale corpus is intentionally opt-in because it creates a large temporary fixture and takes roughly two minutes on the validated Windows host."
+      "commit": "53ebb488daad",
+      "summary": "No product or remote state changes in this commit."
     },
     {
-      "commit": "8556b05e033a",
-      "summary": "Test-only path construction changed; transaction behavior and product runtime are unchanged."
+      "commit": "5f93f42f9708",
+      "summary": "Historical malformed commit messages remain reported for review; no history was rewritten."
     },
     {
-      "commit": "b6e8e6200b9e",
-      "summary": "No product behavior changes; this commit contains generated AIDE state only."
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
     },
     {
-      "commit": "4d542308f806",
-      "summary": "The solver construction and timeout acceptance behavior are unchanged."
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
     },
     {
-      "commit": "02398db38063",
-      "summary": "Values are identical to the existing field defaults; product behavior and ABI layout are unchanged."
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
     },
     {
-      "commit": "681a614ea193",
-      "summary": "Test-only initialization changed; TUI runtime behavior is unchanged."
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
     },
     {
-      "commit": "774628f442b0",
-      "summary": "The target remains same-filesystem owned trash; cross-volume directory moves still fail closed."
+      "commit": "067397e592ce",
+      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
     },
     {
-      "commit": "81abee2fb122",
-      "summary": "Hosted Linux runtime increases because the native core is built once more in Release mode."
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "6cce8ed15a8f",
-      "summary": "The record is revision-pinned and must not be reused for later code without fresh validation."
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "1f840e533774",
-      "summary": "Evidence is revision-scoped and advisory; it grants no branch, release, or human-claim authority."
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "dcd9a6cbb0d2",
-      "summary": "No product behavior changes; this commit contains generated wave state only."
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "6619c04c9c1a",
-      "summary": "None; documentation and governance evidence only."
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "6619c04c9c1a",
-      "summary": "None; documentation and governance evidence only."
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "2190b044ad86",
-      "summary": "None; formatting-only documentation correction."
+      "commit": "a286b5c42736",
+      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "2190b044ad86",
-      "summary": "None; formatting-only documentation correction."
+      "commit": "a6cfe28c704d",
+      "summary": "Ordinary live apply and every excluded execution or system authority remain unavailable."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Existing consumers of the retired project-state v1 filename must move to v2."
+      "commit": "480a58ca4c10",
+      "summary": "Full repository, package, reproducibility, and hosted integration proof remain pending; human verdict and ordinary live apply remain unavailable."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Existing consumers of the retired project-state v1 filename must move to v2."
+      "commit": "d746454ca850",
+      "summary": "WU6 still requires reviewed hosted integration; the M2 human verdict and ordinary live apply remain pending."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Existing consumers of the retired project-state v1 filename must move to v2."
+      "commit": "f0b27c2e7f21",
+      "summary": "Exact-head and exact-dev hosted workflows remain required; human setup verdict remains pending."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Existing consumers of the retired project-state v1 filename must move to v2."
+      "commit": "99f8cd8319ad",
+      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "Existing consumers of the retired project-state v1 filename must move to v2."
+      "commit": "99f8cd8319ad",
+      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Present optional numeric strings are deliberately bounded by the public contract before legacy domain conversion."
+      "commit": "99f8cd8319ad",
+      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Present optional numeric strings are deliberately bounded by the public contract before legacy domain conversion."
+      "commit": "a64037693f4b",
+      "summary": "The operator verdict remains pending and no setup mutation authority changes."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Present optional numeric strings are deliberately bounded by the public contract before legacy domain conversion."
+      "commit": "952c46a629f0",
+      "summary": "Apply remains blocked; this test grants no mutation authority."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Present optional numeric strings are deliberately bounded by the public contract before legacy domain conversion."
+      "commit": "952c46a629f0",
+      "summary": "Apply remains blocked; this test grants no mutation authority."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "Present optional numeric strings are deliberately bounded by the public contract before legacy domain conversion."
+      "commit": "00ca569368dd",
+      "summary": "No setup apply, execution, or human-verdict authority changed."
     },
     {
-      "commit": "2f4f7b5460b2",
-      "summary": "WARN: The ABI and SDK remain experimental, binary replay and the full compiler matrix are unproven, and the provider pin has no declared license file."
+      "commit": "00ca569368dd",
+      "summary": "No setup apply, execution, or human-verdict authority changed."
     },
     {
-      "commit": "6dce5c194457",
-      "summary": "WARN: facman_client_static intentionally still links all selected transports for existing CLI and TUI consumers."
+      "commit": "0e50b6fe0e90",
+      "summary": "Dev integration, the M2 human verdict, real Factorio archive acceptance, and all execution authority remain pending."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "Standalone/manual Factorio isolation remains unproven; no execution capability is enabled."
+      "commit": "0e50b6fe0e90",
+      "summary": "Dev integration, the M2 human verdict, real Factorio archive acceptance, and all execution authority remain pending."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "Standalone/manual Factorio isolation remains unproven; no execution capability is enabled."
+      "commit": "526d6f5a2d1c",
+      "summary": "Publisher authenticity remains unproven; the evidence is unsigned and unpublished."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "Standalone/manual Factorio isolation remains unproven; no execution capability is enabled."
+      "commit": "1b029ead969e",
+      "summary": "None; this commit changes no product or authority surface."
     },
     {
-      "commit": "514413661f13",
-      "summary": "The broader request-schema/runtime mismatches remain separately scoped and are not hidden by this refusal repair."
+      "commit": "d3b5458645e2",
+      "summary": "Human M2 verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "514413661f13",
-      "summary": "The broader request-schema/runtime mismatches remain separately scoped and are not hidden by this refusal repair."
+      "commit": "d3b5458645e2",
+      "summary": "Human M2 verdict remains pending and ordinary live apply remains unavailable."
     },
     {
-      "commit": "514413661f13",
-      "summary": "The broader request-schema/runtime mismatches remain separately scoped and are not hidden by this refusal repair."
+      "commit": "991ff78c5cc3",
+      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
     },
     {
-      "commit": "aa794491ad68",
-      "summary": "Sanitizer propagation is intentionally limited to GCC and Clang; unsupported compilers fail explicitly when enabled."
+      "commit": "991ff78c5cc3",
+      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
     },
     {
-      "commit": "aa794491ad68",
-      "summary": "Sanitizer propagation is intentionally limited to GCC and Clang; unsupported compilers fail explicitly when enabled."
+      "commit": "991ff78c5cc3",
+      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
     },
     {
-      "commit": "c4d8ee0f4d54",
-      "summary": "WSL1 cannot complete three filesystem tests because its host filesystem semantics are intentionally outside the reviewed allowlist; Windows native execution passes and hosted Ubuntu remains authoritative."
+      "commit": "6ca7e62889f6",
+      "summary": "Package proof, hosted dev integration, and the human operator verdict remain pending."
     },
     {
-      "commit": "c4d8ee0f4d54",
-      "summary": "WSL1 cannot complete three filesystem tests because its host filesystem semantics are intentionally outside the reviewed allowlist; Windows native execution passes and hosted Ubuntu remains authoritative."
+      "commit": "6ca7e62889f6",
+      "summary": "Package proof, hosted dev integration, and the human operator verdict remain pending."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "Marker absence is only none_detected, not proof; candidate installs still require an H1 operator verdict before execution can be enabled."
+      "commit": "d59d22a27b08",
+      "summary": "Very short runs intentionally report child-process observation as not_attempted; long acceptance runs retain periodic observation."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "Marker absence is only none_detected, not proof; candidate installs still require an H1 operator verdict before execution can be enabled."
+      "commit": "d59d22a27b08",
+      "summary": "Very short runs intentionally report child-process observation as not_attempted; long acceptance runs retain periodic observation."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "Marker absence is only none_detected, not proof; candidate installs still require an H1 operator verdict before execution can be enabled."
+      "commit": "79577fd7eb8a",
+      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "Standalone execution remains intentionally blocked; only a later reviewed H1 Pass may change eligibility to eligible."
+      "commit": "79577fd7eb8a",
+      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "Standalone execution remains intentionally blocked; only a later reviewed H1 Pass may change eligibility to eligible."
+      "commit": "79577fd7eb8a",
+      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "Standalone execution remains intentionally blocked; only a later reviewed H1 Pass may change eligibility to eligible."
-    },
-    {
-      "commit": "a06669155e57",
-      "summary": "Standalone execution remains intentionally blocked; only a later reviewed H1 Pass may change eligibility to eligible."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "none_detected does not prove absence of platform integration; all present local installs remain unproven for strict execution."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "none_detected does not prove absence of platform integration; all present local installs remain unproven for strict execution."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "none_detected does not prove absence of platform integration; all present local installs remain unproven for strict execution."
-    },
-    {
-      "commit": "7502462385d0",
-      "summary": "A standalone H1 result remains unavailable until the operator's licensed Factorio archive is present and independently observed."
-    },
-    {
-      "commit": "7502462385d0",
-      "summary": "A standalone H1 result remains unavailable until the operator's licensed Factorio archive is present and independently observed."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "The local WSL filesystem is intentionally refused by three lock-safety tests; hosted Linux remains the authority for those tests."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "The local WSL filesystem is intentionally refused by three lock-safety tests; hosted Linux remains the authority for those tests."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "The local WSL filesystem is intentionally refused by three lock-safety tests; hosted Linux remains the authority for those tests."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "WinForms remains a separately built legacy frontend; its artifact must exist before the legacy package profile can be assembled."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "WinForms remains a separately built legacy frontend; its artifact must exist before the legacy package profile can be assembled."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "WinForms remains a separately built legacy frontend; its artifact must exist before the legacy package profile can be assembled."
-    },
-    {
-      "commit": "d365ceaf7cda",
-      "summary": "Low; product runtime and command behavior are untouched."
-    },
-    {
-      "commit": "d365ceaf7cda",
-      "summary": "Low; product runtime and command behavior are untouched."
-    },
-    {
-      "commit": "91b5985b818f",
-      "summary": "Low; binary evidence remains byte-exact and product code is untouched."
-    },
-    {
-      "commit": "91b5985b818f",
-      "summary": "Low; binary evidence remains byte-exact and product code is untouched."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "Mainline canonical proof is intentionally not claimed until the dedicated dev-to-main PR merges and exact main workflows finish."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "Mainline canonical proof is intentionally not claimed until the dedicated dev-to-main PR merges and exact main workflows finish."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "Mainline canonical proof is intentionally not claimed until the dedicated dev-to-main PR merges and exact main workflows finish."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "Mainline canonical proof is intentionally not claimed until the dedicated dev-to-main PR merges and exact main workflows finish."
+      "commit": "d40596f0654b",
+      "summary": "Hosted branch and exact-head workflow evidence remain pending until push."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "2671ca55d91d87e32f48b28890768339820b2d5d",
-  "source_range": "29cf22fa..HEAD",
+  "source_head": "f1a9996d391ba19a4c5ce4e418193e6067bfd722",
+  "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
     {
-      "commit": "f40e9d31f940",
-      "summary": "`py -3 .aide/scripts/aide_lite.py test`: PASS."
+      "commit": "129f70d13058",
+      "summary": "Clean three-repository reconstruction: PASS."
     },
     {
-      "commit": "8335fde1ba12",
-      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release."
+      "commit": "129f70d13058",
+      "summary": "Clean three-repository reconstruction: PASS."
     },
     {
-      "commit": "05a93277d739",
-      "summary": "PASS: AIDE Lite wave verify."
+      "commit": "129f70d13058",
+      "summary": "Clean three-repository reconstruction: PASS."
     },
     {
-      "commit": "b93d7376c625",
-      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release."
+      "commit": "e4b03c82b649",
+      "summary": "AIDE task inspection: PASS and complete with no missing evidence."
     },
     {
-      "commit": "7ad66aea23d7",
-      "summary": "PASS: AIDE Lite wave verify."
+      "commit": "e4b03c82b649",
+      "summary": "AIDE task inspection: PASS and complete with no missing evidence."
     },
     {
-      "commit": "2e9a66f8a4bd",
-      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release."
+      "commit": "f051731b80b5",
+      "summary": "AIDE git detect: PASS with high-confidence task/dev/main roles."
     },
     {
-      "commit": "b30e4a70272e",
-      "summary": "PASS: AIDE Lite wave verify."
+      "commit": "2c55d1d111a2",
+      "summary": "Exact dev CI, CodeQL, and security policy: PASS."
     },
     {
-      "commit": "578bfb57bf82",
-      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release"
+      "commit": "182ada6be86d",
+      "summary": "Exact dev CI 29326004461: PASS."
     },
     {
-      "commit": "d90d461a99dd",
-      "summary": "PASS: py -3 .aide/scripts/aide_lite.py wave verify for nine WU8 gates."
+      "commit": "182ada6be86d",
+      "summary": "Exact dev CI 29326004461: PASS."
     },
     {
-      "commit": "dedadfa2f95e",
-      "summary": "PASS: py -3 tools/dev.py test --full --build-root build --configuration Release."
+      "commit": "182ada6be86d",
+      "summary": "Exact dev CI 29326004461: PASS."
     },
     {
-      "commit": "9af53a736f47",
-      "summary": "PASS: py -3 .aide/scripts/aide_lite.py wave verify."
+      "commit": "cad50062c955",
+      "summary": "AIDE task inspection: PASS and complete with three evidence files."
     },
     {
-      "commit": "9fea4325129c",
-      "summary": "PASS: Release full suite, 21 native and 314 Python tests with one intentional opt-in skip."
+      "commit": "cad50062c955",
+      "summary": "AIDE task inspection: PASS and complete with three evidence files."
     },
     {
-      "commit": "625a964355d0",
-      "summary": "PASS: Release full suite, 21 native and 314 Python tests with one intentional opt-in skip."
+      "commit": "53ebb488daad",
+      "summary": "AIDE git detect: PASS."
     },
     {
-      "commit": "8556b05e033a",
-      "summary": "PASS: Rebuilt the Release transaction-session smoke target."
+      "commit": "5f93f42f9708",
+      "summary": "AIDE Lite test: PASS."
     },
     {
-      "commit": "b6e8e6200b9e",
-      "summary": "PASS: Clean three-repository build, native, strict, AIDE, and Python matrix."
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
     },
     {
-      "commit": "4d542308f806",
-      "summary": "PASS: Five affected Release native tests."
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
     },
     {
-      "commit": "02398db38063",
-      "summary": "PASS: All affected product sources compile with GCC 15 warnings-as-errors."
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
     },
     {
-      "commit": "681a614ea193",
-      "summary": "PASS: GCC 15 warnings-as-errors compile and link."
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
     },
     {
-      "commit": "774628f442b0",
-      "summary": "PASS: Affected Release CTest 3/3."
+      "commit": "067397e592ce",
+      "summary": "exact-dev CI 29332570822: PASS."
     },
     {
-      "commit": "81abee2fb122",
-      "summary": "PASS: Workflow source-format tests 10/10."
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
     },
     {
-      "commit": "6cce8ed15a8f",
-      "summary": "PASS: Cross-platform CI run 29207641505."
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
     },
     {
-      "commit": "1f840e533774",
-      "summary": "PASS: Changelog preview reports 31 commits, seven categories, zero malformed commits, and non-publishing status."
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
     },
     {
-      "commit": "dcd9a6cbb0d2",
-      "summary": "PASS: AIDE wave verification and close."
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
     },
     {
-      "commit": "6619c04c9c1a",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
     },
     {
-      "commit": "6619c04c9c1a",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
     },
     {
-      "commit": "2190b044ad86",
-      "summary": "`py -3 tools/source_format_check.py`: PASS."
+      "commit": "a286b5c42736",
+      "summary": "combined Release CTest 39/39: PASS."
     },
     {
-      "commit": "2190b044ad86",
-      "summary": "`py -3 tools/source_format_check.py`: PASS."
+      "commit": "a6cfe28c704d",
+      "summary": "project_state.py, test_aide_compaction, and strict_check.py: PASS."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
+      "commit": "480a58ca4c10",
+      "summary": "Six focused exact-pin native and SDK tests, project-state checks, and strict validation: PASS."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
+      "commit": "d746454ca850",
+      "summary": "Native 41/41, Python 339 plus one opt-in skip, Windows package 14/14, AIDE, strict, and byte reproducibility: PASS."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
+      "commit": "f0b27c2e7f21",
+      "summary": "AIDE verify, review, close, project state, compaction, strict, and diff checks: PASS."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
+      "commit": "99f8cd8319ad",
+      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
     },
     {
-      "commit": "9539338419c5",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
+      "commit": "99f8cd8319ad",
+      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "`py -3 tools/codegen/generate_metadata.py --check`: PASS."
+      "commit": "99f8cd8319ad",
+      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "`py -3 tools/codegen/generate_metadata.py --check`: PASS."
+      "commit": "a64037693f4b",
+      "summary": "All three exact-dev workflow conclusions: PASS."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "`py -3 tools/codegen/generate_metadata.py --check`: PASS."
+      "commit": "952c46a629f0",
+      "summary": "Debug facman_cli build: PASS."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "`py -3 tools/codegen/generate_metadata.py --check`: PASS."
+      "commit": "952c46a629f0",
+      "summary": "Debug facman_cli build: PASS."
     },
     {
-      "commit": "49101f7acfba",
-      "summary": "`py -3 tools/codegen/generate_metadata.py --check`: PASS."
+      "commit": "00ca569368dd",
+      "summary": "Focused command and compaction tests: PASS."
     },
     {
-      "commit": "2f4f7b5460b2",
-      "summary": "PASS: Release configure and build in build/h1-eb629caa."
+      "commit": "00ca569368dd",
+      "summary": "Focused command and compaction tests: PASS."
     },
     {
-      "commit": "6dce5c194457",
-      "summary": "PASS: Release configure and build in build/h1-eb629caa."
+      "commit": "0e50b6fe0e90",
+      "summary": "Release CTest 41/41: PASS."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "py -3 -m unittest tests.test_h1_verdict tests.test_aide_target_truth tests.test_aide_compaction: PASS (17 tests)."
+      "commit": "0e50b6fe0e90",
+      "summary": "Release CTest 41/41: PASS."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "py -3 -m unittest tests.test_h1_verdict tests.test_aide_target_truth tests.test_aide_compaction: PASS (17 tests)."
+      "commit": "526d6f5a2d1c",
+      "summary": "Required Windows package proof 14/14 with zero skips: PASS."
     },
     {
-      "commit": "6d3c61c009ab",
-      "summary": "py -3 -m unittest tests.test_h1_verdict tests.test_aide_target_truth tests.test_aide_compaction: PASS (17 tests)."
+      "commit": "1b029ead969e",
+      "summary": "AIDE git policy and workflow detection: PASS."
     },
     {
-      "commit": "514413661f13",
-      "summary": "Fresh cmake --build build --config Release --target flb_command_bridge_smoke facman_cli: PASS."
+      "commit": "d3b5458645e2",
+      "summary": "project state generator and validator: PASS."
     },
     {
-      "commit": "514413661f13",
-      "summary": "Fresh cmake --build build --config Release --target flb_command_bridge_smoke facman_cli: PASS."
+      "commit": "d3b5458645e2",
+      "summary": "project state generator and validator: PASS."
     },
     {
-      "commit": "514413661f13",
-      "summary": "Fresh cmake --build build --config Release --target flb_command_bridge_smoke facman_cli: PASS."
+      "commit": "991ff78c5cc3",
+      "summary": "metadata generation check: PASS."
     },
     {
-      "commit": "aa794491ad68",
-      "summary": "py -3 -m unittest tests.test_installed_sdk_smoke: PASS."
+      "commit": "991ff78c5cc3",
+      "summary": "metadata generation check: PASS."
     },
     {
-      "commit": "aa794491ad68",
-      "summary": "py -3 -m unittest tests.test_installed_sdk_smoke: PASS."
+      "commit": "991ff78c5cc3",
+      "summary": "metadata generation check: PASS."
     },
     {
-      "commit": "c4d8ee0f4d54",
-      "summary": "cmake --build build --config Release --target fl_transaction_session_smoke: PASS."
+      "commit": "6ca7e62889f6",
+      "summary": "project state generator and validator: PASS."
     },
     {
-      "commit": "c4d8ee0f4d54",
-      "summary": "cmake --build build --config Release --target fl_transaction_session_smoke: PASS."
+      "commit": "6ca7e62889f6",
+      "summary": "project state generator and validator: PASS."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "py -3 -m unittest discover -s tests -p test_discovery*.py: PASS, 15 tests."
+      "commit": "d59d22a27b08",
+      "summary": "timeout and termination test repeated five times: PASS at approximately 0.2 seconds each."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "py -3 -m unittest discover -s tests -p test_discovery*.py: PASS, 15 tests."
+      "commit": "d59d22a27b08",
+      "summary": "timeout and termination test repeated five times: PASS at approximately 0.2 seconds each."
     },
     {
-      "commit": "08cf8a58fb17",
-      "summary": "py -3 -m unittest discover -s tests -p test_discovery*.py: PASS, 15 tests."
+      "commit": "79577fd7eb8a",
+      "summary": "exact-pin Release CTest 41/41: PASS."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "py -3 -m unittest discover -s tests -p test_cli.py: PASS, 13 tests."
+      "commit": "79577fd7eb8a",
+      "summary": "exact-pin Release CTest 41/41: PASS."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "py -3 -m unittest discover -s tests -p test_cli.py: PASS, 13 tests."
+      "commit": "79577fd7eb8a",
+      "summary": "exact-pin Release CTest 41/41: PASS."
     },
     {
-      "commit": "a06669155e57",
-      "summary": "py -3 -m unittest discover -s tests -p test_cli.py: PASS, 13 tests."
-    },
-    {
-      "commit": "a06669155e57",
-      "summary": "py -3 -m unittest discover -s tests -p test_cli.py: PASS, 13 tests."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "py -3 -m unittest tests.test_factorio_version_capability_corpus: PASS, 5 tests."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "py -3 -m unittest tests.test_factorio_version_capability_corpus: PASS, 5 tests."
-    },
-    {
-      "commit": "e74255d5209c",
-      "summary": "py -3 -m unittest tests.test_factorio_version_capability_corpus: PASS, 5 tests."
-    },
-    {
-      "commit": "7502462385d0",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
-    },
-    {
-      "commit": "7502462385d0",
-      "summary": "`py -3 tools/strict_check.py`: PASS."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "Exact-head GitHub CI run 29274644517: FAIL reproduced on Linux and macOS at the same missing-field-initializers diagnostic."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "Exact-head GitHub CI run 29274644517: FAIL reproduced on Linux and macOS at the same missing-field-initializers diagnostic."
-    },
-    {
-      "commit": "21ae0f68ed30",
-      "summary": "Exact-head GitHub CI run 29274644517: FAIL reproduced on Linux and macOS at the same missing-field-initializers diagnostic."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "Exact-head GitHub CI run 29274644517 Windows legacy package step: FAIL reproduced because the installed tree lacked the WinForms target."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "Exact-head GitHub CI run 29274644517 Windows legacy package step: FAIL reproduced because the installed tree lacked the WinForms target."
-    },
-    {
-      "commit": "b6006e514d03",
-      "summary": "Exact-head GitHub CI run 29274644517 Windows legacy package step: FAIL reproduced because the installed tree lacked the WinForms target."
-    },
-    {
-      "commit": "d365ceaf7cda",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction.AideCompactionTests.test_lifecycle_transitions_and_hashes_archived_evidence tests.test_aide_compaction.AideCompactionTests.test_queue_index_rejects_partially_materialized_records -v`: PASS."
-    },
-    {
-      "commit": "d365ceaf7cda",
-      "summary": "`py -3 -m unittest tests.test_aide_compaction.AideCompactionTests.test_lifecycle_transitions_and_hashes_archived_evidence tests.test_aide_compaction.AideCompactionTests.test_queue_index_rejects_partially_materialized_records -v`: PASS."
-    },
-    {
-      "commit": "91b5985b818f",
-      "summary": "`py -3 tools/aide_compaction_check.py --repair-indexes`: PASS; repaired the newly created R3.8 index."
-    },
-    {
-      "commit": "91b5985b818f",
-      "summary": "`py -3 tools/aide_compaction_check.py --repair-indexes`: PASS; repaired the newly created R3.8 index."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "`py -3 -m unittest discover -s tests -v`: PASS, 330 tests with one deliberate opt-in performance skip on this closeout branch."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "`py -3 -m unittest discover -s tests -v`: PASS, 330 tests with one deliberate opt-in performance skip on this closeout branch."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "`py -3 -m unittest discover -s tests -v`: PASS, 330 tests with one deliberate opt-in performance skip on this closeout branch."
-    },
-    {
-      "commit": "2671ca55d91d",
-      "summary": "`py -3 -m unittest discover -s tests -v`: PASS, 330 tests with one deliberate opt-in performance skip on this closeout branch."
+      "commit": "d40596f0654b",
+      "summary": "AIDE git policy: PASS."
     }
   ],
   "warnings": [
-    "8 malformed or legacy commits require review"
+    "747b4442cf22 merge commit ignored",
+    "178de3192f3c merge commit ignored",
+    "a8b298a35cd1 merge commit ignored",
+    "476813e6fc74 merge commit ignored",
+    "5563e3b8de43 merge commit ignored",
+    "f4b02ac022ee merge commit ignored",
+    "8c1ed5351133 merge commit ignored",
+    "37c83c653882 merge commit ignored",
+    "f1a9996d391b merge commit ignored",
+    "14 malformed or legacy commits require review"
   ]
 }

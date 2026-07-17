@@ -20,6 +20,22 @@ class GeneratedFrontendCatalogTests(unittest.TestCase):
             (ROOT / "contracts/generated-index/frontend_command_catalog.v1.json").read_text(encoding="utf-8")
         )
         commands = catalog["commands"]
+        workflows = catalog["workflows"]
+        self.assertEqual(1, len(workflows))
+        workflow = workflows[0]
+        self.assertEqual("facman.setup_workflow.v1", workflow["schema"])
+        self.assertEqual("universal-setup", workflow["policy_owner"])
+        self.assertFalse(workflow["frontend_policy"])
+        self.assertEqual("live_target_acceptance_required", workflow["apply_availability"])
+        self.assertEqual("pending", workflow["operator_verdict"])
+        self.assertEqual(
+            [
+                "Choose archive", "Choose destination", "Inspect source", "Review plan",
+                "Review ownership", "Review warnings", "Type or select APPLY", "Observe progress",
+                "Inspect verification", "Open audit/recovery details",
+            ],
+            [step["label"] for step in workflow["steps"]],
+        )
         self.assertGreaterEqual(len(commands), 56)
         outputs = {
             "winforms": (ROOT / "apps/gui/windows/winforms/GeneratedCommandCatalog.cs").read_text(encoding="utf-8"),
@@ -34,6 +50,21 @@ class GeneratedFrontendCatalogTests(unittest.TestCase):
             for name, text in outputs.items():
                 self.assertIn(command["command_id"], text, f"{name} missing contract id")
                 self.assertIn(command["runtime_id"], text, f"{name} missing runtime id")
+        workflow_labels = [step["label"] for step in workflow["steps"]]
+        workflow_labels += [field["label"] for field in workflow["always_visible_fields"]]
+        workflow_labels += [warning["label"] for warning in workflow["warnings"]]
+        for label in workflow_labels:
+            for name, text in outputs.items():
+                self.assertIn(label, text, f"{name} missing generated setup workflow label")
+
+        cli = (ROOT / "apps/cli/generated/command_help.inc").read_text(encoding="utf-8")
+        for label in workflow_labels:
+            self.assertIn(label, cli, "CLI missing generated setup workflow label")
+
+        source = json.loads(
+            (ROOT / "contracts/command/frontend/setup.workflow.v1.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(source, workflow)
 
     def test_desktop_adapters_have_no_manual_catalog_or_payload_switch(self) -> None:
         winforms_catalog = (ROOT / "apps/gui/windows/winforms/CommandCatalog.cs").read_text(encoding="utf-8")
@@ -57,6 +88,8 @@ class GeneratedFrontendCatalogTests(unittest.TestCase):
         self.assertNotIn("inputsForCommandId:", appkit_form)
         self.assertIn('request["dry_run"] = command.DryRunDefault', winforms_transport)
         self.assertIn('@"dry_run": @(command.dryRunDefault)', appkit_transport)
+        self.assertIn("GeneratedCommandCatalog.SetupWorkflowText", winforms_form)
+        self.assertIn("FacManGeneratedSetupWorkflowText()", appkit_form)
 
     def test_diagnostics_export_and_localization_are_truthful(self) -> None:
         catalog = json.loads(

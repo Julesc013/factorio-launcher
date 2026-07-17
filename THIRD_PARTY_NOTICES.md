@@ -4,16 +4,21 @@ This repository does not bundle Factorio binaries or Wube assets.
 
 ## Universal Launcher
 
-- Source: pinned workspace provider `universal-launcher`, resolved outside this repository
-- Pinned commit: `de6c7c6cfa80c524296066bd6bb90a70ba02b760`
-- License: no license file is declared at the pinned commit
-- Use: linked shared library and installed public C headers for the experimental FacMan SDK
+- Source: https://github.com/Julesc013/universal-launcher
+- Pinned commit: `7bd4425f0c35414f738159b45d8bec42edf70235`
+- License: MIT
+- License notice: `LICENSES/UniversalLauncher.txt`
+- Use: linked runtime library and installed public C headers for the experimental FacMan SDK
 - Runtime networking: none enabled by this repository
 
-The missing upstream license declaration is an unresolved redistribution issue.
-The installed SDK proof is therefore a local compatibility proof, not publication
-or redistribution approval. The provider README is installed as provenance and is
-not represented as a license.
+## Universal Setup
+
+- Source: https://github.com/Julesc013/universal-setup
+- Pinned commit: `3f8489275077347c2918f3bb03614ec6431362ff`
+- License: MIT
+- License notice: `LICENSES/UniversalSetup.txt`
+- Use: linked setup runtime and installed public C headers for managed-setup contracts
+- Runtime networking: none enabled by this repository
 
 ## Miniz 3.1.2
 
@@ -43,8 +48,9 @@ reproduce that notice in their documentation or other supplied materials.
 
 Dependencies must document:
 
-- dependency name and version
-- license
-- source URL
-- whether the dependency is linked, bundled, or used only for development
-- any redistribution obligations
+- dependency name and version;
+- license and exact retained notice;
+- source URL and pinned revision;
+- whether the dependency is linked, bundled, or used only for development;
+- runtime networking and transitive dependencies; and
+- redistribution obligations.

@@ -1,0 +1,114 @@
+{
+  "schema": "factorio.m2_operator_acceptance_record.v1",
+  "status": "machine_evidence_ready_pending_operator_verdict",
+  "work_unit": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01",
+  "acceptance_run": {
+    "acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
+    "run_id": "m2wu10-20260715-01",
+    "summary_relative_path": "acceptance-summary.json",
+    "summary_sha256": "3a0b7e080e83bd3bcb72c3e2198de1dc040e20e46d0e33ea1df11bd7967bec25",
+    "completed_at": "2026-07-14T19:47:42Z",
+    "source_revisions": {
+      "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff",
+      "factorio_launcher": "384c2569c84696c5fce02802684e30fad44f9ee0"
+    },
+    "synthetic_archive": {
+      "relative_path": "synthetic-product.zip",
+      "sha256": "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf",
+      "contains_executable_code": false
+    },
+    "retained_tree": {
+      "file_count": 26,
+      "directory_count": 14,
+      "total_bytes": 40105,
+      "reparse_point_count": 0
+    },
+    "steps": [
+      {"name": "install_plan", "status": "reviewed"},
+      {"name": "install_apply", "status": "completed"},
+      {"name": "install_verify", "status": "pass"},
+      {"name": "damage_verify", "status": "expected_fail"},
+      {"name": "repair", "status": "pass"},
+      {"name": "same_volume_move", "status": "pass_old_root_retained"},
+      {"name": "cross_volume_move", "status": "not_attempted_no_second_authorized_volume"},
+      {"name": "uninstall_with_foreign_content", "status": "refused_and_retained"},
+      {"name": "operator_exact_foreign_file_removal", "status": "completed_by_runner_not_setup"},
+      {"name": "clean_uninstall", "status": "pass"}
+    ],
+    "evidence_packets": [
+      {
+        "operation": "install_local",
+        "relative_path": "setup-state/evidence/packets/evidence.install.m2wu10-20260715-01.json",
+        "packet_id": "evidence.install.m2wu10-20260715-01",
+        "packet_digest": "56a7f3ccfcb3b3d52bb9717eb896b8ffe1a353fe3b878cac89c0d228940e8555",
+        "file_sha256": "15c39eb0412505a67e295c4f9fe783a088d9b4eaa9741f4551148121eefe59e0",
+        "plan_digest": "eef6421d373ea51ba64df267296b967ce0936ebde7254e5da37a1ef89ff18808"
+      },
+      {
+        "operation": "repair",
+        "relative_path": "setup-state/evidence/packets/evidence.repair.m2wu10-20260715-01.json",
+        "packet_id": "evidence.repair.m2wu10-20260715-01",
+        "packet_digest": "0c6be0c8b86b736d06e2b429f60a1817fd2e526c757166301728d15e2800d59c",
+        "file_sha256": "30caf7c3ca2d285093f8a32c491ec324c926aab6761839507fce3c3ed3f8cb60",
+        "plan_digest": "16a4c7dfd724e439044ddb42b47cb68ec8c98539a357cb159e0bac21778a3ee1"
+      },
+      {
+        "operation": "move",
+        "relative_path": "setup-state/evidence/packets/evidence.move.m2wu10-20260715-01.json",
+        "packet_id": "evidence.move.m2wu10-20260715-01",
+        "packet_digest": "5ab7f59815d676b98e9400c74f8e23e056408fb1d14df3f5817f8973f027ac5b",
+        "file_sha256": "d0bfe56f4972131e451cfb00d6c82d8502229243df443fa379981a0af27962b7",
+        "plan_digest": "6ce391b91aca38b1e1691fb8d6bfdf5288554240b5cce8214910d5eb77ea07e1"
+      },
+      {
+        "operation": "uninstall",
+        "relative_path": "setup-state/evidence/packets/evidence.uninstall.m2wu10-20260715-01.json",
+        "packet_id": "evidence.uninstall.m2wu10-20260715-01",
+        "packet_digest": "85735dc193276592ab0d28d9b501f65a91c858ce682e97d66f5e3b0f788cdf85",
+        "file_sha256": "4d9cf3af1f703a560ea0801082bcc0535d1a09799ce34034193f241b5eb2e635",
+        "plan_digest": "e111ae49443cf039f3da793f166269c268410f4786b31d4cf5fe790bd7d90225"
+      }
+    ],
+    "final_state": {
+      "installed_state_digest": "12455bd93c60092a59908a71aa40f44a3470ab377bd9a64d78be5df0fbe7a0b2",
+      "ownership_digest": "4623ad7f321e299770fadd8faac51349b3accc1b65fe47479c40053a009d76ec",
+      "audit_chain_id": "audit.synthetic.m2.m2wu10-20260715-01",
+      "audit_head_digest": "bd8a64adcea1e9e9c29810a287316a2a65147726c42d5e5d360ec3c8e950007a",
+      "audit_event_count": 5,
+      "committed_closure": "removed",
+      "recovery_status": "not_required",
+      "old_root": "retained_for_review",
+      "current_root": "removed_by_clean_uninstall"
+    }
+  },
+  "interruption_recovery": {
+    "accepted_run_id": "m2wu5-20260714-01",
+    "summary_sha256": "c64ddfaa38bde351002d2840999b3ba74173cde8c76d3e6aa21891b5d169f6c1",
+    "case_count": 11,
+    "unchanged": 1,
+    "rolled_back": 4,
+    "completed": 3,
+    "recovery_required": 3,
+    "operator_verdict": "pending"
+  },
+  "operator_review": {
+    "allowed_verdicts": ["Pass", "Fail", "Inconclusive"],
+    "operator_verdict": "pending",
+    "automation_can_record_operator_verdict": false,
+    "recorded_at": null,
+    "recorded_by": null,
+    "statement_digest": null
+  },
+  "authority": {
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "factorio_archive_acceptance": "unavailable",
+    "existing_factorio_mutation": false,
+    "steam_mutation": false,
+    "network": false,
+    "registry": false,
+    "elevation": false,
+    "run_execute": false,
+    "h1_inference": "none",
+    "publication": false
+  }
+}

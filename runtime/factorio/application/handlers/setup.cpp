@@ -154,8 +154,8 @@ ApplicationResult managed_install_policy(
         return unavailable(
             context,
             operation,
-            "setup_lifecycle_fixture_proof_required",
-            "Managed " + action + " planning remains unavailable until the fixture-backed setup lifecycle proof is complete");
+            "live_target_acceptance_required",
+            "A human M2 live-target acceptance Pass is required before managed " + action + " planning is activated");
     }
     const std::string reason = "setup may not " + action + " " + install.value().ownership + " installs";
     ApplicationResult result;
@@ -194,10 +194,31 @@ ApplicationResult install_plan_impl(
 {
 #if FACMAN_WITH_SETUP
     InstallPlanRequest plan_request;
+    plan_request.request_id = context.ids().next("setup-plan");
+    plan_request.install_id = request.install_id.empty() ? request.id : request.install_id;
+    plan_request.created_at = context.clock().now_utc();
     plan_request.version = request.version;
     plan_request.archive = facman::platform::path_from_utf8(request.archive);
     if (!request.target_root.empty()) {
         plan_request.target = facman::platform::path_from_utf8(request.target_root);
+    }
+    if (plan_request.install_id.empty() || plan_request.target.empty()) {
+        FactorioArchiveInspectRequest inspection_request;
+        inspection_request.version = plan_request.version;
+        inspection_request.archive = plan_request.archive;
+        auto inspection = context.setup().inspect_install_archive(inspection_request);
+        if (!inspection) {
+            return unavailable(
+                context,
+                operation,
+                inspection.error().code,
+                inspection.error().message);
+        }
+        return unavailable(
+            context,
+            operation,
+            "setup_plan_inputs_not_confirmed",
+            "The legacy preview does not bind an install identity and operator-selected target");
     }
     auto plan = context.setup().plan_install(plan_request);
     if (!plan) return unavailable(context, operation, plan.error().code, plan.error().message);
@@ -210,22 +231,24 @@ ApplicationResult install_plan_impl(
                 ? "The archive passed Universal Setup inspection and the Factorio recipe, but no authoritative target-bound setup plan is available"
                 : "Universal Setup did not return a typed confirmation for the requested version, archive, target, and install identity");
     }
-    return unavailable(context, operation, "setup_apply_not_authorized", "Ordinary setup apply remains unavailable");
+    ApplicationResult result;
+    result.output = plan.value().provider_response;
+    return result;
 #else
     (void)request;
     return unavailable(context, operation, "setup_unavailable", "Universal Setup support is disabled in this build");
 #endif
 }
 
-ApplicationResult setup_apply_not_authorized(
+ApplicationResult live_target_acceptance_required(
     ApplicationContext& context,
     const char* operation)
 {
     return unavailable(
         context,
         operation,
-        "setup_apply_not_authorized",
-        "Ordinary setup apply remains unavailable until fixture proof and separate live-target acceptance");
+        "live_target_acceptance_required",
+        "A human M2 live-target acceptance Pass is required before FacMan setup apply is available");
 }
 }
 
@@ -241,7 +264,7 @@ ApplicationResult plan_repair_install(ApplicationContext& context, const Service
 
 ApplicationResult apply_repair_install(ApplicationContext& context, const ServiceOperationRequest&)
 {
-    return setup_apply_not_authorized(context, "installs.repair.apply");
+    return live_target_acceptance_required(context, "installs.repair.apply");
 }
 
 ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOperationRequest& request)
@@ -251,7 +274,7 @@ ApplicationResult plan_move_install(ApplicationContext& context, const ServiceOp
 
 ApplicationResult apply_move_install(ApplicationContext& context, const ServiceOperationRequest&)
 {
-    return setup_apply_not_authorized(context, "installs.move.apply");
+    return live_target_acceptance_required(context, "installs.move.apply");
 }
 
 ApplicationResult uninstall_install(ApplicationContext& context, const ServiceOperationRequest& request)
@@ -266,7 +289,7 @@ ApplicationResult plan_uninstall_install(ApplicationContext& context, const Serv
 
 ApplicationResult apply_uninstall_install(ApplicationContext& context, const ServiceOperationRequest&)
 {
-    return setup_apply_not_authorized(context, "installs.uninstall.apply");
+    return live_target_acceptance_required(context, "installs.uninstall.apply");
 }
 
 ApplicationResult inspect_install_recovery(ApplicationContext& context, const ServiceOperationRequest&)
@@ -274,13 +297,13 @@ ApplicationResult inspect_install_recovery(ApplicationContext& context, const Se
     return unavailable(
         context,
         "installs.recovery.inspect",
-        "setup_recovery_not_available",
-        "No setup-owned recovery report is available through the FacMan gateway");
+        "live_target_acceptance_required",
+        "A human M2 live-target acceptance Pass is required before FacMan setup recovery is activated");
 }
 
 ApplicationResult apply_install_recovery(ApplicationContext& context, const ServiceOperationRequest&)
 {
-    return setup_apply_not_authorized(context, "installs.recovery.apply");
+    return live_target_acceptance_required(context, "installs.recovery.apply");
 }
 
 ApplicationResult install_version(ApplicationContext& context, const ServiceOperationRequest& request)
@@ -295,7 +318,7 @@ ApplicationResult plan_install(ApplicationContext& context, const ServiceOperati
 
 ApplicationResult apply_install(ApplicationContext& context, const ServiceOperationRequest&)
 {
-    return setup_apply_not_authorized(context, "installs.install.apply");
+    return live_target_acceptance_required(context, "installs.install.apply");
 }
 
 bool is_setup_command(CommandId command) noexcept

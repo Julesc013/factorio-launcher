@@ -6,6 +6,9 @@
 #include "fl_json.h"
 #include "fl_file_io.h"
 
+#include <cstdlib>
+#include <system_error>
+
 #ifndef FACMAN_WITH_SETUP
 #define FACMAN_WITH_SETUP 0
 #endif
@@ -61,10 +64,41 @@ usk_string_view view(const std::string& text)
     return {text.data(), static_cast<usk_size>(text.size())};
 }
 
-facman::core::Result<std::string> execute_setup(const std::string& command, const std::string& payload)
+facman::core::Result<std::string> execute_setup(
+    const std::string& command,
+    const std::string& payload,
+    bool dry_run = true)
 {
+    const char* state_root = std::getenv("FACMAN_SETUP_STATE_ROOT");
+    const char* acceptance_root = std::getenv("FACMAN_SETUP_ACCEPTANCE_ROOT");
+    const char* activation = std::getenv("FACMAN_SETUP_POLICY_ACTIVATION");
+    const bool any_configured = state_root != nullptr || acceptance_root != nullptr || activation != nullptr;
+    if (any_configured &&
+        (state_root == nullptr || *state_root == '\0' ||
+         acceptance_root == nullptr || *acceptance_root == '\0' ||
+         activation == nullptr || *activation == '\0')) {
+        return facman::core::Result<std::string>::failure({
+            "setup_configuration_incomplete",
+            "FACMAN setup planning requires state, acceptance-root, and policy activation together",
+            ""});
+    }
+    if (activation != nullptr && std::string(activation) != "operator_acceptance_candidate") {
+        return facman::core::Result<std::string>::failure({
+            "setup_policy_activation_refused",
+            "FacMan accepts only the operator_acceptance_candidate setup policy before the M2 verdict",
+            ""});
+    }
+    usk_config_v1 config {};
+    const usk_config_v1* configured = nullptr;
+    if (any_configured) {
+        config.struct_size = sizeof(config);
+        config.state_root = state_root;
+        config.authorized_acceptance_root = acceptance_root;
+        config.target_policy_activation = activation;
+        configured = &config;
+    }
     usk_context* context = nullptr;
-    if (usk_context_create_v1(nullptr, &context) != USK_STATUS_OK || context == nullptr) {
+    if (usk_context_create_v1(configured, &context) != USK_STATUS_OK || context == nullptr) {
         return facman::core::Result<std::string>::failure({"setup_context_failed", "Universal Setup context creation failed", ""});
     }
     usk_command_request_v1 request {};
@@ -72,7 +106,7 @@ facman::core::Result<std::string> execute_setup(const std::string& command, cons
     request.struct_size = sizeof(request);
     request.command_name = view(command);
     request.json_payload = view(payload);
-    request.dry_run = 1;
+    request.dry_run = dry_run ? 1 : 0;
     response.struct_size = sizeof(response);
     const int status = usk_command_execute_v1(context, &request, &response);
     std::string output;
@@ -90,6 +124,23 @@ facman::core::Result<std::string> execute_setup(const std::string& command, cons
         return facman::core::Result<std::string>::failure(std::move(error));
     }
     return facman::core::Result<std::string>::success(std::move(output));
+}
+
+facman::core::Result<std::filesystem::path> absolute_normalized(
+    const std::filesystem::path& path,
+    const char* field)
+{
+    if (path.empty()) {
+        return facman::core::Result<std::filesystem::path>::failure({
+            "setup_plan_input_missing", std::string(field) + " is required", ""});
+    }
+    std::error_code error;
+    const std::filesystem::path absolute = std::filesystem::absolute(path, error);
+    if (error) {
+        return facman::core::Result<std::filesystem::path>::failure({
+            "setup_plan_path_invalid", std::string(field) + " could not be made absolute", ""});
+    }
+    return facman::core::Result<std::filesystem::path>::success(absolute.lexically_normal());
 }
 
 std::string string_field(const facman::core::json::Value& object, const char* key)
@@ -321,6 +372,13 @@ public:
 
     facman::core::Result<InstallPlan> plan_install(const InstallPlanRequest& request) override
     {
+        if (request.request_id.empty() || request.install_id.empty() ||
+            request.created_at.empty()) {
+            return facman::core::Result<InstallPlan>::failure({
+                "setup_plan_input_missing",
+                "Factorio install planning requires request, install, and timestamp identities",
+                ""});
+        }
         FactorioArchiveInspectRequest inspection_request;
         inspection_request.version = request.version;
         inspection_request.archive = request.archive;
@@ -328,26 +386,113 @@ public:
         if (!assessment) {
             return facman::core::Result<InstallPlan>::failure(assessment.error());
         }
+        auto recipe = facman::factorio::setup::portable_windows_zip_recipe();
+        if (!recipe) return facman::core::Result<InstallPlan>::failure(recipe.error());
+        auto archive = absolute_normalized(request.archive, "archive");
+        if (!archive) return facman::core::Result<InstallPlan>::failure(archive.error());
+        auto target = absolute_normalized(request.target, "target");
+        if (!target) return facman::core::Result<InstallPlan>::failure(target.error());
+
+        facman::core::json::ObjectBuilder budgets;
+        budgets.add_unsigned_integer("max_entries", 100000);
+        budgets.add_unsigned_integer("max_uncompressed_bytes", 16ULL * 1024ULL * 1024ULL * 1024ULL);
+        budgets.add_unsigned_integer("max_entry_bytes", 8ULL * 1024ULL * 1024ULL * 1024ULL);
+        budgets.add_unsigned_integer("max_depth", 64);
+        budgets.add_unsigned_integer("max_ratio", 1000);
+        budgets.add_unsigned_integer("max_elapsed_ms", 120000);
+        facman::core::json::ObjectBuilder archive_binding;
+        archive_binding.add_string("path", facman::platform::path_to_utf8(archive.value()));
+        archive_binding.add_string("format", recipe.value().archive_format);
+        archive_binding.add_string("expected_sha256", assessment.value().archive_sha256);
+        archive_binding.add_string("strip_prefix", assessment.value().application_root_prefix);
+        archive_binding.add_object("budgets", budgets);
+        facman::core::json::ObjectBuilder target_binding;
+        target_binding.add_string("root", facman::platform::path_to_utf8(target.value()));
+        target_binding.add_string("class", "operator_acceptance");
+        facman::core::json::ArrayBuilder components;
+        for (const std::string& component : assessment.value().capabilities) {
+            components.add_string(component);
+        }
+        facman::core::json::ObjectBuilder entrypoint;
+        entrypoint.add_string("entrypoint_id", "factorio");
+        entrypoint.add_string("relative_path", recipe.value().entrypoint);
+        entrypoint.add_string("kind", "application");
+        facman::core::json::ArrayBuilder entrypoints;
+        entrypoints.add_object(entrypoint);
+        facman::core::json::ObjectBuilder recipe_binding;
+        recipe_binding.add_string("product_id", assessment.value().product_id);
+        recipe_binding.add_string("product_version", assessment.value().requested_version);
+        recipe_binding.add_string("recipe_digest", assessment.value().recipe_digest);
+        recipe_binding.add_string("provider_revision", "facman.factorio.recipe.v1");
+        recipe_binding.add_array("components", components);
+        recipe_binding.add_array("entrypoints", entrypoints);
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "usk.install_local_plan_request.v1");
+        payload.add_string("request_id", request.request_id);
+        payload.add_string("created_at", request.created_at);
+        payload.add_string("install_id", request.install_id);
+        payload.add_object("archive", archive_binding);
+        payload.add_object("target", target_binding);
+        payload.add_object("recipe", recipe_binding);
+        auto response = execute_setup("install_local.plan", payload.serialize());
+        if (!response) {
+            return facman::core::Result<InstallPlan>::failure(provider_error(
+                response.error(),
+                "setup_install_plan_refused",
+                "Universal Setup refused the target-bound Factorio install plan"));
+        }
+        facman::core::json::Limits limits;
+        limits.maximum_bytes = 64U * 1024U * 1024U;
+        limits.maximum_depth = 64;
+        limits.maximum_nodes = 1000000;
+        limits.maximum_string_bytes = 32U * 1024U * 1024U;
+        auto document = facman::core::json::parse(response.value(), limits);
+        const auto* provider_plan = document && document.value().is_object()
+            ? document.value().find("payload")
+            : nullptr;
+        const std::string plan_id = provider_plan != nullptr && provider_plan->is_object()
+            ? string_field(*provider_plan, "plan_id")
+            : std::string();
+        const std::string plan_digest = provider_plan != nullptr && provider_plan->is_object()
+            ? string_field(*provider_plan, "plan_digest")
+            : std::string();
+        if (!document || string_field(document.value(), "status") != "ok" ||
+            provider_plan == nullptr || !provider_plan->is_object() ||
+            string_field(*provider_plan, "schema") != "usk.install_plan.v1" ||
+            string_field(*provider_plan, "status") != "planned" ||
+            plan_id != request.request_id || plan_digest.size() != 64) {
+            return facman::core::Result<InstallPlan>::failure({
+                "setup_install_plan_response_invalid",
+                "Universal Setup returned an invalid target-bound install plan",
+                ""});
+        }
         InstallPlan plan;
         plan.archive_inspected = true;
         plan.product_layout_verified = assessment.value().layout_verified;
-        plan.inputs_confirmed = false;
-        plan.provider_response = facman::factorio::setup::archive_assessment_json(
-            assessment.value());
+        plan.inputs_confirmed = true;
+        plan.plan_id = plan_id;
+        plan.plan_digest = plan_digest;
+        plan.provider_response = provider_plan->serialize();
         return facman::core::Result<InstallPlan>::success(std::move(plan));
     }
 
     facman::core::Result<SetupRefusal> verify_install(const std::string&) override
     {
-        return unsupported("setup_verification_not_implemented", "Installed-state verification is not implemented");
+        return unsupported(
+            "live_target_acceptance_required",
+            "A human M2 live-target acceptance Pass is required before FacMan installed-state verification is activated");
     }
     facman::core::Result<SetupRefusal> repair_install(const std::string&) override
     {
-        return unsupported("setup_mutation_not_implemented", "Installed-state repair is not implemented");
+        return unsupported(
+            "live_target_acceptance_required",
+            "A human M2 live-target acceptance Pass is required before FacMan repair is activated");
     }
     facman::core::Result<SetupRefusal> uninstall_install(const std::string&) override
     {
-        return unsupported("setup_mutation_not_implemented", "Installed-state uninstall is not implemented");
+        return unsupported(
+            "live_target_acceptance_required",
+            "A human M2 live-target acceptance Pass is required before FacMan uninstall is activated");
     }
 
 private:

@@ -33,8 +33,8 @@ class ComplianceTests(unittest.TestCase):
             document = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual([], provenance_build.verify_sbom_component_coverage(document, records))
         licenses = {package["name"]: package["licenseDeclared"] for package in document["packages"]}
-        self.assertEqual("NOASSERTION", licenses["Universal Launcher"])
-        self.assertEqual("NOASSERTION", licenses["Universal Setup"])
+        self.assertEqual("MIT", licenses["Universal Launcher"])
+        self.assertEqual("MIT", licenses["Universal Setup"])
 
     def test_sbom_component_coverage_rejects_missing_component(self) -> None:
         record = {"name": "console_cli"}

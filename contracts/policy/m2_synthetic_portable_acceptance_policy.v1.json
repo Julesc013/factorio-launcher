@@ -1,0 +1,133 @@
+{
+  "schema": "factorio.m2_synthetic_portable_acceptance_policy.v1",
+  "policy_id": "facman.m2.synthetic_portable_acceptance.v1",
+  "status": "frozen_criteria_no_result",
+  "scope": {
+    "acceptance_root": "D:\\FacMan-Live-Acceptance\\M2",
+    "root_requirement": "new_exclusive_disposable_children_only",
+    "target_class": "operator_acceptance",
+    "archive_kind": "non_executable_synthetic_zip",
+    "real_factorio_allowed": false,
+    "existing_installation_allowed": false
+  },
+  "revision_binding": {
+    "universal_setup_runner": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "factorio_launcher_consumer": "accepted_policy_revision",
+    "verifier": "accepted_policy_revision",
+    "result": "separate_later_revision"
+  },
+  "synthetic_archive": {
+    "sha256": "02bed514abfac0145cb8e57008aeff3f2107715ea8a3f57ebed78ce456b2ddbf",
+    "contains_executable_code": false,
+    "entries": [
+      {"path": "product/README.txt", "sha256": "85b5051362ff0e52688756d1054f0a0857a4334f97408c737b704e1ab887a9ba", "size_bytes": 48},
+      {"path": "product/config/settings.ini", "sha256": "839de304a01dfeac9ae13fc74dff983142b97cc5fba70fa4881fa29857741033", "size_bytes": 29},
+      {"path": "product/data/payload.dat", "sha256": "3b631c7346704df508f535d800fe5f052d5ef39b026885937e221bb81aa729d9", "size_bytes": 18}
+    ]
+  },
+  "retained_lifecycle": {
+    "file_count": 26,
+    "directory_count": 14,
+    "total_bytes": 40105,
+    "reparse_point_count": 0,
+    "product_files": [
+      {"path": "README.txt", "sha256": "85b5051362ff0e52688756d1054f0a0857a4334f97408c737b704e1ab887a9ba", "size_bytes": 48},
+      {"path": "config/settings.ini", "sha256": "839de304a01dfeac9ae13fc74dff983142b97cc5fba70fa4881fa29857741033", "size_bytes": 29},
+      {"path": "data/payload.dat", "sha256": "3b631c7346704df508f535d800fe5f052d5ef39b026885937e221bb81aa729d9", "size_bytes": 18}
+    ],
+    "steps": [
+      ["install_plan", "reviewed"],
+      ["install_apply", "completed"],
+      ["install_verify", "pass"],
+      ["damage_verify", "expected_fail"],
+      ["repair", "pass"],
+      ["same_volume_move", "pass_old_root_retained"],
+      ["cross_volume_move", "not_attempted_no_second_authorized_volume"],
+      ["uninstall_with_foreign_content", "refused_and_retained"],
+      ["operator_exact_foreign_file_removal", "completed_by_runner_not_setup"],
+      ["clean_uninstall", "pass"]
+    ],
+    "evidence_operations": ["install_local", "repair", "move", "uninstall"],
+    "audit_operations": ["install_local", "install_local", "repair", "move", "uninstall"],
+    "audit_event_count": 5,
+    "installed_product": "present_exact_owned_closure",
+    "moved_product": "absent_after_clean_uninstall",
+    "operator_note": "absent",
+    "committed_closure": "removed",
+    "recovery_status": "not_required"
+  },
+  "interruption_recovery": {
+    "schema": "usk.interruption_acceptance_summary.v1",
+    "case_count": 11,
+    "unchanged": 1,
+    "rolled_back": 4,
+    "completed": 3,
+    "recovery_required": 3,
+    "journal_count": 14,
+    "fresh_rerun_required": true
+  },
+  "required_validation": {
+    "exact_head_required": true,
+    "local": [
+      "policy_only",
+      "negative_controls",
+      "strict",
+      "native_ctest",
+      "python_unittest",
+      "required_package_proof",
+      "reproducible_workspace"
+    ],
+    "hosted": [
+      "windows_native_package",
+      "linux",
+      "macos",
+      "sanitizers",
+      "bounded_fuzzers",
+      "coverage",
+      "codeql",
+      "schema",
+      "security_policy",
+      "release_policy"
+    ]
+  },
+  "technical_acceptance": {
+    "requirement": "required",
+    "success_result": "MachinePass",
+    "human_review": "not_required_for_synthetic_non_executable_lane",
+    "current_result_recorded": false
+  },
+  "authority_on_machine_pass": {
+    "local_managed_portable_setup": "candidate",
+    "verified_launcher_handoff": "candidate",
+    "facman_local_managed_setup_candidate": true,
+    "factorio_archive_acceptance": false,
+    "existing_factorio_mutation": false,
+    "existing_installation_adoption": false,
+    "steam_mutation": false,
+    "steam_cloud_mutation": false,
+    "network": false,
+    "credentials": false,
+    "registry": false,
+    "shortcuts": false,
+    "elevation": false,
+    "system_wide_installation": false,
+    "run_execute": false,
+    "h1_inference": "none",
+    "signing": false,
+    "publication": false
+  },
+  "required_negative_controls": [
+    "alter_acceptance_summary",
+    "alter_synthetic_archive",
+    "alter_evidence_packet",
+    "break_audit_chain_linkage",
+    "add_reparse_point",
+    "add_unexpected_retained_file",
+    "change_expected_tree_counts",
+    "recreate_moved_product",
+    "remove_installed_product",
+    "target_outside_acceptance_root",
+    "change_provider_revision",
+    "promote_excluded_authority"
+  ]
+}

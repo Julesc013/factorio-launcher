@@ -1,0 +1,49 @@
+{
+  "schema": "facman.setup_workflow.v1",
+  "workflow_id": "live_portable_setup",
+  "title": "Managed portable setup",
+  "policy_owner": "universal-setup",
+  "frontend_policy": false,
+  "confirmation_literal": "APPLY",
+  "apply_availability": "live_target_acceptance_required",
+  "operator_verdict": "pending",
+  "steps": [
+    {"id": "choose_archive", "label": "Choose archive", "command": "installs.install.plan"},
+    {"id": "choose_destination", "label": "Choose destination", "command": "installs.install.plan"},
+    {"id": "inspect_source", "label": "Inspect source", "command": "installs.install.plan"},
+    {"id": "review_plan", "label": "Review plan", "command": "installs.install.plan"},
+    {"id": "review_ownership", "label": "Review ownership", "command": "installs.install.plan"},
+    {"id": "review_warnings", "label": "Review warnings", "command": "installs.install.plan"},
+    {"id": "confirm_apply", "label": "Type or select APPLY", "command": "installs.install.apply"},
+    {"id": "observe_progress", "label": "Observe progress", "command": "installs.install.apply"},
+    {"id": "inspect_verification", "label": "Inspect verification", "command": "installs.verify"},
+    {"id": "open_audit_recovery", "label": "Open audit/recovery details", "command": "installs.recovery.inspect"}
+  ],
+  "always_visible_fields": [
+    {"id": "source_path", "label": "Source path"},
+    {"id": "target_path", "label": "Target path"},
+    {"id": "product_version", "label": "Exact product version"},
+    {"id": "archive_sha256", "label": "Archive SHA-256"}
+  ],
+  "warnings": [
+    {"code": "no_overwrite_or_merge", "label": "Overwrite or merge is never the default."},
+    {"code": "unknown_files_retained", "label": "Unknown files are retained and reported."},
+    {"code": "cancellation_explained", "label": "Cancellation may leave a visible recovery-required operation."},
+    {"code": "recovery_not_generic_failure", "label": "Recovery required is a distinct state, not a generic failure."}
+  ],
+  "progress_states": [
+    {"id": "planning", "label": "Planning"},
+    {"id": "staging", "label": "Staging"},
+    {"id": "verifying", "label": "Verifying"},
+    {"id": "committing", "label": "Committing"},
+    {"id": "completed", "label": "Completed"},
+    {"id": "cancelled", "label": "Cancelled"},
+    {"id": "recovery_required", "label": "Recovery required"}
+  ],
+  "risk_labels": [
+    {"id": "read_only", "label": "Read-only review"},
+    {"id": "persistent_local_write", "label": "Persistent local write"},
+    {"id": "foreign_content", "label": "Foreign content retained"},
+    {"id": "human_gate", "label": "Human acceptance required"}
+  ]
+}

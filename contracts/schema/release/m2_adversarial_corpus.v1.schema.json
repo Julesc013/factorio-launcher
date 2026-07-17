@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.m2_adversarial_corpus.v1.schema.json",
+  "title": "M2 adversarial corpus proof",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "setup_provider", "platform_evidence", "cases", "authority"],
+  "properties": {
+    "schema": {"const": "factorio.m2_adversarial_corpus.v1"},
+    "status": {"enum": ["provider_passed_consumer_candidate", "accepted_dev_integration_pending_operator_verdict"]},
+    "setup_provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_head", "task_tree", "reviewed_pr", "main_revision", "main_tree", "coverage_manifest", "coverage_manifest_sha256", "push_ci_run", "pr_ci_run", "main_ci_run"],
+      "properties": {
+        "task_head": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "task_tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "reviewed_pr": {"type": "integer", "minimum": 1},
+        "main_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "main_tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "coverage_manifest": {"type": "string", "minLength": 1},
+        "coverage_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "push_ci_run": {"type": "string", "pattern": "^[0-9]+$"},
+        "pr_ci_run": {"type": "string", "pattern": "^[0-9]+$"},
+        "main_ci_run": {"type": "string", "pattern": "^[0-9]+$"}
+      }
+    },
+    "platform_evidence": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["platform", "runner", "workflow_run", "result"],
+        "properties": {
+          "platform": {"enum": ["linux", "macos", "windows"]},
+          "runner": {"type": "string", "minLength": 1},
+          "workflow_run": {"type": "string", "pattern": "^[0-9]+$"},
+          "result": {"const": "success"}
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "owner", "evidence"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "owner": {"enum": ["universal_setup", "factorio_launcher"]},
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "markers"],
+              "properties": {
+                "path": {"type": "string", "minLength": 1},
+                "markers": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["automation_can_record_operator_verdict", "operator_verdict", "ordinary_live_apply", "execution_authority", "h1_inference"],
+      "properties": {
+        "automation_can_record_operator_verdict": {"const": false},
+        "operator_verdict": {"const": "pending"},
+        "ordinary_live_apply": {"const": "unavailable_pending_operator_acceptance"},
+        "execution_authority": {"const": false},
+        "h1_inference": {"const": "none"}
+      }
+    }
+  }
+}

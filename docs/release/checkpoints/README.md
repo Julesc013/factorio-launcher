@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The accepted non-execution product wave is `r3.7`. The exact H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the operator verdict remains `Fail`.
+The accepted non-execution product wave is `m2`. The exact H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the operator verdict remains `Fail`.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -40,6 +40,107 @@ The independent
 checkpoint records the fixture-backed local-archive lifecycle across Universal
 Setup, Universal Launcher, and FacMan. It does not replace the frozen R3.7 H1
 candidate, promote ordinary live-target setup apply, or infer an H1 Pass.
+
+The evidence-only
+[`M1 Public Integration Proof`](m1-public-integration-proof.md) binds the WU12
+implementation, final `dev` checkpoint, canonical `main` promotion, identical
+tree identities, and exact successful `dev` and `main` workflows. It does not
+change M1's fixture-only mutation authority.
+
+The subsequent
+[`Universal MIT license integration`](universal-mit-license-integration.md)
+checkpoint binds the operator-authorized provider licenses, retained notices,
+final provider pins, and a fresh clean package reproducibility proof. It grants
+no signing, publication, live-target setup, execution, or H1 authority.
+
+The bounded
+[`M2-WU1 live target policy`](m2-wu1-live-target-policy.md) checkpoint binds the
+product-neutral target taxonomy, fail-closed decision law, canonical Universal
+Setup provider merge, and a fresh FacMan package proof. It performs no host
+inspection, activates no public apply command, and records no human verdict.
+
+The subsequent
+[`M2-WU2 public setup lifecycle`](m2-wu2-public-setup-lifecycle.md) checkpoint
+binds explicit public plan/apply dispatch, exact-plan revalidation, owned-state
+repair/move/uninstall behavior, read-only recovery inspection/planning, and a
+fresh three-repository/package proof. Its reviewed `dev` merge and exact hosted
+workflows are accepted; the separate human live-target verdict remains pending,
+and ordinary managed-portable apply and `recovery.apply` are not promoted.
+
+The bounded
+[`M2-WU3 live target evidence`](m2-wu3-live-target-evidence.md) checkpoint adds
+immutable sanitized evidence packets, exact setup-owned state/journal binding,
+pre/post target snapshots, and a separate human-verdict recording boundary.
+It is fixture/proof-root implementation evidence only; the live acceptance
+root is untouched and the operator verdict remains pending.
+
+The retained
+[`M2-WU5 live interruption and recovery`](m2-wu5-live-interruption-recovery.md)
+checkpoint binds eleven deterministic crash windows, exact staged rollback,
+idempotent install finalization, and explicitly retained repair/move/uninstall
+recovery-required states. It does not create the pending human verdict.
+
+The bounded
+[`M2-WU6 Universal Launcher live setup handoff`](m2-wu6-universal-launcher-live-handoff.md)
+checkpoint binds the additive Launcher 1.3 recovery projection, including the
+no-reference interruption case and stable dependent-instance status. Launcher
+remains unable to mutate setup and the human verdict remains pending.
+
+The subsequent
+[`M2-WU7 FacMan live portable workflow`](m2-wu7-facman-live-portable-workflow.md)
+checkpoint binds a real read-only Factorio recipe plan through Universal Setup,
+plus the uniform `live_target_acceptance_required` apply gate. It does not
+record the pending human verdict or enable mutation.
+
+The bounded
+[`M2-WU8 generated frontend workflow`](m2-wu8-generated-frontend-workflow.md)
+
+[`M2-WU9 cross-platform adversarial proof`](m2-wu9-cross-platform-adversarial-proof.md)
+checkpoint binds one presentation contract across CLI, TUI, WinForms, and
+AppKit, including exact identities, warnings, confirmation, progress, and
+recovery labels. Universal Setup remains the policy owner and ordinary apply
+remains unavailable pending the separate human verdict.
+
+The policy-only
+[`M2-WU10 automated synthetic acceptance`](m2-wu10-automated-acceptance-policy.md)
+checkpoint freezes a separate standard-library verifier, twelve negative
+controls, exact revision/evidence binding, and the `MachinePass` result name for
+the deterministic non-executable synthetic lane. It records no current result,
+does not reuse the historical run as the sole acceptance result, and promotes
+no authority. H1 and all real Factorio, existing-installation, Steam, external
+mutation, signing, and publication gates remain human-authorized.
+
+The policy-only
+[`M2-WU10 native-journal verifier correction`](m2-wu10-native-journal-policy-correction.md)
+checkpoint records that the first fresh result attempt failed closed before
+`EvidencePass`: native Universal Setup journals use deterministic field order,
+not sorted-key file bytes. The correction changes only journal parsing while
+retaining schema, chain, digest, root-containment, negative-control, no-result,
+and excluded-authority requirements. Another independently revision-bound
+fresh run remains mandatory after this correction merges.
+
+The
+[`M2-WU10 machine-acceptance candidate`](m2-wu10-machine-acceptance-candidate.md)
+checkpoint binds a new post-correction lifecycle and interruption pair to the
+unchanged accepted verifier. It records `EvidencePass` and the exact
+observation digest, but deliberately withholds `MachinePass` and authority
+until complete local proof and hosted validation of a separate candidate
+revision are available.
+
+The separate
+[`M2-WU10 MachinePass`](m2-wu10-machine-pass.md) checkpoint binds the accepted
+policy/verifier, fresh observation, complete local matrix, and six successful
+push/PR workflows for candidate revision `ff883cd`. It closes WU10 with a
+technical `MachinePass`, never a human `Pass`, and promotes only bounded local
+managed portable setup candidacy. M2 closeout and canonical promotion remain a
+separate checkpoint.
+
+The
+[`M2 closeout candidate`](m2-closeout-candidate.md) marks the bounded technical
+wave complete from merged `dev` revision `5250db1`, preserves every higher-risk
+exclusion, and freezes M3 as read-only and plan-only. Exact-`dev`, canonical
+`main`, public-integration, and post-promotion `dev` synchronization evidence
+remain pending.
 
 Earlier checkpoints remain revision-pinned historical evidence:
 

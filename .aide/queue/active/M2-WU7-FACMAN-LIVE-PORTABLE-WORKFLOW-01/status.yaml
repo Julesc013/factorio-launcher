@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-14T15:10:54Z
+result: PASS
+evidence_path: .aide/queue/active/M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01/evidence/
+active_at: 2026-07-14T15:10:55Z
+verified_at: 2026-07-14T15:43:12Z
+implementation_state: implemented
+reviewed_at: 2026-07-14T15:43:13Z
+closed_at: 2026-07-14T15:43:13Z

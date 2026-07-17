@@ -1,0 +1,49 @@
+{
+  "schema": "factorio.m2_adversarial_corpus.v1",
+  "status": "accepted_dev_integration_pending_operator_verdict",
+  "setup_provider": {
+    "task_head": "682eede3a954d9603b29308fcc28cc87c911aa37",
+    "task_tree": "8861d0d640af8dc24e774f5ff934ad67f8a5d5cd",
+    "reviewed_pr": 17,
+    "main_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "main_tree": "8861d0d640af8dc24e774f5ff934ad67f8a5d5cd",
+    "coverage_manifest": "tests/fixtures/setup/m2-adversarial-coverage.v1.json",
+    "coverage_manifest_sha256": "c3d3ee7ff13c95371603ec0690265bdef549e2ade7468ed5ec690c067d8d29bb",
+    "push_ci_run": "29354954411",
+    "pr_ci_run": "29354958088",
+    "main_ci_run": "29355175219"
+  },
+  "platform_evidence": [
+    {"platform": "linux", "runner": "ubuntu-24.04", "workflow_run": "29355175219", "result": "success"},
+    {"platform": "macos", "runner": "macos-15-intel", "workflow_run": "29355175219", "result": "success"},
+    {"platform": "windows", "runner": "windows-2022", "workflow_run": "29355175219", "result": "success"}
+  ],
+  "cases": [
+    {"id": "unicode_and_long_paths", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["unicode_and_long_paths"]}]},
+    {"id": "case_collisions", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["case_collisions"]}]},
+    {"id": "unicode_normalization_collisions", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["unicode_normalization_collisions"]}]},
+    {"id": "links_and_reparse_points", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["links_and_reparse_points"]}]},
+    {"id": "source_replacement", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["source_replacement"]}]},
+    {"id": "target_ancestor_replacement", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["target_ancestor_replacement"]}]},
+    {"id": "concurrent_applies", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["concurrent_applies"]}]},
+    {"id": "read_only_sources", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["read_only_sources"]}]},
+    {"id": "partial_writes", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["partial_writes"]}]},
+    {"id": "insufficient_space_simulation", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["insufficient_space_simulation"]}]},
+    {"id": "cross_device_move", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["cross_device_move"]}]},
+    {"id": "changed_ownership_manifests", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["changed_ownership_manifests"]}]},
+    {"id": "audit_chain_tampering", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["audit_chain_tampering"]}]},
+    {"id": "stale_and_replayed_plans", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["stale_and_replayed_plans"]}]},
+    {"id": "foreign_files_during_repair_or_uninstall", "owner": "universal_setup", "evidence": [{"path": "tests/fixtures/setup/m2-adversarial-coverage.v1.json", "markers": ["foreign_files_during_repair_or_uninstall"]}]},
+    {"id": "frontend_cancellation_and_process_termination", "owner": "factorio_launcher", "evidence": [
+      {"path": "tests/test_tui_product.py", "markers": ["test_redirected_default_unavailable_and_cancellation", "Command cancelled before dispatch"]},
+      {"path": "tests/native/facman_client_smoke.cpp", "markers": ["cli_process_timeout", "client_operation_cancelled", "cancelled-process-tree-survivor.txt"]}
+    ]}
+  ],
+  "authority": {
+    "automation_can_record_operator_verdict": false,
+    "operator_verdict": "pending",
+    "ordinary_live_apply": "unavailable_pending_operator_acceptance",
+    "execution_authority": false,
+    "h1_inference": "none"
+  }
+}

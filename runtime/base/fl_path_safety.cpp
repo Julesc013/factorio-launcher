@@ -3,6 +3,8 @@
 
 #include "fl_path_safety.h"
 
+#include "fl_windows_path.h"
+
 #include <algorithm>
 #include <atomic>
 #include <cerrno>
@@ -71,7 +73,8 @@ bool is_link_or_reparse_point(const fs::path& path)
         return true;
     }
 #ifdef _WIN32
-    DWORD attributes = GetFileAttributesW(path.c_str());
+    const std::wstring native_path = facman::platform::windows_extended_path(path);
+    DWORD attributes = GetFileAttributesW(native_path.c_str());
     return attributes != INVALID_FILE_ATTRIBUTES &&
         (attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
 #else
@@ -200,8 +203,9 @@ bool write_file_exclusive(
     std::string& detail)
 {
 #ifdef _WIN32
+    const std::wstring native_path = facman::platform::windows_extended_path(path);
     HANDLE handle = CreateFileW(
-        path.c_str(),
+        native_path.c_str(),
         GENERIC_WRITE,
         0,
         nullptr,
@@ -234,7 +238,7 @@ bool write_file_exclusive(
         ok = false;
     }
     if (!ok) {
-        DeleteFileW(path.c_str());
+        DeleteFileW(native_path.c_str());
     }
     return ok;
 #else
@@ -280,7 +284,9 @@ bool rename_no_replace(
     std::string& detail)
 {
 #ifdef _WIN32
-    if (MoveFileExW(source.c_str(), destination.c_str(), MOVEFILE_WRITE_THROUGH)) {
+    const std::wstring native_source = facman::platform::windows_extended_path(source);
+    const std::wstring native_destination = facman::platform::windows_extended_path(destination);
+    if (MoveFileExW(native_source.c_str(), native_destination.c_str(), MOVEFILE_WRITE_THROUGH)) {
         return true;
     }
     detail = "no-replace rename failed: " + platform_error_message(GetLastError());

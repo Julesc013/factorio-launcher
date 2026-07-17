@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-14T13:00:41Z
+result: PASS
+evidence_path: .aide/queue/active/M2-WU4-LIVE-INSTALL-ACCEPTANCE-01/evidence/
+active_at: 2026-07-14T13:00:42Z
+verified_at: 2026-07-14T13:25:25Z
+implementation_state: implemented
+reviewed_at: 2026-07-14T13:25:26Z
+closed_at: 2026-07-14T13:25:26Z

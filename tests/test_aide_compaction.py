@@ -25,6 +25,25 @@ class AideCompactionTests(unittest.TestCase):
         for key in (
             "current_revisions", "active_work_unit", "last_closed_work_unit",
             "r3_8_repair", "r3_8_public_integration", "m1_managed_portable_install",
+            "m1_public_integration",
+            "m2_live_portable_setup",
+            "m2_wu1_target_policy",
+            "m2_wu2_public_lifecycle",
+            "m2_wu3_live_evidence",
+            "m2_wu4_live_acceptance",
+            "m2_wu5_interruption_recovery",
+            "m2_wu6_launcher_handoff",
+            "m2_wu7_facman_live_portable_workflow",
+            "m2_wu8_generated_frontend_workflow",
+            "m2_wu9_cross_platform_adversarial_proof",
+            "m2_wu10_operator_live_target_verdict",
+            "m2_wu10_automated_acceptance_policy",
+            "m2_wu10_automated_acceptance_result_attempt",
+            "m2_wu10_machine_acceptance_candidate",
+            "m2_wu10_machine_acceptance_result",
+            "m2_closeout_candidate",
+            "m3_existing_portable_adoption",
+            "universal_repository_licenses",
             "next_authority_gate",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
@@ -33,17 +52,327 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m1_closeout_preserves_provider_gate_and_catalog_truth(self) -> None:
+    def test_m2_workflows_preserve_machine_and_higher_risk_human_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m1-managed-portable-install-foundation", data["current_checkpoint"])
+        self.assertEqual("m2-closeout-candidate", data["current_checkpoint"])
         self.assertEqual("H1", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("M2-CLOSEOUT-CANONICAL-PROMOTION-01", data["active_work_unit"])
         self.assertEqual(
-            "M1-WU12-PACKAGE-REPRODUCIBILITY-CLOSEOUT",
+            "complete_machine_pass_pending_canonical_promotion",
+            data["m2_live_portable_setup"]["status"],
+        )
+        self.assertEqual("MachinePass", data["m2_live_portable_setup"]["technical_acceptance"])
+        self.assertEqual(
+            "not_required_for_synthetic_non_executable_lane",
+            data["m2_live_portable_setup"]["human_review"],
+        )
+        self.assertEqual(
+            "candidate_within_machine_accepted_policy_scope",
+            data["m2_live_portable_setup"]["ordinary_live_apply"],
+        )
+        self.assertEqual(
+            "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02",
             data["last_closed_work_unit"],
         )
+        self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
+        self.assertFalse(data["m2_wu1_target_policy"]["mutation_authority"])
+        self.assertEqual("d96384bf8f48230256d35fa7015cbc7374e83319", data["m2_wu1_target_policy"]["facman_dev_integration_revision"])
+        self.assertEqual("29318247825", data["m2_wu1_target_policy"]["facman_dev_ci_run"])
+        m2_wu2 = data["m2_wu2_public_lifecycle"]
+        self.assertEqual("accepted_dev_integration_proof", m2_wu2["status"])
+        self.assertEqual(
+            "316ee8efec5b962e6c2ed8419c0453c0c6062654",
+            m2_wu2["facman_validation_remediation_revision"],
+        )
+        self.assertEqual(38, m2_wu2["native_test_count"])
+        self.assertEqual(339, m2_wu2["python_test_count"])
+        self.assertEqual(14, m2_wu2["required_windows_package_tests"])
+        self.assertEqual(
+            "747b4442cf228561de9fa15834bf78b0dad72f23",
+            m2_wu2["facman_dev_integration_revision"],
+        )
+        self.assertEqual("29326004461", m2_wu2["facman_dev_ci_run"])
+        self.assertEqual("29326004230", m2_wu2["facman_dev_code_security_run"])
+        self.assertEqual("29326004219", m2_wu2["facman_dev_security_policy_run"])
+        self.assertTrue(m2_wu2["plan_commands_read_only"])
+        self.assertEqual("unavailable_pending_wu5", m2_wu2["recovery_apply"])
+        self.assertEqual("pending", m2_wu2["operator_verdict"])
+        self.assertFalse(m2_wu2["execution_authority"])
+        m2_wu3 = data["m2_wu3_live_evidence"]
+        self.assertEqual("accepted_dev_integration_proof", m2_wu3["status"])
+        self.assertEqual(
+            "fbbeb762f25921ae05945206fd0c004a52239c13",
+            m2_wu3["universal_setup_main_revision"],
+        )
+        self.assertEqual("pending", m2_wu3["operator_verdict"])
+        self.assertFalse(m2_wu3["automation_can_record_operator_verdict"])
+        self.assertTrue(m2_wu3["setup_owned_evidence_write"])
+        self.assertTrue(m2_wu3["plan_pre_snapshot"])
+        self.assertTrue(m2_wu3["capture_recomputes_post_snapshot"])
+        self.assertEqual(16, m2_wu3["facman_reviewed_pr"])
+        self.assertEqual(
+            "5f93f42f97089ae367e718d3466f4421abf43625",
+            m2_wu3["facman_task_head_revision"],
+        )
+        self.assertEqual(
+            m2_wu3["facman_task_tree_identity"],
+            m2_wu3["facman_dev_tree_identity"],
+        )
+        self.assertEqual(
+            "a8b298a35cd1587cea566886b5a3891153a2b7f2",
+            m2_wu3["facman_dev_integration_revision"],
+        )
+        self.assertEqual("29332570822", m2_wu3["facman_dev_ci_run"])
+        self.assertEqual("29332570777", m2_wu3["facman_dev_code_security_run"])
+        self.assertEqual("29332570776", m2_wu3["facman_dev_security_policy_run"])
+        self.assertEqual("unavailable_pending_operator_acceptance", m2_wu3["ordinary_live_apply"])
+        self.assertFalse(m2_wu3["execution_authority"])
+        self.assertEqual("none", m2_wu3["h1_inference"])
+        m2_wu4 = data["m2_wu4_live_acceptance"]
+        self.assertEqual("accepted_dev_integration_proof_pending_operator_verdict", m2_wu4["status"])
+        self.assertEqual(18, m2_wu4["facman_reviewed_pr"])
+        self.assertEqual("a286b5c42736e1a4189030a51e9b1e5c397552eb", m2_wu4["facman_task_head_revision"])
+        self.assertEqual(m2_wu4["facman_task_tree"], m2_wu4["facman_dev_tree"])
+        self.assertEqual("5563e3b8de4363d1d42cc2ba6f5829aed0c7405e", m2_wu4["facman_dev_integration_revision"])
+        self.assertEqual("29337542209", m2_wu4["facman_dev_ci_run"])
+        self.assertEqual("29337541636", m2_wu4["facman_dev_code_security_run"])
+        self.assertEqual("29337541937", m2_wu4["facman_dev_security_policy_run"])
+        self.assertEqual("9b8196437e41e45bd8d5a613246dabe5b8cdb968", m2_wu4["universal_setup_main_revision"])
+        self.assertEqual("6209385f25db1824bcbb7ec599cf2152606be89b", m2_wu4["universal_setup_runner_revision"])
+        self.assertEqual(4, m2_wu4["evidence_packet_count"])
+        self.assertEqual(4, m2_wu4["journal_count"])
+        self.assertEqual(5, m2_wu4["audit_event_count"])
+        self.assertEqual(39, m2_wu4["native_test_count"])
+        self.assertEqual(339, m2_wu4["python_test_count"])
+        self.assertEqual(1, m2_wu4["python_opt_in_skip_count"])
+        self.assertEqual(14, m2_wu4["required_windows_package_tests"])
+        self.assertEqual(0, m2_wu4["required_windows_package_skips"])
+        self.assertEqual(388, m2_wu4["package_tree_file_count"])
+        self.assertEqual("expected_fail_observed", m2_wu4["damaged_owned_file_detection"])
+        self.assertEqual("pass_old_root_retained", m2_wu4["same_volume_move"])
+        self.assertEqual("not_attempted_no_second_authorized_volume", m2_wu4["cross_volume_move"])
+        self.assertEqual("refused_and_retained", m2_wu4["foreign_content_uninstall"])
+        self.assertEqual("retired", m2_wu4["final_lifecycle_status"])
+        self.assertEqual("not_required", m2_wu4["final_recovery_status"])
+        self.assertEqual("pending", m2_wu4["operator_verdict"])
+        self.assertFalse(m2_wu4["automation_can_record_operator_verdict"])
+        self.assertEqual("unavailable_pending_operator_acceptance", m2_wu4["ordinary_live_apply"])
+        self.assertEqual("unavailable_pending_wu5", m2_wu4["recovery_apply"])
+        self.assertFalse(m2_wu4["execution_authority"])
+        self.assertEqual("none", m2_wu4["h1_inference"])
+        m2_wu5 = data["m2_wu5_interruption_recovery"]
+        self.assertEqual("accepted_dev_integration_proof_pending_operator_verdict", m2_wu5["status"])
+        self.assertEqual(19, m2_wu5["facman_reviewed_pr"])
+        self.assertEqual("a6cfe28c704df68025094f29be85f8961f745cd1", m2_wu5["facman_task_head_revision"])
+        self.assertEqual(m2_wu5["facman_task_tree"], m2_wu5["facman_dev_tree"])
+        self.assertEqual("f4b02ac022ee676ca5fdd5d8f31b44709a2c3277", m2_wu5["facman_dev_integration_revision"])
+        self.assertEqual("29341098765", m2_wu5["facman_dev_ci_run"])
+        self.assertEqual("29341101347", m2_wu5["facman_dev_code_security_run"])
+        self.assertEqual("29341100659", m2_wu5["facman_dev_security_policy_run"])
+        self.assertEqual("e1ce68e9593ae8d9a35cc0821b5e42c798524453", m2_wu5["universal_setup_main_revision"])
+        self.assertEqual(11, m2_wu5["case_count"])
+        self.assertEqual([1, 4, 3, 3], [m2_wu5["unchanged_count"], m2_wu5["rolled_back_count"], m2_wu5["completed_count"], m2_wu5["recovery_required_count"]])
+        self.assertEqual(40, m2_wu5["native_test_count"])
+        self.assertEqual(339, m2_wu5["python_test_count"])
+        self.assertEqual(14, m2_wu5["required_windows_package_tests"])
+        self.assertEqual(0, m2_wu5["required_windows_package_skips"])
+        self.assertEqual(389, m2_wu5["package_tree_file_count"])
+        self.assertEqual("exact_staged_rollback_only", m2_wu5["public_recovery_apply"])
+        self.assertEqual("pending", m2_wu5["operator_verdict"])
+        self.assertFalse(m2_wu5["automation_can_record_operator_verdict"])
+        self.assertEqual("unavailable_pending_operator_acceptance", m2_wu5["ordinary_live_apply"])
+        self.assertFalse(m2_wu5["execution_authority"])
+        m2_wu6 = data["m2_wu6_launcher_handoff"]
+        self.assertEqual("accepted_dev_integration_proof_pending_operator_verdict", m2_wu6["status"])
+        self.assertEqual("f0b27c2e7f2117f9df0a98edb2264608ab75b664", m2_wu6["facman_task_head_revision"])
+        self.assertEqual(m2_wu6["facman_task_tree"], m2_wu6["facman_dev_tree"])
+        self.assertEqual("8c1ed53511332da2d9c2fbf04abb2d5e91c4df6c", m2_wu6["facman_dev_integration_revision"])
+        self.assertEqual("29344174316", m2_wu6["facman_dev_ci_run"])
+        self.assertEqual("29344174402", m2_wu6["facman_dev_codeql_run"])
+        self.assertEqual("29344174517", m2_wu6["facman_dev_security_policy_run"])
+        self.assertEqual(data["provider_pins"]["universal_launcher"]["revision"], m2_wu6["universal_launcher_main_revision"])
+        self.assertEqual("1.3", m2_wu6["launcher_abi_version"])
+        self.assertEqual("1.3", m2_wu6["facman_binding_abi_version"])
+        self.assertTrue(m2_wu6["recovery_without_install_reference"])
+        self.assertEqual("managed_install_recovery_required", m2_wu6["dependent_instance_status"])
+        self.assertEqual("stale", m2_wu6["launch_plan_status"])
+        self.assertFalse(m2_wu6["launcher_can_mutate_setup"])
+        self.assertEqual("universal-setup", m2_wu6["setup_mutation_owner"])
+        self.assertEqual("pending", m2_wu6["operator_verdict"])
+        self.assertFalse(m2_wu6["automation_can_record_operator_verdict"])
+        self.assertEqual("unavailable_pending_operator_acceptance", m2_wu6["ordinary_live_apply"])
+        self.assertFalse(m2_wu6["execution_authority"])
+        self.assertEqual("none", m2_wu6["h1_inference"])
+        self.assertEqual(41, m2_wu6["native_test_count"])
+        self.assertEqual(339, m2_wu6["python_test_count"])
+        self.assertEqual(1, m2_wu6["python_opt_in_skip_count"])
+        self.assertEqual(14, m2_wu6["required_windows_package_tests"])
+        self.assertEqual(0, m2_wu6["required_windows_package_skips"])
+        self.assertEqual(390, m2_wu6["package_tree_file_count"])
+        m2_wu7 = data["m2_wu7_facman_live_portable_workflow"]
+        self.assertEqual(
+            "accepted_dev_integration_proof_pending_operator_verdict",
+            m2_wu7["status"],
+        )
+        self.assertEqual("1b029ead969e3b68387fcbaef71458ba99f0c33e", m2_wu7["facman_task_head_revision"])
+        self.assertEqual("a638e5d078a28751fa12ede205b48595986e5b0f", m2_wu7["facman_task_tree"])
+        self.assertEqual(21, m2_wu7["facman_pull_request"])
+        self.assertEqual("37c83c6538822a57bf96e03f03c48536f2b97e47", m2_wu7["facman_dev_integration_revision"])
+        self.assertEqual(m2_wu7["facman_task_tree"], m2_wu7["facman_dev_tree"])
+        self.assertEqual("29347961199", m2_wu7["facman_dev_ci_run"])
+        self.assertEqual("29347961372", m2_wu7["facman_dev_codeql_run"])
+        self.assertEqual("29347960097", m2_wu7["facman_dev_security_policy_run"])
+        self.assertEqual("install_local.plan", m2_wu7["setup_command"])
+        self.assertEqual("operator_acceptance", m2_wu7["target_class"])
+        self.assertTrue(m2_wu7["plan_is_read_only"])
+        self.assertTrue(m2_wu7["plan_binds_source_recipe_target_and_provider"])
+        self.assertFalse(m2_wu7["apply_enabled"])
+        self.assertEqual("live_target_acceptance_required", m2_wu7["apply_refusal"])
+        self.assertEqual("pending", m2_wu7["operator_verdict"])
+        self.assertFalse(m2_wu7["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu7["execution_authority"])
+        self.assertEqual("none", m2_wu7["h1_inference"])
+        m2_wu8 = data["m2_wu8_generated_frontend_workflow"]
+        self.assertEqual(
+            "accepted_dev_integration_proof_pending_operator_verdict",
+            m2_wu8["status"],
+        )
+        self.assertEqual("facman.setup_workflow.v1", m2_wu8["workflow_schema"])
+        self.assertEqual("991ff78c5cc349dfcd8400f585d319b830d2c922", m2_wu8["implementation_revision"])
+        self.assertEqual(["cli", "tui", "winforms", "appkit"], m2_wu8["clients"])
+        self.assertEqual("universal-setup", m2_wu8["policy_owner"])
+        self.assertFalse(m2_wu8["frontend_policy"])
+        self.assertEqual("APPLY", m2_wu8["confirmation_literal"])
+        self.assertTrue(m2_wu8["recovery_required_is_distinct"])
+        self.assertFalse(m2_wu8["apply_enabled"])
+        self.assertEqual("live_target_acceptance_required", m2_wu8["apply_refusal"])
+        self.assertEqual("pending", m2_wu8["operator_verdict"])
+        self.assertFalse(m2_wu8["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu8["execution_authority"])
+        self.assertEqual("none", m2_wu8["h1_inference"])
+        self.assertEqual(14, m2_wu8["required_windows_package_tests"])
+        self.assertEqual(0, m2_wu8["required_windows_package_skips"])
+        self.assertEqual(392, m2_wu8["package_tree_file_count"])
+        m2_wu9 = data["m2_wu9_cross_platform_adversarial_proof"]
+        self.assertEqual(
+            "accepted_dev_integration_proof_pending_operator_verdict",
+            m2_wu9["status"],
+        )
+        self.assertEqual(["windows", "linux", "macos"], m2_wu9["required_platforms"])
+        self.assertEqual([16, 15, 1], [m2_wu9["case_count"], m2_wu9["setup_owned_case_count"], m2_wu9["consumer_case_count"]])
+        self.assertEqual("3f8489275077347c2918f3bb03614ec6431362ff", m2_wu9["universal_setup_main_revision"])
+        self.assertEqual(m2_wu9["universal_setup_task_tree"], m2_wu9["universal_setup_main_tree"])
+        self.assertTrue(m2_wu9["target_ancestor_identity_bound"])
+        self.assertEqual([41, 344, 1], [m2_wu9["facman_native_test_count"], m2_wu9["facman_python_test_count"], m2_wu9["python_opt_in_skip_count"]])
+        self.assertEqual([14, 0], [m2_wu9["required_windows_package_tests"], m2_wu9["required_windows_package_skips"]])
+        self.assertEqual(395, m2_wu9["package_tree_file_count"])
+        self.assertEqual("not_proven", m2_wu9["publisher_authenticity"])
+        self.assertEqual(23, m2_wu9["facman_reviewed_pr"])
+        self.assertEqual(m2_wu9["facman_task_tree"], m2_wu9["facman_dev_integration_tree"])
+        self.assertEqual(
+            ["29361218441", "29361218988", "29361218569", "29361219348"],
+            [m2_wu9["dev_ci_run"], m2_wu9["dev_code_security_run"], m2_wu9["dev_security_policy_run"], m2_wu9["dev_schema_check_run"]],
+        )
+        self.assertEqual("pending", m2_wu9["operator_verdict"])
+        self.assertFalse(m2_wu9["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu9["execution_authority"])
+        m2_wu10 = data["m2_wu10_operator_live_target_verdict"]
+        self.assertEqual("historical_machine_evidence_ready_pending_operator_verdict", m2_wu10["status"])
+        self.assertEqual("D:\\FacMan-Live-Acceptance\\M2", m2_wu10["acceptance_root"])
+        self.assertEqual("m2wu10-20260715-01", m2_wu10["run_id"])
+        self.assertEqual(["Pass", "Fail", "Inconclusive"], m2_wu10["verdict_choices"])
+        self.assertEqual([10, 4, 26, 14, 40105, 0], [
+            m2_wu10["lifecycle_step_count"], m2_wu10["evidence_packet_count"],
+            m2_wu10["retained_file_count"], m2_wu10["retained_directory_count"],
+            m2_wu10["retained_total_bytes"], m2_wu10["retained_reparse_point_count"],
+        ])
+        self.assertEqual([5, "removed", "not_required"], [
+            m2_wu10["audit_event_count"], m2_wu10["final_committed_closure"],
+            m2_wu10["final_recovery_status"],
+        ])
+        self.assertEqual(11, m2_wu10["interruption_case_count"])
+        self.assertEqual([41, 345, 1, 231], [
+            m2_wu10["native_test_count"], m2_wu10["python_test_count"],
+            m2_wu10["python_opt_in_skip_count"], m2_wu10["schema_count"],
+        ])
+        self.assertEqual("980d5b9e3113a673782d6efde74291b0c477f14b", m2_wu10["hosted_validation_revision"])
+        self.assertEqual(25, m2_wu10["draft_pull_request"])
+        self.assertEqual(
+            ["29364492582", "29364492665", "29364491886", "29364492053",
+             "29364494313", "29364495679", "29364495081", "29364494922"],
+            [m2_wu10["task_push_ci_run"], m2_wu10["task_push_code_security_run"],
+             m2_wu10["task_push_security_policy_run"], m2_wu10["task_push_schema_check_run"],
+             m2_wu10["task_pr_ci_run"], m2_wu10["task_pr_code_security_run"],
+             m2_wu10["task_pr_security_policy_run"], m2_wu10["task_pr_schema_check_run"]],
+        )
+        self.assertEqual("pending", m2_wu10["operator_verdict"])
+        self.assertFalse(m2_wu10["automation_can_record_operator_verdict"])
+        self.assertFalse(m2_wu10["execution_authority"])
+        machine_policy = data["m2_wu10_automated_acceptance_policy"]
+        self.assertEqual(
+            "accepted_corrected_policy_with_bound_machine_pass",
+            machine_policy["status"],
+        )
+        self.assertEqual(
+            "MachinePass",
+            machine_policy["technical_acceptance"],
+        )
+        self.assertEqual(
+            "7a3f812ab0f81fb35e2e6104bd573d8832a44e59",
+            machine_policy["accepted_policy_revision"],
+        )
+        self.assertEqual(
+            "26eb7056984b42859e377c1ffd0ffb7c80488078",
+            machine_policy["correction_revision"],
+        )
+        self.assertFalse(machine_policy["fresh_lifecycle_rerun_required"])
+        self.assertFalse(machine_policy["fresh_interruption_rerun_required"])
+        self.assertEqual(12, machine_policy["negative_control_count"])
+        result_attempt = data["m2_wu10_automated_acceptance_result_attempt"]
+        self.assertEqual("blocked_before_evidence_pass", result_attempt["status"])
+        self.assertEqual("fail_closed", result_attempt["verifier_result"])
+        self.assertFalse(result_attempt["observation_written"])
+        self.assertFalse(result_attempt["machine_pass"])
+        self.assertFalse(result_attempt["authority_promotion"])
+        candidate = data["m2_wu10_machine_acceptance_candidate"]
+        self.assertEqual(
+            "hosted_validation_passed_bound_to_separate_machine_result",
+            candidate["status"],
+        )
+        self.assertEqual("pass_complete_matrix", candidate["local_validation"])
+        self.assertEqual("pass_exact_candidate_revision", candidate["hosted_validation"])
+        self.assertEqual("EvidencePass", candidate["evidence_result"])
+        self.assertFalse(candidate["machine_pass"])
+        self.assertFalse(candidate["authority_promotion"])
+        result = data["m2_wu10_machine_acceptance_result"]
+        self.assertEqual("MachinePass", result["status"])
+        self.assertEqual("candidate", result["local_managed_portable_setup"])
+        self.assertFalse(result["run_execute"])
+        self.assertEqual("none", result["h1_inference"])
+        closeout = data["m2_closeout_candidate"]
+        self.assertEqual(
+            "machine_pass_closeout_pending_exact_dev_and_main_promotion",
+            closeout["status"],
+        )
+        self.assertEqual(
+            "5250db1d17ac330f5ae0b672ccc7466431a1e4a2",
+            closeout["wu10_dev_merge_revision"],
+        )
+        self.assertEqual("pending_dev_to_main_promotion", closeout["canonical_main_revision"])
+        self.assertEqual("pass_complete_matrix", closeout["local_validation"])
+        self.assertFalse(closeout["run_execute"])
+        m3 = data["m3_existing_portable_adoption"]
+        self.assertEqual("read_only_and_plan_only", m3["scope"])
+        self.assertTrue(m3["existing_portable_inspection"])
+        self.assertTrue(m3["adoption_plan"])
+        self.assertFalse(m3["adoption_apply"])
+        self.assertFalse(m3["existing_installation_mutation"])
+        self.assertFalse(m3["steam_adoption"])
+        self.assertEqual("m2-closeout-candidate", data["current_checkpoint"])
+        self.assertEqual("M2-CLOSEOUT-CANONICAL-PROMOTION-01", data["active_work_unit"])
+        self.assertEqual("M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",
@@ -71,7 +400,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "c43d390efe0db17480f9d0262827659b4ae242dd",
+            "7bd4425f0c35414f738159b45d8bec42edf70235",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]
@@ -85,7 +414,7 @@ class AideCompactionTests(unittest.TestCase):
             m1["dev_integration_revision"],
         )
         self.assertEqual(
-            data["provider_pins"]["universal_setup"]["revision"],
+            "2bc4bf93b1a77c5c906fdc6d3f12b286dadc8ca7",
             m1["universal_setup_revision"],
         )
         self.assertEqual(
@@ -93,6 +422,27 @@ class AideCompactionTests(unittest.TestCase):
             m1["ordinary_setup_apply"],
         )
         self.assertFalse(m1["authority_promotion"])
+        public_integration = data["m1_public_integration"]
+        self.assertEqual("accepted", public_integration["status"])
+        self.assertEqual(
+            "73bec99916d509b0ab055a43562e93ef20a6b4b7",
+            public_integration["canonical_main_revision"],
+        )
+        self.assertEqual(
+            public_integration["dev_tree_identity"],
+            public_integration["main_tree_identity"],
+        )
+        self.assertEqual("29310497458", public_integration["final_main_ci_run"])
+        self.assertTrue(public_integration["main_dev_synchronized_at_proof"])
+        self.assertFalse(public_integration["authority_promotion"])
+        licenses = data["universal_repository_licenses"]
+        self.assertEqual("accepted_mit", licenses["status"])
+        self.assertEqual(
+            "3f8489275077347c2918f3bb03614ec6431362ff",
+            data["provider_pins"]["universal_setup"]["revision"],
+        )
+        self.assertEqual("MIT", licenses["spdx_license_expression"])
+        self.assertFalse(licenses["publication_authority"])
         catalog = json.loads(
             (project_state.ROOT / "contracts/generated-index/command_catalog.v2.json").read_text(encoding="utf-8")
         )

@@ -32,9 +32,17 @@ reported as stronger runtime evidence.
 | Linux x64 CLI tarball runs after relocation | target CI proven | ELF allowlist, archive, read-only and relocation matrix | Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished |
 | macOS x64 CLI tarball runs after relocation | target CI proven | Mach-O, deployment, integrity, relocation | Intel runner and target 13.0 only; no Apple Silicon, AppKit runtime, signing, or publication claim |
 | Package verification is setup-authoritative | cross-repo tested | USK bounded verification and FacMan rendering | authenticity and live-target setup acceptance remain unproven |
-| Managed portable install lifecycle | fixture-proven across 3 repos | synthetic install, verify, move, repair, uninstall, recovery, and reference refresh | ordinary FacMan apply awaits live-target acceptance; no Factorio execution |
+| Managed portable install lifecycle | bounded candidate across 3 repos | synthetic lifecycle and recovery across 3 repos | new policy-approved targets only; no real Factorio or execution |
+| Public setup lifecycle | machine-accepted candidate | exact Setup CI; inspect, plan, revalidate, lifecycle, cross-repo and package proof | not general availability; existing installations and all higher-risk scopes remain excluded |
+| FacMan portable install plan | bounded managed-setup candidate | CLI/provider plan binds source, recipe, target, policy, and provider | newly created, explicitly selected policy-approved targets only |
+| Generated portable setup review | four-client candidate | shared contract covers sequence, identities, warnings, confirmation, progress, and recovery | presentation only; Setup owns policy; broader authority remains excluded |
+| Portable setup adversarial corpus | cross-platform machine proof | 16 cases; Setup on three targets; FacMan cancellation/termination | bounded synthetic lane only; Windows/macOS multi-volume and real archives unproven |
+| Operator live-target setup | historical pending record | retained first synthetic lifecycle, audit, and interruption matrix | superseded only for the automated synthetic lane; no human Pass claimed |
+| Automated synthetic setup acceptance | MachinePass | frozen verifier, fresh run, 12 controls, full local/hosted proof | managed candidate only; no Factorio, existing install, execution, H1, or external authority |
+| M2 technical wave | closeout candidate | WU1-WU10 and merged MachinePass at `5250db1` | canonical main, public integration, and dev synchronization pending |
+| Existing-portable adoption | M3 authorized-next | read-only inspection and plan generation only | no adoption apply, deletion, mutation, Steam adoption, execution, or external authority |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
-| Package inputs and provenance are recorded | target CI proven | SPDX component closure, licenses, identities, and digests | provider licenses are `NOASSERTION`; unsigned evidence is not publisher authentication |
+| Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |
 | CLI uses only the client boundary | regression-proven | include/link checker, direct transport smoke, parity tests | process and daemon transports remain unavailable |
 | Install-tree archives reproduce | Windows digest-proven | independent roots, normalized metadata, dirty refusal | other targets need per-revision CI; output is unsigned |

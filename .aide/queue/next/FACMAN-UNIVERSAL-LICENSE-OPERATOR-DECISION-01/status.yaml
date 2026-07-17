@@ -1,8 +1,0 @@
-schema_version: aide.queue-status.v1
-task_id: FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01
-status: planned
-lifecycle_state: planned
-planning_state: planned
-created_at: 2026-07-11T23:03:13Z
-result: PENDING
-evidence_path: .aide/queue/next/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/evidence/

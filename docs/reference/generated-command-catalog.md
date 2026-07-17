@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `76410c383ec5e0dc5393f04bb142b1c752e152eae59bfa7b1a5f28040c5e4222`.
+Source digest: `7b587bd0b8f3f1317aca52509aa9996d787a075ed6d3b3837dcea44a1ce96c41`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -21,7 +21,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.import` | `install_refs.import` | `install_import` | yes | install-refs.import | available | workspace_read, workspace_write | `facman installs import <factorio-dir> --id <install-id> --json` |
 | `installs.inspect` | `install_refs.inspect` | `install_inspect` | no | install-refs.inspect | available | workspace_read | `facman installs inspect <install-id> --json` |
 | `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
-| `installs.install.plan` | `installs.install.plan` | `installs_install_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json` |
+| `installs.install.plan` | `installs.install.plan` | `installs_install_plan` | no | - | implemented | setup_preview | `facman installs install plan <version> --archive <path> --target <path> --id <install-id> --json` |
 | `installs.install_version` | `installs.install_version` | `installs_install_version` | no | installs.install-version | unavailable_until_gateway | setup_preview | `facman installs install-version <version> --archive <path> --json` |
 | `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.move.plan` | `installs.move.plan` | `installs_move_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs move plan <install-id> --target <path> --json` |

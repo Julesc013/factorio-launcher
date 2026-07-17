@@ -3,6 +3,7 @@
 
 #import "MainWindowController.h"
 #import "CommandClient.h"
+#import "FacManGeneratedCommandCatalog.h"
 
 @interface MainWindowController ()
 @property(nonatomic, strong) FacManCommandClient *commandClient;
@@ -133,7 +134,13 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)addInstallsTab:(NSTabView *)tabs
 {
     NSView *view = [self addTab:@"Installs" toTabs:tabs];
-    [self addGeneratedCommandsToView:view prefixes:@[ @"install_refs.", @"installs.", @"setup." ]];
+    NSTextView *workflow = [[NSTextView alloc] initWithFrame:NSMakeRect(16, 210, 1000, 180)];
+    [workflow setEditable:NO];
+    [workflow setFont:[NSFont userFixedPitchFontOfSize:11.0]];
+    [workflow setString:FacManGeneratedSetupWorkflowText()];
+    [workflow setAccessibilityLabel:@"Managed portable setup workflow"];
+    [view addSubview:workflow];
+    [self addGeneratedCommandsToView:view prefixes:@[ @"install_refs.", @"installs.", @"setup." ] startY:190];
 }
 
 - (void)addInstancesTab:(NSTabView *)tabs
@@ -162,6 +169,11 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 
 - (void)addGeneratedCommandsToView:(NSView *)view prefixes:(NSArray<NSString *> *)prefixes
 {
+    [self addGeneratedCommandsToView:view prefixes:prefixes startY:350];
+}
+
+- (void)addGeneratedCommandsToView:(NSView *)view prefixes:(NSArray<NSString *> *)prefixes startY:(NSInteger)startY
+{
     NSInteger index = 0;
     for (FacManCommandDefinition *command in [FacManCommandClient catalog]) {
         BOOL included = NO;
@@ -169,7 +181,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
         if (!included) continue;
         NSInteger column = index % 3;
         NSInteger row = index / 3;
-        NSRect frame = NSMakeRect(16 + column * 320, 350 - row * 48, 300, 34);
+        NSRect frame = NSMakeRect(16 + column * 320, startY - row * 48, 300, 34);
         [self addButton:command.label commandId:command.commandId toView:view frame:frame];
         index++;
     }

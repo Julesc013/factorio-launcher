@@ -51,8 +51,8 @@ def validate() -> list[str]:
     setup = (ROOT / "runtime/factorio/application/handlers/setup.cpp").read_text(
         encoding="utf-8"
     )
-    if setup.count("setup_apply_not_authorized") < 6:
-        problems.append("ordinary setup apply routes are no longer uniformly fail-closed")
+    if setup.count("live_target_acceptance_required") < 6:
+        problems.append("ordinary setup apply routes are no longer uniformly gated by human M2 acceptance")
 
     docs = (ROOT / "docs/quality/m1-three-repository-system-proof.v1.md").read_text(
         encoding="utf-8"

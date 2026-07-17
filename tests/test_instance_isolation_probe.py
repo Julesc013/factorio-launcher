@@ -432,6 +432,7 @@ class InstanceIsolationProbeTests(unittest.TestCase):
             self.assertTrue(report["termination_requested"])
             self.assertIsNotNone(report["exit_status"])
             self.assertLess(report["duration_seconds"], 3)
+            self.assertEqual("not_attempted", report["child_process_observation"]["status"])
             self.assertTrue(report["started_utc"].endswith("Z"))
             self.assertTrue(report["ended_utc"].endswith("Z"))
 

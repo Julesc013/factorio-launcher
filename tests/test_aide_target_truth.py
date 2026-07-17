@@ -31,7 +31,7 @@ roots:
             "execution": {"status": "unavailable", "operator_verdict": "Fail", "proof": "evidence.json"},
         }
         problems = project_state.validate_status(stale)
-        self.assertTrue(any("completed R3.7" in problem for problem in problems), problems)
+        self.assertTrue(any("completed M2 technical wave" in problem for problem in problems), problems)
 
     def test_profile_evidence_authorities_exist(self) -> None:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")

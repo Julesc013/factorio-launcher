@@ -44,8 +44,8 @@ def validate() -> list[str]:
         if seed_components.get(component_id, {}).get("license") != component.get("license"):
             problems.append(f"SBOM seed license differs from dependency lock: {component_id}")
     for provider in ("universal_launcher", "universal_setup"):
-        if components.get(provider, {}).get("license") != "NOASSERTION":
-            problems.append(f"provider license must remain NOASSERTION pending operator choice: {provider}")
+        if components.get(provider, {}).get("license") != "MIT":
+            problems.append(f"provider license must match the accepted MIT decision: {provider}")
     miniz = components.get("miniz", {})
     hashes = {
         "miniz_c_sha256": ROOT / "external" / "miniz" / "miniz.c",
@@ -56,7 +56,16 @@ def validate() -> list[str]:
         if sha256(path) != miniz.get(field):
             problems.append(f"Miniz {field} does not match the vendored file")
     notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
-    for anchor in ("Miniz 3.1.2", "external/miniz/LICENSE", "PicoJSON", "external/picojson/LICENSE"):
+    for anchor in (
+        "Universal Launcher",
+        "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "Universal Setup",
+        "3f8489275077347c2918f3bb03614ec6431362ff",
+        "Miniz 3.1.2",
+        "external/miniz/LICENSE",
+        "PicoJSON",
+        "external/picojson/LICENSE",
+    ):
         if anchor not in notices:
             problems.append(f"third-party notice is missing: {anchor}")
     reuse = (ROOT / "REUSE.toml").read_text(encoding="utf-8")
@@ -76,6 +85,16 @@ def validate() -> list[str]:
             problems.append(f"packaged dependency notice is missing: {packaged_notice}")
         elif normalized_notice(ROOT / packaged_notice) != normalized_notice(ROOT / upstream_notice):
             problems.append(f"packaged dependency notice differs from upstream: {packaged_notice}")
+    for provider, packaged_notice in (
+        ("universal_launcher", "LICENSES/UniversalLauncher.txt"),
+        ("universal_setup", "LICENSES/UniversalSetup.txt"),
+    ):
+        path = ROOT / packaged_notice
+        if not path.is_file():
+            problems.append(f"packaged provider notice is missing: {packaged_notice}")
+            continue
+        if sha256(path) != components.get(provider, {}).get("license_file_sha256"):
+            problems.append(f"packaged provider notice digest differs from lock: {provider}")
     security = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
     for anchor in ("GitHub security advisory", "7 calendar days", "Supported versions"):
         if anchor not in security:
@@ -85,8 +104,25 @@ def validate() -> list[str]:
         if anchor not in support:
             problems.append(f"supported-version policy is missing: {anchor}")
     decision = ROOT / "docs" / "quality" / "operator-decisions" / "universal-repository-license.md"
-    if not decision.is_file() or "pending operator decision" not in decision.read_text(encoding="utf-8"):
-        problems.append("Universal repository license operator decision is missing")
+    if not decision.is_file() or "Status: accepted" not in decision.read_text(encoding="utf-8"):
+        problems.append("accepted Universal repository license operator decision is missing")
+    required_provider_notices = {
+        "LICENSES/UniversalLauncher.txt",
+        "LICENSES/UniversalSetup.txt",
+    }
+    for profile_path in sorted((ROOT / "release" / "profiles").glob("*/profile.toml")):
+        with profile_path.open("rb") as handle:
+            profile = tomllib.load(handle)
+        for label, values in (
+            ("profile", profile.get("licenses", [])),
+            ("required_components", profile.get("required_components", {}).get("licenses", [])),
+        ):
+            missing = required_provider_notices - set(values)
+            if missing:
+                problems.append(
+                    f"{profile_path.relative_to(ROOT)} {label} omits provider notices: "
+                    + ", ".join(sorted(missing))
+                )
     builder = (ROOT / "tools" / "provenance_build.py").read_text(encoding="utf-8")
     for anchor in ("built_component_package", "verify_sbom_component_coverage", '"CONTAINS"'):
         if anchor not in builder:

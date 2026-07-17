@@ -5,10 +5,12 @@ from __future__ import annotations
 
 import json
 import hashlib
+import os
 import shutil
 import tempfile
 import unittest
 import zipfile
+from unittest import mock
 from pathlib import Path
 
 from native_cli import facman_executable, invoke
@@ -31,6 +33,29 @@ def tree_snapshot(root: Path) -> dict[str, str]:
 
 
 class CliTests(unittest.TestCase):
+    def test_generated_setup_workflow_is_policy_neutral_and_human_gated(self) -> None:
+        code, stdout, stderr = invoke(["installs", "workflow", "--json"])
+        self.assertEqual(code, 0, stderr)
+        workflow = json.loads(stdout)
+        self.assertEqual("facman.setup_workflow.v1", workflow["schema"])
+        self.assertEqual("universal-setup", workflow["policy_owner"])
+        self.assertFalse(workflow["frontend_policy"])
+        self.assertEqual("live_target_acceptance_required", workflow["apply_availability"])
+        self.assertEqual("pending", workflow["operator_verdict"])
+        self.assertEqual("APPLY", workflow["confirmation_literal"])
+        self.assertEqual(
+            {"source_path", "target_path", "product_version", "archive_sha256"},
+            {field["id"] for field in workflow["always_visible_fields"]},
+        )
+        self.assertIn("recovery_required", {state["id"] for state in workflow["progress_states"]})
+
+        code, text, stderr = invoke(["installs", "workflow"])
+        self.assertEqual(code, 0, stderr)
+        self.assertIn("Choose archive", text)
+        self.assertIn("Unknown files are retained and reported.", text)
+        self.assertIn("Recovery required is a distinct state, not a generic failure.", text)
+        self.assertIn("Apply availability: live_target_acceptance_required", text)
+
     def test_version(self) -> None:
         code, stdout, stderr = invoke(["--version"])
         self.assertEqual(code, 0, stderr)
@@ -449,8 +474,47 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1, stderr)
             canonical_plan = json.loads(stdout)
             self.assertEqual(canonical_plan["operation"], "installs.install.plan")
-            self.assertEqual(canonical_plan["refusal"]["code"], "setup_plan_inputs_not_confirmed")
+            self.assertEqual(canonical_plan["refusal"]["code"], "live_target_acceptance_required")
             self.assertFalse(target.exists())
+
+            setup_state = Path(tmp) / "setup-state"
+            configured_target = Path(tmp) / "configured-managed-factorio"
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "FACMAN_SETUP_STATE_ROOT": str(setup_state),
+                    "FACMAN_SETUP_ACCEPTANCE_ROOT": tmp,
+                    "FACMAN_SETUP_POLICY_ACTIVATION": "operator_acceptance_candidate",
+                },
+                clear=False,
+            ):
+                code, stdout, stderr = invoke(
+                    [
+                        "--workspace",
+                        tmp,
+                        "installs",
+                        "install",
+                        "plan",
+                        "2.0.77",
+                        "--archive",
+                        str(archive),
+                        "--target",
+                        str(configured_target),
+                        "--id",
+                        "managed-fixture",
+                        "--json",
+                    ]
+                )
+            self.assertEqual(code, 0, stderr)
+            reviewed = json.loads(stdout)
+            self.assertEqual(reviewed["schema"], "usk.install_plan.v1")
+            self.assertEqual(reviewed["operation"], "install_local")
+            self.assertEqual(reviewed["status"], "planned")
+            self.assertEqual(reviewed["target"]["root"], configured_target.as_posix())
+            self.assertEqual(len(reviewed["plan_digest"]), 64)
+            self.assertTrue(reviewed["refusal_policy"]["refuse_existing_target"])
+            self.assertFalse(configured_target.exists())
+            self.assertFalse(setup_state.exists())
 
             digest = "0" * 64
             code, stdout, _stderr = invoke(
@@ -471,7 +535,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1)
             apply_refusal = json.loads(stdout)
             self.assertEqual(apply_refusal["operation"], "installs.install.apply")
-            self.assertEqual(apply_refusal["refusal"]["code"], "setup_apply_not_authorized")
+            self.assertEqual(apply_refusal["refusal"]["code"], "live_target_acceptance_required")
             self.assertFalse(target.exists())
 
             code, _stdout, _stderr = invoke(
@@ -500,7 +564,7 @@ class CliTests(unittest.TestCase):
             code, stdout, stderr = invoke(["--workspace", tmp, "installs", "verify", "fixture", "--json"])
             self.assertEqual(code, 1, stderr)
             verify = json.loads(stdout)
-            self.assertEqual(verify["refusal"]["code"], "setup_verification_not_implemented")
+            self.assertEqual(verify["refusal"]["code"], "live_target_acceptance_required")
 
             code, stdout, _stderr = invoke(["--workspace", tmp, "installs", "repair", "fixture", "--json"])
             self.assertEqual(code, 1)
@@ -533,7 +597,7 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(code, 1)
             recovery = json.loads(stdout)
-            self.assertEqual(recovery["refusal"]["code"], "setup_recovery_not_available")
+            self.assertEqual(recovery["refusal"]["code"], "live_target_acceptance_required")
 
     def test_saves_backup_clone_and_instance_export_are_portable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

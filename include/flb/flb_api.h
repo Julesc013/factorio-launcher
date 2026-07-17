@@ -25,7 +25,7 @@ extern "C" {
 typedef struct flb_context flb_context;
 
 #define FLB_ABI_VERSION_MAJOR 1u
-#define FLB_ABI_VERSION_MINOR 2u
+#define FLB_ABI_VERSION_MINOR 3u
 #define FLB_ABI_VERSION ((FLB_ABI_VERSION_MAJOR << 16) | FLB_ABI_VERSION_MINOR)
 
 typedef struct flb_config_v1 {

@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: M2-WU3-DEV-INTEGRATION-PROOF-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-14T12:33:56Z
+result: PASS
+evidence_path: .aide/queue/active/M2-WU3-DEV-INTEGRATION-PROOF-01/evidence/
+active_at: 2026-07-14T12:34:01Z
+verified_at: 2026-07-14T12:40:02Z
+implementation_state: implemented
+reviewed_at: 2026-07-14T12:40:03Z
+closed_at: 2026-07-14T12:40:03Z
