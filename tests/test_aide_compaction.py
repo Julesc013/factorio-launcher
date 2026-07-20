@@ -46,7 +46,8 @@ class AideCompactionTests(unittest.TestCase):
             "universal_repository_licenses",
             "next_authority_gate",
             "product", "readiness", "execution_foundation", "world_product_program",
-            "operation_permit_program", "host_environment_program", "execution_modes", "capabilities",
+            "operation_permit_program", "host_environment_program", "multi_version_install_lifecycle",
+            "gate0_product_convergence_integration", "execution_modes", "capabilities",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
             "machine_protocol", "execution", "release", "validation", "safe_beta",
@@ -66,12 +67,41 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("WorldSpec", data["world_product_program"]["portable_record"])
         self.assertEqual("WorldBinding", data["world_product_program"]["machine_local_record"])
         self.assertFalse(data["world_product_program"]["runtime_authority"])
-        self.assertEqual("task_branch_committed_reviewed_unintegrated", data["product"]["truth_scope"])
+        self.assertEqual("dev_integrated_reviewed_reproduced", data["product"]["truth_scope"])
         self.assertFalse(data["product"]["canonical_integration"])
-        self.assertFalse(data["product"]["local_counts_promoted"])
+        self.assertTrue(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
         self.assertFalse(data["host_environment_program"]["blocks_real_play"])
+        self.assertTrue(
+            data["host_environment_program"]["installation_model_v2_reviewed_committed_clean"]
+        )
+        lifecycle = data["multi_version_install_lifecycle"]
+        self.assertEqual(
+            "dev_integrated_installation_model_v2_plan_only_task_active",
+            lifecycle["status"],
+        )
+        self.assertEqual("implemented_read_only_projection", lifecycle["installation_model_v2"])
+        self.assertEqual("implemented_deterministic_plan_only", lifecycle["reconciliation_plan"])
+        self.assertFalse(lifecycle["reconciliation_apply"])
+        gate0 = data["gate0_product_convergence_integration"]
+        self.assertEqual("accepted_reviewed_dev_integration", gate0["status"])
+        self.assertEqual(34, gate0["pull_request"])
+        self.assertEqual(
+            "61a7afe6718d3ca36b2c530b83890fcd37cc5c03",
+            gate0["reviewed_head_revision"],
+        )
+        self.assertEqual(
+            "62c2503110cdb89b9cc89f19a69903f214d33e3c",
+            gate0["dev_integration_revision"],
+        )
+        self.assertTrue(gate0["exact_head_clean_reproduction"])
+        self.assertTrue(gate0["exact_dev_clean_reproduction"])
+        self.assertFalse(gate0["authority_promotion"])
+        self.assertFalse(gate0["playability_promotion"])
+        self.assertFalse(gate0["canonical_main_promotion"])
+        self.assertFalse(gate0["signing"])
+        self.assertFalse(gate0["publication"])
         self.assertEqual(
             {"instance_isolated", "hermetic"},
             {mode["id"] for mode in data["execution_modes"]},

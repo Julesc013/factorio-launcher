@@ -59,7 +59,7 @@ FacMan ships as the first serious Factorio product binding.
 > Choose a world, press Play, and remain in control of everything that changes.
 
 The golden journey is `find Factorio -> choose or create a world -> review readiness -> Play -> exit -> relaunch`. M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This committed but unintegrated task branch enumerates 123 commands, 250 schemas, and 217 refusal codes; those counts are not integrated release claims.
+This reviewed and reproduced dev-integrated tree enumerates 123 commands, 250 schemas, and 217 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven: Steam-aware `instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because `real_play_gate_not_passed`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.

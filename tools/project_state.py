@@ -112,6 +112,8 @@ def collect() -> dict[str, Any]:
         "world_product_program": status["world_product_program"],
         "operation_permit_program": status["operation_permit_program"],
         "host_environment_program": status["host_environment_program"],
+        "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
+        "gate0_product_convergence_integration": status["gate0_product_convergence_integration"],
         "execution_modes": status["execution_mode"],
         "r3_8_repair": status["r3_8_repair"],
         "r3_8_public_integration": status["r3_8_public_integration"],
@@ -354,6 +356,11 @@ def markdown(data: dict[str, Any]) -> str:
         f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
         f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
+        f"- truth scope: `{data['product']['truth_scope']}`; canonical integration: "
+        f"`{str(data['product']['canonical_integration']).lower()}`; local counts promoted: "
+        f"`{str(data['product']['local_counts_promoted']).lower()}`;",
+        f"- Gate 0 integration: `{data['gate0_product_convergence_integration']['status']}` at dev "
+        f"`{data['gate0_product_convergence_integration']['dev_integration_revision']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
@@ -396,6 +403,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- next WorkUnit: `{data['host_environment_program']['next_work_unit']}`;",
         f"- first runtime scope: `{data['host_environment_program']['first_runtime_scope']}`;",
         f"- first apply WorkUnit: `{data['host_environment_program']['first_apply_work_unit']}`;",
+        f"- installation-model-v2 reviewed, committed, and clean: "
+        f"`{str(data['host_environment_program']['installation_model_v2_reviewed_committed_clean']).lower()}`;",
         f"- blocks real Play: `{str(data['host_environment_program']['blocks_real_play']).lower()}`;",
         f"- host mutation authority: `{str(data['host_environment_program']['host_mutation_authority']).lower()}`;",
         f"- privileged broker authority: `{str(data['host_environment_program']['privileged_broker_authority']).lower()}`;",
@@ -470,8 +479,9 @@ def readme_status(data: dict[str, Any]) -> str:
         "",
         f"The golden journey is `{data['product']['golden_journey']}`. M3 existing-portable adoption is "
         "authorised backlog after the playable alpha, not the current critical path.",
-        f"This committed but unintegrated task branch enumerates {law['contracts']} commands, {law['schemas']} schemas, "
-        f"and {law['refusal_codes']} refusal codes; those counts are not integrated release claims.",
+        f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
+        f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
+        "development-state counts, not release, playability, or authority claims.",
         "",
         "Two execution modes are accepted product designs but remain unproven: Steam-aware "
         "`instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because "
@@ -510,7 +520,7 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "",
         first_step,
         "2. Close the additive installation-model-v2 and deterministic reconciliation-plan proof.",
-        "3. Review, commit, and reproduce product convergence, execution foundation, and installation-model-v2 from a clean three-repository checkout.",
+        "3. Preserve the accepted Gate 0 dev-integration proof and defer general installation mutation to later permit-backed lifecycle work.",
         "4. Run `FACMAN-WORLD-SPEC-AND-READINESS-01`; separate portable desired state, local bindings, computed readiness, and task-oriented views.",
         "5. Run `FACMAN-OPERATION-PERMIT-01`; bind unsafe authority to one reviewed plan and require provider-side revalidation.",
         "6. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.",
@@ -653,9 +663,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "current_work_unit": phase_contract["active"],
         "next_work_unit": phase_contract["next"],
         "m3_disposition": "authorized_backlog_after_playable_alpha",
-        "truth_scope": "task_branch_committed_reviewed_unintegrated",
+        "truth_scope": "dev_integrated_reviewed_reproduced",
         "canonical_integration": False,
-        "local_counts_promoted": False,
+        "local_counts_promoted": True,
     }
     for key, expected in expected_product.items():
         if product.get(key) != expected:
@@ -724,7 +734,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "first_runtime_scope": "workflow_specific_read_only_list_inspect_doctor",
         "first_apply_work_unit": "WINDOWS-SANDBOX-PROFILE-01",
         "workflow_health_model": "versioned_requirement_profiles_no_global_health_score",
-        "installation_model_v2_reviewed_committed_clean": False,
+        "installation_model_v2_reviewed_committed_clean": True,
         "critical_path": False,
         "blocks_real_play": False,
         "host_mutation_authority": False,
@@ -733,6 +743,44 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "arbitrary_script_authority": False,
     }:
         problems.append("host-environment programme must remain parallel, non-blocking, and non-mutating")
+    lifecycle = status.get("multi_version_install_lifecycle", {})
+    if lifecycle.get("status") != "dev_integrated_installation_model_v2_plan_only_task_active":
+        problems.append("installation-model-v2 must record reviewed dev integration while its bounded closeout remains active")
+    if lifecycle.get("installation_model_v2") != "implemented_read_only_projection":
+        problems.append("installation-model-v2 must remain a read-only projection")
+    if lifecycle.get("reconciliation_plan") != "implemented_deterministic_plan_only":
+        problems.append("installation reconciliation must remain deterministic and plan-only")
+    if lifecycle.get("reconciliation_apply") is not False:
+        problems.append("installation reconciliation apply must remain unavailable")
+    gate0 = status.get("gate0_product_convergence_integration", {})
+    expected_gate0 = {
+        "status": "accepted_reviewed_dev_integration",
+        "pull_request": 34,
+        "reviewed_head_revision": "61a7afe6718d3ca36b2c530b83890fcd37cc5c03",
+        "dev_integration_revision": "62c2503110cdb89b9cc89f19a69903f214d33e3c",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_head_ci_run": "29758642385",
+        "exact_head_code_security_run": "29758642411",
+        "exact_head_schema_check_run": "29758642428",
+        "exact_head_security_policy_run": "29758642557",
+        "exact_dev_ci_run": "29760235796",
+        "exact_dev_code_security_run": "29760235888",
+        "exact_dev_schema_check_run": "29760236038",
+        "exact_dev_security_policy_run": "29760236168",
+        "exact_head_clean_reproduction": True,
+        "exact_dev_clean_reproduction": True,
+        "five_slice_review": "pass_with_documented_notes_no_p0_findings",
+        "generated_contract_counts_verified": True,
+        "setup_global_admission_verified": True,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate0 != expected_gate0:
+        problems.append("Gate 0 integration evidence must bind the exact reviewed head and merged-dev proofs without promoting authority")
     execution_modes = {mode.get("id"): mode for mode in status.get("execution_mode", [])}
     if set(execution_modes) != {"instance_isolated", "hermetic"}:
         problems.append("canonical status must define exactly the two accepted execution modes")

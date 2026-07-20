@@ -14,6 +14,8 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - active WorkUnit: `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`;
 - next WorkUnit: `FACMAN-WORLD-SPEC-AND-READINESS-01`;
 - next authority gate: `real-play-isolation`;
+- truth scope: `dev_integrated_reviewed_reproduced`; canonical integration: `false`; local counts promoted: `true`;
+- Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - execution: `unavailable` / `real_play_gate_not_passed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
@@ -57,6 +59,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - next WorkUnit: `HOST-ENVIRONMENT-CONTRACT-SPINE-01`;
 - first runtime scope: `workflow_specific_read_only_list_inspect_doctor`;
 - first apply WorkUnit: `WINDOWS-SANDBOX-PROFILE-01`;
+- installation-model-v2 reviewed, committed, and clean: `true`;
 - blocks real Play: `false`;
 - host mutation authority: `false`;
 - privileged broker authority: `false`;
