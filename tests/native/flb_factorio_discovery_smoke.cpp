@@ -111,12 +111,12 @@ int main()
         if (install.provider_id != "explicit.environment" || install.evidence.empty()) return 3;
     }
 
-    const fs::path library = fs::temp_directory_path() / "facman-version-library-smoke";
-    fs::remove_all(library, cleanup_error);
-    make_structural_install(library / "2.0", "2.0.77", false, false, true);
-    make_structural_install(library / "2.1", "2.1.10", true, true, false);
-    const auto versioned = facman::factorio::discovery::scan_install_candidates({library});
-    fs::remove_all(library, cleanup_error);
+    const fs::path version_library = fs::temp_directory_path() / "facman-version-library-smoke";
+    fs::remove_all(version_library, cleanup_error);
+    make_structural_install(version_library / "2.0", "2.0.77", false, false, true);
+    make_structural_install(version_library / "2.1", "2.1.10", true, true, false);
+    const auto versioned = facman::factorio::discovery::scan_install_candidates({version_library});
+    fs::remove_all(version_library, cleanup_error);
     if (versioned.size() != 2) {
         std::cerr << "expected two numeric version roots, got " << versioned.size() << '\n';
         return 4;

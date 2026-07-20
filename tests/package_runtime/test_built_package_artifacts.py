@@ -499,7 +499,7 @@ class WindowsPortableTuiPackageProofTests(unittest.TestCase):
         self.assertTrue(report["tui"]["present"])
         self.assertEqual(report["tui"]["smoke"], "pass")
         self.assertGreaterEqual(report["tui"]["command_count"], 56)
-        self.assertEqual(report["tui"]["execution_authority"], "blocked_pending_h1_h3")
+        self.assertEqual(report["tui"]["execution_authority"], "blocked_pending_real_play_gate")
 
     def test_target_specific_archive_identity_is_not_portable_os_neutral(self) -> None:
         artifacts = list((self.root / "dist").glob("*.zip"))

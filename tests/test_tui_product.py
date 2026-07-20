@@ -89,14 +89,27 @@ class TuiProductTests(unittest.TestCase):
             self.assertEqual(redirected.returncode, 0, redirected.stderr)
             self.assertEqual(json.loads(redirected.stdout)["command"], "workspace.status")
 
-            unavailable = self.invoke(
+            dry_run_refusal = self.invoke(
                 [
                     "--workspace", str(workspace), "--command", "run.execute",
                     "--payload", '{"instance_id":"space-age-main"}', "--json",
                 ]
             )
-            self.assertEqual(unavailable.returncode, 1)
-            self.assertEqual(json.loads(unavailable.stdout)["refusal"]["code"], "isolation_not_proven")
+            self.assertEqual(dry_run_refusal.returncode, 1)
+            self.assertEqual(
+                json.loads(dry_run_refusal.stdout)["refusal"]["code"],
+                "dry_run_write_not_executed",
+            )
+
+            unavailable = self.invoke(
+                [
+                    "--workspace", str(workspace), "--command", "run.execute",
+                    "--payload", '{"instance_id":"space-age-main"}', "--apply", "--json",
+                ]
+            )
+            self.assertEqual(unavailable.returncode, 2)
+            self.assertEqual(unavailable.stdout, "")
+            self.assertIn("remains human-gated", unavailable.stderr)
 
             cancelled = self.invoke(
                 ["--workspace", str(workspace), "--command", "workspace.status", "--cancel", "--json"]
