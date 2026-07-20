@@ -23,9 +23,11 @@ int main()
         std::string(facman::tui::kGeneratedSetupWorkflowText).find("live_target_acceptance_required") == std::string::npos) return 8;
     const auto* status_command = facman::tui::find_command("workspace.status");
     const auto* diagnostics = facman::tui::find_command("diagnostics.export");
-    if (status_command == nullptr || diagnostics == nullptr) return 2;
+    const auto* run = facman::tui::find_command("run.execute");
+    if (status_command == nullptr || diagnostics == nullptr || run == nullptr) return 2;
     if (std::string(diagnostics->runtime_id) != "diagnostics.export" ||
-        !facman::tui::command_writes(*diagnostics)) return 3;
+        !facman::tui::command_writes(*diagnostics) ||
+        !facman::tui::command_writes(*run)) return 3;
 
     const fs::path workspace = fs::temp_directory_path() /
         facman::platform::path_from_utf8("facman-tui-Ω-empty");
@@ -44,7 +46,7 @@ int main()
         output.str().find("Outcome: ok") == std::string::npos) return 5;
 
     auto unavailable = client.execute({
-        "run.execute", "{\"instance_id\":\"space-age-main\"}", false, false, {}, std::chrono::minutes(5)});
+        "run.execute", "{\"instance_id\":\"space-age-main\"}", true, false, {}, std::chrono::minutes(5)});
     if (!unavailable || unavailable.value().ok() || unavailable.value().outcome != "unavailable") return 6;
 
     std::ostringstream catalog;

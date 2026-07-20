@@ -1,0 +1,14 @@
+command_id = "installs.describe"
+cli = "facman installs describe <install-id> --json"
+effects = ["workspace_read"]
+request_schema = "contracts/schema/command/installs.describe.request.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_installation_model.v2.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = true
+executes_process = false
+mutates_workspace = false
+availability = "implemented"
+golden_success = "tests/golden/commands/installs.describe.success.json"
+golden_refusal = "tests/golden/commands/installs.describe.refusal.json"

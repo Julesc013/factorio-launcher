@@ -12,6 +12,15 @@ py -3 tools/dev.py test --full
 py -3 tools/dev.py verify-all
 ```
 
+`test --fast` is the canonical inner loop: it builds only the native targets
+labelled `fast-unit` and runs the focused Python policy/metadata suite. It must
+stay bounded and must not invoke the full strict chain indirectly.
+
+`verify-all` is the canonical exhaustive local gate: it builds the default
+native graph, runs all CTest and Python tests, then runs every strict validator.
+It is intentionally slower and is required before a WorkUnit closeout; a green
+fast run does not replace it.
+
 The affected map is `contracts/policy/test_impact.v1.json`. It selects focused
 native targets, Python modules, strict validators, and platform package lanes.
 Inventory floors detect test removal, but passing affected validation does not

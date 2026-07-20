@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_integration_record.v1.schema.json",
+  "title": "Factorio Integration Record",
+  "type": "object",
+  "required": ["schema", "kind", "owner", "side_by_side_safety", "uninstall_integration"],
+  "properties": {
+    "schema": { "const": "factorio.integration_record.v1" },
+    "kind": { "type": "string" },
+    "owner": { "type": "string" },
+    "side_by_side_safety": { "type": "string" },
+    "uninstall_integration": { "type": "string" }
+  },
+  "additionalProperties": false
+}

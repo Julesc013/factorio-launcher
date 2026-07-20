@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_provenance_record.v1.schema.json",
+  "title": "Factorio Provenance Record",
+  "type": "object",
+  "required": ["schema", "status", "version", "state_revision", "verification_identity"],
+  "properties": {
+    "schema": { "const": "factorio.provenance_record.v1" },
+    "status": { "type": "string" },
+    "version": { "type": "string" },
+    "state_revision": { "type": "string" },
+    "verification_identity": { "type": "string" }
+  },
+  "additionalProperties": false
+}

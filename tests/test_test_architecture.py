@@ -34,6 +34,12 @@ class TestArchitectureTests(unittest.TestCase):
     def test_script_backed_native_tests_build_their_real_prerequisite(self) -> None:
         self.assertEqual("flb_factorio_shared", dev.NATIVE_BUILD_PREREQUISITES["facman_abi_symbol_smoke"])
 
+    def test_fast_runner_builds_only_declared_fast_native_targets(self) -> None:
+        impact = dev.load_impact()
+        self.assertGreater(len(impact["fast_native"]), 0)
+        self.assertNotIn("*", impact["fast_native"])
+        self.assertNotIn("tests.test_schema_tools", impact["fast_python"])
+
     def test_native_executable_honors_requested_configuration(self) -> None:
         source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
         self.assertIn('f"{configuration}/facman.exe"', source)

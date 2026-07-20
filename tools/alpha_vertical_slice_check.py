@@ -81,10 +81,10 @@ def validate_authoritative_preview_route() -> list[str]:
     cli_path = ROOT / "apps" / "cli" / "command_dispatch.cpp"
     binding_path = ROOT / "runtime" / "factorio" / "binding" / "flb_api.c"
     cli_text = cli_path.read_text(encoding="utf-8")
-    start = cli_text.find("int command_launch(const Options& options, bool run)")
+    start = cli_text.find("int command_launch(")
     end = cli_text.find("int command_transfer(", start)
     if start < 0 or end < 0:
-        return [f"{cli_path.relative_to(ROOT)}: cannot locate command_run body"]
+        return [f"{cli_path.relative_to(ROOT)}: cannot locate command_launch body"]
     run_body = cli_text[start:end]
     problems: list[str] = []
     for anchor in ['call(options,', '"run.preview"']:

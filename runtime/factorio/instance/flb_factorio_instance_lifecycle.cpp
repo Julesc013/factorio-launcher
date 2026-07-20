@@ -576,8 +576,11 @@ facman::core::Result<std::string> verify(const fs::path& root, const InspectRequ
     auto summary = summarize_tree(instance.value().root, true, false);
     if (!summary) return failure(summary.error().code, summary.error().message, summary.error().path);
     const fs::path config_path = instance.value().root / "config" / "config.ini";
-    auto config = stable_text(config_path, 4U * 1024U * 1024U);
-    if (!config || config.value() != effective_config(instance.value(), install.value())) {
+    const auto config = facman::factorio::launch::parse_effective_config(
+        config_path, instance.value().root / "mods");
+    const fs::path expected_read = fs::absolute(install.value().root / "data").lexically_normal();
+    const fs::path expected_write = fs::absolute(instance.value().root).lexically_normal();
+    if (!config.ok || config.read_data != expected_read || config.write_data != expected_write) {
         return failure("instance_effective_config_invalid", "Effective configuration is missing or does not match instance paths", config_path);
     }
     if (fs::exists(instance.value().root / "locks" / "run.lock")) {
@@ -589,7 +592,9 @@ facman::core::Result<std::string> verify(const fs::path& root, const InspectRequ
     std::vector<std::string> warnings;
     const std::set<std::string> expected_top = {
         "instance.v1.json", "config", "mods", "saves", "scenarios", "script-output",
-        "logs", "crash", "exports", "cache", "locks"};
+        "logs", "crash", "exports", "cache", "locks", "imports", "temp",
+        "player-data.json", "achievements.dat", "crop-cache.dat",
+        "factorio-current.log", "factorio-previous.log"};
     std::error_code error;
     for (fs::directory_iterator item(instance.value().root, error), end; item != end && !error; item.increment(error)) {
         if (expected_top.count(item->path().filename().string()) == 0) {

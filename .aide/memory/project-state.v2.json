@@ -1,5 +1,230 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
+  "capabilities": [
+    {
+      "commands": [],
+      "description": "Read a Factorio credential from an operating-system-backed credential provider.",
+      "domain": "credentials",
+      "id": "credential.factorio.read",
+      "required_effects": [
+        "credential_read"
+      ],
+      "status": "unavailable"
+    },
+    {
+      "commands": [
+        "installs.scan"
+      ],
+      "description": "Discover candidate Factorio installations without taking ownership or mutating them.",
+      "domain": "installs",
+      "id": "install.discover",
+      "required_effects": [
+        "workspace_read"
+      ],
+      "status": "available"
+    },
+    {
+      "commands": [],
+      "description": "Apply an exact adoption plan without mutating Steam-owned installations.",
+      "domain": "installs",
+      "id": "install.existing.adoption.apply",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "setup_mutation"
+      ],
+      "status": "unavailable"
+    },
+    {
+      "commands": [],
+      "description": "Plan explicit adoption of an eligible standalone installation.",
+      "domain": "installs",
+      "id": "install.existing.adoption.plan",
+      "required_effects": [
+        "workspace_read",
+        "setup_preview"
+      ],
+      "status": "backlog"
+    },
+    {
+      "commands": [],
+      "description": "Inspect an existing portable installation without mutation or ownership transfer.",
+      "domain": "installs",
+      "id": "install.existing.inspect",
+      "required_effects": [
+        "workspace_read",
+        "setup_preview"
+      ],
+      "status": "backlog"
+    },
+    {
+      "commands": [
+        "installs.install.apply"
+      ],
+      "description": "Apply a reviewed managed-install plan through Universal Setup.",
+      "domain": "installs",
+      "id": "install.managed.apply",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "setup_mutation"
+      ],
+      "status": "unavailable"
+    },
+    {
+      "commands": [
+        "installs.install.plan"
+      ],
+      "description": "Produce an immutable plan for a new FacMan-managed standalone installation.",
+      "domain": "installs",
+      "id": "install.managed.plan",
+      "required_effects": [
+        "workspace_read",
+        "setup_preview"
+      ],
+      "status": "conditional"
+    },
+    {
+      "commands": [
+        "installs.describe"
+      ],
+      "description": "Project a registered installation into independent source, deployment, ownership, data, integration, provenance, verification, and filesystem capability axes.",
+      "domain": "installs",
+      "id": "install.model.inspect",
+      "required_effects": [
+        "workspace_read"
+      ],
+      "status": "available"
+    },
+    {
+      "commands": [
+        "installs.reconcile.plan"
+      ],
+      "description": "Compare current installation evidence with desired state and produce a deterministic, non-mutating reconciliation plan.",
+      "domain": "installs",
+      "id": "install.reconciliation.plan",
+      "required_effects": [
+        "workspace_read"
+      ],
+      "status": "available"
+    },
+    {
+      "commands": [
+        "installs.import"
+      ],
+      "description": "Register a reference to an eligible existing installation while preserving foreign ownership.",
+      "domain": "installs",
+      "id": "install.reference.register",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "status": "available"
+    },
+    {
+      "commands": [
+        "run.execute"
+      ],
+      "description": "Run with no persistent change outside the authorised FacMan workspace.",
+      "domain": "launch",
+      "id": "launch.execute.hermetic",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "process_execute"
+      ],
+      "status": "unavailable"
+    },
+    {
+      "commands": [
+        "run.execute"
+      ],
+      "description": "Run with FacMan-owned instance data isolated while explicitly disclosing enumerated platform-owned state.",
+      "domain": "launch",
+      "id": "launch.execute.instance_isolated",
+      "required_effects": [
+        "workspace_read",
+        "workspace_write",
+        "process_execute"
+      ],
+      "status": "unavailable"
+    },
+    {
+      "commands": [
+        "launch_plan.preflight"
+      ],
+      "description": "Revalidate launch identity, paths, ownership, configuration, and isolation immediately before execution.",
+      "domain": "launch",
+      "id": "launch.preflight",
+      "required_effects": [
+        "workspace_read"
+      ],
+      "status": "available"
+    },
+    {
+      "commands": [
+        "run.preview",
+        "launch.plan"
+      ],
+      "description": "Render the exact executable, arguments, configuration, roots, and advertised isolation mode.",
+      "domain": "launch",
+      "id": "launch.preview",
+      "required_effects": [
+        "workspace_read"
+      ],
+      "status": "available"
+    },
+    {
+      "commands": [],
+      "description": "Read Factorio Mod Portal metadata through an explicit network capability.",
+      "domain": "content",
+      "id": "network.mod_portal.read",
+      "required_effects": [
+        "network_read"
+      ],
+      "status": "unavailable"
+    },
+    {
+      "commands": [],
+      "description": "Perform authenticated Mod Portal mutations through an explicit network capability.",
+      "domain": "content",
+      "id": "network.mod_portal.write",
+      "required_effects": [
+        "network_write"
+      ],
+      "status": "unavailable"
+    },
+    {
+      "commands": [],
+      "description": "Start and supervise an explicitly authorised process without shell invocation under timeout, cancellation, output, environment, and process-tree rules; real Factorio use remains separately gated.",
+      "domain": "platform",
+      "id": "process.execute",
+      "required_effects": [
+        "process_execute"
+      ],
+      "status": "conditional"
+    },
+    {
+      "commands": [],
+      "description": "Publish a signed, provenance-bound release through an explicitly authorised channel.",
+      "domain": "release",
+      "id": "release.publish",
+      "required_effects": [
+        "release_publish"
+      ],
+      "status": "unavailable"
+    },
+    {
+      "commands": [],
+      "description": "Sign a release artifact with separately authorised publisher credentials.",
+      "domain": "release",
+      "id": "release.sign",
+      "required_effects": [
+        "release_sign"
+      ],
+      "status": "unavailable"
+    }
+  ],
   "claim_levels": [
     {
       "claim": "Managed paths remain inside the workspace",
@@ -25,6 +250,11 @@
       "claim": "Process boundary preserves intended isolation",
       "level": "surrogate process proven",
       "limitation": "proves FacMan and probe behavior, not Factorio internals"
+    },
+    {
+      "claim": "Process supervision and launch audit",
+      "level": "fake-process proven",
+      "limitation": "internal test authority only; no real Factorio guarantee"
     },
     {
       "claim": "Steam-backed strict instance-only persistence",
@@ -60,6 +290,16 @@
       "claim": "Windows, Linux, and macOS install discovery is read-only",
       "level": "target CI proven",
       "limitation": "scoped roots/layouts only; no package-manager or Spotlight execution"
+    },
+    {
+      "claim": "Explicit version-library discovery finds structural numeric children without mutating them",
+      "level": "regression-proven",
+      "limitation": "discovery does not confer setup ownership"
+    },
+    {
+      "claim": "Program-local Factorio data can be preserved in an isolated instance",
+      "level": "regression-proven",
+      "limitation": "temp is skipped; no installer identity is created"
     },
     {
       "claim": "Non-execution product journey is functional",
@@ -168,11 +408,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "7b587bd0b8f3f1317aca52509aa9996d787a075ed6d3b3837dcea44a1ce96c41",
-    "contracts": 121,
+    "catalog_digest": "671764ee966fe44d269d6787664049383ff461152616762b4312b0a1789abfdb",
+    "contracts": 123,
     "refusal_codes": 217,
-    "registered_routes": 119,
-    "schemas": 234
+    "registered_routes": 121,
+    "schemas": 250
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -180,7 +420,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "m3-existing-portable-adoption-plan-only",
+  "current_checkpoint": "multi-version-install-lifecycle",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -188,17 +428,65 @@
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
+    "current_gate_status": "not_started",
     "operator_verdict": "Fail",
+    "operator_verdict_scope": "historical_steam_backed_h1_only",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "steam_external_state_not_isolated",
+    "reason": "real_play_gate_not_passed",
     "status": "unavailable"
   },
+  "execution_foundation": {
+    "full_verification": "pass",
+    "native_test_count": 43,
+    "process_authority": "foundation_test_process_only",
+    "python_expected_skips": 1,
+    "python_test_count": 355,
+    "real_factorio_execution": false,
+    "real_play_authority": false,
+    "schema_count": 235,
+    "status": "complete_fake_process_proof",
+    "work_unit": "FACMAN-EXECUTION-FOUNDATION-01"
+  },
+  "execution_modes": [
+    {
+      "boundary": "FacMan-owned instance data is isolated; enumerated Steam/platform state may change after explicit disclosure.",
+      "claim_status": "unproven",
+      "id": "instance_isolated",
+      "next_gate": "FACMAN-STEAM-AWARE-PLAY-01",
+      "product_mode": "accepted"
+    },
+    {
+      "boundary": "No persistent change may occur outside the authorised FacMan workspace.",
+      "claim_status": "unproven",
+      "id": "hermetic",
+      "next_gate": "FACMAN-HERMETIC-STANDALONE-PLAY-01",
+      "product_mode": "accepted"
+    }
+  ],
+  "host_environment_program": {
+    "arbitrary_script_authority": false,
+    "architecture": "docs/architecture/host_environment_lifecycle.md",
+    "blocks_real_play": false,
+    "critical_path": false,
+    "first_apply_work_unit": "WINDOWS-SANDBOX-PROFILE-01",
+    "first_runtime_scope": "workflow_specific_read_only_list_inspect_doctor",
+    "host_mutation_authority": false,
+    "installation_model_v2_reviewed_committed_clean": false,
+    "next_work_unit": "HOST-ENVIRONMENT-CONTRACT-SPINE-01",
+    "privileged_broker_authority": false,
+    "remote_mutation_authority": false,
+    "status": "planned_parallel_support_lane",
+    "workflow_health_model": "versioned_requirement_profiles_no_global_health_score"
+  },
   "known_blockers": [
-    "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
+    "The local Wube-signed Factorio 2.0.77 conversion succeeded, but FacMan does not yet expose authenticated source inspection or transaction-backed lifecycle apply as product commands.",
+    "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
+    "Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.",
+    "The current desktop UI exposes commands rather than the first-run world-to-Play journey.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "M2-CLOSEOUT-CANONICAL-PROMOTION-01",
+  "last_closed_work_unit": "FACMAN-EXECUTION-FOUNDATION-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -921,9 +1209,10 @@
     "opened_after_m2_dev_revision": "51977de8120202958fc35776d284077b1fc027d3",
     "publication": false,
     "registry": false,
+    "resume_after": "FACMAN-WORLD-CENTRIC-ALPHA-01",
     "run_execute": false,
     "scope": "read_only_and_plan_only",
-    "status": "active_read_only_and_plan_only",
+    "status": "authorized_backlog_after_playable_alpha",
     "steam_adoption": false,
     "steam_mutation": false
   },
@@ -932,7 +1221,16 @@
     "status": "implemented",
     "transport": "bounded newline-delimited JSON over stdio"
   },
-  "next_authority_gate": "H1",
+  "next_authority_gate": "real-play-isolation",
+  "operation_permit_program": {
+    "authority_model": "short_lived_plan_bound_exact_resource_permit",
+    "global_admission_is_sole_enforcer": false,
+    "harmless_reads_require_permit": false,
+    "permit_issuance_authority": false,
+    "provider_revalidation_required": true,
+    "status": "planned_after_world_readiness",
+    "work_unit": "FACMAN-OPERATION-PERMIT-01"
+  },
   "platforms": [
     {
       "compile_status": "passed",
@@ -1045,6 +1343,22 @@
       "support_status": "experimental"
     }
   ],
+  "product": {
+    "canonical_integration": false,
+    "charter": "Choose a world, press Play, and remain in control of everything that changes.",
+    "compatibility_alias": "facman run <instance> --execute",
+    "current_work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
+    "golden_journey": "find Factorio -> choose or create a world -> review readiness -> Play -> exit -> relaunch",
+    "local_counts_promoted": false,
+    "m3_disposition": "authorized_backlog_after_playable_alpha",
+    "next_work_unit": "FACMAN-WORLD-SPEC-AND-READINESS-01",
+    "phase": "multi_version_install_lifecycle",
+    "phase_status": "active",
+    "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
+    "preferred_user_command": "facman play <instance>",
+    "primary_persona": "A Factorio player who wants multiple safe, reproducible worlds without managing launcher internals.",
+    "truth_scope": "task_branch_committed_reviewed_unintegrated"
+  },
   "product_version": "0.1.0-dev",
   "provider_pins": {
     "factorio_binding": {
@@ -1064,12 +1378,16 @@
     }
   },
   "quarantined_capabilities": [
-    "run.execute",
-    "setup mutation outside newly created, explicitly selected, policy-approved managed targets",
-    "network and credential operations",
-    "server and developer process execution",
-    "daemon publication",
-    "release signing, notarization, publication, and publisher authenticity"
+    "launch.execute.instance_isolated",
+    "launch.execute.hermetic",
+    "process.execute",
+    "install.managed.apply outside newly created, explicitly selected, policy-approved managed targets",
+    "install.existing.adoption.apply",
+    "network.mod_portal.read",
+    "network.mod_portal.write",
+    "credential.factorio.read",
+    "release.sign",
+    "release.publish"
   ],
   "r3_8_public_integration": {
     "authority_promotion": false,
@@ -1088,6 +1406,15 @@
     "status": "closed",
     "task_head_revision": "b6006e514d03c56910160f32b6c9e7b90cb2b654"
   },
+  "readiness": {
+    "compatibility": "experimental_public_subset",
+    "platform_support": "windows_first_alpha_planned",
+    "playability": "not_yet_playable",
+    "release_authenticity": "not_proven_unsigned",
+    "safety_authority": "execution_foundation_proven_real_play_unproven",
+    "user_validation": "not_started",
+    "user_workflow": "advanced_command_surface_only"
+  },
   "release": {
     "authenticity": "not_proven_unsigned",
     "public_sdk": "experimental_installed",
@@ -1099,7 +1426,8 @@
     "AIDE is development governance only and never a product dependency.",
     "Focused affected tests do not replace the full promotion matrix.",
     "Human acceptance is never inferred from automated checks.",
-    "Compile, runtime, package, publication, and support status are separate claims."
+    "Compile, runtime, package, publication, and support status are separate claims.",
+    "Historical milestone evidence does not select the current product objective."
   ],
   "universal_repository_licenses": {
     "clean_reconstruction": "passed",
@@ -1130,5 +1458,17 @@
     "release_policy_run": "29299286894",
     "schema_check_run": "29297933368",
     "security_policy_run": "29299245082"
+  },
+  "world_product_program": {
+    "architecture": "docs/architecture/world_product_model.md",
+    "machine_local_record": "WorldBinding",
+    "next_work_unit": "FACMAN-WORLD-SPEC-AND-READINESS-01",
+    "portable_factorio_binaries": false,
+    "portable_record": "WorldSpec",
+    "preparation_model": "federated_typed_subplans_by_owner",
+    "readiness_model": "computed_projection_not_authoritative_state",
+    "runtime_authority": false,
+    "status": "planned_after_installation_model_v2_closeout",
+    "ui_aggregate": "WorldView"
   }
 }

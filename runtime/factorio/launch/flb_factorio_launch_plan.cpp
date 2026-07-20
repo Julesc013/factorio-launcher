@@ -503,7 +503,7 @@ std::string launch_plan_json(const LaunchPlanResult& plan)
         notes.add_string("Steam-integrated Factorio may write Steam Cloud state outside the selected instance root.");
         notes.add_string("Strict execution is refused for this install class.");
     } else {
-        notes.add_string("This install is only a strict-isolation candidate until a reviewed standalone H1 Pass exists.");
+        notes.add_string("This install is only a hermetic-execution candidate until the standalone real-play gate passes.");
     }
     json::ObjectBuilder document;
     document.add_string("schema", "factorio.launch_plan.v1");

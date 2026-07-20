@@ -8,14 +8,19 @@
 namespace facman::factorio::application {
 
 ApplicationContext::ApplicationContext(std::filesystem::path workspace)
-    : workspace_(std::move(workspace)),
-      layout_(workspace_),
+    : ApplicationContext(ApplicationConfiguration::load(std::move(workspace)))
+{
+}
+
+ApplicationContext::ApplicationContext(ApplicationConfiguration configuration)
+    : configuration_(std::move(configuration)),
+      layout_(configuration_.workspace()),
       installs_(layout_),
       instances_(layout_),
       modsets_(layout_),
       transactions_(layout_),
       workspace_repository_(layout_),
-      setup_(make_setup_gateway())
+      setup_(make_setup_gateway(configuration_.setup()))
 {
 }
 

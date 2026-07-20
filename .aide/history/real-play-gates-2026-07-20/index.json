@@ -1,0 +1,18 @@
+{
+  "checkpoint": "real-play-gates-2026-07-20",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "13f4a3e1d9dc910f50932145ea4480be651c2a113936500a4c06402771e42655",
+        "evidence/remaining-risks.md": "381fa287c62d4e2122a474e23601702c4f38f6c2446019fe0b68b2e7cc414401",
+        "evidence/validation.md": "0292027240f8361f32bc73580d606bf52b3b7107a442a0b1459d13a9b93107d7",
+        "status.yaml": "bd57b8537a0bfc53682860c8c2b6a72a8f479e40dc94235bb9f418d86cdb9084",
+        "task.yaml": "49fcee23f96de93275ee22f6e730e23416031d29d9bdd5c7f4ce4c8a67b180d7"
+      },
+      "task_id": "FACMAN-EXECUTION-FOUNDATION-01"
+    }
+  ]
+}

@@ -42,6 +42,7 @@ factorio_workspace/
 .aide/reports/module-quality-report.md
 .aide/reports/reuse-modularity-report.md
 .aide/reports/test-coverage-map.md
+.aide/verification/latest-*.md
 .aide.local/
 .aide.local/**
 .env

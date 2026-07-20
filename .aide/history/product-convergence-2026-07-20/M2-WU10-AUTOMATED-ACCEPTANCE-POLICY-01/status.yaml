@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-17T04:09:54Z
+result: PASS
+evidence_path: .aide/history/product-convergence-2026-07-20/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/evidence/
+active_at: 2026-07-17T04:09:55Z
+verified_at: 2026-07-17T05:02:56Z
+implementation_state: implemented
+reviewed_at: 2026-07-17T05:49:46Z
+closed_at: 2026-07-17T05:49:46Z
+archived_at: 2026-07-19T14:38:32Z

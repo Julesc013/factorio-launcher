@@ -1,30 +1,151 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "m3-existing-portable-adoption-plan-only"
+current_checkpoint = "multi-version-install-lifecycle"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
-last_closed_work_unit = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
-next_authority_gate = "H1"
+active_work_unit = "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01"
+last_closed_work_unit = "FACMAN-EXECUTION-FOUNDATION-01"
+next_authority_gate = "real-play-isolation"
 safe_beta = false
 
 known_blockers = [
-  "H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.",
+  "The local Wube-signed Factorio 2.0.77 conversion succeeded, but FacMan does not yet expose authenticated source inspection or transaction-backed lifecycle apply as product commands.",
+  "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
+  "Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.",
+  "The current desktop UI exposes commands rather than the first-run world-to-Play journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
 ]
 
 quarantined_capabilities = [
-  "run.execute",
-  "setup mutation outside newly created, explicitly selected, policy-approved managed targets",
-  "network and credential operations",
-  "server and developer process execution",
-  "daemon publication",
-  "release signing, notarization, publication, and publisher authenticity",
+  "launch.execute.instance_isolated",
+  "launch.execute.hermetic",
+  "process.execute",
+  "install.managed.apply outside newly created, explicitly selected, policy-approved managed targets",
+  "install.existing.adoption.apply",
+  "network.mod_portal.read",
+  "network.mod_portal.write",
+  "credential.factorio.read",
+  "release.sign",
+  "release.publish",
 ]
+
+[product]
+phase = "multi_version_install_lifecycle"
+phase_status = "active"
+primary_persona = "A Factorio player who wants multiple safe, reproducible worlds without managing launcher internals."
+charter = "Choose a world, press Play, and remain in control of everything that changes."
+golden_journey = "find Factorio -> choose or create a world -> review readiness -> Play -> exit -> relaunch"
+platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
+current_work_unit = "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01"
+next_work_unit = "FACMAN-WORLD-SPEC-AND-READINESS-01"
+m3_disposition = "authorized_backlog_after_playable_alpha"
+preferred_user_command = "facman play <instance>"
+compatibility_alias = "facman run <instance> --execute"
+truth_scope = "task_branch_committed_reviewed_unintegrated"
+canonical_integration = false
+local_counts_promoted = false
+
+[readiness]
+playability = "not_yet_playable"
+user_workflow = "advanced_command_surface_only"
+safety_authority = "execution_foundation_proven_real_play_unproven"
+platform_support = "windows_first_alpha_planned"
+release_authenticity = "not_proven_unsigned"
+compatibility = "experimental_public_subset"
+user_validation = "not_started"
+
+[world_product_program]
+status = "planned_after_installation_model_v2_closeout"
+architecture = "docs/architecture/world_product_model.md"
+next_work_unit = "FACMAN-WORLD-SPEC-AND-READINESS-01"
+portable_record = "WorldSpec"
+machine_local_record = "WorldBinding"
+readiness_model = "computed_projection_not_authoritative_state"
+ui_aggregate = "WorldView"
+preparation_model = "federated_typed_subplans_by_owner"
+portable_factorio_binaries = false
+runtime_authority = false
+
+[operation_permit_program]
+status = "planned_after_world_readiness"
+work_unit = "FACMAN-OPERATION-PERMIT-01"
+authority_model = "short_lived_plan_bound_exact_resource_permit"
+global_admission_is_sole_enforcer = false
+provider_revalidation_required = true
+harmless_reads_require_permit = false
+permit_issuance_authority = false
+
+[execution_foundation]
+status = "complete_fake_process_proof"
+work_unit = "FACMAN-EXECUTION-FOUNDATION-01"
+process_authority = "foundation_test_process_only"
+real_factorio_execution = false
+real_play_authority = false
+native_test_count = 43
+python_test_count = 355
+python_expected_skips = 1
+schema_count = 235
+full_verification = "pass"
+
+[host_environment_program]
+status = "planned_parallel_support_lane"
+architecture = "docs/architecture/host_environment_lifecycle.md"
+next_work_unit = "HOST-ENVIRONMENT-CONTRACT-SPINE-01"
+first_runtime_scope = "workflow_specific_read_only_list_inspect_doctor"
+first_apply_work_unit = "WINDOWS-SANDBOX-PROFILE-01"
+workflow_health_model = "versioned_requirement_profiles_no_global_health_score"
+installation_model_v2_reviewed_committed_clean = false
+critical_path = false
+blocks_real_play = false
+host_mutation_authority = false
+privileged_broker_authority = false
+remote_mutation_authority = false
+arbitrary_script_authority = false
+
+[multi_version_install_lifecycle]
+status = "local_replacement_pass_installation_model_v2_plan_only_task_active"
+work_unit = "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01"
+explicit_library_root = "D:\\Games\\Factorio"
+discovered_numeric_install_count = 16
+registered_numeric_install_count = 16
+factorio_2_0_program_version = "2.0.77"
+factorio_2_0_program_layout = "official_installer"
+factorio_2_0_data_routing = "system_shared"
+factorio_2_0_instance_id = "factorio-2-0"
+factorio_2_0_instance_verification = "pass"
+factorio_2_0_launch_preflight = "pass_execution_refused_pending_isolation_proof"
+factorio_2_0_original_tree = "retained_same_volume_rollback"
+windows_primary_registration = "factorio_space_age_2.1.10"
+installer_exit_code = 0
+native_test_count = 44
+python_test_count = 358
+python_expected_skips = 1
+schema_count = 250
+command_count = 123
+full_verification = "pass"
+installation_model_v2 = "implemented_read_only_projection"
+reconciliation_plan = "implemented_deterministic_plan_only"
+reconciliation_apply = false
+legacy_install_ref_rewritten = false
+live_2_0_read_only_projection = "pass_workspace_digest_unchanged"
+
+[[execution_mode]]
+id = "instance_isolated"
+product_mode = "accepted"
+claim_status = "unproven"
+boundary = "FacMan-owned instance data is isolated; enumerated Steam/platform state may change after explicit disclosure."
+next_gate = "FACMAN-STEAM-AWARE-PLAY-01"
+
+[[execution_mode]]
+id = "hermetic"
+product_mode = "accepted"
+claim_status = "unproven"
+boundary = "No persistent change may occur outside the authorised FacMan workspace."
+next_gate = "FACMAN-HERMETIC-STANDALONE-PLAY-01"
 
 [r3_8_repair]
 status = "closed"
@@ -574,8 +695,9 @@ signing = false
 publication = false
 
 [m3_existing_portable_adoption]
-status = "active_read_only_and_plan_only"
+status = "authorized_backlog_after_playable_alpha"
 scope = "read_only_and_plan_only"
+resume_after = "FACMAN-WORLD-CENTRIC-ALPHA-01"
 opened_after_m2_dev_revision = "51977de8120202958fc35776d284077b1fc027d3"
 existing_portable_inspection = true
 adoption_plan = true
@@ -780,9 +902,11 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "steam_external_state_not_isolated"
+reason = "real_play_gate_not_passed"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
+operator_verdict_scope = "historical_steam_backed_h1_only"
+current_gate_status = "not_started"
 
 [release]
 status = "unpublished"

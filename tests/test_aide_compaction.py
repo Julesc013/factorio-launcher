@@ -45,6 +45,8 @@ class AideCompactionTests(unittest.TestCase):
             "m3_existing_portable_adoption",
             "universal_repository_licenses",
             "next_authority_gate",
+            "product", "readiness", "execution_foundation", "world_product_program",
+            "operation_permit_program", "host_environment_program", "execution_modes", "capabilities",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
             "machine_protocol", "execution", "release", "validation", "safe_beta",
@@ -52,13 +54,28 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_workflows_preserve_machine_and_higher_risk_human_gates(self) -> None:
+    def test_completed_execution_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m3-existing-portable-adoption-plan-only", data["current_checkpoint"])
-        self.assertEqual("H1", data["next_authority_gate"])
+        self.assertEqual("multi-version-install-lifecycle", data["current_checkpoint"])
+        self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
+        self.assertEqual("FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01", data["active_work_unit"])
+        self.assertEqual("FACMAN-WORLD-SPEC-AND-READINESS-01", data["product"]["next_work_unit"])
+        self.assertEqual("WorldSpec", data["world_product_program"]["portable_record"])
+        self.assertEqual("WorldBinding", data["world_product_program"]["machine_local_record"])
+        self.assertFalse(data["world_product_program"]["runtime_authority"])
+        self.assertEqual("task_branch_committed_reviewed_unintegrated", data["product"]["truth_scope"])
+        self.assertFalse(data["product"]["canonical_integration"])
+        self.assertFalse(data["product"]["local_counts_promoted"])
+        self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
+        self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
+        self.assertFalse(data["host_environment_program"]["blocks_real_play"])
+        self.assertEqual(
+            {"instance_isolated", "hermetic"},
+            {mode["id"] for mode in data["execution_modes"]},
+        )
         self.assertEqual(
             "complete_machine_pass_canonically_promoted",
             data["m2_live_portable_setup"]["status"],
@@ -73,9 +90,11 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "M2-CLOSEOUT-CANONICAL-PROMOTION-01",
+            "FACMAN-EXECUTION-FOUNDATION-01",
             data["last_closed_work_unit"],
         )
+        self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
+        self.assertFalse(data["execution_foundation"]["real_play_authority"])
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
         self.assertFalse(data["m2_wu1_target_policy"]["mutation_authority"])
         self.assertEqual("d96384bf8f48230256d35fa7015cbc7374e83319", data["m2_wu1_target_policy"]["facman_dev_integration_revision"])
@@ -388,7 +407,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(closeout["run_execute"])
         m3 = data["m3_existing_portable_adoption"]
         self.assertEqual(
-            "active_read_only_and_plan_only",
+            "authorized_backlog_after_playable_alpha",
             m3["status"],
         )
         self.assertEqual("read_only_and_plan_only", m3["scope"])
@@ -397,9 +416,13 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["adoption_apply"])
         self.assertFalse(m3["existing_installation_mutation"])
         self.assertFalse(m3["steam_adoption"])
-        self.assertEqual("m3-existing-portable-adoption-plan-only", data["current_checkpoint"])
-        self.assertIsNone(data["active_work_unit"])
-        self.assertEqual("M2-CLOSEOUT-CANONICAL-PROMOTION-01", data["last_closed_work_unit"])
+        self.assertEqual("FACMAN-WORLD-CENTRIC-ALPHA-01", m3["resume_after"])
+        self.assertEqual("multi-version-install-lifecycle", data["current_checkpoint"])
+        self.assertEqual(
+            "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
+            data["active_work_unit"],
+        )
+        self.assertEqual("FACMAN-EXECUTION-FOUNDATION-01", data["last_closed_work_unit"])
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",

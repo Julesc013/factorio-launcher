@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_verification_snapshot.v1.schema.json",
+  "title": "Factorio Verification Snapshot",
+  "type": "object",
+  "required": ["schema", "status", "structural_verification", "findings"],
+  "properties": {
+    "schema": { "const": "factorio.verification_snapshot.v1" },
+    "status": { "type": "string" },
+    "structural_verification": { "type": "string" },
+    "findings": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

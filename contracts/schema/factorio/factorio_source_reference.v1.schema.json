@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_source_reference.v1.schema.json",
+  "title": "Factorio Source Reference",
+  "type": "object",
+  "required": ["schema", "kind", "provider", "source_ref", "reconstruction"],
+  "properties": {
+    "schema": { "const": "factorio.source_reference.v1" },
+    "kind": { "type": "string" },
+    "provider": { "type": "string" },
+    "source_ref": { "type": "string" },
+    "reconstruction": { "type": "string" }
+  },
+  "additionalProperties": false
+}

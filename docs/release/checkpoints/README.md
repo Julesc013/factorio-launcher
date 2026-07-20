@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The accepted non-execution product wave is `m2`. The exact H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the operator verdict remains `Fail`.
+The active product phase is `multi_version_install_lifecycle` and the active WorkUnit is `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

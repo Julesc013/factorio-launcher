@@ -52,6 +52,60 @@
         "required": false
       }
     ],
+    "installs.describe": [
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      }
+    ],
+    "installs.reconcile.plan": [
+      {
+        "kind": "identifier",
+        "name": "install_id",
+        "required": true
+      },
+      {
+        "kind": "string",
+        "name": "version",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "source_ref",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "target_root",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "management_mode",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "deployment_style",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "data_policy",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "integration_mode",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "update_policy",
+        "required": false
+      }
+    ],
     "installs.install.apply": [
       {
         "kind": "identifier",
@@ -249,6 +303,11 @@
       {
         "kind": "identifier",
         "name": "template_id",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "source_data_root",
         "required": false
       }
     ],

@@ -17,6 +17,9 @@
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
     },
+    "source_data_root": {
+      "type": "string"
+    },
     "template_id": {
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"

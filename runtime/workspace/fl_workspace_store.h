@@ -44,11 +44,13 @@ private:
 
 struct InstallRecord {
     InstallId id;
+    std::string provider_id;
     std::filesystem::path root;
     std::filesystem::path executable;
     std::string version;
     std::string ownership;
     std::string source;
+    std::string source_ref;
     std::string platform;
     std::string distribution_origin;
     std::string platform_integration;

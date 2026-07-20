@@ -41,6 +41,35 @@ void make_fixture(const fs::path& root, const char* id)
     std::ofstream(root / "bin" / "x64" / "factorio.stub", std::ios::binary) << "fixture";
 }
 
+void make_structural_install(
+    const fs::path& root,
+    const char* version,
+    bool system_data,
+    bool uninstaller,
+    bool local_player_data)
+{
+    fs::create_directories(root / "data" / "base");
+    fs::create_directories(root / "bin" / "x64");
+    std::ofstream(root / "data" / "base" / "info.json", std::ios::binary)
+        << "{\"version\":\"" << version << "\"}";
+#ifdef _WIN32
+    std::ofstream(root / "bin" / "x64" / "factorio.exe", std::ios::binary) << "test";
+#else
+    std::ofstream(root / "bin" / "x64" / "factorio", std::ios::binary) << "test";
+#endif
+    std::ofstream(root / "config-path.cfg", std::ios::binary)
+        << "config-path=__PATH__executable__/../../config\n"
+        << "use-system-read-write-data-directories=" << (system_data ? "true" : "false") << "\n";
+    if (uninstaller) {
+        std::ofstream(root / "unins000.exe", std::ios::binary) << "test";
+        std::ofstream(root / "unins000.dat", std::ios::binary) << "test";
+    }
+    if (local_player_data) {
+        fs::create_directories(root / "mods");
+        std::ofstream(root / "player-data.json", std::ios::binary) << "{}";
+    }
+}
+
 #if defined(__APPLE__)
 void make_app_fixture(const fs::path& root, const char* id)
 {
@@ -82,6 +111,28 @@ int main()
         if (install.provider_id != "explicit.environment" || install.evidence.empty()) return 3;
     }
 
+    const fs::path version_library = fs::temp_directory_path() / "facman-version-library-smoke";
+    fs::remove_all(version_library, cleanup_error);
+    make_structural_install(version_library / "2.0", "2.0.77", false, false, true);
+    make_structural_install(version_library / "2.1", "2.1.10", true, true, false);
+    const auto versioned = facman::factorio::discovery::scan_install_candidates({version_library});
+    fs::remove_all(version_library, cleanup_error);
+    if (versioned.size() != 2) {
+        std::cerr << "expected two numeric version roots, got " << versioned.size() << '\n';
+        return 4;
+    }
+    if (versioned[0].root.filename() != "2.0" || versioned[1].root.filename() != "2.1") return 5;
+    if (versioned[0].installation_layout != "portable_archive" ||
+        versioned[0].data_routing != "install_local" ||
+        versioned[0].program_data_separation != "conflated" ||
+        versioned[0].distribution_origin != "local_archive") return 6;
+    if (versioned[1].installation_layout != "official_installer" ||
+        versioned[1].data_routing != "system_shared" ||
+        versioned[1].program_data_separation != "separated" ||
+        versioned[1].distribution_origin != "website_installer" ||
+        versioned[1].side_by_side_safety !=
+            "program_files_separate_but_registration_may_be_superseded") return 7;
+
 #if defined(__linux__)
     const fs::path native_base = fs::temp_directory_path() / "facman-linux-provider-smoke";
     fs::remove_all(native_base, cleanup_error);
@@ -100,9 +151,9 @@ int main()
     set_environment("HOME", facman::platform::path_to_utf8(home));
     const auto native_installs = facman::factorio::discovery::scan_install_candidates({});
     fs::remove_all(native_base, cleanup_error);
-    if (native_installs.size() != 2) return 4;
+    if (native_installs.size() != 2) return 8;
     if (native_installs[0].provider_id.rfind("linux.", 0) != 0 ||
-        native_installs[1].provider_id.rfind("linux.", 0) != 0) return 5;
+        native_installs[1].provider_id.rfind("linux.", 0) != 0) return 9;
 #elif defined(__APPLE__)
     const fs::path native_base = fs::temp_directory_path() / "facman-macos-provider-smoke";
     fs::remove_all(native_base, cleanup_error);
@@ -121,9 +172,9 @@ int main()
     set_environment("HOME", facman::platform::path_to_utf8(home));
     const auto native_installs = facman::factorio::discovery::scan_install_candidates({});
     fs::remove_all(native_base, cleanup_error);
-    if (native_installs.size() != 2) return 6;
+    if (native_installs.size() != 2) return 10;
     if (native_installs[0].provider_id.rfind("macos.", 0) != 0 ||
-        native_installs[1].provider_id.rfind("macos.", 0) != 0) return 7;
+        native_installs[1].provider_id.rfind("macos.", 0) != 0) return 11;
 #endif
     return 0;
 }

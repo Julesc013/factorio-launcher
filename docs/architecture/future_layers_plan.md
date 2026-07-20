@@ -15,15 +15,32 @@ wave. Its autonomous lane is complete.
 
 ## Ordered future authority gates
 
-1. Obtain the operator-supplied real Factorio isolation verdict before any
-   `run.execute` promotion. Automated checks cannot provide that verdict.
-2. Advance workspace v2 only through dry-run migration, backup, journal,
+1. Review, commit, and cleanly reproduce product convergence, the
+   capability-scoped execution foundation, and installation-model-v2 without
+   promoting real execution or setup authority.
+2. Add portable `WorldSpec`, machine-local `WorldBinding`, computed readiness,
+   and the read-only world list/inspect/readiness surface. `World` is the UX
+   aggregate, not a monolithic persisted object or mutation kernel.
+3. Add short-lived `OperationPermit`s bound to one reviewed plan, exact
+   resources, evidence, policy, machine, and providers. Global admission and
+   each authority-bearing provider revalidate independently.
+4. Prefer hermetic standalone Play as the first revision-pinned real-product
+   gate. Steam-aware Play remains separate; at least one human-reviewed route
+   must pass before the world-centric playable alpha.
+5. In parallel after gate 1, add workflow-specific read-only host
+   list/inspect/doctor, bounded support export, and the first no-admin Windows
+   Sandbox profile. Host support must not block an unrelated native Play route.
+   Restart operations, a one-shot privilege broker, and shared-resource
+   coordination precede any privileged host recipe.
+6. Advance workspace formats only through dry-run migration, backup, journal,
    rollback, and compatibility proof.
-3. Add network, credentials, Mod Portal access, or setup mutation only in
+7. Add network, credentials, Mod Portal access, or setup mutation only in
    separate reviewed tasks with explicit ownership and threat-model changes.
-4. Promote daemon or GUI packages only after their actual transports,
+8. Promote daemon or GUI packages only after their actual transports,
    runtime behavior, accessibility, and operator usability are proven.
-5. Add signing/notarization/publication only after integrity, provenance, and
+9. Require signed packages, migration, and update rollback for public beta,
+   but do not make signed self-update block the first controlled playable alpha.
+10. Add signing/notarization/publication only after integrity, provenance, and
    publisher-authenticity gates are explicitly separated and approved.
 
 ## Permanent order
@@ -39,3 +56,10 @@ intelligence last
 No future layer may bypass the command graph, make a frontend a backend,
 duplicate an established authority, or convert a fixture or green CI run into
 a stronger product claim.
+
+The implemented execution-foundation boundary is documented in
+[`execution_foundation.md`](execution_foundation.md).
+The planned world aggregate and operation authority are documented in
+[`world_product_model.md`](world_product_model.md).
+The prerequisite-gated but Play-independent host support lane is documented in
+[`host_environment_lifecycle.md`](host_environment_lifecycle.md).

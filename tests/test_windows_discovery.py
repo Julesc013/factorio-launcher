@@ -47,6 +47,59 @@ def scan_with_providers(workspace: Path, **environment: str) -> dict:
 
 @unittest.skipUnless(os.name == "nt", "real Windows discovery providers")
 class WindowsDiscoveryProviderTests(unittest.TestCase):
+    def test_numeric_version_library_is_classified_without_parent_false_positive(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman versions ") as tmp:
+            root = Path(tmp)
+            library = root / "Factorio versions"
+            portable = library / "2.0"
+            installed = library / "2.1"
+            for target, version in ((portable, "2.0.77"), (installed, "2.1.10")):
+                (target / "bin" / "x64").mkdir(parents=True)
+                (target / "data" / "base").mkdir(parents=True)
+                (target / "bin" / "x64" / "factorio.exe").write_bytes(b"test")
+                (target / "data" / "base" / "info.json").write_text(
+                    json.dumps({"version": version}), encoding="utf-8"
+                )
+            (portable / "config-path.cfg").write_text(
+                "config-path=__PATH__executable__/../../config\n"
+                "use-system-read-write-data-directories=false\n",
+                encoding="utf-8",
+            )
+            (portable / "mods").mkdir()
+            (portable / "player-data.json").write_text("{}", encoding="utf-8")
+            (installed / "config-path.cfg").write_text(
+                "config-path=__PATH__executable__/../../config\n"
+                "use-system-read-write-data-directories=true\n",
+                encoding="utf-8",
+            )
+            (installed / "unins000.exe").write_bytes(b"test")
+            (installed / "unins000.dat").write_bytes(b"test")
+            before = tree_snapshot(library)
+            workspace = root / "workspace"
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "scan",
+                "--search-root", str(library), "--json",
+            ])
+
+            self.assertEqual(code, 0, stderr or stdout)
+            report = json.loads(stdout)
+            self.assertEqual(before, tree_snapshot(library))
+            self.assertFalse(workspace.exists())
+            self.assertEqual(report["candidate_count"], 2)
+            self.assertEqual(report["invalid_count"], 0)
+            self.assertEqual([item["root"] for item in report["installs"]], [str(portable), str(installed)])
+            by_version = {item["version"]: item for item in report["installs"]}
+            self.assertEqual(by_version["2.0.77"]["installation_layout"], "portable_archive")
+            self.assertEqual(by_version["2.0.77"]["data_routing"], "install_local")
+            self.assertEqual(by_version["2.0.77"]["program_data_separation"], "conflated")
+            self.assertEqual(by_version["2.1.10"]["installation_layout"], "official_installer")
+            self.assertEqual(by_version["2.1.10"]["data_routing"], "system_shared")
+            self.assertEqual(
+                by_version["2.1.10"]["side_by_side_safety"],
+                "program_files_separate_but_registration_may_be_superseded",
+            )
+
     def test_steam_vdf_discovery_is_stable_deduplicated_and_read_only(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman Steam Ω ") as tmp:
             root = Path(tmp)

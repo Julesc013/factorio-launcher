@@ -55,7 +55,7 @@ const GeneratedCommand* find_command(const std::string& command)
 
 bool command_writes(const GeneratedCommand& command)
 {
-    return std::string(command.risk_tier) == "persistent_local_write";
+    return command.writes_state != 0;
 }
 
 }  // namespace facman::tui

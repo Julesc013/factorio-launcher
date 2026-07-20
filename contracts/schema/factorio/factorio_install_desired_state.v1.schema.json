@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_desired_state.v1.schema.json",
+  "title": "Factorio Installation Desired State",
+  "type": "object",
+  "required": ["schema", "install_id", "version", "source_ref", "target_root", "management_mode", "deployment_style", "data_policy", "update_policy", "integration"],
+  "properties": {
+    "schema": { "const": "factorio.install_desired_state.v1" },
+    "install_id": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "source_ref": { "type": "string" },
+    "target_root": { "type": "string" },
+    "management_mode": { "enum": ["preserve", "managed", "reference", "external"] },
+    "deployment_style": { "enum": ["preserve", "standalone_directory", "vendor_installed", "portable_in_place", "external_manager"] },
+    "data_policy": { "enum": ["preserve", "instance_local", "system_shared", "install_local"] },
+    "update_policy": { "enum": ["preserve", "pinned", "manual", "follow_channel"] },
+    "integration": {
+      "type": "object",
+      "required": ["mode", "effective"],
+      "properties": {
+        "mode": { "enum": ["preserve", "none", "facman_owned", "external"] },
+        "effective": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -5,6 +5,7 @@
 #include "m1_system_proof_launcher.h"
 
 #include "application_context.h"
+#include "command_admission.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_setup_recipe.h"
 #include "handlers/instances.h"
@@ -115,8 +116,10 @@ void prove_facman_consumption(
         throw std::runtime_error("FacMan launch preview crossed the H1 authority boundary");
     }
     auto instance_id = facman::core::InstanceId::parse(create.instance_id);
+    const auto admission = application::admit_command(
+        context.configuration(), application::CommandId::run_execute);
     const auto execution = application::handlers::refuse_execute(
-        context, {instance_id.take_value()});
+        context, {instance_id.take_value()}, admission);
     if (execution.status == ULK_STATUS_OK || execution.error_code != "isolation_not_proven") {
         throw std::runtime_error("run.execute was not kept fail-closed");
     }

@@ -4,8 +4,8 @@
 #include "facman_transport_process.h"
 
 #include "facman_client_internal.h"
-#include "facman_process.h"
 #include "fl_file_io.h"
+#include "fl_process_supervisor.h"
 
 #include <atomic>
 
@@ -52,27 +52,30 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
         envelope.add_string("workspace", facman::platform::path_to_utf8(workspace_.lexically_normal()));
     }
     detail::progress(request, "starting_cli_process", 0, 3);
-    detail::ProcessRequest process;
+    facman::platform::ProcessRequest process;
     process.executable = executable_;
+    process.arguments = {"rpc", "--stdio"};
     process.standard_input = envelope.serialize();
     process.timeout = request.timeout;
     process.cancellation_requested = [&request]() { return detail::cancelled(request); };
-    auto result = detail::run_cli_process(process);
-    if (result.cancelled) {
+    auto result = facman::platform::supervise_process(process);
+    if (result.termination == facman::platform::ProcessTermination::cancelled) {
         return detail::failure(
             "client_operation_cancelled",
             "CLI process command was cancelled",
             {},
             facman::core::OutcomeKind::cancelled);
     }
-    if (result.timed_out) {
+    if (result.termination == facman::platform::ProcessTermination::timed_out) {
         return detail::failure(
             "cli_process_timeout",
             "CLI process exceeded its timeout",
             {},
             facman::core::OutcomeKind::timeout);
     }
-    if (result.output_too_large) return detail::failure("cli_process_output_too_large", "CLI process exceeded its output budget");
+    if (result.termination == facman::platform::ProcessTermination::output_limit) {
+        return detail::failure("cli_process_output_too_large", "CLI process exceeded its output budget");
+    }
     if (!result.error.empty()) {
         return detail::failure(
             "cli_process_start_failed",

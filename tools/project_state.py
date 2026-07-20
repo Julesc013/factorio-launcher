@@ -12,6 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 SUPPORT_PATH = ROOT / "release" / "index" / "support_matrix.v1.toml"
+CAPABILITY_PATH = ROOT / "contracts" / "policy" / "capabilities.v1.toml"
 JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v2.json"
 LEGACY_JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v1.json"
 MARKDOWN_PATH = ROOT / ".aide" / "memory" / "project-state.md"
@@ -85,6 +86,11 @@ def claim_levels() -> list[dict[str, str]]:
     return rows
 
 
+def capability_state() -> list[dict[str, Any]]:
+    policy = load_toml(CAPABILITY_PATH)
+    return sorted(policy.get("capability", []), key=lambda item: str(item.get("id", "")))
+
+
 def collect() -> dict[str, Any]:
     status = load_toml(STATUS_PATH)
     pins = provider_pins()
@@ -100,6 +106,13 @@ def collect() -> dict[str, Any]:
         "current_checkpoint": status["current_checkpoint"],
         "active_work_unit": status["active_work_unit"] or None,
         "last_closed_work_unit": status.get("last_closed_work_unit", "") or None,
+        "product": status["product"],
+        "readiness": status["readiness"],
+        "execution_foundation": status["execution_foundation"],
+        "world_product_program": status["world_product_program"],
+        "operation_permit_program": status["operation_permit_program"],
+        "host_environment_program": status["host_environment_program"],
+        "execution_modes": status["execution_mode"],
         "r3_8_repair": status["r3_8_repair"],
         "r3_8_public_integration": status["r3_8_public_integration"],
         "m1_managed_portable_install": status["m1_managed_portable_install"],
@@ -135,6 +148,7 @@ def collect() -> dict[str, Any]:
         },
         "provider_pins": pins,
         "command_law": command_law(),
+        "capabilities": capability_state(),
         "machine_protocol": {
             "transport": "bounded newline-delimited JSON over stdio",
             "status": "implemented",
@@ -149,11 +163,12 @@ def collect() -> dict[str, Any]:
             "Focused affected tests do not replace the full promotion matrix.",
             "Human acceptance is never inferred from automated checks.",
             "Compile, runtime, package, publication, and support status are separate claims.",
+            "Historical milestone evidence does not select the current product objective.",
         ],
     }
 
 
-def markdown(data: dict[str, Any]) -> str:
+def historical_markdown(data: dict[str, Any]) -> str:
     law = data["command_law"]
     validation = data["validation"]
     revisions = data["current_revisions"]
@@ -166,20 +181,40 @@ def markdown(data: dict[str, Any]) -> str:
         "",
         "## Current",
         "",
+        f"- product phase: `{data['product']['phase']}` / `{data['product']['phase_status']}`;",
+        f"- product charter: {data['product']['charter']}",
+        f"- primary persona: {data['product']['primary_persona']}",
+        f"- golden journey: `{data['product']['golden_journey']}`;",
         f"- product version: `{data['product_version']}`;",
-        f"- completed wave: `{data['completed_wave']['id']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
+        f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
         f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
-        f"- H1 candidate: `{revisions['factorio_launcher']}`;",
+        f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
+        f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
+        f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        "",
+        "## Readiness dimensions",
+        "",
+        *[f"- {name.replace('_', ' ')}: `{value}`;" for name, value in data["readiness"].items()],
+        "",
+        "## Execution guarantees",
+        "",
+        *[
+            f"- `{mode['id']}`: product mode `{mode['product_mode']}`, claim `{mode['claim_status']}`; "
+            f"next gate `{mode['next_gate']}`. {mode['boundary']}"
+            for mode in data["execution_modes"]
+        ],
+        "",
+        "## Historical proof context",
+        "",
+        f"- completed technical wave: `{data['completed_wave']['id']}`;",
+        f"- historical H1 candidate: `{revisions['factorio_launcher']}`;",
         f"- accepted integration evidence: `{revisions['accepted_integration']}`;",
         f"- Universal Launcher pin: `{revisions['universal_launcher']}`;",
         f"- Universal Setup pin: `{revisions['universal_setup']}`;",
-        f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
-        f"- operator verdict: `{data['execution']['operator_verdict']}`;",
-        f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
-        f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        f"- historical Steam-backed H1 operator verdict: `{data['execution']['operator_verdict']}`;",
         f"- public SDK: `{data['release']['public_sdk']}`; stable compatibility is not promised.",
         f"- M1 managed portable install: `{data['m1_managed_portable_install']['status']}`; "
         f"ordinary setup apply: `{data['m1_managed_portable_install']['ordinary_setup_apply']}`.",
@@ -250,8 +285,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
-        "R3.7, M1, and the bounded M2 technical wave are complete. The exact R3.7 runtime is "
-        "frozen as the H1 candidate. M2-WU10 records a bounded MachinePass for "
+        "R3.7, M1, and the bounded M2 technical wave are historical proof, not the active roadmap. "
+        "M2-WU10 records a bounded MachinePass for "
         "newly created policy-approved managed targets. No execution, Safe beta, stable SDK, "
         "daemon, real-Factorio archive, existing-installation, networking, credential, signing, "
         "or publication authority is inferred from that synthetic proof.",
@@ -298,58 +333,197 @@ def markdown(data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def markdown(data: dict[str, Any]) -> str:
+    law = data["command_law"]
+    validation = data["validation"]
+    revisions = data["current_revisions"]
+    lines = [
+        "# FacMan Project State",
+        "",
+        "Generated from `release/index/project_status.v2.toml`, the workspace lock,",
+        "the command/refusal registries, capability policy, and support matrix.",
+        "Edit canonical inputs, then run `py -3 tools/project_state.py --write`.",
+        "",
+        "## Current product truth",
+        "",
+        f"- phase: `{data['product']['phase']}` / `{data['product']['phase_status']}`;",
+        f"- charter: {data['product']['charter']}",
+        f"- persona: {data['product']['primary_persona']}",
+        f"- golden journey: `{data['product']['golden_journey']}`;",
+        f"- checkpoint: `{data['current_checkpoint']}`;",
+        f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
+        f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
+        f"- next authority gate: `{data['next_authority_gate']}`;",
+        f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
+        f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
+        f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        "",
+        "## Readiness dimensions",
+        "",
+        *[f"- {name.replace('_', ' ')}: `{value}`;" for name, value in data["readiness"].items()],
+        "",
+        "## Execution guarantees",
+        "",
+        *[
+            f"- `{mode['id']}`: product mode `{mode['product_mode']}`, claim "
+            f"`{mode['claim_status']}`, next gate `{mode['next_gate']}`. {mode['boundary']}"
+            for mode in data["execution_modes"]
+        ],
+        "",
+        "## World product programme",
+        "",
+        f"- status: `{data['world_product_program']['status']}`;",
+        f"- next WorkUnit: `{data['world_product_program']['next_work_unit']}`;",
+        f"- portable record: `{data['world_product_program']['portable_record']}`;",
+        f"- machine-local record: `{data['world_product_program']['machine_local_record']}`;",
+        f"- readiness: `{data['world_product_program']['readiness_model']}`;",
+        f"- preparation: `{data['world_product_program']['preparation_model']}`;",
+        f"- runtime authority: `{str(data['world_product_program']['runtime_authority']).lower()}`;",
+        "",
+        "## Operation-permit programme",
+        "",
+        f"- status: `{data['operation_permit_program']['status']}`;",
+        f"- WorkUnit: `{data['operation_permit_program']['work_unit']}`;",
+        f"- authority model: `{data['operation_permit_program']['authority_model']}`;",
+        f"- provider revalidation required: "
+        f"`{str(data['operation_permit_program']['provider_revalidation_required']).lower()}`;",
+        f"- permit issuance authority: "
+        f"`{str(data['operation_permit_program']['permit_issuance_authority']).lower()}`;",
+        "",
+        "## Host-environment programme",
+        "",
+        f"- status: `{data['host_environment_program']['status']}`;",
+        f"- next WorkUnit: `{data['host_environment_program']['next_work_unit']}`;",
+        f"- first runtime scope: `{data['host_environment_program']['first_runtime_scope']}`;",
+        f"- first apply WorkUnit: `{data['host_environment_program']['first_apply_work_unit']}`;",
+        f"- blocks real Play: `{str(data['host_environment_program']['blocks_real_play']).lower()}`;",
+        f"- host mutation authority: `{str(data['host_environment_program']['host_mutation_authority']).lower()}`;",
+        f"- privileged broker authority: `{str(data['host_environment_program']['privileged_broker_authority']).lower()}`;",
+        "- prerequisite: the current convergence, execution-foundation, and installation-model-v2 tree "
+        "must be reviewed, committed, and reproduced cleanly.",
+        "",
+        "## Capability snapshot",
+        "",
+    ]
+    for status in ("available", "conditional", "backlog", "unavailable"):
+        ids = [item["id"] for item in data["capabilities"] if item["status"] == status]
+        lines.append(f"- {status}: `{', '.join(ids) if ids else 'none'}`;")
+    lines.extend([
+        "",
+        "## Historical proof boundary",
+        "",
+        f"- completed technical wave: `{data['completed_wave']['id']}`;",
+        f"- last closed historical WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
+        f"- accepted FacMan integration: `{revisions['accepted_integration']}`;",
+        f"- historical Steam-backed H1 candidate/result: `{revisions['factorio_launcher']}` / "
+        f"`{data['execution']['operator_verdict']}`;",
+        f"- Universal Launcher / Setup pins: `{revisions['universal_launcher']}` / "
+        f"`{revisions['universal_setup']}`;",
+        f"- M2 synthetic managed-target result: `{data['m2_live_portable_setup']['technical_acceptance']}`;",
+        f"- M3 disposition: `{data['product']['m3_disposition']}`; adoption apply remains "
+        f"`{str(data['m3_existing_portable_adoption']['adoption_apply']).lower()}`.",
+        "",
+        "Historical M1/M2 details remain in `release/index/project_status.v2.toml`,",
+        "`.aide/history/`, and `docs/release/checkpoints/`. They do not select current",
+        "work or promote execution, network, credential, signing, or publication authority.",
+        "",
+        "## Contract and validation identity",
+        "",
+        f"- commands / registered routes: `{law['contracts']}` / `{law['registered_routes']}`;",
+        f"- schemas / refusal codes: `{law['schemas']}` / `{law['refusal_codes']}`;",
+        f"- command catalog digest: `{law['catalog_digest']}`;",
+        f"- accepted historical CI revision: `{validation['accepted_revision']}`;",
+        f"- accepted historical matrix: `{validation['native_test_count']}` native and "
+        f"`{validation['python_test_count']}` Python tests.",
+        "",
+        "## Quarantined capabilities",
+        "",
+        *[f"- {value}" for value in data["quarantined_capabilities"]],
+        "",
+        "## Known blockers",
+        "",
+        *[f"- {value}" for value in data["known_blockers"]],
+        "",
+        "## Authorities",
+        "",
+        "- current status: `release/index/project_status.v2.toml`;",
+        "- capability vocabulary: `contracts/policy/capabilities.v1.toml`;",
+        "- provider revisions: `release/index/workspace_lock.v1.toml`;",
+        "- platform proof: `release/index/support_matrix.v1.toml`;",
+        "- claim limitations: `docs/quality/safety_claim_ledger.md`;",
+        "- accepted evidence: `.aide/history/` and `docs/release/checkpoints/`.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def readme_status(data: dict[str, Any]) -> str:
     law = data["command_law"]
+    active = data["active_work_unit"] or "none (operator gate required)"
     return "\n".join([
         "## Current Status",
         "",
-        f"R3.7 is complete and `{data['current_revisions']['factorio_launcher']}` is the exact H1 candidate.",
-        f"The current contract surface contains {law['contracts']} commands, {law['schemas']} schemas, "
-        f"and {law['refusal_codes']} refusal codes.",
+        f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
+        f"**Next:** `{data['product']['next_work_unit']}`.",
         "",
-        f"The next authority gate is **{data['next_authority_gate']}**. `run.execute` remains "
-        f"`{data['execution']['status']}` with `{data['execution']['reason']}`.",
-        f"The operator verdict is `{data['execution']['operator_verdict']}` and Safe beta remains unpromoted.",
-        f"M1 managed portable setup is `{data['m1_managed_portable_install']['status']}` in bounded fixture, "
-        "disposable, and package-proof roots; ordinary live-target apply remains unavailable.",
+        f"> {data['product']['charter']}",
+        "",
+        f"The golden journey is `{data['product']['golden_journey']}`. M3 existing-portable adoption is "
+        "authorised backlog after the playable alpha, not the current critical path.",
+        f"This committed but unintegrated task branch enumerates {law['contracts']} commands, {law['schemas']} schemas, "
+        f"and {law['refusal_codes']} refusal codes; those counts are not integrated release claims.",
+        "",
+        "Two execution modes are accepted product designs but remain unproven: Steam-aware "
+        "`instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because "
+        f"`{data['execution']['reason']}`; no real-play gate has passed.",
+        f"Readiness is playability `{data['readiness']['playability']}`, workflow "
+        f"`{data['readiness']['user_workflow']}`, user validation `{data['readiness']['user_validation']}`, "
+        f"and release authenticity `{data['readiness']['release_authenticity']}`.",
+        "Historical M2 setup proof remains preserved and does not promote execution, existing-install "
+        "adoption, network, credential, signing, or publication authority.",
+        "After installation-model-v2 closeout, the primary path is portable WorldSpec, local WorldBinding, "
+        "computed readiness, operation-bound permits, and the hermetic standalone Play gate.",
+        "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
+        "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
         "neither carries a stable compatibility promise.",
+        "Contributor status command: `py -3 tools/project_state.py --summary`.",
     ])
 
 
 def roadmap_status(data: dict[str, Any]) -> str:
-    verdict = data["execution"]["operator_verdict"]
-    if verdict == "Fail":
-        repair = data["r3_8_repair"]
-        gate_detail = [
-            "The human-reviewed H1 verdict for the Steam-backed route is **Fail**.",
-            "The narrow isolation repair is "
-            f"`{repair['status']}` at dev integration `{repair['dev_integration_revision']}`; "
-            "Steam Cloud remains a protected external domain.",
-            "A standalone/manual distribution must receive its own revision-pinned reviewed H1 Pass before "
-            "an R3.8 execution-candidate WorkUnit can open.",
-        ]
-    else:
-        gate_detail = [
-            "Until a reviewed operator verdict exists, execution, Safe beta, setup mutation, networking, "
-            "credentials, server processes, daemon publication, signing, and publication remain unavailable.",
-        ]
+    active = data["active_work_unit"]
+    opening = (
+        f"The active phase is **{data['product']['phase']}** and the active WorkUnit is `{active}`."
+        if active else
+        f"The current phase is **{data['product']['phase']}** and no authority-gate WorkUnit is active."
+    )
+    first_step = (
+        f"1. Complete `{active}`."
+        if active else
+        "1. Freeze one independent real-Play gate policy and obtain explicit operator acknowledgement."
+    )
     return "\n".join([
-        "## Current Status and Authority Gate",
+        "## Current Product Sequence",
         "",
-        f"R3.7 is complete. The frozen H1 candidate is "
-        f"`{data['current_revisions']['factorio_launcher']}` and the next authority gate is "
-        f"**{data['next_authority_gate']}**.",
+        opening,
         "",
-        "- H1 Pass may create a separate R3.8 execution-candidate branch.",
-        "- H1 Fail routes to a narrow isolation-repair WorkUnit.",
-        "- H1 Inconclusive routes to improved observation and a repeat.",
+        first_step,
+        "2. Close the additive installation-model-v2 and deterministic reconciliation-plan proof.",
+        "3. Review, commit, and reproduce product convergence, execution foundation, and installation-model-v2 from a clean three-repository checkout.",
+        "4. Run `FACMAN-WORLD-SPEC-AND-READINESS-01`; separate portable desired state, local bindings, computed readiness, and task-oriented views.",
+        "5. Run `FACMAN-OPERATION-PERMIT-01`; bind unsafe authority to one reviewed plan and require provider-side revalidation.",
+        "6. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.",
+        "7. Require one passing, human-reviewed Play route before `FACMAN-WORLD-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
+        "8. In parallel after closeout, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
+        "9. Deepen portable world reconstruction, managed install reconciliation, content preparation, and host repair from observed player needs.",
+        "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
         "",
-        *gate_detail,
-        "M1 fixture-backed managed setup is complete. Ordinary live-target setup apply remains unavailable.",
-        "Execution, Safe beta, networking, credentials, server processes, daemon publication, "
-        "signing, and publication remain unavailable.",
-        "Truth/conformance and public-boundary hardening may continue without changing the frozen H1 runtime.",
+        "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new "
+        "Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.",
+        "The multi-version lifecycle is active pre-alpha work because it enables the selected local "
+        "standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,",
+        "server processes, daemon publication, signing, and publication remain unavailable.",
     ])
 
 
@@ -373,12 +547,12 @@ def support_status(data: dict[str, Any]) -> str:
 
 
 def release_status(data: dict[str, Any]) -> str:
+    active = data["active_work_unit"] or "none (operator gate required)"
     return "\n".join([
         "## Current Boundary",
         "",
-        f"The accepted non-execution product wave is `{data['completed_wave']['id']}`. "
-        f"The exact H1 candidate is `{data['current_revisions']['factorio_launcher']}` and "
-        f"the operator verdict remains `{data['execution']['operator_verdict']}`.",
+        f"The active product phase is `{data['product']['phase']}` and the active WorkUnit is "
+        f"`{active}`. Historical M2/H1 evidence remains preserved separately.",
         "",
         f"Execution is `{data['execution']['status']}`; Safe beta is "
         f"`{str(data['safe_beta']).lower()}`; release status is `{data['release']['status']}`; "
@@ -422,22 +596,149 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical status has the wrong schema")
     if status.get("completed_wave") != "m2":
         problems.append("canonical status must record completed M2 technical wave")
-    if status.get("next_authority_gate") != "H1":
-        problems.append("canonical status must route the next authority gate to H1")
+    phase_contracts = {
+        "product_convergence": {
+            "checkpoint": "product-convergence",
+            "active": "FACMAN-PRODUCT-CONVERGENCE-01",
+            "last_closed": "M2-CLOSEOUT-CANONICAL-PROMOTION-01",
+            "next": "FACMAN-EXECUTION-FOUNDATION-01",
+            "safety": "non_execution_foundation_proven",
+            "execution_reason": "execution_foundation_not_implemented",
+        },
+        "execution_foundation": {
+            "checkpoint": "execution-foundation",
+            "active": "FACMAN-EXECUTION-FOUNDATION-01",
+            "last_closed": "FACMAN-PRODUCT-CONVERGENCE-01",
+            "next": "FACMAN-STEAM-AWARE-PLAY-01 + FACMAN-HERMETIC-STANDALONE-PLAY-01",
+            "safety": "execution_foundation_in_progress",
+            "execution_reason": "execution_foundation_in_progress",
+        },
+        "real_play_gates": {
+            "checkpoint": "real-play-gates",
+            "active": "",
+            "last_closed": "FACMAN-EXECUTION-FOUNDATION-01",
+            "next": "FACMAN-STEAM-AWARE-PLAY-01 + FACMAN-HERMETIC-STANDALONE-PLAY-01",
+            "phase_status": "awaiting_operator_gate",
+            "safety": "execution_foundation_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
+        "multi_version_install_lifecycle": {
+            "checkpoint": "multi-version-install-lifecycle",
+            "active": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
+            "last_closed": "FACMAN-EXECUTION-FOUNDATION-01",
+            "next": "FACMAN-WORLD-SPEC-AND-READINESS-01",
+            "safety": "execution_foundation_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
+    }
+    product = status.get("product", {})
+    phase = product.get("phase")
+    phase_contract = phase_contracts.get(phase)
+    if phase_contract is None:
+        problems.append(f"canonical product phase is unsupported: {phase!r}")
+        phase_contract = phase_contracts["product_convergence"]
+    if status.get("current_checkpoint") != phase_contract["checkpoint"]:
+        problems.append(f"canonical status checkpoint must be {phase_contract['checkpoint']!r}")
+    if status.get("next_authority_gate") != "real-play-isolation":
+        problems.append("canonical status must route the next authority gate to real-play isolation")
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
-    repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_wu10_id = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
-    m2_closeout_id = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
-    if status.get("active_work_unit") == repair_id:
-        problems.append("closed R3.8 repair must not remain the active WorkUnit")
-    if status.get("active_work_unit") == m2_closeout_id:
-        if status.get("last_closed_work_unit") != latest_wu10_id:
-            problems.append("active M2 closeout must preserve WU10 as the latest closed WorkUnit")
-    elif status.get("active_work_unit"):
-        problems.append("only the M2 closeout WorkUnit may be active")
-    elif status.get("last_closed_work_unit") != m2_closeout_id:
-        problems.append("closed M2 closeout must be the latest closed WorkUnit")
+    if status.get("active_work_unit") != phase_contract["active"]:
+        problems.append(f"active WorkUnit must be {phase_contract['active']!r}")
+    if status.get("last_closed_work_unit") != phase_contract["last_closed"]:
+        problems.append(f"last closed WorkUnit must be {phase_contract['last_closed']!r}")
+    expected_product = {
+        "phase": phase,
+        "phase_status": phase_contract.get("phase_status", "active"),
+        "current_work_unit": phase_contract["active"],
+        "next_work_unit": phase_contract["next"],
+        "m3_disposition": "authorized_backlog_after_playable_alpha",
+        "truth_scope": "task_branch_committed_reviewed_unintegrated",
+        "canonical_integration": False,
+        "local_counts_promoted": False,
+    }
+    for key, expected in expected_product.items():
+        if product.get(key) != expected:
+            problems.append(f"product {key} must be {expected!r}")
+    for key in ("primary_persona", "charter", "golden_journey", "platform_scope"):
+        if not product.get(key):
+            problems.append(f"product {key} must be defined")
+    if product.get("current_work_unit") != status.get("active_work_unit"):
+        problems.append("product and top-level active WorkUnit disagree")
+    readiness = status.get("readiness", {})
+    expected_readiness = {
+        "playability": "not_yet_playable",
+        "user_workflow": "advanced_command_surface_only",
+        "safety_authority": phase_contract["safety"],
+        "platform_support": "windows_first_alpha_planned",
+        "release_authenticity": "not_proven_unsigned",
+        "compatibility": "experimental_public_subset",
+        "user_validation": "not_started",
+    }
+    if readiness != expected_readiness:
+        problems.append("readiness dimensions must remain explicit and unpromoted")
+    foundation = status.get("execution_foundation", {})
+    if foundation != {
+        "status": "complete_fake_process_proof",
+        "work_unit": "FACMAN-EXECUTION-FOUNDATION-01",
+        "process_authority": "foundation_test_process_only",
+        "real_factorio_execution": False,
+        "real_play_authority": False,
+        "native_test_count": 43,
+        "python_test_count": 355,
+        "python_expected_skips": 1,
+        "schema_count": 235,
+        "full_verification": "pass",
+    }:
+        problems.append("execution foundation evidence must remain complete, bounded, and non-authoritative")
+    world_program = status.get("world_product_program", {})
+    if world_program != {
+        "status": "planned_after_installation_model_v2_closeout",
+        "architecture": "docs/architecture/world_product_model.md",
+        "next_work_unit": "FACMAN-WORLD-SPEC-AND-READINESS-01",
+        "portable_record": "WorldSpec",
+        "machine_local_record": "WorldBinding",
+        "readiness_model": "computed_projection_not_authoritative_state",
+        "ui_aggregate": "WorldView",
+        "preparation_model": "federated_typed_subplans_by_owner",
+        "portable_factorio_binaries": False,
+        "runtime_authority": False,
+    }:
+        problems.append("world programme must remain decomposed, portable, and non-authoritative")
+    permit_program = status.get("operation_permit_program", {})
+    if permit_program != {
+        "status": "planned_after_world_readiness",
+        "work_unit": "FACMAN-OPERATION-PERMIT-01",
+        "authority_model": "short_lived_plan_bound_exact_resource_permit",
+        "global_admission_is_sole_enforcer": False,
+        "provider_revalidation_required": True,
+        "harmless_reads_require_permit": False,
+        "permit_issuance_authority": False,
+    }:
+        problems.append("operation permits must remain short-lived, plan-bound, and unissued")
+    host_program = status.get("host_environment_program", {})
+    if host_program != {
+        "status": "planned_parallel_support_lane",
+        "architecture": "docs/architecture/host_environment_lifecycle.md",
+        "next_work_unit": "HOST-ENVIRONMENT-CONTRACT-SPINE-01",
+        "first_runtime_scope": "workflow_specific_read_only_list_inspect_doctor",
+        "first_apply_work_unit": "WINDOWS-SANDBOX-PROFILE-01",
+        "workflow_health_model": "versioned_requirement_profiles_no_global_health_score",
+        "installation_model_v2_reviewed_committed_clean": False,
+        "critical_path": False,
+        "blocks_real_play": False,
+        "host_mutation_authority": False,
+        "privileged_broker_authority": False,
+        "remote_mutation_authority": False,
+        "arbitrary_script_authority": False,
+    }:
+        problems.append("host-environment programme must remain parallel, non-blocking, and non-mutating")
+    execution_modes = {mode.get("id"): mode for mode in status.get("execution_mode", [])}
+    if set(execution_modes) != {"instance_isolated", "hermetic"}:
+        problems.append("canonical status must define exactly the two accepted execution modes")
+    for mode in execution_modes.values():
+        if mode.get("product_mode") != "accepted" or mode.get("claim_status") != "unproven":
+            problems.append(f"execution mode {mode.get('id', '<unknown>')} must remain accepted but unproven")
     repair = status.get("r3_8_repair", {})
     if repair.get("status") != "closed":
         problems.append("canonical status must record the R3.8 repair as closed")
@@ -569,15 +870,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if closeout.get("h1_inference") != "none":
         problems.append("M2 closeout must not infer H1")
     m3 = status.get("m3_existing_portable_adoption", {})
-    expected_m3_status = (
-        "active_read_only_and_plan_only"
-        if closeout_status == "accepted_public_integration_dev_synchronized"
-        else (
-            "authorized_next_wave_pending_m2_dev_synchronization"
-            if closeout_status == "canonically_promoted_public_integration_pending_dev_synchronization"
-            else "authorized_next_wave_pending_m2_canonical_promotion"
-        )
-    )
+    expected_m3_status = "authorized_backlog_after_playable_alpha"
     if [
         m3.get("status"), m3.get("scope"), m3.get("existing_portable_inspection"),
         m3.get("adoption_plan"), m3.get("adoption_apply"),
@@ -588,9 +881,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "read_only_and_plan_only", True, True, False, False, False, False, False, False,
     ]:
         problems.append("M3 must remain in its phase-appropriate read-only and plan-only state")
-    if expected_m3_status == "active_read_only_and_plan_only":
-        if m3.get("opened_after_m2_dev_revision") != "51977de8120202958fc35776d284077b1fc027d3":
-            problems.append("active M3 must bind the accepted synchronized M2 dev revision")
+    if m3.get("opened_after_m2_dev_revision") != "51977de8120202958fc35776d284077b1fc027d3":
+        problems.append("M3 backlog must retain the accepted synchronized M2 dev revision")
+    if m3.get("resume_after") != "FACMAN-WORLD-CENTRIC-ALPHA-01":
+        problems.append("M3 backlog must resume only after the playable alpha")
     m2_wu1 = status.get("m2_wu1_target_policy", {})
     if m2_wu1.get("status") != "accepted_dev_integration_proof":
         problems.append("M2-WU1 target policy must record the accepted dev integration proof")
@@ -1062,11 +1356,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     execution = status.get("execution", {})
     if execution.get("status") != "unavailable":
         problems.append("canonical status must keep execution unavailable")
+    if execution.get("reason") != phase_contract["execution_reason"]:
+        problems.append("canonical execution reason must match the current product phase")
     verdict = execution.get("operator_verdict")
     if verdict not in {"pending", "Fail"}:
         problems.append("canonical status may record only pending or the reviewed H1 Fail before promotion")
     if verdict == "Fail" and not execution.get("proof"):
         problems.append("canonical H1 Fail must bind a sanitized proof record")
+    if execution.get("operator_verdict_scope") != "historical_steam_backed_h1_only":
+        problems.append("historical H1 verdict must remain explicitly scoped")
+    if execution.get("current_gate_status") != "not_started":
+        problems.append("real-play execution gates must remain not started")
     return problems
 
 
@@ -1106,9 +1406,30 @@ def validate() -> list[str]:
     return problems
 
 
+def summary(data: dict[str, Any]) -> str:
+    modes = ", ".join(
+        f"{mode['id']}={mode['claim_status']}"
+        for mode in data["execution_modes"]
+    )
+    return "\n".join([
+        "FacMan product status",
+        f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
+        f"active_work_unit: {data['active_work_unit'] or 'none'}",
+        f"next_work_unit: {data['product']['next_work_unit']}",
+        f"golden_journey: {data['product']['golden_journey']}",
+        f"playability: {data['readiness']['playability']}",
+        f"execution: {data['execution']['status']} ({data['execution']['reason']})",
+        f"execution_modes: {modes}",
+        f"release_authenticity: {data['readiness']['release_authenticity']}",
+        f"user_validation: {data['readiness']['user_validation']}",
+    ])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate FacMan project truth from canonical data.")
-    parser.add_argument("--write", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--write", action="store_true")
+    modes.add_argument("--summary", action="store_true")
     args = parser.parse_args()
     data = collect()
     if args.write:
@@ -1123,6 +1444,9 @@ def main() -> int:
         for problem in problems:
             print(f"project-state: {problem}")
         return 1
+    if args.summary:
+        print(summary(data))
+        return 0
     print("project-state: ok")
     return 0
 

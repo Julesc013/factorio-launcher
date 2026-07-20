@@ -6,7 +6,6 @@
 #include "fl_json.h"
 #include "fl_file_io.h"
 
-#include <cstdlib>
 #include <system_error>
 
 #ifndef FACMAN_WITH_SETUP
@@ -67,12 +66,13 @@ usk_string_view view(const std::string& text)
 facman::core::Result<std::string> execute_setup(
     const std::string& command,
     const std::string& payload,
+    const SetupConfiguration& setup,
     bool dry_run = true)
 {
-    const char* state_root = std::getenv("FACMAN_SETUP_STATE_ROOT");
-    const char* acceptance_root = std::getenv("FACMAN_SETUP_ACCEPTANCE_ROOT");
-    const char* activation = std::getenv("FACMAN_SETUP_POLICY_ACTIVATION");
-    const bool any_configured = state_root != nullptr || acceptance_root != nullptr || activation != nullptr;
+    const char* state_root = setup.state_root.empty() ? nullptr : setup.state_root.c_str();
+    const char* acceptance_root = setup.acceptance_root.empty() ? nullptr : setup.acceptance_root.c_str();
+    const char* activation = setup.policy_activation.empty() ? nullptr : setup.policy_activation.c_str();
+    const bool any_configured = setup.configured();
     if (any_configured &&
         (state_root == nullptr || *state_root == '\0' ||
          acceptance_root == nullptr || *acceptance_root == '\0' ||
@@ -85,7 +85,7 @@ facman::core::Result<std::string> execute_setup(
     if (activation != nullptr && std::string(activation) != "operator_acceptance_candidate") {
         return facman::core::Result<std::string>::failure({
             "setup_policy_activation_refused",
-            "FacMan accepts only the operator_acceptance_candidate setup policy before the M2 verdict",
+            "This build accepts only the bounded operator_acceptance_candidate managed-target policy",
             ""});
     }
     usk_config_v1 config {};
@@ -276,6 +276,11 @@ facman::core::Result<facman::factorio::setup::ArchiveInspection> decode_archive_
 
 class UskSetupGateway final : public SetupGateway {
 public:
+    explicit UskSetupGateway(SetupConfiguration configuration)
+        : configuration_(std::move(configuration))
+    {
+    }
+
     facman::core::Result<PackageVerifyResult> verify_package(const PackageVerifyRequest& request) override
     {
         facman::core::json::ObjectBuilder payload;
@@ -284,7 +289,7 @@ public:
         payload.add_string("expected_target_os", request.target_os);
         payload.add_string("expected_target_arch", request.target_arch);
         payload.add_string("expected_linkage_model", request.linkage_model);
-        auto response = execute_setup("package.verify", payload.serialize());
+        auto response = execute_setup("package.verify", payload.serialize(), configuration_);
         if (!response) {
             auto document = facman::core::json::parse(response.error().detail);
             if (document && document.value().is_object()) {
@@ -351,7 +356,7 @@ public:
         payload.add_string("archive_path", facman::platform::path_to_utf8(request.archive));
         payload.add_string("archive_format", recipe.value().archive_format);
         payload.add_object("budgets", budgets);
-        auto response = execute_setup("install_local.inspect", payload.serialize());
+        auto response = execute_setup("install_local.inspect", payload.serialize(), configuration_);
         if (!response) {
             return facman::core::Result<facman::factorio::setup::ArchiveAssessment>::failure(
                 provider_error(
@@ -434,7 +439,7 @@ public:
         payload.add_object("archive", archive_binding);
         payload.add_object("target", target_binding);
         payload.add_object("recipe", recipe_binding);
-        auto response = execute_setup("install_local.plan", payload.serialize());
+        auto response = execute_setup("install_local.plan", payload.serialize(), configuration_);
         if (!response) {
             return facman::core::Result<InstallPlan>::failure(provider_error(
                 response.error(),
@@ -480,22 +485,24 @@ public:
     {
         return unsupported(
             "live_target_acceptance_required",
-            "A human M2 live-target acceptance Pass is required before FacMan installed-state verification is activated");
+            "Managed-target verification authority is unavailable until its separate live-target policy gate passes");
     }
     facman::core::Result<SetupRefusal> repair_install(const std::string&) override
     {
         return unsupported(
             "live_target_acceptance_required",
-            "A human M2 live-target acceptance Pass is required before FacMan repair is activated");
+            "Managed-target repair authority is unavailable until its separate live-target policy gate passes");
     }
     facman::core::Result<SetupRefusal> uninstall_install(const std::string&) override
     {
         return unsupported(
             "live_target_acceptance_required",
-            "A human M2 live-target acceptance Pass is required before FacMan uninstall is activated");
+            "Managed-target uninstall authority is unavailable until its separate live-target policy gate passes");
     }
 
 private:
+    SetupConfiguration configuration_;
+
     static facman::core::Result<SetupRefusal> unsupported(const char* code, const char* reason)
     {
         return facman::core::Result<SetupRefusal>::success({code, reason});
@@ -505,11 +512,12 @@ private:
 
 } // namespace
 
-std::unique_ptr<SetupGateway> make_setup_gateway()
+std::unique_ptr<SetupGateway> make_setup_gateway(const SetupConfiguration& configuration)
 {
 #if FACMAN_WITH_SETUP
-    return std::make_unique<UskSetupGateway>();
+    return std::make_unique<UskSetupGateway>(configuration);
 #else
+    (void)configuration;
     return std::make_unique<UnavailableSetupGateway>();
 #endif
 }

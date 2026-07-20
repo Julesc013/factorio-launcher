@@ -1,0 +1,104 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-PRODUCT-CONVERGENCE-01
+title: FacMan product convergence and truth reset
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-19T14:39:58Z
+owner: unassigned
+objective: >
+  A contributor can determine the supported player outcome, available and unavailable authority, current product phase, and next objective from the README and one status command without mistaking historical proof for current work.
+allowed_paths:
+  - README.md
+  - docs/**
+  - release/**
+  - tools/**
+  - contracts/**
+  - runtime/**
+  - apps/**
+  - tests/**
+  - CMakeLists.txt
+  - .aide/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+supported_scope:
+  - repository truth and contributor workflow
+  - Windows-first playable-alpha product decisions
+  - durable capability and effect vocabulary
+declared_effects:
+  - repository workspace reads and writes only
+  - no product execution, network, credential, setup mutation, signing, or publication authority
+failure_behaviour:
+  - fail generated-truth validation on drift
+  - preserve historical evidence and unproven claims
+user_visible_criterion:
+  - README and the contributor status command identify the same current product sequence
+automated_evidence:
+  - canonical fast and full developer entrypoints
+  - project-state, capability, queue, compaction, contract, and native validation
+human_evidence:
+  - none required because this WorkUnit promotes no user authority
+explicit_exclusions:
+  - real Factorio execution
+  - M3 implementation
+  - dynamic plugins, daemon, AI, signing, and publication
+architecture_budget:
+  - no repository reorganisation or domain migration
+  - only truth generation, capability vocabulary, durable wording, build identity, and test-entrypoint repair
+affected_native_targets:
+  - facman_abi_layout_smoke
+  - facman_client_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_refusal_contract
+  - tests.test_release_structure
+  - tests.test_schema_tools
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/command_contract_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_structure_check.py
+  - tools/schema_validate.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-19T14:40:04Z
+verified_at: 2026-07-19T15:25:25Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-19T15:25:33Z
+closed_at: 2026-07-19T15:25:38Z
+archived_at: 2026-07-19T15:25:46Z

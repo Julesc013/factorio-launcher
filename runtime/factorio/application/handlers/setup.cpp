@@ -155,7 +155,7 @@ ApplicationResult managed_install_policy(
             context,
             operation,
             "live_target_acceptance_required",
-            "A human M2 live-target acceptance Pass is required before managed " + action + " planning is activated");
+            "Managed-target " + action + " planning is unavailable until its separate live-target policy gate passes");
     }
     const std::string reason = "setup may not " + action + " " + install.value().ownership + " installs";
     ApplicationResult result;
@@ -248,7 +248,7 @@ ApplicationResult live_target_acceptance_required(
         context,
         operation,
         "live_target_acceptance_required",
-        "A human M2 live-target acceptance Pass is required before FacMan setup apply is available");
+        "Managed-target setup apply is unavailable until its separate live-target policy gate passes");
 }
 }
 
@@ -298,7 +298,7 @@ ApplicationResult inspect_install_recovery(ApplicationContext& context, const Se
         context,
         "installs.recovery.inspect",
         "live_target_acceptance_required",
-        "A human M2 live-target acceptance Pass is required before FacMan setup recovery is activated");
+        "Managed-target recovery is unavailable until its separate live-target policy gate passes");
 }
 
 ApplicationResult apply_install_recovery(ApplicationContext& context, const ServiceOperationRequest&)

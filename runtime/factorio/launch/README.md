@@ -17,5 +17,8 @@ Current implementation:
   roots, and checks local lock files without starting a process.
 - The run-lock helper provides exclusive per-instance ownership, structured
   contention, conservative malformed-lock refusal, and bounded stale recovery.
-- The purpose-built test probe owns process-boundary proof. Real Factorio
-  spawning remains unavailable pending the operator smoke and human verdict.
+- `flb_factorio_execution.*` adapts the product-neutral process supervisor,
+  journals the versioned launch lifecycle, and reconciles interrupted sessions.
+- The purpose-built fake process owns process-boundary proof. Its test-only
+  authority does not promote either real Factorio execution mode; those remain
+  unavailable pending their separate real-play gates and human verdicts.

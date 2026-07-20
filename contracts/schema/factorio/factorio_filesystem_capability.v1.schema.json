@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_filesystem_capability.v1.schema.json",
+  "title": "Factorio Filesystem Capability",
+  "type": "object",
+  "required": ["schema", "class", "move_capability", "stable_identity"],
+  "properties": {
+    "schema": { "const": "factorio.filesystem_capability.v1" },
+    "class": { "type": "string" },
+    "move_capability": { "type": "string" },
+    "stable_identity": { "type": "string" }
+  },
+  "additionalProperties": false
+}

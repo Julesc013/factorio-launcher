@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_data_routing_policy.v1.schema.json",
+  "title": "Factorio Data Routing Policy",
+  "type": "object",
+  "required": ["schema", "routing", "program_data_separation", "local_domains", "external_domains"],
+  "properties": {
+    "schema": { "const": "factorio.data_routing_policy.v1" },
+    "routing": { "type": "string" },
+    "program_data_separation": { "type": "string" },
+    "local_domains": { "type": "array", "items": { "type": "string" } },
+    "external_domains": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

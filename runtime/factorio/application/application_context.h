@@ -4,6 +4,7 @@
 #ifndef FACMAN_FACTORIO_APPLICATION_CONTEXT_H
 #define FACMAN_FACTORIO_APPLICATION_CONTEXT_H
 
+#include "application_configuration.h"
 #include "fl_system_services.h"
 #include "fl_workspace_store.h"
 #include "setup_gateway.h"
@@ -18,8 +19,10 @@ namespace facman::factorio::application {
 class ApplicationContext {
 public:
     explicit ApplicationContext(std::filesystem::path workspace);
+    explicit ApplicationContext(ApplicationConfiguration configuration);
 
-    const std::filesystem::path& workspace() const noexcept { return workspace_; }
+    const std::filesystem::path& workspace() const noexcept { return configuration_.workspace(); }
+    const ApplicationConfiguration& configuration() const noexcept { return configuration_; }
     facman::workspace::WorkspaceLayout& layout() noexcept { return layout_; }
     facman::workspace::InstallRepository& installs() noexcept { return installs_; }
     facman::workspace::InstanceRepository& instances() noexcept { return instances_; }
@@ -31,7 +34,7 @@ public:
     SetupGateway& setup() noexcept { return *setup_; }
 
 private:
-    std::filesystem::path workspace_;
+    ApplicationConfiguration configuration_;
     facman::workspace::WorkspaceLayout layout_;
     facman::workspace::InstallRepository installs_;
     facman::workspace::InstanceRepository instances_;

@@ -25,8 +25,8 @@ def validate() -> list[str]:
     direct_source = (ROOT / "runtime/client/facman_transport_direct.cpp").read_text(encoding="utf-8")
     process_transport = (ROOT / "runtime/client/facman_transport_process.cpp").read_text(encoding="utf-8")
     daemon_source = (ROOT / "runtime/client/facman_transport_daemon.cpp").read_text(encoding="utf-8")
-    process_source = (ROOT / "runtime/client/facman_process_windows.cpp").read_text(encoding="utf-8")
-    process_source += (ROOT / "runtime/client/facman_process_posix.cpp").read_text(encoding="utf-8")
+    process_source = (ROOT / "runtime/platform/fl_process_supervisor_windows.cpp").read_text(encoding="utf-8")
+    process_source += (ROOT / "runtime/platform/fl_process_supervisor_posix.cpp").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
     cmake = "\n".join(path.read_text(encoding="utf-8") for path in [
         ROOT / "CMakeLists.txt",
@@ -61,6 +61,8 @@ def validate() -> list[str]:
     for anchor in ("JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE", "TerminateJobObject", "setpgid(", "kill(-child", "maximum_standard_output"):
         if anchor not in process_source:
             problems.append(f"CLI process transport is missing safety anchor: {anchor}")
+    if "facman::platform::supervise_process(process)" not in process_transport:
+        problems.append("CLI process transport does not consume the shared platform supervisor")
 
     if "facman::client::FacManClient" not in cli or "call(options," not in cli:
         problems.append("CLI does not dispatch through FacManClient")

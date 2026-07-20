@@ -198,6 +198,7 @@ ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "compat",
     "diagnostics",
     "discovery",
+    "installation",
     "install_validation",
     "instance",
     "launch",

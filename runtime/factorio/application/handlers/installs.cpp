@@ -6,6 +6,7 @@
 #include "command_result.h"
 #include "fl_json.h"
 #include "flb_factorio_discovery.h"
+#include "flb_factorio_install_model.h"
 
 #include <filesystem>
 #include <utility>
@@ -23,11 +24,13 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
     auto record = context.installs().load(parsed_id.value());
     if (!record) return false;
     install.install_id = record.value().id.str();
+    install.provider_id = record.value().provider_id;
     install.root = record.value().root;
     install.executable = record.value().executable;
     install.version = record.value().version;
     install.ownership = record.value().ownership;
     install.source = record.value().source;
+    install.source_ref = record.value().source_ref;
     install.platform = record.value().platform;
     install.distribution_origin = record.value().distribution_origin;
     install.platform_integration = record.value().platform_integration;
@@ -39,6 +42,7 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
     install.state_revision = record.value().state_revision;
     install.verification_status = record.value().verification_status;
     discovery::classify_install_isolation(install);
+    discovery::classify_install_layout(install);
     return true;
 }
 }
@@ -140,6 +144,36 @@ ApplicationResult inspect_install(ApplicationContext& context, const InspectInst
         "unknown_install", "Install reference is not registered");
     ApplicationResult result;
     result.output = discovery::install_ref_json(install);
+    return result;
+}
+
+ApplicationResult describe_install(ApplicationContext& context, const DescribeInstallRequest& request)
+{
+    discovery::InstallRef install;
+    if (!load_install(context, request.install_id, install)) return refused(
+        safety_refusal("installs.describe", "unknown_install", "Install reference is not registered", request.install_id, true),
+        "unknown_install", "Install reference is not registered");
+    ApplicationResult result;
+    result.output = installation::installation_model_json(install);
+    return result;
+}
+
+ApplicationResult plan_install_reconciliation(
+    ApplicationContext& context,
+    const ReconcileInstallRequest& request)
+{
+    discovery::InstallRef install;
+    if (!load_install(context, request.install_id, install)) return refused(
+        safety_refusal(
+            "installs.reconcile.plan",
+            "unknown_install",
+            "Install reference is not registered",
+            request.install_id,
+            true),
+        "unknown_install",
+        "Install reference is not registered");
+    ApplicationResult result;
+    result.output = installation::reconciliation_plan_json(install, request);
     return result;
 }
 
