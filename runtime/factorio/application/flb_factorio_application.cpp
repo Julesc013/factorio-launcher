@@ -60,8 +60,7 @@ public:
         : context_(workspace_root.empty()
               ? std::filesystem::path()
               : facman::platform::path_from_utf8(workspace_root))
-    {
-    }
+    {}
     int handle(const ulk_command_request_v1* request, ulk_command_response_v1* response)
     {
         std::lock_guard<std::mutex> lock(request_mutex_);
@@ -107,10 +106,11 @@ private:
                 "dry_run_write_not_executed",
                 "Dry-run requests never execute data writes");
         }
+        const CommandAdmissionDecision admission = admit_command(context_.configuration(), request.command);
         if (handlers::is_setup_command(request.command)) {
+            if (!admission.admitted) return handlers::unavailable(context_, current_command_, admission.code, admission.reason);
             return handlers::dispatch_setup(context_, request);
         }
-        const CommandAdmissionDecision admission = admit_command(context_.configuration(), request.command);
         if (launch_module_.handles(request.command)) {
             return launch_module_.execute(context_, request, admission);
         }

@@ -78,8 +78,12 @@ def validate() -> list[str]:
             problems.append(f"application entrypoint owns backend or codec behavior: {forbidden}")
     if "json::parse(" not in dispatch or "ApplicationRequest" not in dispatch:
         problems.append("command dispatch does not own bounded JSON-to-typed decoding")
-    if "admit_command(context_.configuration(), request.command)" not in entrypoint:
+    admission_route = "admit_command(context_.configuration(), request.command)"
+    setup_route = "if (handlers::is_setup_command(request.command))"
+    if admission_route not in entrypoint:
         problems.append("application entrypoint does not apply global effect/capability admission")
+    elif setup_route not in entrypoint or entrypoint.index(admission_route) > entrypoint.index(setup_route):
+        problems.append("setup commands bypass global effect/capability admission")
     if "launch_module_.handles(request.command)" not in entrypoint:
         problems.append("application entrypoint does not route through the launch module seam")
     if "installation_module_.handles(request.command)" not in entrypoint:
