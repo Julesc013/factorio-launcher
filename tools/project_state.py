@@ -470,7 +470,7 @@ def readme_status(data: dict[str, Any]) -> str:
         "",
         f"The golden journey is `{data['product']['golden_journey']}`. M3 existing-portable adoption is "
         "authorised backlog after the playable alpha, not the current critical path.",
-        f"This local unreviewed task worktree enumerates {law['contracts']} commands, {law['schemas']} schemas, "
+        f"This committed but unintegrated task branch enumerates {law['contracts']} commands, {law['schemas']} schemas, "
         f"and {law['refusal_codes']} refusal codes; those counts are not integrated release claims.",
         "",
         "Two execution modes are accepted product designs but remain unproven: Steam-aware "
@@ -653,7 +653,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "current_work_unit": phase_contract["active"],
         "next_work_unit": phase_contract["next"],
         "m3_disposition": "authorized_backlog_after_playable_alpha",
-        "truth_scope": "local_task_worktree_unreviewed_uncommitted",
+        "truth_scope": "task_branch_committed_unreviewed_unintegrated",
         "canonical_integration": False,
         "local_counts_promoted": False,
     }

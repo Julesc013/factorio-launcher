@@ -66,7 +66,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("WorldSpec", data["world_product_program"]["portable_record"])
         self.assertEqual("WorldBinding", data["world_product_program"]["machine_local_record"])
         self.assertFalse(data["world_product_program"]["runtime_authority"])
-        self.assertEqual("local_task_worktree_unreviewed_uncommitted", data["product"]["truth_scope"])
+        self.assertEqual("task_branch_committed_unreviewed_unintegrated", data["product"]["truth_scope"])
         self.assertFalse(data["product"]["canonical_integration"])
         self.assertFalse(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
