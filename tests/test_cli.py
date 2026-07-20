@@ -60,6 +60,8 @@ class CliTests(unittest.TestCase):
         code, stdout, stderr = invoke(["--version"])
         self.assertEqual(code, 0, stderr)
         self.assertIn("FacMan 0.1.0", stdout)
+        self.assertRegex(stdout, r"revision (?:[0-9a-f]{12}|unknown)")
+        self.assertRegex(stdout, r"configuration [^)]+")
 
     def test_product_inspect_json(self) -> None:
         code, stdout, stderr = invoke(["product", "inspect", "--json"])
@@ -133,6 +135,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(descriptors["servers.create"]["availability"], "available")
         self.assertIn("install_refs.scan", commands)
         self.assertIn("install_refs.import", commands)
+        self.assertIn("installs.describe", commands)
+        self.assertIn("installs.reconcile.plan", commands)
         self.assertIn("run.preview", commands)
         self.assertIn("launch_plan.preflight", commands)
         self.assertNotIn("diagnostics.report", commands)
@@ -158,6 +162,173 @@ class CliTests(unittest.TestCase):
             self.assertIn("Status: warning", stdout)
             self.assertIn("no install references registered yet", stdout)
             self.assertEqual(list(Path(tmp).iterdir()), [])
+
+    def test_install_model_and_reconciliation_are_read_only_and_conservative(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install = root / "Factorio 2.0"
+            workspace = root / "workspace"
+            shutil.copytree(FIXTURE_INSTALL, install)
+            source_before = tree_snapshot(install)
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "import", str(install),
+                "--id", "fixture", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            workspace_before = tree_snapshot(workspace)
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "describe", "fixture", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            model = json.loads(stdout)
+            self.assertEqual("factorio.installation_model.v2", model["schema"])
+            authority = model["current_evidence"]["ownership_and_authority"]
+            self.assertEqual("reference", authority["management_class"])
+            self.assertFalse(authority["mutation_authority"])
+            actions = {action["id"]: action for action in model["available_actions"]}
+            self.assertEqual("requires_adoption_or_clone", actions["repair"]["status"])
+            self.assertEqual("requires_adoption_or_clone", actions["uninstall"]["status"])
+            self.assertEqual("universal_setup", actions["repair"]["owner"])
+
+            model_schema = json_contract.load_schema(
+                ROOT / "contracts/schema/factorio/factorio_installation_model.v2.schema.json"
+            )
+            self.assertEqual(json_contract.validate(model, model_schema), [])
+            record_schemas = {
+                "source": "factorio_source_reference.v1.schema.json",
+                "deployment": "factorio_deployment_record.v1.schema.json",
+                "ownership_and_authority": "factorio_ownership_authority.v1.schema.json",
+                "data_policy": "factorio_data_routing_policy.v1.schema.json",
+                "integration": "factorio_integration_record.v1.schema.json",
+                "health": "factorio_verification_snapshot.v1.schema.json",
+                "provenance": "factorio_provenance_record.v1.schema.json",
+                "filesystem": "factorio_filesystem_capability.v1.schema.json",
+            }
+            for key, filename in record_schemas.items():
+                schema = json_contract.load_schema(ROOT / "contracts/schema/factorio" / filename)
+                self.assertEqual(json_contract.validate(model["current_evidence"][key], schema), [])
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            unchanged = json.loads(stdout)
+            self.assertEqual("already_reconciled", unchanged["summary"]["status"])
+            self.assertFalse(unchanged["mutation_executed"])
+            self.assertFalse(unchanged["apply_available"])
+
+            candidate = root / "managed-candidate"
+            blocked_args = [
+                "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                "--management", "managed", "--deployment-style", "standalone_directory",
+                "--data-policy", "instance_local", "--integration", "facman_owned",
+                "--target", str(candidate), "--json",
+            ]
+            code, stdout, stderr = invoke(blocked_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            blocked = json.loads(stdout)
+            self.assertEqual("blocked_plan", blocked["summary"]["status"])
+            self.assertIn("trusted_source_ref_required_for_managed_materialisation", blocked["blockers"])
+
+            planned_args = blocked_args[:-1] + [
+                "--source-ref", "fixture-source:2.0.77", "--update-policy", "pinned", "--json",
+            ]
+            code, stdout, stderr = invoke(planned_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            planned = json.loads(stdout)
+            code, repeated_stdout, stderr = invoke(planned_args)
+            self.assertEqual(code, 0, stderr or repeated_stdout)
+            repeated = json.loads(repeated_stdout)
+            self.assertEqual("plan_ready_for_provider_review", planned["summary"]["status"])
+            self.assertEqual(planned["plan_id"], repeated["plan_id"])
+            self.assertFalse(planned["mutation_executed"])
+            self.assertFalse(planned["apply_available"])
+            self.assertFalse(candidate.exists())
+            plan_schema = json_contract.load_schema(
+                ROOT / "contracts/schema/factorio/factorio_install_reconciliation_plan.v1.schema.json"
+            )
+            desired_schema = json_contract.load_schema(
+                ROOT / "contracts/schema/factorio/factorio_install_desired_state.v1.schema.json"
+            )
+            self.assertEqual(json_contract.validate(planned, plan_schema), [])
+            self.assertEqual(json_contract.validate(planned["desired_state"], desired_schema), [])
+            self.assertEqual(source_before, tree_snapshot(install))
+            self.assertEqual(workspace_before, tree_snapshot(workspace))
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "describe", "missing", "--json",
+            ])
+            self.assertNotEqual(code, 0)
+            self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
+
+    def test_create_instance_can_preserve_program_local_player_data(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install = root / "Factorio 2.0"
+            workspace = root / "workspace"
+            shutil.copytree(FIXTURE_INSTALL, install)
+            (install / "config").mkdir()
+            (install / "config" / "config.ini").write_text(
+                "[path]\nread-data=old\nwrite-data=old\n\n[graphics]\nquality=high\n",
+                encoding="utf-8",
+            )
+            (install / "mods").mkdir()
+            (install / "mods" / "example_1.0.0.zip").write_bytes(b"mod")
+            (install / "saves").mkdir()
+            (install / "saves" / "world.zip").write_bytes(b"save")
+            (install / "script-output").mkdir()
+            (install / "script-output" / "report.txt").write_text("report", encoding="utf-8")
+            (install / "player-data.json").write_text('{"service-username":"player"}', encoding="utf-8")
+            (install / "achievements.dat").write_bytes(b"achievements")
+            (install / "crop-cache.dat").write_bytes(b"cache")
+            (install / "factorio-current.log").write_text("log", encoding="utf-8")
+            (install / "temp").mkdir()
+            (install / "temp" / "volatile.tmp").write_bytes(b"volatile")
+            source_before = tree_snapshot(install)
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "import", str(install),
+                "--id", "factorio-2-0", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "create", "Factorio 2.0 Legacy",
+                "--id", "factorio-2-0-legacy", "--install", "factorio-2-0",
+                "--import-data", str(install), "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+
+            instance = workspace / "instances" / "factorio-2-0-legacy"
+            self.assertEqual(source_before, tree_snapshot(install))
+            self.assertEqual((instance / "mods" / "example_1.0.0.zip").read_bytes(), b"mod")
+            self.assertEqual((instance / "saves" / "world.zip").read_bytes(), b"save")
+            self.assertEqual((instance / "script-output" / "report.txt").read_text(encoding="utf-8"), "report")
+            self.assertEqual((instance / "player-data.json").read_text(encoding="utf-8"), '{"service-username":"player"}')
+            self.assertEqual((instance / "achievements.dat").read_bytes(), b"achievements")
+            self.assertEqual((instance / "cache" / "imported-crop-cache.dat").read_bytes(), b"cache")
+            self.assertEqual((instance / "logs" / "imported-factorio-current.log").read_text(encoding="utf-8"), "log")
+            self.assertEqual(
+                (instance / "imports" / "source-config" / "config.ini").read_text(encoding="utf-8"),
+                (install / "config" / "config.ini").read_text(encoding="utf-8"),
+            )
+            effective = (instance / "config" / "config.ini").read_text(encoding="utf-8")
+            self.assertIn(f"write-data={instance}", effective)
+            self.assertNotIn("write-data=old", effective)
+            self.assertIn("[graphics]\nquality=high", effective)
+            self.assertFalse((instance / "temp").exists())
+            manifest = json.loads((instance / "imports" / "local-data-import.v1.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["schema"], "factorio.local_data_import.v1")
+            self.assertIn("mods", manifest["imported_domains"])
+            self.assertIn("source_config", manifest["preserved_but_inactive_domains"])
+            self.assertEqual(manifest["skipped_volatile_domains"], ["temp"])
+            import_schema = json.loads(
+                (ROOT / "contracts/schema/factorio/factorio_local_data_import.v1.schema.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(json_contract.validate(manifest, import_schema), [])
 
     def test_import_instance_and_launch_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -288,6 +459,12 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertEqual(refusal["status"], "refused")
             self.assertEqual(refusal["refusal"]["code"], "isolation_not_proven")
+            play_code, play_stdout, _play_stderr = invoke(
+                ["--workspace", tmp, "play", "exec-fixture", "--json"]
+            )
+            play_refusal = json.loads(play_stdout)
+            self.assertEqual(play_code, 1)
+            self.assertEqual(play_refusal["refusal"]["code"], "isolation_not_proven")
             history = Path(tmp) / "instances" / "exec-fixture" / "logs" / "launch_history.log"
             self.assertFalse(history.exists())
             audit = Path(tmp) / "audit" / "launch_events.log"

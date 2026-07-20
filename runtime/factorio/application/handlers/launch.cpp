@@ -35,6 +35,7 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
     install.state_revision = record.value().state_revision;
     install.verification_status = record.value().verification_status;
     discovery::classify_install_isolation(install);
+    discovery::classify_install_layout(install);
     return true;
 }
 
@@ -115,7 +116,10 @@ ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunc
     return result;
 }
 
-ApplicationResult refuse_execute(ApplicationContext& context, const ExecuteRunRequest& request)
+ApplicationResult refuse_execute(
+    ApplicationContext& context,
+    const ExecuteRunRequest& request,
+    const CommandAdmissionDecision& admission)
 {
     std::string code = "isolation_not_proven";
     std::string detail = request.instance_id.empty()
@@ -140,6 +144,11 @@ ApplicationResult refuse_execute(ApplicationContext& context, const ExecuteRunRe
                 }
             }
         }
+    }
+    if (code == "isolation_not_proven" && !admission.admitted) {
+        code = admission.code;
+        detail = admission.reason;
+        if (!request.instance_id.empty()) detail += " for instance " + request.instance_id.str();
     }
     return unavailable(context, "run.execute", code, detail);
 }

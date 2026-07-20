@@ -635,13 +635,36 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
         if (!required_string(payload, "install_id", typed.install_id, detail)) return false;
         request.payload = std::move(typed); return true;
     }
+    case CommandId::installs_describe: {
+        if (!validate_fields(payload, {"install_id"}, detail)) return false;
+        DescribeInstallRequest typed;
+        if (!required_string(payload, "install_id", typed.install_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::installs_reconcile_plan: {
+        if (!validate_fields(payload, {
+                "install_id", "version", "source_ref", "target_root", "management_mode",
+                "deployment_style", "data_policy", "integration_mode", "update_policy"}, detail)) return false;
+        ReconcileInstallRequest typed;
+        if (!required_string(payload, "install_id", typed.install_id, detail) ||
+            !optional_string(payload, "version", typed.version, detail) ||
+            !optional_string(payload, "source_ref", typed.source_ref, detail) ||
+            !optional_string(payload, "target_root", typed.target_root, detail) ||
+            !optional_string(payload, "management_mode", typed.management_mode, detail) ||
+            !optional_string(payload, "deployment_style", typed.deployment_style, detail) ||
+            !optional_string(payload, "data_policy", typed.data_policy, detail) ||
+            !optional_string(payload, "integration_mode", typed.integration_mode, detail) ||
+            !optional_string(payload, "update_policy", typed.update_policy, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::instance_create: {
-        if (!validate_fields(payload, {"display_name", "instance_id", "install_id", "template_id"}, detail)) return false;
+        if (!validate_fields(payload, {"display_name", "instance_id", "install_id", "template_id", "source_data_root"}, detail)) return false;
         CreateInstanceRequest typed;
         if (!required_string(payload, "display_name", typed.display_name, detail) ||
             !required_string(payload, "instance_id", typed.instance_id, detail) ||
             !required_string(payload, "install_id", typed.install_id, detail) ||
-            !optional_string(payload, "template_id", typed.template_id, detail)) return false;
+            !optional_string(payload, "template_id", typed.template_id, detail) ||
+            !optional_string(payload, "source_data_root", typed.source_data_root, detail)) return false;
         request.payload = std::move(typed); return true;
     }
     case CommandId::instances_inspect:

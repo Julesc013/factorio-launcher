@@ -126,7 +126,7 @@ def test_command(args: argparse.Namespace) -> None:
         run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"], env=env)
         return
     if args.mode == "fast":
-        run_native(build_root, args.configuration, [], "fast-unit")
+        run_native(build_root, args.configuration, impact["fast_native"], "fast-unit")
         run_python(impact["fast_python"], build_root, args.configuration)
         return
     if args.mode == "category":

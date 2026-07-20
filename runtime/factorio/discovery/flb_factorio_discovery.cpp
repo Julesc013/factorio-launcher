@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cctype>
 #include <cstdlib>
+#include <iterator>
 #include <set>
 
 #ifdef _WIN32
@@ -215,6 +216,29 @@ std::string app_dir_kind(const fs::path& root)
     return "install_root";
 }
 
+bool looks_like_factorio_install(const fs::path& root)
+{
+    const fs::path data_candidates[] = {
+        root / "data" / "base" / "info.json",
+        root / "Factorio.app" / "Contents" / "Resources" / "data" / "base" / "info.json",
+        root / "Contents" / "Resources" / "data" / "base" / "info.json",
+    };
+    const fs::path executable_candidates[] = {
+        root / "bin" / "x64" / "factorio.exe",
+        root / "bin" / "x64" / "factorio",
+        root / "bin" / "x64" / "factorio.exe.stub",
+        root / "bin" / "x64" / "factorio.stub",
+        root / "Factorio.app" / "Contents" / "MacOS" / "factorio",
+        root / "Contents" / "MacOS" / "factorio",
+    };
+    const bool has_data = std::any_of(std::begin(data_candidates), std::end(data_candidates),
+        [](const fs::path& path) { return fs::is_regular_file(path); });
+    const bool has_executable = std::any_of(
+        std::begin(executable_candidates), std::end(executable_candidates),
+        [](const fs::path& path) { return fs::is_regular_file(path); });
+    return has_data && has_executable;
+}
+
 std::string non_empty_or(const std::string& value, const std::string& fallback)
 {
     return value.empty() ? fallback : value;
@@ -310,6 +334,7 @@ std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
     constexpr std::size_t kMaximumDirectoryEntries = 4096U;
     std::vector<fs::path> candidates;
     std::vector<fs::path> fixture_children;
+    std::vector<fs::path> install_children;
     bool root_is_fixture = fs::is_regular_file(root / "fixture.manifest.v1.json");
 
     if (root_is_fixture) {
@@ -332,15 +357,17 @@ std::vector<fs::path> discovery_candidates_for_root(const fs::path& root)
             if (fs::is_regular_file(child / "fixture.manifest.v1.json")) {
                 fixture_children.push_back(child);
             }
+            if (looks_like_factorio_install(child)) install_children.push_back(child);
         }
     }
 
-    if (fixture_children.empty()) {
+    if (looks_like_factorio_install(root) || install_children.empty()) {
         append_unique_path(candidates, root);
     }
     for (const fs::path& child : fixture_children) {
         append_unique_path(candidates, child);
     }
+    for (const fs::path& child : install_children) append_unique_path(candidates, child);
     append_unique_path(candidates, root / "steamapps" / "common" / "Factorio");
     append_unique_path(candidates, root / "Factorio");
     append_unique_path(candidates, root / "factorio");
@@ -420,6 +447,60 @@ void classify_install_isolation(InstallRef& install)
     }
 }
 
+void classify_install_layout(InstallRef& install)
+{
+    const std::string config = read_text(install.root / "config-path.cfg", 64U * 1024U);
+    std::string lower = config;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    const bool system_data = lower.find("use-system-read-write-data-directories=true") != std::string::npos;
+    const bool local_data = lower.find("use-system-read-write-data-directories=false") != std::string::npos;
+    const bool uninstaller = fs::is_regular_file(install.root / "unins000.exe") &&
+        fs::is_regular_file(install.root / "unins000.dat");
+    if (install.platform_integration == "steam") install.installation_layout = "steam_managed";
+    else if (uninstaller) install.installation_layout = "official_installer";
+    else if (local_data) install.installation_layout = "portable_archive";
+    else if (system_data) install.installation_layout = "installer_style_tree";
+    else if (install.app_dir_kind == "app_bundle") install.installation_layout = "app_bundle";
+    else install.installation_layout = "unknown";
+    install.local_data_domains.clear();
+    const std::pair<const char*, fs::path> domains[] = {
+        {"config", install.root / "config"}, {"mods", install.root / "mods"},
+        {"saves", install.root / "saves"}, {"script_output", install.root / "script-output"},
+        {"logs", install.root / "factorio-current.log"}, {"player_data", install.root / "player-data.json"},
+        {"cache", install.root / "crop-cache.dat"}, {"achievements", install.root / "achievements.dat"},
+        {"temp", install.root / "temp"},
+    };
+    for (const auto& domain : domains) {
+        std::error_code error;
+        const fs::file_status status = fs::symlink_status(domain.second, error);
+        if (!error && status.type() != fs::file_type::not_found &&
+            status.type() != fs::file_type::symlink) {
+            install.local_data_domains.push_back(domain.first);
+        }
+    }
+    install.data_routing = system_data
+        ? (install.local_data_domains.empty() ? "system_shared" : "system_shared_with_local_residue")
+        : local_data ? "install_local" : "unknown";
+    install.program_data_separation = install.local_data_domains.empty() ? "separated" : "conflated";
+    install.uninstall_integration = uninstaller ? "uninstaller_present" : "not_detected";
+    install.side_by_side_safety = install.platform_integration == "steam"
+        ? "platform_managed"
+        : uninstaller
+            ? "program_files_separate_but_registration_may_be_superseded"
+            : "independent_program_tree";
+    if (uninstaller) {
+        install.distribution_origin = "website_installer";
+        install.platform_integration = "none_detected";
+        install.strict_isolation_eligibility = "candidate";
+    } else if (local_data && install.platform_integration != "steam") {
+        install.distribution_origin = "local_archive";
+        install.platform_integration = "none_detected";
+        install.strict_isolation_eligibility = "candidate";
+    }
+}
+
 InstallRef inspect_install(const fs::path& root, const std::string& install_id)
 {
     InstallRef install;
@@ -487,6 +568,7 @@ InstallRef inspect_install(const fs::path& root, const std::string& install_id)
         install.diagnostic_code = "invalid_factorio_install";
     }
     classify_install_isolation(install);
+    classify_install_layout(install);
     return install;
 }
 
@@ -539,6 +621,7 @@ std::vector<InstallRef> scan_install_candidates(const std::vector<fs::path>& exp
             install.strict_isolation_eligibility.clear();
             install.external_state_domains.clear();
             classify_install_isolation(install);
+            classify_install_layout(install);
             install.evidence = search.evidence;
             installs.push_back(std::move(install));
         }
@@ -570,9 +653,16 @@ json::ObjectBuilder install_ref_builder(const InstallRef& install)
     output.add_string("version", install.version);
     output.add_string("ownership", install.ownership);
     output.add_string("source", install.source);
+    output.add_string("source_ref", install.source_ref);
     output.add_string("platform", install.platform);
     output.add_string("distribution_origin", install.distribution_origin);
     output.add_string("platform_integration", install.platform_integration);
+    output.add_string("installation_layout", install.installation_layout);
+    output.add_string("data_routing", install.data_routing);
+    output.add_string("program_data_separation", install.program_data_separation);
+    output.add_string("uninstall_integration", install.uninstall_integration);
+    output.add_string("side_by_side_safety", install.side_by_side_safety);
+    output.add_array("local_data_domains", string_array_builder(install.local_data_domains));
     output.add_string("strict_isolation_eligibility", install.strict_isolation_eligibility);
     output.add_array("external_state_domains", string_array_builder(install.external_state_domains));
     output.add_array("capabilities", string_array_builder(install.capabilities));

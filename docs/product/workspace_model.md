@@ -17,6 +17,9 @@ workspace/
       config/
       mods/
       saves/
+      imports/              # provenance and preserved inactive source configuration
+      player-data.json      # Factorio runtime state, instance-local
+      achievements.dat      # Factorio runtime state, instance-local
       scenarios/
       script-output/
       logs/
@@ -53,6 +56,32 @@ The contract schemas are:
 
 - `contracts/schema/factorio/factorio_workspace.v1.schema.json`
 - `contracts/schema/factorio/factorio_instance_root.v1.schema.json`
+
+## Planned world portability boundary
+
+The current workspace layout remains the implemented compatibility contract.
+The next world-centric model will separate portable desired state from local
+resolution rather than treating the entire workspace as one portable object:
+
+```text
+portable
+  WorldSpec
+  selected saves
+  modset locks and permitted content references
+  profiles, policies, logical IDs, and hashes
+
+machine-local
+  WorldBinding
+  install and execution-environment references
+  absolute storage paths
+  credential-reference IDs
+  derived indexes and readiness caches
+```
+
+Installed Factorio files never establish redistribution rights or entitlement.
+Portable export identifies a required player-owned source when the binary
+cannot legally be included. The detailed planned contract is defined in
+[`world_product_model.md`](../architecture/world_product_model.md).
 
 Runtime invariant tests now cover:
 

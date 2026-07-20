@@ -1,0 +1,15 @@
+{
+  "schema": "factorio.installation_model.v2",
+  "command": "installs.describe",
+  "install_id": "fixture",
+  "current_evidence": {
+    "schema": "factorio.install_current_evidence.v1"
+  },
+  "compatibility": {
+    "source_schema": "factorio.install_ref.v1",
+    "projection_schema": "factorio.installation_model.v2",
+    "persisted_record_rewritten": false,
+    "conservative_defaults_applied": true,
+    "missing_authority_default": "read_only"
+  }
+}

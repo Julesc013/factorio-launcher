@@ -1,0 +1,11 @@
+{
+  "schema": "factorio.install_reconciliation_plan.v1",
+  "command": "installs.reconcile.plan",
+  "install_id": "fixture",
+  "mode": "plan_only",
+  "mutation_executed": false,
+  "apply_available": false,
+  "summary": {
+    "status": "plan_ready_for_provider_review"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_deployment_record.v1.schema.json",
+  "title": "Factorio Deployment Record",
+  "type": "object",
+  "required": ["schema", "style", "layout", "root", "executable", "platform"],
+  "properties": {
+    "schema": { "const": "factorio.deployment_record.v1" },
+    "style": { "type": "string" },
+    "layout": { "type": "string" },
+    "root": { "type": "string" },
+    "executable": { "type": "string" },
+    "platform": { "type": "string" }
+  },
+  "additionalProperties": false
+}

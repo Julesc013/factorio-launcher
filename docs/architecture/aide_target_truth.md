@@ -6,7 +6,7 @@ the current revision; bootstrap-era plans are not allowed to outrank live
 contracts, tests, or package evidence.
 
 The executable root grammar is defined by `tools/structure_policy_check.py`.
-`.aide/policies/flaunch-root-authority.yaml` mirrors that grammar and is checked
+`.aide/policies/facman-root-authority.yaml` mirrors that grammar and is checked
 by `tools/aide_target_truth_check.py`. Retired roots are rejected in both
 places, so a future task packet cannot legitimately recreate `source/`,
 `data/`, `schemas/`, or `packaging/` at repository root.

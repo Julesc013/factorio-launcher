@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_ownership_authority.v1.schema.json",
+  "title": "Factorio Ownership and Authority",
+  "type": "object",
+  "required": ["schema", "recorded_ownership", "management_class", "status", "setup_proof_present", "mutation_authority", "mutation_owner", "setup_state_ref"],
+  "properties": {
+    "schema": { "const": "factorio.ownership_authority.v1" },
+    "recorded_ownership": { "type": "string" },
+    "management_class": { "enum": ["managed", "adopted", "reference", "external", "unknown"] },
+    "status": { "type": "string" },
+    "setup_proof_present": { "type": "boolean" },
+    "mutation_authority": { "const": false },
+    "mutation_owner": { "const": "universal_setup" },
+    "setup_state_ref": { "type": "string" }
+  },
+  "additionalProperties": false
+}

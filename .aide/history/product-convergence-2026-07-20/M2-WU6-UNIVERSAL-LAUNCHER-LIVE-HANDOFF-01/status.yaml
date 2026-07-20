@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-14T14:30:19Z
+result: PASS
+evidence_path: .aide/history/product-convergence-2026-07-20/M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01/evidence/
+active_at: 2026-07-14T14:30:25Z
+verified_at: 2026-07-14T14:56:35Z
+implementation_state: implemented
+reviewed_at: 2026-07-14T14:56:35Z
+closed_at: 2026-07-14T14:56:36Z
+archived_at: 2026-07-19T14:39:14Z

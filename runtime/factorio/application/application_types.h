@@ -5,6 +5,7 @@
 #define FACMAN_FACTORIO_APPLICATION_TYPES_H
 
 #include "flb_factorio_diagnostics.h"
+#include "flb_factorio_install_model.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
 #include "flb_factorio_modset_solver.h"
@@ -47,11 +48,14 @@ struct ScanInstallRefsRequest { std::vector<std::string> roots; };
 struct DoctorRequest { std::vector<std::string> roots; };
 struct ImportInstallRefRequest { std::string path; std::string install_id; };
 struct InspectInstallRefRequest { std::string install_id; };
+struct DescribeInstallRequest { std::string install_id; };
+using ReconcileInstallRequest = installation::DesiredInstallationState;
 struct CreateInstanceRequest {
     std::string display_name;
     std::string instance_id;
     std::string install_id;
     std::string template_id = "vanilla";
+    std::string source_data_root;
 };
 struct BuildLaunchPlanRequest { std::string instance_id; };
 struct ExecuteRunRequest { facman::core::InstanceId instance_id; };
@@ -118,6 +122,8 @@ using ApplicationPayload = std::variant<
     DoctorRequest,
     ImportInstallRefRequest,
     InspectInstallRefRequest,
+    DescribeInstallRequest,
+    ReconcileInstallRequest,
     CreateInstanceRequest,
     BuildLaunchPlanRequest,
     ExecuteRunRequest,

@@ -1,5 +1,5 @@
 command_id = "instances.create"
-cli = "facman instances create <name> --install <install-id> --json"
+cli = "facman instances create <name> --install <install-id> [--import-data <install-root>] --json"
 effects = ["workspace_read", "workspace_write"]
 request_schema = "contracts/schema/command/instance.create.request.v1.schema.json"
 response_schema = "contracts/schema/factorio/factorio_instance.v1.schema.json"

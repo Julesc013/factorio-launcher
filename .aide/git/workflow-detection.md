@@ -3,8 +3,8 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/m2-closeout-canonical-promotion
-- current_commit: 5250db1d17ac330f5ae0b672ccc7466431a1e4a2
+- current_branch: task/facman-product-convergence-01
+- current_commit: 2056c8d0a16c220be45b94aa388c390d2da79577
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
@@ -14,8 +14,8 @@
 
 ## Branch Summary
 
-- local_branches: 43
-- remote_branches: 28
+- local_branches: 47
+- remote_branches: 32
 - tags_count: 2
 
 ## Warnings

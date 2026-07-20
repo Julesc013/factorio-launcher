@@ -246,7 +246,7 @@ id = "live_target_acceptance_required"
 severity = "blocked"
 effect = "workspace_write"
 retryable = false
-message = "A human M2 live-target acceptance Pass is required before FacMan setup mutation is activated."
+message = "Managed-target setup mutation remains unavailable until its separate live-target policy gate passes."
 
 [[code]]
 id = "setup_recovery_not_available"

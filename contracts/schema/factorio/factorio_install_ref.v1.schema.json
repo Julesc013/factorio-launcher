@@ -9,7 +9,8 @@
     "provider_id": { "type": "string" },
     "product_id": { "const": "factorio" },
     "source": { "type": "string" },
-    "ownership": { "enum": ["managed", "foreign", "foreign_owned", "imported", "portable"] },
+    "source_ref": { "type": "string" },
+    "ownership": { "enum": ["managed", "adopted", "foreign", "foreign_owned", "imported", "portable"] },
     "version": { "type": ["string", "null"] },
     "channel": { "type": ["string", "null"] },
     "platform": { "type": "string" },
@@ -17,6 +18,12 @@
       "enum": ["steam", "website_zip", "website_installer", "gog", "local_archive", "os_package", "manually_imported", "unknown"]
     },
     "platform_integration": { "enum": ["steam", "none_detected", "unknown"] },
+    "installation_layout": { "enum": ["steam_managed", "official_installer", "portable_archive", "installer_style_tree", "app_bundle", "unknown"] },
+    "data_routing": { "enum": ["system_shared", "system_shared_with_local_residue", "install_local", "unknown"] },
+    "program_data_separation": { "enum": ["separated", "conflated", "unknown"] },
+    "uninstall_integration": { "enum": ["uninstaller_present", "not_detected"] },
+    "side_by_side_safety": { "enum": ["platform_managed", "program_files_separate_but_registration_may_be_superseded", "independent_program_tree"] },
+    "local_data_domains": { "type": "array", "items": { "enum": ["config", "mods", "saves", "script_output", "logs", "player_data", "cache", "achievements", "temp"] } },
     "strict_isolation_eligibility": { "enum": ["ineligible", "candidate", "unproven", "eligible"] },
     "external_state_domains": {
       "type": "array",

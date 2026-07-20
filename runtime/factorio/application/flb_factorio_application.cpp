@@ -4,13 +4,12 @@
 #include "application_context.h"
 #include "application_types.h"
 #include "command_dispatch.h"
+#include "command_admission.h"
 #include "command_result.h"
 #include "handlers/diagnostics.h"
 #include "handlers/doctor.h"
-#include "handlers/installs.h"
 #include "handlers/instances.h"
 #include "handlers/intelligence.h"
-#include "handlers/launch.h"
 #include "handlers/mods.h"
 #include "handlers/modsets.h"
 #include "handlers/product.h"
@@ -22,11 +21,12 @@
 #include "handlers/snapshots.h"
 #include "handlers/unavailable.h"
 #include "handlers/utility.h"
+#include "modules/installation_module.h"
+#include "modules/launch_module.h"
 #include "fl_json_boundary.h"
 #include "fl_file_io.h"
 #include <filesystem>
 #include <mutex>
-#include <new>
 #include <string>
 #include <variant>
 namespace facman::factorio::application {
@@ -110,6 +110,19 @@ private:
         if (handlers::is_setup_command(request.command)) {
             return handlers::dispatch_setup(context_, request);
         }
+        const CommandAdmissionDecision admission = admit_command(context_.configuration(), request.command);
+        if (launch_module_.handles(request.command)) {
+            return launch_module_.execute(context_, request, admission);
+        }
+        if (!admission.admitted && admission.code == "network_forbidden") {
+            return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
+        }
+        if (!admission.admitted) {
+            return handlers::unavailable(context_, current_command_, admission.code, admission.reason);
+        }
+        if (installation_module_.handles(request.command)) {
+            return installation_module_.execute(context_, request);
+        }
         switch (request.command) {
         case CommandId::workspace_status: return handlers::workspace_status(context_);
         case CommandId::workspace_paths: return handlers::workspace_paths(context_);
@@ -124,10 +137,6 @@ private:
         case CommandId::doctor_explain: return handlers::doctor_explain(context_);
         case CommandId::launch_plan_explain: return handlers::launch_plan_explain(context_, std::get<ExplainInstanceRequest>(request.payload));
         case CommandId::doctor_run: return handlers::run_doctor(context_, std::get<DoctorRequest>(request.payload));
-        case CommandId::install_list: return handlers::list_installs(context_);
-        case CommandId::install_scan: return handlers::scan_installs(context_, std::get<ScanInstallRefsRequest>(request.payload));
-        case CommandId::install_import: return handlers::import_install(context_, std::get<ImportInstallRefRequest>(request.payload));
-        case CommandId::install_inspect: return handlers::inspect_install(context_, std::get<InspectInstallRefRequest>(request.payload));
         case CommandId::instance_list: return handlers::list_instances(context_);
         case CommandId::instance_create: return handlers::create_instance(context_, std::get<CreateInstanceRequest>(request.payload));
         case CommandId::instances_inspect: case CommandId::instances_verify: case CommandId::instances_diff:
@@ -141,12 +150,6 @@ private:
         case CommandId::profiles_list: case CommandId::profiles_inspect: case CommandId::profiles_create:
         case CommandId::profiles_clone: case CommandId::profiles_diff: case CommandId::profiles_plan: case CommandId::profiles_apply:
         case CommandId::profiles_archive: return handlers::dispatch_profiles(context_, request);
-        case CommandId::launch_plan_build: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "launch_plan.build");
-        case CommandId::run_preview: return handlers::preview_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload), "run.preview");
-        case CommandId::run_execute:
-            return std::get<ExecuteRunRequest>(request.payload).instance_id.empty()
-                ? handlers::unavailable(context_, "run.execute", "isolation_not_proven", "real Factorio write isolation has not been proven")
-                : handlers::refuse_execute(context_, std::get<ExecuteRunRequest>(request.payload));
         case CommandId::mods_search: case CommandId::mods_install:
         case CommandId::mods_update: return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
         case CommandId::servers_list: return handlers::list_servers(context_);
@@ -159,7 +162,6 @@ private:
         case CommandId::dev_dump_data: case CommandId::dev_dump_icons:
         case CommandId::dev_benchmark:
         case CommandId::dev_instrument_mod: return handlers::refuse_dev_execution(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::launch_plan_preflight: return handlers::preflight_launch(context_, std::get<BuildLaunchPlanRequest>(request.payload));
         case CommandId::mods_import: return handlers::import_mod(context_, std::get<ImportModRequest>(request.payload));
         case CommandId::mods_list: case CommandId::mods_inspect: case CommandId::mods_verify: case CommandId::mods_index: case CommandId::mods_explain: return handlers::dispatch_mod_inventory(context_, request);
         case CommandId::modsets_lock: return handlers::lock_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
@@ -203,6 +205,8 @@ private:
         return result.status;
     }
     ApplicationContext context_;
+    InstallationApplicationModule installation_module_;
+    LaunchApplicationModule launch_module_;
     std::string current_command_;
     std::string response_json_;
     std::string error_message_;

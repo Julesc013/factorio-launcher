@@ -1,10 +1,13 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
 
+#include "application_configuration.h"
+#include "command_admission.h"
 #include "command_dispatch.h"
 #include "fl_result.h"
 
 #include <string>
+#include <algorithm>
 #include <variant>
 
 int main()
@@ -29,5 +32,13 @@ int main()
             false,
             request,
             detail)) return 6;
+    const CommandAdmissionPolicy policy = command_admission_policy(CommandId::run_execute);
+    if (std::find(policy.effects.begin(), policy.effects.end(), "workspace_write") == policy.effects.end() ||
+        std::find(policy.effects.begin(), policy.effects.end(), "process_execute") == policy.effects.end() ||
+        std::find(policy.capabilities.begin(), policy.capabilities.end(), "process.execute") == policy.capabilities.end()) return 7;
+    const ApplicationConfiguration configuration = ApplicationConfiguration::load({});
+    const CommandAdmissionDecision execution = admit_command(configuration, CommandId::run_execute);
+    if (execution.admitted || execution.code != "isolation_not_proven") return 8;
+    if (!admit_command(configuration, CommandId::run_preview).admitted) return 9;
     return 0;
 }

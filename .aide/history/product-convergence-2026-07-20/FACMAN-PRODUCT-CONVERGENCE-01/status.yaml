@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-PRODUCT-CONVERGENCE-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-19T14:39:58Z
+result: PASS
+evidence_path: .aide/history/product-convergence-2026-07-20/FACMAN-PRODUCT-CONVERGENCE-01/evidence/
+active_at: 2026-07-19T14:40:04Z
+verified_at: 2026-07-19T15:25:25Z
+implementation_state: implemented
+reviewed_at: 2026-07-19T15:25:33Z
+closed_at: 2026-07-19T15:25:38Z
+archived_at: 2026-07-19T15:25:46Z

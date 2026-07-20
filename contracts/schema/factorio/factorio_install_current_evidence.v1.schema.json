@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_current_evidence.v1.schema.json",
+  "title": "Factorio Installation Current Evidence",
+  "type": "object",
+  "required": ["schema", "install_id", "product_id", "version", "source", "deployment", "ownership_and_authority", "data_policy", "integration", "health", "provenance", "filesystem"],
+  "properties": {
+    "schema": { "const": "factorio.install_current_evidence.v1" },
+    "install_id": { "type": "string", "minLength": 1 },
+    "product_id": { "const": "factorio" },
+    "version": { "type": "string" },
+    "source": { "type": "object" },
+    "deployment": { "type": "object" },
+    "ownership_and_authority": { "type": "object" },
+    "data_policy": { "type": "object" },
+    "integration": { "type": "object" },
+    "health": { "type": "object" },
+    "provenance": { "type": "object" },
+    "filesystem": { "type": "object" }
+  },
+  "additionalProperties": false
+}

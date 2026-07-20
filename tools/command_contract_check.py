@@ -22,6 +22,8 @@ EXPECTED_COMMANDS = {
     "installs.scan",
     "installs.import",
     "installs.inspect",
+    "installs.describe",
+    "installs.reconcile.plan",
     "install_refs.list",
     "instances.create",
     "instances.inspect",

@@ -56,6 +56,14 @@ ENUM_CHOICES: dict[str, list[str]] = {
     "selection_mode": ["none", "load-save", "benchmark-save"],
     "window_mode": ["windowed", "fullscreen"],
     "confirmation": ["APPLY"],
+    "management_mode": ["preserve", "managed", "reference", "external"],
+    "deployment_style": [
+        "preserve", "standalone_directory", "vendor_installed",
+        "portable_in_place", "external_manager",
+    ],
+    "data_policy": ["preserve", "instance_local", "system_shared", "install_local"],
+    "integration_mode": ["preserve", "none", "facman_owned", "external"],
+    "update_policy": ["preserve", "pinned", "manual", "follow_channel"],
 }
 
 
@@ -606,7 +614,7 @@ def render_tui_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         "    const char* label_key; const char* description_key; const char* availability;",
         "    const char* availability_reason; const char* risk_tier; const char* effects_json;",
         "    const char* positionals_json; const char* options_json;",
-        "    const char* request_fields_json; const char* renderer;",
+        "    const char* request_fields_json; const char* renderer; int writes_state;",
         "};",
         "inline constexpr GeneratedCommand kGeneratedCommands[] = {",
     ]
@@ -623,7 +631,11 @@ def render_tui_catalog(commands: list[dict[str, Any]], digest: str) -> str:
             json.dumps(metadata["cli_grammar"]["options"], separators=(",", ":")),
             json.dumps(metadata["request_fields"], separators=(",", ":")), str(metadata["renderer"]),
         ]
-        lines.append("    {" + ", ".join(c_string(value) for value in values) + "},")
+        writes_state = "workspace_write" in {str(effect) for effect in item.get("effects", [])}
+        lines.append(
+            "    {" + ", ".join(c_string(value) for value in values) +
+            f", {1 if writes_state else 0}" + "},"
+        )
     lines.extend([
         "};",
         "inline constexpr std::size_t kGeneratedCommandCount = sizeof(kGeneratedCommands) / sizeof(kGeneratedCommands[0]);",
@@ -647,7 +659,10 @@ def render_english_strings(commands: list[dict[str, Any]]) -> str:
             continue
         runtime_id = str(item["runtime_id"])
         base[f"command.{runtime_id}.title"] = humanize(str(item["command_id"]))
-        base[f"command.{runtime_id}.description"] = "Run " + str(item.get("cli", runtime_id))
+        command_line = str(item.get("cli", runtime_id))
+        if len(command_line) > 180 and " [--" in command_line:
+            command_line = command_line.split(" [--", 1)[0] + " [options] --json"
+        base[f"command.{runtime_id}.description"] = "Run " + command_line
     lines = ["schema = \"facman.ui.strings.v1\"", "locale = \"en-US\"", "", "[strings]"]
     lines.extend(f"{json.dumps(key)} = {json.dumps(value)}" for key, value in sorted(base.items()))
     lines.append("")

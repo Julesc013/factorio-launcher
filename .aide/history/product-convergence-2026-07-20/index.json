@@ -1,0 +1,178 @@
+{
+  "checkpoint": "product-convergence-2026-07-20",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "ad5a3505815c06b245a0b5c716141b23162066c08bebcee027be12df1eaa14a6",
+        "evidence/remaining-risks.md": "d8ccdfecdff1e408aa52c3f78f4ba794f1d88093b57a5fa60461e1d2906441cd",
+        "evidence/validation.md": "0b02564670d94fa6d0e1c5c0e60b4911eea51b5c3a6306fc1d8d0aa6eca0ef0e",
+        "status.yaml": "a66362a3372b28147c0a2173c10f25c67c0ce4d6c466996fe31a28e49310a1f5",
+        "task.yaml": "a473bea485f24792e7a4ca01ecc7c072b952bce8627022a2bbe5c1347acbd335"
+      },
+      "task_id": "FACMAN-PRODUCT-CONVERGENCE-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "7ea55f28683c1117a9d7a10060c9c307be65939bc8f5450bbe9b541da3131591",
+        "evidence/remaining-risks.md": "76303a64bf5354d90b5705335d0abca2d2975fe532cd3101216077d2de79f96e",
+        "evidence/validation.md": "a5e4f942a5ad6cd86e823fed1c1e01a619418f499ec9808c1e6eb1f84c874cf5",
+        "status.yaml": "af65c006050191d2d4d440a662e9a32323b2491089ed69dfb0af56f0bef98083",
+        "task.yaml": "24450b716efad34653cc38d84cda2c2687f3d8c1f1c12478139e5be7983ef37b"
+      },
+      "task_id": "FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "8de5aff8201ac655243cb2c51b9667ee0eaad608fc6a0e3b7bab741f224f9ae5",
+        "evidence/remaining-risks.md": "ac37d3ea055bba43ef60694df3a154629c9ceb6de0966361ff63f6c447d81903",
+        "evidence/validation.md": "e88eaa92e1a0138b9226d2bbdd78ac19d09686e44a6b5c0f8d80f784868225df",
+        "status.yaml": "aaad81f79acf3f04435dfe741bc6aae24e6381e9b706712feae2de075ac4b7ec",
+        "task.yaml": "87c656aa2472270125e186162af2949772d1733daba0a88d776675cc59c50f30"
+      },
+      "task_id": "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "0be243767494d249ce73adbdaac4aa05e9b4bf455cb4562f1b871444214e3b11",
+        "evidence/remaining-risks.md": "8d9008bcc55226d14059e1862723f071cb5aae7b46c86134d9cc2e18564c2256",
+        "evidence/validation.md": "e58cdaa0c72000e2cfccee68cec2252abf3c10be060ab0e5078eaa1db8407217",
+        "status.yaml": "eb113bf3304a98b39c111e37843e1466c1f00a3847f4dcd0f3ad5c8fa5c2c408",
+        "task.yaml": "9565ed36167e290e7d4badb8d314843a9ccbd39b96b5218e8599a249a83391a4"
+      },
+      "task_id": "M2-WU1-LIVE-TARGET-POLICY-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "1e1a4eed57a2131e1666d84bd0dcbb91b73a32097643402b3d32836636ee4533",
+        "evidence/remaining-risks.md": "f88df5b67d2fa1072e3d968964036c55d70a72f6d87ad9fac6e6acbbed190e24",
+        "evidence/validation.md": "eb5f2568d291e4dd3c67995041330778c369b6fac0f82090272418968ea26049",
+        "status.yaml": "1e900a2e21f5b0c217618d1fe57af21445dc9443790353e4a1cb31742b805d9c",
+        "task.yaml": "19617f46ef361db11660e5bee7a3de6976640a63d843f663b7138d453b43dc53"
+      },
+      "task_id": "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "16f91a305543403656b7c773bfb472a77a7f5300164af2f671fc1c402499cf45",
+        "evidence/remaining-risks.md": "1c9a4b48ad70f9871569fdc682fd0447ea4788a6ffd47e89e9738cb78338433f",
+        "evidence/validation.md": "18fce0d71b6f8e6131863ab89f80e30d00fa44ae688b21523a749cfe3a4249e0",
+        "status.yaml": "4d0930c540e2d82716a85f012f20bbe4cc3ec6048b24817c0d1f2afaf4b8c6a7",
+        "task.yaml": "44b9634693c523b95f5cdff9cc036d5e6273651d252252849a53a98d9938f389"
+      },
+      "task_id": "M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "fbe479da99ace59af91a06698d00401c0ef1958a6d5935052835388ef9b23226",
+        "evidence/remaining-risks.md": "bc7ea608e402fc90ecb45cbdcb8385c45251102ffe724ce826e40c58ae15f6c1",
+        "evidence/validation.md": "0bf1aa71ea9d81a2bc75191ff80c1ec6b6e7450086a90f7ccf804c5f84e61c79",
+        "status.yaml": "5dc8882aa7beae48a9e42ba20de59a70379118ae205e8f0733a6f402009b89ef",
+        "task.yaml": "bf41b929a238fff21dd4dd71abce4bd216176c4f0bd58a456825e0f1d1269043"
+      },
+      "task_id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "d1f869264c6d495513a15879d13e2241205bca2708733def77fd0f812074818c",
+        "evidence/remaining-risks.md": "50473308dbb8ebfa631bfe9829706e91f688d1bc5aa1283b7aab0ce2aa15bf26",
+        "evidence/validation.md": "16c71f4db09836ad932b18af8f365c785c5d0148ce76a3cec029c9c32a124400",
+        "status.yaml": "cb69b374e79ae078d975f7e4e6bc11895efd9f508d61f996c7f30b49ed4e03f9",
+        "task.yaml": "bd0c36f2dd5d4e0fbb29cdf64740d229ed1ef9c2a6f02316647c384046e2bead"
+      },
+      "task_id": "M2-WU2-DEV-INTEGRATION-PROOF-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "deaa6b9b08ef40669bbeefe59b09ea182f10bb5bea7dc882fb53588b6fda0dc2",
+        "evidence/remaining-risks.md": "3232ef5e8558b6b2a8b3ed4d4fb0c1aaeb17a879d9df726d48e741a330a53290",
+        "evidence/validation.md": "9f712bfc55ddaf70240b2aec4634b34ba1e5f12a15c56ac81287adf7fc0d0e1d",
+        "status.yaml": "8945d97eb6b5c5effb3dde089c1698f5f954dd4d1f0f7a7a4a39be778a14aeaa",
+        "task.yaml": "0d1f2a5bbfaa0a20d083e345cbc546d6d968341dc9cb15fd8e94dcdbe98e4b8a"
+      },
+      "task_id": "M2-WU2-PUBLIC-SETUP-LIFECYCLE-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "c2e441f6bb7ecac637ff3ecb2f4a8e206b5d62acc481acfda81fe629aeab1123",
+        "evidence/remaining-risks.md": "f1c6d4284f9163269d2a656d7301ff38048d44defea213fc1e4f7a2a332b8183",
+        "evidence/validation.md": "71cbebc7d61ab99b4b3219f98650d5222944073b899ab39f41b5b1fdc9ea72f3",
+        "status.yaml": "db2f8e42605b599bfa06ed5ea47d4bbf65724929bacd41c976ee7d7c4b4edd01",
+        "task.yaml": "59561315348c9a8ec227790c3c4991618d79b46956c4d0c191d6423462953940"
+      },
+      "task_id": "M2-WU3-DEV-INTEGRATION-PROOF-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "07de722e102c755b6bb8b6df07e7dfa88e1d0a3087c8541aa8a7da3998088f7f",
+        "evidence/remaining-risks.md": "aaae44f6bb4455effe859496c842660fa4607652dcdb2afa79fe87796cda6593",
+        "evidence/validation.md": "8da1e11d1f279f9eb299cb14fd7781c75009427270aaec8613e4ac05d32dbd42",
+        "status.yaml": "89408290da80ef89f1d7111cae9f48235f1ad8d66efc6835b202de67c8ccdbaf",
+        "task.yaml": "93a9de8080ecf72c1aa9a93f77fc847693cf7181bfc243b4aaa4385e6e2d35da"
+      },
+      "task_id": "M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "d69c86a793abad82be2aae8db5a001ed5c1535081e380423f06f1d8139fff8c6",
+        "evidence/remaining-risks.md": "50cd1f311ff924385331aa6717f0d53ca5842411c65b4c3981e7cf6cf9b8fef9",
+        "evidence/validation.md": "bee028710687d9453162357dfc8ffc1db0e0cc53181f331ade153c34f74a55ba",
+        "status.yaml": "b009bf300b8dd4e8b53444b0c6703f39d9fc493b989d0baabe30aa17184747f2",
+        "task.yaml": "e683e992f610d41a0c79a2b178bae788f2f4d2248c19b5b538bca9ef6effbd96"
+      },
+      "task_id": "M2-WU4-LIVE-INSTALL-ACCEPTANCE-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "ea20235f25c4bf986fd3da6873c0a34ab25ab005e89949ba296c4c967a1871d6",
+        "evidence/remaining-risks.md": "759a5972cf3040af8c5deb4932c47bb8a7892d7b192a0d80313709a7444ecd14",
+        "evidence/validation.md": "b628d921d45d9836f8fca028fb76b0d776ccbc7a46463d416ecb913305a4f43b",
+        "status.yaml": "121bedf465769d6e5fe073396dc36b016b530f44f41ab971a91bbdeeb03ae4f6",
+        "task.yaml": "35c232c0eb2d06dfa899b9020b76acfbb76a2f33b0a4e5be642b8318549477a4"
+      },
+      "task_id": "M2-WU5-LIVE-INTERRUPTION-RECOVERY-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "088164fc1e8617f4aea8a27a546789567431d7d25f99796ef47d8663cb1d0b88",
+        "evidence/remaining-risks.md": "5cefde01785ff9714a12a33676a012428dd4a3da900fbae7fe600a10adb04920",
+        "evidence/validation.md": "257eb28f3a680473a793d5d210313c1f9cbc1c06f63f1b57322db6372438f307",
+        "status.yaml": "748cdb160de3967b25364455a34d7d664fb071072f0617b443efef4d2c78b1af",
+        "task.yaml": "df328aff00c54ec40ca9bf2f81b9eb576d50ff3175b7b719ee9ac0ecabcacebd"
+      },
+      "task_id": "M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "429fc60781d969692ce5aa58a9143fa97e2dd97ca2fdb432b0a87be360dbcc53",
+        "evidence/remaining-risks.md": "11b99578a2a2e4103cfd40e70ca3a050b16d12b7e50394169a7b74259a7d04a5",
+        "evidence/validation.md": "60f2010c6b3ba895eea8601895d284f863b6090acc99a6953be4924381d27787",
+        "status.yaml": "7861565b69bc5ac5f06592bb9f61512fbb3f8c2751ea8139494ab9e2288b96a5",
+        "task.yaml": "46fb9781f8e6610962ba467153875db527a83d5a7ffe0f77ba723b377ead2968"
+      },
+      "task_id": "M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "a9bea616b06a3879736bf642206c1f47997dae87d3acb732a0f9d9dc114ffc43",
+        "evidence/remaining-risks.md": "0fabc9e859f1b919ab11c39487eb0fa2ec4686c6719e3e5042d63dd26b5bfdb0",
+        "evidence/validation.md": "e0993aade9b74536ebf754d9953c5b93bab30836691f0f48cd6469883b4fac78",
+        "status.yaml": "69a280991a1fac06259ebbb2126f752214767948b6eb748d7ae4447d4060ec91",
+        "task.yaml": "002f4dccc1b7294ee2898164cacef41469506ba01233a126a24d8e129115bafa"
+      },
+      "task_id": "M2-WU8-GENERATED-FRONTEND-WORKFLOW-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "449ea5a2f90ac8b69d3fec846a6ea08035a32cdd57baa305cbf63241d729b0af",
+        "evidence/remaining-risks.md": "e5e5854a8fac8f5400fcfdcec4f434f690b3249968b2506d1487af117b175495",
+        "evidence/validation.md": "9a91f2812d1fd904385fbe572ce4e602000372959fdaf55c786f2a662dc2b858",
+        "status.yaml": "a5bee3e3274073b0ee0b7cd5edde71bacac423331ff8fcb6c7607c7722192a3e",
+        "task.yaml": "cfdfa022bf2160b523c152f9d3a5ba19e81733c8b8b13decac890bb661be93d6"
+      },
+      "task_id": "M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01"
+    }
+  ]
+}

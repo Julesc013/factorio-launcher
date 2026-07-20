@@ -225,7 +225,7 @@ int main(void)
     if (run_command(context, "doctor.run", 1, "\"command\":\"doctor.run\"") != 0) return 40;
     if (run_command(context, "workspace.status", 1, "\"mutation_executed\":false") != 0 ||
         run_command(context, "workspace.paths", 1, "\"command\":\"workspace.paths\"") != 0 ||
-        run_command(context, "capabilities.inspect", 1, "human_gated") != 0 ||
+        run_command(context, "capabilities.inspect", 1, "launch.execute.hermetic") != 0 ||
         run_command(context, "onboarding.plan", 1, "\"executed\":false") != 0 ||
         run_command(context, "doctor.explain", 1, "isolation_not_proven") != 0) return 42;
     if (run_refusal(context, "launch_plan.explain", 1, "{}", "invalid_request") != 0 ||

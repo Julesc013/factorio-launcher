@@ -1,0 +1,157 @@
+schema = "facman.capabilities.v1"
+version = 1
+
+# Capability identifiers describe durable authority and user outcomes. They are
+# deliberately independent of command spellings and historical milestone IDs.
+
+[[capability]]
+id = "install.discover"
+domain = "installs"
+status = "available"
+required_effects = ["workspace_read"]
+commands = ["installs.scan"]
+description = "Discover candidate Factorio installations without taking ownership or mutating them."
+
+[[capability]]
+id = "install.reference.register"
+domain = "installs"
+status = "available"
+required_effects = ["workspace_read", "workspace_write"]
+commands = ["installs.import"]
+description = "Register a reference to an eligible existing installation while preserving foreign ownership."
+
+[[capability]]
+id = "install.model.inspect"
+domain = "installs"
+status = "available"
+required_effects = ["workspace_read"]
+commands = ["installs.describe"]
+description = "Project a registered installation into independent source, deployment, ownership, data, integration, provenance, verification, and filesystem capability axes."
+
+[[capability]]
+id = "install.reconciliation.plan"
+domain = "installs"
+status = "available"
+required_effects = ["workspace_read"]
+commands = ["installs.reconcile.plan"]
+description = "Compare current installation evidence with desired state and produce a deterministic, non-mutating reconciliation plan."
+
+[[capability]]
+id = "install.managed.plan"
+domain = "installs"
+status = "conditional"
+required_effects = ["workspace_read", "setup_preview"]
+commands = ["installs.install.plan"]
+description = "Produce an immutable plan for a new FacMan-managed standalone installation."
+
+[[capability]]
+id = "install.managed.apply"
+domain = "installs"
+status = "unavailable"
+required_effects = ["workspace_read", "workspace_write", "setup_mutation"]
+commands = ["installs.install.apply"]
+description = "Apply a reviewed managed-install plan through Universal Setup."
+
+[[capability]]
+id = "install.existing.inspect"
+domain = "installs"
+status = "backlog"
+required_effects = ["workspace_read", "setup_preview"]
+commands = []
+description = "Inspect an existing portable installation without mutation or ownership transfer."
+
+[[capability]]
+id = "install.existing.adoption.plan"
+domain = "installs"
+status = "backlog"
+required_effects = ["workspace_read", "setup_preview"]
+commands = []
+description = "Plan explicit adoption of an eligible standalone installation."
+
+[[capability]]
+id = "install.existing.adoption.apply"
+domain = "installs"
+status = "unavailable"
+required_effects = ["workspace_read", "workspace_write", "setup_mutation"]
+commands = []
+description = "Apply an exact adoption plan without mutating Steam-owned installations."
+
+[[capability]]
+id = "launch.preview"
+domain = "launch"
+status = "available"
+required_effects = ["workspace_read"]
+commands = ["run.preview", "launch.plan"]
+description = "Render the exact executable, arguments, configuration, roots, and advertised isolation mode."
+
+[[capability]]
+id = "launch.preflight"
+domain = "launch"
+status = "available"
+required_effects = ["workspace_read"]
+commands = ["launch_plan.preflight"]
+description = "Revalidate launch identity, paths, ownership, configuration, and isolation immediately before execution."
+
+[[capability]]
+id = "launch.execute.instance_isolated"
+domain = "launch"
+status = "unavailable"
+required_effects = ["workspace_read", "workspace_write", "process_execute"]
+commands = ["run.execute"]
+description = "Run with FacMan-owned instance data isolated while explicitly disclosing enumerated platform-owned state."
+
+[[capability]]
+id = "launch.execute.hermetic"
+domain = "launch"
+status = "unavailable"
+required_effects = ["workspace_read", "workspace_write", "process_execute"]
+commands = ["run.execute"]
+description = "Run with no persistent change outside the authorised FacMan workspace."
+
+[[capability]]
+id = "process.execute"
+domain = "platform"
+status = "conditional"
+required_effects = ["process_execute"]
+commands = []
+description = "Start and supervise an explicitly authorised process without shell invocation under timeout, cancellation, output, environment, and process-tree rules; real Factorio use remains separately gated."
+
+[[capability]]
+id = "network.mod_portal.read"
+domain = "content"
+status = "unavailable"
+required_effects = ["network_read"]
+commands = []
+description = "Read Factorio Mod Portal metadata through an explicit network capability."
+
+[[capability]]
+id = "network.mod_portal.write"
+domain = "content"
+status = "unavailable"
+required_effects = ["network_write"]
+commands = []
+description = "Perform authenticated Mod Portal mutations through an explicit network capability."
+
+[[capability]]
+id = "credential.factorio.read"
+domain = "credentials"
+status = "unavailable"
+required_effects = ["credential_read"]
+commands = []
+description = "Read a Factorio credential from an operating-system-backed credential provider."
+
+[[capability]]
+id = "release.sign"
+domain = "release"
+status = "unavailable"
+required_effects = ["release_sign"]
+commands = []
+description = "Sign a release artifact with separately authorised publisher credentials."
+
+[[capability]]
+id = "release.publish"
+domain = "release"
+status = "unavailable"
+required_effects = ["release_publish"]
+commands = []
+description = "Publish a signed, provenance-bound release through an explicitly authorised channel."

@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `7b587bd0b8f3f1317aca52509aa9996d787a075ed6d3b3837dcea44a1ce96c41`.
+Source digest: `671764ee966fe44d269d6787664049383ff461152616762b4312b0a1789abfdb`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -18,6 +18,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `doctor.run` | `doctor.run` | `doctor_run` | no | - | available | workspace_read | `facman doctor --json` |
 | `factorio.product.inspect` | `factorio.product.inspect` | `product_inspect` | no | - | available | none | `FLB command bridge: factorio.product.inspect` |
 | `install_refs.list` | `install_refs.list` | `install_list` | no | install-refs.list | available | workspace_read | `facman installs list --json` |
+| `installs.describe` | `installs.describe` | `installs_describe` | no | - | implemented | workspace_read | `facman installs describe <install-id> --json` |
 | `installs.import` | `install_refs.import` | `install_import` | yes | install-refs.import | available | workspace_read, workspace_write | `facman installs import <factorio-dir> --id <install-id> --json` |
 | `installs.inspect` | `install_refs.inspect` | `install_inspect` | no | install-refs.inspect | available | workspace_read | `facman installs inspect <install-id> --json` |
 | `installs.install.apply` | `installs.install.apply` | `installs_install_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs install apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
@@ -25,12 +26,13 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `installs.install_version` | `installs.install_version` | `installs_install_version` | no | installs.install-version | unavailable_until_gateway | setup_preview | `facman installs install-version <version> --archive <path> --json` |
 | `installs.move.apply` | `installs.move.apply` | `installs_move_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs move apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.move.plan` | `installs.move.plan` | `installs_move_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs move plan <install-id> --target <path> --json` |
+| `installs.reconcile.plan` | `installs.reconcile.plan` | `installs_reconcile_plan` | no | - | implemented | workspace_read | `facman installs reconcile plan <install-id> [--version <v>] [--source-ref <ref>] [--target <path>] [--management <mode>] [--deployment-style <style>] [--data-policy <policy>] [--integration <mode>] [--update-policy <policy>] --json` |
 | `installs.recovery.apply` | `installs.recovery.apply` | `installs_recovery_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs recovery apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.recovery.inspect` | `installs.recovery.inspect` | `installs_recovery_inspect` | no | - | unavailable_until_gateway | setup_preview | `facman installs recovery inspect <transaction-id> --json` |
 | `installs.repair` | `installs.repair` | `installs_repair` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs repair <install-id> --json` |
 | `installs.repair.apply` | `installs.repair.apply` | `installs_repair_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs repair apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.repair.plan` | `installs.repair.plan` | `installs_repair_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs repair plan <install-id> --archive <path> --json` |
-| `installs.scan` | `install_refs.scan` | `install_scan` | no | install-refs.scan | available | workspace_read | `facman installs scan --json` |
+| `installs.scan` | `install_refs.scan` | `install_scan` | no | install-refs.scan | available | workspace_read | `facman installs scan [--search-root <path>] --json` |
 | `installs.uninstall` | `installs.uninstall` | `installs_uninstall` | no | - | unavailable_until_gateway | setup_preview, foreign_owned_refusal | `facman installs uninstall <install-id> --json` |
 | `installs.uninstall.apply` | `installs.uninstall.apply` | `installs_uninstall_apply` | yes | - | unavailable_until_gateway | workspace_write, setup_preview | `facman installs uninstall apply <plan-id> --digest <sha256> --confirm <APPLY> --json` |
 | `installs.uninstall.plan` | `installs.uninstall.plan` | `installs_uninstall_plan` | no | - | unavailable_until_gateway | setup_preview | `facman installs uninstall plan <install-id> --json` |
@@ -40,7 +42,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `instance.list` | `instance.list` | `instance_list` | no | - | available | workspace_read | `facman instances list --json` |
 | `instances.archive` | `instances.archive` | `instances_archive` | yes | - | available | workspace_read, workspace_write | `facman instances archive <instance-id> --json` |
 | `instances.clone` | `instances.clone` | `instances_clone` | yes | - | available | workspace_read, workspace_write | `facman instances clone <source-id> <destination-id> [--name <display-name>] [--install <install-id>] --json` |
-| `instances.create` | `instance.create` | `instance_create` | yes | - | available | workspace_read, workspace_write | `facman instances create <name> --install <install-id> --json` |
+| `instances.create` | `instance.create` | `instance_create` | yes | - | available | workspace_read, workspace_write | `facman instances create <name> --install <install-id> [--import-data <install-root>] --json` |
 | `instances.diff` | `instances.diff` | `instances_diff` | no | - | available | workspace_read | `facman instances diff <left-instance-id> <right-instance-or-snapshot> --json` |
 | `instances.inspect` | `instances.inspect` | `instances_inspect` | no | - | available | workspace_read | `facman instances inspect <instance-id> --json` |
 | `instances.rename` | `instances.rename` | `instances_rename` | yes | - | available | workspace_read, workspace_write | `facman instances rename <instance-id> --name <display-name> --json` |
@@ -83,7 +85,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `profiles.inspect` | `profiles.inspect` | `profiles_inspect` | no | - | available | workspace_read | `facman profiles inspect <profile-id> --json` |
 | `profiles.list` | `profiles.list` | `profiles_list` | no | - | available | workspace_read | `facman profiles list --json` |
 | `profiles.plan` | `profiles.plan` | `profiles_plan` | no | - | available | workspace_read | `facman profiles plan <instance-id> <profile-id> [profile options] --json` |
-| `run.execute` | `run.execute` | `run_execute` | no | - | unavailable_until_isolation_proof | workspace_read | `facman run <instance-id> --execute --json` |
+| `run.execute` | `run.execute` | `run_execute` | yes | - | unavailable_until_isolation_proof | workspace_read, workspace_write, process_execute | `facman play <instance-id> --json` |
 | `run.preview` | `run.preview` | `run_preview` | no | - | available | workspace_read | `facman run <instance-id> --json` |
 | `saves.associate` | `saves.associate` | `saves_associate` | yes | - | available | workspace_read, workspace_write | `facman saves associate <save> --instance <instance-id> [--profile <id>] --json` |
 | `saves.backup` | `saves.backup` | `saves_backup` | yes | - | available | workspace_read, workspace_write | `facman saves backup <save> --instance <instance-id> --json` |

@@ -54,13 +54,20 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-R3.7 is complete and `eb629caaec9d62536a272336e940c0d3003fdaae` is the exact H1 candidate.
-The current contract surface contains 121 commands, 234 schemas, and 217 refusal codes.
+**Phase:** `multi_version_install_lifecycle`. **Active WorkUnit:** `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`. **Next:** `FACMAN-WORLD-SPEC-AND-READINESS-01`.
 
-The next authority gate is **H1**. `run.execute` remains `unavailable` with `steam_external_state_not_isolated`.
-The operator verdict is `Fail` and Safe beta remains unpromoted.
-M1 managed portable setup is `fixture_proven` in bounded fixture, disposable, and package-proof roots; ordinary live-target apply remains unavailable.
+> Choose a world, press Play, and remain in control of everything that changes.
+
+The golden journey is `find Factorio -> choose or create a world -> review readiness -> Play -> exit -> relaunch`. M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
+This local unreviewed task worktree enumerates 123 commands, 250 schemas, and 217 refusal codes; those counts are not integrated release claims.
+
+Two execution modes are accepted product designs but remain unproven: Steam-aware `instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because `real_play_gate_not_passed`; no real-play gate has passed.
+Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
+After installation-model-v2 closeout, the primary path is portable WorldSpec, local WorldBinding, computed readiness, operation-bound permits, and the hermetic standalone Play gate.
+The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
+Contributor status command: `py -3 tools/project_state.py --summary`.
 <!-- FACMAN-PROJECT-STATUS:END -->
 
 The native CLI-first slice includes:
@@ -74,6 +81,7 @@ facman installs import <factorio-dir> --id <install-id>
 facman instances create space-age-main --install <install-id>
 facman launch-plan space-age-main
 facman run space-age-main
+facman play space-age-main  # safely refused until a real-play gate passes
 ```
 
 When running directly from a checkout, use:
@@ -138,11 +146,12 @@ instances, profiles, install references, and launch plans belong to
 - No bundled Factorio binaries.
 - No passwords or tokens in manifests.
 - No repair or uninstall for Steam or otherwise foreign-owned installs.
-- No silent writes to the default Factorio data directory.
+- No undisclosed writes to external Factorio, Steam, or platform state.
 - No global mod folder swapping.
-- Launch planning is dry-run only. `run --execute` returns
-  `isolation_not_proven` until an operator-supplied real Factorio smoke proves
-  effective write-data isolation.
+- Launch planning and preflight are available. Execution remains unavailable
+  until either the Steam-aware instance-isolated or standalone hermetic
+  real-play gate passes; fake-process supervision proof grants no real-product
+  authority.
 - Diagnostic bundle export accepts only reviewed local formats, reads each
   selected file through a stable no-follow handle, redacts before staging, and
   self-verifies a transaction-journaled production ZIP before success.
@@ -163,6 +172,8 @@ py -3 tools/dev.py verify-all
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 [development getting-started guide](docs/development/getting-started.md).
+The bounded process, admission, and session-journal design is described in the
+[execution-foundation architecture](docs/architecture/execution_foundation.md).
 
 ## AIDE Lite
 
@@ -178,6 +189,7 @@ Before large native implementation work, review
 
 ## Roadmap
 
-The detailed roadmap lives in [docs/roadmap.md](docs/roadmap.md). The first
-useful target is read-only install discovery plus isolated instance creation
-and launch-plan preview.
+The active plan lives in [docs/product/master_plan.md](docs/product/master_plan.md)
+and the historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
+The current target is the smallest trustworthy path from choosing a world to
+playing it; managed-install expansion resumes after playable alpha.

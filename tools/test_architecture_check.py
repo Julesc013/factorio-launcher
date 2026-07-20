@@ -48,6 +48,9 @@ def validate() -> list[str]:
         path = ROOT / (module_name.replace(".", "/") + ".py")
         if not path.is_file():
             problems.append(f"fast Python test does not exist: {module_name}")
+    fast_native = impact.get("fast_native", [])
+    if not isinstance(fast_native, list) or not fast_native:
+        problems.append("fast native target list must be non-empty")
     minimums = impact.get("minimums", {})
     for key, floor in FROZEN_MINIMUMS.items():
         if int(minimums.get(key, 0)) < floor:
@@ -60,6 +63,10 @@ def validate() -> list[str]:
     if validator_count < int(minimums.get("strict_validators", 0)):
         problems.append("strict validator inventory fell below its frozen minimum")
     native_text = (ROOT / "tests" / "native" / "CMakeLists.txt").read_text(encoding="utf-8")
+    for target in fast_native:
+        declaration = f"facman_native_test({target} "
+        if declaration not in native_text or "fast-unit" not in native_text.split(declaration, 1)[1].split("\n", 1)[0]:
+            problems.append(f"fast native target is missing its fast-unit declaration: {target}")
     native_count = len(re.findall(r"facman_native_test\(", native_text)) - 1
     direct_count = len(re.findall(r"add_test\(NAME\s+", native_text))
     external_count = 3

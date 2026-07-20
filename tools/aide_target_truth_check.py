@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
 
 from tools import project_state, structure_policy_check
 
-ROOT_POLICY = ROOT / ".aide" / "policies" / "flaunch-root-authority.yaml"
+ROOT_POLICY = ROOT / ".aide" / "policies" / "facman-root-authority.yaml"
 PROFILE = ROOT / ".aide" / "profile.yaml"
 CLAIM_LEDGER = ROOT / "docs" / "quality" / "safety_claim_ledger.md"
 DISCOVERY_README = ROOT / "runtime" / "factorio" / "discovery" / "README.md"
@@ -106,13 +106,20 @@ def validate_profile_text(text: str) -> list[str]:
     problems: list[str] = []
     phase = yaml_scalar(text, "phase", 2)
     allowed_phases = {
-        "r3.8-repair-closed-h1-fail",
-        "m1-managed-portable-install-foundation",
+        "product-convergence",
+        "execution-foundation",
+        "real-play-gates",
+        "multi-version-install-lifecycle",
     }
     if phase not in allowed_phases:
-        problems.append(f"profile phase is {phase!r}, expected a current R3.8/M1 phase")
+        problems.append(f"profile phase is {phase!r}, expected a current product or real-play gate phase")
     quarantined = set(yaml_list(text, "quarantined_capabilities", 2))
-    for capability in {"run.execute", "setup.mutation", "network.access"} - quarantined:
+    for capability in {
+        "launch.execute.instance_isolated",
+        "launch.execute.hermetic",
+        "process.execute",
+        "network.mod_portal.read",
+    } - quarantined:
         problems.append(f"profile quarantine is missing {capability}")
     evidence = {
         "workspace_lock": "release/index/workspace_lock.v1.toml",

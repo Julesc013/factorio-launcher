@@ -14,6 +14,9 @@ Current implementation:
   `installs import`.
 - Scan remains read-only: no install, repair, uninstall, Steam mutation,
   download, or default Factorio data-directory write occurs during discovery.
+- An explicit version-library root also yields structural direct children, so
+  numeric directories such as `1.1`, `2.0`, and `2.1` do not depend on a name
+  containing `factorio` and do not produce an invalid parent false positive.
 - Windows providers inspect Steam registry roots, parse bounded
   `libraryfolders.vdf` metadata, and inspect standalone/default roots. Results
   are deterministically de-duplicated.
@@ -26,8 +29,11 @@ Current implementation:
   Steam `libraryfolders.vdf` without Spotlight or recursive home scans.
 - Every candidate records its provider id, source, ownership, root, executable,
   version, platform, capabilities, verification status, diagnostic code, and
-  evidence. Directory entries, roots, candidates, metadata bytes, depth, and
-  elapsed time are bounded.
+  evidence, plus program layout, data routing, program/data separation,
+  uninstaller presence, side-by-side registration risk, and local player-data
+  domains. Directory entries, roots, candidates, metadata bytes, depth, and
+  elapsed time are bounded. Lifecycle policy is documented in
+  `docs/architecture/multi_version_install_lifecycle.md`.
 
 Windows read-only discovery is implemented. Linux and macOS read-only
 providers are also implemented. Spotlight and
