@@ -45,7 +45,7 @@ next_work_unit = "FACMAN-WORLD-SPEC-AND-READINESS-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "task_branch_committed_unreviewed_unintegrated"
+truth_scope = "task_branch_committed_reviewed_unintegrated"
 canonical_integration = false
 local_counts_promoted = false
 

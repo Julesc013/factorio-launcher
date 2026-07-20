@@ -653,7 +653,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "current_work_unit": phase_contract["active"],
         "next_work_unit": phase_contract["next"],
         "m3_disposition": "authorized_backlog_after_playable_alpha",
-        "truth_scope": "task_branch_committed_unreviewed_unintegrated",
+        "truth_scope": "task_branch_committed_reviewed_unintegrated",
         "canonical_integration": False,
         "local_counts_promoted": False,
     }

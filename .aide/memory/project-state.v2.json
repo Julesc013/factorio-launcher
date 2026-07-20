@@ -1357,7 +1357,7 @@
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple safe, reproducible worlds without managing launcher internals.",
-    "truth_scope": "task_branch_committed_unreviewed_unintegrated"
+    "truth_scope": "task_branch_committed_reviewed_unintegrated"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
