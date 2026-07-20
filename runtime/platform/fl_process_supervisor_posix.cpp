@@ -51,6 +51,22 @@ private:
 
 void close_fd(int& value) noexcept { if (value >= 0) close(value); value = -1; }
 
+void write_exec_error(int descriptor, int child_error) noexcept
+{
+    const auto* bytes = reinterpret_cast<const unsigned char*>(&child_error);
+    std::size_t offset = 0;
+    while (offset < sizeof(child_error)) {
+        const ssize_t count = write(descriptor, bytes + offset, sizeof(child_error) - offset);
+        if (count > 0) {
+            offset += static_cast<std::size_t>(count);
+        } else if (count < 0 && errno == EINTR) {
+            continue;
+        } else {
+            break;
+        }
+    }
+}
+
 void read_bounded(int descriptor, std::string& output, std::size_t maximum, std::atomic<bool>& overflow)
 {
     char buffer[8192];
@@ -134,7 +150,7 @@ ProcessResult supervise_process(const ProcessRequest& request)
         close_fd(exec_status[0]);
         if (!working_directory.empty() && chdir(working_directory.c_str()) != 0) {
             const int child_error = errno;
-            (void)write(exec_status[1], &child_error, sizeof(child_error));
+            write_exec_error(exec_status[1], child_error);
             _exit(126);
         }
         (void)dup2(input[0], STDIN_FILENO);
@@ -149,7 +165,7 @@ ProcessResult supervise_process(const ProcessRequest& request)
         }
         execve(executable.c_str(), arguments.data(), environment_values.data());
         const int child_error = errno;
-        (void)write(exec_status[1], &child_error, sizeof(child_error));
+        write_exec_error(exec_status[1], child_error);
         _exit(127);
     }
     if (child < 0) {
