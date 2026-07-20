@@ -57,7 +57,9 @@ int main(int argc, char** argv)
 #ifdef _WIN32
             RaiseException(0xE000FACAUL, EXCEPTION_NONCONTINUABLE, 0, nullptr);
 #else
-            std::raise(SIGSEGV);
+            // SIGKILL cannot be intercepted and converted into a normal exit
+            // by ASan, so the supervisor observes a deterministic signal exit.
+            std::raise(SIGKILL);
 #endif
             return 23;
         }
