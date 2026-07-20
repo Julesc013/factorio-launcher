@@ -8,6 +8,14 @@ The active product phase is `multi_version_install_lifecycle` and the active Wor
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
 
+The evidence-only
+[`PR #34 Gate 0 dev integration`](pr-34-gate-0-dev-integration.md) binds the
+five-slice review, exact task-head workflows, clean three-repository
+reproduction, reviewed merge to `dev`, and exact merged-dev workflows and
+reproduction. It promotes only current integrated development-state truth;
+execution, installation apply, host mutation, playability, signing, and
+publication remain unavailable.
+
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),
 frozen at implementation proof revision

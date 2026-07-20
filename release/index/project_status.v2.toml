@@ -45,9 +45,9 @@ next_work_unit = "FACMAN-WORLD-SPEC-AND-READINESS-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "task_branch_committed_reviewed_unintegrated"
+truth_scope = "dev_integrated_reviewed_reproduced"
 canonical_integration = false
-local_counts_promoted = false
+local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
@@ -98,7 +98,7 @@ next_work_unit = "HOST-ENVIRONMENT-CONTRACT-SPINE-01"
 first_runtime_scope = "workflow_specific_read_only_list_inspect_doctor"
 first_apply_work_unit = "WINDOWS-SANDBOX-PROFILE-01"
 workflow_health_model = "versioned_requirement_profiles_no_global_health_score"
-installation_model_v2_reviewed_committed_clean = false
+installation_model_v2_reviewed_committed_clean = true
 critical_path = false
 blocks_real_play = false
 host_mutation_authority = false
@@ -107,7 +107,7 @@ remote_mutation_authority = false
 arbitrary_script_authority = false
 
 [multi_version_install_lifecycle]
-status = "local_replacement_pass_installation_model_v2_plan_only_task_active"
+status = "dev_integrated_installation_model_v2_plan_only_task_active"
 work_unit = "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01"
 explicit_library_root = "D:\\Games\\Factorio"
 discovered_numeric_install_count = 16
@@ -132,6 +132,32 @@ reconciliation_plan = "implemented_deterministic_plan_only"
 reconciliation_apply = false
 legacy_install_ref_rewritten = false
 live_2_0_read_only_projection = "pass_workspace_digest_unchanged"
+
+[gate0_product_convergence_integration]
+status = "accepted_reviewed_dev_integration"
+pull_request = 34
+reviewed_head_revision = "61a7afe6718d3ca36b2c530b83890fcd37cc5c03"
+dev_integration_revision = "62c2503110cdb89b9cc89f19a69903f214d33e3c"
+universal_launcher_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
+universal_setup_revision = "3f8489275077347c2918f3bb03614ec6431362ff"
+exact_head_ci_run = "29758642385"
+exact_head_code_security_run = "29758642411"
+exact_head_schema_check_run = "29758642428"
+exact_head_security_policy_run = "29758642557"
+exact_dev_ci_run = "29760235796"
+exact_dev_code_security_run = "29760235888"
+exact_dev_schema_check_run = "29760236038"
+exact_dev_security_policy_run = "29760236168"
+exact_head_clean_reproduction = true
+exact_dev_clean_reproduction = true
+five_slice_review = "pass_with_documented_notes_no_p0_findings"
+generated_contract_counts_verified = true
+setup_global_admission_verified = true
+authority_promotion = false
+playability_promotion = false
+canonical_main_promotion = false
+signing = false
+publication = false
 
 [[execution_mode]]
 id = "instance_isolated"
