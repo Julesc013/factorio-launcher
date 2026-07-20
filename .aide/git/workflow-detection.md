@@ -4,7 +4,7 @@
 - generated_by: aide-lite
 - non_mutating: true
 - current_branch: task/facman-product-convergence-01
-- current_commit: 2056c8d0a16c220be45b94aa388c390d2da79577
+- current_commit: fde5ca5f7010f37a20f92106d9f23e97ac6ea87c
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
@@ -14,8 +14,8 @@
 
 ## Branch Summary
 
-- local_branches: 47
-- remote_branches: 32
+- local_branches: 8
+- remote_branches: 33
 - tags_count: 2
 
 ## Warnings
