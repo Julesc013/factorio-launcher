@@ -57,6 +57,8 @@ struct ProcessResult {
     int native_status = 0;
     std::string standard_output;
     std::string standard_error;
+    // True only when the supervisor successfully requested termination of a
+    // live process tree; false is valid when a limited process already exited.
     bool process_tree_terminated = false;
     std::string error;
 };

@@ -146,7 +146,7 @@ int main()
     auto excessive = service.execute(excessive_request);
     if (!excessive || excessive.value().process.termination != facman::platform::ProcessTermination::output_limit ||
         excessive.value().process.standard_output.size() != 4096 ||
-        !excessive.value().process.process_tree_terminated || !has_state(excessive.value(), "killed"))
+        !has_state(excessive.value(), "killed"))
         return process_failure(7, "output-limit launch", excessive);
 
     auto ignored = service.execute(request_for(tree.path, "ignore-graceful", std::chrono::milliseconds(100)));

@@ -226,6 +226,12 @@ ProcessResult supervise_process(const ProcessRequest& request)
         result.exit_code = 128 + WTERMSIG(status);
         if (primary_exited) result.termination = ProcessTermination::crashed;
     }
+    if (primary_exited && overflow.load(std::memory_order_acquire)) {
+        // The reader can observe the limit after the process has exited but
+        // before its pipe is drained. Preserve the safety outcome instead of
+        // reporting that a process with truncated output completed cleanly.
+        result.termination = ProcessTermination::output_limit;
+    }
     return result;
 }
 

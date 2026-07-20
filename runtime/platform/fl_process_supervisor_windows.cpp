@@ -308,9 +308,14 @@ ProcessResult supervise_process(const ProcessRequest& request)
         result.exit_code = static_cast<int>(exit_code);
     }
     if (primary_exited) {
-        result.termination = exit_code >= 0x80000000UL
-            ? ProcessTermination::crashed
-            : ProcessTermination::exited;
+        // A fast process can exit before the supervisor poll observes that a
+        // pipe reader crossed its capture limit. The overflow is still the
+        // authoritative outcome even when there is no live tree left to kill.
+        result.termination = overflow.load(std::memory_order_acquire)
+            ? ProcessTermination::output_limit
+            : (exit_code >= 0x80000000UL
+                ? ProcessTermination::crashed
+                : ProcessTermination::exited);
     }
     return result;
 }
