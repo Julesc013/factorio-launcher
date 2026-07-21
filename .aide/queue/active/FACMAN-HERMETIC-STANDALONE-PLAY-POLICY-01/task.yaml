@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
 title: Freeze hermetic standalone Play policy
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-21T11:45:31Z
 owner: unassigned
 objective: >
@@ -83,3 +83,8 @@ closeout_checklist:
   - permit issuance and real execution remain unavailable
   - structured commit check passed
 active_at: 2026-07-21T11:45:32Z
+verified_at: 2026-07-21T16:23:29Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-21T16:23:29Z
+closed_at: 2026-07-21T16:23:29Z

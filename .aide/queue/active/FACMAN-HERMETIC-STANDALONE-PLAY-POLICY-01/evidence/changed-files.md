@@ -15,7 +15,9 @@ Changed-file families are restricted to:
 - the policy strict validator and focused negative-control tests;
 - architecture, policy-index, and safety-claim documentation;
 - canonical project truth, generated status projections, and truth tests; and
-- this active WorkUnit's bounded evidence.
+- the closed WorkUnit's exact hosted and clean-reproduction evidence;
+- the Gate 4A closeout checkpoint and no-active-task promotion state; and
+- one planned, deliberately unstarted implementation-candidate queue item.
 
 Expected changes are restricted to policy, architecture, contract, release
 truth, tests for those documents/contracts, and AIDE development state under

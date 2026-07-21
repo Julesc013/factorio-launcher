@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `hermetic_standalone_play_policy` and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `hermetic_standalone_play_policy_closeout` and the active WorkUnit is `none (operator gate required)`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -46,6 +46,13 @@ binds PRs #43-#45, exact closeout, promotion, canonical-`main`, ancestry-only
 synchronization, and final-`dev` workflow evidence. It establishes a canonical
 pre-Play baseline without promoting permit issuance, execution, apply, signing,
 publication, or Safe beta.
+
+The policy-only
+[`Gate 4A hermetic standalone Play policy closeout`](gate4a-hermetic-standalone-play-policy-closeout.md)
+binds PR #47, the immutable process-tree claim and policy digest, exact
+writable/protected/evidence/observation/verdict law, exact reviewed-head and
+merged-`dev` workflows, and clean pinned three-repository reconstruction. It
+adds no issuer, process execution, real Play verdict, or authority.
 
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),

@@ -54,7 +54,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `hermetic_standalone_play_policy`. **Active WorkUnit:** `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`. **Next:** `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`.
+**Phase:** `hermetic_standalone_play_policy_closeout`. **Active WorkUnit:** `none (operator gate required)`. **Next:** `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 

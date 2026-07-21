@@ -1,0 +1,103 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
+title: Implement exact hermetic standalone Play candidate
+status: planned
+lifecycle_state: planned
+planning_state: planned
+created_at: 2026-07-21T16:23:41Z
+owner: unassigned
+objective: >
+  Implement the exact frozen Windows x64 Factorio 2.0.77 standalone menu-Play candidate, bounded issuer, independent provider consumption, supervision, protected-root observation, and hash-closed result packet without broadening the policy or recording the separate human verdict.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/profile.yaml
+  - README.md
+  - .github/workflows/**
+  - runtime/core/permit/**
+  - runtime/core/CMakeLists.txt
+  - runtime/factorio/application/**
+  - runtime/factorio/instance/**
+  - runtime/factorio/launch/**
+  - runtime/factorio/CMakeLists.txt
+  - runtime/platform/**
+  - contracts/**
+  - apps/**
+  - content/factorio/strings/**
+  - docs/**
+  - release/index/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_client_smoke
+  - facman_execution_foundation_smoke
+  - facman_operation_permit_smoke
+  - facman_process_probe
+  - flb_factorio_instance_model_smoke
+  - flb_factorio_launch_permit_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_cli
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_frontend_contract
+  - tests.test_frontend_parity
+  - tests.test_hermetic_play_policy
+  - tests.test_operation_permit_contract
+  - tests.test_refusal_contract
+  - tests.test_schema_tools
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/application_handler_check.py
+  - tools/capability_policy_check.py
+  - tools/command_contract_check.py
+  - tools/frontend_contract_check.py
+  - tools/frontend_parity_check.py
+  - tools/hermetic_play_policy_check.py
+  - tools/operation_permit_check.py
+  - tools/refusal_contract_check.py
+  - tools/schema_validate.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - the frozen policy digest is immutable during candidate implementation
+  - only Windows x64 Factorio 2.0.77 standalone non-Steam menu Play is in scope
+  - whole-host immutability is not claimed
+  - the issuer can authorize only one exact policy-bound candidate operation
+  - the owning launch provider independently revalidates and atomically consumes the permit immediately before process creation
+  - executable, launch plan, instance, installation, configuration, resources, provider revisions, intent, and isolation are exact identities
+  - writable roots are closed no-follow resources rather than path prefixes
+  - process-tree attribution and protected-root manifests are independent evidence forms
+  - any event loss, attribution gap, or incomplete manifest produces Inconclusive
+  - process output and lifecycle journals remain separate and stable-read protected
+  - restart, replay, concurrent launch, stale evidence, wrong intent, wrong isolation, cancellation, timeout, and crash fail closed
+  - the implementation candidate cannot record the separate human verdict
+  - Setup, credentials, networking, signing, publication, alternate intents, Steam, and foreign installations remain unavailable
+depends_on:
+  - FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+  - exact frozen policy digest retained
+  - exact bounded issuer and provider-consumption path reviewed
+  - protected-root and process-tree observation gaps force Inconclusive
+  - no human verdict inferred from automated candidate proof
