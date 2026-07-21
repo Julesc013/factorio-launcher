@@ -14,11 +14,12 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - active WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`;
 - next WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `dev_integrated_reviewed_reproduced`; canonical integration: `false`; local counts promoted: `true`;
+- truth scope: `canonical_main_promoted_dev_synchronized`; canonical integration: `true`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
 - Gate 3 permit closeout: `accepted_reviewed_dev_integration` at dev `91c2aa4fe0a30be97bf16165b41a95a8fab4cd11`;
+- Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - execution: `unavailable` / `real_play_gate_not_passed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.

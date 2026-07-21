@@ -27,6 +27,7 @@ class AideCompactionTests(unittest.TestCase):
             "current_revisions", "active_work_unit", "last_closed_work_unit",
             "r3_8_repair", "r3_8_public_integration", "m1_managed_portable_install",
             "m1_public_integration",
+            "gate3_public_integration",
             "m2_live_portable_setup",
             "m2_wu1_target_policy",
             "m2_wu2_public_lifecycle",
@@ -129,8 +130,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["presets_grant_authority"])
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
-        self.assertEqual("dev_integrated_reviewed_reproduced", data["product"]["truth_scope"])
-        self.assertFalse(data["product"]["canonical_integration"])
+        self.assertEqual(
+            "canonical_main_promoted_dev_synchronized",
+            data["product"]["truth_scope"],
+        )
+        self.assertTrue(data["product"]["canonical_integration"])
         self.assertTrue(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
@@ -144,6 +148,26 @@ class AideCompactionTests(unittest.TestCase):
         self.assertTrue(gate3["exact_dev_clean_reproduction"])
         self.assertFalse(gate3["permit_issuance_authority"])
         self.assertFalse(gate3["real_factorio_execution"])
+        gate3_integration = data["gate3_public_integration"]
+        self.assertEqual(
+            "accepted_canonical_main_dev_synchronized",
+            gate3_integration["status"],
+        )
+        self.assertEqual(44, gate3_integration["promotion_pull_request"])
+        self.assertEqual(
+            "810e92ccd52ad89fada8a9bb5699805cb5580c24",
+            gate3_integration["canonical_main_revision"],
+        )
+        self.assertEqual(45, gate3_integration["synchronization_pull_request"])
+        self.assertEqual(
+            "08d4318ffd32bd9553ce8914cbd8bfc98fde7b74",
+            gate3_integration["final_dev_revision"],
+        )
+        self.assertTrue(gate3_integration["main_is_ancestor_of_dev"])
+        self.assertTrue(gate3_integration["trees_equal_at_synchronization"])
+        self.assertFalse(gate3_integration["authority_promotion"])
+        self.assertFalse(gate3_integration["permit_issuance_authority"])
+        self.assertFalse(gate3_integration["real_factorio_execution"])
         self.assertFalse(data["host_environment_program"]["blocks_real_play"])
         self.assertTrue(
             data["host_environment_program"]["installation_model_v2_reviewed_committed_clean"]
