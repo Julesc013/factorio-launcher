@@ -7,3 +7,13 @@ target_compile_features(facman_core_static PUBLIC cxx_std_17)
 target_link_libraries(facman_core_static PRIVATE picojson_headers)
 add_library(facman::core ALIAS facman_core_static)
 facman_apply_policies(facman_core_static)
+
+add_library(facman_permit_static STATIC permit/fl_operation_permit.cpp)
+target_include_directories(facman_permit_static PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/permit
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/json)
+target_compile_features(facman_permit_static PUBLIC cxx_std_17)
+target_link_libraries(facman_permit_static PUBLIC facman_core_static facman_base_static)
+add_library(facman::permit ALIAS facman_permit_static)
+facman_apply_policies(facman_permit_static)

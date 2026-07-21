@@ -161,6 +161,20 @@ component digest. Volatile timestamps are absent.
 12. OperationPermit, preparation apply, and real Factorio execution remain
     unavailable and require separate reviewed gates.
 
+## Gate 3 permit resource projection
+
+The read-only instance model now has an internal, path-free projection into
+typed permit resources. It binds the current spec, binding, readiness,
+installation evidence, instance-root identity, effective config, modset state,
+execution environment, and explicit `menu` intent. Repeating the projection
+against unchanged evidence is deterministic, and changed evidence changes the
+projection digest.
+
+This is resource identity, not authority. The projection is explicitly
+incomplete for Play until Gate 4 supplies an exact executable identity,
+launch-plan digest, frozen Play policy, reviewed issuance, and a real process
+provider. It is not exposed as a command and cannot start Factorio.
+
 ## Proof surface
 
 Native and CLI tests cover deterministic repeated projection, digest

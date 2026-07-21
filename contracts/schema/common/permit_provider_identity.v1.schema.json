@@ -1,0 +1,12 @@
+{
+  "$id": "https://facman.invalid/schema/common/permit_provider_identity.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Operation permit provider identity",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "provider_id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{2,127}$"},
+    "provider_revision": {"type": "string", "minLength": 1, "maxLength": 128}
+  },
+  "required": ["provider_id", "provider_revision"]
+}

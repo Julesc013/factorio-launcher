@@ -22,3 +22,10 @@ Current implementation:
 - The purpose-built fake process owns process-boundary proof. Its test-only
   authority does not promote either real Factorio execution mode; those remain
   unavailable pending their separate real-play gates and human verdicts.
+- `flb_factorio_launch_permit.*` is the Gate 3 dormant owning-provider seam.
+  It obtains a fresh validation context through a provider-controlled callback,
+  independently validates it, and atomically consumes only the exact
+  `foundation.factorio-permit-proof` permit. It explicitly rejects
+  `instance.play`, non-menu intent, non-hermetic proof mode, process effects,
+  and the wrong audience. It does not reference the process supervisor or
+  expose execution authority.

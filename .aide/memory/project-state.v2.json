@@ -415,9 +415,9 @@
   "command_law": {
     "catalog_digest": "4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba",
     "contracts": 125,
-    "refusal_codes": 217,
+    "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 261
+    "schemas": 268
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",

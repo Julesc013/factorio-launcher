@@ -1,5 +1,46 @@
 # OperationPermit changed-file evidence
 
-The WorkUnit is active. No permit runtime, contract, route, provider, or
-frontend implementation change has been accepted yet. This file will be
-updated as bounded implementation slices are committed.
+The WorkUnit is active. Its reviewed implementation scope now includes the
+dormant Factorio launch verifier under `runtime/factorio/launch/**` so Gate 3
+can prove independent owning-provider validation and atomic consumption. The
+verifier is not an execution path and cannot launch Factorio.
+
+The scope also includes generated `.aide/memory/**` and root `README.md` truth
+surfaces because contract and refusal counts must remain generator-consistent
+during the active gate.
+
+The scope includes the existing hosted workflow definitions only so the new
+bounded permit parser/libFuzzer targets can join the established sanitizer and
+fuzz matrix. This does not authorize secrets, external providers, publication,
+or a new workflow class.
+
+The contract-law slice adds seven internal `common.*permit*.v1` schemas, the
+closed 25-code permit refusal family, and the versioned architecture law. It
+also regenerates the development-state counts to 268 schemas and 242 refusal
+codes. No command, route, frontend, runtime authenticator, provider effect, or
+product issuance surface is introduced by this slice.
+
+The permit-core slice adds `facman_permit_static` under
+`runtime/core/permit/` with canonical claims encoding, strict bounded envelope
+decoding, HMAC-SHA-256 process-session authentication, injected wall and
+monotonic clocks, a bounded in-memory issuance/revocation ledger, exact-context
+validation, and atomic one-time consumption. The native smoke uses only a
+foundation fixture operation and has no Factorio, Setup, credential, network,
+signing, publication, or frontend dependency.
+
+The provider-proof slice adds a path-free, deterministic projection from the
+accepted Gate 2 instance model to nine typed permit resources. It also adds a
+dormant Factorio launch verifier that independently authenticates, reobserves,
+validates, and atomically consumes only the foundation proof operation. The
+verifier hard-refuses real `instance.play`, non-menu intents, non-hermetic
+isolation, effect escalation, and process execution.
+
+The proof slice adds an adversarial native provider smoke, a bounded parser
+corpus, shared standalone/libFuzzer harnesses, a strict no-authority validator,
+and hosted sanitizer/libFuzzer wiring. The public command and route counts stay
+at 125 and 123 respectively; no issuance route or process-launch path exists.
+
+The entropy hardening removes the permit core's implicit `std::random_device`
+dependency. A process-session authenticator now requires an injected
+`PermitEntropySource`; fixtures may supply deterministic bytes, while any
+future product issuer must explicitly bind the platform CSPRNG.

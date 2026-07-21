@@ -10,12 +10,16 @@ objective: >
   Implement canonical short-lived permit issuance and validation primitives bound to one reviewed operation, exact resources, current evidence, policy and provider revisions, principal, nonce, and expiry, with independent provider revalidation while product issuance routes and real Factorio execution remain unavailable pending review.
 allowed_paths:
   - .aide/queue/**
+  - .aide/memory/**
   - .aide/profile.yaml
+  - README.md
+  - .github/workflows/**
   - runtime/core/permit/**
   - runtime/core/CMakeLists.txt
   - runtime/core/generated/**
   - runtime/factorio/application/**
   - runtime/factorio/instance/**
+  - runtime/factorio/launch/**
   - runtime/factorio/CMakeLists.txt
   - contracts/**
   - apps/**
@@ -32,7 +36,11 @@ affected_native_targets:
   - facman_client_smoke
   - flb_factorio_instance_model_smoke
   - flb_factorio_application_static
+  - flb_factorio_launch_static
+  - flb_factorio_launch_permit_smoke
   - facman_operation_permit_smoke
+  - facman_operation_permit_fuzz
+  - facman_operation_permit_libfuzzer
 affected_python_tests:
   - tests.test_capability_policy
   - tests.test_cli
@@ -45,6 +53,7 @@ affected_python_tests:
   - tests.test_aide_compaction
   - tests.test_aide_target_truth
   - tests.test_architecture_fitness
+  - tests.test_operation_permit_contract
 affected_strict_validators:
   - tools/aide_compaction_check.py
   - tools/aide_queue_state_check.py
@@ -56,6 +65,7 @@ affected_strict_validators:
   - tools/frontend_parity_check.py
   - tools/refusal_contract_check.py
   - tools/schema_validate.py
+  - tools/operation_permit_check.py
 affected_package_profiles:
   []
 architecture_invariants:
@@ -71,6 +81,7 @@ architecture_invariants:
   - expired, replayed, stale, wrong-machine, wrong-provider, and wrong-resource permits fail closed
   - harmless read-only inspection does not require a permit
   - global admission is not the sole policy enforcer
+  - the dormant Factorio launch verifier independently validates and consumes permits but cannot launch Factorio
   - product permit issuance and real Factorio execution remain unavailable until separately reviewed
 depends_on:
   - FACMAN-INSTANCE-SPEC-AND-READINESS-01
