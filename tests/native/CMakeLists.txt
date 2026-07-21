@@ -115,7 +115,9 @@ target_compile_features(fl_json_fuzz PRIVATE cxx_std_17)
 target_link_libraries(fl_json_fuzz PRIVATE facman_core_static)
 facman_apply_policies(fl_json_fuzz)
 
-add_executable(facman_operation_permit_fuzz facman_operation_permit_fuzz.cpp)
+add_executable(facman_operation_permit_fuzz
+  facman_operation_permit_fuzz.cpp
+  facman_operation_permit_libfuzzer.cpp)
 target_compile_features(facman_operation_permit_fuzz PRIVATE cxx_std_17)
 target_link_libraries(facman_operation_permit_fuzz PRIVATE facman_permit_static)
 facman_apply_policies(facman_operation_permit_fuzz)
@@ -182,6 +184,7 @@ if(TARGET fl_json_libfuzzer)
 endif()
 facman_add_libfuzzer(facman_operation_permit_libfuzzer facman_operation_permit_libfuzzer.cpp)
 if(TARGET facman_operation_permit_libfuzzer)
+  target_compile_options(facman_permit_static PRIVATE -fsanitize=fuzzer-no-link,address,undefined)
   target_link_libraries(facman_operation_permit_libfuzzer PRIVATE facman_permit_static)
 endif()
 

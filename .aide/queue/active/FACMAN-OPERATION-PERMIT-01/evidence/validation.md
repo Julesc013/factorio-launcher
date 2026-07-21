@@ -44,3 +44,11 @@ The provider-proof and adversarial slices additionally pass locally:
 Clang is not installed locally, so the actual libFuzzer engine is pending the
 hosted Linux job. The target and bounded 1,000-run CI invocation are present;
 this file does not claim that hosted result before it exists.
+
+The first hosted Linux-native attempt at PR #42 passed all 47 native tests and
+then failed the changed-source clang-tidy coverage guard because the new
+libFuzzer entry point existed only in the conditional fuzz build and therefore
+had no normal-build compile command. The repair compiles that entry point in
+the standalone corpus target as well, preserving the guard without an
+allowlist; it also instruments the permit static library in the libFuzzer
+configuration. Replacement hosted proof is pending.
