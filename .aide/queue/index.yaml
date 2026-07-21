@@ -3,8 +3,20 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
-  - id: FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01
+  - id: FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01
+    status: passed
+    lifecycle_state: closed
+    title: Installation model v2 read-only closeout
+    task: .aide/queue/active/FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01/evidence
+  - id: FACMAN-INSTANCE-SPEC-AND-READINESS-01
     status: active
+    lifecycle_state: active
+    title: Instance specification, binding, readiness, and view
+    task: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/evidence
+  - id: FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01
+    status: superseded
     lifecycle_state: active
     title: FacMan multi-version Factorio installation lifecycle
     task: .aide/queue/active/FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01/task.yaml
@@ -21,3 +33,9 @@ items:
     title: M2 WU10 operator live-target verdict
     task: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/evidence
+  - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
+    status: planned
+    lifecycle_state: planned
+    title: Permit-backed managed installation reconciliation
+    task: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence

@@ -113,6 +113,7 @@ def collect() -> dict[str, Any]:
         "operation_permit_program": status["operation_permit_program"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
+        "gate1_installation_model_v2_readonly_closeout": status["gate1_installation_model_v2_readonly_closeout"],
         "gate0_product_convergence_integration": status["gate0_product_convergence_integration"],
         "execution_modes": status["execution_mode"],
         "r3_8_repair": status["r3_8_repair"],
@@ -361,6 +362,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"`{str(data['product']['local_counts_promoted']).lower()}`;",
         f"- Gate 0 integration: `{data['gate0_product_convergence_integration']['status']}` at dev "
         f"`{data['gate0_product_convergence_integration']['dev_integration_revision']}`;",
+        f"- Gate 1 installation closeout: "
+        f"`{data['gate1_installation_model_v2_readonly_closeout']['status']}` at dev "
+        f"`{data['gate1_installation_model_v2_readonly_closeout']['dev_integration_revision']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
@@ -380,6 +384,7 @@ def markdown(data: dict[str, Any]) -> str:
         "## Instance product programme",
         "",
         f"- status: `{data['instance_product_program']['status']}`;",
+        f"- active WorkUnit: `{data['instance_product_program']['work_unit']}`;",
         f"- next WorkUnit: `{data['instance_product_program']['next_work_unit']}`;",
         f"- portable record: `{data['instance_product_program']['portable_record']}`;",
         f"- machine-local record: `{data['instance_product_program']['machine_local_record']}`;",
@@ -430,7 +435,7 @@ def markdown(data: dict[str, Any]) -> str:
         "## Historical proof boundary",
         "",
         f"- completed technical wave: `{data['completed_wave']['id']}`;",
-        f"- last closed historical WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
+        f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- accepted FacMan integration: `{revisions['accepted_integration']}`;",
         f"- historical Steam-backed H1 candidate/result: `{revisions['factorio_launcher']}` / "
         f"`{data['execution']['operator_verdict']}`;",
@@ -501,9 +506,10 @@ def readme_status(data: dict[str, Any]) -> str:
         f"and release authenticity `{data['readiness']['release_authenticity']}`.",
         "Historical M2 setup proof remains preserved and does not promote execution, existing-install "
         "adoption, network, credential, signing, or publication authority.",
-        "After installation-model-v2 closeout, the primary path is portable InstanceSpec,",
-        "local InstanceBinding, computed readiness, operation-bound permits, and the hermetic "
-        "standalone Play-to-menu gate. Saves/worlds remain optional instance content.",
+        "Installation model v2 is closed as a read-only, evidence-bound planning layer.",
+        "The primary path is now portable InstanceSpec, local InstanceBinding, computed readiness, "
+        "operation-bound permits, and the hermetic standalone Play-to-menu gate. Saves/worlds "
+        "remain optional instance content.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -530,20 +536,19 @@ def roadmap_status(data: dict[str, Any]) -> str:
         opening,
         "",
         first_step,
-        "2. Close the additive installation-model-v2 and deterministic reconciliation-plan proof.",
-        "3. Preserve the accepted Gate 0 dev-integration proof and defer general installation mutation to later permit-backed lifecycle work.",
-        "4. Run `FACMAN-INSTANCE-SPEC-AND-READINESS-01`; compose installation, profile, preset provenance, modpack, account reference, settings, resources, local binding, and computed readiness.",
-        "5. Run `FACMAN-OPERATION-PERMIT-01`; bind unsafe authority to one reviewed plan and require provider-side revalidation.",
-        "6. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.",
-        "7. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
-        "8. In parallel after closeout, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
-        "9. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
-        "10. Deepen portable instance reconstruction, managed install reconciliation, content preparation, and host repair from observed player needs.",
-        "11. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
+        "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
+        "3. Implement only the minimal InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView slice needed for menu-first Play.",
+        "4. Run `FACMAN-OPERATION-PERMIT-01`; bind unsafe authority to one reviewed plan and require provider-side revalidation.",
+        "5. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.",
+        "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
+        "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
+        "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
+        "9. Deepen portable instance reconstruction, permit-backed managed install reconciliation, content preparation, and host repair from observed player needs.",
+        "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new "
         "Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.",
-        "The multi-version lifecycle is active pre-alpha work because it enables the selected local "
+        "The installation model is accepted read-only infrastructure for the selected local "
         "standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,",
         "server processes, daemon publication, signing, and publication remain unavailable.",
     ])
@@ -652,6 +657,14 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "safety": "execution_foundation_proven_real_play_unproven",
             "execution_reason": "real_play_gate_not_passed",
         },
+        "instance_spec_and_readiness": {
+            "checkpoint": "instance-spec-and-readiness",
+            "active": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+            "last_closed": "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01",
+            "next": "FACMAN-OPERATION-PERMIT-01",
+            "safety": "execution_foundation_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
     }
     product = status.get("product", {})
     phase = product.get("phase")
@@ -715,9 +728,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("execution foundation evidence must remain complete, bounded, and non-authoritative")
     instance_program = status.get("instance_product_program", {})
     if instance_program != {
-        "status": "planned_after_installation_model_v2_closeout",
+        "status": "active_read_only_vertical_slice",
         "architecture": "docs/architecture/instance_product_model.md",
-        "next_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+        "work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+        "next_work_unit": "FACMAN-OPERATION-PERMIT-01",
         "portable_record": "InstanceSpec",
         "machine_local_record": "InstanceBinding",
         "readiness_model": "computed_projection_not_authoritative_state",
@@ -782,14 +796,60 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }:
         problems.append("host-environment programme must remain parallel, non-blocking, and non-mutating")
     lifecycle = status.get("multi_version_install_lifecycle", {})
-    if lifecycle.get("status") != "dev_integrated_installation_model_v2_plan_only_task_active":
-        problems.append("installation-model-v2 must record reviewed dev integration while its bounded closeout remains active")
+    if lifecycle.get("status") != "gate1_read_only_model_complete_remaining_mutation_transferred":
+        problems.append("installation-model-v2 must record the accepted Gate 1 boundary and transferred mutation lifecycle")
     if lifecycle.get("installation_model_v2") != "implemented_read_only_projection":
         problems.append("installation-model-v2 must remain a read-only projection")
-    if lifecycle.get("reconciliation_plan") != "implemented_deterministic_plan_only":
-        problems.append("installation reconciliation must remain deterministic and plan-only")
+    if lifecycle.get("reconciliation_plan") != "implemented_evidence_bound_deterministic_plan_only":
+        problems.append("installation reconciliation must remain evidence-bound, deterministic, and plan-only")
     if lifecycle.get("reconciliation_apply") is not False:
         problems.append("installation reconciliation apply must remain unavailable")
+    if lifecycle.get("umbrella_objective_complete") is not False:
+        problems.append("the broad installation lifecycle objective must not be marked complete")
+    if lifecycle.get("remaining_lifecycle_work_unit") != "FACMAN-MANAGED-INSTALL-RECONCILIATION-01":
+        problems.append("remaining installation mutation scope must be transferred explicitly")
+    if not lifecycle.get("plan_identity_binds_current_evidence"):
+        problems.append("installation reconciliation plan identity must bind current evidence")
+    if not lifecycle.get("zero_write_proof"):
+        problems.append("installation read-only closeout must retain zero-write proof")
+    gate1 = status.get("gate1_installation_model_v2_readonly_closeout", {})
+    expected_gate1 = {
+        "status": "accepted_reviewed_dev_integration",
+        "work_unit": "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01",
+        "implementation_pull_request": 37,
+        "implementation_revision": "ecd157570dfe3f87006cb00e8fe07a959f44ae8c",
+        "reviewed_head_revision": "c9ae60405d0b221faaba364be5f47e524649bb97",
+        "dev_integration_revision": "6ec47046d1b1f4ab8bddfcc27bcec76a774ff305",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_head_ci_run": "29799245632",
+        "exact_head_code_security_run": "29799245642",
+        "exact_head_schema_check_run": "29799245604",
+        "exact_head_security_policy_run": "29799245629",
+        "exact_dev_ci_run": "29799938954",
+        "exact_dev_code_security_run": "29799939008",
+        "exact_dev_schema_check_run": "29799938962",
+        "exact_dev_security_policy_run": "29799938996",
+        "local_full_matrix": True,
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 362.9,
+        "canonicalization_version": "facman.sorted-json.v1",
+        "effect_vocabulary_version": "common.effects.v1",
+        "plan_identity_binds_current_evidence": True,
+        "plan_identity_binds_desired_state": True,
+        "source_candidate_is_authenticated_evidence": False,
+        "zero_write_proof": True,
+        "compatible_v1_record_rewritten": False,
+        "apply_route_added": False,
+        "reconciliation_apply": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate1 != expected_gate1:
+        problems.append("Gate 1 closeout must bind exact reviewed and merged-dev proof without promoting authority")
     gate0 = status.get("gate0_product_convergence_integration", {})
     expected_gate0 = {
         "status": "accepted_reviewed_dev_integration",

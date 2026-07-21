@@ -6,16 +6,17 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Current product truth
 
-- phase: `multi_version_install_lifecycle` / `active`;
+- phase: `instance_spec_and_readiness` / `active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `multi-version-install-lifecycle`;
-- active WorkUnit: `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`;
-- next WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
+- checkpoint: `instance-spec-and-readiness`;
+- active WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
+- next WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
 - next authority gate: `real-play-isolation`;
 - truth scope: `dev_integrated_reviewed_reproduced`; canonical integration: `false`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
+- Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - execution: `unavailable` / `real_play_gate_not_passed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
@@ -37,8 +38,9 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Instance product programme
 
-- status: `planned_after_installation_model_v2_closeout`;
-- next WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
+- status: `active_read_only_vertical_slice`;
+- active WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
+- next WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
 - portable record: `InstanceSpec`;
 - machine-local record: `InstanceBinding`;
 - readiness: `computed_projection_not_authoritative_state`;
@@ -81,7 +83,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed historical WorkUnit: `FACMAN-EXECUTION-FOUNDATION-01`;
+- last closed WorkUnit: `FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `7bd4425f0c35414f738159b45d8bec42edf70235` / `3f8489275077347c2918f3bb03614ec6431362ff`;
@@ -115,7 +117,7 @@ work or promote execution, network, credential, signing, or publication authorit
 
 ## Known blockers
 
-- The local Wube-signed Factorio 2.0.77 conversion succeeded, but FacMan does not yet expose authenticated source inspection or transaction-backed lifecycle apply as product commands.
+- Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.
 - Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
 - Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.
 - The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.

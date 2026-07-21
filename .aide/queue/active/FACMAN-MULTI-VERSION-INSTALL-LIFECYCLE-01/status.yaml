@@ -1,9 +1,14 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01
-status: active
+status: superseded
 lifecycle_state: active
-planning_state: active
+planning_state: transferred
 created_at: 2026-07-20T00:17:16Z
 result: PENDING
 evidence_path: .aide/queue/active/FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01/evidence/
 active_at: 2026-07-20T00:17:16Z
+disposition: bounded_read_only_slice_accepted_remaining_scope_transferred
+objective_complete: false
+accepts_new_implementation: false
+bounded_closeout_work_unit: FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01
+remaining_scope_work_unit: FACMAN-MANAGED-INSTALL-RECONCILIATION-01

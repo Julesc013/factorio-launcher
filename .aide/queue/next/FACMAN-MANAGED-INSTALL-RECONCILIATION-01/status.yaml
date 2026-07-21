@@ -1,0 +1,8 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
+status: planned
+lifecycle_state: planned
+planning_state: planned
+created_at: 2026-07-21T04:25:36Z
+result: PENDING
+evidence_path: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence/

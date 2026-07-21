@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-INSTANCE-SPEC-AND-READINESS-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-21T04:25:36Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/evidence/
+active_at: 2026-07-21T04:32:50Z

@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-21T04:25:24Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01/evidence/
+active_at: 2026-07-21T04:25:25Z
+verified_at: 2026-07-21T04:32:49Z
+implementation_state: implemented
+reviewed_at: 2026-07-21T04:32:49Z
+closed_at: 2026-07-21T04:32:50Z

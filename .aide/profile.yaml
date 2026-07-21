@@ -8,18 +8,19 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: multi-version-install-lifecycle
+  phase: instance-spec-and-readiness
   primary_goal: >
-    Model every Factorio installation as independent source, deployment,
-    authority, data, integration, health, provenance, and filesystem evidence;
-    reconcile explicit desired state without overwriting siblings or inventing
-    ownership.
+    Implement the minimal read-only InstanceSpec, InstanceBinding,
+    InstanceReadiness, and InstanceView slice needed to select one exact
+    isolated Factorio environment and prepare for menu-first Play without
+    granting preparation or execution authority.
   next_task: >
-    Close, review, commit, and cleanly reproduce the read-only
-    installation-model-v2 and reconciliation-plan proof, then implement
-    portable WorldSpec, machine-local WorldBinding, and computed readiness.
-    Follow with operation-bound permits and the hermetic standalone Play gate;
-    keep read-only host-environment work as a non-blocking parallel support lane.
+    Compose portable instance intent with machine-local installation, data,
+    configuration, modset-lock, environment, and evidence bindings; expose
+    read-only list, inspect, and readiness projections with menu as the default
+    launch intent. Follow with operation-bound permits and the hermetic
+    standalone Play gate; keep host-environment work as a non-blocking parallel
+    support lane and general installation mutation in its transferred WorkUnit.
   authoritative_command_slice:
     - installs.scan
     - installs.import
