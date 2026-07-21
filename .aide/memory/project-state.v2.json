@@ -387,6 +387,11 @@
       "limitation": "no issuance, Play, Setup, credentials, network, signing, or publication authority"
     },
     {
+      "claim": "Hermetic standalone Play policy",
+      "level": "frozen criteria; no runtime result",
+      "limitation": "process-tree claim only; no candidate, issuance, execution, verdict, or authority"
+    },
+    {
       "claim": "Package hashes authenticate publisher",
       "level": "not claimed",
       "limitation": "signatures or trusted external metadata required"
@@ -422,7 +427,7 @@
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 268
+    "schemas": 274
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -664,6 +669,51 @@
     "synchronization_head_security_policy_run": "29832438665",
     "synchronization_pull_request": 45,
     "trees_equal_at_synchronization": true
+  },
+  "hermetic_standalone_play_policy": {
+    "architecture": "x86_64",
+    "authority_promotion": false,
+    "candidate_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+    "canonical_main_promotion": false,
+    "canonicalization_version": "facman.sorted-json.v1",
+    "claim_id": "factorio.hermetic_process_tree.v1",
+    "credential_authority": false,
+    "distribution": "standalone_non_steam",
+    "evidence_requirement_count": 31,
+    "factorio_version": "2.0.77",
+    "filesystem": "ntfs_fixed_local",
+    "host_mutation_authority": false,
+    "human_verdict_required": true,
+    "instance_ownership": "facman_owned",
+    "interruption_case_count": 29,
+    "isolation_mode": "hermetic",
+    "launch_intent": "menu",
+    "mod_state": "explicit_empty_lock",
+    "network_authority": false,
+    "observation_scope_count": 2,
+    "permit_issuance_authority": false,
+    "platform": "windows",
+    "playability_promotion": false,
+    "policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+    "policy_id": "facman.hermetic-standalone-play.2.0.77.windows-x64.v1",
+    "policy_only": true,
+    "policy_path": "contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml",
+    "policy_revision": "1",
+    "policy_schema": "factorio.hermetic_standalone_play_policy.v1",
+    "product_apply_route": false,
+    "protected_or_disclosed_resource_count": 18,
+    "public_command": false,
+    "publication": false,
+    "real_factorio_execution": false,
+    "setup_authority": false,
+    "signing": false,
+    "status": "implemented_frozen_policy_pending_review_closeout",
+    "user_label": "Hermetic standalone",
+    "verdict_count": 3,
+    "verdict_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+    "whole_host_immutability_claimed": false,
+    "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+    "writable_resource_count": 13
   },
   "host_environment_program": {
     "arbitrary_script_authority": false,

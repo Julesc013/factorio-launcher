@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.play_evidence_requirement.v1.schema.json",
+  "title": "Factorio Play policy evidence requirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "requirement_id", "category", "subject", "evidence_kind", "required", "freshness", "mismatch_disposition", "recorded_in_packet", "secret_value", "notes"],
+  "properties": {
+    "schema": {"const": "factorio.play_evidence_requirement.v1"},
+    "requirement_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "category": {"enum": ["revision", "identity", "digest", "configuration", "resource", "observation", "policy", "principal", "intent", "isolation"]},
+    "subject": {"type": "string", "minLength": 1, "maxLength": 160},
+    "evidence_kind": {"enum": ["sha256", "stable_identity", "canonical_digest", "provider_revision", "authenticated_source_identity", "explicit_state", "manifest_digest", "session_identity", "volume_identity", "no_follow_state", "content_capability", "version", "intent", "isolation_mode", "policy_binding", "plan_identity"]},
+    "required": {"const": true},
+    "freshness": {"enum": ["plan_time", "pre_effect", "post_effect", "whole_operation"]},
+    "mismatch_disposition": {"enum": ["refused", "fail", "inconclusive"]},
+    "recorded_in_packet": {"const": true},
+    "secret_value": {"const": false},
+    "notes": {"type": "string", "minLength": 1, "maxLength": 512}
+  }
+}

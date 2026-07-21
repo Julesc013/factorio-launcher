@@ -1,0 +1,1412 @@
+schema = "factorio.hermetic_standalone_play_policy.v1"
+policy_id = "facman.hermetic-standalone-play.2.0.77.windows-x64.v1"
+policy_revision = "1"
+canonicalization_version = "facman.sorted-json.v1"
+policy_digest = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
+status = "frozen_criteria_no_result"
+
+human_journey = [
+  "select_exact_instance",
+  "inspect_readiness",
+  "review_exact_menu_launch_plan",
+  "issue_one_exact_permit_in_the_later_candidate",
+  "provider_independently_revalidates",
+  "start_factorio",
+  "observe_normal_factorio_main_menu",
+  "confirm_no_save_was_automatically_loaded",
+  "create_disposable_game_or_explicitly_load_test_save",
+  "save_and_return_to_menu",
+  "exit_normally",
+  "complete_postrun_observation",
+  "inspect_last_run_result",
+  "relaunch_with_fresh_authority_and_confirm_save_visibility",
+  "exit_normally_again",
+]
+
+automated_negative_controls = [
+  "mutate_authenticated_permit_claim",
+  "replay_permit_sequentially",
+  "replay_permit_concurrently",
+  "expire_permit",
+  "change_launch_intent",
+  "change_isolation_mode",
+  "stale_readiness",
+  "replace_executable_same_path",
+  "replace_effective_config",
+  "change_modset_state",
+  "change_installation_evidence",
+  "select_sibling_instance",
+  "attempt_concurrent_launch",
+  "cancel_before_process_creation",
+  "cancel_during_execution",
+  "force_timeout",
+  "force_process_crash",
+  "fail_journal_write",
+  "present_stale_run_lock",
+  "restart_provider_session",
+  "restart_issuer_session",
+  "lose_observer_events",
+  "add_wildcard_or_prefix_resource",
+  "change_protected_root_identity",
+  "write_os_global_temporary_directory",
+]
+
+explicit_exclusions = [
+  "whole_host_immutability",
+  "steam_aware_play",
+  "other_factorio_versions",
+  "other_operating_systems",
+  "third_party_modpacks",
+  "account_or_credential_bindings",
+  "networked_mod_acquisition",
+  "load_save_intent",
+  "new_game_intent",
+  "map_editor_intent",
+  "connect_server_intent",
+  "start_server_intent",
+  "benchmark_intent",
+  "instrumented_dev_intent",
+  "installation_or_instance_preparation",
+  "universal_setup_mutation",
+  "signing_and_publication",
+]
+
+[claim]
+claim_id = "factorio.hermetic_process_tree.v1"
+user_label = "Hermetic standalone"
+guarantee = "No persistent filesystem or registry write attributable to FacMan, Factorio, or their supervised process tree may occur outside the exact writable resources bound by the reviewed operation."
+whole_host_immutability_claimed = false
+external_unobserved_disclosed = true
+
+[candidate]
+platform = "windows"
+architecture = "x86_64"
+factorio_version = "2.0.77"
+distribution = "standalone_non_steam"
+source_authentication = "sha256_bound_to_authenticated_wube_source"
+filesystem = "ntfs"
+volume = "fixed_local"
+reparse_policy = "no_links_or_reparse_points_in_bound_closure"
+instance_ownership = "facman_owned"
+content_capability_requirement = "base_game"
+optional_content_treatment = "reported_capability_not_entitlement"
+mod_state = "explicit_empty_lock"
+account_requirement = "none"
+credential_requirement = "none"
+network_requirement = "none"
+candidate_revision_binding = "exact_reviewed_candidate_revision_required"
+
+[provider_baseline]
+universal_launcher_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
+universal_setup_revision = "3f8489275077347c2918f3bb03614ec6431362ff"
+facman_candidate_revision = "bound_by_candidate_evidence"
+process_provider_revision = "bound_by_candidate_evidence"
+observation_provider_revision = "bound_by_candidate_evidence"
+
+[launch]
+operation_kind = "instance.play"
+intent = "menu"
+isolation_mode = "hermetic"
+permitted_effects = ["workspace_read", "workspace_write", "process_execute"]
+required_capabilities = ["launch.execute.hermetic", "process.execute"]
+direct_save_allowed = false
+scenario_allowed = false
+server_allowed = false
+editor_allowed = false
+benchmark_allowed = false
+multiplayer_connect_allowed = false
+network_allowed = false
+credentials_allowed = false
+preparation_allowed = false
+setup_allowed = false
+factorio_update_checks = "disabled"
+mod_updates = "disabled"
+process_environment = "versioned_minimal"
+temporary_directory_policy = "workspace_operation_temporary_only"
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.config"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/config"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Instance-specific generated and player configuration."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.mods"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/mods"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Instance mod directory; the first candidate requires an explicit empty lock."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.saves"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/saves"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Instance save library used by the normal Factorio menu."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.scenarios"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/scenarios"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Instance scenario content remains available in the menu but is not inferred as launch intent."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.script_output"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/script-output"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Factorio script output is isolated to the selected instance."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.logs"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/logs"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Factorio process output and game logs are kept inside the instance."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.crash"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/crash"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Crash artifacts are isolated and retained for recovery."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.cache"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/cache"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Instance-specific cache state may change during Play."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.state"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/state"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Instance-local lifecycle and last-run state."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instance.locks"
+domain = "filesystem"
+role = "instance_mutable"
+classification = "writable"
+selector = "{instance_root}/locks"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Exact-instance concurrency locks."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "operation.record"
+domain = "filesystem"
+role = "operation_state"
+classification = "writable"
+selector = "{workspace_root}/operations/{operation_id}"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "The exact operation record; no broad operations-root prefix authority is granted."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "workspace.audit"
+domain = "filesystem"
+role = "audit_state"
+classification = "writable"
+selector = "{workspace_root}/audit"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "Redacted audit summaries; full permit tokens and secret values are forbidden."
+
+[[writable_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "operation.temporary"
+domain = "filesystem"
+role = "operation_temporary"
+classification = "writable"
+selector = "{workspace_root}/temporary/{operation_id}"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status"]
+permitted_effects = ["workspace_read", "workspace_write"]
+attributed_write_disposition = "permitted"
+comparison = "stable_manifest"
+notes = "All candidate temporary state stays within the exact operation root."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "installation.selected"
+domain = "filesystem"
+role = "selected_installation"
+classification = "protected_snapshot"
+selector = "{installation_root}"
+presence_policy = "required"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "The selected standalone application image is immutable during Play."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "installation.siblings"
+domain = "filesystem"
+role = "sibling_installations"
+classification = "protected_snapshot"
+selector = "{registered_sibling_installation_roots}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Every registered sibling installation is separately bound; a parent prefix is not authority."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "factorio.default_user_data"
+domain = "filesystem"
+role = "global_user_data"
+classification = "protected_snapshot"
+selector = "{factorio_default_user_data_root}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Default global Factorio data must not be used by the isolated instance."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "factorio.appdata"
+domain = "filesystem"
+role = "global_user_data"
+classification = "protected_snapshot"
+selector = "{%APPDATA%}/Factorio"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Roaming Factorio state is protected whether present or absent."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "factorio.localappdata"
+domain = "filesystem"
+role = "global_user_data"
+classification = "protected_snapshot"
+selector = "{%LOCALAPPDATA%}/Factorio"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Local Factorio state is protected whether present or absent."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "factorio.programdata"
+domain = "filesystem"
+role = "global_user_data"
+classification = "protected_snapshot"
+selector = "{%PROGRAMDATA%}/Factorio"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Machine-wide Factorio data is protected whether present or absent."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "steam.install_roots"
+domain = "filesystem"
+role = "platform_integration"
+classification = "protected_snapshot"
+selector = "{steam_install_roots}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Steam installations are foreign and excluded from the standalone route."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "steam.userdata"
+domain = "filesystem"
+role = "platform_integration"
+classification = "protected_snapshot"
+selector = "{steam_userdata_roots}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Steam account and user data must remain untouched."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "steam.cloud_cache"
+domain = "filesystem"
+role = "platform_integration"
+classification = "protected_snapshot"
+selector = "{steam_cloud_and_cache_domains}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Steam Cloud and cache state are outside the supported candidate."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "facman.package"
+domain = "filesystem"
+role = "facman_package"
+classification = "protected_snapshot"
+selector = "{facman_executable_package_root}"
+presence_policy = "required"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "The executing FacMan package cannot rewrite itself during the candidate run."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "instances.other"
+domain = "filesystem"
+role = "other_instances"
+classification = "protected_snapshot"
+selector = "{other_facman_instance_roots}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "A permit for one instance cannot affect a sibling instance."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "factorio.source_material"
+domain = "filesystem"
+role = "source_material"
+classification = "protected_snapshot"
+selector = "{factorio_source_archives_and_installers}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Owned source archives and installers are immutable inputs, never scratch space."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "registry.factorio_uninstall"
+domain = "registry"
+role = "registration"
+classification = "protected_snapshot"
+selector = "{windows_factorio_uninstall_registration}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["registry_value_set", "provider_identity"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Play never changes Windows installation registration."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "registry.factorio"
+domain = "registry"
+role = "registration"
+classification = "protected_snapshot"
+selector = "{relevant_factorio_registry_domains}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["registry_value_set", "provider_identity"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Relevant Factorio registry values are compared before and after the run."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "registry.steam"
+domain = "registry"
+role = "platform_integration"
+classification = "protected_snapshot"
+selector = "{relevant_steam_registry_domains}"
+presence_policy = "absence_must_remain_absent"
+identity_requirements = ["registry_value_set", "provider_identity"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "stable_manifest"
+notes = "Steam registry state is foreign to the standalone candidate."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "effects.external_filesystem"
+domain = "attributed_effect_scope"
+role = "attributed_external_effects"
+classification = "forbidden_observed"
+selector = "{all_filesystem_targets_outside_exact_writable_resources}"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["provider_identity"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "event_only"
+notes = "Any attributed external filesystem write fails even when the target is not a named snapshot root."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "effects.external_registry"
+domain = "attributed_effect_scope"
+role = "attributed_external_effects"
+classification = "forbidden_observed"
+selector = "{all_registry_targets_outside_exact_writable_resources}"
+presence_policy = "absent_or_present_bound"
+identity_requirements = ["provider_identity"]
+permitted_effects = []
+attributed_write_disposition = "fail"
+comparison = "event_only"
+notes = "Any attributed registry write fails."
+
+[[protected_roots]]
+schema = "factorio.play_protected_root.v1"
+resource_id = "host.external_unobserved"
+domain = "host_state"
+role = "disclosed_external_state"
+classification = "external_unobserved"
+selector = "{host_state_outside_enumerated_or_attributable_domains}"
+presence_policy = "disclosed_unobserved"
+identity_requirements = []
+permitted_effects = []
+attributed_write_disposition = "outside_claim"
+comparison = "no_comparison"
+notes = "Unattributed whole-host state is outside factorio.hermetic_process_tree.v1 and is never implied unchanged."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "facman.source_revision"
+category = "revision"
+subject = "FacMan source revision"
+evidence_kind = "provider_revision"
+required = true
+freshness = "whole_operation"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Bind the exact reviewed candidate source revision."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "facman.build_identity"
+category = "identity"
+subject = "FacMan executable build"
+evidence_kind = "sha256"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Bind the exact executing candidate artifact."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "universal_launcher.revision"
+category = "revision"
+subject = "Universal Launcher provider"
+evidence_kind = "provider_revision"
+required = true
+freshness = "whole_operation"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Bind the pinned launch dependency revision."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "universal_setup.revision"
+category = "revision"
+subject = "Universal Setup provider"
+evidence_kind = "provider_revision"
+required = true
+freshness = "whole_operation"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Record the pinned Setup revision even though Setup is not invoked."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "policy.revision"
+category = "policy"
+subject = "Frozen Play policy revision"
+evidence_kind = "policy_binding"
+required = true
+freshness = "whole_operation"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Policy revision must match the canonical frozen artifact."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "policy.digest"
+category = "policy"
+subject = "Frozen Play policy digest"
+evidence_kind = "canonical_digest"
+required = true
+freshness = "whole_operation"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "The permit and evidence packet bind this exact policy digest."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "machine.binding"
+category = "identity"
+subject = "FacMan machine binding"
+evidence_kind = "stable_identity"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "No invasive hardware fingerprint is permitted."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "principal.identity"
+category = "principal"
+subject = "Approving local principal"
+evidence_kind = "session_identity"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Record only the provider-scoped logical identity required for enforcement."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "application.session"
+category = "principal"
+subject = "Issuer application session"
+evidence_kind = "session_identity"
+required = true
+freshness = "whole_operation"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Restart invalidates all prior permit authority."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "instance.spec_digest"
+category = "digest"
+subject = "Portable InstanceSpec"
+evidence_kind = "canonical_digest"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Bind the selected instance intent."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "instance.binding_digest"
+category = "digest"
+subject = "Machine-local InstanceBinding"
+evidence_kind = "canonical_digest"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Bind the exact installation and instance-root resolution."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "instance.readiness_digest"
+category = "digest"
+subject = "InstanceReadiness projection"
+evidence_kind = "canonical_digest"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Readiness is revalidated and remains non-authoritative."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "installation.evidence_digest"
+category = "digest"
+subject = "Installation evidence projection"
+evidence_kind = "canonical_digest"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Stale installation evidence cannot reach process creation."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "installation.root_identity"
+category = "resource"
+subject = "Selected installation root"
+evidence_kind = "stable_identity"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "A path string alone is not installation identity."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "executable.identity"
+category = "resource"
+subject = "Factorio executable object"
+evidence_kind = "stable_identity"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Detect replacement even when the path is unchanged."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "executable.sha256"
+category = "digest"
+subject = "Factorio executable content"
+evidence_kind = "sha256"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Bind exact executable bytes."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "executable.publisher_source"
+category = "identity"
+subject = "Authenticated Wube source identity"
+evidence_kind = "authenticated_source_identity"
+required = true
+freshness = "plan_time"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Installed files alone are not provenance or entitlement evidence."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "factorio.version"
+category = "configuration"
+subject = "Factorio product version"
+evidence_kind = "version"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "The first route is exactly version 2.0.77."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "factorio.content_capabilities"
+category = "configuration"
+subject = "Installed content capabilities"
+evidence_kind = "content_capability"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Capabilities are observed without claiming entitlement."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "config.digest"
+category = "configuration"
+subject = "Effective Factorio configuration"
+evidence_kind = "canonical_digest"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "The config must route read-data and write-data exactly."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "read_data.identity"
+category = "resource"
+subject = "Factorio read-data root"
+evidence_kind = "stable_identity"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Read-data resolves to the selected immutable installation."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "write_data.identity"
+category = "resource"
+subject = "Factorio write-data root"
+evidence_kind = "stable_identity"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Write-data resolves inside the selected FacMan instance."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "mod_root.identity"
+category = "resource"
+subject = "Instance mod root"
+evidence_kind = "stable_identity"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "The exact mod root is bound even for an empty lock."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "modset.state"
+category = "configuration"
+subject = "Exact modset state"
+evidence_kind = "explicit_state"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "The first proof requires an explicit empty-lock state."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "launch.intent"
+category = "intent"
+subject = "Selected launch intent"
+evidence_kind = "intent"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Only menu is eligible."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "launch.plan_identity"
+category = "identity"
+subject = "Reviewed launch plan"
+evidence_kind = "plan_identity"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Bind one reviewed plan identity."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "launch.plan_digest"
+category = "digest"
+subject = "Reviewed launch plan content"
+evidence_kind = "canonical_digest"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Any plan mutation requires review again."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "isolation.mode"
+category = "isolation"
+subject = "Selected isolation guarantee"
+evidence_kind = "isolation_mode"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "refused"
+recorded_in_packet = true
+secret_value = false
+notes = "Hermetic and instance-isolated are distinct authorities."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "protected.baseline_digest"
+category = "observation"
+subject = "Protected-root baseline"
+evidence_kind = "manifest_digest"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "inconclusive"
+recorded_in_packet = true
+secret_value = false
+notes = "Incomplete stable baseline evidence cannot Pass."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "writable.baseline_digest"
+category = "observation"
+subject = "Writable-root baseline"
+evidence_kind = "manifest_digest"
+required = true
+freshness = "pre_effect"
+mismatch_disposition = "inconclusive"
+recorded_in_packet = true
+secret_value = false
+notes = "Writable changes remain explainable against a known baseline."
+
+[[evidence_requirements]]
+schema = "factorio.play_evidence_requirement.v1"
+requirement_id = "observation.provider_revision"
+category = "observation"
+subject = "Independent observation provider"
+evidence_kind = "provider_revision"
+required = true
+freshness = "whole_operation"
+mismatch_disposition = "inconclusive"
+recorded_in_packet = true
+secret_value = false
+notes = "Observer identity and revision are part of the evidence packet."
+
+[[observation_scopes]]
+schema = "factorio.play_observation_scope.v1"
+observer_id = "factorio.play.process_tree_effects.v1"
+method = "attributed_process_tree"
+provider_binding_required = true
+captures = ["filesystem", "registry", "process_identity", "child_process_tree", "provider_process"]
+before_launch = true
+during_run = true
+after_quiescence = true
+quiescence_seconds = 5
+gap_signals = ["lost_events", "buffer_overflow", "unknown_process_identity", "unresolved_target", "delayed_events", "attribution_gap", "provider_failure"]
+gap_disposition = "Inconclusive"
+hash_closes_output = true
+independent_of_process_provider = true
+notes = "Attributes filesystem and registry effects to FacMan, Factorio, supervised children, and named providers."
+
+[[observation_scopes]]
+schema = "factorio.play_observation_scope.v1"
+observer_id = "factorio.play.protected_comparison.v1"
+method = "stable_protected_comparison"
+provider_binding_required = true
+captures = ["filesystem", "registry", "stable_identity", "content_manifest", "absence_presence"]
+before_launch = true
+during_run = false
+after_quiescence = true
+quiescence_seconds = 5
+gap_signals = ["unresolved_target", "delayed_events", "baseline_incomplete", "postrun_incomplete", "provider_failure"]
+gap_disposition = "Inconclusive"
+hash_closes_output = true
+independent_of_process_provider = true
+notes = "Compares stable identities, bounded manifests, hashes, registry values, and absent roots after quiescence."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "permit.mutation"
+lane = "automated"
+trigger = "Mutate any authenticated permit claim after sealing."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Authentication failure must precede process creation."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "permit.replay"
+lane = "automated"
+trigger = "Reuse a consumed permit sequentially or concurrently."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "Exactly one provider consumer may win."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "permit.expiry"
+lane = "automated"
+trigger = "Attempt provider consumption at or after expiry."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Expiry is checked at the effect boundary."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "launch.wrong_intent"
+lane = "automated"
+trigger = "Present a non-menu intent or intent-mismatched plan."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "A menu permit cannot authorize load-save, server, editor, or benchmark."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "launch.wrong_isolation"
+lane = "automated"
+trigger = "Present instance-isolated or another isolation mode."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Isolation modes are alternative authorities."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "readiness.stale"
+lane = "automated"
+trigger = "Change readiness evidence after plan review."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Readiness must be recomputed."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "executable.changed"
+lane = "automated"
+trigger = "Replace executable identity or bytes after planning."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Same-path replacement is detected."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "config.changed"
+lane = "automated"
+trigger = "Replace the effective configuration after planning."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Configuration digest drift requires review again."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "modset.changed"
+lane = "automated"
+trigger = "Change explicit empty-lock or mod-root evidence."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Mod state cannot drift after planning."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "installation.changed"
+lane = "automated"
+trigger = "Change installation evidence after planning."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Installation evidence must be current."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "instance.wrong"
+lane = "automated"
+trigger = "Present a sibling instance or root."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Shared parents do not imply authority."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "launch.concurrent"
+lane = "automated"
+trigger = "Attempt a second concurrent launch for the same instance."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "The exact-instance run lock fails closed."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "cancel.before_process"
+lane = "automated"
+trigger = "Cancel after review but before process creation."
+required_before_verdict = true
+expected_outcome = "cancel_without_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "No process or reusable authority remains."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "cancel.during_execution"
+lane = "automated"
+trigger = "Cancel while the supervised Factorio process is running."
+required_before_verdict = true
+expected_outcome = "honest_interrupted"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "Lifecycle state records interruption and post-run observation still executes."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "execution.timeout"
+lane = "automated"
+trigger = "Exceed the reviewed candidate timeout."
+required_before_verdict = true
+expected_outcome = "honest_interrupted"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "Timeout cannot be reported as clean completion."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "process.crash"
+lane = "automated"
+trigger = "The Factorio process exits abnormally."
+required_before_verdict = true
+expected_outcome = "recovery_required"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "Crash evidence and recovery disposition are retained."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "journal.write_failure"
+lane = "automated"
+trigger = "A required lifecycle journal transition cannot be persisted."
+required_before_verdict = true
+expected_outcome = "recovery_required"
+permit_consumption = "depends_on_effect_boundary"
+verdict_impact = "pass_precondition"
+notes = "No false complete state may be emitted."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "run_lock.stale"
+lane = "automated"
+trigger = "A stale run lock is observed before launch."
+required_before_verdict = true
+expected_outcome = "recovery_required"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Recovery re-inspects before new authority."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "provider.restart"
+lane = "automated"
+trigger = "The owning provider session changes before consumption."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "A new reviewed operation is required."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "issuer.restart"
+lane = "automated"
+trigger = "The FacMan issuer session changes before consumption."
+required_before_verdict = true
+expected_outcome = "refuse_before_process"
+permit_consumption = "not_consumed"
+verdict_impact = "pass_precondition"
+notes = "Process-session permits never survive restart."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "observer.event_loss"
+lane = "automated"
+trigger = "The observer reports loss, overflow, unresolved targets, or attribution gaps."
+required_before_verdict = true
+expected_outcome = "inconclusive"
+permit_consumption = "depends_on_effect_boundary"
+verdict_impact = "inconclusive"
+notes = "Observation gaps can never be waived into Pass."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "human.menu_reached"
+lane = "human"
+trigger = "Reviewer observes the normal Factorio main menu."
+required_before_verdict = true
+expected_outcome = "human_confirmation"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "Automated process success cannot substitute for this observation."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "human.no_save_inferred"
+lane = "human"
+trigger = "Reviewer confirms no save or alternate intent opened automatically."
+required_before_verdict = true
+expected_outcome = "human_confirmation"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "Menu is the exact default intent."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "human.create_or_load"
+lane = "human"
+trigger = "Reviewer creates a disposable game or explicitly loads the selected test save."
+required_before_verdict = true
+expected_outcome = "human_confirmation"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "The choice occurs inside Factorio."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "human.save_works"
+lane = "human"
+trigger = "Reviewer saves successfully into the selected instance."
+required_before_verdict = true
+expected_outcome = "human_confirmation"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "Writable instance state is usable."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "human.clean_exit"
+lane = "human"
+trigger = "Reviewer returns to the menu and exits normally."
+required_before_verdict = true
+expected_outcome = "human_confirmation"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "Post-run observation begins only after process exit and quiescence."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "human.last_run_accurate"
+lane = "human"
+trigger = "Reviewer confirms FacMan's last-run report matches observed lifecycle state."
+required_before_verdict = true
+expected_outcome = "human_confirmation"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "A false complete state is a failure."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "human.relaunch_persists"
+lane = "human"
+trigger = "Reviewer relaunches and confirms the same instance sees the created save."
+required_before_verdict = true
+expected_outcome = "human_confirmation"
+permit_consumption = "consumed_once"
+verdict_impact = "pass_precondition"
+notes = "The second launch requires fresh authority."
+
+[[interruption_cases]]
+schema = "factorio.play_interruption_case.v1"
+case_id = "power_loss.synthetic"
+lane = "synthetic_deferred"
+trigger = "Abrupt machine power loss during an interactive run."
+required_before_verdict = false
+expected_outcome = "deferred"
+permit_consumption = "not_applicable"
+verdict_impact = "no_authority"
+notes = "Remain synthetic until a disposable-machine lane exists."
+
+[[verdict_criteria]]
+schema = "factorio.play_verdict_criteria.v1"
+result = "Pass"
+requires_human_review = true
+conditions = [
+  "candidate_policy_plan_evidence_provider_and_permit_identities_match",
+  "provider_consumes_the_permit_exactly_once",
+  "factorio_opens_to_the_normal_main_menu",
+  "no_save_or_alternate_launch_intent_is_inferred",
+  "selected_instance_data_is_visible_and_usable",
+  "saving_and_freshly_authorized_relaunch_work",
+  "no_attributed_write_occurs_outside_writable_roots",
+  "all_protected_roots_remain_identity_and_content_equivalent",
+  "no_observation_event_or_required_manifest_is_lost",
+  "run_session_state_is_honest_and_complete",
+  "human_reviewer_signs_the_exact_hash_closed_evidence_packet",
+]
+observation_gaps_allowed = false
+hash_closed_packet_required = true
+grants_authority = false
+disposition = "eligible_for_separate_exact_route_promotion"
+scope_after_verdict = "Only the exact reviewed Windows x64 standalone 2.0.77 menu/hermetic candidate may become eligible for a separate authority promotion."
+notes = "Pass is evidence, not self-executing authority."
+
+[[verdict_criteria]]
+schema = "factorio.play_verdict_criteria.v1"
+result = "Fail"
+requires_human_review = true
+conditions = [
+  "selected_or_sibling_installation_changes",
+  "default_or_global_factorio_data_changes",
+  "steam_or_other_external_protected_domain_changes",
+  "any_attributed_write_occurs_outside_the_writable_set",
+  "wrong_intent_or_implicit_save_load_occurs",
+  "stale_replayed_or_mismatched_permit_is_accepted",
+  "required_player_journey_fails_because_of_the_candidate",
+  "recovery_or_postrun_state_is_falsely_reported_complete",
+  "unexpected_attributable_persistent_state_change_occurs",
+  "exact_bound_resource_is_replaced_or_bypassed",
+]
+observation_gaps_allowed = false
+hash_closed_packet_required = true
+grants_authority = false
+disposition = "bounded_repair_required"
+scope_after_verdict = "Open a repair WorkUnit bound to observed evidence; do not weaken this policy retroactively."
+notes = "Fail never grants authority."
+
+[[verdict_criteria]]
+schema = "factorio.play_verdict_criteria.v1"
+result = "Inconclusive"
+requires_human_review = true
+conditions = [
+  "observer_loses_events_or_reports_overflow",
+  "baseline_or_postrun_manifest_cannot_be_completed",
+  "candidate_or_bound_evidence_changes_during_the_run",
+  "unrelated_host_activity_prevents_required_attribution",
+  "host_restarts_or_observation_provider_fails",
+  "human_reviewer_cannot_establish_the_required_ui_result",
+  "evidence_packet_is_incomplete_corrupt_or_not_hash_closed",
+  "stable_identity_or_target_resolution_is_ambiguous",
+]
+observation_gaps_allowed = false
+hash_closed_packet_required = true
+grants_authority = false
+disposition = "improve_observation_and_repeat"
+scope_after_verdict = "Improve observation and repeat against the same frozen policy, or review a new policy revision with an explicit reason."
+notes = "Inconclusive is mandatory when required evidence is unavailable."
+
+[required_validation]
+exact_head_required = true
+local = ["policy_validator", "schema_metaschema", "negative_controls", "strict", "native_ctest", "python_unittest", "clean_reproduction"]
+hosted = ["windows_native_package", "linux", "macos", "sanitizers", "bounded_fuzzers", "coverage", "codeql", "schema", "security_policy", "package_proof"]
+
+[governance]
+policy_implementation_review_required = true
+policy_closeout_review_required = true
+canonical_policy_promotion_before_candidate = true
+main_to_dev_ancestry_sync_before_candidate = true
+candidate_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01"
+verdict_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+candidate_implementation_separate = true
+human_verdict_separate = true
+criteria_change_after_candidate_observation_forbidden = true
+
+[authority_boundary]
+public_command = false
+permit_issuer = false
+permit_issuance_authority = false
+process_execution = false
+real_factorio_execution = false
+product_apply_route = false
+setup_authority = false
+credential_authority = false
+network_authority = false
+host_mutation_authority = false
+signing = false
+publication = false
+safe_beta = false

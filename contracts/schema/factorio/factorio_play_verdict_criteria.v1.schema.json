@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.play_verdict_criteria.v1.schema.json",
+  "title": "Factorio Play verdict criteria",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "result", "requires_human_review", "conditions", "observation_gaps_allowed", "hash_closed_packet_required", "grants_authority", "disposition", "scope_after_verdict", "notes"],
+  "properties": {
+    "schema": {"const": "factorio.play_verdict_criteria.v1"},
+    "result": {"enum": ["Pass", "Fail", "Inconclusive"]},
+    "requires_human_review": {"const": true},
+    "conditions": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+    "observation_gaps_allowed": {"const": false},
+    "hash_closed_packet_required": {"const": true},
+    "grants_authority": {"const": false},
+    "disposition": {"enum": ["eligible_for_separate_exact_route_promotion", "bounded_repair_required", "improve_observation_and_repeat"]},
+    "scope_after_verdict": {"type": "string", "minLength": 1, "maxLength": 512},
+    "notes": {"type": "string", "minLength": 1, "maxLength": 512}
+  }
+}

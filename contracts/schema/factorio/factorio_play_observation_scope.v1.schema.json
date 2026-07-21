@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.play_observation_scope.v1.schema.json",
+  "title": "Factorio Play observation scope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "observer_id", "method", "provider_binding_required", "captures", "before_launch", "during_run", "after_quiescence", "quiescence_seconds", "gap_signals", "gap_disposition", "hash_closes_output", "independent_of_process_provider", "notes"],
+  "properties": {
+    "schema": {"const": "factorio.play_observation_scope.v1"},
+    "observer_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "method": {"enum": ["attributed_process_tree", "stable_protected_comparison"]},
+    "provider_binding_required": {"const": true},
+    "captures": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"enum": ["filesystem", "registry", "process_identity", "child_process_tree", "provider_process", "stable_identity", "content_manifest", "absence_presence"]}
+    },
+    "before_launch": {"type": "boolean"},
+    "during_run": {"type": "boolean"},
+    "after_quiescence": {"type": "boolean"},
+    "quiescence_seconds": {"type": "integer", "minimum": 1, "maximum": 60},
+    "gap_signals": {
+      "type": "array",
+      "minItems": 5,
+      "items": {"enum": ["lost_events", "buffer_overflow", "unknown_process_identity", "unresolved_target", "delayed_events", "attribution_gap", "baseline_incomplete", "postrun_incomplete", "provider_failure"]}
+    },
+    "gap_disposition": {"const": "Inconclusive"},
+    "hash_closes_output": {"const": true},
+    "independent_of_process_provider": {"const": true},
+    "notes": {"type": "string", "minLength": 1, "maxLength": 512}
+  }
+}

@@ -70,6 +70,7 @@ native_direction:
         )
         self.assertIn("instance_isolated=unproven", text)
         self.assertIn("hermetic=unproven", text)
+        self.assertIn("Gate 4A hermetic Play policy", text)
 
     def test_claim_ledger_rejects_stable_abi_promotion(self) -> None:
         problems = aide_target_truth_check.validate_claim_ledger_text(
