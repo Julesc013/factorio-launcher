@@ -2,6 +2,9 @@
 
 - Product permit issuance remains unavailable.
 - Readiness and plans grant no authority.
+- The contract law is specified, but its native canonicalization,
+  authentication, timing, replay, and provider enforcement remain to be
+  implemented and adversarially proven.
 - Provider-side independent revalidation, freshness, expiry, nonce, replay,
   principal, machine, intent, isolation, and exact-resource laws remain to be
   implemented and proven.

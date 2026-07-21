@@ -9,6 +9,8 @@ The scope also includes generated `.aide/memory/**` and root `README.md` truth
 surfaces because contract and refusal counts must remain generator-consistent
 during the active gate.
 
-No permit runtime, contract, route, provider, or frontend implementation
-change has been accepted yet. This file will be updated as bounded
-implementation slices are committed.
+The contract-law slice adds seven internal `common.*permit*.v1` schemas, the
+closed 25-code permit refusal family, and the versioned architecture law. It
+also regenerates the development-state counts to 268 schemas and 242 refusal
+codes. No command, route, frontend, runtime authenticator, provider effect, or
+product issuance surface is introduced by this slice.
