@@ -54,7 +54,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `instance_spec_and_readiness`. **Active WorkUnit:** `FACMAN-INSTANCE-SPEC-AND-READINESS-01`. **Next:** `FACMAN-OPERATION-PERMIT-01`.
+**Phase:** `operation_permit`. **Active WorkUnit:** `FACMAN-OPERATION-PERMIT-01`. **Next:** `FACMAN-HERMETIC-STANDALONE-PLAY-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -67,7 +67,8 @@ Two execution modes are accepted product designs but remain unproven: Steam-awar
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
-The primary path is now portable InstanceSpec, local InstanceBinding, computed readiness, operation-bound permits, and the hermetic standalone Play-to-menu gate. Saves/worlds remain optional instance content.
+Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
+The active path now binds one exact reviewed operation into a short-lived permit with provider-side revalidation, followed by the hermetic standalone Play-to-menu gate.
 The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 Contributor status command: `py -3 tools/project_state.py --summary`.

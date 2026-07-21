@@ -120,5 +120,42 @@ preparation_available = false
 execution_available = false
 ```
 
-Hosted cross-platform and exact-merged-`dev` evidence are intentionally not
-claimed here; they belong to the reviewed PR and post-merge closeout sequence.
+## Reviewed integration proof
+
+PR #39 merged reviewed implementation head
+`fa11b056c03784964e66ef391a81a6dfa8fcedc1` at `dev`
+`7113011a6c4fe1d76d4c09cc36bc8a3aafa34b36` after exact-head CI
+`29812506939`, code-security `29812506919`, schema-check `29812506783`, and
+security-policy `29812507063` passed.
+
+The first isolated reproduction exposed an ancestor-path false negative in the
+CMake architecture validator after every native build and CTest had passed.
+PR #40 corrected only that path filter and added a regression test. Its exact
+head `f5915475eff78c255fe1f618a8be12c9c0f2d0f9` passed CI `29814299428`,
+code-security `29814299449`, and security-policy `29814299432`, then merged at
+final `dev` `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`.
+
+The final exact-`dev` CI `29815159526`, code-security `29815159602`, and
+security-policy `29815159595` passed. The dedicated schema workflow did not
+retrigger for the path-only correction; the implementation merge passed it at
+`29813605517`, while final CI strict validation and the clean reproduction both
+revalidated all 261 schemas.
+
+The evidence-only closeout branch reran the repository-owned full local matrix:
+44/44 native tests and 361 Python tests passed with seven declared optional
+frontend skips.
+
+## Clean pinned reconstruction
+
+```text
+FacMan:             bbb46c5bfd10cd35fb965b23edc4951784f93ef4
+Universal Launcher: 7bd4425f0c35414f738159b45d8bec42edf70235
+Universal Setup:    3f8489275077347c2918f3bb03614ec6431362ff
+result:             PASS
+duration:           387.0 seconds
+```
+
+All repositories were detached and clean before and after validation. Both
+providers and FacMan configured, built, tested, and passed strict checks;
+FacMan also passed AIDE Lite and the complete Python suite. The isolated source
+and build root was removed after proof capture.

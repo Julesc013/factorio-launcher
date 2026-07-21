@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-INSTANCE-SPEC-AND-READINESS-01
 title: Instance specification, binding, readiness, and view
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-21T04:25:36Z
 owner: unassigned
 objective: >
@@ -127,3 +127,8 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-21T04:32:50Z
+verified_at: 2026-07-21T08:58:25Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-21T08:58:26Z
+closed_at: 2026-07-21T08:58:26Z

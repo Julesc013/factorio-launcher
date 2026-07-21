@@ -63,5 +63,6 @@ credential, network, Setup apply, signing, or publication paths.
   WorkUnit active and all dangerous authority unavailable.
 
 Generated-only files and line-ending-normalized worktree observations are kept
-inside the repository. No external clone, copied project, or persistent
-temporary directory was created.
+inside the repository. The final proof used one named OS-temporary root for
+three detached clones and out-of-tree builds; all clones were verified clean
+and that root was removed after the matrix.

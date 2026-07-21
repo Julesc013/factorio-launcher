@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+  "active_work_unit": "FACMAN-OPERATION-PERMIT-01",
   "capabilities": [
     {
       "commands": [],
@@ -377,6 +377,11 @@
       "limitation": "no adoption apply, deletion, mutation, Steam adoption, execution, or external authority"
     },
     {
+      "claim": "Instance readiness",
+      "level": "reviewed read-only `dev` integration",
+      "limitation": "menu only; no preparation, permit, credentials, network, or execution"
+    },
+    {
       "claim": "Package hashes authenticate publisher",
       "level": "not claimed",
       "limitation": "signatures or trusted external metadata required"
@@ -420,7 +425,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "instance-spec-and-readiness",
+  "current_checkpoint": "operation-permit",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -524,6 +529,58 @@
     "work_unit": "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01",
     "zero_write_proof": true
   },
+  "gate2_instance_spec_and_readiness_closeout": {
+    "authority_promotion": false,
+    "canonical_main_promotion": false,
+    "canonicalization_version": "facman.sorted-json.v1",
+    "clean_reproduction_seconds": 387.0,
+    "command_count": 125,
+    "compatible_v1_record_rewritten": false,
+    "correction_head_ci_run": "29814299428",
+    "correction_head_code_security_run": "29814299449",
+    "correction_head_security_policy_run": "29814299432",
+    "default_launch_intent": "menu",
+    "exact_dev_ci_run": "29815159526",
+    "exact_dev_clean_reproduction": true,
+    "exact_dev_code_security_run": "29815159602",
+    "exact_dev_schema_check_run": "29813605517",
+    "exact_dev_schema_disposition": "implementation_merge_passed_and_final_correction_had_no_schema_delta",
+    "exact_dev_security_policy_run": "29815159595",
+    "exact_head_ci_run": "29812506939",
+    "exact_head_code_security_run": "29812506919",
+    "exact_head_schema_check_run": "29812506783",
+    "exact_head_security_policy_run": "29812507063",
+    "execution_available": false,
+    "final_dev_revision": "bbb46c5bfd10cd35fb965b23edc4951784f93ef4",
+    "final_python_test_count": 361,
+    "implementation_dev_revision": "7113011a6c4fe1d76d4c09cc36bc8a3aafa34b36",
+    "implementation_pull_request": 39,
+    "implementation_python_test_count": 360,
+    "implementation_revision": "fa11b056c03784964e66ef391a81a6dfa8fcedc1",
+    "local_full_matrix": true,
+    "native_test_count": 44,
+    "permit_issuance_authority": false,
+    "playability_promotion": false,
+    "preparation_available": false,
+    "publication": false,
+    "python_expected_skips": 7,
+    "read_only_projection": true,
+    "refusal_code_count": 217,
+    "registered_route_count": 123,
+    "reproduction_correction_pull_request": 40,
+    "reproduction_correction_revision": "f5915475eff78c255fe1f618a8be12c9c0f2d0f9",
+    "schema_count": 261,
+    "scope_revision": "a2b851c258e901055ae2edbc3c9379f5aa502652",
+    "signing": false,
+    "status": "accepted_reviewed_dev_integration",
+    "supported_launch_intents": [
+      "menu"
+    ],
+    "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+    "zero_write_proof": true
+  },
   "host_environment_program": {
     "arbitrary_script_authority": false,
     "architecture": "docs/architecture/host_environment_lifecycle.md",
@@ -600,7 +657,7 @@
     "readiness_model": "computed_projection_not_authoritative_state",
     "runtime_authority": false,
     "save_role": "optional_content_within_instance",
-    "status": "active_read_only_vertical_slice",
+    "status": "gate2_read_only_projection_complete",
     "templates_are_initializers": true,
     "ui_aggregate": "InstanceView",
     "work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
@@ -614,7 +671,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01",
+  "last_closed_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -1394,7 +1451,7 @@
     "harmless_reads_require_permit": false,
     "permit_issuance_authority": false,
     "provider_revalidation_required": true,
-    "status": "planned_after_instance_readiness",
+    "status": "active_contract_and_validation_infrastructure",
     "work_unit": "FACMAN-OPERATION-PERMIT-01"
   },
   "platforms": [
@@ -1513,12 +1570,12 @@
     "canonical_integration": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+    "current_work_unit": "FACMAN-OPERATION-PERMIT-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-OPERATION-PERMIT-01",
-    "phase": "instance_spec_and_readiness",
+    "next_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-01",
+    "phase": "operation_permit",
     "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
