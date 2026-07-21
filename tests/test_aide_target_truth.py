@@ -59,9 +59,13 @@ native_direction:
 
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
-        self.assertIn("phase: hermetic_standalone_play_policy (active)", text)
         self.assertIn(
-            "active_work_unit: FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+            "phase: hermetic_standalone_play_policy_closeout "
+            "(accepted_dev_pending_canonical_policy_promotion)",
+            text,
+        )
+        self.assertIn(
+            "active_work_unit: none",
             text,
         )
         self.assertIn(

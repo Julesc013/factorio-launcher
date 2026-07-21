@@ -8,18 +8,17 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: hermetic-standalone-play-policy
+  phase: hermetic-standalone-play-policy-closeout
   primary_goal: >
-    Freeze the exact standalone Factorio Play-to-menu candidate, protected and
-    writable roots, evidence, interruption matrix, observation method, and
-    human verdict law without issuing a permit or launching a process.
+    Preserve the reviewed exact Gate 4A policy digest while it is promoted as
+    a no-authority canonical baseline and synchronized back into dev.
   next_task: >
-    Use the accepted InstanceSpec, InstanceBinding, and InstanceReadiness to
-    review and freeze one exact non-Steam standalone candidate class with
-    menu as the default and only candidate launch intent, complete resource and
-    protected-root evidence, explicit interruption cases, and separate Pass,
-    Fail, and Inconclusive human criteria. Follow with a separately reviewed
-    implementation candidate and a separately reviewed operator verdict.
+    Promote the accepted policy-only dev checkpoint to main, synchronize main
+    ancestry back into dev without changing the accepted tree, and only then
+    activate the separately scoped implementation candidate bound to the
+    accepted InstanceSpec, InstanceBinding, and InstanceReadiness. Keep menu as the default
+    and only candidate launch intent. The later human verdict remains a
+    distinct WorkUnit.
   authoritative_command_slice:
     - installs.scan
     - installs.import
@@ -77,7 +76,7 @@ safety_invariants:
   - no passwords or tokens in manifests
   - no silent writes to the default Factorio data directory
   - Steam-aware Play must disclose enumerated Steam-owned external-state domains
-  - hermetic Play fails on any persistent change outside the authorised workspace
+  - hermetic Play fails on any process-tree-attributable persistent write outside exact authorised roots
   - dry-run launch plan by default
   - install mutation belongs to Universal Setup
   - install registration and legacy managed text never grant mutation authority

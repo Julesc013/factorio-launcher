@@ -6,12 +6,12 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Current product truth
 
-- phase: `hermetic_standalone_play_policy` / `active`;
+- phase: `hermetic_standalone_play_policy_closeout` / `accepted_dev_pending_canonical_policy_promotion`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `hermetic-standalone-play-policy`;
-- active WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`;
+- checkpoint: `hermetic-standalone-play-policy-closeout`;
+- active WorkUnit: `none`;
 - next WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`;
 - next authority gate: `real-play-isolation`;
 - truth scope: `canonical_main_promoted_dev_synchronized`; canonical integration: `true`; local counts promoted: `true`;
@@ -20,7 +20,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
 - Gate 3 permit closeout: `accepted_reviewed_dev_integration` at dev `91c2aa4fe0a30be97bf16165b41a95a8fab4cd11`;
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
-- Gate 4A hermetic Play policy: `implemented_frozen_policy_pending_review_closeout` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
+- Gate 4A hermetic Play policy: `accepted_reviewed_dev_integration_pending_canonical_promotion` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - execution: `unavailable` / `real_play_gate_not_passed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
@@ -87,7 +87,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
+- last closed WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `7bd4425f0c35414f738159b45d8bec42edf70235` / `3f8489275077347c2918f3bb03614ec6431362ff`;

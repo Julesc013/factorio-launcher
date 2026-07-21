@@ -68,7 +68,53 @@ resumed, and the first Python run had already printed `OK (skipped=2)` for all
 window returned exit code zero in 120.8 seconds. These were command-duration
 limits, not product or test failures.
 
-The remaining closeout evidence is exact-head hosted review, clean pinned
-three-repository reproduction, exact merged-`dev` proof, and policy-only
+## Exact reviewed-head proof
+
+PR #47 reviewed implementation head
+`cf674d852e16ceb237ab83dc9254b37b0d900aa2` passed both push and
+pull-request event proofs:
+
+| Proof | Push run | Pull-request run | Result |
+| --- | --- | --- | --- |
+| CI | `29846149703` | `29846178980` | Pass |
+| Code security | `29846150053` | `29846179861` | Pass |
+| Schema check | `29846150047` | `29846179477` | Pass |
+| Security policy | `29846149398` | `29846179286` | Pass |
+
+PR #47 merged with exact-head matching into `dev` revision
+`51f4fc24c9164762a88b92b4f865b04fe9256d4b`. Its exact merged-state
+proof passed:
+
+| Proof | Run | Result |
+| --- | --- | --- |
+| CI | `29847230819` | Pass |
+| Code security | `29847230890` | Pass |
+| Schema check | `29847230200` | Pass |
+| Security policy | `29847230265` | Pass |
+
+## Clean pinned reconstruction
+
+One unique OS-temporary root used fresh detached clones and these exact pins:
+
+- FacMan `51f4fc24c9164762a88b92b4f865b04fe9256d4b`;
+- Universal Launcher `7bd4425f0c35414f738159b45d8bec42edf70235`;
+- Universal Setup `3f8489275077347c2918f3bb03614ec6431362ff`.
+
+All three repositories configured, built, tested, and passed strict checks.
+FacMan additionally passed AIDE Lite and its full Python suite. The serial
+single-writer matrix completed in 404.8 seconds; all three source checkouts
+remained clean and exact at their pins. The complete temporary clone and build
+root was removed in the same command's guaranteed cleanup path.
+
+Gate 4A is therefore ready for a truth-only closeout and later policy-only
 canonical promotion. No permit was issued, no launch route was added, and no
-Factorio process was executed by this validation.
+FacMan or Factorio product process was executed by this validation.
+
+The truth-only closeout transition passes project-state validation, strict
+validation, AIDE Lite, diff checks, and 25 focused policy/queue/truth tests. A
+raw full-suite invocation after the validated build tree had deliberately been
+deleted reached its expected Windows package-proof precondition because
+`build/native-smoke/Debug/facman.exe` was absent; it was not recorded as a
+product failure or as a passing full-suite run. The exact merged revision's
+clean reconstruction above is the complete local build-backed suite, and the
+closeout PR must supply a fresh hosted full-matrix proof.

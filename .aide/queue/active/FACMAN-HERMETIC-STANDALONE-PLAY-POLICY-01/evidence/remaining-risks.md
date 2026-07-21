@@ -10,8 +10,9 @@
   not implemented for real Play.
 - No real Factorio run or human `Pass`, `Fail`, or `Inconclusive` verdict has
   occurred.
-- The policy still requires exact-head review, bounded closeout, canonical
-  policy-only promotion, and ancestry synchronization before candidate work.
+- Exact-head review, merged-`dev` proof, clean reproduction, and bounded
+  closeout are complete. Canonical policy-only promotion and ancestry
+  synchronization still must complete before candidate work starts.
 - Steam and foreign installation routes remain outside this programme.
 - Instance preparation, installation apply, credentials, networking, host
   mutation, signing, publication, and Safe beta remain unavailable.

@@ -90,14 +90,18 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("hermetic-standalone-play-policy", data["current_checkpoint"])
+        self.assertEqual(
+            "hermetic-standalone-play-policy-closeout",
+            data["current_checkpoint"],
+        )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
-            data["active_work_unit"],
+            data["last_closed_work_unit"],
         )
         self.assertEqual(
             "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
@@ -171,9 +175,23 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(gate3_integration["real_factorio_execution"])
         hermetic_policy = data["hermetic_standalone_play_policy"]
         self.assertEqual(
-            "implemented_frozen_policy_pending_review_closeout",
+            "accepted_reviewed_dev_integration_pending_canonical_promotion",
             hermetic_policy["status"],
         )
+        self.assertEqual(47, hermetic_policy["implementation_pull_request"])
+        self.assertEqual(
+            "cf674d852e16ceb237ab83dc9254b37b0d900aa2",
+            hermetic_policy["reviewed_head_revision"],
+        )
+        self.assertEqual(
+            "51f4fc24c9164762a88b92b4f865b04fe9256d4b",
+            hermetic_policy["dev_integration_revision"],
+        )
+        self.assertTrue(hermetic_policy["local_full_matrix"])
+        self.assertTrue(hermetic_policy["exact_dev_clean_reproduction"])
+        self.assertEqual(47, hermetic_policy["native_test_count"])
+        self.assertEqual(372, hermetic_policy["python_test_count"])
+        self.assertEqual(2, hermetic_policy["python_expected_skips"])
         self.assertEqual(
             "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
             hermetic_policy["policy_digest"],
@@ -278,7 +296,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-OPERATION-PERMIT-01",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -605,13 +623,13 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["existing_installation_mutation"])
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
-        self.assertEqual("hermetic-standalone-play-policy", data["current_checkpoint"])
+        self.assertEqual(
+            "hermetic-standalone-play-policy-closeout",
+            data["current_checkpoint"],
+        )
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-OPERATION-PERMIT-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
