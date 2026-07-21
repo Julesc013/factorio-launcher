@@ -10,12 +10,15 @@ objective: >
   Implement canonical short-lived permit issuance and validation primitives bound to one reviewed operation, exact resources, current evidence, policy and provider revisions, principal, nonce, and expiry, with independent provider revalidation while product issuance routes and real Factorio execution remain unavailable pending review.
 allowed_paths:
   - .aide/queue/**
+  - .aide/memory/**
   - .aide/profile.yaml
+  - README.md
   - runtime/core/permit/**
   - runtime/core/CMakeLists.txt
   - runtime/core/generated/**
   - runtime/factorio/application/**
   - runtime/factorio/instance/**
+  - runtime/factorio/launch/**
   - runtime/factorio/CMakeLists.txt
   - contracts/**
   - apps/**
@@ -32,6 +35,8 @@ affected_native_targets:
   - facman_client_smoke
   - flb_factorio_instance_model_smoke
   - flb_factorio_application_static
+  - flb_factorio_launch_static
+  - flb_factorio_launch_permit_smoke
   - facman_operation_permit_smoke
 affected_python_tests:
   - tests.test_capability_policy
@@ -71,6 +76,7 @@ architecture_invariants:
   - expired, replayed, stale, wrong-machine, wrong-provider, and wrong-resource permits fail closed
   - harmless read-only inspection does not require a permit
   - global admission is not the sole policy enforcer
+  - the dormant Factorio launch verifier independently validates and consumes permits but cannot launch Factorio
   - product permit issuance and real Factorio execution remain unavailable until separately reviewed
 depends_on:
   - FACMAN-INSTANCE-SPEC-AND-READINESS-01
