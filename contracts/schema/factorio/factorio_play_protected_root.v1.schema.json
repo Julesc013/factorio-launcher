@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.play_protected_root.v1.schema.json",
+  "title": "Factorio Play writable, protected, forbidden, or disclosed root",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "resource_id", "domain", "role", "classification", "selector", "presence_policy", "identity_requirements", "permitted_effects", "attributed_write_disposition", "comparison", "notes"],
+  "properties": {
+    "schema": {"const": "factorio.play_protected_root.v1"},
+    "resource_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "domain": {"enum": ["filesystem", "registry", "attributed_effect_scope", "host_state"]},
+    "role": {"enum": ["instance_mutable", "operation_state", "audit_state", "operation_temporary", "selected_installation", "sibling_installations", "global_user_data", "platform_integration", "facman_package", "other_instances", "source_material", "registration", "attributed_external_effects", "disclosed_external_state"]},
+    "classification": {"enum": ["writable", "protected_snapshot", "forbidden_observed", "external_unobserved", "not_applicable"]},
+    "selector": {"type": "string", "minLength": 3, "maxLength": 256},
+    "presence_policy": {"enum": ["required", "absent_or_present_bound", "absence_must_remain_absent", "disclosed_unobserved"]},
+    "identity_requirements": {
+      "type": "array",
+      "items": {"enum": ["stable_object_identity", "volume_identity", "filesystem_identity", "no_follow_reparse_status", "content_manifest", "registry_value_set", "provider_identity"]}
+    },
+    "permitted_effects": {
+      "type": "array",
+      "items": {"enum": ["workspace_read", "workspace_write"]}
+    },
+    "attributed_write_disposition": {"enum": ["permitted", "fail", "inconclusive", "outside_claim"]},
+    "comparison": {"enum": ["stable_manifest", "event_only", "no_comparison", "absence"]},
+    "notes": {"type": "string", "minLength": 1, "maxLength": 512}
+  }
+}

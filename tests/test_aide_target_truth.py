@@ -59,9 +59,13 @@ native_direction:
 
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
-        self.assertIn("phase: hermetic_standalone_play_policy (active)", text)
         self.assertIn(
-            "active_work_unit: FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+            "phase: hermetic_standalone_play_policy_closeout "
+            "(accepted_dev_pending_canonical_policy_promotion)",
+            text,
+        )
+        self.assertIn(
+            "active_work_unit: none",
             text,
         )
         self.assertIn(
@@ -70,6 +74,7 @@ native_direction:
         )
         self.assertIn("instance_isolated=unproven", text)
         self.assertIn("hermetic=unproven", text)
+        self.assertIn("Gate 4A hermetic Play policy", text)
 
     def test_claim_ledger_rejects_stable_abi_promotion(self) -> None:
         problems = aide_target_truth_check.validate_claim_ledger_text(

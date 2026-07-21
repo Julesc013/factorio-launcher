@@ -54,21 +54,23 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `hermetic_standalone_play_policy`. **Active WorkUnit:** `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`. **Next:** `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`.
+**Phase:** `hermetic_standalone_play_policy_closeout`. **Active WorkUnit:** `none (operator gate required)`. **Next:** `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 268 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 274 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven: Steam-aware `instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because `real_play_gate_not_passed`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
-Gate 3 exact permit infrastructure is closed with provider-side revalidation and no product issuance. The active path now freezes the hermetic standalone Play-to-menu policy.
+Gate 3 exact permit infrastructure is closed with provider-side revalidation and no product issuance.
+Gates 0-3 are canonically promoted and dev-synchronized without authority promotion. The active path now freezes the hermetic standalone Play-to-menu policy.
+Gate 4A now has a digest-bound process-tree-hermetic Windows x64 / Factorio 2.0.77 policy candidate; it adds no issuer, process route, real Play result, or authority.
 The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 Contributor status command: `py -3 tools/project_state.py --summary`.

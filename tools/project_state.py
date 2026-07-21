@@ -112,6 +112,8 @@ def collect() -> dict[str, Any]:
         "instance_product_program": status["instance_product_program"],
         "operation_permit_program": status["operation_permit_program"],
         "gate3_operation_permit_closeout": status["gate3_operation_permit_closeout"],
+        "gate3_public_integration": status["gate3_public_integration"],
+        "hermetic_standalone_play_policy": status["hermetic_standalone_play_policy"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
         "gate2_instance_spec_and_readiness_closeout": status["gate2_instance_spec_and_readiness_closeout"],
@@ -373,6 +375,13 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Gate 3 permit closeout: "
         f"`{data['gate3_operation_permit_closeout']['status']}` at dev "
         f"`{data['gate3_operation_permit_closeout']['dev_integration_revision']}`;",
+        f"- Gates 0-3 canonical integration: "
+        f"`{data['gate3_public_integration']['status']}` at main "
+        f"`{data['gate3_public_integration']['canonical_main_revision']}` and synchronized dev "
+        f"`{data['gate3_public_integration']['final_dev_revision']}`;",
+        f"- Gate 4A hermetic Play policy: "
+        f"`{data['hermetic_standalone_play_policy']['status']}` with digest "
+        f"`{data['hermetic_standalone_play_policy']['policy_digest']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
@@ -518,7 +527,11 @@ def readme_status(data: dict[str, Any]) -> str:
         "Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as "
         "menu-first read-only projections. Saves/worlds remain optional instance content.",
         "Gate 3 exact permit infrastructure is closed with provider-side revalidation and no "
-        "product issuance. The active path now freezes the hermetic standalone Play-to-menu policy.",
+        "product issuance.",
+        "Gates 0-3 are canonically promoted and dev-synchronized without "
+        "authority promotion. The active path now freezes the hermetic standalone Play-to-menu policy.",
+        "Gate 4A now has a digest-bound process-tree-hermetic Windows x64 / Factorio 2.0.77 policy "
+        "candidate; it adds no issuer, process route, real Play result, or authority.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -690,6 +703,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "safety": "permit_infrastructure_proven_real_play_unproven",
             "execution_reason": "real_play_gate_not_passed",
         },
+        "hermetic_standalone_play_policy_closeout": {
+            "checkpoint": "hermetic-standalone-play-policy-closeout",
+            "active": "",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "phase_status": "accepted_dev_pending_canonical_policy_promotion",
+            "safety": "permit_infrastructure_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
     }
     product = status.get("product", {})
     phase = product.get("phase")
@@ -713,8 +735,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "current_work_unit": phase_contract["active"],
         "next_work_unit": phase_contract["next"],
         "m3_disposition": "authorized_backlog_after_playable_alpha",
-        "truth_scope": "dev_integrated_reviewed_reproduced",
-        "canonical_integration": False,
+        "truth_scope": "canonical_main_promoted_dev_synchronized",
+        "canonical_integration": True,
         "local_counts_promoted": True,
     }
     for key, expected in expected_product.items():
@@ -844,6 +866,125 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     if gate3 != expected_gate3:
         problems.append("Gate 3 closeout must bind exact reviewed and merged-dev proof without promoting issuance or execution")
+    gate3_integration = status.get("gate3_public_integration", {})
+    expected_gate3_integration = {
+        "status": "accepted_canonical_main_dev_synchronized",
+        "closeout_pull_request": 43,
+        "closeout_head_revision": "ec4159f05678ad1ea55326ea881728354f5182c6",
+        "closeout_dev_revision": "11feb2e53539e4b272f061374b2a07450c8e32bf",
+        "closeout_head_ci_run": "29828529397",
+        "closeout_head_code_security_run": "29828529368",
+        "closeout_head_security_policy_run": "29828529380",
+        "closeout_dev_ci_run": "29829439259",
+        "closeout_dev_code_security_run": "29829439147",
+        "closeout_dev_security_policy_run": "29829439134",
+        "promotion_pull_request": 44,
+        "promotion_source_revision": "11feb2e53539e4b272f061374b2a07450c8e32bf",
+        "canonical_main_revision": "810e92ccd52ad89fada8a9bb5699805cb5580c24",
+        "shared_tree_identity": "1f15a9ff477db9f4713e82ce23aedea1914293d9",
+        "promotion_head_ci_run": "29830315611",
+        "promotion_head_code_security_run": "29830315615",
+        "promotion_head_schema_check_run": "29830315614",
+        "promotion_head_security_policy_run": "29830315656",
+        "exact_main_ci_run": "29831299212",
+        "exact_main_code_security_run": "29831299101",
+        "exact_main_schema_check_run": "29831299292",
+        "exact_main_security_policy_run": "29831299545",
+        "synchronization_pull_request": 45,
+        "synchronization_head_revision": "ff57488e3cd5a04d6aab7a28f667be64ac54992a",
+        "synchronization_head_ci_run": "29832438748",
+        "synchronization_head_code_security_run": "29832438688",
+        "synchronization_head_security_policy_run": "29832438665",
+        "final_dev_revision": "08d4318ffd32bd9553ce8914cbd8bfc98fde7b74",
+        "final_dev_ci_run": "29833442835",
+        "final_dev_code_security_run": "29833442940",
+        "final_dev_security_policy_run": "29833442807",
+        "main_is_ancestor_of_dev": True,
+        "trees_equal_at_synchronization": True,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "permit_issuance_authority": False,
+        "real_factorio_execution": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate3_integration != expected_gate3_integration:
+        problems.append("Gate 3 public integration must bind exact canonical and synchronized proof without promoting authority")
+    hermetic_policy = status.get("hermetic_standalone_play_policy", {})
+    expected_hermetic_policy = {
+        "status": "accepted_reviewed_dev_integration_pending_canonical_promotion",
+        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+        "implementation_pull_request": 47,
+        "reviewed_head_revision": "cf674d852e16ceb237ab83dc9254b37b0d900aa2",
+        "dev_integration_revision": "51f4fc24c9164762a88b92b4f865b04fe9256d4b",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_push_ci_run": "29846149703",
+        "exact_push_code_security_run": "29846150053",
+        "exact_push_schema_check_run": "29846150047",
+        "exact_push_security_policy_run": "29846149398",
+        "exact_head_ci_run": "29846178980",
+        "exact_head_code_security_run": "29846179861",
+        "exact_head_schema_check_run": "29846179477",
+        "exact_head_security_policy_run": "29846179286",
+        "exact_dev_ci_run": "29847230819",
+        "exact_dev_code_security_run": "29847230890",
+        "exact_dev_schema_check_run": "29847230200",
+        "exact_dev_security_policy_run": "29847230265",
+        "local_full_matrix": True,
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 404.8,
+        "native_test_count": 47,
+        "python_test_count": 372,
+        "python_expected_skips": 2,
+        "schema_count": 274,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 242,
+        "policy_path": "contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml",
+        "policy_schema": "factorio.hermetic_standalone_play_policy.v1",
+        "policy_id": "facman.hermetic-standalone-play.2.0.77.windows-x64.v1",
+        "policy_revision": "1",
+        "canonicalization_version": "facman.sorted-json.v1",
+        "policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "claim_id": "factorio.hermetic_process_tree.v1",
+        "user_label": "Hermetic standalone",
+        "whole_host_immutability_claimed": False,
+        "platform": "windows",
+        "architecture": "x86_64",
+        "factorio_version": "2.0.77",
+        "distribution": "standalone_non_steam",
+        "filesystem": "ntfs_fixed_local",
+        "instance_ownership": "facman_owned",
+        "mod_state": "explicit_empty_lock",
+        "launch_intent": "menu",
+        "isolation_mode": "hermetic",
+        "writable_resource_count": 13,
+        "protected_or_disclosed_resource_count": 18,
+        "evidence_requirement_count": 31,
+        "observation_scope_count": 2,
+        "interruption_case_count": 29,
+        "verdict_count": 3,
+        "human_verdict_required": True,
+        "candidate_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+        "verdict_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+        "policy_only": True,
+        "public_command": False,
+        "permit_issuance_authority": False,
+        "real_factorio_execution": False,
+        "product_apply_route": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if hermetic_policy != expected_hermetic_policy:
+        problems.append("hermetic standalone Play policy truth must bind exact frozen criteria without promoting authority")
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {
         "status": "accepted_reviewed_dev_integration",
@@ -1681,6 +1822,9 @@ def summary(data: dict[str, Any]) -> str:
         f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
         f"active_work_unit: {data['active_work_unit'] or 'none'}",
         f"next_work_unit: {data['product']['next_work_unit']}",
+        f"Gate 4A hermetic Play policy: "
+        f"{data['hermetic_standalone_play_policy']['status']} "
+        f"({data['hermetic_standalone_play_policy']['policy_digest']})",
         f"golden_journey: {data['product']['golden_journey']}",
         f"playability: {data['readiness']['playability']}",
         f"execution: {data['execution']['status']} ({data['execution']['reason']})",
