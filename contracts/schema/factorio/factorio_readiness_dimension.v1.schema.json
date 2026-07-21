@@ -1,0 +1,27 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_readiness_dimension.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Factorio instance readiness dimension",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "enum": [
+        "installation", "version", "content", "instance_root", "configuration",
+        "profile", "mod_content", "saves", "accounts", "recovery", "environment",
+        "isolation", "play_authority"
+      ]
+    },
+    "state": {
+      "enum": ["satisfied", "degraded", "blocked", "not_applicable", "not_observed", "stale"]
+    },
+    "required": {"type": "boolean"},
+    "summary": {"type": "string", "minLength": 1},
+    "evidence_dependencies": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    }
+  },
+  "required": ["id", "state", "required", "summary", "evidence_dependencies"]
+}

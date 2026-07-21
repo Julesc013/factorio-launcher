@@ -1,52 +1,102 @@
-# Product Vision
+# Product Charter
 
-FacMan is an unofficial, native, portable, scriptable, instance-first launcher
-and environment manager for Factorio.
+FacMan is an unofficial, native, portable, scriptable, instance-centric
+launcher and environment manager for Factorio.
+
+Its user promise is:
+
+> FacMan lets players create any number of independent Factorio setups, select
+> one, and launch the normal game as though Factorio had always been installed
+> and configured exactly that way.
+
+Its long-term outcome is to make every player-defined Factorio environment
+understandable, playable, reproducible, repairable, portable, and recoverable
+without silently taking ownership of foreign software or data.
+
+The primary persona is a Factorio player who wants multiple complete, isolated
+game environments without rebuilding versions, mods, profiles, accounts,
+settings, and resources by hand or learning launcher internals.
 
 Its value is not simply launching Factorio. Its value is:
 
 ```text
-one install, many isolated worlds
-many Factorio versions, safely pinned
-many modsets, reproducibly locked
-many saves, protected and backed up
+many installations and Factorio versions, safely selected
+many isolated instances, each independently reproducible
+many profiles and presets, explicitly composed
+many modpacks and modsets, reproducibly locked
+many account references, provider-scoped and secret-free
+many saves/worlds per instance, protected and backed up
 many frontends, one command graph
 many platforms, one native core
 many products later, one universal launcher pattern
 ```
 
-The central workflow is:
+The golden journey is:
 
 ```text
-Create a new isolated Factorio instance,
-choose an install/version,
-attach a locked modset,
-attach saves/profiles/server settings,
-preview the exact launch plan,
-then run without touching global Factorio data.
+Find Factorio,
+create, clone, import, or select an instance,
+choose its version, profile, preset, modpack, account, settings, and resources,
+review readiness and the advertised isolation guarantee,
+press Play and arrive at Factorio's main menu,
+select or create a save inside Factorio,
+save and exit,
+then relaunch the same instance with an explainable last-run result.
 ```
+
+Saves/worlds are optional content inside an instance, not the required launch
+aggregate. Direct save loading may exist as an explicit launch intent, but
+`facman play <instance>` opens the game menu by default.
+
+Any requested combination can be represented, compared, planned, and
+explained. Only compatible, player-owned, provider-supported, policy-admitted
+combinations can be prepared or executed; FacMan does not emulate entitlement
+or silently substitute versions, mods, accounts, installations, or settings.
+
+Advanced installation, instance, profile, preset, modpack/modset, account,
+save, diagnostic, and automation surfaces remain available through the CLI,
+TUI, and command explorer.
+
+## Execution Guarantees
+
+FacMan must never describe all execution as simply "isolated." It supports two
+separate product modes, each with its own evidence gate:
+
+- **Instance-isolated:** FacMan-owned instance data is isolated. Enumerated
+  Steam or platform-owned state may change only after explicit disclosure and
+  acknowledgement. This mode cannot carry the hermetic claim.
+- **Hermetic standalone:** no persistent change may occur outside the
+  authorised FacMan workspace. Any external change fails the claim.
+
+Both modes are accepted product designs and currently unproven. Automated
+fake-process tests can validate the supervisor; only revision-pinned real
+Factorio evidence and human review can promote either execution claim.
 
 ## Product Rules
 
 - No bundled Factorio binaries.
 - No ownership bypass.
 - No official branding assets.
-- No silent writes to the default Factorio data directory.
+- No undisclosed writes to external Factorio, Steam, or platform state.
 - No global mod folder swapping.
 - Dry-run launch plans before execution.
 - Managed install operations go through Universal Setup.
 
 ## v1 Shape
 
-v1 is useful when it has read-only install discovery, ownership
-classification, isolated instances, dry-run launch plans, safe launch
-execution, local ZIP mod import, modset lockfiles, save backup, diagnostics,
-portable workspace behavior, CLI-first command coverage, and native packaging
-skeletons.
+v1 is useful when it has one proven real Play-to-menu route, read-only install
+discovery, ownership classification, multiple isolated instances, portable
+instance specifications with explicit local rebinding, profiles, presets,
+modpacks and exact modset locks, provider-scoped account references, computed
+readiness, dry-run launch/preparation plans, safe launch execution, local
+content preparation, save backup, rollback/recovery, managed standalone
+lifecycle, diagnostics, signed primary packages, a task-oriented GUI, complete
+CLI coverage, and a documented stable workflow-contract subset.
 
-v1 should not require full GUI parity, managed network installs, full Mod
-Portal automation, auto-updating everything, AI recommendations, or a
-cross-product marketplace.
+v1 should not require every GUI toolkit, Steam-aware Play when standalone Play
+is proven, full Mod Portal automation, a headless server manager, remote
+support, AI recommendations, cloud synchronization, or a cross-product
+marketplace.
 
 ## Non-Goals
 
@@ -54,5 +104,7 @@ Do not start with GUI parity. Do not make WinForms, Python tooling, or any
 frontend the backend. Do not put Mod Portal logic in Universal Launcher. Do not make
 Universal Launcher huge before Factorio proves it. Do not make Universal Setup
 huge before Dominium proves it. Do not bundle Factorio binaries, repair Steam
-installs, touch Steam Cloud files silently, store Factorio passwords, or make a
-single executable the architecture.
+installs, manipulate Steam state, touch Steam Cloud files silently, store
+Factorio passwords, or make a single executable the architecture. Do not add a
+dynamic in-process plugin framework, daemon, or AI action layer before a real
+consumer earns the complexity.

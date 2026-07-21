@@ -1,0 +1,12 @@
+{
+  "$id": "https://facman.invalid/schema/common/permit_policy_binding.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Operation permit policy binding",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "policy_revision": {"type": "string", "minLength": 1, "maxLength": 128},
+    "policy_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["policy_revision", "policy_digest"]
+}

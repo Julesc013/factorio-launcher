@@ -24,6 +24,19 @@ namespace json = facman::core::json;
 constexpr std::size_t kTransportInputLimit = 1024U * 1024U;
 constexpr std::size_t kTransportOutputLimit = 16U * 1024U * 1024U;
 
+#ifndef FACMAN_BUILD_SOURCE_REVISION
+#define FACMAN_BUILD_SOURCE_REVISION "unknown"
+#endif
+
+#ifndef FACMAN_BUILD_CONFIGURATION
+#define FACMAN_BUILD_CONFIGURATION ""
+#endif
+
+const char* build_configuration()
+{
+    return *FACMAN_BUILD_CONFIGURATION == '\0' ? "default" : FACMAN_BUILD_CONFIGURATION;
+}
+
 struct Options {
     std::string workspace;
     std::optional<facman::core::Error> workspace_error;
@@ -432,6 +445,23 @@ int command_installs(const Options& options)
         return 0;
     }
     if (action == "inspect" && options.args.size() >= 3) return emit_basic(call(options, "install_refs.inspect", exact_fields_payload({{"install_id", options.args[2]}})), flag(options.args, "--json"), "Install inspected");
+    if (action == "describe" && options.args.size() >= 3) return emit_basic(
+        call(options, "installs.describe", exact_fields_payload({{"install_id", options.args[2]}})),
+        flag(options.args, "--json"), "Installation model described");
+    if (action == "reconcile" && options.args.size() >= 4 && options.args[2] == "plan") {
+        std::vector<std::pair<std::string, std::string>> fields = {{"install_id", options.args[3]}};
+        for (const auto& [option_name, field_name] : std::vector<std::pair<std::string, std::string>>{
+                 {"--version", "version"}, {"--source-ref", "source_ref"}, {"--target", "target_root"},
+                 {"--management", "management_mode"}, {"--deployment-style", "deployment_style"},
+                 {"--data-policy", "data_policy"}, {"--integration", "integration_mode"},
+                 {"--update-policy", "update_policy"}}) {
+            const std::string value = option(options.args, option_name);
+            if (!value.empty()) fields.push_back({field_name, value});
+        }
+        return emit_basic(
+            call(options, "installs.reconcile.plan", exact_fields_payload(fields)),
+            flag(options.args, "--json"), "Installation reconciliation plan rendered");
+    }
     if (action == "install" && options.args.size() >= 4) {
         const std::string phase = options.args[2];
         if (phase == "plan") {
@@ -539,12 +569,26 @@ int command_instances(const Options& options)
         const std::string install = option(options.args, "--install");
         if (install.empty()) return 2;
         const std::string id = option(options.args, "--id", slugify(options.args[2]));
-        const std::string payload = exact_fields_payload({
+        std::vector<std::pair<std::string, std::string>> fields = {
             {"display_name", options.args[2]}, {"instance_id", id}, {"install_id", install},
-            {"template_id", option(options.args, "--template", "vanilla")}});
+            {"template_id", option(options.args, "--template", "vanilla")}};
+        const std::string source_data_root = option(options.args, "--import-data");
+        if (!source_data_root.empty()) fields.push_back({"source_data_root", source_data_root});
+        const std::string payload = exact_fields_payload(fields);
         return emit_basic(call(options, "instance.create", payload, false), flag(options.args, "--json"), "Created instance " + id);
     }
     const std::string action = options.args[1];
+    if ((action == "describe" || action == "readiness") && options.args.size() >= 3) {
+        for (std::size_t index = 3; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (options.args[index] != "--intent" || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        return emit_basic(
+            call(options, "instances." + action, fields_payload({
+                {"instance_id", options.args[2]}, {"intent", option(options.args, "--intent")}})),
+            flag(options.args, "--json"), "Instance " + action + " completed");
+    }
     if ((action == "inspect" || action == "verify" || action == "archive") && options.args.size() >= 3) {
         for (std::size_t index = 3; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;
         return emit_basic(
@@ -791,7 +835,7 @@ int command_diagnostics(const Options& options)
     return 2;
 }
 
-int command_launch(const Options& options, bool run)
+int command_launch(const Options& options, bool run, bool play = false)
 {
     if (!run && options.args.size() >= 3 && options.args[0] == "launch" && options.args[1] == "explain") {
         return emit_guidance(call(options, "launch_plan.explain", exact_fields_payload({{"instance_id", options.args[2]}})), flag(options.args, "--json"));
@@ -800,7 +844,12 @@ int command_launch(const Options& options, bool run)
     if (!run && options.args[0] == "launch" && options.args.size() > 2 && options.args[1] == "plan") id_index = 2;
     if (options.args.size() <= id_index) return 2;
     const std::string instance = options.args[id_index];
-    if (run && flag(options.args, "--execute")) return emit_basic(call(options, "run.execute", exact_fields_payload({{"instance_id", instance}}), false), flag(options.args, "--json"), "");
+    if (play || (run && flag(options.args, "--execute"))) {
+        return emit_basic(
+            call(options, "run.execute", exact_fields_payload({{"instance_id", instance}}), false),
+            flag(options.args, "--json"),
+            "Play session completed");
+    }
     const std::string command = run ? "run.preview" : flag(options.args, "--preflight") ? "launch_plan.preflight" : "launch_plan.build";
     auto response = call(options, command, exact_fields_payload({{"instance_id", instance}}));
     if (flag(options.args, "--json")) return emit_json(response);
@@ -947,7 +996,12 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     const Options options = parse_options(argc, argv);
     if (options.args.empty()) return usage();
     const std::string& command = options.args[0];
-    if (command == "--version" || command == "version") { std::cout << "FacMan " << FACMAN_VERSION_SEMVER << '\n'; return 0; }
+    if (command == "--version" || command == "version") {
+        std::cout << "FacMan " << FACMAN_VERSION_SEMVER
+                  << " (revision " << FACMAN_BUILD_SOURCE_REVISION
+                  << ", configuration " << build_configuration() << ")\n";
+        return 0;
+    }
     if (command == "--help" || command == "help") return usage();
     if (command == "rpc") return command_rpc(options);
     if (command == "product") return command_product(options);
@@ -964,6 +1018,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     if (command == "saves") return command_saves(options);
     if (command == "launch-plan" || command == "launch") return command_launch(options, false);
     if (command == "run") return command_launch(options, true);
+    if (command == "play") return command_launch(options, true, true);
     if (command == "export") return command_transfer(options, true);
     if (command == "import") return command_transfer(options, false);
     if (command == "servers") return command_servers(options);

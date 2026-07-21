@@ -1,96 +1,136 @@
 # FacMan Project State
 
 Generated from `release/index/project_status.v2.toml`, the workspace lock,
-the command/refusal registries, and the support matrix. Edit those canonical
-inputs, then run `py -3 tools/project_state.py --write`.
+the command/refusal registries, capability policy, and support matrix.
+Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
-## Current
+## Current product truth
 
-- product version: `0.1.0-dev`;
-- completed wave: `m2`;
-- checkpoint: `m2-closeout-candidate`;
-- active WorkUnit: `M2-CLOSEOUT-CANONICAL-PROMOTION-01`;
-- last closed WorkUnit: `M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02`;
-- next authority gate: `H1`;
-- H1 candidate: `eb629caaec9d62536a272336e940c0d3003fdaae`;
-- accepted integration evidence: `73bec99916d509b0ab055a43562e93ef20a6b4b7`;
-- Universal Launcher pin: `7bd4425f0c35414f738159b45d8bec42edf70235`;
-- Universal Setup pin: `3f8489275077347c2918f3bb03614ec6431362ff`;
-- execution: `unavailable` / `steam_external_state_not_isolated`;
-- operator verdict: `Fail`;
+- phase: `hermetic_standalone_play_policy` / `active`;
+- charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
+- persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
+- golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
+- checkpoint: `hermetic-standalone-play-policy`;
+- active WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`;
+- next WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`;
+- next authority gate: `real-play-isolation`;
+- truth scope: `dev_integrated_reviewed_reproduced`; canonical integration: `false`; local counts promoted: `true`;
+- Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
+- Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
+- Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
+- Gate 3 permit closeout: `accepted_reviewed_dev_integration` at dev `91c2aa4fe0a30be97bf16165b41a95a8fab4cd11`;
+- execution: `unavailable` / `real_play_gate_not_passed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
-- public SDK: `experimental_installed`; stable compatibility is not promised.
-- M1 managed portable install: `fixture_proven`; ordinary setup apply: `unavailable_pending_live_target_acceptance`.
-- M1 public integration: `accepted` at canonical main `73bec99916d509b0ab055a43562e93ef20a6b4b7`.
-- M2 live portable setup: `complete_machine_pass_pending_canonical_promotion`; technical acceptance: `MachinePass`; human review: `not_required_for_synthetic_non_executable_lane`; ordinary live apply: `candidate_within_machine_accepted_policy_scope`.
-- M2-WU1 target policy: `accepted_dev_integration_proof` at Universal Setup main `f322655fa8fa287a400f7afb6c661eade30d707b`; mutation authority: `false`.
-- M2-WU2 public lifecycle: `accepted_dev_integration_proof`; operator verdict: `pending`; execution authority: `false`.
-- M2-WU3 live evidence: `accepted_dev_integration_proof` at Universal Setup main `fbbeb762f25921ae05945206fd0c004a52239c13`; operator verdict: `pending`; automated verdict authority: `false`.
-- M2-WU4 live acceptance: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Setup main `9b8196437e41e45bd8d5a613246dabe5b8cdb968`; run: `m2wu4-20260714-01`; operator verdict: `pending`.
-- M2-WU5 interruption recovery: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Setup main `e1ce68e9593ae8d9a35cc0821b5e42c798524453`; run: `m2wu5-20260714-01`; operator verdict: `pending`.
-- M2-WU6 Launcher handoff: `accepted_dev_integration_proof_pending_operator_verdict` at Universal Launcher main `7bd4425f0c35414f738159b45d8bec42edf70235`; recovery status: `managed_install_recovery_required`; operator verdict: `pending`.
-- M2-WU7 FacMan portable workflow: `accepted_dev_integration_proof_pending_operator_verdict`; plan: `install_local.plan`; apply: `unavailable_pending_operator_acceptance`; operator verdict: `pending`.
-- M2-WU8 generated frontend workflow: `accepted_dev_integration_proof_pending_operator_verdict`; clients: `cli, tui, winforms, appkit`; apply: `unavailable_pending_operator_acceptance`; operator verdict: `pending`.
-- M2-WU9 adversarial proof: `accepted_dev_integration_proof_pending_operator_verdict`; cases: `16`; Setup main: `3f8489275077347c2918f3bb03614ec6431362ff`; operator verdict: `pending`.
-- M2-WU10 operator acceptance: `historical_machine_evidence_ready_pending_operator_verdict`; run: `m2wu10-20260715-01`; operator verdict: `pending`.
-- M2-WU10 automated acceptance policy: `accepted_corrected_policy_with_bound_machine_pass`; technical acceptance: `MachinePass`; human review: `not_required_for_synthetic_non_executable_lane`.
-- M2-WU10 first automated result attempt: `blocked_before_evidence_pass`; verifier: `fail_closed`; MachinePass: `false`.
-- M2-WU10 corrected acceptance candidate: `hosted_validation_passed_bound_to_separate_machine_result`; evidence: `EvidencePass`; MachinePass: `false`.
-- M2-WU10 machine acceptance result: `MachinePass`; human review: `not_required_for_synthetic_non_executable_lane`; managed setup: `candidate`.
-- M2 closeout: `machine_pass_closeout_pending_exact_dev_and_main_promotion`; dev merge: `5250db1d17ac330f5ae0b672ccc7466431a1e4a2`; canonical main: `pending_dev_to_main_promotion`.
-- M3 existing-portable adoption: `authorized_next_wave_pending_m2_canonical_promotion`; scope: `read_only_and_plan_only`; adoption apply: `false`.
-- Universal repository licenses: `accepted_mit`; publication authority: `false`.
 
-R3.7, M1, and the bounded M2 technical wave are complete. The exact R3.7 runtime is frozen as the H1 candidate. M2-WU10 records a bounded MachinePass for newly created policy-approved managed targets. No execution, Safe beta, stable SDK, daemon, real-Factorio archive, existing-installation, networking, credential, signing, or publication authority is inferred from that synthetic proof.
+## Readiness dimensions
+
+- playability: `not_yet_playable`;
+- user workflow: `advanced_command_surface_only`;
+- safety authority: `permit_infrastructure_proven_real_play_unproven`;
+- platform support: `windows_first_alpha_planned`;
+- release authenticity: `not_proven_unsigned`;
+- compatibility: `experimental_public_subset`;
+- user validation: `not_started`;
+
+## Execution guarantees
+
+- `instance_isolated`: product mode `accepted`, claim `unproven`, next gate `FACMAN-STEAM-AWARE-PLAY-01`. FacMan-owned instance data is isolated; enumerated Steam/platform state may change after explicit disclosure.
+- `hermetic`: product mode `accepted`, claim `unproven`, next gate `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`. No persistent change may occur outside the authorised FacMan workspace.
+
+## Instance product programme
+
+- status: `gate2_read_only_projection_complete`;
+- active WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
+- next WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
+- portable record: `InstanceSpec`;
+- machine-local record: `InstanceBinding`;
+- readiness: `computed_projection_not_authoritative_state`;
+- preparation: `federated_typed_subplans_by_owner`;
+- default launch intent: `menu`;
+- launch intents: `menu, continue_last, load_save, new_game, map_editor, connect_server, start_server, benchmark, instrumented_dev`;
+- save role: `optional_content_within_instance`;
+- profile families: `LaunchProfile, GraphicsProfile, AudioProfile, InterfaceProfile, MultiplayerProfile, ServerProfile, NewGameProfile, BackupProfile`;
+- account bindings: `PlatformAccountBinding, FactorioAccountBinding, PlayerIdentityProfile, ServerCredentialBinding`;
+- secondary save/world WorkUnit: `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01`;
+- runtime authority: `false`;
+
+## Operation-permit programme
+
+- status: `gate3_infrastructure_complete_no_issuance`;
+- WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
+- authority model: `short_lived_plan_bound_exact_resource_permit`;
+- provider revalidation required: `true`;
+- permit issuance authority: `false`;
+
+## Host-environment programme
+
+- status: `planned_parallel_support_lane`;
+- next WorkUnit: `HOST-ENVIRONMENT-CONTRACT-SPINE-01`;
+- first runtime scope: `workflow_specific_read_only_list_inspect_doctor`;
+- first apply WorkUnit: `WINDOWS-SANDBOX-PROFILE-01`;
+- installation-model-v2 reviewed, committed, and clean: `true`;
+- blocks real Play: `false`;
+- host mutation authority: `false`;
+- privileged broker authority: `false`;
+- prerequisite: the current convergence, execution-foundation, and installation-model-v2 tree must be reviewed, committed, and reproduced cleanly.
+
+## Capability snapshot
+
+- available: `install.discover, install.model.inspect, install.reconciliation.plan, install.reference.register, launch.preflight, launch.preview`;
+- conditional: `install.managed.plan, process.execute`;
+- backlog: `install.existing.adoption.plan, install.existing.inspect`;
+- unavailable: `credential.factorio.read, install.existing.adoption.apply, install.managed.apply, launch.execute.hermetic, launch.execute.instance_isolated, network.mod_portal.read, network.mod_portal.write, release.publish, release.sign`;
+
+## Historical proof boundary
+
+- completed technical wave: `m2`;
+- last closed WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
+- accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
+- historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
+- Universal Launcher / Setup pins: `7bd4425f0c35414f738159b45d8bec42edf70235` / `3f8489275077347c2918f3bb03614ec6431362ff`;
+- M2 synthetic managed-target result: `MachinePass`;
+- M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
+
+Historical M1/M2 details remain in `release/index/project_status.v2.toml`,
+`.aide/history/`, and `docs/release/checkpoints/`. They do not select current
+work or promote execution, network, credential, signing, or publication authority.
 
 ## Contract and validation identity
 
-- command contracts: `121`;
-- registered routes: `119`;
-- schemas: `234`;
-- refusal codes: `217`;
-- command catalog digest: `7b587bd0b8f3f1317aca52509aa9996d787a075ed6d3b3837dcea44a1ce96c41`;
-- accepted CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
-- CI / CodeQL / security / schema runs: `29299245206` / `29299245093` / `29299245082` / `29297933368`;
-- accepted matrix counts: `35` native and `337` Python tests.
-
-## Platform proof
-
-| Platform | Compile | Runtime | Package | Publication | Support |
-| --- | --- | --- | --- | --- | --- |
-| `linux_portable_cli_x64` | passed | passed | passed | unpublished | candidate |
-| `macos_portable_cli_x64` | passed | passed | passed | unpublished | candidate |
-| `windows_portable_cli_x64` | passed | passed | passed | unpublished | candidate |
-| `windows_portable_tui_x64` | passed | passed | passed | unpublished | candidate |
-| `linux_portable_tui_x64` | passed | passed | passed | unpublished | candidate |
-| `macos_portable_tui_x64` | passed | passed | passed | unpublished | candidate |
-| `windows_legacy_winforms_x64` | passed | passed | contract_only | unpublished | experimental |
-| `macos_legacy_appkit_x64` | passed | not_proven | contract_only | unpublished | experimental |
-| `linux_x11_gtk_x64` | deferred | deferred | contract_only | unpublished | unavailable |
-| `portable_cli_x64` | passed | contract_tested | contract_only | unpublished | experimental |
-| `portable_tui_x64` | opt_in_only | not_proven | not_built | unpublished | experimental |
+- commands / registered routes: `125` / `123`;
+- schemas / refusal codes: `268` / `242`;
+- command catalog digest: `4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba`;
+- accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
+- accepted historical matrix: `35` native and `337` Python tests.
 
 ## Quarantined capabilities
 
-- run.execute
-- setup mutation outside newly created, explicitly selected, policy-approved managed targets
-- network and credential operations
-- server and developer process execution
-- daemon publication
-- release signing, notarization, publication, and publisher authenticity
+- launch.execute.instance_isolated
+- launch.execute.hermetic
+- process.execute
+- install.managed.apply outside newly created, explicitly selected, policy-approved managed targets
+- install.existing.adoption.apply
+- network.mod_portal.read
+- network.mod_portal.write
+- credential.factorio.read
+- release.sign
+- release.publish
 
 ## Known blockers
 
-- M2 MachinePass closeout is recorded on a task branch; exact-dev proof, canonical main promotion, public integration, and dev synchronization remain incomplete.
-- H1 is a human-reviewed Fail for the tested Steam-backed 2.0.77 route; a standalone/manual distribution has no reviewed H1 Pass.
+- Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.
+- Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
+- Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.
+- The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 
 ## Authorities
 
-- canonical status: `release/index/project_status.v2.toml`;
+- current status: `release/index/project_status.v2.toml`;
+- capability vocabulary: `contracts/policy/capabilities.v1.toml`;
 - provider revisions: `release/index/workspace_lock.v1.toml`;
 - platform proof: `release/index/support_matrix.v1.toml`;
-- claim levels and limitations: `docs/quality/safety_claim_ledger.md`;
-- immutable accepted evidence: `docs/release/checkpoints/`.
+- claim limitations: `docs/quality/safety_claim_ledger.md`;
+- accepted evidence: `.aide/history/` and `docs/release/checkpoints/`.

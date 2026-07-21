@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_local_data_import.v1.schema.json",
+  "title": "Factorio Local Player-Data Import",
+  "type": "object",
+  "required": ["schema", "source_install_root", "file_count", "byte_count", "imported_domains", "preserved_but_inactive_domains", "skipped_volatile_domains"],
+  "properties": {
+    "schema": { "const": "factorio.local_data_import.v1" },
+    "source_install_root": { "type": "string", "minLength": 1 },
+    "file_count": { "type": "integer", "minimum": 0, "maximum": 100000 },
+    "byte_count": { "type": "integer", "minimum": 0, "maximum": 17179869184 },
+    "imported_domains": {
+      "type": "array",
+      "items": { "enum": ["mods", "saves", "scenarios", "script_output", "player_data", "achievements", "cache", "logs"] }
+    },
+    "preserved_but_inactive_domains": {
+      "type": "array",
+      "items": { "enum": ["source_config"] }
+    },
+    "skipped_volatile_domains": {
+      "type": "array",
+      "items": { "enum": ["temp"] }
+    }
+  },
+  "additionalProperties": false
+}

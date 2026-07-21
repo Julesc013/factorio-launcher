@@ -1,0 +1,96 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01
+title: FacMan multi-version Factorio installation lifecycle
+status: superseded
+lifecycle_state: active
+planning_state: transferred
+created_at: 2026-07-20T00:17:16Z
+owner: unassigned
+objective: >
+  A player can discover, inspect, register, preserve, plan, install or adopt, verify, repair, move, reconfigure, reinstall, update, and uninstall explicitly selected non-Steam Factorio versions under a custom versioned library without overwriting sibling versions or conflating program files with player data.
+disposition: bounded_read_only_slice_accepted_remaining_scope_transferred
+objective_complete: false
+accepts_new_implementation: false
+bounded_closeout_work_unit: FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01
+remaining_scope_work_unit: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
+allowed_paths:
+  - .aide/queue/active/FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01
+  - .aide/profile.yaml
+  - apps/cli/**
+  - contracts/**
+  - docs/**
+  - release/index/**
+  - runtime/factorio/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - flb_factorio_discovery_smoke
+  - flb_factorio_install_model_smoke
+  - flb_factorio_instance_static
+  - facman_cli
+affected_python_tests:
+  - tests.test_cli
+  - tests.test_capability_policy
+  - tests.test_command_contracts
+  - tests.test_windows_discovery
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+affected_strict_validators:
+  - tools/application_handler_check.py
+  - tools/capability_policy_check.py
+  - tools/command_contract_check.py
+  - tools/schema_validate.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - official Factorio installer registration is never copied or fabricated
+  - foreign installations remain read-only unless separately adopted through Universal Setup
+  - instance data import is additive, bounded, no-follow, staged, and leaves the source unchanged
+  - setup owns managed program-tree mutation while FacMan owns Factorio instance-data semantics
+  - install source, deployment, authority, data, integration, health, provenance, and filesystem evidence remain independent
+  - reconciliation planning never grants apply authority or rewrites a compatible v1 install record
+allowed_effects:
+  - read explicitly selected local Factorio installation roots and archive sources
+  - register read-only foreign install references in the FacMan workspace
+  - create FacMan-owned staged instance data from an explicitly selected registered install
+  - plan managed installs through Universal Setup
+  - execute the exact locally supplied Wube-signed 2.0.77 installer against D:/Games/Factorio/2.0 after a same-volume rollback move
+  - snapshot and restore only HKLM/Software/Microsoft/Windows/CurrentVersion/Uninstall/Factorio Space Age_is1 so 2.1 remains the primary Windows registration
+forbidden_effects:
+  - mutate Steam, Steam Cloud, or the default Factorio AppData root
+  - execute any installer other than the exact inspected Wube-signed 2.0.77 source
+  - fabricate or clone Add/Remove Programs registration; only exact 2.1 key restoration is allowed
+  - overwrite an existing installation or instance target
+  - follow links or reparse points during discovery or data import
+  - use network, credentials, registry writes outside the exact Factorio Space Age rollback key, signing, or publication
+acceptance:
+  - scanning D:/Games/Factorio returns each numeric version root exactly once and no invalid parent
+  - the original 2.0.77 tree is classified as portable with install-local player data while official installer trees disclose shared-data and registration risk
+  - every selected local version can be registered without changing its install tree
+  - local player data can be preserved into a new isolated instance through a staged no-clobber import
+  - the inspected Wube-signed 2.0.77 split installer is applied only to D:/Games/Factorio/2.0 after retaining an exact same-volume rollback tree
+  - the exact 2.1 uninstall key is restored after install so the existing 2.1 tree remains the primary Windows registration
+  - every registered install can be projected into installation model v2 without rewriting the workspace
+  - desired-state reconciliation is deterministic, plan-only, source-preserving, and defaults missing authority to read-only
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-20T00:17:16Z

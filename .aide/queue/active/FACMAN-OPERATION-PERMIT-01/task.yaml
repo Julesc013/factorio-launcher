@@ -1,0 +1,102 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-OPERATION-PERMIT-01
+title: Exact operation permit contract and revalidation
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-21T08:58:36Z
+owner: unassigned
+objective: >
+  Implement canonical short-lived permit issuance and validation primitives bound to one reviewed operation, exact resources, current evidence, policy and provider revisions, principal, nonce, and expiry, with independent provider revalidation while product issuance routes and real Factorio execution remain unavailable pending review.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/profile.yaml
+  - README.md
+  - .github/workflows/**
+  - runtime/core/permit/**
+  - runtime/core/CMakeLists.txt
+  - runtime/core/generated/**
+  - runtime/factorio/application/**
+  - runtime/factorio/instance/**
+  - runtime/factorio/launch/**
+  - runtime/factorio/CMakeLists.txt
+  - contracts/**
+  - apps/**
+  - content/factorio/strings/**
+  - docs/**
+  - release/index/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_client_smoke
+  - flb_factorio_instance_model_smoke
+  - flb_factorio_application_static
+  - flb_factorio_launch_static
+  - flb_factorio_launch_permit_smoke
+  - facman_operation_permit_smoke
+  - facman_operation_permit_fuzz
+  - facman_operation_permit_libfuzzer
+affected_python_tests:
+  - tests.test_capability_policy
+  - tests.test_cli
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_frontend_contract
+  - tests.test_frontend_parity
+  - tests.test_refusal_contract
+  - tests.test_schema_tools
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_operation_permit_contract
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/application_handler_check.py
+  - tools/capability_policy_check.py
+  - tools/command_contract_check.py
+  - tools/frontend_contract_check.py
+  - tools/frontend_parity_check.py
+  - tools/refusal_contract_check.py
+  - tools/schema_validate.py
+  - tools/operation_permit_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - readiness and plans never grant authority by themselves
+  - each permit binds one operation kind and an exact closed resource set
+  - permit identity binds current evidence, plan, policy, providers, principal, nonce, and expiry
+  - providers independently revalidate permit scope and current resource identity
+  - a menu permit cannot authorize another launch intent or preparation operation
+  - expired, replayed, stale, wrong-machine, wrong-provider, and wrong-resource permits fail closed
+  - harmless read-only inspection does not require a permit
+  - global admission is not the sole policy enforcer
+  - the dormant Factorio launch verifier independently validates and consumes permits but cannot launch Factorio
+  - product permit issuance and real Factorio execution remain unavailable until separately reviewed
+depends_on:
+  - FACMAN-INSTANCE-SPEC-AND-READINESS-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-21T08:59:18Z
+verified_at: 2026-07-21T11:45:03Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-21T11:45:04Z
+closed_at: 2026-07-21T11:45:04Z

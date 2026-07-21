@@ -1,0 +1,31 @@
+{
+  "$id": "https://facman.invalid/schema/command/instances.readiness.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "instance_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "intent": {
+      "enum": [
+        "menu",
+        "continue_last",
+        "load_save",
+        "new_game",
+        "map_editor",
+        "connect_server",
+        "start_server",
+        "benchmark",
+        "instrumented_dev"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "instance_id"
+  ],
+  "title": "instances.readiness request",
+  "type": "object"
+}

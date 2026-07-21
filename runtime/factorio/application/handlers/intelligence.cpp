@@ -144,7 +144,7 @@ ApplicationResult workspace_status(ApplicationContext& context)
     observations.add_unsigned_integer("instance_count", instances.value().size());
     observations.add_unsigned_integer("incomplete_transactions", incomplete);
     observations.add_string("setup_availability", FACMAN_WITH_SETUP ? "gateway_present_plan_unconfirmed" : "disabled_by_build");
-    observations.add_string("execution_authority", "blocked_pending_h1_h3");
+    observations.add_string("execution_authority", "blocked_pending_real_play_gate");
     observations.add_string("diagnostic_export", "implemented");
     observations.add_string("package_profile", packaged ? "package_manifest" : "source_checkout");
     observations.add_string("target", target_name());
@@ -160,8 +160,13 @@ ApplicationResult workspace_status(ApplicationContext& context)
 #endif
     observations.add_array("discovery_providers", providers);
     json::ArrayBuilder quarantines;
-    quarantines.add_string("run.execute"); quarantines.add_string("setup.mutation");
-    quarantines.add_string("network.credentials"); quarantines.add_string("release.publication");
+    quarantines.add_string("launch.execute.instance_isolated");
+    quarantines.add_string("launch.execute.hermetic");
+    quarantines.add_string("process.execute");
+    quarantines.add_string("install.existing.adoption.apply");
+    quarantines.add_string("network.mod_portal.read");
+    quarantines.add_string("credential.factorio.read");
+    quarantines.add_string("release.publish");
     observations.add_array("quarantines", quarantines);
 
     json::ArrayBuilder reasons;
@@ -174,7 +179,7 @@ ApplicationResult workspace_status(ApplicationContext& context)
         add_reason(reasons, "recovery_required", "Incomplete transactions require inspection", "incomplete_transactions=" + std::to_string(incomplete));
         add_remediation(remediation, "inspect_recovery", "facman workspace recovery inspect --json", "Review transaction evidence before applying recovery");
     }
-    add_reason(reasons, "isolation_not_proven", "run.execute remains unavailable", "execution_authority=blocked_pending_h1_h3");
+    add_reason(reasons, "isolation_not_proven", "Play remains unavailable", "the execution foundation is complete but both real-play isolation gates are unproven");
     return guidance("workspace.status", installs.value().empty() || incomplete != 0U ? "warning" : "ok", observations, reasons, remediation);
 }
 
@@ -195,24 +200,27 @@ ApplicationResult workspace_paths(ApplicationContext& context)
 ApplicationResult capabilities_inspect(ApplicationContext&)
 {
     json::ObjectBuilder observations;
-    observations.add_string("execution_authority", "blocked_pending_h1_h3");
+    observations.add_string("execution_authority", "blocked_pending_real_play_gate");
     observations.add_string("setup_mutation", "unavailable");
     json::ArrayBuilder capabilities;
     for (const auto& value : {
-             std::pair<const char*, const char*>("workspace.status", "implemented"),
-             {"installs.scan", "implemented"}, {"instances.create", "implemented"},
-             {"launch_plan.preflight", "implemented"}, {"diagnostics.export", "implemented"},
-             {"run.execute", "human_gated"}, {"installs.install_version", "unavailable"}}) {
+             std::pair<const char*, const char*>("install.discover", "available"),
+             {"install.reference.register", "available"}, {"launch.preview", "available"},
+             {"launch.preflight", "available"}, {"install.managed.plan", "conditional"},
+             {"launch.execute.instance_isolated", "unavailable"},
+             {"launch.execute.hermetic", "unavailable"}, {"process.execute", "unavailable"},
+             {"network.mod_portal.read", "unavailable"}, {"credential.factorio.read", "unavailable"},
+             {"release.publish", "unavailable"}}) {
         json::ObjectBuilder item;
-        item.add_string("command", value.first);
-        item.add_string("availability", value.second);
-        item.add_string("reason", value.second == std::string("implemented") ? "registered_handler" : "authority_not_proven");
+        item.add_string("capability", value.first);
+        item.add_string("status", value.second);
+        item.add_string("reason", value.second == std::string("available") ? "registered_workflow" : "authority_or_provider_not_proven");
         capabilities.add_object(item);
     }
     observations.add_array("capabilities", capabilities);
     json::ArrayBuilder reasons;
     json::ArrayBuilder remediation;
-    add_reason(reasons, "isolation_not_proven", "Execution capability is human-gated", "H1 and H3 reviewed passes are absent");
+    add_reason(reasons, "isolation_not_proven", "Execution capabilities remain unavailable", "real-play evidence is absent; fake-process foundation proof cannot promote authority");
     return guidance("capabilities.inspect", "ok", observations, reasons, remediation);
 }
 
@@ -282,7 +290,7 @@ ApplicationResult launch_plan_explain(ApplicationContext& context, const Explain
     } else {
         add_reason(reasons, "plan_is_dry_run", "Launch planning resolves configuration without starting Factorio", "command=launch_plan.build");
     }
-    add_reason(reasons, "isolation_not_proven", "run.execute remains unavailable", "execution_authority=blocked_pending_h1_h3");
+    add_reason(reasons, "isolation_not_proven", "Play remains unavailable", "the execution foundation is complete but both real-play isolation gates are unproven");
     return guidance("launch_plan.explain", instance ? "ok" : "blocked", observations, reasons, remediation);
 }
 

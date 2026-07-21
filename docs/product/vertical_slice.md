@@ -1,6 +1,6 @@
 # Vertical Slice
 
-`FACMAN-VERTICAL-SLICE-01` is the current end-to-end product proof:
+`FACMAN-VERTICAL-SLICE-01` is the historical non-execution end-to-end product proof:
 
 ```text
 product inspect
@@ -23,6 +23,13 @@ server/dev gated refusal
 The proof uses a local fake Factorio install. It does not download or execute
 Factorio, repair installs, write to the global Factorio data directory, or use
 the Mod Portal.
+
+The current product sequence is defined in
+[`master_plan.md`](master_plan.md). The completed execution-foundation slice is
+a fake-process instance launch journey under
+`FACMAN-EXECUTION-FOUNDATION-01`; that proof does not authorise real Factorio
+execution. The future real route defaults to opening Factorio's main menu, not
+loading a specific save implicitly.
 
 Run it through the normal unit suite:
 

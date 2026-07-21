@@ -6,10 +6,14 @@
 
 #include "application_context.h"
 #include "application_types.h"
+#include "command_admission.h"
 
 namespace facman::factorio::application::handlers {
 ApplicationResult preview_launch(ApplicationContext& context, const BuildLaunchPlanRequest& request, const std::string& command);
 ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunchPlanRequest& request);
-ApplicationResult refuse_execute(ApplicationContext& context, const ExecuteRunRequest& request);
+ApplicationResult refuse_execute(
+    ApplicationContext& context,
+    const ExecuteRunRequest& request,
+    const CommandAdmissionDecision& admission);
 }
 #endif

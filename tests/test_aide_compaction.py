@@ -6,6 +6,7 @@ from __future__ import annotations
 import unittest
 import json
 import hashlib
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -45,6 +46,11 @@ class AideCompactionTests(unittest.TestCase):
             "m3_existing_portable_adoption",
             "universal_repository_licenses",
             "next_authority_gate",
+            "product", "readiness", "execution_foundation", "instance_product_program",
+            "operation_permit_program", "host_environment_program", "multi_version_install_lifecycle",
+            "gate0_product_convergence_integration", "gate1_installation_model_v2_readonly_closeout",
+            "gate2_instance_spec_and_readiness_closeout",
+            "execution_modes", "capabilities",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
             "machine_protocol", "execution", "release", "validation", "safe_beta",
@@ -52,15 +58,173 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
-    def test_m2_workflows_preserve_machine_and_higher_risk_human_gates(self) -> None:
+    def test_instance_product_model_is_menu_first_and_supersedes_world_aggregate(self) -> None:
+        architecture = (
+            project_state.ROOT / "docs" / "architecture" / "instance_product_model.md"
+        ).read_text(encoding="utf-8")
+        superseded = (
+            project_state.ROOT / "docs" / "architecture" / "world_product_model.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("FacMan's primary product and UX aggregate is a **game instance**", architecture)
+        self.assertIn("`facman play <instance>` means `menu`", architecture)
+        self.assertIn("A save or world is optional", architecture)
+        self.assertIn("`PlatformAccountBinding`", architecture)
+        self.assertIn("ModsetSpec", architecture)
+        self.assertIn("continue_last", architecture)
+        self.assertIn("FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01", architecture)
+        self.assertIn("## Safety laws", architecture)
+        safety_laws = architecture.split("## Safety laws", maxsplit=1)[1].split(
+            "## Candidate stable workflow surface", maxsplit=1
+        )[0]
+        self.assertEqual(
+            15,
+            sum(1 for line in safety_laws.splitlines() if re.match(r"^\d+\. ", line)),
+        )
+        self.assertIn("It never contains", architecture)
+        self.assertRegex(architecture, r"credential\s+values")
+        self.assertIn("superseded", superseded)
+        self.assertIn("Instance product model", superseded)
+
+    def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("m2-closeout-candidate", data["current_checkpoint"])
-        self.assertEqual("H1", data["next_authority_gate"])
+        self.assertEqual("hermetic-standalone-play-policy", data["current_checkpoint"])
+        self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
-        self.assertEqual("M2-CLOSEOUT-CANONICAL-PROMOTION-01", data["active_work_unit"])
+        self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "complete_machine_pass_pending_canonical_promotion",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+            data["active_work_unit"],
+        )
+        self.assertEqual(
+            "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            data["product"]["next_work_unit"],
+        )
+        instance_program = data["instance_product_program"]
+        self.assertEqual("gate2_read_only_projection_complete", instance_program["status"])
+        self.assertEqual("FACMAN-INSTANCE-SPEC-AND-READINESS-01", instance_program["work_unit"])
+        self.assertEqual("InstanceSpec", instance_program["portable_record"])
+        self.assertEqual("InstanceBinding", instance_program["machine_local_record"])
+        self.assertEqual("InstanceView", instance_program["ui_aggregate"])
+        self.assertEqual("menu", instance_program["default_launch_intent"])
+        self.assertEqual("optional_content_within_instance", instance_program["save_role"])
+        self.assertIn("account_bindings", instance_program["composition"])
+        self.assertIn("modset_spec", instance_program["composition"])
+        self.assertEqual("menu", instance_program["launch_intents"][0])
+        self.assertIn("map_editor", instance_program["launch_intents"])
+        self.assertIn("GraphicsProfile", instance_program["profile_families"])
+        self.assertIn("FactorioAccountBinding", instance_program["account_binding_types"])
+        self.assertEqual(
+            ["ModsetSpec", "ModsetLock", "ModpackBundle"],
+            instance_program["mod_content_records"],
+        )
+        self.assertEqual(
+            "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01",
+            instance_program["world_save_work_unit"],
+        )
+        self.assertTrue(instance_program["templates_are_initializers"])
+        self.assertFalse(instance_program["conflicts_silently_resolved"])
+        self.assertFalse(instance_program["credential_values_in_instance"])
+        self.assertFalse(instance_program["presets_grant_authority"])
+        self.assertFalse(instance_program["foreign_installation_mutation"])
+        self.assertFalse(instance_program["runtime_authority"])
+        self.assertEqual("dev_integrated_reviewed_reproduced", data["product"]["truth_scope"])
+        self.assertFalse(data["product"]["canonical_integration"])
+        self.assertTrue(data["product"]["local_counts_promoted"])
+        self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
+        self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
+        gate3 = data["gate3_operation_permit_closeout"]
+        self.assertEqual("accepted_reviewed_dev_integration", gate3["status"])
+        self.assertEqual(42, gate3["implementation_pull_request"])
+        self.assertEqual(
+            "91c2aa4fe0a30be97bf16165b41a95a8fab4cd11",
+            gate3["dev_integration_revision"],
+        )
+        self.assertTrue(gate3["exact_dev_clean_reproduction"])
+        self.assertFalse(gate3["permit_issuance_authority"])
+        self.assertFalse(gate3["real_factorio_execution"])
+        self.assertFalse(data["host_environment_program"]["blocks_real_play"])
+        self.assertTrue(
+            data["host_environment_program"]["installation_model_v2_reviewed_committed_clean"]
+        )
+        lifecycle = data["multi_version_install_lifecycle"]
+        self.assertEqual(
+            "gate1_read_only_model_complete_remaining_mutation_transferred",
+            lifecycle["status"],
+        )
+        self.assertEqual("implemented_read_only_projection", lifecycle["installation_model_v2"])
+        self.assertEqual(
+            "implemented_evidence_bound_deterministic_plan_only",
+            lifecycle["reconciliation_plan"],
+        )
+        self.assertFalse(lifecycle["reconciliation_apply"])
+        self.assertFalse(lifecycle["umbrella_objective_complete"])
+        self.assertEqual(
+            "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
+            lifecycle["remaining_lifecycle_work_unit"],
+        )
+        self.assertTrue(lifecycle["plan_identity_binds_current_evidence"])
+        self.assertTrue(lifecycle["zero_write_proof"])
+        gate2 = data["gate2_instance_spec_and_readiness_closeout"]
+        self.assertEqual("accepted_reviewed_dev_integration", gate2["status"])
+        self.assertEqual(39, gate2["implementation_pull_request"])
+        self.assertEqual(40, gate2["reproduction_correction_pull_request"])
+        self.assertEqual(
+            "bbb46c5bfd10cd35fb965b23edc4951784f93ef4",
+            gate2["final_dev_revision"],
+        )
+        self.assertTrue(gate2["exact_dev_clean_reproduction"])
+        self.assertEqual(360, gate2["implementation_python_test_count"])
+        self.assertEqual(361, gate2["final_python_test_count"])
+        self.assertTrue(gate2["read_only_projection"])
+        self.assertTrue(gate2["zero_write_proof"])
+        self.assertFalse(gate2["preparation_available"])
+        self.assertFalse(gate2["execution_available"])
+        self.assertFalse(gate2["permit_issuance_authority"])
+        self.assertFalse(gate2["authority_promotion"])
+        self.assertFalse(gate2["canonical_main_promotion"])
+        gate1 = data["gate1_installation_model_v2_readonly_closeout"]
+        self.assertEqual("accepted_reviewed_dev_integration", gate1["status"])
+        self.assertEqual(37, gate1["implementation_pull_request"])
+        self.assertEqual(
+            "c9ae60405d0b221faaba364be5f47e524649bb97",
+            gate1["reviewed_head_revision"],
+        )
+        self.assertEqual(
+            "6ec47046d1b1f4ab8bddfcc27bcec76a774ff305",
+            gate1["dev_integration_revision"],
+        )
+        self.assertTrue(gate1["exact_dev_clean_reproduction"])
+        self.assertTrue(gate1["plan_identity_binds_current_evidence"])
+        self.assertTrue(gate1["zero_write_proof"])
+        self.assertFalse(gate1["reconciliation_apply"])
+        self.assertFalse(gate1["authority_promotion"])
+        self.assertFalse(gate1["canonical_main_promotion"])
+        gate0 = data["gate0_product_convergence_integration"]
+        self.assertEqual("accepted_reviewed_dev_integration", gate0["status"])
+        self.assertEqual(34, gate0["pull_request"])
+        self.assertEqual(
+            "61a7afe6718d3ca36b2c530b83890fcd37cc5c03",
+            gate0["reviewed_head_revision"],
+        )
+        self.assertEqual(
+            "62c2503110cdb89b9cc89f19a69903f214d33e3c",
+            gate0["dev_integration_revision"],
+        )
+        self.assertTrue(gate0["exact_head_clean_reproduction"])
+        self.assertTrue(gate0["exact_dev_clean_reproduction"])
+        self.assertFalse(gate0["authority_promotion"])
+        self.assertFalse(gate0["playability_promotion"])
+        self.assertFalse(gate0["canonical_main_promotion"])
+        self.assertFalse(gate0["signing"])
+        self.assertFalse(gate0["publication"])
+        self.assertEqual(
+            {"instance_isolated", "hermetic"},
+            {mode["id"] for mode in data["execution_modes"]},
+        )
+        self.assertEqual(
+            "complete_machine_pass_canonically_promoted",
             data["m2_live_portable_setup"]["status"],
         )
         self.assertEqual("MachinePass", data["m2_live_portable_setup"]["technical_acceptance"])
@@ -73,9 +237,11 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02",
+            "FACMAN-OPERATION-PERMIT-01",
             data["last_closed_work_unit"],
         )
+        self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
+        self.assertFalse(data["execution_foundation"]["real_play_authority"])
         self.assertEqual("accepted_dev_integration_proof", data["m2_wu1_target_policy"]["status"])
         self.assertFalse(data["m2_wu1_target_policy"]["mutation_authority"])
         self.assertEqual("d96384bf8f48230256d35fa7015cbc7374e83319", data["m2_wu1_target_policy"]["facman_dev_integration_revision"])
@@ -353,26 +519,60 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("none", result["h1_inference"])
         closeout = data["m2_closeout_candidate"]
         self.assertEqual(
-            "machine_pass_closeout_pending_exact_dev_and_main_promotion",
+            "accepted_public_integration_dev_synchronized",
             closeout["status"],
         )
         self.assertEqual(
             "5250db1d17ac330f5ae0b672ccc7466431a1e4a2",
             closeout["wu10_dev_merge_revision"],
         )
-        self.assertEqual("pending_dev_to_main_promotion", closeout["canonical_main_revision"])
+        self.assertEqual(
+            "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
+            closeout["canonical_main_revision"],
+        )
+        self.assertEqual(
+            "ee54dc220ed5fd80a9f450988033c5e29599a326",
+            closeout["shared_promoted_tree_identity"],
+        )
+        self.assertEqual("29569007275", closeout["exact_main_ci_run"])
+        self.assertEqual("29569007270", closeout["exact_main_code_security_run"])
+        self.assertEqual("29569007323", closeout["exact_main_schema_check_run"])
+        self.assertEqual("29569007290", closeout["exact_main_security_policy_run"])
+        self.assertEqual(
+            "1678cb6d3c9545f09c4ae729054f68cf0fbc7bf2",
+            closeout["public_integration_dev_revision"],
+        )
+        self.assertEqual(
+            "51977de8120202958fc35776d284077b1fc027d3",
+            closeout["dev_synchronization_revision"],
+        )
+        self.assertTrue(closeout["dev_synchronization_main_ancestor"])
+        self.assertEqual("29573335555", closeout["dev_synchronization_ci_run"])
+        self.assertEqual("29573335458", closeout["dev_synchronization_code_security_run"])
+        self.assertEqual("29573335488", closeout["dev_synchronization_security_policy_run"])
         self.assertEqual("pass_complete_matrix", closeout["local_validation"])
         self.assertFalse(closeout["run_execute"])
         m3 = data["m3_existing_portable_adoption"]
+        self.assertEqual(
+            "authorized_backlog_after_playable_alpha",
+            m3["status"],
+        )
         self.assertEqual("read_only_and_plan_only", m3["scope"])
         self.assertTrue(m3["existing_portable_inspection"])
         self.assertTrue(m3["adoption_plan"])
         self.assertFalse(m3["adoption_apply"])
         self.assertFalse(m3["existing_installation_mutation"])
         self.assertFalse(m3["steam_adoption"])
-        self.assertEqual("m2-closeout-candidate", data["current_checkpoint"])
-        self.assertEqual("M2-CLOSEOUT-CANONICAL-PROMOTION-01", data["active_work_unit"])
-        self.assertEqual("M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02", data["last_closed_work_unit"])
+        self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
+        self.assertEqual("hermetic-standalone-play-policy", data["current_checkpoint"])
+        self.assertEqual(
+            "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+            data["active_work_unit"],
+        )
+        self.assertEqual(
+            "FACMAN-OPERATION-PERMIT-01",
+            data["last_closed_work_unit"],
+        )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
         self.assertEqual(
             "f10aef03517a86a7c9d6afaf8b75c19549b6fa51",

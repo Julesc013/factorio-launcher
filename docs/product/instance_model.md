@@ -25,6 +25,13 @@ Rules:
 - Never share writable saves without a lock.
 - Always generate a launch plan before execution.
 
+An instance—not a world—is the selectable runnable aggregate. The default
+future `LaunchIntent` is `menu`: launch with the selected installation,
+instance config, mod directory, and write-data root, but without a direct-save
+argument. Saves/worlds remain optional content visible through Factorio's
+normal menu. The additive target model is defined in
+[`instance_product_model.md`](../architecture/instance_product_model.md).
+
 ## Implemented Native Slice
 
 `instances create` writes the canonical `instance.v1.json` manifest and creates

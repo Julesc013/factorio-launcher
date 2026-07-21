@@ -1,4 +1,4 @@
-# generated source-sha256: 7b587bd0b8f3f1317aca52509aa9996d787a075ed6d3b3837dcea44a1ce96c41
+# generated source-sha256: 4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -11,6 +11,7 @@
 # path: doctor explain
 # path: export instance
 # path: import instance
+# path: installs describe
 # path: installs import
 # path: installs inspect
 # path: installs install apply
@@ -19,12 +20,13 @@
 # path: installs list
 # path: installs move apply
 # path: installs move plan
+# path: installs reconcile plan
 # path: installs recovery apply
 # path: installs recovery inspect
 # path: installs repair
 # path: installs repair apply
 # path: installs repair plan
-# path: installs scan
+# path: installs scan [--search-root <path>]
 # path: installs uninstall
 # path: installs uninstall apply
 # path: installs uninstall plan
@@ -32,9 +34,11 @@
 # path: instances archive
 # path: instances clone
 # path: instances create
+# path: instances describe
 # path: instances diff
 # path: instances inspect
 # path: instances list
+# path: instances readiness
 # path: instances rename
 # path: instances restore
 # path: instances verify
@@ -59,6 +63,7 @@
 # path: modsets verify
 # path: onboarding plan
 # path: package verify
+# path: play
 # path: preferences apply
 # path: preferences inspect
 # path: preferences plan
@@ -116,7 +121,9 @@
 # path: workspace recovery plan
 # path: workspace status
 complete -c facman -f -a <directory>]
+complete -c facman -f -a <path>]
 complete -c facman -f -a [--root
+complete -c facman -f -a [--search-root
 complete -c facman -f -a apply
 complete -c facman -f -a archive
 complete -c facman -f -a associate
@@ -126,6 +133,7 @@ complete -c facman -f -a bug-report
 complete -c facman -f -a capabilities
 complete -c facman -f -a clone
 complete -c facman -f -a create
+complete -c facman -f -a describe
 complete -c facman -f -a dev
 complete -c facman -f -a diagnostics
 complete -c facman -f -a diff
@@ -154,11 +162,14 @@ complete -c facman -f -a onboarding
 complete -c facman -f -a package
 complete -c facman -f -a paths
 complete -c facman -f -a plan
+complete -c facman -f -a play
 complete -c facman -f -a preferences
 complete -c facman -f -a preview
 complete -c facman -f -a product
 complete -c facman -f -a profiles
 complete -c facman -f -a rcon
+complete -c facman -f -a readiness
+complete -c facman -f -a reconcile
 complete -c facman -f -a recovery
 complete -c facman -f -a redact
 complete -c facman -f -a rename

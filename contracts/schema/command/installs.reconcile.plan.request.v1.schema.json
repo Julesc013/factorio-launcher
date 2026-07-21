@@ -1,0 +1,72 @@
+{
+  "$id": "https://facman.invalid/schema/command/installs.reconcile.plan.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "data_policy": {
+      "enum": [
+        "preserve",
+        "instance_local",
+        "system_shared",
+        "install_local"
+      ],
+      "type": "string"
+    },
+    "deployment_style": {
+      "enum": [
+        "preserve",
+        "standalone_directory",
+        "vendor_installed",
+        "portable_in_place",
+        "external_manager"
+      ],
+      "type": "string"
+    },
+    "install_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "integration_mode": {
+      "enum": [
+        "preserve",
+        "none",
+        "facman_owned",
+        "external"
+      ],
+      "type": "string"
+    },
+    "management_mode": {
+      "enum": [
+        "preserve",
+        "managed",
+        "reference",
+        "external"
+      ],
+      "type": "string"
+    },
+    "source_ref": {
+      "type": "string"
+    },
+    "target_root": {
+      "type": "string"
+    },
+    "update_policy": {
+      "enum": [
+        "preserve",
+        "pinned",
+        "manual",
+        "follow_channel"
+      ],
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "install_id"
+  ],
+  "title": "installs.reconcile.plan request",
+  "type": "object"
+}

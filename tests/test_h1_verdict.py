@@ -55,7 +55,9 @@ class H1VerdictTests(unittest.TestCase):
         self.assertEqual("Fail", status["execution"]["operator_verdict"])
         self.assertEqual("unavailable", status["execution"]["status"])
         self.assertFalse(status["safe_beta"])
-        self.assertIn("run.execute", status["quarantined_capabilities"])
+        self.assertIn("launch.execute.instance_isolated", status["quarantined_capabilities"])
+        self.assertIn("launch.execute.hermetic", status["quarantined_capabilities"])
+        self.assertEqual("historical_steam_backed_h1_only", status["execution"]["operator_verdict_scope"])
 
 
 if __name__ == "__main__":

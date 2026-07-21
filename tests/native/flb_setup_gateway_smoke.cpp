@@ -217,7 +217,11 @@ int main()
     set_environment("FACMAN_SETUP_STATE_ROOT", setup_state.string());
     set_environment("FACMAN_SETUP_ACCEPTANCE_ROOT", fixture.root.string());
     set_environment("FACMAN_SETUP_POLICY_ACTIVATION", "operator_acceptance_candidate");
-    auto plan = gateway->plan_install(plan_request);
+    auto still_gated = gateway->plan_install(plan_request);
+    if (still_gated || still_gated.error().code != "live_target_acceptance_required") return 3;
+    const auto configuration = application::ApplicationConfiguration::load({});
+    auto configured_gateway = application::make_setup_gateway(configuration.setup());
+    auto plan = configured_gateway->plan_install(plan_request);
     clear_environment("FACMAN_SETUP_STATE_ROOT");
     clear_environment("FACMAN_SETUP_ACCEPTANCE_ROOT");
     clear_environment("FACMAN_SETUP_POLICY_ACTIVATION");
@@ -228,7 +232,7 @@ int main()
             plan.error().code.c_str(),
             plan.error().message.c_str(),
             plan.error().detail.c_str());
-        return 3;
+        return 4;
     }
     if (!plan || !plan.value().archive_inspected ||
         !plan.value().product_layout_verified || !plan.value().inputs_confirmed ||

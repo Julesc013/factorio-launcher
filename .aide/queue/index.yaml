@@ -3,111 +3,51 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
-  - id: FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01
-    status: passed
-    lifecycle_state: closed
-    title: Choose licenses for Universal repositories
-    task: .aide/queue/active/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01/evidence
-  - id: M2-CLOSEOUT-CANONICAL-PROMOTION-01
+  - id: FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
     status: active
     lifecycle_state: active
-    title: M2 closeout and canonical promotion
-    task: .aide/queue/active/M2-CLOSEOUT-CANONICAL-PROMOTION-01/task.yaml
-    evidence: .aide/queue/active/M2-CLOSEOUT-CANONICAL-PROMOTION-01/evidence
-  - id: M2-WU1-LIVE-TARGET-POLICY-01
+    title: Freeze hermetic standalone Play policy
+    task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01/evidence
+  - id: FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01
     status: passed
     lifecycle_state: closed
-    title: M2 live-target policy contract
-    task: .aide/queue/active/M2-WU1-LIVE-TARGET-POLICY-01/task.yaml
-    evidence: .aide/queue/active/M2-WU1-LIVE-TARGET-POLICY-01/evidence
-  - id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01
+    title: Installation model v2 read-only closeout
+    task: .aide/queue/active/FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01/evidence
+  - id: FACMAN-INSTANCE-SPEC-AND-READINESS-01
     status: passed
     lifecycle_state: closed
-    title: M2 WU10 automated synthetic acceptance policy
-    task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/task.yaml
-    evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-01/evidence
-  - id: M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01
+    title: Instance specification, binding, readiness, and view
+    task: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/evidence
+  - id: FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01
+    status: superseded
+    lifecycle_state: active
+    title: FacMan multi-version Factorio installation lifecycle
+    task: .aide/queue/active/FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01/evidence
+  - id: FACMAN-OPERATION-PERMIT-01
     status: passed
     lifecycle_state: closed
-    title: M2 WU10 native journal verifier policy correction
-    task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01/task.yaml
-    evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-POLICY-CORRECTION-01/evidence
+    title: Exact operation permit contract and revalidation
+    task: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked
     title: M2 WU10 automated synthetic acceptance result
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/evidence
-  - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU10 corrected automated synthetic acceptance result
-    task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02/task.yaml
-    evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02/evidence
   - id: M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01
     status: verified
     lifecycle_state: verified
     title: M2 WU10 operator live-target verdict
     task: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/evidence
-  - id: M2-WU2-DEV-INTEGRATION-PROOF-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU2 dev integration proof
-    task: .aide/queue/active/M2-WU2-DEV-INTEGRATION-PROOF-01/task.yaml
-    evidence: .aide/queue/active/M2-WU2-DEV-INTEGRATION-PROOF-01/evidence
-  - id: M2-WU2-PUBLIC-SETUP-LIFECYCLE-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 public Universal Setup lifecycle activation
-    task: .aide/queue/active/M2-WU2-PUBLIC-SETUP-LIFECYCLE-01/task.yaml
-    evidence: .aide/queue/active/M2-WU2-PUBLIC-SETUP-LIFECYCLE-01/evidence
-  - id: M2-WU3-DEV-INTEGRATION-PROOF-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU3 dev integration proof
-    task: .aide/queue/active/M2-WU3-DEV-INTEGRATION-PROOF-01/task.yaml
-    evidence: .aide/queue/active/M2-WU3-DEV-INTEGRATION-PROOF-01/evidence
-  - id: M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 live-target evidence packet
-    task: .aide/queue/active/M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01/task.yaml
-    evidence: .aide/queue/active/M2-WU3-LIVE-TARGET-EVIDENCE-PACKET-01/evidence
-  - id: M2-WU4-LIVE-INSTALL-ACCEPTANCE-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU4 live synthetic install acceptance
-    task: .aide/queue/active/M2-WU4-LIVE-INSTALL-ACCEPTANCE-01/task.yaml
-    evidence: .aide/queue/active/M2-WU4-LIVE-INSTALL-ACCEPTANCE-01/evidence
-  - id: M2-WU5-LIVE-INTERRUPTION-RECOVERY-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU5 live interruption and recovery
-    task: .aide/queue/active/M2-WU5-LIVE-INTERRUPTION-RECOVERY-01/task.yaml
-    evidence: .aide/queue/active/M2-WU5-LIVE-INTERRUPTION-RECOVERY-01/evidence
-  - id: M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU6 Universal Launcher live setup handoff
-    task: .aide/queue/active/M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01/task.yaml
-    evidence: .aide/queue/active/M2-WU6-UNIVERSAL-LAUNCHER-LIVE-HANDOFF-01/evidence
-  - id: M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU7 FacMan live portable workflow
-    task: .aide/queue/active/M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01/task.yaml
-    evidence: .aide/queue/active/M2-WU7-FACMAN-LIVE-PORTABLE-WORKFLOW-01/evidence
-  - id: M2-WU8-GENERATED-FRONTEND-WORKFLOW-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU8 generated frontend workflow
-    task: .aide/queue/active/M2-WU8-GENERATED-FRONTEND-WORKFLOW-01/task.yaml
-    evidence: .aide/queue/active/M2-WU8-GENERATED-FRONTEND-WORKFLOW-01/evidence
-  - id: M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01
-    status: passed
-    lifecycle_state: closed
-    title: M2 WU9 cross-platform adversarial proof
-    task: .aide/queue/active/M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01/task.yaml
-    evidence: .aide/queue/active/M2-WU9-CROSS-PLATFORM-ADVERSARIAL-PROOF-01/evidence
+  - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
+    status: planned
+    lifecycle_state: planned
+    title: Permit-backed managed installation reconciliation
+    task: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence

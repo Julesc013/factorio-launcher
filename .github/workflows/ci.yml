@@ -70,6 +70,7 @@ jobs:
           ctest --test-dir build/core-sanitized --output-on-failure
           python -m unittest tests.test_archive_core -v
           find tests/fixtures/compatibility tests/golden -name '*.json' -print0 | xargs -0 ./build/core-sanitized/fl_json_fuzz
+          find tests/fixtures/operation_permits -name '*.json' -print0 | xargs -0 ./build/core-sanitized/facman_operation_permit_fuzz
       - name: Configure real bounded libFuzzer job
         run: >-
           cmake -S . -B build/libfuzzer
@@ -80,9 +81,10 @@ jobs:
           -DCMAKE_CXX_COMPILER=clang++
       - name: Run bounded libFuzzer job
         run: |
-          cmake --build build/libfuzzer --target fl_archive_libfuzzer fl_json_libfuzzer --parallel
+          cmake --build build/libfuzzer --target fl_archive_libfuzzer fl_json_libfuzzer facman_operation_permit_libfuzzer --parallel
           ./build/libfuzzer/fl_archive_libfuzzer -runs=1000 tests/fixtures/factorio_saves tests/fixtures/factorio_mods
           ./build/libfuzzer/fl_json_libfuzzer -runs=1000 tests/fixtures/compatibility tests/golden
+          ./build/libfuzzer/facman_operation_permit_libfuzzer -runs=1000 tests/fixtures/operation_permits
       - name: Run Python unit tests
         run: python -m unittest discover -s tests -v
       - name: Run strict policy checks

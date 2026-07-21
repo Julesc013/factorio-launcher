@@ -247,12 +247,14 @@ Result<InstallRecord> InstallRepository::load(const InstallId& id) const
     if (stored_id.value() != id.str()) return failure<InstallRecord>("workspace_record_id_mismatch", stored_id.value(), path);
     InstallRecord record;
     record.id = id;
+    record.provider_id = optional_string(document.value(), "provider_id");
     record.root = facman::platform::path_from_utf8(root.value());
     const std::string executable = optional_string(document.value(), "executable");
     record.executable = executable.empty() ? fs::path() : facman::platform::path_from_utf8(executable);
     record.version = optional_string(document.value(), "version");
     record.ownership = optional_string(document.value(), "ownership");
     record.source = optional_string(document.value(), "source", legacy ? "legacy" : "registered");
+    record.source_ref = optional_string(document.value(), "source_ref");
     record.platform = optional_string(document.value(), "platform");
     record.distribution_origin = optional_string(document.value(), "distribution_origin");
     record.platform_integration = optional_string(document.value(), "platform_integration");

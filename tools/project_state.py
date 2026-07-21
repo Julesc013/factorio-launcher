@@ -12,6 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 SUPPORT_PATH = ROOT / "release" / "index" / "support_matrix.v1.toml"
+CAPABILITY_PATH = ROOT / "contracts" / "policy" / "capabilities.v1.toml"
 JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v2.json"
 LEGACY_JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v1.json"
 MARKDOWN_PATH = ROOT / ".aide" / "memory" / "project-state.md"
@@ -85,6 +86,11 @@ def claim_levels() -> list[dict[str, str]]:
     return rows
 
 
+def capability_state() -> list[dict[str, Any]]:
+    policy = load_toml(CAPABILITY_PATH)
+    return sorted(policy.get("capability", []), key=lambda item: str(item.get("id", "")))
+
+
 def collect() -> dict[str, Any]:
     status = load_toml(STATUS_PATH)
     pins = provider_pins()
@@ -100,6 +106,18 @@ def collect() -> dict[str, Any]:
         "current_checkpoint": status["current_checkpoint"],
         "active_work_unit": status["active_work_unit"] or None,
         "last_closed_work_unit": status.get("last_closed_work_unit", "") or None,
+        "product": status["product"],
+        "readiness": status["readiness"],
+        "execution_foundation": status["execution_foundation"],
+        "instance_product_program": status["instance_product_program"],
+        "operation_permit_program": status["operation_permit_program"],
+        "gate3_operation_permit_closeout": status["gate3_operation_permit_closeout"],
+        "host_environment_program": status["host_environment_program"],
+        "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
+        "gate2_instance_spec_and_readiness_closeout": status["gate2_instance_spec_and_readiness_closeout"],
+        "gate1_installation_model_v2_readonly_closeout": status["gate1_installation_model_v2_readonly_closeout"],
+        "gate0_product_convergence_integration": status["gate0_product_convergence_integration"],
+        "execution_modes": status["execution_mode"],
         "r3_8_repair": status["r3_8_repair"],
         "r3_8_public_integration": status["r3_8_public_integration"],
         "m1_managed_portable_install": status["m1_managed_portable_install"],
@@ -135,6 +153,7 @@ def collect() -> dict[str, Any]:
         },
         "provider_pins": pins,
         "command_law": command_law(),
+        "capabilities": capability_state(),
         "machine_protocol": {
             "transport": "bounded newline-delimited JSON over stdio",
             "status": "implemented",
@@ -149,11 +168,12 @@ def collect() -> dict[str, Any]:
             "Focused affected tests do not replace the full promotion matrix.",
             "Human acceptance is never inferred from automated checks.",
             "Compile, runtime, package, publication, and support status are separate claims.",
+            "Historical milestone evidence does not select the current product objective.",
         ],
     }
 
 
-def markdown(data: dict[str, Any]) -> str:
+def historical_markdown(data: dict[str, Any]) -> str:
     law = data["command_law"]
     validation = data["validation"]
     revisions = data["current_revisions"]
@@ -166,20 +186,40 @@ def markdown(data: dict[str, Any]) -> str:
         "",
         "## Current",
         "",
+        f"- product phase: `{data['product']['phase']}` / `{data['product']['phase_status']}`;",
+        f"- product charter: {data['product']['charter']}",
+        f"- primary persona: {data['product']['primary_persona']}",
+        f"- golden journey: `{data['product']['golden_journey']}`;",
         f"- product version: `{data['product_version']}`;",
-        f"- completed wave: `{data['completed_wave']['id']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
+        f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
         f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
-        f"- H1 candidate: `{revisions['factorio_launcher']}`;",
+        f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
+        f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
+        f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        "",
+        "## Readiness dimensions",
+        "",
+        *[f"- {name.replace('_', ' ')}: `{value}`;" for name, value in data["readiness"].items()],
+        "",
+        "## Execution guarantees",
+        "",
+        *[
+            f"- `{mode['id']}`: product mode `{mode['product_mode']}`, claim `{mode['claim_status']}`; "
+            f"next gate `{mode['next_gate']}`. {mode['boundary']}"
+            for mode in data["execution_modes"]
+        ],
+        "",
+        "## Historical proof context",
+        "",
+        f"- completed technical wave: `{data['completed_wave']['id']}`;",
+        f"- historical H1 candidate: `{revisions['factorio_launcher']}`;",
         f"- accepted integration evidence: `{revisions['accepted_integration']}`;",
         f"- Universal Launcher pin: `{revisions['universal_launcher']}`;",
         f"- Universal Setup pin: `{revisions['universal_setup']}`;",
-        f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
-        f"- operator verdict: `{data['execution']['operator_verdict']}`;",
-        f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
-        f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        f"- historical Steam-backed H1 operator verdict: `{data['execution']['operator_verdict']}`;",
         f"- public SDK: `{data['release']['public_sdk']}`; stable compatibility is not promised.",
         f"- M1 managed portable install: `{data['m1_managed_portable_install']['status']}`; "
         f"ordinary setup apply: `{data['m1_managed_portable_install']['ordinary_setup_apply']}`.",
@@ -250,8 +290,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Universal repository licenses: `{data['universal_repository_licenses']['status']}`; "
         f"publication authority: `{str(data['universal_repository_licenses']['publication_authority']).lower()}`.",
         "",
-        "R3.7, M1, and the bounded M2 technical wave are complete. The exact R3.7 runtime is "
-        "frozen as the H1 candidate. M2-WU10 records a bounded MachinePass for "
+        "R3.7, M1, and the bounded M2 technical wave are historical proof, not the active roadmap. "
+        "M2-WU10 records a bounded MachinePass for "
         "newly created policy-approved managed targets. No execution, Safe beta, stable SDK, "
         "daemon, real-Factorio archive, existing-installation, networking, credential, signing, "
         "or publication authority is inferred from that synthetic proof.",
@@ -298,58 +338,228 @@ def markdown(data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def markdown(data: dict[str, Any]) -> str:
+    law = data["command_law"]
+    validation = data["validation"]
+    revisions = data["current_revisions"]
+    lines = [
+        "# FacMan Project State",
+        "",
+        "Generated from `release/index/project_status.v2.toml`, the workspace lock,",
+        "the command/refusal registries, capability policy, and support matrix.",
+        "Edit canonical inputs, then run `py -3 tools/project_state.py --write`.",
+        "",
+        "## Current product truth",
+        "",
+        f"- phase: `{data['product']['phase']}` / `{data['product']['phase_status']}`;",
+        f"- charter: {data['product']['charter']}",
+        f"- persona: {data['product']['primary_persona']}",
+        f"- golden journey: `{data['product']['golden_journey']}`;",
+        f"- checkpoint: `{data['current_checkpoint']}`;",
+        f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
+        f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
+        f"- next authority gate: `{data['next_authority_gate']}`;",
+        f"- truth scope: `{data['product']['truth_scope']}`; canonical integration: "
+        f"`{str(data['product']['canonical_integration']).lower()}`; local counts promoted: "
+        f"`{str(data['product']['local_counts_promoted']).lower()}`;",
+        f"- Gate 0 integration: `{data['gate0_product_convergence_integration']['status']}` at dev "
+        f"`{data['gate0_product_convergence_integration']['dev_integration_revision']}`;",
+        f"- Gate 1 installation closeout: "
+        f"`{data['gate1_installation_model_v2_readonly_closeout']['status']}` at dev "
+        f"`{data['gate1_installation_model_v2_readonly_closeout']['dev_integration_revision']}`;",
+        f"- Gate 2 instance closeout: "
+        f"`{data['gate2_instance_spec_and_readiness_closeout']['status']}` at dev "
+        f"`{data['gate2_instance_spec_and_readiness_closeout']['final_dev_revision']}`;",
+        f"- Gate 3 permit closeout: "
+        f"`{data['gate3_operation_permit_closeout']['status']}` at dev "
+        f"`{data['gate3_operation_permit_closeout']['dev_integration_revision']}`;",
+        f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
+        f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
+        f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        "",
+        "## Readiness dimensions",
+        "",
+        *[f"- {name.replace('_', ' ')}: `{value}`;" for name, value in data["readiness"].items()],
+        "",
+        "## Execution guarantees",
+        "",
+        *[
+            f"- `{mode['id']}`: product mode `{mode['product_mode']}`, claim "
+            f"`{mode['claim_status']}`, next gate `{mode['next_gate']}`. {mode['boundary']}"
+            for mode in data["execution_modes"]
+        ],
+        "",
+        "## Instance product programme",
+        "",
+        f"- status: `{data['instance_product_program']['status']}`;",
+        f"- active WorkUnit: `{data['instance_product_program']['work_unit']}`;",
+        f"- next WorkUnit: `{data['instance_product_program']['next_work_unit']}`;",
+        f"- portable record: `{data['instance_product_program']['portable_record']}`;",
+        f"- machine-local record: `{data['instance_product_program']['machine_local_record']}`;",
+        f"- readiness: `{data['instance_product_program']['readiness_model']}`;",
+        f"- preparation: `{data['instance_product_program']['preparation_model']}`;",
+        f"- default launch intent: `{data['instance_product_program']['default_launch_intent']}`;",
+        f"- launch intents: `{', '.join(data['instance_product_program']['launch_intents'])}`;",
+        f"- save role: `{data['instance_product_program']['save_role']}`;",
+        f"- profile families: `{', '.join(data['instance_product_program']['profile_families'])}`;",
+        f"- account bindings: "
+        f"`{', '.join(data['instance_product_program']['account_binding_types'])}`;",
+        f"- secondary save/world WorkUnit: "
+        f"`{data['instance_product_program']['world_save_work_unit']}`;",
+        f"- runtime authority: `{str(data['instance_product_program']['runtime_authority']).lower()}`;",
+        "",
+        "## Operation-permit programme",
+        "",
+        f"- status: `{data['operation_permit_program']['status']}`;",
+        f"- WorkUnit: `{data['operation_permit_program']['work_unit']}`;",
+        f"- authority model: `{data['operation_permit_program']['authority_model']}`;",
+        f"- provider revalidation required: "
+        f"`{str(data['operation_permit_program']['provider_revalidation_required']).lower()}`;",
+        f"- permit issuance authority: "
+        f"`{str(data['operation_permit_program']['permit_issuance_authority']).lower()}`;",
+        "",
+        "## Host-environment programme",
+        "",
+        f"- status: `{data['host_environment_program']['status']}`;",
+        f"- next WorkUnit: `{data['host_environment_program']['next_work_unit']}`;",
+        f"- first runtime scope: `{data['host_environment_program']['first_runtime_scope']}`;",
+        f"- first apply WorkUnit: `{data['host_environment_program']['first_apply_work_unit']}`;",
+        f"- installation-model-v2 reviewed, committed, and clean: "
+        f"`{str(data['host_environment_program']['installation_model_v2_reviewed_committed_clean']).lower()}`;",
+        f"- blocks real Play: `{str(data['host_environment_program']['blocks_real_play']).lower()}`;",
+        f"- host mutation authority: `{str(data['host_environment_program']['host_mutation_authority']).lower()}`;",
+        f"- privileged broker authority: `{str(data['host_environment_program']['privileged_broker_authority']).lower()}`;",
+        "- prerequisite: the current convergence, execution-foundation, and installation-model-v2 tree "
+        "must be reviewed, committed, and reproduced cleanly.",
+        "",
+        "## Capability snapshot",
+        "",
+    ]
+    for status in ("available", "conditional", "backlog", "unavailable"):
+        ids = [item["id"] for item in data["capabilities"] if item["status"] == status]
+        lines.append(f"- {status}: `{', '.join(ids) if ids else 'none'}`;")
+    lines.extend([
+        "",
+        "## Historical proof boundary",
+        "",
+        f"- completed technical wave: `{data['completed_wave']['id']}`;",
+        f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
+        f"- accepted FacMan integration: `{revisions['accepted_integration']}`;",
+        f"- historical Steam-backed H1 candidate/result: `{revisions['factorio_launcher']}` / "
+        f"`{data['execution']['operator_verdict']}`;",
+        f"- Universal Launcher / Setup pins: `{revisions['universal_launcher']}` / "
+        f"`{revisions['universal_setup']}`;",
+        f"- M2 synthetic managed-target result: `{data['m2_live_portable_setup']['technical_acceptance']}`;",
+        f"- M3 disposition: `{data['product']['m3_disposition']}`; adoption apply remains "
+        f"`{str(data['m3_existing_portable_adoption']['adoption_apply']).lower()}`.",
+        "",
+        "Historical M1/M2 details remain in `release/index/project_status.v2.toml`,",
+        "`.aide/history/`, and `docs/release/checkpoints/`. They do not select current",
+        "work or promote execution, network, credential, signing, or publication authority.",
+        "",
+        "## Contract and validation identity",
+        "",
+        f"- commands / registered routes: `{law['contracts']}` / `{law['registered_routes']}`;",
+        f"- schemas / refusal codes: `{law['schemas']}` / `{law['refusal_codes']}`;",
+        f"- command catalog digest: `{law['catalog_digest']}`;",
+        f"- accepted historical CI revision: `{validation['accepted_revision']}`;",
+        f"- accepted historical matrix: `{validation['native_test_count']}` native and "
+        f"`{validation['python_test_count']}` Python tests.",
+        "",
+        "## Quarantined capabilities",
+        "",
+        *[f"- {value}" for value in data["quarantined_capabilities"]],
+        "",
+        "## Known blockers",
+        "",
+        *[f"- {value}" for value in data["known_blockers"]],
+        "",
+        "## Authorities",
+        "",
+        "- current status: `release/index/project_status.v2.toml`;",
+        "- capability vocabulary: `contracts/policy/capabilities.v1.toml`;",
+        "- provider revisions: `release/index/workspace_lock.v1.toml`;",
+        "- platform proof: `release/index/support_matrix.v1.toml`;",
+        "- claim limitations: `docs/quality/safety_claim_ledger.md`;",
+        "- accepted evidence: `.aide/history/` and `docs/release/checkpoints/`.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def readme_status(data: dict[str, Any]) -> str:
     law = data["command_law"]
+    active = data["active_work_unit"] or "none (operator gate required)"
     return "\n".join([
         "## Current Status",
         "",
-        f"R3.7 is complete and `{data['current_revisions']['factorio_launcher']}` is the exact H1 candidate.",
-        f"The current contract surface contains {law['contracts']} commands, {law['schemas']} schemas, "
-        f"and {law['refusal_codes']} refusal codes.",
+        f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
+        f"**Next:** `{data['product']['next_work_unit']}`.",
         "",
-        f"The next authority gate is **{data['next_authority_gate']}**. `run.execute` remains "
-        f"`{data['execution']['status']}` with `{data['execution']['reason']}`.",
-        f"The operator verdict is `{data['execution']['operator_verdict']}` and Safe beta remains unpromoted.",
-        f"M1 managed portable setup is `{data['m1_managed_portable_install']['status']}` in bounded fixture, "
-        "disposable, and package-proof roots; ordinary live-target apply remains unavailable.",
+        f"> {data['product']['charter']}",
+        "",
+        "The golden journey is:",
+        f"`{data['product']['golden_journey']}`.",
+        "M3 existing-portable adoption is authorised backlog after the playable alpha, not the "
+        "current critical path.",
+        f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
+        f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
+        "development-state counts, not release, playability, or authority claims.",
+        "",
+        "Two execution modes are accepted product designs but remain unproven: Steam-aware "
+        "`instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because "
+        f"`{data['execution']['reason']}`; no real-play gate has passed.",
+        f"Readiness is playability `{data['readiness']['playability']}`, workflow "
+        f"`{data['readiness']['user_workflow']}`, user validation `{data['readiness']['user_validation']}`, "
+        f"and release authenticity `{data['readiness']['release_authenticity']}`.",
+        "Historical M2 setup proof remains preserved and does not promote execution, existing-install "
+        "adoption, network, credential, signing, or publication authority.",
+        "Installation model v2 is closed as a read-only, evidence-bound planning layer.",
+        "Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as "
+        "menu-first read-only projections. Saves/worlds remain optional instance content.",
+        "Gate 3 exact permit infrastructure is closed with provider-side revalidation and no "
+        "product issuance. The active path now freezes the hermetic standalone Play-to-menu policy.",
+        "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
+        "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
         "neither carries a stable compatibility promise.",
+        "Contributor status command: `py -3 tools/project_state.py --summary`.",
     ])
 
 
 def roadmap_status(data: dict[str, Any]) -> str:
-    verdict = data["execution"]["operator_verdict"]
-    if verdict == "Fail":
-        repair = data["r3_8_repair"]
-        gate_detail = [
-            "The human-reviewed H1 verdict for the Steam-backed route is **Fail**.",
-            "The narrow isolation repair is "
-            f"`{repair['status']}` at dev integration `{repair['dev_integration_revision']}`; "
-            "Steam Cloud remains a protected external domain.",
-            "A standalone/manual distribution must receive its own revision-pinned reviewed H1 Pass before "
-            "an R3.8 execution-candidate WorkUnit can open.",
-        ]
-    else:
-        gate_detail = [
-            "Until a reviewed operator verdict exists, execution, Safe beta, setup mutation, networking, "
-            "credentials, server processes, daemon publication, signing, and publication remain unavailable.",
-        ]
+    active = data["active_work_unit"]
+    opening = (
+        f"The active phase is **{data['product']['phase']}** and the active WorkUnit is `{active}`."
+        if active else
+        f"The current phase is **{data['product']['phase']}** and no authority-gate WorkUnit is active."
+    )
+    first_step = (
+        f"1. Complete `{active}`."
+        if active else
+        "1. Freeze one independent real-Play gate policy and obtain explicit operator acknowledgement."
+    )
     return "\n".join([
-        "## Current Status and Authority Gate",
+        "## Current Product Sequence",
         "",
-        f"R3.7 is complete. The frozen H1 candidate is "
-        f"`{data['current_revisions']['factorio_launcher']}` and the next authority gate is "
-        f"**{data['next_authority_gate']}**.",
+        opening,
         "",
-        "- H1 Pass may create a separate R3.8 execution-candidate branch.",
-        "- H1 Fail routes to a narrow isolation-repair WorkUnit.",
-        "- H1 Inconclusive routes to improved observation and a repeat.",
+        first_step,
+        "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
+        "3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.",
+        "4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.",
+        "5. Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`, then implement `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01` and record `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`; keep Steam-aware Play independent.",
+        "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
+        "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
+        "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
+        "9. Deepen portable instance reconstruction, permit-backed managed install reconciliation, content preparation, and host repair from observed player needs.",
+        "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
         "",
-        *gate_detail,
-        "M1 fixture-backed managed setup is complete. Ordinary live-target setup apply remains unavailable.",
-        "Execution, Safe beta, networking, credentials, server processes, daemon publication, "
-        "signing, and publication remain unavailable.",
-        "Truth/conformance and public-boundary hardening may continue without changing the frozen H1 runtime.",
+        "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new "
+        "Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.",
+        "The installation model is accepted read-only infrastructure for the selected local "
+        "standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,",
+        "server processes, daemon publication, signing, and publication remain unavailable.",
     ])
 
 
@@ -373,12 +583,12 @@ def support_status(data: dict[str, Any]) -> str:
 
 
 def release_status(data: dict[str, Any]) -> str:
+    active = data["active_work_unit"] or "none (operator gate required)"
     return "\n".join([
         "## Current Boundary",
         "",
-        f"The accepted non-execution product wave is `{data['completed_wave']['id']}`. "
-        f"The exact H1 candidate is `{data['current_revisions']['factorio_launcher']}` and "
-        f"the operator verdict remains `{data['execution']['operator_verdict']}`.",
+        f"The active product phase is `{data['product']['phase']}` and the active WorkUnit is "
+        f"`{active}`. Historical M2/H1 evidence remains preserved separately.",
         "",
         f"Execution is `{data['execution']['status']}`; Safe beta is "
         f"`{str(data['safe_beta']).lower()}`; release status is `{data['release']['status']}`; "
@@ -422,22 +632,378 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical status has the wrong schema")
     if status.get("completed_wave") != "m2":
         problems.append("canonical status must record completed M2 technical wave")
-    if status.get("next_authority_gate") != "H1":
-        problems.append("canonical status must route the next authority gate to H1")
+    phase_contracts = {
+        "product_convergence": {
+            "checkpoint": "product-convergence",
+            "active": "FACMAN-PRODUCT-CONVERGENCE-01",
+            "last_closed": "M2-CLOSEOUT-CANONICAL-PROMOTION-01",
+            "next": "FACMAN-EXECUTION-FOUNDATION-01",
+            "safety": "non_execution_foundation_proven",
+            "execution_reason": "execution_foundation_not_implemented",
+        },
+        "execution_foundation": {
+            "checkpoint": "execution-foundation",
+            "active": "FACMAN-EXECUTION-FOUNDATION-01",
+            "last_closed": "FACMAN-PRODUCT-CONVERGENCE-01",
+            "next": "FACMAN-STEAM-AWARE-PLAY-01 + FACMAN-HERMETIC-STANDALONE-PLAY-01",
+            "safety": "execution_foundation_in_progress",
+            "execution_reason": "execution_foundation_in_progress",
+        },
+        "real_play_gates": {
+            "checkpoint": "real-play-gates",
+            "active": "",
+            "last_closed": "FACMAN-EXECUTION-FOUNDATION-01",
+            "next": "FACMAN-STEAM-AWARE-PLAY-01 + FACMAN-HERMETIC-STANDALONE-PLAY-01",
+            "phase_status": "awaiting_operator_gate",
+            "safety": "execution_foundation_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
+        "multi_version_install_lifecycle": {
+            "checkpoint": "multi-version-install-lifecycle",
+            "active": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
+            "last_closed": "FACMAN-EXECUTION-FOUNDATION-01",
+            "next": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+            "safety": "execution_foundation_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
+        "instance_spec_and_readiness": {
+            "checkpoint": "instance-spec-and-readiness",
+            "active": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+            "last_closed": "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01",
+            "next": "FACMAN-OPERATION-PERMIT-01",
+            "safety": "execution_foundation_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
+        "operation_permit": {
+            "checkpoint": "operation-permit",
+            "active": "FACMAN-OPERATION-PERMIT-01",
+            "last_closed": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-01",
+            "safety": "execution_foundation_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
+        "hermetic_standalone_play_policy": {
+            "checkpoint": "hermetic-standalone-play-policy",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+            "last_closed": "FACMAN-OPERATION-PERMIT-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "safety": "permit_infrastructure_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
+    }
+    product = status.get("product", {})
+    phase = product.get("phase")
+    phase_contract = phase_contracts.get(phase)
+    if phase_contract is None:
+        problems.append(f"canonical product phase is unsupported: {phase!r}")
+        phase_contract = phase_contracts["product_convergence"]
+    if status.get("current_checkpoint") != phase_contract["checkpoint"]:
+        problems.append(f"canonical status checkpoint must be {phase_contract['checkpoint']!r}")
+    if status.get("next_authority_gate") != "real-play-isolation":
+        problems.append("canonical status must route the next authority gate to real-play isolation")
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
-    repair_id = "FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01"
-    latest_wu10_id = "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-02"
-    m2_closeout_id = "M2-CLOSEOUT-CANONICAL-PROMOTION-01"
-    if status.get("active_work_unit") == repair_id:
-        problems.append("closed R3.8 repair must not remain the active WorkUnit")
-    if status.get("active_work_unit") == m2_closeout_id:
-        if status.get("last_closed_work_unit") != latest_wu10_id:
-            problems.append("active M2 closeout must preserve WU10 as the latest closed WorkUnit")
-    elif status.get("active_work_unit"):
-        problems.append("only the M2 closeout WorkUnit may be active")
-    elif status.get("last_closed_work_unit") != m2_closeout_id:
-        problems.append("closed M2 closeout must be the latest closed WorkUnit")
+    if status.get("active_work_unit") != phase_contract["active"]:
+        problems.append(f"active WorkUnit must be {phase_contract['active']!r}")
+    if status.get("last_closed_work_unit") != phase_contract["last_closed"]:
+        problems.append(f"last closed WorkUnit must be {phase_contract['last_closed']!r}")
+    expected_product = {
+        "phase": phase,
+        "phase_status": phase_contract.get("phase_status", "active"),
+        "current_work_unit": phase_contract["active"],
+        "next_work_unit": phase_contract["next"],
+        "m3_disposition": "authorized_backlog_after_playable_alpha",
+        "truth_scope": "dev_integrated_reviewed_reproduced",
+        "canonical_integration": False,
+        "local_counts_promoted": True,
+    }
+    for key, expected in expected_product.items():
+        if product.get(key) != expected:
+            problems.append(f"product {key} must be {expected!r}")
+    for key in ("primary_persona", "charter", "golden_journey", "platform_scope"):
+        if not product.get(key):
+            problems.append(f"product {key} must be defined")
+    if product.get("current_work_unit") != status.get("active_work_unit"):
+        problems.append("product and top-level active WorkUnit disagree")
+    readiness = status.get("readiness", {})
+    expected_readiness = {
+        "playability": "not_yet_playable",
+        "user_workflow": "advanced_command_surface_only",
+        "safety_authority": phase_contract["safety"],
+        "platform_support": "windows_first_alpha_planned",
+        "release_authenticity": "not_proven_unsigned",
+        "compatibility": "experimental_public_subset",
+        "user_validation": "not_started",
+    }
+    if readiness != expected_readiness:
+        problems.append("readiness dimensions must remain explicit and unpromoted")
+    foundation = status.get("execution_foundation", {})
+    if foundation != {
+        "status": "complete_fake_process_proof",
+        "work_unit": "FACMAN-EXECUTION-FOUNDATION-01",
+        "process_authority": "foundation_test_process_only",
+        "real_factorio_execution": False,
+        "real_play_authority": False,
+        "native_test_count": 43,
+        "python_test_count": 355,
+        "python_expected_skips": 1,
+        "schema_count": 235,
+        "full_verification": "pass",
+    }:
+        problems.append("execution foundation evidence must remain complete, bounded, and non-authoritative")
+    instance_program = status.get("instance_product_program", {})
+    if instance_program != {
+        "status": "gate2_read_only_projection_complete",
+        "architecture": "docs/architecture/instance_product_model.md",
+        "work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+        "next_work_unit": "FACMAN-OPERATION-PERMIT-01",
+        "portable_record": "InstanceSpec",
+        "machine_local_record": "InstanceBinding",
+        "readiness_model": "computed_projection_not_authoritative_state",
+        "ui_aggregate": "InstanceView",
+        "preparation_model": "federated_typed_subplans_by_owner",
+        "default_launch_intent": "menu",
+        "save_role": "optional_content_within_instance",
+        "composition": [
+            "installation", "instance_data_root", "template_provenance", "pinned_preset",
+            "ordered_profiles", "modset_spec", "modset_lock", "account_bindings",
+            "settings", "saves", "resources", "launch_intent",
+        ],
+        "launch_intents": [
+            "menu", "continue_last", "load_save", "new_game", "map_editor",
+            "connect_server", "start_server", "benchmark", "instrumented_dev",
+        ],
+        "profile_families": [
+            "LaunchProfile", "GraphicsProfile", "AudioProfile", "InterfaceProfile",
+            "MultiplayerProfile", "ServerProfile", "NewGameProfile", "BackupProfile",
+        ],
+        "account_binding_types": [
+            "PlatformAccountBinding", "FactorioAccountBinding", "PlayerIdentityProfile",
+            "ServerCredentialBinding",
+        ],
+        "mod_content_records": ["ModsetSpec", "ModsetLock", "ModpackBundle"],
+        "world_save_work_unit": "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01",
+        "templates_are_initializers": True,
+        "conflicts_silently_resolved": False,
+        "portable_factorio_binaries": False,
+        "credential_values_in_instance": False,
+        "presets_grant_authority": False,
+        "foreign_installation_mutation": False,
+        "runtime_authority": False,
+    }:
+        problems.append("instance programme must remain decomposed, menu-first, portable, and non-authoritative")
+    permit_program = status.get("operation_permit_program", {})
+    if permit_program != {
+        "status": "gate3_infrastructure_complete_no_issuance",
+        "work_unit": "FACMAN-OPERATION-PERMIT-01",
+        "authority_model": "short_lived_plan_bound_exact_resource_permit",
+        "global_admission_is_sole_enforcer": False,
+        "provider_revalidation_required": True,
+        "harmless_reads_require_permit": False,
+        "permit_issuance_authority": False,
+    }:
+        problems.append("operation permits must remain short-lived, plan-bound, and unissued")
+    gate3 = status.get("gate3_operation_permit_closeout", {})
+    expected_gate3 = {
+        "status": "accepted_reviewed_dev_integration",
+        "work_unit": "FACMAN-OPERATION-PERMIT-01",
+        "implementation_pull_request": 42,
+        "reviewed_head_revision": "5f9f122d6d3e95a006c44e46ba54c0927e9d288c",
+        "dev_integration_revision": "91c2aa4fe0a30be97bf16165b41a95a8fab4cd11",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_head_ci_run": "29825371714",
+        "exact_head_code_security_run": "29825371722",
+        "exact_head_schema_check_run": "29825371753",
+        "exact_head_security_policy_run": "29825371793",
+        "exact_dev_ci_run": "29826221338",
+        "exact_dev_code_security_run": "29826221318",
+        "exact_dev_schema_check_run": "29826221373",
+        "exact_dev_security_policy_run": "29826221366",
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 442.0,
+        "native_test_count": 47,
+        "python_test_count": 364,
+        "python_expected_skips": 2,
+        "schema_count": 268,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 242,
+        "canonicalization_version": "facman.sorted-json.v1",
+        "authenticator_algorithm": "hmac-sha256.process.v1",
+        "projected_instance_resource_count": 9,
+        "provider_revalidation_proof": "dormant_factorio_launch_foundation_operation",
+        "permit_issuance_authority": False,
+        "real_factorio_execution": False,
+        "setup_authority_promotion": False,
+        "credential_authority_promotion": False,
+        "network_authority_promotion": False,
+        "signing": False,
+        "publication": False,
+        "canonical_main_promotion": False,
+    }
+    if gate3 != expected_gate3:
+        problems.append("Gate 3 closeout must bind exact reviewed and merged-dev proof without promoting issuance or execution")
+    gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
+    expected_gate2 = {
+        "status": "accepted_reviewed_dev_integration",
+        "work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+        "implementation_pull_request": 39,
+        "scope_revision": "a2b851c258e901055ae2edbc3c9379f5aa502652",
+        "implementation_revision": "fa11b056c03784964e66ef391a81a6dfa8fcedc1",
+        "implementation_dev_revision": "7113011a6c4fe1d76d4c09cc36bc8a3aafa34b36",
+        "reproduction_correction_pull_request": 40,
+        "reproduction_correction_revision": "f5915475eff78c255fe1f618a8be12c9c0f2d0f9",
+        "final_dev_revision": "bbb46c5bfd10cd35fb965b23edc4951784f93ef4",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_head_ci_run": "29812506939",
+        "exact_head_code_security_run": "29812506919",
+        "exact_head_schema_check_run": "29812506783",
+        "exact_head_security_policy_run": "29812507063",
+        "correction_head_ci_run": "29814299428",
+        "correction_head_code_security_run": "29814299449",
+        "correction_head_security_policy_run": "29814299432",
+        "exact_dev_ci_run": "29815159526",
+        "exact_dev_code_security_run": "29815159602",
+        "exact_dev_security_policy_run": "29815159595",
+        "exact_dev_schema_check_run": "29813605517",
+        "exact_dev_schema_disposition": "implementation_merge_passed_and_final_correction_had_no_schema_delta",
+        "local_full_matrix": True,
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 387.0,
+        "native_test_count": 44,
+        "implementation_python_test_count": 360,
+        "final_python_test_count": 361,
+        "python_expected_skips": 7,
+        "schema_count": 261,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 217,
+        "canonicalization_version": "facman.sorted-json.v1",
+        "default_launch_intent": "menu",
+        "supported_launch_intents": ["menu"],
+        "compatible_v1_record_rewritten": False,
+        "read_only_projection": True,
+        "zero_write_proof": True,
+        "preparation_available": False,
+        "execution_available": False,
+        "permit_issuance_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate2 != expected_gate2:
+        problems.append("Gate 2 closeout must bind exact reviewed and merged-dev proof without promoting authority")
+    host_program = status.get("host_environment_program", {})
+    if host_program != {
+        "status": "planned_parallel_support_lane",
+        "architecture": "docs/architecture/host_environment_lifecycle.md",
+        "next_work_unit": "HOST-ENVIRONMENT-CONTRACT-SPINE-01",
+        "first_runtime_scope": "workflow_specific_read_only_list_inspect_doctor",
+        "first_apply_work_unit": "WINDOWS-SANDBOX-PROFILE-01",
+        "workflow_health_model": "versioned_requirement_profiles_no_global_health_score",
+        "installation_model_v2_reviewed_committed_clean": True,
+        "critical_path": False,
+        "blocks_real_play": False,
+        "host_mutation_authority": False,
+        "privileged_broker_authority": False,
+        "remote_mutation_authority": False,
+        "arbitrary_script_authority": False,
+    }:
+        problems.append("host-environment programme must remain parallel, non-blocking, and non-mutating")
+    lifecycle = status.get("multi_version_install_lifecycle", {})
+    if lifecycle.get("status") != "gate1_read_only_model_complete_remaining_mutation_transferred":
+        problems.append("installation-model-v2 must record the accepted Gate 1 boundary and transferred mutation lifecycle")
+    if lifecycle.get("installation_model_v2") != "implemented_read_only_projection":
+        problems.append("installation-model-v2 must remain a read-only projection")
+    if lifecycle.get("reconciliation_plan") != "implemented_evidence_bound_deterministic_plan_only":
+        problems.append("installation reconciliation must remain evidence-bound, deterministic, and plan-only")
+    if lifecycle.get("reconciliation_apply") is not False:
+        problems.append("installation reconciliation apply must remain unavailable")
+    if lifecycle.get("umbrella_objective_complete") is not False:
+        problems.append("the broad installation lifecycle objective must not be marked complete")
+    if lifecycle.get("remaining_lifecycle_work_unit") != "FACMAN-MANAGED-INSTALL-RECONCILIATION-01":
+        problems.append("remaining installation mutation scope must be transferred explicitly")
+    if not lifecycle.get("plan_identity_binds_current_evidence"):
+        problems.append("installation reconciliation plan identity must bind current evidence")
+    if not lifecycle.get("zero_write_proof"):
+        problems.append("installation read-only closeout must retain zero-write proof")
+    gate1 = status.get("gate1_installation_model_v2_readonly_closeout", {})
+    expected_gate1 = {
+        "status": "accepted_reviewed_dev_integration",
+        "work_unit": "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01",
+        "implementation_pull_request": 37,
+        "implementation_revision": "ecd157570dfe3f87006cb00e8fe07a959f44ae8c",
+        "reviewed_head_revision": "c9ae60405d0b221faaba364be5f47e524649bb97",
+        "dev_integration_revision": "6ec47046d1b1f4ab8bddfcc27bcec76a774ff305",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_head_ci_run": "29799245632",
+        "exact_head_code_security_run": "29799245642",
+        "exact_head_schema_check_run": "29799245604",
+        "exact_head_security_policy_run": "29799245629",
+        "exact_dev_ci_run": "29799938954",
+        "exact_dev_code_security_run": "29799939008",
+        "exact_dev_schema_check_run": "29799938962",
+        "exact_dev_security_policy_run": "29799938996",
+        "local_full_matrix": True,
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 362.9,
+        "canonicalization_version": "facman.sorted-json.v1",
+        "effect_vocabulary_version": "common.effects.v1",
+        "plan_identity_binds_current_evidence": True,
+        "plan_identity_binds_desired_state": True,
+        "source_candidate_is_authenticated_evidence": False,
+        "zero_write_proof": True,
+        "compatible_v1_record_rewritten": False,
+        "apply_route_added": False,
+        "reconciliation_apply": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate1 != expected_gate1:
+        problems.append("Gate 1 closeout must bind exact reviewed and merged-dev proof without promoting authority")
+    gate0 = status.get("gate0_product_convergence_integration", {})
+    expected_gate0 = {
+        "status": "accepted_reviewed_dev_integration",
+        "pull_request": 34,
+        "reviewed_head_revision": "61a7afe6718d3ca36b2c530b83890fcd37cc5c03",
+        "dev_integration_revision": "62c2503110cdb89b9cc89f19a69903f214d33e3c",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_head_ci_run": "29758642385",
+        "exact_head_code_security_run": "29758642411",
+        "exact_head_schema_check_run": "29758642428",
+        "exact_head_security_policy_run": "29758642557",
+        "exact_dev_ci_run": "29760235796",
+        "exact_dev_code_security_run": "29760235888",
+        "exact_dev_schema_check_run": "29760236038",
+        "exact_dev_security_policy_run": "29760236168",
+        "exact_head_clean_reproduction": True,
+        "exact_dev_clean_reproduction": True,
+        "five_slice_review": "pass_with_documented_notes_no_p0_findings",
+        "generated_contract_counts_verified": True,
+        "setup_global_admission_verified": True,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate0 != expected_gate0:
+        problems.append("Gate 0 integration evidence must bind the exact reviewed head and merged-dev proofs without promoting authority")
+    execution_modes = {mode.get("id"): mode for mode in status.get("execution_mode", [])}
+    if set(execution_modes) != {"instance_isolated", "hermetic"}:
+        problems.append("canonical status must define exactly the two accepted execution modes")
+    for mode in execution_modes.values():
+        if mode.get("product_mode") != "accepted" or mode.get("claim_status") != "unproven":
+            problems.append(f"execution mode {mode.get('id', '<unknown>')} must remain accepted but unproven")
     repair = status.get("r3_8_repair", {})
     if repair.get("status") != "closed":
         problems.append("canonical status must record the R3.8 repair as closed")
@@ -464,8 +1030,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     m1_integration = status.get("m1_public_integration", {})
     if m1_integration.get("status") != "accepted":
         problems.append("canonical status must record accepted M1 public integration proof")
-    if m1_integration.get("canonical_main_revision") != status.get("accepted_integration_revision"):
-        problems.append("M1 public integration must bind the accepted canonical main revision")
+    if m1_integration.get("canonical_main_revision") != "73bec99916d509b0ab055a43562e93ef20a6b4b7":
+        problems.append("M1 public integration must preserve its accepted canonical main revision")
     if m1_integration.get("dev_tree_identity") != m1_integration.get("main_tree_identity"):
         problems.append("M1 dev and main integration trees must be identical")
     if m1_integration.get("checkpoint_tree_identity") != m1_integration.get("main_tree_identity"):
@@ -475,8 +1041,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if m1_integration.get("authority_promotion") is not False:
         problems.append("M1 public integration proof must not promote authority")
     m2 = status.get("m2_live_portable_setup", {})
-    if m2.get("status") != "complete_machine_pass_pending_canonical_promotion":
-        problems.append("M2 must remain complete with canonical promotion pending")
+    if m2.get("status") not in {
+        "complete_machine_pass_pending_canonical_promotion",
+        "complete_machine_pass_canonically_promoted",
+    }:
+        problems.append("M2 must remain complete at a recognized canonical-promotion state")
     if m2.get("technical_acceptance") != "MachinePass":
         problems.append("M2 technical acceptance must record the bounded MachinePass")
     if m2.get("human_review") != "not_required_for_synthetic_non_executable_lane":
@@ -487,20 +1056,72 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2 must not promote execution or infer H1")
     closeout = status.get("m2_closeout_candidate", {})
     if [
-        closeout.get("status"), closeout.get("work_unit"),
+        closeout.get("work_unit"),
         closeout.get("wu10_pull_request"), closeout.get("wu10_dev_merge_revision"),
         closeout.get("technical_acceptance"), closeout.get("human_review"),
-        closeout.get("result_sha256"), closeout.get("canonical_main_revision"),
-        closeout.get("local_managed_portable_setup"),
+        closeout.get("result_sha256"), closeout.get("local_managed_portable_setup"),
     ] != [
-        "machine_pass_closeout_pending_exact_dev_and_main_promotion",
         "M2-CLOSEOUT-CANONICAL-PROMOTION-01", 28,
         "5250db1d17ac330f5ae0b672ccc7466431a1e4a2", "MachinePass",
         "not_required_for_synthetic_non_executable_lane",
         "a4a00a3f77b394f988a71f9eaa86de3c9c9b74a4051d1c2e3ad38f60b9ad8efa",
-        "pending_dev_to_main_promotion", "candidate",
+        "candidate",
     ]:
         problems.append("M2 closeout candidate identity or scope changed")
+    closeout_status = closeout.get("status")
+    if closeout_status not in {
+        "machine_pass_closeout_pending_exact_dev_and_main_promotion",
+        "canonically_promoted_public_integration_pending_dev_synchronization",
+        "accepted_public_integration_dev_synchronized",
+    }:
+        problems.append("M2 closeout must record a recognized monotonic promotion state")
+    if closeout_status == "machine_pass_closeout_pending_exact_dev_and_main_promotion":
+        if closeout.get("canonical_main_revision") != "pending_dev_to_main_promotion":
+            problems.append("pending M2 closeout must not claim a canonical revision")
+    else:
+        if [
+            closeout.get("closeout_pull_request"), closeout.get("closeout_task_revision"),
+            closeout.get("dev_integration_revision"), closeout.get("shared_promoted_tree_identity"),
+            closeout.get("promotion_pull_request"), closeout.get("promotion_head_revision"),
+            closeout.get("canonical_main_revision"), closeout.get("exact_main_ci_run"),
+            closeout.get("exact_main_code_security_run"), closeout.get("exact_main_schema_check_run"),
+            closeout.get("exact_main_security_policy_run"),
+        ] != [
+            29, "3fc80882e7da0e38cddd901dfc965775281b0411",
+            "4afab65448831b05ab790957abf0e1798074ad1a",
+            "ee54dc220ed5fd80a9f450988033c5e29599a326", 30,
+            "4afab65448831b05ab790957abf0e1798074ad1a",
+            "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
+            "29569007275", "29569007270", "29569007323", "29569007290",
+        ]:
+            problems.append("M2 canonical promotion or exact-main proof identity changed")
+        if status.get("accepted_integration_revision") != closeout.get("canonical_main_revision"):
+            problems.append("accepted integration must bind the canonical M2 main revision")
+    if closeout_status == "accepted_public_integration_dev_synchronized":
+        if [
+            closeout.get("public_integration"), closeout.get("public_integration_task_revision"),
+            closeout.get("public_integration_pull_request"), closeout.get("public_integration_dev_revision"),
+            closeout.get("public_integration_tree_identity"), closeout.get("public_integration_dev_ci_run"),
+            closeout.get("public_integration_dev_code_security_run"),
+            closeout.get("public_integration_dev_security_policy_run"),
+            closeout.get("dev_synchronization"), closeout.get("dev_synchronization_task_revision"),
+            closeout.get("dev_synchronization_pull_request"), closeout.get("dev_synchronization_revision"),
+            closeout.get("dev_synchronization_tree_identity"),
+            closeout.get("dev_synchronization_main_ancestor"),
+            closeout.get("dev_synchronization_ci_run"),
+            closeout.get("dev_synchronization_code_security_run"),
+            closeout.get("dev_synchronization_security_policy_run"),
+        ] != [
+            "accepted_exact_dev_checkpoint", "44687765815174db8afc1da6fa768f7a655a6290",
+            31, "1678cb6d3c9545f09c4ae729054f68cf0fbc7bf2",
+            "8487c87a097395186cccbcd13d929dd88d3b16fa", "29571806755",
+            "29571806753", "29571806738", "accepted_exact_dev_head",
+            "6fb4a0c96503f32ad9070a5c557f2fa1a31209c8", 32,
+            "51977de8120202958fc35776d284077b1fc027d3",
+            "8487c87a097395186cccbcd13d929dd88d3b16fa", True,
+            "29573335555", "29573335458", "29573335488",
+        ]:
+            problems.append("M2 public integration or dev synchronization proof identity changed")
     if closeout.get("local_validation") not in {"pending_complete_matrix", "pass_complete_matrix"}:
         problems.append("M2 closeout must record a recognized local validation state")
     for key in [
@@ -514,16 +1135,21 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if closeout.get("h1_inference") != "none":
         problems.append("M2 closeout must not infer H1")
     m3 = status.get("m3_existing_portable_adoption", {})
+    expected_m3_status = "authorized_backlog_after_playable_alpha"
     if [
         m3.get("status"), m3.get("scope"), m3.get("existing_portable_inspection"),
         m3.get("adoption_plan"), m3.get("adoption_apply"),
         m3.get("deletion_authority"), m3.get("existing_installation_mutation"),
         m3.get("steam_adoption"), m3.get("steam_mutation"), m3.get("run_execute"),
     ] != [
-        "authorized_next_wave_pending_m2_canonical_promotion",
+        expected_m3_status,
         "read_only_and_plan_only", True, True, False, False, False, False, False, False,
     ]:
-        problems.append("M3 must remain authorized-next, read-only, and plan-only")
+        problems.append("M3 must remain in its phase-appropriate read-only and plan-only state")
+    if m3.get("opened_after_m2_dev_revision") != "51977de8120202958fc35776d284077b1fc027d3":
+        problems.append("M3 backlog must retain the accepted synchronized M2 dev revision")
+    if m3.get("resume_after") != "FACMAN-INSTANCE-CENTRIC-ALPHA-01":
+        problems.append("M3 backlog must resume only after the playable alpha")
     m2_wu1 = status.get("m2_wu1_target_policy", {})
     if m2_wu1.get("status") != "accepted_dev_integration_proof":
         problems.append("M2-WU1 target policy must record the accepted dev integration proof")
@@ -995,11 +1621,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     execution = status.get("execution", {})
     if execution.get("status") != "unavailable":
         problems.append("canonical status must keep execution unavailable")
+    if execution.get("reason") != phase_contract["execution_reason"]:
+        problems.append("canonical execution reason must match the current product phase")
     verdict = execution.get("operator_verdict")
     if verdict not in {"pending", "Fail"}:
         problems.append("canonical status may record only pending or the reviewed H1 Fail before promotion")
     if verdict == "Fail" and not execution.get("proof"):
         problems.append("canonical H1 Fail must bind a sanitized proof record")
+    if execution.get("operator_verdict_scope") != "historical_steam_backed_h1_only":
+        problems.append("historical H1 verdict must remain explicitly scoped")
+    if execution.get("current_gate_status") != "not_started":
+        problems.append("real-play execution gates must remain not started")
     return problems
 
 
@@ -1039,9 +1671,30 @@ def validate() -> list[str]:
     return problems
 
 
+def summary(data: dict[str, Any]) -> str:
+    modes = ", ".join(
+        f"{mode['id']}={mode['claim_status']}"
+        for mode in data["execution_modes"]
+    )
+    return "\n".join([
+        "FacMan product status",
+        f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
+        f"active_work_unit: {data['active_work_unit'] or 'none'}",
+        f"next_work_unit: {data['product']['next_work_unit']}",
+        f"golden_journey: {data['product']['golden_journey']}",
+        f"playability: {data['readiness']['playability']}",
+        f"execution: {data['execution']['status']} ({data['execution']['reason']})",
+        f"execution_modes: {modes}",
+        f"release_authenticity: {data['readiness']['release_authenticity']}",
+        f"user_validation: {data['readiness']['user_validation']}",
+    ])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate FacMan project truth from canonical data.")
-    parser.add_argument("--write", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--write", action="store_true")
+    modes.add_argument("--summary", action="store_true")
     args = parser.parse_args()
     data = collect()
     if args.write:
@@ -1056,6 +1709,9 @@ def main() -> int:
         for problem in problems:
             print(f"project-state: {problem}")
         return 1
+    if args.summary:
+        print(summary(data))
+        return 0
     print("project-state: ok")
     return 0
 

@@ -31,13 +31,7 @@ target_link_libraries(facman_transport_direct_static
   PRIVATE facman_platform_static flaunch_client_static flb_factorio_static)
 add_library(facman::transport_direct ALIAS facman_transport_direct_static)
 
-set(FACMAN_PROCESS_TRANSPORT_SOURCES facman_transport_process.cpp)
-if(WIN32)
-  list(APPEND FACMAN_PROCESS_TRANSPORT_SOURCES facman_process_windows.cpp)
-else()
-  list(APPEND FACMAN_PROCESS_TRANSPORT_SOURCES facman_process_posix.cpp)
-endif()
-add_library(facman_transport_process_static STATIC ${FACMAN_PROCESS_TRANSPORT_SOURCES})
+add_library(facman_transport_process_static STATIC facman_transport_process.cpp)
 target_compile_features(facman_transport_process_static PUBLIC cxx_std_17)
 target_include_directories(facman_transport_process_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(facman_transport_process_static

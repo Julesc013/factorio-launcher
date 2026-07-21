@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_launch_session.v1.schema.json",
+  "title": "Factorio Launch Session",
+  "type": "object",
+  "required": ["schema", "session_id", "instance_id", "execution_mode", "immutable_plan_identity", "current_state", "journal_path", "working_directory", "lifecycle", "process", "successful", "recovery_required", "complete"],
+  "properties": {
+    "schema": { "const": "factorio.launch_session.v1" },
+    "session_id": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "instance_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "execution_mode": { "enum": ["foundation_test", "instance_isolated", "hermetic"] },
+    "immutable_plan_identity": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "current_state": { "$ref": "#/$defs/state" },
+    "journal_path": { "type": "string" },
+    "working_directory": { "type": "string" },
+    "lifecycle": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["state", "occurred_at", "detail"],
+        "properties": {
+          "state": { "$ref": "#/$defs/state" },
+          "occurred_at": { "type": "string", "format": "date-time" },
+          "detail": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "process": {
+      "type": "object",
+      "required": ["identity", "termination", "termination_reason", "exit_code", "native_status", "process_tree_terminated", "standard_output", "standard_error", "error"],
+      "properties": {
+        "identity": {
+          "type": "object",
+          "required": ["process_id", "platform"],
+          "properties": {
+            "process_id": { "type": "integer", "minimum": 0 },
+            "platform": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "termination": { "enum": ["pending", "exited", "cancelled", "timed_out", "killed", "crashed", "start_failed"] },
+        "termination_reason": { "type": "string" },
+        "exit_code": { "type": "integer" },
+        "native_status": { "type": "integer" },
+        "process_tree_terminated": { "type": "boolean" },
+        "standard_output": { "type": "string", "maxLength": 1048576 },
+        "standard_error": { "type": "string", "maxLength": 1048576 },
+        "error": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "successful": { "type": "boolean" },
+    "recovery_required": { "type": "boolean" },
+    "complete": { "type": "boolean" },
+    "recovered_from_state": { "type": "string" }
+  },
+  "$defs": {
+    "state": {
+      "enum": ["requested", "preflighted", "authorised", "starting", "running", "exited", "cancelled", "timed_out", "crashed", "killed", "recovery_required", "complete"]
+    }
+  },
+  "additionalProperties": false
+}

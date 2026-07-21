@@ -60,7 +60,7 @@ Portable AIDE framework files under `.aide/` are committed. Target-specific
 policy files use the `flaunch-` prefix:
 
 ```text
-.aide/policies/flaunch-root-authority.yaml
+.aide/policies/facman-root-authority.yaml
 .aide/policies/flaunch-product-boundaries.yaml
 .aide/policies/flaunch-safety.yaml
 ```

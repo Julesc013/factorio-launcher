@@ -1,0 +1,17 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_launch_intent.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Factorio launch intent record",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.launch_intent.v1"},
+    "intent": {
+      "enum": [
+        "menu", "continue_last", "load_save", "new_game", "map_editor",
+        "connect_server", "start_server", "benchmark", "instrumented_dev"
+      ]
+    }
+  },
+  "required": ["schema", "intent"]
+}

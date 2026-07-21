@@ -148,6 +148,31 @@ required_codes = [
   "inventory_record_not_found",
   "inventory_identity_changed",
   "inventory_identity_ambiguous",
+  "permit_missing",
+  "permit_malformed",
+  "permit_schema_unsupported",
+  "permit_authentication_failed",
+  "permit_not_yet_valid",
+  "permit_expired",
+  "permit_lifetime_exceeded",
+  "permit_revoked",
+  "permit_replayed",
+  "permit_wrong_issuer_session",
+  "permit_wrong_operation",
+  "permit_wrong_audience",
+  "permit_wrong_machine",
+  "permit_wrong_principal",
+  "permit_wrong_provider",
+  "permit_wrong_plan",
+  "permit_wrong_policy",
+  "permit_wrong_evidence",
+  "permit_wrong_resource",
+  "permit_resource_stale",
+  "permit_effect_scope_mismatch",
+  "permit_capability_scope_mismatch",
+  "permit_intent_mismatch",
+  "permit_isolation_mismatch",
+  "permit_resource_set_not_closed",
 ]
 
 [[code]]
@@ -246,7 +271,7 @@ id = "live_target_acceptance_required"
 severity = "blocked"
 effect = "workspace_write"
 retryable = false
-message = "A human M2 live-target acceptance Pass is required before FacMan setup mutation is activated."
+message = "Managed-target setup mutation remains unavailable until its separate live-target policy gate passes."
 
 [[code]]
 id = "setup_recovery_not_available"
@@ -1696,3 +1721,178 @@ severity = "blocked"
 effect = "workspace_write"
 retryable = false
 message = "The server plan bundle committed but transaction recovery is required."
+
+[[code]]
+id = "permit_missing"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The authority-bearing operation did not include an operation permit."
+
+[[code]]
+id = "permit_malformed"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit is malformed or violates its bounded canonical contract."
+
+[[code]]
+id = "permit_schema_unsupported"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit uses an unsupported claims, envelope, or canonicalization version."
+
+[[code]]
+id = "permit_authentication_failed"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit authenticator does not match its canonical claims."
+
+[[code]]
+id = "permit_not_yet_valid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit is not valid yet."
+
+[[code]]
+id = "permit_expired"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit has expired or passed its process-local monotonic deadline."
+
+[[code]]
+id = "permit_lifetime_exceeded"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit lifetime or future-issued tolerance exceeds policy."
+
+[[code]]
+id = "permit_revoked"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit was revoked before its effect began."
+
+[[code]]
+id = "permit_replayed"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit nonce was already consumed."
+
+[[code]]
+id = "permit_wrong_issuer_session"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit belongs to another or expired issuer process session."
+
+[[code]]
+id = "permit_wrong_operation"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit does not authorize the requested operation kind."
+
+[[code]]
+id = "permit_wrong_audience"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit was issued to a different owning provider."
+
+[[code]]
+id = "permit_wrong_machine"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit is bound to a different machine identity."
+
+[[code]]
+id = "permit_wrong_principal"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit is bound to a different approving principal or application session."
+
+[[code]]
+id = "permit_wrong_provider"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit provider identities or revisions do not match current providers."
+
+[[code]]
+id = "permit_wrong_plan"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit is bound to a different operation plan or plan digest."
+
+[[code]]
+id = "permit_wrong_policy"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit policy revision or digest is no longer current."
+
+[[code]]
+id = "permit_wrong_evidence"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit evidence digest is no longer current."
+
+[[code]]
+id = "permit_wrong_resource"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The operation permit contains a missing, additional, or differently scoped resource."
+
+[[code]]
+id = "permit_resource_stale"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "A provider-observed resource identity changed after permit review."
+
+[[code]]
+id = "permit_effect_scope_mismatch"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit effect set differs from the exact reviewed effect set."
+
+[[code]]
+id = "permit_capability_scope_mismatch"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit capability set differs from the exact reviewed capability set."
+
+[[code]]
+id = "permit_intent_mismatch"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit launch intent differs from the exact reviewed intent."
+
+[[code]]
+id = "permit_isolation_mismatch"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit isolation mode differs from the exact reviewed mode."
+
+[[code]]
+id = "permit_resource_set_not_closed"
+severity = "blocked"
+effect = "none"
+retryable = false
+message = "The operation permit resource set is duplicate, wildcarded, empty, or otherwise not exact and closed."

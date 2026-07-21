@@ -1,0 +1,16 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_blocker.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Factorio instance blocker",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "code": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "dimension": {"type": "string", "minLength": 1},
+    "reason": {"type": "string", "minLength": 1},
+    "detail": {"type": "string"},
+    "recoverable": {"type": "boolean"},
+    "safe_next_action": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}
+  },
+  "required": ["code", "dimension", "reason", "detail", "recoverable", "safe_next_action"]
+}

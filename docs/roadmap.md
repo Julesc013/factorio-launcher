@@ -4,20 +4,24 @@ FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
-## Current Status and Authority Gate
+## Current Product Sequence
 
-R3.7 is complete. The frozen H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the next authority gate is **H1**.
+The active phase is **hermetic_standalone_play_policy** and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`.
 
-- H1 Pass may create a separate R3.8 execution-candidate branch.
-- H1 Fail routes to a narrow isolation-repair WorkUnit.
-- H1 Inconclusive routes to improved observation and a repeat.
+1. Complete `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`.
+2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.
+3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.
+4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.
+5. Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`, then implement `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01` and record `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`; keep Steam-aware Play independent.
+6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.
+7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.
+8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.
+9. Deepen portable instance reconstruction, permit-backed managed install reconciliation, content preparation, and host repair from observed player needs.
+10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.
 
-The human-reviewed H1 verdict for the Steam-backed route is **Fail**.
-The narrow isolation repair is `closed` at dev integration `f10aef03517a86a7c9d6afaf8b75c19549b6fa51`; Steam Cloud remains a protected external domain.
-A standalone/manual distribution must receive its own revision-pinned reviewed H1 Pass before an R3.8 execution-candidate WorkUnit can open.
-M1 fixture-backed managed setup is complete. Ordinary live-target setup apply remains unavailable.
-Execution, Safe beta, networking, credentials, server processes, daemon publication, signing, and publication remain unavailable.
-Truth/conformance and public-boundary hardening may continue without changing the frozen H1 runtime.
+The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.
+The installation model is accepted read-only infrastructure for the selected local standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,
+server processes, daemon publication, signing, and publication remain unavailable.
 <!-- FACMAN-PROJECT-STATUS:END -->
 
 ## Historical R3.6 - Real-World Product Readiness

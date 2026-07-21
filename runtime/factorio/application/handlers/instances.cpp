@@ -10,6 +10,8 @@
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_instance_lifecycle.h"
+#include "flb_factorio_instance_model.h"
+#include "flb_factorio_local_data_import.h"
 
 #include <filesystem>
 #include <utility>
@@ -43,6 +45,8 @@ bool load_install(ApplicationContext& context, const std::string& id, discovery:
     install.last_verification_identity = record.value().last_verification_identity;
     install.state_revision = record.value().state_revision;
     install.verification_status = record.value().verification_status;
+    discovery::classify_install_isolation(install);
+    discovery::classify_install_layout(install);
     return true;
 }
 
@@ -125,6 +129,23 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
     if (!load_install(context, instance.install_ref.str(), install)) return refused(
         safety_refusal("instances.create", "unknown_install", "Install reference is not registered", instance.install_ref.str(), true),
         "unknown_install", "Install reference is not registered");
+    fs::path source_data_root;
+    if (!request.source_data_root.empty()) {
+        std::error_code source_error;
+        source_data_root = fs::absolute(
+            facman::platform::path_from_utf8(request.source_data_root), source_error).lexically_normal();
+        const bool same_install = !source_error && fs::equivalent(source_data_root, install.root, source_error);
+        std::string link_detail;
+        if (source_error || !same_install ||
+            facman::base::path_crosses_link_or_reparse_point(source_data_root, link_detail)) {
+            return refused(
+                safety_refusal("instances.create", "local_data_import_source_refused",
+                    "Player data may only be imported from the selected registered installation root",
+                    request.source_data_root, false),
+                "local_data_import_source_refused",
+                "Player data import source does not match the selected installation root");
+        }
+    }
     auto target = facman::base::managed_directory(context.workspace(), "instances", instance.id.str());
     if (!target.ok()) return refused(
         safety_refusal("instances.create", target.code, "Instance id cannot be used as a managed path", target.detail, false),
@@ -148,6 +169,7 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
     transaction.command_id = "instance.create";
     transaction.target = target.path;
     transaction.sources = {install.root};
+    if (!source_data_root.empty()) transaction.sources.push_back(source_data_root);
     transaction.staging_roots = {staging};
     transaction.commit_strategy = "destination_volume_stage_then_atomic_no_replace";
     auto started = transactions::TransactionSession::begin(context.workspace(), std::move(transaction));
@@ -169,6 +191,20 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
         "recovery_write_refused", session.detail());
     const char* dirs[] = {"config", "mods", "saves", "scenarios", "script-output", "logs", "crash", "exports", "cache", "locks"};
     for (const char* dir : dirs) fs::create_directories(staging / dir);
+    if (!source_data_root.empty()) {
+        auto imported = lifecycle::import_local_player_data(source_data_root, staging);
+        if (!imported) {
+            std::string cleanup;
+            (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup);
+            session.failed(imported.error().message);
+            return refused(
+                safety_refusal("instances.create", imported.error().code,
+                    "Local Factorio player data could not be preserved",
+                    imported.error().detail, true),
+                imported.error().code,
+                imported.error().message);
+        }
+    }
     launch::InstanceLaunchRef launch_instance {instance.id.str(), instance.profile, instance.root, "gui", {}};
     launch::InstallLaunchRef launch_install {
         install.root,
@@ -179,8 +215,25 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
         install.strict_isolation_eligibility,
         install.external_state_domains,
     };
+    std::string effective_config = launch::effective_config_ini(launch_instance, launch_install);
+    if (!source_data_root.empty()) {
+        auto merged = lifecycle::merge_imported_config_settings(
+            source_data_root / "config" / "config.ini", effective_config);
+        if (!merged) {
+            std::string cleanup;
+            (void)facman::base::remove_owned_staging_tree(staging, ".facman-staging.v1", cleanup);
+            session.failed(merged.error().message);
+            return refused(
+                safety_refusal("instances.create", merged.error().code,
+                    "Imported Factorio settings could not be reconfigured for the isolated instance",
+                    merged.error().detail, true),
+                merged.error().code,
+                merged.error().message);
+        }
+        effective_config = merged.take_value();
+    }
     const bool staged = facman::base::write_text_new_atomic(
-            staging / "config" / "config.ini", launch::effective_config_ini(launch_instance, launch_install), error) &&
+            staging / "config" / "config.ini", effective_config, error) &&
         facman::base::write_text_new_atomic(staging / "instance.v1.json", instance_json(instance), error);
     if (!staged || !session.staged("instance_files_staged") ||
         !session.verified("instance_configuration_verified") ||
@@ -207,6 +260,16 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
 ApplicationResult inspect_instance(ApplicationContext& context, const InspectInstanceRequest& request)
 {
     return lifecycle_result("instances.inspect", lifecycle::inspect(context.workspace(), request));
+}
+
+ApplicationResult describe_instance(ApplicationContext& context, const InstanceProjectionRequest& request)
+{
+    return lifecycle_result("instances.describe", lifecycle::describe_instance(context.workspace(), request));
+}
+
+ApplicationResult readiness_instance(ApplicationContext& context, const InstanceProjectionRequest& request)
+{
+    return lifecycle_result("instances.readiness", lifecycle::instance_readiness(context.workspace(), request));
 }
 
 ApplicationResult verify_instance(ApplicationContext& context, const InspectInstanceRequest& request)

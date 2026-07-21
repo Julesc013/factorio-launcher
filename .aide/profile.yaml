@@ -1,6 +1,6 @@
 schema_version: aide.profile.template.v0
 profile_id: factorio-launcher
-project_name: FLaunch / factorio-launcher
+project_name: FacMan / factorio-launcher
 generated_from: aide-lite-pack-v0
 status: target_initialized
 purpose: >
@@ -8,29 +8,39 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: r3.8-repair-closed-h1-fail
+  phase: hermetic-standalone-play-policy
   primary_goal: >
-    Preserve the completed R3.7 non-execution product and exact H1 candidate,
-    retain the human-reviewed Steam-backed H1 Fail, and bind the closed R3.8
-    external-state isolation repair without promoting execution.
+    Freeze the exact standalone Factorio Play-to-menu candidate, protected and
+    writable roots, evidence, interruption matrix, observation method, and
+    human verdict law without issuing a permit or launching a process.
   next_task: >
-    No WorkUnit is active after closing FACMAN-R3.8-STEAM-EXTERNAL-STATE-ISOLATION-REPAIR-01.
-    M1 may open independently for fixture-backed local portable setup, while the
-    Steam-backed Fail remains operator-owned and a standalone H1 retest still
-    requires another human verdict.
+    Use the accepted InstanceSpec, InstanceBinding, and InstanceReadiness to
+    review and freeze one exact non-Steam standalone candidate class with
+    menu as the default and only candidate launch intent, complete resource and
+    protected-root evidence, explicit interruption cases, and separate Pass,
+    Fail, and Inconclusive human criteria. Follow with a separately reviewed
+    implementation candidate and a separately reviewed operator verdict.
   authoritative_command_slice:
-    - install_refs.scan
-    - install_refs.import
-    - install_refs.inspect
-    - instance.create
+    - installs.scan
+    - installs.import
+    - installs.inspect
+    - installs.describe
+    - installs.reconcile.plan
+    - instances.create
+    - instances.describe
+    - instances.readiness
     - launch_plan.build
     - launch_plan.preflight
     - run.preview
     - diagnostics.export
   quarantined_capabilities:
-    - run.execute
-    - setup.mutation
-    - network.access
+    - launch.execute.instance_isolated
+    - launch.execute.hermetic
+    - process.execute
+    - install.existing.adoption.apply
+    - network.mod_portal.read
+    - credential.factorio.read
+    - release.publish
   evidence_authorities:
     workspace_lock: release/index/workspace_lock.v1.toml
     threat_model: docs/architecture/threat_model.md
@@ -40,7 +50,7 @@ deferred_surfaces:
   - Gateway forwarding, provider/model calls, UI, runtime, and autonomous loops remain deferred.
   - Native GUI package/runtime promotion remains deferred beyond current WinForms client and AppKit compile proof.
   - Universal setup and universal launcher are sibling repos, not Factorio subtrees.
-  - Real Factorio execution remains unavailable until operator-supplied isolation proof.
+  - Real Factorio execution remains unavailable until the execution foundation and one reviewed isolation gate pass.
   - Diagnostic export remains backend-authoritative; generated desktop forms do not own export behavior.
 runtime:
   gateway_forwarding: deferred
@@ -66,8 +76,12 @@ safety_invariants:
   - no ownership bypass
   - no passwords or tokens in manifests
   - no silent writes to the default Factorio data directory
+  - Steam-aware Play must disclose enumerated Steam-owned external-state domains
+  - hermetic Play fails on any persistent change outside the authorised workspace
   - dry-run launch plan by default
   - install mutation belongs to Universal Setup
+  - install registration and legacy managed text never grant mutation authority
+  - in-place authority conversion is refused; managed replacement uses a distinct staged target
   - cross-product orchestration belongs to Universal Launcher
 local_state:
   root: .aide.local/

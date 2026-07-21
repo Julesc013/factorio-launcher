@@ -1,0 +1,18 @@
+{
+  "$id": "https://facman.invalid/schema/common/permit_validation_result.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Operation permit validation result",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "common.permit_validation_result.v1"},
+    "status": {"enum": ["accepted", "refused"]},
+    "code": {"type": ["string", "null"], "pattern": "^[a-z][a-z0-9_]*$"},
+    "permit_id": {"type": ["string", "null"]},
+    "claims_digest": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "consumer_provider_id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{2,127}$"},
+    "consumed": {"const": false},
+    "recovery_action": {"enum": ["none", "review_again", "regenerate_plan", "recompute_readiness", "reauthenticate", "restart_operation", "unsupported_operation"]}
+  },
+  "required": ["schema", "status", "code", "permit_id", "claims_digest", "consumer_provider_id", "consumed", "recovery_action"]
+}

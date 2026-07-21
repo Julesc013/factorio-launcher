@@ -1,0 +1,14 @@
+command_id = "installs.reconcile.plan"
+cli = "facman installs reconcile plan <install-id> [--version <v>] [--source-ref <ref>] [--target <path>] [--management <mode>] [--deployment-style <style>] [--data-policy <policy>] [--integration <mode>] [--update-policy <policy>] --json"
+effects = ["workspace_read"]
+request_schema = "contracts/schema/command/installs.reconcile.plan.request.v1.schema.json"
+response_schema = "contracts/schema/factorio/factorio_install_reconciliation_plan.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = true
+executes_process = false
+mutates_workspace = false
+availability = "implemented"
+golden_success = "tests/golden/commands/installs.reconcile.plan.success.json"
+golden_refusal = "tests/golden/commands/installs.reconcile.plan.refusal.json"

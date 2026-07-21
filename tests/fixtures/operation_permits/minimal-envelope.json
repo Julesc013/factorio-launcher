@@ -1,0 +1,63 @@
+{
+  "schema": "common.operation_permit_envelope.v1",
+  "claims": {
+    "schema": "common.operation_permit_claims.v1",
+    "canonicalization_version": "facman.sorted-json.v1",
+    "permit_id": "permit-11111111111111111111111111111111",
+    "issuer_session_id": "session-22222222222222222222222222222222",
+    "operation": {
+      "kind": "foundation.test-effect",
+      "launch_intent": null,
+      "isolation_mode": null
+    },
+    "plan": {
+      "plan_id": "foundation-plan-v1",
+      "plan_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "audience": {
+      "provider_id": "foundation.effect-provider",
+      "provider_revision": "foundation-provider.v1"
+    },
+    "resources": [
+      {
+        "resource_kind": "foundation.instance",
+        "role": "target",
+        "logical_id": "instance:test",
+        "current_identity_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "owning_provider": {
+          "provider_id": "foundation.effect-provider",
+          "provider_revision": "foundation-provider.v1"
+        },
+        "permitted_effects": ["workspace_read"]
+      }
+    ],
+    "effects": ["workspace_read"],
+    "required_capabilities": ["foundation.test.inspect"],
+    "machine_binding_id": "machine:test-fixture",
+    "principal": {
+      "provider_id": "local.fixture",
+      "principal_id": "principal:test",
+      "application_session_id": "application-session:test"
+    },
+    "evidence_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "policy": {
+      "policy_revision": "foundation-permit-policy.v1",
+      "policy_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    "provider_revisions": [
+      {
+        "provider_id": "foundation.effect-provider",
+        "provider_revision": "foundation-provider.v1"
+      }
+    ],
+    "issued_at_unix_seconds": 1000,
+    "not_before_unix_seconds": 1000,
+    "expires_at_unix_seconds": 1060,
+    "nonce": "nonce-33333333333333333333333333333333"
+  },
+  "claims_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "authenticator": {
+    "algorithm": "hmac-sha256.process.v1",
+    "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  }
+}

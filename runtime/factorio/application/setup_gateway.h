@@ -6,6 +6,7 @@
 
 #include "fl_result.h"
 #include "flb_factorio_setup_recipe.h"
+#include "application_configuration.h"
 
 #include <cstdint>
 #include <filesystem>
@@ -68,7 +69,7 @@ public:
     virtual facman::core::Result<SetupRefusal> uninstall_install(const std::string& install_id) = 0;
 };
 
-std::unique_ptr<SetupGateway> make_setup_gateway();
+std::unique_ptr<SetupGateway> make_setup_gateway(const SetupConfiguration& configuration = {});
 
 } // namespace facman::factorio::application
 

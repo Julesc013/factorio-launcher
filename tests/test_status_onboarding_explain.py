@@ -29,7 +29,10 @@ class StatusOnboardingExplainTests(unittest.TestCase):
             workspace = Path(temporary) / "workspace"
             status = self.invoke_json(workspace, ["workspace", "status"])
             self.assertEqual(status["command"], "workspace.status")
-            self.assertEqual(status["observations"]["execution_authority"], "blocked_pending_h1_h3")
+            self.assertEqual(
+                status["observations"]["execution_authority"],
+                "blocked_pending_real_play_gate",
+            )
             self.assertEqual(status["observations"]["install_count"], 0)
             with (Path(__file__).resolve().parents[1] / "release/index/workspace_lock.v1.toml").open("rb") as handle:
                 lock = tomllib.load(handle)
@@ -43,8 +46,12 @@ class StatusOnboardingExplainTests(unittest.TestCase):
             self.assertFalse(workspace.exists())
 
             capabilities = self.invoke_json(workspace, ["capabilities", "inspect"])
-            run = next(item for item in capabilities["observations"]["capabilities"] if item["command"] == "run.execute")
-            self.assertEqual(run["availability"], "human_gated")
+            hermetic = next(
+                item
+                for item in capabilities["observations"]["capabilities"]
+                if item["capability"] == "launch.execute.hermetic"
+            )
+            self.assertEqual(hermetic["status"], "unavailable")
             code, stdout, stderr = invoke(["--workspace", str(workspace), "workspace", "status"])
             self.assertEqual(code, 0, stderr or stdout)
             self.assertIn("workspace.status\nStatus: warning", stdout)

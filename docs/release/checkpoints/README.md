@@ -3,10 +3,42 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The accepted non-execution product wave is `m2`. The exact H1 candidate is `eb629caaec9d62536a272336e940c0d3003fdaae` and the operator verdict remains `Fail`.
+The active product phase is `hermetic_standalone_play_policy` and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The evidence-only
+[`PR #34 Gate 0 dev integration`](pr-34-gate-0-dev-integration.md) binds the
+five-slice review, exact task-head workflows, clean three-repository
+reproduction, reviewed merge to `dev`, and exact merged-dev workflows and
+reproduction. It promotes only current integrated development-state truth;
+execution, installation apply, host mutation, playability, signing, and
+publication remain unavailable.
+
+The bounded
+[`Gate 1 installation model v2 read-only closeout`](gate1-installation-model-v2-readonly-closeout.md)
+binds PR #37, evidence-bound deterministic reconciliation identity, canonical
+plan effects, explicit source trust, zero-write proof, exact merged-`dev`
+workflows, and a clean pinned three-repository reconstruction. It transfers the
+remaining managed lifecycle to a separate future WorkUnit and activates the
+minimal read-only Instance slice without adding apply or execution authority.
+
+The bounded
+[`Gate 2 instance specification and readiness closeout`](gate2-instance-spec-and-readiness-closeout.md)
+binds PRs #39 and #40, portable and machine-local instance projections,
+menu-first readiness, deterministic component digests, zero-write proof, exact
+merged-`dev` workflows, and a clean pinned three-repository reconstruction. It
+activates OperationPermit contract work while leaving permit issuance,
+preparation, execution, signing, publication, and `main` unpromoted.
+
+The infrastructure-only
+[`Gate 3 OperationPermit closeout`](gate3-operation-permit-closeout.md) binds PR
+#42, authenticated canonical claims, exact closed resource scope, separate
+validation and one-time provider consumption, replay/time/resource-drift proof,
+exact merged-`dev` workflows, and a clean pinned three-repository
+reconstruction. It activates the policy-only hermetic standalone Play WorkUnit
+without exposing permit issuance, process execution, or any other authority.
 
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),
@@ -141,6 +173,16 @@ wave complete from merged `dev` revision `5250db1`, preserves every higher-risk
 exclusion, and freezes M3 as read-only and plan-only. Exact-`dev`, canonical
 `main`, public-integration, and post-promotion `dev` synchronization evidence
 remain pending.
+
+The evidence-only
+[`M2 public integration proof`](m2-public-integration-proof.md) binds the
+MachinePass closeout, exact-`dev` workflows, reviewed promotion PR #30,
+canonical `main` revision `bd064295`, and its four exact successful workflow
+families. PR #31 accepted the public record and PR #32 synchronized canonical
+ancestry back into `dev`; exact synchronized-`dev` workflows passed at
+`51977de`. The M2 closeout WorkUnit is closed. M3 is active only for read-only
+existing-portable inspection and plan generation, with every apply, deletion,
+mutation, Steam, execution, and external authority still excluded.
 
 Earlier checkpoints remain revision-pinned historical evidence:
 

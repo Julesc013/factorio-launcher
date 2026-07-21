@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
 project(facman VERSION 0.1.0 LANGUAGES C CXX)
 
+execute_process(
+  COMMAND git rev-parse --short=12 HEAD
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+  OUTPUT_VARIABLE FACMAN_SOURCE_REVISION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET)
+if(NOT FACMAN_SOURCE_REVISION)
+  set(FACMAN_SOURCE_REVISION "unknown")
+endif()
+
 include(cmake/FacManOptions.cmake)
 include(cmake/FacManPolicies.cmake)
 

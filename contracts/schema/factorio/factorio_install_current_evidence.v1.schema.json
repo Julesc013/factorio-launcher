@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_current_evidence.v1.schema.json",
+  "title": "Factorio Installation Current Evidence",
+  "type": "object",
+  "required": ["schema", "install_id", "product_id", "version", "source", "deployment", "ownership_and_authority", "data_policy", "integration", "health", "provenance", "filesystem", "dependencies"],
+  "properties": {
+    "schema": { "const": "factorio.install_current_evidence.v1" },
+    "install_id": { "type": "string", "minLength": 1 },
+    "product_id": { "const": "factorio" },
+    "version": { "type": "string" },
+    "source": { "type": "object" },
+    "deployment": { "type": "object" },
+    "ownership_and_authority": { "type": "object" },
+    "data_policy": { "type": "object" },
+    "integration": { "type": "object" },
+    "health": { "type": "object" },
+    "provenance": { "type": "object" },
+    "filesystem": { "type": "object" },
+    "dependencies": {
+      "type": "object",
+      "required": ["installation_record_revision", "installation_root_identity", "executable_identity", "verification_identity", "setup_state_identity", "integration_identity", "filesystem_volume_identity", "provider_revision", "captured_at"],
+      "properties": {
+        "installation_record_revision": { "type": "string", "minLength": 1 },
+        "installation_root_identity": { "type": "string", "minLength": 1 },
+        "executable_identity": { "type": "string", "minLength": 1 },
+        "verification_identity": { "type": "string", "minLength": 1 },
+        "setup_state_identity": { "type": "string", "minLength": 1 },
+        "integration_identity": { "type": "string", "minLength": 1 },
+        "filesystem_volume_identity": { "type": "string", "minLength": 1 },
+        "provider_revision": { "type": "string", "minLength": 1 },
+        "captured_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
