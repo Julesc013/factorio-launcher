@@ -504,11 +504,77 @@
     "status": "planned_parallel_support_lane",
     "workflow_health_model": "versioned_requirement_profiles_no_global_health_score"
   },
+  "instance_product_program": {
+    "account_binding_types": [
+      "PlatformAccountBinding",
+      "FactorioAccountBinding",
+      "PlayerIdentityProfile",
+      "ServerCredentialBinding"
+    ],
+    "architecture": "docs/architecture/instance_product_model.md",
+    "composition": [
+      "installation",
+      "instance_data_root",
+      "template_provenance",
+      "pinned_preset",
+      "ordered_profiles",
+      "modset_spec",
+      "modset_lock",
+      "account_bindings",
+      "settings",
+      "saves",
+      "resources",
+      "launch_intent"
+    ],
+    "conflicts_silently_resolved": false,
+    "credential_values_in_instance": false,
+    "default_launch_intent": "menu",
+    "foreign_installation_mutation": false,
+    "launch_intents": [
+      "menu",
+      "continue_last",
+      "load_save",
+      "new_game",
+      "map_editor",
+      "connect_server",
+      "start_server",
+      "benchmark",
+      "instrumented_dev"
+    ],
+    "machine_local_record": "InstanceBinding",
+    "mod_content_records": [
+      "ModsetSpec",
+      "ModsetLock",
+      "ModpackBundle"
+    ],
+    "next_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+    "portable_factorio_binaries": false,
+    "portable_record": "InstanceSpec",
+    "preparation_model": "federated_typed_subplans_by_owner",
+    "presets_grant_authority": false,
+    "profile_families": [
+      "LaunchProfile",
+      "GraphicsProfile",
+      "AudioProfile",
+      "InterfaceProfile",
+      "MultiplayerProfile",
+      "ServerProfile",
+      "NewGameProfile",
+      "BackupProfile"
+    ],
+    "readiness_model": "computed_projection_not_authoritative_state",
+    "runtime_authority": false,
+    "save_role": "optional_content_within_instance",
+    "status": "planned_after_installation_model_v2_closeout",
+    "templates_are_initializers": true,
+    "ui_aggregate": "InstanceView",
+    "world_save_work_unit": "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01"
+  },
   "known_blockers": [
     "The local Wube-signed Factorio 2.0.77 conversion succeeded, but FacMan does not yet expose authenticated source inspection or transaction-backed lifecycle apply as product commands.",
     "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
     "Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.",
-    "The current desktop UI exposes commands rather than the first-run world-to-Play journey.",
+    "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
@@ -1235,7 +1301,7 @@
     "opened_after_m2_dev_revision": "51977de8120202958fc35776d284077b1fc027d3",
     "publication": false,
     "registry": false,
-    "resume_after": "FACMAN-WORLD-CENTRIC-ALPHA-01",
+    "resume_after": "FACMAN-INSTANCE-CENTRIC-ALPHA-01",
     "run_execute": false,
     "scope": "read_only_and_plan_only",
     "status": "authorized_backlog_after_playable_alpha",
@@ -1281,7 +1347,7 @@
     "harmless_reads_require_permit": false,
     "permit_issuance_authority": false,
     "provider_revalidation_required": true,
-    "status": "planned_after_world_readiness",
+    "status": "planned_after_instance_readiness",
     "work_unit": "FACMAN-OPERATION-PERMIT-01"
   },
   "platforms": [
@@ -1398,18 +1464,18 @@
   ],
   "product": {
     "canonical_integration": false,
-    "charter": "Choose a world, press Play, and remain in control of everything that changes.",
+    "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
     "current_work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
-    "golden_journey": "find Factorio -> choose or create a world -> review readiness -> Play -> exit -> relaunch",
+    "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-WORLD-SPEC-AND-READINESS-01",
+    "next_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
     "phase": "multi_version_install_lifecycle",
     "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
-    "primary_persona": "A Factorio player who wants multiple safe, reproducible worlds without managing launcher internals.",
+    "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
     "truth_scope": "dev_integrated_reviewed_reproduced"
   },
   "product_version": "0.1.0-dev",
@@ -1511,17 +1577,5 @@
     "release_policy_run": "29299286894",
     "schema_check_run": "29297933368",
     "security_policy_run": "29299245082"
-  },
-  "world_product_program": {
-    "architecture": "docs/architecture/world_product_model.md",
-    "machine_local_record": "WorldBinding",
-    "next_work_unit": "FACMAN-WORLD-SPEC-AND-READINESS-01",
-    "portable_factorio_binaries": false,
-    "portable_record": "WorldSpec",
-    "preparation_model": "federated_typed_subplans_by_owner",
-    "readiness_model": "computed_projection_not_authoritative_state",
-    "runtime_authority": false,
-    "status": "planned_after_installation_model_v2_closeout",
-    "ui_aggregate": "WorldView"
   }
 }

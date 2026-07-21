@@ -109,7 +109,7 @@ def collect() -> dict[str, Any]:
         "product": status["product"],
         "readiness": status["readiness"],
         "execution_foundation": status["execution_foundation"],
-        "world_product_program": status["world_product_program"],
+        "instance_product_program": status["instance_product_program"],
         "operation_permit_program": status["operation_permit_program"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -377,15 +377,23 @@ def markdown(data: dict[str, Any]) -> str:
             for mode in data["execution_modes"]
         ],
         "",
-        "## World product programme",
+        "## Instance product programme",
         "",
-        f"- status: `{data['world_product_program']['status']}`;",
-        f"- next WorkUnit: `{data['world_product_program']['next_work_unit']}`;",
-        f"- portable record: `{data['world_product_program']['portable_record']}`;",
-        f"- machine-local record: `{data['world_product_program']['machine_local_record']}`;",
-        f"- readiness: `{data['world_product_program']['readiness_model']}`;",
-        f"- preparation: `{data['world_product_program']['preparation_model']}`;",
-        f"- runtime authority: `{str(data['world_product_program']['runtime_authority']).lower()}`;",
+        f"- status: `{data['instance_product_program']['status']}`;",
+        f"- next WorkUnit: `{data['instance_product_program']['next_work_unit']}`;",
+        f"- portable record: `{data['instance_product_program']['portable_record']}`;",
+        f"- machine-local record: `{data['instance_product_program']['machine_local_record']}`;",
+        f"- readiness: `{data['instance_product_program']['readiness_model']}`;",
+        f"- preparation: `{data['instance_product_program']['preparation_model']}`;",
+        f"- default launch intent: `{data['instance_product_program']['default_launch_intent']}`;",
+        f"- launch intents: `{', '.join(data['instance_product_program']['launch_intents'])}`;",
+        f"- save role: `{data['instance_product_program']['save_role']}`;",
+        f"- profile families: `{', '.join(data['instance_product_program']['profile_families'])}`;",
+        f"- account bindings: "
+        f"`{', '.join(data['instance_product_program']['account_binding_types'])}`;",
+        f"- secondary save/world WorkUnit: "
+        f"`{data['instance_product_program']['world_save_work_unit']}`;",
+        f"- runtime authority: `{str(data['instance_product_program']['runtime_authority']).lower()}`;",
         "",
         "## Operation-permit programme",
         "",
@@ -477,8 +485,10 @@ def readme_status(data: dict[str, Any]) -> str:
         "",
         f"> {data['product']['charter']}",
         "",
-        f"The golden journey is `{data['product']['golden_journey']}`. M3 existing-portable adoption is "
-        "authorised backlog after the playable alpha, not the current critical path.",
+        "The golden journey is:",
+        f"`{data['product']['golden_journey']}`.",
+        "M3 existing-portable adoption is authorised backlog after the playable alpha, not the "
+        "current critical path.",
         f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
@@ -491,8 +501,9 @@ def readme_status(data: dict[str, Any]) -> str:
         f"and release authenticity `{data['readiness']['release_authenticity']}`.",
         "Historical M2 setup proof remains preserved and does not promote execution, existing-install "
         "adoption, network, credential, signing, or publication authority.",
-        "After installation-model-v2 closeout, the primary path is portable WorldSpec, local WorldBinding, "
-        "computed readiness, operation-bound permits, and the hermetic standalone Play gate.",
+        "After installation-model-v2 closeout, the primary path is portable InstanceSpec,",
+        "local InstanceBinding, computed readiness, operation-bound permits, and the hermetic "
+        "standalone Play-to-menu gate. Saves/worlds remain optional instance content.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -521,13 +532,14 @@ def roadmap_status(data: dict[str, Any]) -> str:
         first_step,
         "2. Close the additive installation-model-v2 and deterministic reconciliation-plan proof.",
         "3. Preserve the accepted Gate 0 dev-integration proof and defer general installation mutation to later permit-backed lifecycle work.",
-        "4. Run `FACMAN-WORLD-SPEC-AND-READINESS-01`; separate portable desired state, local bindings, computed readiness, and task-oriented views.",
+        "4. Run `FACMAN-INSTANCE-SPEC-AND-READINESS-01`; compose installation, profile, preset provenance, modpack, account reference, settings, resources, local binding, and computed readiness.",
         "5. Run `FACMAN-OPERATION-PERMIT-01`; bind unsafe authority to one reviewed plan and require provider-side revalidation.",
         "6. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.",
-        "7. Require one passing, human-reviewed Play route before `FACMAN-WORLD-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
+        "7. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
         "8. In parallel after closeout, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
-        "9. Deepen portable world reconstruction, managed install reconciliation, content preparation, and host repair from observed player needs.",
-        "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
+        "9. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
+        "10. Deepen portable instance reconstruction, managed install reconciliation, content preparation, and host repair from observed player needs.",
+        "11. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new "
         "Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.",
@@ -636,7 +648,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "checkpoint": "multi-version-install-lifecycle",
             "active": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
             "last_closed": "FACMAN-EXECUTION-FOUNDATION-01",
-            "next": "FACMAN-WORLD-SPEC-AND-READINESS-01",
+            "next": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
             "safety": "execution_foundation_proven_real_play_unproven",
             "execution_reason": "real_play_gate_not_passed",
         },
@@ -701,23 +713,49 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "full_verification": "pass",
     }:
         problems.append("execution foundation evidence must remain complete, bounded, and non-authoritative")
-    world_program = status.get("world_product_program", {})
-    if world_program != {
+    instance_program = status.get("instance_product_program", {})
+    if instance_program != {
         "status": "planned_after_installation_model_v2_closeout",
-        "architecture": "docs/architecture/world_product_model.md",
-        "next_work_unit": "FACMAN-WORLD-SPEC-AND-READINESS-01",
-        "portable_record": "WorldSpec",
-        "machine_local_record": "WorldBinding",
+        "architecture": "docs/architecture/instance_product_model.md",
+        "next_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+        "portable_record": "InstanceSpec",
+        "machine_local_record": "InstanceBinding",
         "readiness_model": "computed_projection_not_authoritative_state",
-        "ui_aggregate": "WorldView",
+        "ui_aggregate": "InstanceView",
         "preparation_model": "federated_typed_subplans_by_owner",
+        "default_launch_intent": "menu",
+        "save_role": "optional_content_within_instance",
+        "composition": [
+            "installation", "instance_data_root", "template_provenance", "pinned_preset",
+            "ordered_profiles", "modset_spec", "modset_lock", "account_bindings",
+            "settings", "saves", "resources", "launch_intent",
+        ],
+        "launch_intents": [
+            "menu", "continue_last", "load_save", "new_game", "map_editor",
+            "connect_server", "start_server", "benchmark", "instrumented_dev",
+        ],
+        "profile_families": [
+            "LaunchProfile", "GraphicsProfile", "AudioProfile", "InterfaceProfile",
+            "MultiplayerProfile", "ServerProfile", "NewGameProfile", "BackupProfile",
+        ],
+        "account_binding_types": [
+            "PlatformAccountBinding", "FactorioAccountBinding", "PlayerIdentityProfile",
+            "ServerCredentialBinding",
+        ],
+        "mod_content_records": ["ModsetSpec", "ModsetLock", "ModpackBundle"],
+        "world_save_work_unit": "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01",
+        "templates_are_initializers": True,
+        "conflicts_silently_resolved": False,
         "portable_factorio_binaries": False,
+        "credential_values_in_instance": False,
+        "presets_grant_authority": False,
+        "foreign_installation_mutation": False,
         "runtime_authority": False,
     }:
-        problems.append("world programme must remain decomposed, portable, and non-authoritative")
+        problems.append("instance programme must remain decomposed, menu-first, portable, and non-authoritative")
     permit_program = status.get("operation_permit_program", {})
     if permit_program != {
-        "status": "planned_after_world_readiness",
+        "status": "planned_after_instance_readiness",
         "work_unit": "FACMAN-OPERATION-PERMIT-01",
         "authority_model": "short_lived_plan_bound_exact_resource_permit",
         "global_admission_is_sole_enforcer": False,
@@ -931,7 +969,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M3 must remain in its phase-appropriate read-only and plan-only state")
     if m3.get("opened_after_m2_dev_revision") != "51977de8120202958fc35776d284077b1fc027d3":
         problems.append("M3 backlog must retain the accepted synchronized M2 dev revision")
-    if m3.get("resume_after") != "FACMAN-WORLD-CENTRIC-ALPHA-01":
+    if m3.get("resume_after") != "FACMAN-INSTANCE-CENTRIC-ALPHA-01":
         problems.append("M3 backlog must resume only after the playable alpha")
     m2_wu1 = status.get("m2_wu1_target_policy", {})
     if m2_wu1.get("status") != "accepted_dev_integration_proof":

@@ -4,7 +4,7 @@ Launch profiles turn user intent into structured Factorio command-line flags.
 
 Initial profiles:
 
-- gui
+- gui (normal menu)
 - load-save
 - multiplayer-connect
 - host-game
@@ -14,6 +14,12 @@ Initial profiles:
 - mod-dev
 - safe-graphics
 - low-vram
+
+This document describes the implemented `LaunchProfile` facet. The target
+instance model adds separate Graphics, Audio, Interface, Multiplayer, Server,
+NewGame, and Backup profile families rather than flattening every setting into
+one launch profile. A future `LaunchIntent` selects the run action; `menu` is
+the default and does not add a save, server, benchmark, or editor target.
 
 Every profile supports a dry-run launch plan. R3.7 stores workspace profiles as
 portable `factorio.launch_profile.v1` documents and layers them over the

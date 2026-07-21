@@ -15,7 +15,7 @@ known_blockers = [
   "The local Wube-signed Factorio 2.0.77 conversion succeeded, but FacMan does not yet expose authenticated source inspection or transaction-backed lifecycle apply as product commands.",
   "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
   "Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.",
-  "The current desktop UI exposes commands rather than the first-run world-to-Play journey.",
+  "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
 ]
@@ -36,12 +36,12 @@ quarantined_capabilities = [
 [product]
 phase = "multi_version_install_lifecycle"
 phase_status = "active"
-primary_persona = "A Factorio player who wants multiple safe, reproducible worlds without managing launcher internals."
-charter = "Choose a world, press Play, and remain in control of everything that changes."
-golden_journey = "find Factorio -> choose or create a world -> review readiness -> Play -> exit -> relaunch"
+primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
+charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
+golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
 current_work_unit = "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01"
-next_work_unit = "FACMAN-WORLD-SPEC-AND-READINESS-01"
+next_work_unit = "FACMAN-INSTANCE-SPEC-AND-READINESS-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
@@ -58,20 +58,46 @@ release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
 user_validation = "not_started"
 
-[world_product_program]
+[instance_product_program]
 status = "planned_after_installation_model_v2_closeout"
-architecture = "docs/architecture/world_product_model.md"
-next_work_unit = "FACMAN-WORLD-SPEC-AND-READINESS-01"
-portable_record = "WorldSpec"
-machine_local_record = "WorldBinding"
+architecture = "docs/architecture/instance_product_model.md"
+next_work_unit = "FACMAN-INSTANCE-SPEC-AND-READINESS-01"
+portable_record = "InstanceSpec"
+machine_local_record = "InstanceBinding"
 readiness_model = "computed_projection_not_authoritative_state"
-ui_aggregate = "WorldView"
+ui_aggregate = "InstanceView"
 preparation_model = "federated_typed_subplans_by_owner"
+default_launch_intent = "menu"
+save_role = "optional_content_within_instance"
+composition = [
+  "installation", "instance_data_root", "template_provenance", "pinned_preset",
+  "ordered_profiles", "modset_spec", "modset_lock", "account_bindings",
+  "settings", "saves", "resources", "launch_intent",
+]
+launch_intents = [
+  "menu", "continue_last", "load_save", "new_game", "map_editor",
+  "connect_server", "start_server", "benchmark", "instrumented_dev",
+]
+profile_families = [
+  "LaunchProfile", "GraphicsProfile", "AudioProfile", "InterfaceProfile",
+  "MultiplayerProfile", "ServerProfile", "NewGameProfile", "BackupProfile",
+]
+account_binding_types = [
+  "PlatformAccountBinding", "FactorioAccountBinding", "PlayerIdentityProfile",
+  "ServerCredentialBinding",
+]
+mod_content_records = ["ModsetSpec", "ModsetLock", "ModpackBundle"]
+world_save_work_unit = "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01"
+templates_are_initializers = true
+conflicts_silently_resolved = false
 portable_factorio_binaries = false
+credential_values_in_instance = false
+presets_grant_authority = false
+foreign_installation_mutation = false
 runtime_authority = false
 
 [operation_permit_program]
-status = "planned_after_world_readiness"
+status = "planned_after_instance_readiness"
 work_unit = "FACMAN-OPERATION-PERMIT-01"
 authority_model = "short_lived_plan_bound_exact_resource_permit"
 global_admission_is_sole_enforcer = false
@@ -723,7 +749,7 @@ publication = false
 [m3_existing_portable_adoption]
 status = "authorized_backlog_after_playable_alpha"
 scope = "read_only_and_plan_only"
-resume_after = "FACMAN-WORLD-CENTRIC-ALPHA-01"
+resume_after = "FACMAN-INSTANCE-CENTRIC-ALPHA-01"
 opened_after_m2_dev_revision = "51977de8120202958fc35776d284077b1fc027d3"
 existing_portable_inspection = true
 adoption_plan = true

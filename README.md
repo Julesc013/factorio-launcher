@@ -54,17 +54,20 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `multi_version_install_lifecycle`. **Active WorkUnit:** `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`. **Next:** `FACMAN-WORLD-SPEC-AND-READINESS-01`.
+**Phase:** `multi_version_install_lifecycle`. **Active WorkUnit:** `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`. **Next:** `FACMAN-INSTANCE-SPEC-AND-READINESS-01`.
 
-> Choose a world, press Play, and remain in control of everything that changes.
+> Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
-The golden journey is `find Factorio -> choose or create a world -> review readiness -> Play -> exit -> relaunch`. M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
+The golden journey is:
+`find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
+M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
 This reviewed and reproduced dev-integrated tree enumerates 123 commands, 250 schemas, and 217 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven: Steam-aware `instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because `real_play_gate_not_passed`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
-After installation-model-v2 closeout, the primary path is portable WorldSpec, local WorldBinding, computed readiness, operation-bound permits, and the hermetic standalone Play gate.
+After installation-model-v2 closeout, the primary path is portable InstanceSpec,
+local InstanceBinding, computed readiness, operation-bound permits, and the hermetic standalone Play-to-menu gate. Saves/worlds remain optional instance content.
 The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 Contributor status command: `py -3 tools/project_state.py --summary`.
@@ -191,5 +194,6 @@ Before large native implementation work, review
 
 The active plan lives in [docs/product/master_plan.md](docs/product/master_plan.md)
 and the historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
-The current target is the smallest trustworthy path from choosing a world to
-playing it; managed-install expansion resumes after playable alpha.
+The current target is the smallest trustworthy path from selecting an instance
+to opening Factorio's menu with that environment active; managed-install
+expansion resumes after playable alpha.

@@ -57,31 +57,38 @@ The contract schemas are:
 - `contracts/schema/factorio/factorio_workspace.v1.schema.json`
 - `contracts/schema/factorio/factorio_instance_root.v1.schema.json`
 
-## Planned world portability boundary
+## Planned instance portability boundary
 
 The current workspace layout remains the implemented compatibility contract.
-The next world-centric model will separate portable desired state from local
-resolution rather than treating the entire workspace as one portable object:
+The next instance-centric model will separate portable desired environment
+from local resolution rather than treating the entire workspace as one
+portable object:
 
 ```text
 portable
-  WorldSpec
-  selected saves
-  modset locks and permitted content references
-  profiles, policies, logical IDs, and hashes
+  InstanceSpec
+  resolved preset provenance
+  profiles and setting overrides
+  modpack requirements and exact modset locks
+  selected saves and permitted content references
+  policies, logical IDs, and hashes
 
 machine-local
-  WorldBinding
+  InstanceBinding
   install and execution-environment references
   absolute storage paths
   credential-reference IDs
   derived indexes and readiness caches
 ```
 
+The instance is the runnable aggregate. Saves/worlds are optional content under
+that environment, and `facman play <instance>` opens Factorio's main menu by
+default rather than requiring or implicitly loading a specific save.
+
 Installed Factorio files never establish redistribution rights or entitlement.
 Portable export identifies a required player-owned source when the binary
 cannot legally be included. The detailed planned contract is defined in
-[`world_product_model.md`](../architecture/world_product_model.md).
+[`instance_product_model.md`](../architecture/instance_product_model.md).
 
 Runtime invariant tests now cover:
 

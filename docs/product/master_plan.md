@@ -6,23 +6,28 @@ lives in `release/index/project_status.v2.toml`; historical proof remains in
 
 ## Product outcome
 
-> Choose a world, press Play, and remain in control of everything that changes.
+> FacMan lets players create any number of independent Factorio setups, select
+> one, and launch the normal game as though Factorio had always been installed
+> and configured exactly that way.
 
 The Windows-first golden journey is:
 
 ```text
 find Factorio
-  -> choose or create a world
+  -> create, clone, import, or select an instance
+  -> choose version, profile, preset, modpack, account, settings, and resources
   -> review readiness and isolation
-  -> Play
-  -> save and exit
+  -> Play to the Factorio main menu
+  -> select or create a save inside Factorio
+  -> exit
   -> review the last run
-  -> relaunch
+  -> relaunch the same instance
 ```
 
-Ordinary players see worlds, readiness, Play, recovery, and safe next actions.
-Advanced users retain the complete CLI, TUI, automation contracts, evidence,
-and command explorer.
+Ordinary players see instances, their effective environment, readiness, Play,
+recovery, and safe next actions. Saves/worlds remain optional content inside an
+instance. Advanced users retain the complete CLI, TUI, automation contracts,
+evidence, and command explorer.
 
 ## Product boundaries
 
@@ -45,7 +50,7 @@ Execution has two independent guarantees:
 
 | Mode | Promise | External state | Gate |
 | --- | --- | --- | --- |
-| Instance-isolated | FacMan-owned world data is isolated | Enumerated Steam/platform domains may change after disclosure and acknowledgement | `FACMAN-STEAM-AWARE-PLAY-01` |
+| Instance-isolated | FacMan-owned instance data is isolated | Enumerated Steam/platform domains may change after disclosure and acknowledgement | `FACMAN-STEAM-AWARE-PLAY-01` |
 | Hermetic standalone | No persistent change outside the authorised workspace | Any external change fails the claim | `FACMAN-HERMETIC-STANDALONE-PLAY-01` |
 
 Steam-aware Play is an accepted product mode, not a hermetic claim. FacMan
@@ -60,7 +65,7 @@ Use a statically composed modular monolith:
 CLI / TUI / task UI / advanced command explorer
   -> versioned command boundary
   -> global effect and capability admission
-  -> worlds | onboarding | installs | instances | launch | content | recovery | diagnostics
+  -> instances | onboarding | installs | profiles | presets | modpacks | launch | content | recovery | diagnostics
   -> capability-scoped ports
   -> platform and provider adapters
   -> journals, audit, traces, and claim state
@@ -73,13 +78,19 @@ Every authority-bearing provider independently revalidates the exact plan,
 resource identities, evidence, policy, and short-lived operation permit before
 acting. There is no universal policy god object or long-lived global grant.
 
-`World` is the product and UX aggregate, but persistence remains decomposed:
-portable `WorldSpec`, machine-local `WorldBinding`, computed
-`WorldReadiness`, and a `WorldView` projection with recent operation and
-recovery history. A top-level world preparation plan composes FacMan,
-Universal Launcher, and Universal Setup subplans without becoming a new
-mutation kernel. See
-[`world_product_model.md`](../architecture/world_product_model.md).
+`Instance` is the product and UX aggregate, but persistence remains
+decomposed: portable `InstanceSpec`, machine-local `InstanceBinding`, computed
+`InstanceReadiness`, and an `InstanceView` projection with effective
+configuration plus recent operation/recovery history. An instance composes an
+installation/version, profile, resolved preset provenance, modpack/modset
+lock, account reference, settings, resources, and optional saves. Its default
+launch intent is `menu`; direct save loading is an explicit optional
+intent. Other explicit intents include continue-last, new-game, map-editor,
+connect/start-server, benchmark, and instrumented-development workflows. A
+top-level preparation plan composes FacMan, Universal Launcher,
+credential/platform providers, and Universal Setup subplans without becoming
+a new mutation kernel. See
+[`instance_product_model.md`](../architecture/instance_product_model.md).
 
 Installation lifecycle uses independent source, deployment, ownership,
 authority, data-routing, integration, health, provenance, and filesystem axes.
@@ -143,7 +154,7 @@ Rules:
 - Read supported old workspace state, write only the current version, and
   migrate through inspect, plan, backup, apply, journal, and recovery.
 - Refuse unknown future workspace versions.
-- Prefer stability for the proven world and operation workflows—list, inspect,
+- Prefer stability for the proven instance and operation workflows—list, inspect,
   readiness, prepare, Play, export/import, inspect/resume/rollback, and support
   export—while low-level provider commands may remain experimental.
 
@@ -218,22 +229,35 @@ Exit: a Factorio-shaped fake process can start, run, exit, hang, crash,
 cancel, spawn a child, recover, and audit without false running state or root
 escape. No real Factorio authority is inferred.
 
-### 2a. World specification, binding, and readiness
+### 2a. Instance specification, binding, and readiness
 
-`FACMAN-WORLD-SPEC-AND-READINESS-01`
+`FACMAN-INSTANCE-SPEC-AND-READINESS-01`
 
-- Add portable `WorldSpec` and machine-local `WorldBinding` records.
-- Compute readiness from installation, content, save, environment, launch,
-  operation, and recovery evidence; do not persist readiness as authority.
-- Expose world list, inspect, and readiness with evidence-backed blockers and
-  safe next actions.
-- Compose `WorldView` for task-oriented frontends while preserving the command
-  explorer as the advanced automation surface.
+- Add portable `InstanceSpec` and machine-local `InstanceBinding` records
+  without rewriting the implemented `factorio.instance.v1` compatibility
+  record.
+- Compose installation/version, profile, resolved preset provenance,
+  modpack/modset lock, account reference, settings, resources, and optional
+  saves into one explicit environment.
+- Model typed Launch, Graphics, Audio, Interface, Multiplayer, Server, NewGame,
+  and Backup profiles; distinguish `ModsetSpec`, `ModsetLock`, and
+  `ModpackBundle`; and separate platform, Factorio, player-identity, and server
+  credential bindings.
+- Compute readiness from installation, executable, configuration, content,
+  account, environment, launch, operation, and recovery evidence; do not
+  persist readiness as authority.
+- Expose instance list, inspect, and readiness with evidence-backed blockers
+  and safe next actions.
+- Compose `InstanceView` for task-oriented frontends while preserving the
+  command explorer as the advanced automation surface.
+- Make `menu` the default launch intent. A save, scenario, benchmark,
+  or server target must be explicit and separately validated.
 - Keep canonical human-readable state separate from rebuildable indexes.
 
-Exit: an ordinary player can select a world and understand exactly what is
-ready, what is blocked, who owns the resource, and which typed plan could make
-it playable without any mutation being inferred.
+Exit: an ordinary player can select an instance and understand exactly which
+version, profile, mods, account context, settings, resources, and saves will be
+available; what is blocked; who owns each resource; and which typed plan could
+make the environment playable without mutation or authority being inferred.
 
 ### 2b. Operation-bound authority
 
@@ -257,7 +281,7 @@ After the same reviewed, committed, cleanly reproduced prerequisites, host work
 may proceed independently as `HOST-ENVIRONMENT-CONTRACT-SPINE-01` and
 `HOST-ENVIRONMENT-READONLY-01`. It begins with workflow-specific read-only
 inspection, doctor, support export, and a no-admin Windows Sandbox profile. It
-does not block World, permit, hermetic Play, or alpha work where the selected
+does not block Instance, permit, hermetic Play, or alpha work where the selected
 route does not require a host remedy.
 
 Rollback classes, operation journaling, restart/resume, a one-shot privilege
@@ -269,22 +293,26 @@ privileged host recipes. The complete lane is defined in
 
 Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first gate because a known
 non-Steam 2.0.77 route exists. Preflight the exact executable and effective
-configuration immediately before launch; exercise main menu, load or create,
-save, clean exit, relaunch, crash, cancellation, timeout, child escape,
+configuration immediately before launch; prove the default plan opens the main
+menu without an implicit save target, then exercise load or create, save,
+clean exit, relaunch, crash, cancellation, timeout, child escape,
 concurrent refusal, post-run indexing, and protected-root observation. Record a
 human-reviewed verdict.
 
 `FACMAN-STEAM-AWARE-PLAY-01` remains an independent, weaker-guarantee gate and
 may follow. Only one route must pass before the first controlled playable alpha.
 
-### 4. World-centric playable alpha
+### 4. Instance-centric playable alpha
 
-`FACMAN-WORLD-CENTRIC-ALPHA-01`
+`FACMAN-INSTANCE-CENTRIC-ALPHA-01`
 
-Build the task UI around Worlds, add/import, Make Playable, readiness, Play,
-last run, snapshot, Recovery Center, Installation Library, and the advanced
-command explorer. Every refusal supplies a safe next action and every dangerous
-operation previews effects and recovery disposition.
+Build primary navigation around Instances, Installations, Modpacks, Profiles
+and Presets, Saves and Worlds, Accounts, Backups and Snapshots, Recovery
+Center, Environments, and Advanced. Instance actions include Play, Configure,
+Make Ready, Clone, Snapshot, Export, Repair, and Archive. The Play menu exposes
+main menu, Continue, Load Save, New Game, Map Editor, and Join Server while
+main-menu Play remains prominent. Every refusal supplies a safe next action
+and every dangerous operation previews effects and recovery disposition.
 
 Targets: median download-to-first-play under five minutes, no external guide
 for the golden path, zero data-loss incidents, no silent foreign mutation,
@@ -293,9 +321,14 @@ becomes an architecture input.
 
 ### 5. Parallel value lanes
 
-- **`FACMAN-PORTABLE-WORLD-BUNDLE-01`:** export portable desired state, saves,
-  locks, hashes, and legal resource requirements; import through explicit local
-  rebinding and conflict reporting without credentials or proprietary binaries.
+- **`FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01`:** preserve World as a
+  secondary content lane for portable metadata, version/modset/content
+  compatibility, save import/export, and creating or preparing an instance
+  from a world bundle.
+- **`FACMAN-PORTABLE-INSTANCE-BUNDLE-01`:** export portable instance intent,
+  resolved preset provenance, profiles, modpack requirements, modset locks,
+  selected saves, hashes, and legal resource requirements; import through
+  explicit local rebinding without credential values or proprietary binaries.
 - **`FACMAN-MANAGED-INSTALL-RECONCILIATION-01`:** authenticate selected sources
   and promote side-by-side create, adopt, repair, move, reinstall, update,
   downgrade, detach, and uninstall through Universal Setup one operation at a
@@ -318,11 +351,13 @@ self-update blocks public beta, not the first controlled playable alpha.
 
 ### 7. Trustworthy v1
 
-Ship one proven Play route, isolated worlds, readiness, side-by-side versions,
-local content preparation, snapshots/backups/recovery, managed standalone
-lifecycle, portable reconstruction, diagnostics, signed primary packages, a
-task-oriented GUI, complete CLI, and a stable workflow-contract subset. Never
-silently modify Steam or foreign installations.
+Ship one proven Play-to-menu route, isolated instances, readiness,
+side-by-side versions, reusable profiles/presets, reproducible modpacks and
+modset locks, provider-scoped account references, optional saves/worlds, local
+content preparation, snapshots/backups/recovery, managed standalone lifecycle,
+portable reconstruction, diagnostics, signed primary packages, a task-oriented
+GUI, complete CLI, and a stable workflow-contract subset. Never silently
+modify Steam or foreign installations.
 
 ### 8. Evidence-driven expansion
 

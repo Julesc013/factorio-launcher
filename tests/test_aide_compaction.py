@@ -6,6 +6,7 @@ from __future__ import annotations
 import unittest
 import json
 import hashlib
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -45,7 +46,7 @@ class AideCompactionTests(unittest.TestCase):
             "m3_existing_portable_adoption",
             "universal_repository_licenses",
             "next_authority_gate",
-            "product", "readiness", "execution_foundation", "world_product_program",
+            "product", "readiness", "execution_foundation", "instance_product_program",
             "operation_permit_program", "host_environment_program", "multi_version_install_lifecycle",
             "gate0_product_convergence_integration", "execution_modes", "capabilities",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
@@ -55,6 +56,34 @@ class AideCompactionTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
 
+    def test_instance_product_model_is_menu_first_and_supersedes_world_aggregate(self) -> None:
+        architecture = (
+            project_state.ROOT / "docs" / "architecture" / "instance_product_model.md"
+        ).read_text(encoding="utf-8")
+        superseded = (
+            project_state.ROOT / "docs" / "architecture" / "world_product_model.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("FacMan's primary product and UX aggregate is a **game instance**", architecture)
+        self.assertIn("`facman play <instance>` means `menu`", architecture)
+        self.assertIn("A save or world is optional", architecture)
+        self.assertIn("`PlatformAccountBinding`", architecture)
+        self.assertIn("ModsetSpec", architecture)
+        self.assertIn("continue_last", architecture)
+        self.assertIn("FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01", architecture)
+        self.assertIn("## Safety laws", architecture)
+        safety_laws = architecture.split("## Safety laws", maxsplit=1)[1].split(
+            "## Candidate stable workflow surface", maxsplit=1
+        )[0]
+        self.assertEqual(
+            15,
+            sum(1 for line in safety_laws.splitlines() if re.match(r"^\d+\. ", line)),
+        )
+        self.assertIn("It never contains", architecture)
+        self.assertRegex(architecture, r"credential\s+values")
+        self.assertIn("superseded", superseded)
+        self.assertIn("Instance product model", superseded)
+
     def test_completed_execution_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual("multi-version-install-lifecycle", data["current_checkpoint"])
@@ -63,10 +92,33 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual("FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01", data["active_work_unit"])
-        self.assertEqual("FACMAN-WORLD-SPEC-AND-READINESS-01", data["product"]["next_work_unit"])
-        self.assertEqual("WorldSpec", data["world_product_program"]["portable_record"])
-        self.assertEqual("WorldBinding", data["world_product_program"]["machine_local_record"])
-        self.assertFalse(data["world_product_program"]["runtime_authority"])
+        self.assertEqual("FACMAN-INSTANCE-SPEC-AND-READINESS-01", data["product"]["next_work_unit"])
+        instance_program = data["instance_product_program"]
+        self.assertEqual("InstanceSpec", instance_program["portable_record"])
+        self.assertEqual("InstanceBinding", instance_program["machine_local_record"])
+        self.assertEqual("InstanceView", instance_program["ui_aggregate"])
+        self.assertEqual("menu", instance_program["default_launch_intent"])
+        self.assertEqual("optional_content_within_instance", instance_program["save_role"])
+        self.assertIn("account_bindings", instance_program["composition"])
+        self.assertIn("modset_spec", instance_program["composition"])
+        self.assertEqual("menu", instance_program["launch_intents"][0])
+        self.assertIn("map_editor", instance_program["launch_intents"])
+        self.assertIn("GraphicsProfile", instance_program["profile_families"])
+        self.assertIn("FactorioAccountBinding", instance_program["account_binding_types"])
+        self.assertEqual(
+            ["ModsetSpec", "ModsetLock", "ModpackBundle"],
+            instance_program["mod_content_records"],
+        )
+        self.assertEqual(
+            "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01",
+            instance_program["world_save_work_unit"],
+        )
+        self.assertTrue(instance_program["templates_are_initializers"])
+        self.assertFalse(instance_program["conflicts_silently_resolved"])
+        self.assertFalse(instance_program["credential_values_in_instance"])
+        self.assertFalse(instance_program["presets_grant_authority"])
+        self.assertFalse(instance_program["foreign_installation_mutation"])
+        self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual("dev_integrated_reviewed_reproduced", data["product"]["truth_scope"])
         self.assertFalse(data["product"]["canonical_integration"])
         self.assertTrue(data["product"]["local_counts_promoted"])
@@ -446,7 +498,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["adoption_apply"])
         self.assertFalse(m3["existing_installation_mutation"])
         self.assertFalse(m3["steam_adoption"])
-        self.assertEqual("FACMAN-WORLD-CENTRIC-ALPHA-01", m3["resume_after"])
+        self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual("multi-version-install-lifecycle", data["current_checkpoint"])
         self.assertEqual(
             "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",

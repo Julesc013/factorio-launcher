@@ -15,7 +15,7 @@ available.
 Host-environment implementation begins only after product convergence, the
 execution foundation, and installation-model-v2 have been reviewed, committed,
 and reproduced from a clean three-repository checkout. It then runs as a
-parallel support lane. It must not delay WorldSpec, readiness, operation-bound
+parallel support lane. It must not delay InstanceSpec, readiness, operation-bound
 authority, or a native Factorio Play route when that route does not depend on a
 host remedy. Until its own WorkUnits are activated, this document is
 architecture and backlog truth, not runtime authority.
