@@ -239,6 +239,24 @@ int main()
     if (!same_root ||
         !array_contains(same_root.value(), "blockers", "in_place_authority_conversion_refused")) return 16;
 
+    auto implicit_same_root_desired = desired;
+    implicit_same_root_desired.target_root.clear();
+    auto implicit_same_root_text =
+        installation::reconciliation_plan_json(install, implicit_same_root_desired);
+    if (!implicit_same_root_text) return 18;
+    auto implicit_same_root = json::parse(implicit_same_root_text.value());
+    if (!implicit_same_root || !array_contains(
+            implicit_same_root.value(), "blockers", "in_place_authority_conversion_refused")) return 18;
+
+    installation::DesiredInstallationState reference_only;
+    reference_only.install_id = "fixture";
+    reference_only.management_mode = "external";
+    auto reference_only_text = installation::reconciliation_plan_json(install, reference_only);
+    if (!reference_only_text) return 19;
+    auto reference_only_plan = json::parse(reference_only_text.value());
+    if (!reference_only_plan || array_contains(
+            reference_only_plan.value(), "blockers", "source_candidate_required_for_materialisation")) return 19;
+
     desired.source_ref = "fixture-source:2.0.77";
     auto first_text = installation::reconciliation_plan_json(install, desired);
     auto second_text = installation::reconciliation_plan_json(install, desired);

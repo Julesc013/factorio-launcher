@@ -723,6 +723,9 @@ facman::core::Result<std::string> reconciliation_plan_json(
     }
     const TypedDesiredInstallationState& typed = decoded.value();
     const std::string current_root = path_string(model.install.root);
+    const std::string effective_target_root = typed.target_root.empty()
+        ? current_root
+        : typed.target_root;
     const bool management_change = typed.management_mode != ManagementMode::preserve &&
         to_string(typed.management_mode) != model.management_class;
     const bool deployment_change = typed.deployment_style != DeploymentStyle::preserve &&
@@ -733,11 +736,12 @@ facman::core::Result<std::string> reconciliation_plan_json(
         to_string(typed.integration_mode) != model.integration_kind;
     const bool version_change = !typed.version.empty() &&
         typed.version != model.install.version;
-    const bool target_change = !typed.target_root.empty() &&
-        typed.target_root != current_root;
+    const bool target_change = effective_target_root != current_root;
     const bool update_policy_change = typed.update_policy != UpdatePolicy::preserve;
     const bool source_selected = typed.source_trust_status != SourceTrustStatus::unselected;
-    const bool application_change = management_change || deployment_change ||
+    const bool managed_materialisation = management_change &&
+        typed.management_mode == ManagementMode::managed;
+    const bool application_change = managed_materialisation || deployment_change ||
         version_change || target_change;
     const bool source_required = application_change;
     const std::size_t change_count = static_cast<std::size_t>(management_change) +
@@ -762,7 +766,7 @@ facman::core::Result<std::string> reconciliation_plan_json(
         blockers.push_back("facman_integration_requires_managed_desired_state");
     }
     if (management_change && typed.management_mode == ManagementMode::managed &&
-        typed.target_root == current_root) {
+        effective_target_root == current_root) {
         blockers.push_back("in_place_authority_conversion_refused");
     }
     if (model.install.side_by_side_safety ==

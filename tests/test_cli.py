@@ -249,6 +249,15 @@ class CliTests(unittest.TestCase):
             self.assertEqual("blocked_plan", blocked["summary"]["status"])
             self.assertIn("source_candidate_required_for_materialisation", blocked["blockers"])
 
+            implicit_same_root_args = [
+                "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                "--management", "managed", "--json",
+            ]
+            code, stdout, stderr = invoke(implicit_same_root_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            implicit_same_root = json.loads(stdout)
+            self.assertIn("in_place_authority_conversion_refused", implicit_same_root["blockers"])
+
             planned_args = blocked_args[:-1] + [
                 "--source-ref", str(source_candidate), "--update-policy", "pinned", "--json",
             ]
