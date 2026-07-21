@@ -22,6 +22,7 @@
 #include "handlers/unavailable.h"
 #include "handlers/utility.h"
 #include "modules/installation_module.h"
+#include "modules/instance_module.h"
 #include "modules/launch_module.h"
 #include "fl_json_boundary.h"
 #include "fl_file_io.h"
@@ -123,6 +124,9 @@ private:
         if (installation_module_.handles(request.command)) {
             return installation_module_.execute(context_, request);
         }
+        if (instance_module_.handles(request.command)) {
+            return instance_module_.execute(context_, request);
+        }
         switch (request.command) {
         case CommandId::workspace_status: return handlers::workspace_status(context_);
         case CommandId::workspace_paths: return handlers::workspace_paths(context_);
@@ -206,6 +210,7 @@ private:
     }
     ApplicationContext context_;
     InstallationApplicationModule installation_module_;
+    InstanceApplicationModule instance_module_;
     LaunchApplicationModule launch_module_;
     std::string current_command_;
     std::string response_json_;

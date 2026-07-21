@@ -1,0 +1,15 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_resource_requirement.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Factorio instance resource requirement",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["installation", "instance_data", "configuration", "mod_content"]},
+    "required": {"type": "boolean"},
+    "state": {"enum": ["satisfied", "degraded", "blocked", "not_observed"]},
+    "identity": {"type": "string", "minLength": 1}
+  },
+  "required": ["id", "kind", "required", "state", "identity"]
+}

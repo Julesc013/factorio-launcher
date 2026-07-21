@@ -11,6 +11,8 @@ namespace facman::factorio::application::handlers {
 ApplicationResult list_instances(ApplicationContext& context);
 ApplicationResult create_instance(ApplicationContext& context, const CreateInstanceRequest& request);
 ApplicationResult inspect_instance(ApplicationContext& context, const InspectInstanceRequest& request);
+ApplicationResult describe_instance(ApplicationContext& context, const InstanceProjectionRequest& request);
+ApplicationResult readiness_instance(ApplicationContext& context, const InstanceProjectionRequest& request);
 ApplicationResult verify_instance(ApplicationContext& context, const InspectInstanceRequest& request);
 ApplicationResult diff_instances(ApplicationContext& context, const DiffInstanceRequest& request);
 ApplicationResult clone_instance(ApplicationContext& context, const CloneInstanceRequest& request);

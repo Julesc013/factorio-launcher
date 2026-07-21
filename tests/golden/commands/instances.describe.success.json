@@ -1,0 +1,481 @@
+{
+  "backup_state": "not_configured",
+  "canonicalization_version": "facman.sorted-json.v1",
+  "command": "instances.describe",
+  "display_name": "Main",
+  "installation_summary": {
+    "evidence_digest": "6918b662fb7859cd4ce3e7b9931ab9d1f4c11241521b0003c21d4133ea72978d",
+    "health": "healthy_structural",
+    "installation_id": "fixture",
+    "source": "manual",
+    "version": "2.0.77"
+  },
+  "instance_binding": {
+    "binding_dependencies": [
+      {
+        "identity": "sha256:b34b8229b3cd7e1f69b6db29f6a8ae1f56dbd78ce4b4371962de62e08ab70033",
+        "kind": "instance_record",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "6918b662fb7859cd4ce3e7b9931ab9d1f4c11241521b0003c21d4133ea72978d",
+        "kind": "installation_evidence",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "path_reference_sha256:42e611fae1d0535125c93cae9fea9f82338029688ab0115e1a86c573f78b8dda:manifest:file:460189795:562949955166428:479:1:sha256:b34b8229b3cd7e1f69b6db29f6a8ae1f56dbd78ce4b4371962de62e08ab70033",
+        "kind": "instance_root",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "sha256:45f5a1ef9a805c1a580bcf0bb3cb7d5408b929b998e7e16667ce686423befc03",
+        "kind": "effective_config",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "938aeb1b6ac08d21cdbec569abea5e71865f68828652df76df2d90400d43c70c",
+        "kind": "profile",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "template:vanilla",
+        "kind": "template_provenance",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "not_observed",
+        "kind": "modset_lock",
+        "revalidate_before_use": true,
+        "state": "not_observed"
+      },
+      {
+        "identity": "incomplete-transactions:0",
+        "kind": "recovery_state",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "structural-preflight:pass",
+        "kind": "launch_preflight",
+        "revalidate_before_use": true,
+        "state": "observed"
+      }
+    ],
+    "binding_digest": "30505f9bf63a02dda4bc9d457795904c4d86d442dc81f3a876831a32fee9e48b",
+    "canonicalization_version": "facman.sorted-json.v1",
+    "effective_config": {
+      "digest": "45f5a1ef9a805c1a580bcf0bb3cb7d5408b929b998e7e16667ce686423befc03",
+      "path": "<workspace>\\instances\\main\\config\\config.ini",
+      "state": "valid"
+    },
+    "execution_environment_identity": "windows-native:provider-not-observed",
+    "freshness_state": "current",
+    "installation_evidence_digest": "6918b662fb7859cd4ce3e7b9931ab9d1f4c11241521b0003c21d4133ea72978d",
+    "instance_id": "main",
+    "instance_root": {
+      "observed_identity": "path_reference_sha256:42e611fae1d0535125c93cae9fea9f82338029688ab0115e1a86c573f78b8dda:manifest:file:460189795:562949955166428:479:1:sha256:b34b8229b3cd7e1f69b6db29f6a8ae1f56dbd78ce4b4371962de62e08ab70033",
+      "path": "<workspace>\\instances\\main",
+      "state": "observed"
+    },
+    "mod_root_path": "<workspace>\\instances\\main\\mods",
+    "modset_lock_identity": "not_observed",
+    "profile_template_identities": {
+      "profile_id": "gui",
+      "profile_revision": "938aeb1b6ac08d21cdbec569abea5e71865f68828652df76df2d90400d43c70c",
+      "template_id": "vanilla",
+      "template_revision": "shipped:vanilla:v1"
+    },
+    "provider_revisions": {
+      "installation_projection": "factorio.installation_model.v2",
+      "instance_projection": "factorio.instance-model.v1",
+      "launch_preflight": "factorio.launch-preflight.v1",
+      "modset_projection": "factorio.modset-structural.v1",
+      "profile_projection": "factorio.launch-profile.v1"
+    },
+    "read_data_path": "<install>\\data",
+    "schema": "factorio.instance_binding.v1",
+    "selected_installation_id": "fixture",
+    "write_data_path": "<workspace>\\instances\\main"
+  },
+  "instance_id": "main",
+  "instance_readiness": {
+    "blockers": [
+      {
+        "code": "real_play_gate_not_passed",
+        "detail": "Gate 2 is read-only and cannot start a process",
+        "dimension": "play_authority",
+        "reason": "The exact menu-launch permit and real-product Play gate are not implemented",
+        "recoverable": true,
+        "safe_next_action": "await_operation_permit_gate"
+      }
+    ],
+    "canonicalization_version": "facman.sorted-json.v1",
+    "command": "instances.readiness",
+    "configuration_state": "degraded",
+    "credential_accessed": false,
+    "dependency_identities": [
+      {
+        "identity": "sha256:b34b8229b3cd7e1f69b6db29f6a8ae1f56dbd78ce4b4371962de62e08ab70033",
+        "kind": "instance_record",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "6918b662fb7859cd4ce3e7b9931ab9d1f4c11241521b0003c21d4133ea72978d",
+        "kind": "installation_evidence",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "path_reference_sha256:42e611fae1d0535125c93cae9fea9f82338029688ab0115e1a86c573f78b8dda:manifest:file:460189795:562949955166428:479:1:sha256:b34b8229b3cd7e1f69b6db29f6a8ae1f56dbd78ce4b4371962de62e08ab70033",
+        "kind": "instance_root",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "sha256:45f5a1ef9a805c1a580bcf0bb3cb7d5408b929b998e7e16667ce686423befc03",
+        "kind": "effective_config",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "938aeb1b6ac08d21cdbec569abea5e71865f68828652df76df2d90400d43c70c",
+        "kind": "profile",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "template:vanilla",
+        "kind": "template_provenance",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "not_observed",
+        "kind": "modset_lock",
+        "revalidate_before_use": true,
+        "state": "not_observed"
+      },
+      {
+        "identity": "incomplete-transactions:0",
+        "kind": "recovery_state",
+        "revalidate_before_use": true,
+        "state": "observed"
+      },
+      {
+        "identity": "structural-preflight:pass",
+        "kind": "launch_preflight",
+        "revalidate_before_use": true,
+        "state": "observed"
+      }
+    ],
+    "dimensions": [
+      {
+        "evidence_dependencies": [
+          "installation_evidence"
+        ],
+        "id": "installation",
+        "required": true,
+        "state": "satisfied",
+        "summary": "A current Gate 1 installation projection is available"
+      },
+      {
+        "evidence_dependencies": [
+          "instance_record",
+          "installation_evidence"
+        ],
+        "id": "version",
+        "required": true,
+        "state": "satisfied",
+        "summary": "Observed installation version matches the exact instance requirement"
+      },
+      {
+        "evidence_dependencies": [
+          "installation_evidence"
+        ],
+        "id": "content",
+        "required": true,
+        "state": "satisfied",
+        "summary": "Required base application content is present"
+      },
+      {
+        "evidence_dependencies": [
+          "instance_root"
+        ],
+        "id": "instance_root",
+        "required": true,
+        "state": "satisfied",
+        "summary": "The instance root is present and does not cross a link/reparse boundary"
+      },
+      {
+        "evidence_dependencies": [
+          "effective_config",
+          "installation_evidence",
+          "instance_root"
+        ],
+        "id": "configuration",
+        "required": true,
+        "state": "satisfied",
+        "summary": "Effective config routes read-data to the installation and write-data to the instance"
+      },
+      {
+        "evidence_dependencies": [
+          "profile"
+        ],
+        "id": "profile",
+        "required": true,
+        "state": "satisfied",
+        "summary": "The referenced profile and effective overrides are valid"
+      },
+      {
+        "evidence_dependencies": [
+          "modset_lock"
+        ],
+        "id": "mod_content",
+        "required": true,
+        "state": "satisfied",
+        "summary": "No external mods are configured"
+      },
+      {
+        "evidence_dependencies": [
+          "instance_root"
+        ],
+        "id": "saves",
+        "required": false,
+        "state": "satisfied",
+        "summary": "Zero saves is valid for menu launch"
+      },
+      {
+        "evidence_dependencies": [],
+        "id": "accounts",
+        "required": false,
+        "state": "not_applicable",
+        "summary": "Standalone menu readiness does not require an account or credential"
+      },
+      {
+        "evidence_dependencies": [
+          "recovery_state"
+        ],
+        "id": "recovery",
+        "required": true,
+        "state": "satisfied",
+        "summary": "No incomplete workspace transaction is observed"
+      },
+      {
+        "evidence_dependencies": [
+          "launch_preflight"
+        ],
+        "id": "environment",
+        "required": true,
+        "state": "degraded",
+        "summary": "The native platform is identified but per-operation filesystem and process capabilities are not yet proven"
+      },
+      {
+        "evidence_dependencies": [
+          "instance_record"
+        ],
+        "id": "isolation",
+        "required": false,
+        "state": "not_observed",
+        "summary": "The legacy instance record contains no portable isolation requirement"
+      },
+      {
+        "evidence_dependencies": [
+          "launch_preflight"
+        ],
+        "id": "play_authority",
+        "required": true,
+        "state": "blocked",
+        "summary": "Real Factorio execution and OperationPermit issuance remain unavailable"
+      }
+    ],
+    "execution_available": false,
+    "execution_started": false,
+    "findings": [
+      {
+        "code": "instance_environment_capabilities_unproven",
+        "detail": "Gate 2 records dependencies but does not grant process authority",
+        "dimension": "environment",
+        "severity": "warning"
+      },
+      {
+        "code": "instance_isolation_not_recorded",
+        "detail": "Isolation must be selected and proven by the later Play gate",
+        "dimension": "isolation",
+        "severity": "info"
+      }
+    ],
+    "freshness": "current",
+    "instance_binding_digest": "30505f9bf63a02dda4bc9d457795904c4d86d442dc81f3a876831a32fee9e48b",
+    "instance_id": "main",
+    "instance_spec_digest": "e37efadbcfbc73e856ed5b9a95e6cc2fc137b1e537533bacea2a092d8840eca8",
+    "launch_intent": "menu",
+    "mutation_executed": false,
+    "network_accessed": false,
+    "operation_guarantees": {
+      "credential_accessed": false,
+      "execution_started": false,
+      "mutation_executed": false,
+      "network_accessed": false,
+      "permit_issued": false,
+      "preparation_executed": false
+    },
+    "overall_state": "blocked",
+    "permit_issued": false,
+    "play_authority_state": "unavailable",
+    "policy_revision": "factorio.instance-readiness-policy.v1",
+    "preparation_available": false,
+    "preparation_executed": false,
+    "preparation_state": "already_prepared",
+    "readiness_digest": "2f5b9cea499955b6af55876945d65fa18988b3efc35f0a20d231c9654fbd3d5c",
+    "resource_requirements": [
+      {
+        "id": "factorio-installation",
+        "identity": "6918b662fb7859cd4ce3e7b9931ab9d1f4c11241521b0003c21d4133ea72978d",
+        "kind": "installation",
+        "required": true,
+        "state": "satisfied"
+      },
+      {
+        "id": "instance-root",
+        "identity": "path_reference_sha256:42e611fae1d0535125c93cae9fea9f82338029688ab0115e1a86c573f78b8dda:manifest:file:460189795:562949955166428:479:1:sha256:b34b8229b3cd7e1f69b6db29f6a8ae1f56dbd78ce4b4371962de62e08ab70033",
+        "kind": "instance_data",
+        "required": true,
+        "state": "satisfied"
+      },
+      {
+        "id": "effective-config",
+        "identity": "45f5a1ef9a805c1a580bcf0bb3cb7d5408b929b998e7e16667ce686423befc03",
+        "kind": "configuration",
+        "required": true,
+        "state": "satisfied"
+      },
+      {
+        "id": "modset",
+        "identity": "not_observed",
+        "kind": "mod_content",
+        "required": false,
+        "state": "satisfied"
+      }
+    ],
+    "safe_next_actions": [
+      {
+        "command": null,
+        "id": "await_operation_permit_gate",
+        "label": "Keep the instance ready for the OperationPermit gate",
+        "requires_authority": false
+      }
+    ],
+    "satisfied_requirements": [
+      "installation",
+      "version",
+      "content",
+      "instance_root",
+      "configuration",
+      "profile",
+      "mod_content",
+      "saves",
+      "recovery"
+    ],
+    "schema": "factorio.instance_readiness.v1"
+  },
+  "instance_spec": {
+    "account_requirement": "not_configured",
+    "backup_policy_reference": "not_configured",
+    "canonicalization_version": "facman.sorted-json.v1",
+    "compatibility_projection": {
+      "conservative_defaults_applied": true,
+      "default_launch_intent": "menu",
+      "missing_authority_default": "none",
+      "persisted_record_rewritten": false,
+      "projection_schema": "factorio.instance_spec.v1",
+      "source_record_schema": "factorio.instance.v1"
+    },
+    "default_launch_intent": "menu",
+    "display_name": "Main",
+    "explicit_setting_overrides_summary": {
+      "count": 0,
+      "source": "not_configured"
+    },
+    "factorio_version_requirement": {
+      "kind": "exact",
+      "value": "2.0.77"
+    },
+    "installation_selection_requirement": {
+      "ownership_requirement": "none",
+      "strategy": "compatible_registered_installation"
+    },
+    "instance_id": "main",
+    "isolation_requirement": "not_recorded",
+    "modset_lock_requirement": {
+      "lock_digest": null,
+      "reference": null,
+      "status": "not_recorded"
+    },
+    "ordered_profile_references": [
+      {
+        "id": "gui",
+        "kind": "legacy_launch_profile",
+        "provenance": "factorio.instance.v1",
+        "revision": "938aeb1b6ac08d21cdbec569abea5e71865f68828652df76df2d90400d43c70c"
+      }
+    ],
+    "required_content_capabilities": [
+      "base"
+    ],
+    "schema": "factorio.instance_spec.v1",
+    "spec_digest": "e37efadbcfbc73e856ed5b9a95e6cc2fc137b1e537533bacea2a092d8840eca8",
+    "template_provenance": {
+      "application": "initialized_legacy_record",
+      "live_mutable_dependency": false,
+      "template_id": "vanilla"
+    }
+  },
+  "isolation_requirement": "not_recorded",
+  "last_run_state": "not_observed",
+  "modset_summary": {
+    "lock_digest": null,
+    "mod_count": 0,
+    "status": "not_required"
+  },
+  "operation_guarantees": {
+    "credential_accessed": false,
+    "execution_started": false,
+    "mutation_executed": false,
+    "network_accessed": false,
+    "permit_issued": false,
+    "preparation_executed": false
+  },
+  "overall_readiness": "blocked",
+  "primary_blocker": {
+    "code": "real_play_gate_not_passed",
+    "detail": "Gate 2 is read-only and cannot start a process",
+    "dimension": "play_authority",
+    "reason": "The exact menu-launch permit and real-product Play gate are not implemented",
+    "recoverable": true,
+    "safe_next_action": "await_operation_permit_gate"
+  },
+  "profile_preset_summary": {
+    "profile_id": "gui",
+    "revision": "938aeb1b6ac08d21cdbec569abea5e71865f68828652df76df2d90400d43c70c",
+    "status": "valid",
+    "template_id": "vanilla"
+  },
+  "recommended_action": {
+    "command": null,
+    "id": "await_operation_permit_gate",
+    "label": "Keep the instance ready for the OperationPermit gate",
+    "requires_authority": false
+  },
+  "save_count": 0,
+  "schema": "factorio.instance_view.v1",
+  "snapshot_count": 0,
+  "version": "2.0.77",
+  "view_digest": "9ac7a8b964d10e785855e34175b72671337b3103bfa8043da778a0c0c643fc99"
+}

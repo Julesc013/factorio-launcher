@@ -7,6 +7,7 @@ import json
 import hashlib
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -407,6 +408,209 @@ class CliTests(unittest.TestCase):
                 )
             )
             self.assertEqual(json_contract.validate(manifest, import_schema), [])
+
+    def test_instance_projection_is_deterministic_intent_specific_and_read_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace = root / "workspace"
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "installs", "import", str(FIXTURE_INSTALL),
+                "--id", "fixture", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "create", "Main",
+                "--id", "main", "--install", "fixture", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+
+            existing_inspection = invoke([
+                "--workspace", str(workspace), "instances", "inspect", "main", "--json",
+            ])
+            self.assertEqual(existing_inspection[0], 0, existing_inspection[2])
+            self.assertEqual(json.loads(existing_inspection[1])["schema"], "factorio.instance_inspection.v1")
+
+            before = tree_snapshot(workspace)
+            readiness_args = [
+                "--workspace", str(workspace), "instances", "readiness", "main",
+                "--intent", "menu", "--json",
+            ]
+            code, stdout, stderr = invoke(readiness_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            readiness = json.loads(stdout)
+            code, repeated_stdout, stderr = invoke(readiness_args)
+            self.assertEqual(code, 0, stderr or repeated_stdout)
+            self.assertEqual(readiness, json.loads(repeated_stdout))
+
+            transport_request = {
+                "schema": "facman.transport_request.v1",
+                "protocol_version": 1,
+                "request_id": "gate2-instance-readiness",
+                "workspace": str(workspace),
+                "command": "instances.readiness",
+                "dry_run": True,
+                "payload": {"instance_id": "main", "intent": "menu"},
+            }
+            transported = subprocess.run(
+                [str(facman_executable()), "rpc", "--stdio"],
+                cwd=ROOT,
+                input=json.dumps(transport_request),
+                text=True,
+                encoding="utf-8",
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=30,
+            )
+            self.assertEqual(transported.returncode, 0, transported.stderr or transported.stdout)
+            self.assertEqual(transported.stderr, "")
+            transport_response = json.loads(transported.stdout)
+            self.assertEqual(transport_response["outcome"], "ok")
+            self.assertEqual(transport_response["payload"], readiness)
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "describe", "main", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            view = json.loads(stdout)
+            self.assertEqual(before, tree_snapshot(workspace))
+
+            self.assertEqual(readiness["schema"], "factorio.instance_readiness.v1")
+            self.assertEqual(readiness["launch_intent"], "menu")
+            self.assertEqual(readiness["overall_state"], "blocked")
+            self.assertIn(readiness["configuration_state"], {"ready", "degraded"})
+            self.assertEqual(readiness["preparation_state"], "already_prepared")
+            self.assertEqual(readiness["play_authority_state"], "unavailable")
+            self.assertFalse(readiness["preparation_available"])
+            self.assertFalse(readiness["execution_available"])
+            self.assertTrue(all(value is False for value in readiness["operation_guarantees"].values()))
+            blockers = {blocker["code"] for blocker in readiness["blockers"]}
+            self.assertEqual(blockers, {"real_play_gate_not_passed"})
+            dimensions = {item["id"]: item for item in readiness["dimensions"]}
+            self.assertEqual(dimensions["saves"]["state"], "satisfied")
+            self.assertIn("Zero saves is valid", dimensions["saves"]["summary"])
+            self.assertEqual(dimensions["accounts"]["state"], "not_applicable")
+            self.assertEqual(dimensions["play_authority"]["state"], "blocked")
+
+            self.assertEqual(view["schema"], "factorio.instance_view.v1")
+            self.assertEqual(view["instance_spec"]["schema"], "factorio.instance_spec.v1")
+            self.assertEqual(view["instance_binding"]["schema"], "factorio.instance_binding.v1")
+            self.assertEqual(view["instance_readiness"], readiness)
+            self.assertEqual(view["instance_spec"]["default_launch_intent"], "menu")
+            self.assertNotIn(str(workspace), json.dumps(view["instance_spec"], sort_keys=True))
+            self.assertEqual(
+                Path(view["instance_binding"]["instance_root"]["path"]),
+                workspace / "instances" / "main",
+            )
+
+            spec_core = dict(view["instance_spec"])
+            spec_digest = spec_core.pop("spec_digest")
+            self.assertEqual(canonical_json_digest(spec_core), spec_digest)
+            binding_core = dict(view["instance_binding"])
+            binding_digest = binding_core.pop("binding_digest")
+            self.assertEqual(canonical_json_digest(binding_core), binding_digest)
+            readiness_core = dict(readiness)
+            readiness_digest = readiness_core.pop("readiness_digest")
+            readiness_core.pop("operation_guarantees")
+            self.assertEqual(canonical_json_digest(readiness_core), readiness_digest)
+            view_core = dict(view)
+            view_digest = view_core.pop("view_digest")
+            self.assertEqual(canonical_json_digest(view_core), view_digest)
+
+            for document, schema_name in [
+                (view["instance_spec"], "factorio_instance_spec.v1.schema.json"),
+                (view["instance_binding"], "factorio_instance_binding.v1.schema.json"),
+                (readiness, "factorio_instance_readiness.v1.schema.json"),
+                (view, "factorio_instance_view.v1.schema.json"),
+            ]:
+                schema = json_contract.load_schema(ROOT / "contracts" / "schema" / "factorio" / schema_name)
+                self.assertEqual(json_contract.validate(document, schema), [], schema_name)
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "readiness", "main",
+                "--intent", "load_save", "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout)["refusal"]["code"], "unsupported_launch_intent")
+            self.assertEqual(before, tree_snapshot(workspace))
+
+            mods = workspace / "instances" / "main" / "mods"
+            (mods / "local-only_1.0.0.zip").write_bytes(b"not inspected by readiness")
+            (workspace / "instances" / "main" / "saves" / "damaged.zip").write_bytes(b"damaged")
+            code, stdout, stderr = invoke(readiness_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            unlocked = json.loads(stdout)
+            unlocked_dimensions = {item["id"]: item for item in unlocked["dimensions"]}
+            self.assertEqual(unlocked_dimensions["mod_content"]["state"], "degraded")
+            self.assertEqual(unlocked_dimensions["saves"]["state"], "satisfied")
+            self.assertNotIn("instance_modset_blocked", {item["code"] for item in unlocked["blockers"]})
+            self.assertNotEqual(unlocked["readiness_digest"], readiness["readiness_digest"])
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "instances", "describe", "main", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            self.assertEqual(
+                json.loads(stdout)["instance_spec"]["spec_digest"],
+                view["instance_spec"]["spec_digest"],
+                "unlocked machine-local mod evidence must not alter portable intent",
+            )
+
+            local_lock = mods / "modset-lock.v1.json"
+            local_lock.write_text(json.dumps({
+                "schema": "factorio.modset_lock.v1",
+                "lockfile_version": 1,
+                "instance_id": "main",
+                "factorio_version": "2.0.77",
+                "mods": [{
+                    "name": "missing",
+                    "version": "1.0.0",
+                    "enabled": True,
+                    "source": "local",
+                    "file_name": "missing_1.0.0.zip",
+                    "sha1": "0" * 40,
+                    "sha256": "0" * 64,
+                }],
+            }, sort_keys=True), encoding="utf-8")
+            code, stdout, stderr = invoke(readiness_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            missing_artifact = json.loads(stdout)
+            self.assertIn(
+                "instance_modset_blocked",
+                {item["code"] for item in missing_artifact["blockers"]},
+            )
+
+            local_lock.write_text(json.dumps({
+                "schema": "factorio.modset_lock.v1",
+                "lockfile_version": 1,
+                "instance_id": "main",
+                "factorio_version": "1.1.110",
+                "mods": [],
+            }, sort_keys=True), encoding="utf-8")
+            code, stdout, stderr = invoke(readiness_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            incompatible_lock = json.loads(stdout)
+            self.assertIn(
+                "instance_modset_blocked",
+                {item["code"] for item in incompatible_lock["blockers"]},
+            )
+
+            transactions = workspace / "transactions"
+            transactions.mkdir(parents=True, exist_ok=True)
+            (transactions / "invalid.transaction.v1.json").write_text("{", encoding="utf-8")
+            before_recovery_read = tree_snapshot(workspace)
+            code, stdout, stderr = invoke(readiness_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            recovery = json.loads(stdout)
+            self.assertEqual(recovery["overall_state"], "recovery_required")
+            self.assertEqual(recovery["blockers"][0]["code"], "instance_recovery_required")
+            self.assertEqual(before_recovery_read, tree_snapshot(workspace))
+
+            missing_workspace = root / "missing-workspace"
+            code, stdout, stderr = invoke([
+                "--workspace", str(missing_workspace), "instances", "readiness", "missing", "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertFalse(missing_workspace.exists())
 
     def test_import_instance_and_launch_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

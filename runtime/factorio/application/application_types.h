@@ -17,6 +17,7 @@
 #include "fl_result.h"
 #include "fl_preferences.h"
 #include "flb_factorio_instance_lifecycle.h"
+#include "flb_factorio_instance_model.h"
 #include "flb_factorio_snapshots.h"
 #include "flb_factorio_profiles.h"
 #include "flb_factorio_server_plan.h"
@@ -98,6 +99,7 @@ using ExportInstanceRequest = saves::ExportRequest;
 using ImportInstanceRequest = saves::ImportRequest;
 using ExportDiagnosticRequest = diagnostics::ExportRequest;
 using InspectInstanceRequest = instance_lifecycle::InspectRequest;
+using InstanceProjectionRequest = instance_lifecycle::ProjectionRequest;
 using DiffInstanceRequest = instance_lifecycle::DiffRequest;
 using CloneInstanceRequest = instance_lifecycle::CloneRequest;
 using RenameInstanceRequest = instance_lifecycle::RenameRequest;
@@ -143,6 +145,7 @@ using ApplicationPayload = std::variant<
     RecoveryRequest,
     PreferencesRequest,
     InspectInstanceRequest,
+    InstanceProjectionRequest,
     DiffInstanceRequest,
     CloneInstanceRequest,
     RenameInstanceRequest,

@@ -61,15 +61,18 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
   flb_factorio_launch_static flb_factorio_modsets_static)
 
 add_library(flb_factorio_instance_static
+  instance/flb_factorio_instance_model.cpp
   instance/flb_factorio_instance_lifecycle.cpp
   instance/flb_factorio_local_data_import.cpp)
 target_compile_features(flb_factorio_instance_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_instance_static PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/instance ${CMAKE_CURRENT_SOURCE_DIR}/launch
-  ${CMAKE_CURRENT_SOURCE_DIR}/modsets ${CMAKE_CURRENT_SOURCE_DIR}/snapshots)
+  ${CMAKE_CURRENT_SOURCE_DIR}/instance ${CMAKE_CURRENT_SOURCE_DIR}/installation
+  ${CMAKE_CURRENT_SOURCE_DIR}/launch ${CMAKE_CURRENT_SOURCE_DIR}/modsets
+  ${CMAKE_CURRENT_SOURCE_DIR}/profiles ${CMAKE_CURRENT_SOURCE_DIR}/snapshots)
 target_link_libraries(flb_factorio_instance_static PUBLIC
   facman_archive_static facman_base_static facman_platform_static facman_transaction_static facman_workspace_static
-  flb_factorio_launch_static flb_factorio_modsets_static flb_factorio_snapshots_static)
+  flb_factorio_install_model_static flb_factorio_launch_static flb_factorio_modsets_static
+  flb_factorio_profiles_static flb_factorio_snapshots_static)
 
 add_library(flb_factorio_snapshots_static snapshots/flb_factorio_snapshots.cpp)
 target_compile_features(flb_factorio_snapshots_static PUBLIC cxx_std_17)
@@ -115,6 +118,7 @@ add_library(flb_factorio_application_static STATIC
   application/handlers/profiles.cpp application/modules/installation_module.cpp
   application/modules/launch_module.cpp
   application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
+target_sources(flb_factorio_application_static PRIVATE application/modules/instance_module.cpp)
 target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_application_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application)
 target_compile_definitions(flb_factorio_application_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)

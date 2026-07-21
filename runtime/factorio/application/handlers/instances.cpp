@@ -10,6 +10,7 @@
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_instance_lifecycle.h"
+#include "flb_factorio_instance_model.h"
 #include "flb_factorio_local_data_import.h"
 
 #include <filesystem>
@@ -259,6 +260,16 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
 ApplicationResult inspect_instance(ApplicationContext& context, const InspectInstanceRequest& request)
 {
     return lifecycle_result("instances.inspect", lifecycle::inspect(context.workspace(), request));
+}
+
+ApplicationResult describe_instance(ApplicationContext& context, const InstanceProjectionRequest& request)
+{
+    return lifecycle_result("instances.describe", lifecycle::describe_instance(context.workspace(), request));
+}
+
+ApplicationResult readiness_instance(ApplicationContext& context, const InstanceProjectionRequest& request)
+{
+    return lifecycle_result("instances.readiness", lifecycle::instance_readiness(context.workspace(), request));
 }
 
 ApplicationResult verify_instance(ApplicationContext& context, const InspectInstanceRequest& request)

@@ -37,3 +37,22 @@ recognizable committed target; they never authorize automatic repair.
 
 Snapshot comparison is intentionally unavailable until the separate snapshot
 work unit establishes its portable manifest and hash contract.
+
+## Gate 2 read-only player projections
+
+Two additive commands provide the instance-centric player model without
+changing the R3.7 lifecycle record or granting lifecycle authority:
+
+- `instances.describe <id> [--intent menu]` returns
+  `factorio.instance_view.v1`, which composes a portable `InstanceSpec`, local
+  `InstanceBinding`, evidence-derived `InstanceReadiness`, and player summary;
+- `instances.readiness <id> [--intent menu]` returns the canonical readiness
+  component directly.
+
+The default and only accepted Gate 2 intent is `menu`. Other registered launch
+intents receive `unsupported_launch_intent`; no save is inferred. Both commands
+are deterministic `workspace_read` operations. They do not rewrite
+`factorio.instance.v1`, prepare content, issue a permit, access credentials or
+the network, invoke Setup, or execute Factorio. See
+[`../architecture/instance_model_and_readiness.md`](../architecture/instance_model_and_readiness.md)
+for the component, digest, evidence, and readiness contracts.

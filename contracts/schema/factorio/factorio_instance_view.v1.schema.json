@@ -1,0 +1,105 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_view.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Player-facing Factorio instance view",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "label": {"type": "string"},
+        "command": {"type": ["string", "null"]},
+        "requires_authority": {"type": "boolean"}
+      },
+      "required": ["id", "label", "command", "requires_authority"]
+    },
+    "guarantees": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mutation_executed": {"const": false},
+        "preparation_executed": {"const": false},
+        "execution_started": {"const": false},
+        "permit_issued": {"const": false},
+        "credential_accessed": {"const": false},
+        "network_accessed": {"const": false}
+      },
+      "required": ["mutation_executed", "preparation_executed", "execution_started", "permit_issued", "credential_accessed", "network_accessed"]
+    }
+  },
+  "properties": {
+    "schema": {"const": "factorio.instance_view.v1"},
+    "command": {"const": "instances.describe"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "instance_id": {"type": "string", "minLength": 1},
+    "display_name": {"type": "string"},
+    "version": {"type": "string", "minLength": 1},
+    "installation_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "installation_id": {"type": ["string", "null"]},
+        "version": {"type": "string"},
+        "source": {"type": "string"},
+        "health": {"type": "string"},
+        "evidence_digest": {"type": "string", "minLength": 1}
+      },
+      "required": ["installation_id", "version", "source", "health", "evidence_digest"]
+    },
+    "profile_preset_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {"type": "string"},
+        "template_id": {"type": "string"},
+        "status": {"type": "string"},
+        "revision": {"type": "string"}
+      },
+      "required": ["profile_id", "template_id", "status", "revision"]
+    },
+    "modset_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {"type": "string"},
+        "lock_digest": {"type": ["string", "null"]},
+        "mod_count": {"type": "integer", "minimum": 0}
+      },
+      "required": ["status", "lock_digest", "mod_count"]
+    },
+    "save_count": {"type": "integer", "minimum": 0},
+    "snapshot_count": {"type": "integer", "minimum": 0},
+    "isolation_requirement": {"const": "not_recorded"},
+    "backup_state": {"type": "string"},
+    "last_run_state": {"type": "string"},
+    "overall_readiness": {"enum": ["ready", "degraded", "blocked", "recovery_required"]},
+    "primary_blocker": {
+      "anyOf": [
+        {"$ref": "factorio_instance_blocker.v1.schema.json"},
+        {"type": "null"}
+      ]
+    },
+    "recommended_action": {
+      "anyOf": [
+        {"$ref": "#/$defs/action"},
+        {"type": "null"}
+      ]
+    },
+    "instance_spec": {"$ref": "factorio_instance_spec.v1.schema.json"},
+    "instance_binding": {"$ref": "factorio_instance_binding.v1.schema.json"},
+    "instance_readiness": {"$ref": "factorio_instance_readiness.v1.schema.json"},
+    "operation_guarantees": {"$ref": "#/$defs/guarantees"},
+    "view_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": [
+    "schema", "command", "canonicalization_version", "instance_id", "display_name",
+    "version", "installation_summary", "profile_preset_summary", "modset_summary",
+    "save_count", "snapshot_count", "isolation_requirement", "backup_state",
+    "last_run_state", "overall_readiness", "primary_blocker", "recommended_action",
+    "instance_spec", "instance_binding", "instance_readiness", "operation_guarantees",
+    "view_digest"
+  ]
+}

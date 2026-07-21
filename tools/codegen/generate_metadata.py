@@ -64,6 +64,10 @@ ENUM_CHOICES: dict[str, list[str]] = {
     "data_policy": ["preserve", "instance_local", "system_shared", "install_local"],
     "integration_mode": ["preserve", "none", "facman_owned", "external"],
     "update_policy": ["preserve", "pinned", "manual", "follow_channel"],
+    "intent": [
+        "menu", "continue_last", "load_save", "new_game", "map_editor",
+        "connect_server", "start_server", "benchmark", "instrumented_dev",
+    ],
 }
 
 

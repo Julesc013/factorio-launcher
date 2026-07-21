@@ -10,9 +10,12 @@ and opens Factorio's own main menu by default. A save or world is optional
 content available inside the instance; it is not the mandatory identity of the
 instance and is not loaded implicitly.
 
-This document is target architecture. Records, commands, permits, credential
-providers, and apply paths described here are planned unless a current contract
-and project status explicitly mark them available.
+This document describes the product ceiling. Gate 2 implements only the
+read-only compatibility projections and commands documented in
+[`instance_model_and_readiness.md`](instance_model_and_readiness.md). Other
+records, commands, permits, credential providers, and apply paths described
+here remain planned unless a current contract and project status explicitly
+mark them available.
 
 ## Product promise
 
@@ -207,8 +210,10 @@ values, Steam tokens, entitlement claims, or redistributable Factorio
 binaries.
 
 The implemented `factorio.instance.v1` workspace record remains the current
-compatibility record. A future `InstanceSpec` is additive and must not silently
-rewrite existing workspaces or infer authority from legacy fields.
+compatibility record. Gate 2 computes an additive `factorio.instance_spec.v1`
+projection without persisting it, rewriting existing workspaces, or inferring
+authority from legacy fields. A future persisted portable specification must
+retain those compatibility laws.
 
 ### `InstanceBinding`: machine-local resolution
 

@@ -25,6 +25,12 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
     case CommandId::installs_reconcile_plan:
         policy.capabilities.push_back("install.reconciliation.plan");
         break;
+    case CommandId::instances_describe:
+        policy.capabilities.push_back("instance.model.inspect");
+        break;
+    case CommandId::instances_readiness:
+        policy.capabilities.push_back("instance.readiness.inspect");
+        break;
     case CommandId::installs_install_plan:
         policy.effects.push_back("setup_preview");
         policy.capabilities.push_back("install.managed.plan");

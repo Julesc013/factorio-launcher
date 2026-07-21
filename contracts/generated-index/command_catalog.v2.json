@@ -2978,6 +2978,97 @@
     },
     {
       "aliases": [],
+      "availability": "implemented",
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman instances describe <instance-id> [--intent menu] --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "instances",
+          "describe"
+        ],
+        "positionals": [
+          {
+            "name": "instance-id",
+            "required": true
+          }
+        ],
+        "usage": "facman instances describe <instance-id> [--intent menu] --json"
+      },
+      "command_id": "instances.describe",
+      "contract_path": "contracts/command/factorio/instances.describe.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "instances",
+      "golden_refusal": "tests/golden/commands/instances.describe.refusal.json",
+      "golden_success": "tests/golden/commands/instances.describe.success.json",
+      "localization_keys": [
+        "command.instances.describe.title",
+        "command.instances.describe.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "instances_describe",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "instances_describe",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [
+            "menu",
+            "continue_last",
+            "load_save",
+            "new_game",
+            "map_editor",
+            "connect_server",
+            "start_server",
+            "benchmark",
+            "instrumented_dev"
+          ],
+          "default": null,
+          "name": "intent",
+          "repeatable": false,
+          "request_field": "intent",
+          "required": false,
+          "type": "enum"
+        }
+      ],
+      "request_schema": "contracts/schema/command/instances.describe.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_instance_view.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "instances.describe",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman instances diff <left-instance-id> <right-instance-or-snapshot> --json",
@@ -3127,6 +3218,97 @@
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "instances.inspect",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
+      "availability": "implemented",
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman instances readiness <instance-id> [--intent menu] --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "instances",
+          "readiness"
+        ],
+        "positionals": [
+          {
+            "name": "instance-id",
+            "required": true
+          }
+        ],
+        "usage": "facman instances readiness <instance-id> [--intent menu] --json"
+      },
+      "command_id": "instances.readiness",
+      "contract_path": "contracts/command/factorio/instances.readiness.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "instances",
+      "golden_refusal": "tests/golden/commands/instances.readiness.refusal.json",
+      "golden_success": "tests/golden/commands/instances.readiness.success.json",
+      "localization_keys": [
+        "command.instances.readiness.title",
+        "command.instances.readiness.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "instances_readiness",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "instances_readiness",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [
+            "menu",
+            "continue_last",
+            "load_save",
+            "new_game",
+            "map_editor",
+            "connect_server",
+            "start_server",
+            "benchmark",
+            "instrumented_dev"
+          ],
+          "default": null,
+          "name": "intent",
+          "repeatable": false,
+          "request_field": "intent",
+          "required": false,
+          "type": "enum"
+        }
+      ],
+      "request_schema": "contracts/schema/command/instances.readiness.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/factorio/factorio_instance_readiness.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "instances.readiness",
       "schema": "facman.command.v2",
       "visibility": "public",
       "writes_state": false
@@ -10623,6 +10805,6 @@
   ],
   "owner": "factorio-launcher",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "671764ee966fe44d269d6787664049383ff461152616762b4312b0a1789abfdb",
+  "source_digest": "4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba",
   "version": "facman-0.1.0+dev.contract"
 }
