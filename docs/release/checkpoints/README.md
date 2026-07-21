@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `operation_permit` and the active WorkUnit is `FACMAN-OPERATION-PERMIT-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `hermetic_standalone_play_policy` and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -31,6 +31,14 @@ menu-first readiness, deterministic component digests, zero-write proof, exact
 merged-`dev` workflows, and a clean pinned three-repository reconstruction. It
 activates OperationPermit contract work while leaving permit issuance,
 preparation, execution, signing, publication, and `main` unpromoted.
+
+The infrastructure-only
+[`Gate 3 OperationPermit closeout`](gate3-operation-permit-closeout.md) binds PR
+#42, authenticated canonical claims, exact closed resource scope, separate
+validation and one-time provider consumption, replay/time/resource-drift proof,
+exact merged-`dev` workflows, and a clean pinned three-repository
+reconstruction. It activates the policy-only hermetic standalone Play WorkUnit
+without exposing permit issuance, process execution, or any other authority.
 
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),

@@ -51,7 +51,7 @@ Execution has two independent guarantees:
 | Mode | Promise | External state | Gate |
 | --- | --- | --- | --- |
 | Instance-isolated | FacMan-owned instance data is isolated | Enumerated Steam/platform domains may change after disclosure and acknowledgement | `FACMAN-STEAM-AWARE-PLAY-01` |
-| Hermetic standalone | No persistent change outside the authorised workspace | Any external change fails the claim | `FACMAN-HERMETIC-STANDALONE-PLAY-01` |
+| Hermetic standalone | No persistent change outside the authorised workspace | Any external change fails the claim | policy → candidate → human verdict |
 
 Steam-aware Play is an accepted product mode, not a hermetic claim. FacMan
 never manipulates Steam state. Either real-play gate may fail without
@@ -291,13 +291,22 @@ privileged host recipes. The complete lane is defined in
 
 ### 3. Real playable execution
 
-Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first gate because a known
-non-Steam 2.0.77 route exists. Preflight the exact executable and effective
-configuration immediately before launch; prove the default plan opens the main
-menu without an implicit save target, then exercise load or create, save,
-clean exit, relaunch, crash, cancellation, timeout, child escape,
-concurrent refusal, post-run indexing, and protected-root observation. Record a
-human-reviewed verdict.
+Use three separately reviewed WorkUnits for the first real-product gate:
+
+1. `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01` freezes the exact supported
+   candidate class, protected and writable roots, evidence, interruption
+   matrix, observation method, and human verdict criteria without running it.
+2. `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01` implements exact menu-plan,
+   permit issuance/consumption, process identity, supervision, journal, and
+   observation only for the frozen candidate.
+3. `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01` runs the reviewed procedure and
+   records `Pass`, `Fail`, or `Inconclusive` as a human verdict.
+
+A known non-Steam 2.0.77 route is the intended candidate. Preflight the exact
+executable and effective configuration immediately before launch; prove the
+default plan opens the main menu without an implicit save target, then exercise
+load or create, save, clean exit, relaunch, crash, cancellation, timeout, child
+escape, concurrent refusal, post-run indexing, and protected-root observation.
 
 `FACMAN-STEAM-AWARE-PLAY-01` remains an independent, weaker-guarantee gate and
 may follow. Only one route must pass before the first controlled playable alpha.

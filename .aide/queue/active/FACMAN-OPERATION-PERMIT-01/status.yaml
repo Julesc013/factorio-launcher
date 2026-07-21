@@ -1,9 +1,13 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-OPERATION-PERMIT-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-21T08:58:36Z
-result: PENDING
+result: PASS
 evidence_path: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence/
 active_at: 2026-07-21T08:59:18Z
+verified_at: 2026-07-21T11:45:03Z
+implementation_state: implemented
+reviewed_at: 2026-07-21T11:45:04Z
+closed_at: 2026-07-21T11:45:04Z

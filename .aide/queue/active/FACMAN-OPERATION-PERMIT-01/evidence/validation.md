@@ -51,4 +51,45 @@ libFuzzer entry point existed only in the conditional fuzz build and therefore
 had no normal-build compile command. The repair compiles that entry point in
 the standalone corpus target as well, preserving the guard without an
 allowlist; it also instruments the permit static library in the libFuzzer
-configuration. Replacement hosted proof is pending.
+configuration. Replacement hosted proof passed.
+
+Final reviewed-head evidence for `5f9f122d6d3e95a006c44e46ba54c0927e9d288c`:
+
+- PR #42 CI run `29825371714`: PASS, including Linux Debug/Release,
+  clang-tidy, sanitized full CTest/corpus, bounded 1,000-run libFuzzer,
+  coverage, Windows Debug/Release/WinForms/package reproducibility, macOS
+  native/archive/AppKit/package proof, and all Python/strict checks.
+- PR #42 code-security run `29825371722`: PASS for all configured languages.
+- PR #42 schema-check run `29825371753`: PASS.
+- PR #42 security-policy run `29825371793`: PASS.
+
+PR #42 merged into `dev` at
+`91c2aa4fe0a30be97bf16165b41a95a8fab4cd11`. Exact merged-`dev` runs:
+
+- CI `29826221338`: PASS.
+- code-security `29826221318`: PASS.
+- schema-check `29826221373`: PASS.
+- security-policy `29826221366`: PASS.
+
+The final clean reproduction used one temporary root with detached, clean pins:
+
+- FacMan `91c2aa4fe0a30be97bf16165b41a95a8fab4cd11`;
+- Universal Launcher `7bd4425f0c35414f738159b45d8bec42edf70235`;
+- Universal Setup `3f8489275077347c2918f3bb03614ec6431362ff`.
+
+All three repositories configured, built, tested, and passed strict checks;
+FacMan additionally passed AIDE Lite and its complete Python suite. The clean
+run completed in 442 seconds and all three source worktrees remained clean.
+An earlier attempt was inconclusive because a two-minute shell timeout left an
+MSBuild child writing the interrupted build tree; restarting against that same
+tree caused PDB contention. No product test failed. The final proof used a new,
+single-writer build directory and passed.
+
+The truth-only closeout transition additionally passes locally:
+
+- `py -3 tools/project_state.py`;
+- `py -3 tools/strict_check.py`;
+- `py -3 .aide/scripts/aide_lite.py test`;
+- full Python suite: 364 passed, 2 skipped;
+- full native CTest: 47 of 47 passed;
+- `git diff --check`.

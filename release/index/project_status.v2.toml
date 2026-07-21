@@ -1,13 +1,13 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "operation-permit"
+current_checkpoint = "hermetic-standalone-play-policy"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-OPERATION-PERMIT-01"
-last_closed_work_unit = "FACMAN-INSTANCE-SPEC-AND-READINESS-01"
+active_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01"
+last_closed_work_unit = "FACMAN-OPERATION-PERMIT-01"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -34,14 +34,14 @@ quarantined_capabilities = [
 ]
 
 [product]
-phase = "operation_permit"
+phase = "hermetic_standalone_play_policy"
 phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-OPERATION-PERMIT-01"
-next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-01"
+current_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01"
+next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
@@ -52,7 +52,7 @@ local_counts_promoted = true
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "execution_foundation_proven_real_play_unproven"
+safety_authority = "permit_infrastructure_proven_real_play_unproven"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -98,13 +98,51 @@ foreign_installation_mutation = false
 runtime_authority = false
 
 [operation_permit_program]
-status = "active_contract_and_validation_infrastructure"
+status = "gate3_infrastructure_complete_no_issuance"
 work_unit = "FACMAN-OPERATION-PERMIT-01"
 authority_model = "short_lived_plan_bound_exact_resource_permit"
 global_admission_is_sole_enforcer = false
 provider_revalidation_required = true
 harmless_reads_require_permit = false
 permit_issuance_authority = false
+
+[gate3_operation_permit_closeout]
+status = "accepted_reviewed_dev_integration"
+work_unit = "FACMAN-OPERATION-PERMIT-01"
+implementation_pull_request = 42
+reviewed_head_revision = "5f9f122d6d3e95a006c44e46ba54c0927e9d288c"
+dev_integration_revision = "91c2aa4fe0a30be97bf16165b41a95a8fab4cd11"
+universal_launcher_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
+universal_setup_revision = "3f8489275077347c2918f3bb03614ec6431362ff"
+exact_head_ci_run = "29825371714"
+exact_head_code_security_run = "29825371722"
+exact_head_schema_check_run = "29825371753"
+exact_head_security_policy_run = "29825371793"
+exact_dev_ci_run = "29826221338"
+exact_dev_code_security_run = "29826221318"
+exact_dev_schema_check_run = "29826221373"
+exact_dev_security_policy_run = "29826221366"
+exact_dev_clean_reproduction = true
+clean_reproduction_seconds = 442.0
+native_test_count = 47
+python_test_count = 364
+python_expected_skips = 2
+schema_count = 268
+command_count = 125
+registered_route_count = 123
+refusal_code_count = 242
+canonicalization_version = "facman.sorted-json.v1"
+authenticator_algorithm = "hmac-sha256.process.v1"
+projected_instance_resource_count = 9
+provider_revalidation_proof = "dormant_factorio_launch_foundation_operation"
+permit_issuance_authority = false
+real_factorio_execution = false
+setup_authority_promotion = false
+credential_authority_promotion = false
+network_authority_promotion = false
+signing = false
+publication = false
+canonical_main_promotion = false
 
 [gate2_instance_spec_and_readiness_closeout]
 status = "accepted_reviewed_dev_integration"
@@ -294,7 +332,7 @@ id = "hermetic"
 product_mode = "accepted"
 claim_status = "unproven"
 boundary = "No persistent change may occur outside the authorised FacMan workspace."
-next_gate = "FACMAN-HERMETIC-STANDALONE-PLAY-01"
+next_gate = "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01"
 
 [r3_8_repair]
 status = "closed"

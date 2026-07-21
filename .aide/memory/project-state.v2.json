@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-OPERATION-PERMIT-01",
+  "active_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
   "capabilities": [
     {
       "commands": [],
@@ -382,6 +382,11 @@
       "limitation": "menu only; no preparation, permit, credentials, network, or execution"
     },
     {
+      "claim": "OperationPermit infrastructure",
+      "level": "reviewed `dev` integration",
+      "limitation": "no issuance, Play, Setup, credentials, network, signing, publication, or `main` authority"
+    },
+    {
       "claim": "Package hashes authenticate publisher",
       "level": "not claimed",
       "limitation": "signatures or trusted external metadata required"
@@ -425,7 +430,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "operation-permit",
+  "current_checkpoint": "hermetic-standalone-play-policy",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -464,7 +469,7 @@
       "boundary": "No persistent change may occur outside the authorised FacMan workspace.",
       "claim_status": "unproven",
       "id": "hermetic",
-      "next_gate": "FACMAN-HERMETIC-STANDALONE-PLAY-01",
+      "next_gate": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
       "product_mode": "accepted"
     }
   ],
@@ -581,6 +586,44 @@
     "work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
     "zero_write_proof": true
   },
+  "gate3_operation_permit_closeout": {
+    "authenticator_algorithm": "hmac-sha256.process.v1",
+    "canonical_main_promotion": false,
+    "canonicalization_version": "facman.sorted-json.v1",
+    "clean_reproduction_seconds": 442.0,
+    "command_count": 125,
+    "credential_authority_promotion": false,
+    "dev_integration_revision": "91c2aa4fe0a30be97bf16165b41a95a8fab4cd11",
+    "exact_dev_ci_run": "29826221338",
+    "exact_dev_clean_reproduction": true,
+    "exact_dev_code_security_run": "29826221318",
+    "exact_dev_schema_check_run": "29826221373",
+    "exact_dev_security_policy_run": "29826221366",
+    "exact_head_ci_run": "29825371714",
+    "exact_head_code_security_run": "29825371722",
+    "exact_head_schema_check_run": "29825371753",
+    "exact_head_security_policy_run": "29825371793",
+    "implementation_pull_request": 42,
+    "native_test_count": 47,
+    "network_authority_promotion": false,
+    "permit_issuance_authority": false,
+    "projected_instance_resource_count": 9,
+    "provider_revalidation_proof": "dormant_factorio_launch_foundation_operation",
+    "publication": false,
+    "python_expected_skips": 2,
+    "python_test_count": 364,
+    "real_factorio_execution": false,
+    "refusal_code_count": 242,
+    "registered_route_count": 123,
+    "reviewed_head_revision": "5f9f122d6d3e95a006c44e46ba54c0927e9d288c",
+    "schema_count": 268,
+    "setup_authority_promotion": false,
+    "signing": false,
+    "status": "accepted_reviewed_dev_integration",
+    "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "work_unit": "FACMAN-OPERATION-PERMIT-01"
+  },
   "host_environment_program": {
     "arbitrary_script_authority": false,
     "architecture": "docs/architecture/host_environment_lifecycle.md",
@@ -671,7 +714,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+  "last_closed_work_unit": "FACMAN-OPERATION-PERMIT-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -1451,7 +1494,7 @@
     "harmless_reads_require_permit": false,
     "permit_issuance_authority": false,
     "provider_revalidation_required": true,
-    "status": "active_contract_and_validation_infrastructure",
+    "status": "gate3_infrastructure_complete_no_issuance",
     "work_unit": "FACMAN-OPERATION-PERMIT-01"
   },
   "platforms": [
@@ -1570,12 +1613,12 @@
     "canonical_integration": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-OPERATION-PERMIT-01",
+    "current_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-01",
-    "phase": "operation_permit",
+    "next_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+    "phase": "hermetic_standalone_play_policy",
     "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
@@ -1634,7 +1677,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "execution_foundation_proven_real_play_unproven",
+    "safety_authority": "permit_infrastructure_proven_real_play_unproven",
     "user_validation": "not_started",
     "user_workflow": "advanced_command_surface_only"
   },

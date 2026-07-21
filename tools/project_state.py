@@ -111,6 +111,7 @@ def collect() -> dict[str, Any]:
         "execution_foundation": status["execution_foundation"],
         "instance_product_program": status["instance_product_program"],
         "operation_permit_program": status["operation_permit_program"],
+        "gate3_operation_permit_closeout": status["gate3_operation_permit_closeout"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
         "gate2_instance_spec_and_readiness_closeout": status["gate2_instance_spec_and_readiness_closeout"],
@@ -369,6 +370,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Gate 2 instance closeout: "
         f"`{data['gate2_instance_spec_and_readiness_closeout']['status']}` at dev "
         f"`{data['gate2_instance_spec_and_readiness_closeout']['final_dev_revision']}`;",
+        f"- Gate 3 permit closeout: "
+        f"`{data['gate3_operation_permit_closeout']['status']}` at dev "
+        f"`{data['gate3_operation_permit_closeout']['dev_integration_revision']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
@@ -513,8 +517,8 @@ def readme_status(data: dict[str, Any]) -> str:
         "Installation model v2 is closed as a read-only, evidence-bound planning layer.",
         "Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as "
         "menu-first read-only projections. Saves/worlds remain optional instance content.",
-        "The active path now binds one exact reviewed operation into a short-lived permit with "
-        "provider-side revalidation, followed by the hermetic standalone Play-to-menu gate.",
+        "Gate 3 exact permit infrastructure is closed with provider-side revalidation and no "
+        "product issuance. The active path now freezes the hermetic standalone Play-to-menu policy.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -543,8 +547,8 @@ def roadmap_status(data: dict[str, Any]) -> str:
         first_step,
         "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
         "3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.",
-        "4. Bind each permit to one reviewed operation and require expiry, replay refusal, exact resources, and provider-side revalidation.",
-        "5. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.",
+        "4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.",
+        "5. Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`, then implement `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01` and record `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`; keep Steam-aware Play independent.",
         "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
         "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
         "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
@@ -678,6 +682,14 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "safety": "execution_foundation_proven_real_play_unproven",
             "execution_reason": "real_play_gate_not_passed",
         },
+        "hermetic_standalone_play_policy": {
+            "checkpoint": "hermetic-standalone-play-policy",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+            "last_closed": "FACMAN-OPERATION-PERMIT-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "safety": "permit_infrastructure_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
     }
     product = status.get("product", {})
     phase = product.get("phase")
@@ -782,7 +794,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("instance programme must remain decomposed, menu-first, portable, and non-authoritative")
     permit_program = status.get("operation_permit_program", {})
     if permit_program != {
-        "status": "active_contract_and_validation_infrastructure",
+        "status": "gate3_infrastructure_complete_no_issuance",
         "work_unit": "FACMAN-OPERATION-PERMIT-01",
         "authority_model": "short_lived_plan_bound_exact_resource_permit",
         "global_admission_is_sole_enforcer": False,
@@ -791,6 +803,47 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "permit_issuance_authority": False,
     }:
         problems.append("operation permits must remain short-lived, plan-bound, and unissued")
+    gate3 = status.get("gate3_operation_permit_closeout", {})
+    expected_gate3 = {
+        "status": "accepted_reviewed_dev_integration",
+        "work_unit": "FACMAN-OPERATION-PERMIT-01",
+        "implementation_pull_request": 42,
+        "reviewed_head_revision": "5f9f122d6d3e95a006c44e46ba54c0927e9d288c",
+        "dev_integration_revision": "91c2aa4fe0a30be97bf16165b41a95a8fab4cd11",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_head_ci_run": "29825371714",
+        "exact_head_code_security_run": "29825371722",
+        "exact_head_schema_check_run": "29825371753",
+        "exact_head_security_policy_run": "29825371793",
+        "exact_dev_ci_run": "29826221338",
+        "exact_dev_code_security_run": "29826221318",
+        "exact_dev_schema_check_run": "29826221373",
+        "exact_dev_security_policy_run": "29826221366",
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 442.0,
+        "native_test_count": 47,
+        "python_test_count": 364,
+        "python_expected_skips": 2,
+        "schema_count": 268,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 242,
+        "canonicalization_version": "facman.sorted-json.v1",
+        "authenticator_algorithm": "hmac-sha256.process.v1",
+        "projected_instance_resource_count": 9,
+        "provider_revalidation_proof": "dormant_factorio_launch_foundation_operation",
+        "permit_issuance_authority": False,
+        "real_factorio_execution": False,
+        "setup_authority_promotion": False,
+        "credential_authority_promotion": False,
+        "network_authority_promotion": False,
+        "signing": False,
+        "publication": False,
+        "canonical_main_promotion": False,
+    }
+    if gate3 != expected_gate3:
+        problems.append("Gate 3 closeout must bind exact reviewed and merged-dev proof without promoting issuance or execution")
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {
         "status": "accepted_reviewed_dev_integration",

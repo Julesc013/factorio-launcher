@@ -9,7 +9,7 @@
   authority incomplete and real Play remains impossible.
 - Local Clang/libFuzzer execution was not available on this machine. The real
   bounded libFuzzer target and cross-platform compiler/sanitizer/package proof
-  await hosted CI on the exact published head.
+  passed in hosted CI on exact reviewed head `5f9f122` and exact merged `dev`.
 - The platform CSPRNG is deliberately not wired to permit creation because
   product issuance remains outside Gate 3. Gate 4 must add that adapter before
   a product issuer can construct a process-session authenticator.

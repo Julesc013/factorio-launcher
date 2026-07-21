@@ -6,18 +6,19 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Current product truth
 
-- phase: `operation_permit` / `active`;
+- phase: `hermetic_standalone_play_policy` / `active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `operation-permit`;
-- active WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
-- next WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-01`;
+- checkpoint: `hermetic-standalone-play-policy`;
+- active WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`;
+- next WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`;
 - next authority gate: `real-play-isolation`;
 - truth scope: `dev_integrated_reviewed_reproduced`; canonical integration: `false`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
+- Gate 3 permit closeout: `accepted_reviewed_dev_integration` at dev `91c2aa4fe0a30be97bf16165b41a95a8fab4cd11`;
 - execution: `unavailable` / `real_play_gate_not_passed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
@@ -26,7 +27,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 - playability: `not_yet_playable`;
 - user workflow: `advanced_command_surface_only`;
-- safety authority: `execution_foundation_proven_real_play_unproven`;
+- safety authority: `permit_infrastructure_proven_real_play_unproven`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -35,7 +36,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Execution guarantees
 
 - `instance_isolated`: product mode `accepted`, claim `unproven`, next gate `FACMAN-STEAM-AWARE-PLAY-01`. FacMan-owned instance data is isolated; enumerated Steam/platform state may change after explicit disclosure.
-- `hermetic`: product mode `accepted`, claim `unproven`, next gate `FACMAN-HERMETIC-STANDALONE-PLAY-01`. No persistent change may occur outside the authorised FacMan workspace.
+- `hermetic`: product mode `accepted`, claim `unproven`, next gate `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`. No persistent change may occur outside the authorised FacMan workspace.
 
 ## Instance product programme
 
@@ -56,7 +57,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Operation-permit programme
 
-- status: `active_contract_and_validation_infrastructure`;
+- status: `gate3_infrastructure_complete_no_issuance`;
 - WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
 - authority model: `short_lived_plan_bound_exact_resource_permit`;
 - provider revalidation required: `true`;
@@ -84,7 +85,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
+- last closed WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `7bd4425f0c35414f738159b45d8bec42edf70235` / `3f8489275077347c2918f3bb03614ec6431362ff`;
