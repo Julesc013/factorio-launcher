@@ -28,6 +28,10 @@ conversion slice:
 - Native and CLI tests prove management-class action decisions, missing-source
   blockers, deterministic plans, source/workspace invariance, and no target
   materialisation.
+- Gate 1 hardening binds plan identity to canonical current evidence and desired
+  state, normalizes steps to the repository effect vocabulary, decodes desired
+  enums into closed runtime types, exposes freshness/revalidation identities,
+  and keeps caller-selected source references explicitly unverified.
 - Native discovery, Windows discovery, CLI, schema, architecture, project
   truth, product, workspace, and safety documentation cover the new behavior.
 - `evidence/install-factorio-2.0.77.ps1` records the reviewed one-host

@@ -23,13 +23,17 @@
   v1 stored record. Source identity for the live 2.0.77 installation is not yet
   durably bound, filesystem capabilities are revalidation requirements rather
   than apply proofs, and no v2 persisted-record migration is enabled.
-- Reconciliation plans are advisory provider inputs. They expose blockers,
-  risks, ordered responsibilities, and rollback policy, but deliberately have
-  no apply command until authenticated source inspection, exact staged closure,
-  dependent-instance impact, interruption recovery, and provider gates exist.
+- Reconciliation plans are evidence-bound advisory provider inputs. They expose
+  canonical digests, revalidation dependencies, blockers, risks, ordered
+  responsibilities, and rollback policy, but deliberately have no apply
+  command. Raw source references remain unverified until authenticated source
+  inspection, exact staged closure, dependent-instance impact, interruption
+  recovery, and provider gates exist.
 - Real Factorio Play remains disabled. The execution foundation is fake-process
   proven, but hermetic standalone Play and Steam-aware Play require their own
   reviewed gates.
-- The work unit remains active because the full lifecycle objective is larger
-  than the completed discovery, preservation, and one-host replacement
-  milestone.
+- The umbrella work unit remains only as historical governance for the bounded
+  discovery, preservation, one-host replacement, and read-only model slices.
+  General mutation work must transfer to
+  `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`; closing the bounded Gate 1 slice
+  must not claim the umbrella lifecycle objective was completed.

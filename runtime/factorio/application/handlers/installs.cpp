@@ -172,8 +172,19 @@ ApplicationResult plan_install_reconciliation(
             true),
         "unknown_install",
         "Install reference is not registered");
+    auto plan = installation::reconciliation_plan_json(install, request);
+    if (!plan) return refused(
+        safety_refusal(
+            "installs.reconcile.plan",
+            plan.error().code,
+            "Desired installation state is not compatible with this runtime",
+            plan.error().message,
+            false),
+        plan.error().code,
+        plan.error().message,
+        plan.error().kind);
     ApplicationResult result;
-    result.output = installation::reconciliation_plan_json(install, request);
+    result.output = plan.take_value();
     return result;
 }
 

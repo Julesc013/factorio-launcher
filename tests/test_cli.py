@@ -32,6 +32,14 @@ def tree_snapshot(root: Path) -> dict[str, str]:
     }
 
 
+def canonical_json_digest(value: object) -> str:
+    rendered = json.dumps(
+        value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).replace("/", "\\/")
+    encoded = rendered.encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 class CliTests(unittest.TestCase):
     def test_generated_setup_workflow_is_policy_neutral_and_human_gated(self) -> None:
         code, stdout, stderr = invoke(["installs", "workflow", "--json"])
@@ -167,9 +175,12 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             install = root / "Factorio 2.0"
+            source_candidate = root / "selected-source"
             workspace = root / "workspace"
             shutil.copytree(FIXTURE_INSTALL, install)
+            shutil.copytree(FIXTURE_INSTALL, source_candidate)
             source_before = tree_snapshot(install)
+            candidate_source_before = tree_snapshot(source_candidate)
 
             code, stdout, stderr = invoke([
                 "--workspace", str(workspace), "installs", "import", str(install),
@@ -184,6 +195,10 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr or stdout)
             model = json.loads(stdout)
             self.assertEqual("factorio.installation_model.v2", model["schema"])
+            self.assertRegex(model["current_evidence_digest"], r"^[0-9a-f]{64}$")
+            self.assertEqual(
+                canonical_json_digest(model["current_evidence"]), model["current_evidence_digest"]
+            )
             authority = model["current_evidence"]["ownership_and_authority"]
             self.assertEqual("reference", authority["management_class"])
             self.assertFalse(authority["mutation_authority"])
@@ -191,6 +206,8 @@ class CliTests(unittest.TestCase):
             self.assertEqual("requires_adoption_or_clone", actions["repair"]["status"])
             self.assertEqual("requires_adoption_or_clone", actions["uninstall"]["status"])
             self.assertEqual("universal_setup", actions["repair"]["owner"])
+            self.assertEqual("unselected", model["current_evidence"]["source"]["trust_status"])
+            self.assertTrue(all(value is False for value in model["no_write_guarantees"].values()))
 
             model_schema = json_contract.load_schema(
                 ROOT / "contracts/schema/factorio/factorio_installation_model.v2.schema.json"
@@ -230,10 +247,19 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr or stdout)
             blocked = json.loads(stdout)
             self.assertEqual("blocked_plan", blocked["summary"]["status"])
-            self.assertIn("trusted_source_ref_required_for_managed_materialisation", blocked["blockers"])
+            self.assertIn("source_candidate_required_for_materialisation", blocked["blockers"])
+
+            implicit_same_root_args = [
+                "--workspace", str(workspace), "installs", "reconcile", "plan", "fixture",
+                "--management", "managed", "--json",
+            ]
+            code, stdout, stderr = invoke(implicit_same_root_args)
+            self.assertEqual(code, 0, stderr or stdout)
+            implicit_same_root = json.loads(stdout)
+            self.assertIn("in_place_authority_conversion_refused", implicit_same_root["blockers"])
 
             planned_args = blocked_args[:-1] + [
-                "--source-ref", "fixture-source:2.0.77", "--update-policy", "pinned", "--json",
+                "--source-ref", str(source_candidate), "--update-policy", "pinned", "--json",
             ]
             code, stdout, stderr = invoke(planned_args)
             self.assertEqual(code, 0, stderr or stdout)
@@ -241,10 +267,46 @@ class CliTests(unittest.TestCase):
             code, repeated_stdout, stderr = invoke(planned_args)
             self.assertEqual(code, 0, stderr or repeated_stdout)
             repeated = json.loads(repeated_stdout)
-            self.assertEqual("plan_ready_for_provider_review", planned["summary"]["status"])
+            self.assertEqual("blocked_plan", planned["summary"]["status"])
+            self.assertIn("source_inspection_required_for_materialisation", planned["blockers"])
+            self.assertEqual("selected_unverified", planned["desired_state"]["source"]["trust_status"])
+            steps = {step["step_kind"]: step for step in planned["steps"]}
+            self.assertEqual("blocked_pending_source_inspection", steps["source.inspect"]["status"])
+            canonical_effects = {"workspace_read", "workspace_write", "setup_preview"}
+            self.assertTrue(all(set(step["effects"]) <= canonical_effects for step in planned["steps"]))
             self.assertEqual(planned["plan_id"], repeated["plan_id"])
+            self.assertEqual(planned["plan_digest"], repeated["plan_digest"])
+            self.assertEqual(planned["current_evidence_digest"], repeated["current_evidence_digest"])
+            self.assertEqual(planned["desired_state_digest"], repeated["desired_state_digest"])
+            self.assertEqual(planned["plan_id"], planned["plan_digest"])
+            self.assertRegex(planned["current_evidence_digest"], r"^[0-9a-f]{64}$")
+            self.assertRegex(planned["desired_state_digest"], r"^[0-9a-f]{64}$")
+            self.assertEqual(
+                canonical_json_digest(planned["current_evidence"]),
+                planned["current_evidence_digest"],
+            )
+            self.assertEqual(
+                canonical_json_digest(planned["desired_state"]), planned["desired_state_digest"]
+            )
+            plan_core = {
+                "schema": planned["schema"],
+                "canonicalization_version": planned["canonicalization_version"],
+                "effect_vocabulary_version": planned["effect_vocabulary_version"],
+                "install_id": planned["install_id"],
+                "current_evidence_digest": planned["current_evidence_digest"],
+                "desired_state_digest": planned["desired_state_digest"],
+                "steps": planned["steps"],
+                "blockers": planned["blockers"],
+                "risks": planned["risks"],
+                "provider_revisions": planned["provider_revisions"],
+                "policy_revision": planned["policy_revision"],
+                "revalidation_requirements": planned["revalidation_requirements"],
+            }
+            self.assertEqual(canonical_json_digest(plan_core), planned["plan_digest"])
             self.assertFalse(planned["mutation_executed"])
             self.assertFalse(planned["apply_available"])
+            self.assertIsNone(planned["created_at"])
+            self.assertTrue(all(value is False for value in planned["no_write_guarantees"].values()))
             self.assertFalse(candidate.exists())
             plan_schema = json_contract.load_schema(
                 ROOT / "contracts/schema/factorio/factorio_install_reconciliation_plan.v1.schema.json"
@@ -255,6 +317,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(json_contract.validate(planned, plan_schema), [])
             self.assertEqual(json_contract.validate(planned["desired_state"], desired_schema), [])
             self.assertEqual(source_before, tree_snapshot(install))
+            self.assertEqual(candidate_source_before, tree_snapshot(source_candidate))
             self.assertEqual(workspace_before, tree_snapshot(workspace))
 
             code, stdout, stderr = invoke([
@@ -262,6 +325,21 @@ class CliTests(unittest.TestCase):
             ])
             self.assertNotEqual(code, 0)
             self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
+
+            absent_workspace = root / "absent-workspace"
+            code, stdout, stderr = invoke([
+                "--workspace", str(absent_workspace), "installs", "describe", "missing", "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse(absent_workspace.exists())
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(absent_workspace), "installs", "reconcile", "plan", "missing", "--json",
+            ])
+            self.assertNotEqual(code, 0, stderr)
+            self.assertEqual("unknown_install", json.loads(stdout)["refusal"]["code"])
+            self.assertFalse(absent_workspace.exists())
 
     def test_create_instance_can_preserve_program_local_player_data(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

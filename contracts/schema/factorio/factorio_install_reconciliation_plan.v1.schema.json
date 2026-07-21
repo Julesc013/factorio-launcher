@@ -3,11 +3,18 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_reconciliation_plan.v1.schema.json",
   "title": "Factorio Installation Reconciliation Plan",
   "type": "object",
-  "required": ["schema", "command", "plan_id", "mode", "mutation_executed", "apply_available", "current_evidence", "desired_state", "steps", "blockers", "risks", "summary", "authority", "rollback"],
+  "required": ["schema", "command", "install_id", "canonicalization_version", "effect_vocabulary_version", "current_evidence_digest", "desired_state_digest", "plan_digest", "plan_id", "created_at", "mode", "mutation_executed", "apply_available", "current_evidence", "desired_state", "steps", "blockers", "risks", "provider_revisions", "policy_revision", "revalidation_requirements", "summary", "authority", "rollback", "no_write_guarantees"],
   "properties": {
     "schema": { "const": "factorio.install_reconciliation_plan.v1" },
     "command": { "const": "installs.reconcile.plan" },
+    "install_id": { "type": "string", "minLength": 1 },
+    "canonicalization_version": { "const": "facman.sorted-json.v1" },
+    "effect_vocabulary_version": { "const": "common.effects.v1" },
+    "current_evidence_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "desired_state_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "plan_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "plan_id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
     "mode": { "const": "plan_only" },
     "mutation_executed": { "const": false },
     "apply_available": { "const": false },
@@ -18,12 +25,17 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "status", "owner", "effect", "reason"],
+        "required": ["step_kind", "status", "owner", "effects", "reason"],
         "properties": {
-          "id": { "type": "string" },
-          "status": { "type": "string" },
-          "owner": { "type": "string" },
-          "effect": { "type": "string" },
+          "step_kind": { "enum": ["evidence.capture", "source.inspect", "application.materialize", "instance_data.separate", "integration.reconcile", "application.verify", "instances.verify_dependents", "rollback.retain"] },
+          "status": { "enum": ["required", "not_required", "blocked", "blocked_pending_source_inspection", "blocked_missing_source_candidate"] },
+          "owner": { "enum": ["facman", "universal_setup", "integration_provider"] },
+          "effects": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "enum": ["workspace_read", "workspace_write", "setup_preview"] }
+          },
           "reason": { "type": "string" }
         },
         "additionalProperties": false
@@ -31,6 +43,26 @@
     },
     "blockers": { "type": "array", "items": { "type": "string" } },
     "risks": { "type": "array", "items": { "type": "string" } },
+    "provider_revisions": {
+      "type": "object",
+      "required": ["installation_projection", "installation_provider", "installation_provider_revision", "source_provider_revision", "setup_provider_revision", "integration_provider_revision"],
+      "properties": {
+        "installation_projection": { "const": "factorio.installation_model.v2" },
+        "installation_provider": { "type": "string", "minLength": 1 },
+        "installation_provider_revision": { "type": "string", "minLength": 1 },
+        "source_provider_revision": { "type": "string", "minLength": 1 },
+        "setup_provider_revision": { "type": "string", "minLength": 1 },
+        "integration_provider_revision": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "policy_revision": { "const": "factorio.install-reconciliation-policy.v1" },
+    "revalidation_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["installation_record_revision", "installation_root_identity", "executable_identity", "verification_identity", "setup_state_identity", "integration_identity", "filesystem_volume_identity", "provider_revisions", "policy_revision", "source_evidence"] }
+    },
     "summary": {
       "type": "object",
       "required": ["status", "change_count", "blocker_count"],
@@ -61,6 +93,22 @@
         "required": { "type": "boolean" },
         "source_deletion_allowed": { "const": false },
         "acceptance": { "const": "human_review_required_before_retirement" }
+      },
+      "additionalProperties": false
+    },
+    "no_write_guarantees": {
+      "type": "object",
+      "required": ["installation_bytes_changed", "source_bytes_changed", "registry_state_changed", "setup_apply_invoked", "persisted_record_rewritten", "workspace_created", "journal_created", "temporary_state_created", "source_deletion_allowed"],
+      "properties": {
+        "installation_bytes_changed": { "const": false },
+        "source_bytes_changed": { "const": false },
+        "registry_state_changed": { "const": false },
+        "setup_apply_invoked": { "const": false },
+        "persisted_record_rewritten": { "const": false },
+        "workspace_created": { "const": false },
+        "journal_created": { "const": false },
+        "temporary_state_created": { "const": false },
+        "source_deletion_allowed": { "const": false }
       },
       "additionalProperties": false
     }

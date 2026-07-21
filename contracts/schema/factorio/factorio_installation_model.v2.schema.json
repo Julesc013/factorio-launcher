@@ -3,11 +3,13 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_installation_model.v2.schema.json",
   "title": "Factorio Installation Model",
   "type": "object",
-  "required": ["schema", "command", "install_id", "current_evidence", "available_actions", "recommendations", "compatibility"],
+  "required": ["schema", "command", "install_id", "canonicalization_version", "current_evidence_digest", "current_evidence", "available_actions", "recommendations", "compatibility", "no_write_guarantees"],
   "properties": {
     "schema": { "const": "factorio.installation_model.v2" },
     "command": { "const": "installs.describe" },
     "install_id": { "type": "string", "minLength": 1 },
+    "canonicalization_version": { "const": "facman.sorted-json.v1" },
+    "current_evidence_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "current_evidence": { "type": "object" },
     "available_actions": {
       "type": "array",
@@ -35,6 +37,22 @@
         "persisted_record_rewritten": { "const": false },
         "conservative_defaults_applied": { "const": true },
         "missing_authority_default": { "const": "read_only" }
+      },
+      "additionalProperties": false
+    },
+    "no_write_guarantees": {
+      "type": "object",
+      "required": ["installation_bytes_changed", "source_bytes_changed", "registry_state_changed", "setup_apply_invoked", "persisted_record_rewritten", "workspace_created", "journal_created", "temporary_state_created", "source_deletion_allowed"],
+      "properties": {
+        "installation_bytes_changed": { "const": false },
+        "source_bytes_changed": { "const": false },
+        "registry_state_changed": { "const": false },
+        "setup_apply_invoked": { "const": false },
+        "persisted_record_rewritten": { "const": false },
+        "workspace_created": { "const": false },
+        "journal_created": { "const": false },
+        "temporary_state_created": { "const": false },
+        "source_deletion_allowed": { "const": false }
       },
       "additionalProperties": false
     }
