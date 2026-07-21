@@ -4,6 +4,7 @@
 #ifndef FLB_FACTORIO_INSTALL_MODEL_H
 #define FLB_FACTORIO_INSTALL_MODEL_H
 
+#include "fl_result.h"
 #include "flb_factorio_discovery.h"
 
 #include <string>
@@ -24,7 +25,7 @@ struct DesiredInstallationState {
 
 std::string installation_model_json(const discovery::InstallRef& install);
 
-std::string reconciliation_plan_json(
+facman::core::Result<std::string> reconciliation_plan_json(
     const discovery::InstallRef& install,
     const DesiredInstallationState& desired);
 

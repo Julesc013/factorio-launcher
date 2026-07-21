@@ -44,28 +44,39 @@
 - `installs describe`: projects the compatible install reference into source,
   deployment, authority, data, integration, health, provenance, and filesystem
   evidence; the live 2.0.77 install remains a read-only reference.
-- `installs reconcile plan`: deterministic SHA-256 plan identity, explicit
+- `installs reconcile plan`: independently reproducible evidence, desired-state,
+  and plan SHA-256 digests; explicit provider/policy dependencies,
   blockers/risks/rollback, `mutation_executed=false`, and
   `apply_available=false`.
-- Disposable fixture proof: a missing source blocks managed conversion; a
-  complete side-by-side request becomes provider-review ready; the source and
-  workspace remain byte-for-byte unchanged and no candidate target is created.
+- Disposable fixture proof: a missing source blocks materialisation; a raw
+  caller-selected source remains `selected_unverified` and blocked pending
+  authenticated inspection. Installation, selected source, and workspace
+  bytes remain unchanged and no candidate target is created.
 - `flb_factorio_install_model_smoke`: pass.
 - Focused CLI model, reconciliation, and command-graph tests: 2 pass.
-- Live `factorio-2-0` proof: version 2.0.77, `vendor_installed`, management
-  class `reference`, mutation authority false, and source identity not yet
-  bound. The complete desired-state request is provider-review ready but has
-  `apply_available=false` and `mutation_executed=false`.
-- Repeated live desired state produced plan identity
-  `0ccf75f6a9ce06b18f286f986918d2c01ac9353b44e35e5e7d927362c288d915`.
-  The candidate target was not created and the workspace digest remained
-  `adad8cae3c0b6108031ca23b2ae6924a7f88d6948b7160122c29c0853d065d7d`.
+- Historical live `factorio-2-0` proof remains valid for the read-only
+  projection: version 2.0.77, `vendor_installed`, management class `reference`,
+  mutation authority false, and source identity not yet bound. Its earlier
+  provider-review-ready plan identity is superseded by the stricter Gate 1
+  source-trust contract; a raw source reference can no longer unblock it.
+- Native proof covers reference, legacy managed, proof-backed managed and
+  adopted, Steam, package-manager, damaged, mutable-data-conflated, and shared
+  vendor-registration cases. It also proves changed evidence or desired state
+  changes plan identity and unknown enum values refuse as `invalid_request`.
+- CLI proof independently reconstructs all three canonical digests, validates
+  all affected schemas, confirms closed step effects, snapshots installation,
+  source, and workspace bytes, and proves missing-workspace reads create no
+  directory.
 
 - PowerShell operation script parser: pass
 - `tools/strict_check.py`: pass, including 250 schemas and 123 commands
 - `tests.test_aide_compaction`: 6 tests pass
 - Full `tools/dev.py verify-all`: pass in 499.7 seconds; 44 native tests and
   358 Python tests pass with one expected Python skip
+- Gate 1 canonical local matrix: `tools/dev.py test --full` passes 43/43 native
+  tests and 359 Python tests with seven declared optional skips; the full
+  strict validator chain passes with 250 schemas, 123 commands, and 217 refusal
+  codes.
 - Portable AIDE Lite self-test: pass. Task inspection reports the active work
   unit as `partial` with zero missing evidence; noop-check says to continue
   from current status and evidence rather than repeat completed work.

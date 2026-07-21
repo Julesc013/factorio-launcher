@@ -6,6 +6,6 @@
   "mutation_executed": false,
   "apply_available": false,
   "summary": {
-    "status": "plan_ready_for_provider_review"
+    "status": "blocked_plan"
   }
 }
