@@ -14,3 +14,11 @@ closed 25-code permit refusal family, and the versioned architecture law. It
 also regenerates the development-state counts to 268 schemas and 242 refusal
 codes. No command, route, frontend, runtime authenticator, provider effect, or
 product issuance surface is introduced by this slice.
+
+The permit-core slice adds `facman_permit_static` under
+`runtime/core/permit/` with canonical claims encoding, strict bounded envelope
+decoding, HMAC-SHA-256 process-session authentication, injected wall and
+monotonic clocks, a bounded in-memory issuance/revocation ledger, exact-context
+validation, and atomic one-time consumption. The native smoke uses only a
+foundation fixture operation and has no Factorio, Setup, credential, network,
+signing, publication, or frontend dependency.
