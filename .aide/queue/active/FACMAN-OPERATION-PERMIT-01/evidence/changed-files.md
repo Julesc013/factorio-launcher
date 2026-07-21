@@ -39,3 +39,8 @@ The proof slice adds an adversarial native provider smoke, a bounded parser
 corpus, shared standalone/libFuzzer harnesses, a strict no-authority validator,
 and hosted sanitizer/libFuzzer wiring. The public command and route counts stay
 at 125 and 123 respectively; no issuance route or process-launch path exists.
+
+The entropy hardening removes the permit core's implicit `std::random_device`
+dependency. A process-session authenticator now requires an injected
+`PermitEntropySource`; fixtures may supply deterministic bytes, while any
+future product issuer must explicitly bind the platform CSPRNG.

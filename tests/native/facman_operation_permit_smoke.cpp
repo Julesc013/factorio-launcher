@@ -43,6 +43,30 @@ private:
     std::vector<unsigned char> key_;
 };
 
+class FixtureEntropy final : public permit::PermitEntropySource {
+public:
+    facman::core::Result<void> fill(unsigned char* output, std::size_t size) noexcept override
+    {
+        for (std::size_t index = 0; index < size; ++index) {
+            output[index] = static_cast<unsigned char>((next_++ % 251U) + 1U);
+        }
+        return facman::core::Result<void>::success();
+    }
+
+private:
+    std::size_t next_ = 0U;
+};
+
+class UnavailableEntropy final : public permit::PermitEntropySource {
+public:
+    facman::core::Result<void> fill(unsigned char*, std::size_t) noexcept override
+    {
+        return facman::core::Result<void>::failure({
+            "fixture_entropy_unavailable", "fixture entropy is unavailable",
+            "$fixture", facman::core::OutcomeKind::unavailable});
+    }
+};
+
 class ManualClock final : public permit::PermitClock {
 public:
     std::uint64_t wall = 1000U;
@@ -319,11 +343,18 @@ int main()
         static_cast<int>(right.code == "permit_replayed");
     if (consumed_count != 1 || replay_count != 1) return fail(49, "concurrent replay was not atomic");
 
-    auto process_authenticator = permit::ProcessSessionAuthenticator::create();
+    FixtureEntropy process_entropy;
+    auto process_authenticator = permit::ProcessSessionAuthenticator::create(process_entropy);
     if (!process_authenticator ||
         process_authenticator.value()->issuer_session_id().size() != 40U ||
         process_authenticator.value()->authenticate("probe").size() != 64U) {
         return fail(50, "process-session authenticator creation failed");
+    }
+    UnavailableEntropy unavailable_entropy;
+    auto unavailable_authenticator = permit::ProcessSessionAuthenticator::create(unavailable_entropy);
+    if (unavailable_authenticator ||
+        unavailable_authenticator.error().code != "permit_authentication_failed") {
+        return fail(51, "process-session authenticator accepted unavailable entropy");
     }
 
     std::cout << "operation-permit-smoke: ok\n";

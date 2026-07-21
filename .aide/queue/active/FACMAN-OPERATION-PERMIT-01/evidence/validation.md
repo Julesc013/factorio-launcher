@@ -33,11 +33,13 @@ The provider-proof and adversarial slices additionally pass locally:
   permit core, Gate 2 instance model, and dormant launch-provider verifier.
 - Full Python suite: 364 passed, 2 skipped.
 - Strict policy: 268 schemas, 242 refusal codes, 125 commands, 123 routes,
-  520 SPDX source files, and all architecture/security/parity checks passed.
+  530 SPDX source files, and all architecture/security/parity checks passed.
 - Standalone permit fuzz corpus over valid, malformed, duplicate-key, time,
   and resource inputs.
 - Portable AIDE Lite self-test.
 - `git diff --check`.
+- Explicit entropy-source success and unavailable-source refusal; the strict
+  validator rejects any `std::random_device` fallback in the permit core.
 
 Clang is not installed locally, so the actual libFuzzer engine is pending the
 hosted Linux job. The target and bounded 1,000-run CI invocation are present;

@@ -79,13 +79,15 @@ def check() -> list[str]:
     core_header = (ROOT / "runtime/core/permit/fl_operation_permit.h").read_text(encoding="utf-8")
     core_source = (ROOT / "runtime/core/permit/fl_operation_permit.cpp").read_text(encoding="utf-8")
     for anchor in (
-        "class PermitAuthenticator", "class ProcessSessionAuthenticator",
+        "class PermitAuthenticator", "class PermitEntropySource", "class ProcessSessionAuthenticator",
         "class PermitLedger", "class PermitValidator", "register_issued",
         "maximum_ttl_seconds", "monotonic_milliseconds", "constant_time_equal",
         "hmac_sha256_hex", "permit_replayed", "permit_resource_set_not_closed",
     ):
         if anchor not in core_header + core_source:
             problems.append(f"permit core is missing anchor: {anchor}")
+    if "std::random_device" in core_source or "#include <random>" in core_source:
+        problems.append("permit core falls back to an unspecified random_device entropy source")
 
     launch_header = (ROOT / "runtime/factorio/launch/flb_factorio_launch_permit.h").read_text(encoding="utf-8")
     launch_source = (ROOT / "runtime/factorio/launch/flb_factorio_launch_permit.cpp").read_text(encoding="utf-8")

@@ -21,6 +21,12 @@ interface. The secret and complete envelope are never persisted, exported, or
 written to ordinary logs. A future out-of-process provider may replace the
 authenticator without changing claim semantics.
 
+Process-authenticator construction requires an explicit `PermitEntropySource`.
+The permit core never falls back to `std::random_device` or a deterministic
+generator. Gate 3 tests inject fixture entropy; a future product issuer must
+inject the existing platform CSPRNG, and remains unavailable until that wiring
+is separately reviewed.
+
 ## Canonical law
 
 Claims use `facman.sorted-json.v1`. Effects, capabilities, providers, and

@@ -10,11 +10,9 @@
 #include <array>
 #include <chrono>
 #include <cctype>
-#include <exception>
 #include <limits>
 #include <map>
 #include <mutex>
-#include <random>
 #include <set>
 #include <tuple>
 #include <utility>
@@ -827,31 +825,26 @@ ProcessSessionAuthenticator::ProcessSessionAuthenticator(
     std::vector<unsigned char> key)
     : session_id_(std::move(session_id)), key_(std::move(key)) {}
 
-Result<std::unique_ptr<ProcessSessionAuthenticator>> ProcessSessionAuthenticator::create()
+Result<std::unique_ptr<ProcessSessionAuthenticator>> ProcessSessionAuthenticator::create(
+    PermitEntropySource& entropy)
 {
-    try {
-        std::random_device random;
-        std::vector<unsigned char> key(32U);
-        std::vector<unsigned char> session(16U);
-        auto fill = [&](std::vector<unsigned char>& destination) {
-            for (std::size_t index = 0; index < destination.size(); index += 4U) {
-                const std::uint32_t value = random();
-                for (std::size_t offset = 0; offset < 4U && index + offset < destination.size(); ++offset) {
-                    destination[index + offset] = static_cast<unsigned char>(
-                        (value >> static_cast<unsigned int>(offset * 8U)) & 0xffU);
-                }
-            }
-        };
-        fill(key);
-        fill(session);
-        return Result<std::unique_ptr<ProcessSessionAuthenticator>>::success(
-            std::unique_ptr<ProcessSessionAuthenticator>(
-                new ProcessSessionAuthenticator("session-" + bytes_hex(session), std::move(key))));
-    } catch (const std::exception& error) {
+    std::vector<unsigned char> key(32U);
+    std::vector<unsigned char> session(16U);
+    auto key_result = entropy.fill(key.data(), key.size());
+    auto session_result = key_result ? entropy.fill(session.data(), session.size())
+                                     : Result<void>::failure(key_result.error());
+    if (!key_result || !session_result) {
+        secure_zero(key.data(), key.size());
+        secure_zero(session.data(), session.size());
         return Result<std::unique_ptr<ProcessSessionAuthenticator>>::failure({
-            "permit_authentication_failed", std::string("process entropy is unavailable: ") + error.what(),
+            "permit_authentication_failed", "a cryptographically secure process entropy source is unavailable",
             "$authenticator", OutcomeKind::unavailable});
     }
+    const std::string session_id = "session-" + bytes_hex(session);
+    secure_zero(session.data(), session.size());
+    return Result<std::unique_ptr<ProcessSessionAuthenticator>>::success(
+        std::unique_ptr<ProcessSessionAuthenticator>(
+            new ProcessSessionAuthenticator(session_id, std::move(key))));
 }
 
 ProcessSessionAuthenticator::~ProcessSessionAuthenticator()

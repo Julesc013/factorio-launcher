@@ -42,6 +42,20 @@ public:
     std::uint64_t monotonic_milliseconds() const override { return 50000U; }
 };
 
+class FixtureEntropy final : public permit::PermitEntropySource {
+public:
+    facman::core::Result<void> fill(unsigned char* output, std::size_t size) noexcept override
+    {
+        for (std::size_t index = 0; index < size; ++index) {
+            output[index] = static_cast<unsigned char>((next_++ % 251U) + 1U);
+        }
+        return facman::core::Result<void>::success();
+    }
+
+private:
+    std::size_t next_ = 0U;
+};
+
 void write_text(const fs::path& path, const std::string& text)
 {
     fs::create_directories(path.parent_path());
@@ -177,7 +191,8 @@ int main()
             resource.permitted_effects != std::vector<std::string>{"workspace_read"}) return fail(2);
     }
 
-    auto authenticator = permit::ProcessSessionAuthenticator::create();
+    FixtureEntropy process_entropy;
+    auto authenticator = permit::ProcessSessionAuthenticator::create(process_entropy);
     auto expected = current_context(workspace);
     if (!authenticator || !expected) return fail(3);
     auto sealed = permit::seal_claims(claims_from(expected.value(), *authenticator.value()),

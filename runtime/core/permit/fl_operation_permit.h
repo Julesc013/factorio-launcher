@@ -6,6 +6,7 @@
 
 #include "fl_result.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -114,9 +115,18 @@ public:
         const std::string& authenticator_value) const = 0;
 };
 
+class PermitEntropySource {
+public:
+    virtual ~PermitEntropySource() = default;
+    virtual facman::core::Result<void> fill(
+        unsigned char* output,
+        std::size_t size) noexcept = 0;
+};
+
 class ProcessSessionAuthenticator final : public PermitAuthenticator {
 public:
-    static facman::core::Result<std::unique_ptr<ProcessSessionAuthenticator>> create();
+    static facman::core::Result<std::unique_ptr<ProcessSessionAuthenticator>> create(
+        PermitEntropySource& entropy);
 
     ~ProcessSessionAuthenticator() override;
     ProcessSessionAuthenticator(ProcessSessionAuthenticator&&) noexcept;
