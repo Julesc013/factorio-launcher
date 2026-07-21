@@ -11,8 +11,12 @@ objective: >
 allowed_paths:
   - .aide/queue/**
   - runtime/factorio/instance/**
+  - runtime/factorio/application/**
+  - runtime/factorio/CMakeLists.txt
+  - runtime/core/generated/**
   - contracts/**
   - apps/**
+  - content/factorio/strings/**
   - docs/**
   - release/index/**
   - tests/**
@@ -29,6 +33,8 @@ affected_native_targets:
   - fl_json_core_smoke
   - flb_command_bridge_smoke
   - flb_factorio_install_model_smoke
+  - flb_factorio_instance_model_smoke
+  - flb_factorio_application_static
   - m1_three_repository_system_proof
 affected_python_tests:
   - tests.package_layout.test_distribution_contracts
@@ -105,7 +111,8 @@ architecture_invariants:
   - InstanceBinding contains machine-local resolution and evidence identities
   - InstanceReadiness is a computed read-only projection and never grants authority
   - menu is the explicit default LaunchIntent and no save is inferred
-  - the initial slice exposes list, inspect, and readiness only
+  - existing instance.list and instances.inspect contracts remain compatible
+  - the initial player projection adds instances.describe and instances.readiness only
   - preparation, permit issuance, and real Factorio execution remain unavailable
 depends_on:
   - FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01
