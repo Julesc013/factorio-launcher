@@ -1,0 +1,1 @@
+{"schema":"common.operation_permit_envelope.v1","claims":{"expires_at_unix_seconds":-1,"resources":[{},{}]},"claims_digest":"not-a-digest","authenticator":{"algorithm":"none","value":""}}

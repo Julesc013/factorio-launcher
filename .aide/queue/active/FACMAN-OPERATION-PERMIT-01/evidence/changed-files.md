@@ -27,3 +27,15 @@ monotonic clocks, a bounded in-memory issuance/revocation ledger, exact-context
 validation, and atomic one-time consumption. The native smoke uses only a
 foundation fixture operation and has no Factorio, Setup, credential, network,
 signing, publication, or frontend dependency.
+
+The provider-proof slice adds a path-free, deterministic projection from the
+accepted Gate 2 instance model to nine typed permit resources. It also adds a
+dormant Factorio launch verifier that independently authenticates, reobserves,
+validates, and atomically consumes only the foundation proof operation. The
+verifier hard-refuses real `instance.play`, non-menu intents, non-hermetic
+isolation, effect escalation, and process execution.
+
+The proof slice adds an adversarial native provider smoke, a bounded parser
+corpus, shared standalone/libFuzzer harnesses, a strict no-authority validator,
+and hosted sanitizer/libFuzzer wiring. The public command and route counts stay
+at 125 and 123 respectively; no issuance route or process-launch path exists.

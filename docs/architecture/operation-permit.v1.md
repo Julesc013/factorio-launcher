@@ -66,5 +66,14 @@ child permits; a bearer token is not shared across independent providers.
   host mutation.
 - The dormant Factorio launch verifier can validate and consume only; it has
   no process-launch dependency or execution entry point.
+- Gate 2 instance evidence is projected into nine typed, path-free resources:
+  spec, binding, readiness, instance root, installation evidence, effective
+  config, explicit modset state, execution environment, and `menu` intent.
+  This projection deliberately records that executable identity, a frozen
+  launch-plan digest, the Play policy, issuance, and real process-provider
+  authority are missing, so it is not a complete Play resource set.
+- The Gate 3 launch verifier accepts only
+  `foundation.factorio-permit-proof`. `instance.play` remains unsupported even
+  when an envelope is otherwise authentic.
 - `permit_issuance_authority` and real Factorio execution remain false until a
   later reviewed gate.

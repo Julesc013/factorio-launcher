@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 add_library(flb_factorio_launch_static STATIC
-  launch/flb_factorio_execution.cpp launch/flb_factorio_launch_plan.cpp)
+  launch/flb_factorio_execution.cpp launch/flb_factorio_launch_plan.cpp
+  launch/flb_factorio_launch_permit.cpp)
 target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
 target_link_libraries(flb_factorio_launch_static PUBLIC
-  facman_base_static facman_core_static facman_platform_static)
+  facman_base_static facman_core_static facman_permit_static facman_platform_static)
 
 add_library(flb_factorio_discovery_static STATIC
   discovery/discovery_service.cpp discovery/flb_factorio_discovery.cpp
@@ -62,6 +63,7 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
 
 add_library(flb_factorio_instance_static
   instance/flb_factorio_instance_model.cpp
+  instance/flb_factorio_permit_projection.cpp
   instance/flb_factorio_instance_lifecycle.cpp
   instance/flb_factorio_local_data_import.cpp)
 target_compile_features(flb_factorio_instance_static PUBLIC cxx_std_17)

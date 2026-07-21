@@ -25,3 +25,20 @@ The permit-core slice additionally passes:
 
 Gate 2 closeout validation remains recorded independently in
 `docs/release/checkpoints/gate2-instance-spec-and-readiness-closeout.md`.
+
+The provider-proof and adversarial slices additionally pass locally:
+
+- Clean Visual Studio 2022 x64 Debug configure/build with warnings as errors.
+- Full native CTest: 47/47 passed, including the three-repository proof,
+  permit core, Gate 2 instance model, and dormant launch-provider verifier.
+- Full Python suite: 364 passed, 2 skipped.
+- Strict policy: 268 schemas, 242 refusal codes, 125 commands, 123 routes,
+  520 SPDX source files, and all architecture/security/parity checks passed.
+- Standalone permit fuzz corpus over valid, malformed, duplicate-key, time,
+  and resource inputs.
+- Portable AIDE Lite self-test.
+- `git diff --check`.
+
+Clang is not installed locally, so the actual libFuzzer engine is pending the
+hosted Linux job. The target and bounded 1,000-run CI invocation are present;
+this file does not claim that hosted result before it exists.
