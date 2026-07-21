@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `instance_spec_and_readiness` and the active WorkUnit is `FACMAN-INSTANCE-SPEC-AND-READINESS-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `operation_permit` and the active WorkUnit is `FACMAN-OPERATION-PERMIT-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -23,6 +23,14 @@ plan effects, explicit source trust, zero-write proof, exact merged-`dev`
 workflows, and a clean pinned three-repository reconstruction. It transfers the
 remaining managed lifecycle to a separate future WorkUnit and activates the
 minimal read-only Instance slice without adding apply or execution authority.
+
+The bounded
+[`Gate 2 instance specification and readiness closeout`](gate2-instance-spec-and-readiness-closeout.md)
+binds PRs #39 and #40, portable and machine-local instance projections,
+menu-first readiness, deterministic component digests, zero-write proof, exact
+merged-`dev` workflows, and a clean pinned three-repository reconstruction. It
+activates OperationPermit contract work while leaving permit issuance,
+preparation, execution, signing, publication, and `main` unpromoted.
 
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),

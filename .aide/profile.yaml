@@ -8,19 +8,18 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: instance-spec-and-readiness
+  phase: operation-permit
   primary_goal: >
-    Implement the minimal read-only InstanceSpec, InstanceBinding,
-    InstanceReadiness, and InstanceView slice needed to select one exact
-    isolated Factorio environment and prepare for menu-first Play without
-    granting preparation or execution authority.
+    Implement the canonical short-lived OperationPermit contract and
+    independent provider revalidation needed to authorize one exact reviewed
+    operation without granting broad preparation or execution authority.
   next_task: >
-    Compose portable instance intent with machine-local installation, data,
-    configuration, modset-lock, environment, and evidence bindings; expose
-    read-only list, inspect, and readiness projections with menu as the default
-    launch intent. Follow with operation-bound permits and the hermetic
-    standalone Play gate; keep host-environment work as a non-blocking parallel
-    support lane and general installation mutation in its transferred WorkUnit.
+    Bind the accepted InstanceSpec, InstanceBinding, readiness evidence, and
+    menu as the default launch intent into a permit for one operation kind,
+    exact resources, plan and evidence digests, isolation mode, provider and
+    policy revisions, principal, nonce, and expiry. Require independent
+    provider revalidation, replay refusal, and zero authority from readiness
+    alone; follow with the hermetic standalone Play-to-menu gate.
   authoritative_command_slice:
     - installs.scan
     - installs.import
@@ -28,6 +27,8 @@ current_focus:
     - installs.describe
     - installs.reconcile.plan
     - instances.create
+    - instances.describe
+    - instances.readiness
     - launch_plan.build
     - launch_plan.preflight
     - run.preview

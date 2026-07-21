@@ -10,8 +10,8 @@ items:
     task: .aide/queue/active/FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01/evidence
   - id: FACMAN-INSTANCE-SPEC-AND-READINESS-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Instance specification, binding, readiness, and view
     task: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/task.yaml
     evidence: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/evidence
@@ -21,6 +21,12 @@ items:
     title: FacMan multi-version Factorio installation lifecycle
     task: .aide/queue/active/FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01/task.yaml
     evidence: .aide/queue/active/FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01/evidence
+  - id: FACMAN-OPERATION-PERMIT-01
+    status: active
+    lifecycle_state: active
+    title: Exact operation permit contract and revalidation
+    task: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked

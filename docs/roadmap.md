@@ -6,12 +6,12 @@ leaving setup mutation to Universal Setup.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The active phase is **instance_spec_and_readiness** and the active WorkUnit is `FACMAN-INSTANCE-SPEC-AND-READINESS-01`.
+The active phase is **operation_permit** and the active WorkUnit is `FACMAN-OPERATION-PERMIT-01`.
 
-1. Complete `FACMAN-INSTANCE-SPEC-AND-READINESS-01`.
+1. Complete `FACMAN-OPERATION-PERMIT-01`.
 2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.
-3. Implement only the minimal InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView slice needed for menu-first Play.
-4. Run `FACMAN-OPERATION-PERMIT-01`; bind unsafe authority to one reviewed plan and require provider-side revalidation.
+3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.
+4. Bind each permit to one reviewed operation and require expiry, replay refusal, exact resources, and provider-side revalidation.
 5. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.
 6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.
 7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.

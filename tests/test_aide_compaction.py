@@ -49,6 +49,7 @@ class AideCompactionTests(unittest.TestCase):
             "product", "readiness", "execution_foundation", "instance_product_program",
             "operation_permit_program", "host_environment_program", "multi_version_install_lifecycle",
             "gate0_product_convergence_integration", "gate1_installation_model_v2_readonly_closeout",
+            "gate2_instance_spec_and_readiness_closeout",
             "execution_modes", "capabilities",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
@@ -87,15 +88,15 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_completed_execution_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
-        self.assertEqual("instance-spec-and-readiness", data["current_checkpoint"])
+        self.assertEqual("operation-permit", data["current_checkpoint"])
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
-        self.assertEqual("FACMAN-INSTANCE-SPEC-AND-READINESS-01", data["active_work_unit"])
-        self.assertEqual("FACMAN-OPERATION-PERMIT-01", data["product"]["next_work_unit"])
+        self.assertEqual("FACMAN-OPERATION-PERMIT-01", data["active_work_unit"])
+        self.assertEqual("FACMAN-HERMETIC-STANDALONE-PLAY-01", data["product"]["next_work_unit"])
         instance_program = data["instance_product_program"]
-        self.assertEqual("active_read_only_vertical_slice", instance_program["status"])
+        self.assertEqual("gate2_read_only_projection_complete", instance_program["status"])
         self.assertEqual("FACMAN-INSTANCE-SPEC-AND-READINESS-01", instance_program["work_unit"])
         self.assertEqual("InstanceSpec", instance_program["portable_record"])
         self.assertEqual("InstanceBinding", instance_program["machine_local_record"])
@@ -149,6 +150,24 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertTrue(lifecycle["plan_identity_binds_current_evidence"])
         self.assertTrue(lifecycle["zero_write_proof"])
+        gate2 = data["gate2_instance_spec_and_readiness_closeout"]
+        self.assertEqual("accepted_reviewed_dev_integration", gate2["status"])
+        self.assertEqual(39, gate2["implementation_pull_request"])
+        self.assertEqual(40, gate2["reproduction_correction_pull_request"])
+        self.assertEqual(
+            "bbb46c5bfd10cd35fb965b23edc4951784f93ef4",
+            gate2["final_dev_revision"],
+        )
+        self.assertTrue(gate2["exact_dev_clean_reproduction"])
+        self.assertEqual(360, gate2["implementation_python_test_count"])
+        self.assertEqual(361, gate2["final_python_test_count"])
+        self.assertTrue(gate2["read_only_projection"])
+        self.assertTrue(gate2["zero_write_proof"])
+        self.assertFalse(gate2["preparation_available"])
+        self.assertFalse(gate2["execution_available"])
+        self.assertFalse(gate2["permit_issuance_authority"])
+        self.assertFalse(gate2["authority_promotion"])
+        self.assertFalse(gate2["canonical_main_promotion"])
         gate1 = data["gate1_installation_model_v2_readonly_closeout"]
         self.assertEqual("accepted_reviewed_dev_integration", gate1["status"])
         self.assertEqual(37, gate1["implementation_pull_request"])
@@ -202,7 +221,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01",
+            "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -529,13 +548,13 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["existing_installation_mutation"])
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
-        self.assertEqual("instance-spec-and-readiness", data["current_checkpoint"])
+        self.assertEqual("operation-permit", data["current_checkpoint"])
         self.assertEqual(
-            "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
+            "FACMAN-OPERATION-PERMIT-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01",
+            "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

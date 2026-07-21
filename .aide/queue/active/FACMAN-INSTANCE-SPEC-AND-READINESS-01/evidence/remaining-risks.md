@@ -1,15 +1,11 @@
 # Gate 2 remaining risks and explicit non-claims
 
-## Required before Gate 2 closeout
+## Closeout gates
 
-- Hosted Linux GCC, macOS AppleClang, Windows MSVC, sanitizer, CodeQL, schema,
-  code-security, and security-policy checks must pass for the exact reviewed
-  task head.
-- The reviewed head must merge to `dev`, and the exact merged `dev` revision
-  must pass the required post-merge checks and clean pinned three-repository
-  reconstruction before this WorkUnit is closed.
-- Generated truth and claim-ledger state must be updated in a separate honest
-  closeout transition after integration evidence exists.
+The exact-head, exact-merged-`dev`, clean pinned reconstruction, generated
+truth, and claim-ledger requirements passed. The temporary reproduction roots
+were removed. Remaining items below are deliberate product boundaries, not
+unfinished Gate 2 acceptance work.
 
 ## Deliberate Gate 2 limits
 

@@ -111,6 +111,7 @@ def validate_profile_text(text: str) -> list[str]:
         "real-play-gates",
         "multi-version-install-lifecycle",
         "instance-spec-and-readiness",
+        "operation-permit",
     }
     if phase not in allowed_phases:
         problems.append(f"profile phase is {phase!r}, expected a current product or real-play gate phase")

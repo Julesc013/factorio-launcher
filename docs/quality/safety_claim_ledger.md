@@ -44,6 +44,7 @@ reported as stronger runtime evidence.
 | Automated synthetic setup acceptance | MachinePass | frozen verifier, fresh run, 12 controls, full local/hosted proof | managed candidate only; no Factorio, existing install, execution, H1, or external authority |
 | M2 technical wave | accepted public integration | MachinePass, canonical `bd06429`, synchronized `dev` `51977de` | synthetic/local managed candidate only; every higher-risk authority remains excluded |
 | Existing-portable adoption | M3 active read-only/plan-only | inspection and plan generation after synchronized M2 closeout | no adoption apply, deletion, mutation, Steam adoption, execution, or external authority |
+| Instance readiness | reviewed read-only `dev` integration | PRs #39/#40, exact workflows, zero-write and clean three-repo proof | menu only; no preparation, permit, credentials, network, or execution |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |
