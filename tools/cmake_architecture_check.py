@@ -10,6 +10,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def source_cmake_files(root: Path) -> list[Path]:
+    """Return source CMake files while excluding only build dirs inside root."""
+    return [
+        path
+        for path in sorted(root.glob("**/CMakeLists.txt"))
+        if "build" not in path.relative_to(root).parts
+    ]
+
+
 def validate() -> list[str]:
     problems: list[str] = []
     root = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
@@ -26,8 +35,7 @@ def validate() -> list[str]:
 
     combined = "\n".join(
         path.read_text(encoding="utf-8")
-        for path in sorted(ROOT.glob("**/CMakeLists.txt"))
-        if "build" not in path.parts
+        for path in source_cmake_files(ROOT)
     )
     for alias in (
         "facman::core", "facman::platform", "facman::workspace", "facman::archive", "facman::preferences",
