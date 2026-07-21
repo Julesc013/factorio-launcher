@@ -28,6 +28,7 @@ class AideCompactionTests(unittest.TestCase):
             "r3_8_repair", "r3_8_public_integration", "m1_managed_portable_install",
             "m1_public_integration",
             "gate3_public_integration",
+            "hermetic_standalone_play_policy",
             "m2_live_portable_setup",
             "m2_wu1_target_policy",
             "m2_wu2_public_lifecycle",
@@ -168,6 +169,22 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(gate3_integration["authority_promotion"])
         self.assertFalse(gate3_integration["permit_issuance_authority"])
         self.assertFalse(gate3_integration["real_factorio_execution"])
+        hermetic_policy = data["hermetic_standalone_play_policy"]
+        self.assertEqual(
+            "implemented_frozen_policy_pending_review_closeout",
+            hermetic_policy["status"],
+        )
+        self.assertEqual(
+            "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+            hermetic_policy["policy_digest"],
+        )
+        self.assertEqual("factorio.hermetic_process_tree.v1", hermetic_policy["claim_id"])
+        self.assertEqual("menu", hermetic_policy["launch_intent"])
+        self.assertEqual("hermetic", hermetic_policy["isolation_mode"])
+        self.assertFalse(hermetic_policy["whole_host_immutability_claimed"])
+        self.assertFalse(hermetic_policy["permit_issuance_authority"])
+        self.assertFalse(hermetic_policy["real_factorio_execution"])
+        self.assertFalse(hermetic_policy["authority_promotion"])
         self.assertFalse(data["host_environment_program"]["blocks_real_play"])
         self.assertTrue(
             data["host_environment_program"]["installation_model_v2_reviewed_committed_clean"]

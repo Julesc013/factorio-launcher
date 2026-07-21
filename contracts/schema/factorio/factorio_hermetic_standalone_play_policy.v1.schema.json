@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.hermetic_standalone_play_policy.v1.schema.json",
+  "title": "Frozen hermetic standalone Factorio Play policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "policy_id", "policy_revision", "canonicalization_version", "policy_digest", "status", "claim", "candidate", "provider_baseline", "launch", "writable_roots", "protected_roots", "evidence_requirements", "observation_scopes", "interruption_cases", "verdict_criteria", "human_journey", "automated_negative_controls", "required_validation", "governance", "authority_boundary", "explicit_exclusions"],
+  "properties": {
+    "schema": {"const": "factorio.hermetic_standalone_play_policy.v1"},
+    "policy_id": {"const": "facman.hermetic-standalone-play.2.0.77.windows-x64.v1"},
+    "policy_revision": {"const": "1"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "policy_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"const": "frozen_criteria_no_result"},
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "user_label", "guarantee", "whole_host_immutability_claimed", "external_unobserved_disclosed"],
+      "properties": {
+        "claim_id": {"const": "factorio.hermetic_process_tree.v1"},
+        "user_label": {"const": "Hermetic standalone"},
+        "guarantee": {"type": "string", "minLength": 40, "maxLength": 512},
+        "whole_host_immutability_claimed": {"const": false},
+        "external_unobserved_disclosed": {"const": true}
+      }
+    },
+    "candidate": {"type": "object"},
+    "provider_baseline": {"type": "object"},
+    "launch": {"type": "object"},
+    "writable_roots": {"type": "array", "minItems": 13, "maxItems": 13, "items": {"type": "object"}},
+    "protected_roots": {"type": "array", "minItems": 15, "items": {"type": "object"}},
+    "evidence_requirements": {"type": "array", "minItems": 25, "items": {"type": "object"}},
+    "observation_scopes": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object"}},
+    "interruption_cases": {"type": "array", "minItems": 29, "maxItems": 29, "items": {"type": "object"}},
+    "verdict_criteria": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "object"}},
+    "human_journey": {"type": "array", "minItems": 12, "items": {"type": "string", "minLength": 1}},
+    "automated_negative_controls": {"type": "array", "minItems": 18, "items": {"type": "string", "minLength": 1}},
+    "required_validation": {"type": "object"},
+    "governance": {"type": "object"},
+    "authority_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public_command", "permit_issuer", "permit_issuance_authority", "process_execution", "real_factorio_execution", "product_apply_route", "setup_authority", "credential_authority", "network_authority", "host_mutation_authority", "signing", "publication", "safe_beta"],
+      "properties": {
+        "public_command": {"const": false},
+        "permit_issuer": {"const": false},
+        "permit_issuance_authority": {"const": false},
+        "process_execution": {"const": false},
+        "real_factorio_execution": {"const": false},
+        "product_apply_route": {"const": false},
+        "setup_authority": {"const": false},
+        "credential_authority": {"const": false},
+        "network_authority": {"const": false},
+        "host_mutation_authority": {"const": false},
+        "signing": {"const": false},
+        "publication": {"const": false},
+        "safe_beta": {"const": false}
+      }
+    },
+    "explicit_exclusions": {"type": "array", "minItems": 10, "items": {"type": "string", "minLength": 1}}
+  }
+}

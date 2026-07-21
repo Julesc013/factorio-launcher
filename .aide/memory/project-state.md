@@ -20,6 +20,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
 - Gate 3 permit closeout: `accepted_reviewed_dev_integration` at dev `91c2aa4fe0a30be97bf16165b41a95a8fab4cd11`;
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
+- Gate 4A hermetic Play policy: `implemented_frozen_policy_pending_review_closeout` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - execution: `unavailable` / `real_play_gate_not_passed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
@@ -100,7 +101,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `268` / `242`;
+- schemas / refusal codes: `274` / `242`;
 - command catalog digest: `4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.

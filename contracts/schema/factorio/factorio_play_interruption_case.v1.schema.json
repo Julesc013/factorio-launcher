@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.play_interruption_case.v1.schema.json",
+  "title": "Factorio Play interruption or journey case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "case_id", "lane", "trigger", "required_before_verdict", "expected_outcome", "permit_consumption", "verdict_impact", "notes"],
+  "properties": {
+    "schema": {"const": "factorio.play_interruption_case.v1"},
+    "case_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "lane": {"enum": ["automated", "human", "synthetic_deferred"]},
+    "trigger": {"type": "string", "minLength": 1, "maxLength": 256},
+    "required_before_verdict": {"type": "boolean"},
+    "expected_outcome": {"enum": ["refuse_before_process", "cancel_without_process", "honest_interrupted", "recovery_required", "fail", "inconclusive", "human_confirmation", "deferred"]},
+    "permit_consumption": {"enum": ["not_consumed", "consumed_once", "depends_on_effect_boundary", "not_applicable"]},
+    "verdict_impact": {"enum": ["pass_precondition", "fail", "inconclusive", "no_authority"]},
+    "notes": {"type": "string", "minLength": 1, "maxLength": 512}
+  }
+}
