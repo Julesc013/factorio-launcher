@@ -13,6 +13,7 @@ allowed_paths:
   - .aide/memory/**
   - .aide/profile.yaml
   - README.md
+  - .github/workflows/**
   - runtime/core/permit/**
   - runtime/core/CMakeLists.txt
   - runtime/core/generated/**
@@ -38,6 +39,8 @@ affected_native_targets:
   - flb_factorio_launch_static
   - flb_factorio_launch_permit_smoke
   - facman_operation_permit_smoke
+  - facman_operation_permit_fuzz
+  - facman_operation_permit_libfuzzer
 affected_python_tests:
   - tests.test_capability_policy
   - tests.test_cli
@@ -50,6 +53,7 @@ affected_python_tests:
   - tests.test_aide_compaction
   - tests.test_aide_target_truth
   - tests.test_architecture_fitness
+  - tests.test_operation_permit_contract
 affected_strict_validators:
   - tools/aide_compaction_check.py
   - tools/aide_queue_state_check.py
@@ -61,6 +65,7 @@ affected_strict_validators:
   - tools/frontend_parity_check.py
   - tools/refusal_contract_check.py
   - tools/schema_validate.py
+  - tools/operation_permit_check.py
 affected_package_profiles:
   []
 architecture_invariants:

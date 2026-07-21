@@ -9,6 +9,11 @@ The scope also includes generated `.aide/memory/**` and root `README.md` truth
 surfaces because contract and refusal counts must remain generator-consistent
 during the active gate.
 
+The scope includes the existing hosted workflow definitions only so the new
+bounded permit parser/libFuzzer targets can join the established sanitizer and
+fuzz matrix. This does not authorize secrets, external providers, publication,
+or a new workflow class.
+
 The contract-law slice adds seven internal `common.*permit*.v1` schemas, the
 closed 25-code permit refusal family, and the versioned architecture law. It
 also regenerates the development-state counts to 268 schemas and 242 refusal
