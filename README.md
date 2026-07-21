@@ -68,7 +68,8 @@ Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
-Gate 3 exact permit infrastructure is closed with provider-side revalidation and no product issuance. The active path now freezes the hermetic standalone Play-to-menu policy.
+Gate 3 exact permit infrastructure is closed with provider-side revalidation and no product issuance.
+Gates 0-3 are canonically promoted and dev-synchronized without authority promotion. The active path now freezes the hermetic standalone Play-to-menu policy.
 The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 Contributor status command: `py -3 tools/project_state.py --summary`.

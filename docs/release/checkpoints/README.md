@@ -40,6 +40,13 @@ exact merged-`dev` workflows, and a clean pinned three-repository
 reconstruction. It activates the policy-only hermetic standalone Play WorkUnit
 without exposing permit issuance, process execution, or any other authority.
 
+The evidence-only
+[`Gates 0-3 canonical public integration proof`](gate3-public-integration-proof.md)
+binds PRs #43-#45, exact closeout, promotion, canonical-`main`, ancestry-only
+synchronization, and final-`dev` workflow evidence. It establishes a canonical
+pre-Play baseline without promoting permit issuance, execution, apply, signing,
+publication, or Safe beta.
+
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),
 frozen at implementation proof revision

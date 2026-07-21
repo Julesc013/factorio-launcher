@@ -112,6 +112,7 @@ def collect() -> dict[str, Any]:
         "instance_product_program": status["instance_product_program"],
         "operation_permit_program": status["operation_permit_program"],
         "gate3_operation_permit_closeout": status["gate3_operation_permit_closeout"],
+        "gate3_public_integration": status["gate3_public_integration"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
         "gate2_instance_spec_and_readiness_closeout": status["gate2_instance_spec_and_readiness_closeout"],
@@ -373,6 +374,10 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Gate 3 permit closeout: "
         f"`{data['gate3_operation_permit_closeout']['status']}` at dev "
         f"`{data['gate3_operation_permit_closeout']['dev_integration_revision']}`;",
+        f"- Gates 0-3 canonical integration: "
+        f"`{data['gate3_public_integration']['status']}` at main "
+        f"`{data['gate3_public_integration']['canonical_main_revision']}` and synchronized dev "
+        f"`{data['gate3_public_integration']['final_dev_revision']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
@@ -518,7 +523,9 @@ def readme_status(data: dict[str, Any]) -> str:
         "Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as "
         "menu-first read-only projections. Saves/worlds remain optional instance content.",
         "Gate 3 exact permit infrastructure is closed with provider-side revalidation and no "
-        "product issuance. The active path now freezes the hermetic standalone Play-to-menu policy.",
+        "product issuance.",
+        "Gates 0-3 are canonically promoted and dev-synchronized without "
+        "authority promotion. The active path now freezes the hermetic standalone Play-to-menu policy.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -713,8 +720,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "current_work_unit": phase_contract["active"],
         "next_work_unit": phase_contract["next"],
         "m3_disposition": "authorized_backlog_after_playable_alpha",
-        "truth_scope": "dev_integrated_reviewed_reproduced",
-        "canonical_integration": False,
+        "truth_scope": "canonical_main_promoted_dev_synchronized",
+        "canonical_integration": True,
         "local_counts_promoted": True,
     }
     for key, expected in expected_product.items():
@@ -844,6 +851,50 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     if gate3 != expected_gate3:
         problems.append("Gate 3 closeout must bind exact reviewed and merged-dev proof without promoting issuance or execution")
+    gate3_integration = status.get("gate3_public_integration", {})
+    expected_gate3_integration = {
+        "status": "accepted_canonical_main_dev_synchronized",
+        "closeout_pull_request": 43,
+        "closeout_head_revision": "ec4159f05678ad1ea55326ea881728354f5182c6",
+        "closeout_dev_revision": "11feb2e53539e4b272f061374b2a07450c8e32bf",
+        "closeout_head_ci_run": "29828529397",
+        "closeout_head_code_security_run": "29828529368",
+        "closeout_head_security_policy_run": "29828529380",
+        "closeout_dev_ci_run": "29829439259",
+        "closeout_dev_code_security_run": "29829439147",
+        "closeout_dev_security_policy_run": "29829439134",
+        "promotion_pull_request": 44,
+        "promotion_source_revision": "11feb2e53539e4b272f061374b2a07450c8e32bf",
+        "canonical_main_revision": "810e92ccd52ad89fada8a9bb5699805cb5580c24",
+        "shared_tree_identity": "1f15a9ff477db9f4713e82ce23aedea1914293d9",
+        "promotion_head_ci_run": "29830315611",
+        "promotion_head_code_security_run": "29830315615",
+        "promotion_head_schema_check_run": "29830315614",
+        "promotion_head_security_policy_run": "29830315656",
+        "exact_main_ci_run": "29831299212",
+        "exact_main_code_security_run": "29831299101",
+        "exact_main_schema_check_run": "29831299292",
+        "exact_main_security_policy_run": "29831299545",
+        "synchronization_pull_request": 45,
+        "synchronization_head_revision": "ff57488e3cd5a04d6aab7a28f667be64ac54992a",
+        "synchronization_head_ci_run": "29832438748",
+        "synchronization_head_code_security_run": "29832438688",
+        "synchronization_head_security_policy_run": "29832438665",
+        "final_dev_revision": "08d4318ffd32bd9553ce8914cbd8bfc98fde7b74",
+        "final_dev_ci_run": "29833442835",
+        "final_dev_code_security_run": "29833442940",
+        "final_dev_security_policy_run": "29833442807",
+        "main_is_ancestor_of_dev": True,
+        "trees_equal_at_synchronization": True,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "permit_issuance_authority": False,
+        "real_factorio_execution": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate3_integration != expected_gate3_integration:
+        problems.append("Gate 3 public integration must bind exact canonical and synchronized proof without promoting authority")
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {
         "status": "accepted_reviewed_dev_integration",

@@ -45,8 +45,8 @@ next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "dev_integrated_reviewed_reproduced"
-canonical_integration = false
+truth_scope = "canonical_main_promoted_dev_synchronized"
+canonical_integration = true
 local_counts_promoted = true
 
 [readiness]
@@ -143,6 +143,47 @@ network_authority_promotion = false
 signing = false
 publication = false
 canonical_main_promotion = false
+
+[gate3_public_integration]
+status = "accepted_canonical_main_dev_synchronized"
+closeout_pull_request = 43
+closeout_head_revision = "ec4159f05678ad1ea55326ea881728354f5182c6"
+closeout_dev_revision = "11feb2e53539e4b272f061374b2a07450c8e32bf"
+closeout_head_ci_run = "29828529397"
+closeout_head_code_security_run = "29828529368"
+closeout_head_security_policy_run = "29828529380"
+closeout_dev_ci_run = "29829439259"
+closeout_dev_code_security_run = "29829439147"
+closeout_dev_security_policy_run = "29829439134"
+promotion_pull_request = 44
+promotion_source_revision = "11feb2e53539e4b272f061374b2a07450c8e32bf"
+canonical_main_revision = "810e92ccd52ad89fada8a9bb5699805cb5580c24"
+shared_tree_identity = "1f15a9ff477db9f4713e82ce23aedea1914293d9"
+promotion_head_ci_run = "29830315611"
+promotion_head_code_security_run = "29830315615"
+promotion_head_schema_check_run = "29830315614"
+promotion_head_security_policy_run = "29830315656"
+exact_main_ci_run = "29831299212"
+exact_main_code_security_run = "29831299101"
+exact_main_schema_check_run = "29831299292"
+exact_main_security_policy_run = "29831299545"
+synchronization_pull_request = 45
+synchronization_head_revision = "ff57488e3cd5a04d6aab7a28f667be64ac54992a"
+synchronization_head_ci_run = "29832438748"
+synchronization_head_code_security_run = "29832438688"
+synchronization_head_security_policy_run = "29832438665"
+final_dev_revision = "08d4318ffd32bd9553ce8914cbd8bfc98fde7b74"
+final_dev_ci_run = "29833442835"
+final_dev_code_security_run = "29833442940"
+final_dev_security_policy_run = "29833442807"
+main_is_ancestor_of_dev = true
+trees_equal_at_synchronization = true
+authority_promotion = false
+playability_promotion = false
+permit_issuance_authority = false
+real_factorio_execution = false
+signing = false
+publication = false
 
 [gate2_instance_spec_and_readiness_closeout]
 status = "accepted_reviewed_dev_integration"
