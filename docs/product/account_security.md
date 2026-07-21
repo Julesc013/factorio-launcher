@@ -2,6 +2,13 @@
 
 FacMan account behavior is reference-first and redaction-first.
 
+The target instance model distinguishes `PlatformAccountBinding`,
+`FactorioAccountBinding`, non-secret `PlayerIdentityProfile`, and
+`ServerCredentialBinding`. Their owners and availability differ; none permits
+credential values or entitlement assertions in an instance record. In
+particular, the active Steam client session owns Steam identity and FacMan
+cannot silently switch it.
+
 Rules:
 
 - do not store plaintext Factorio passwords

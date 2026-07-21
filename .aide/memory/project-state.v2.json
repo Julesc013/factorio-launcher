@@ -505,30 +505,70 @@
     "workflow_health_model": "versioned_requirement_profiles_no_global_health_score"
   },
   "instance_product_program": {
+    "account_binding_types": [
+      "PlatformAccountBinding",
+      "FactorioAccountBinding",
+      "PlayerIdentityProfile",
+      "ServerCredentialBinding"
+    ],
     "architecture": "docs/architecture/instance_product_model.md",
     "composition": [
       "installation",
-      "profile",
-      "preset_provenance",
-      "modpack",
+      "instance_data_root",
+      "template_provenance",
+      "pinned_preset",
+      "ordered_profiles",
+      "modset_spec",
       "modset_lock",
-      "account_ref",
+      "account_bindings",
       "settings",
-      "resources"
+      "saves",
+      "resources",
+      "launch_intent"
     ],
+    "conflicts_silently_resolved": false,
     "credential_values_in_instance": false,
-    "default_launch_intent": "open_game_menu",
+    "default_launch_intent": "menu",
+    "foreign_installation_mutation": false,
+    "launch_intents": [
+      "menu",
+      "continue_last",
+      "load_save",
+      "new_game",
+      "map_editor",
+      "connect_server",
+      "start_server",
+      "benchmark",
+      "instrumented_dev"
+    ],
     "machine_local_record": "InstanceBinding",
+    "mod_content_records": [
+      "ModsetSpec",
+      "ModsetLock",
+      "ModpackBundle"
+    ],
     "next_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",
     "portable_factorio_binaries": false,
     "portable_record": "InstanceSpec",
     "preparation_model": "federated_typed_subplans_by_owner",
     "presets_grant_authority": false,
+    "profile_families": [
+      "LaunchProfile",
+      "GraphicsProfile",
+      "AudioProfile",
+      "InterfaceProfile",
+      "MultiplayerProfile",
+      "ServerProfile",
+      "NewGameProfile",
+      "BackupProfile"
+    ],
     "readiness_model": "computed_projection_not_authoritative_state",
     "runtime_authority": false,
     "save_role": "optional_content_within_instance",
     "status": "planned_after_installation_model_v2_closeout",
-    "ui_aggregate": "InstanceView"
+    "templates_are_initializers": true,
+    "ui_aggregate": "InstanceView",
+    "world_save_work_unit": "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01"
   },
   "known_blockers": [
     "The local Wube-signed Factorio 2.0.77 conversion succeeded, but FacMan does not yet expose authenticated source inspection or transaction-backed lifecycle apply as product commands.",
@@ -1424,10 +1464,10 @@
   ],
   "product": {
     "canonical_integration": false,
-    "charter": "Choose an instance, press Play, and arrive at Factorio's menu with the selected environment already in effect.",
+    "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
     "current_work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
-    "golden_journey": "find Factorio -> create or select an instance -> choose version, profile, modpack, account, and settings -> review readiness -> Play to the game menu -> exit -> relaunch",
+    "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
     "next_work_unit": "FACMAN-INSTANCE-SPEC-AND-READINESS-01",

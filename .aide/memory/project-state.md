@@ -7,9 +7,9 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Current product truth
 
 - phase: `multi_version_install_lifecycle` / `active`;
-- charter: Choose an instance, press Play, and arrive at Factorio's menu with the selected environment already in effect.
+- charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
-- golden journey: `find Factorio -> create or select an instance -> choose version, profile, modpack, account, and settings -> review readiness -> Play to the game menu -> exit -> relaunch`;
+- golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `multi-version-install-lifecycle`;
 - active WorkUnit: `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`;
 - next WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
@@ -43,8 +43,12 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - machine-local record: `InstanceBinding`;
 - readiness: `computed_projection_not_authoritative_state`;
 - preparation: `federated_typed_subplans_by_owner`;
-- default launch intent: `open_game_menu`;
+- default launch intent: `menu`;
+- launch intents: `menu, continue_last, load_save, new_game, map_editor, connect_server, start_server, benchmark, instrumented_dev`;
 - save role: `optional_content_within_instance`;
+- profile families: `LaunchProfile, GraphicsProfile, AudioProfile, InterfaceProfile, MultiplayerProfile, ServerProfile, NewGameProfile, BackupProfile`;
+- account bindings: `PlatformAccountBinding, FactorioAccountBinding, PlayerIdentityProfile, ServerCredentialBinding`;
+- secondary save/world WorkUnit: `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01`;
 - runtime authority: `false`;
 
 ## Operation-permit programme

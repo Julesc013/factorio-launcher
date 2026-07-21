@@ -10,12 +10,33 @@
     own menu. A save/world is optional content inside that environment, not the
     required identity of every launch.
 
-- Decision: `facman play <instance>` defaults to the `open_game_menu` launch
+- Decision: `facman play <instance>` defaults to the `menu` launch
   intent.
   - Status: accepted target architecture
   - Rationale: Direct save loading, new-game setup, benchmarks, and headless
     servers are explicit optional intents and must never be inferred from the
     presence of saves or other instance content.
+
+- Decision: Profiles are typed, presets initialize or explicitly upgrade
+  instances, and reproducible mod content separates `ModsetSpec`, `ModsetLock`,
+  and `ModpackBundle`.
+  - Status: accepted target architecture
+  - Rationale: Reuse must retain versioned provenance without creating hidden
+    mutable dependencies or confusing desired content with an exact artifact
+    closure.
+
+- Decision: Account configuration is decomposed into platform, Factorio,
+  player-identity, and server-credential bindings.
+  - Status: accepted target architecture
+  - Rationale: These identities have different owners and trust boundaries;
+    instance records contain references and non-secret presentation state, not
+    credentials or entitlement assertions.
+
+- Decision: World/save portability remains a secondary content lane under
+  `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01`.
+  - Status: accepted target architecture
+  - Rationale: Save compatibility and import/export remain valuable without
+    making a save the required identity of ordinary Play.
 
 - Decision: Authority-bearing operations use short-lived, plan-bound
   `OperationPermit`s rather than long-lived capability grants.
@@ -66,8 +87,9 @@
   - Rationale: Arbitrary scripts, global authority flags, and uncoordinated
     HNS/Hyper-V/WSL/Sandbox changes cannot provide bounded product safety.
 
-- Decision: The product promise is "choose an instance, press Play, and arrive
-  at Factorio's menu with the selected environment already in effect."
+- Decision: The product promise is "create any number of independent Factorio
+  setups, select one, and launch the normal game as though Factorio had always
+  been installed and configured exactly that way."
   - Status: accepted
   - Rationale: FacMan is an instance-centric environment manager, not a command
     catalogue, a save-only launcher, or a generic architecture demonstration.

@@ -37,8 +37,8 @@ quarantined_capabilities = [
 phase = "multi_version_install_lifecycle"
 phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
-charter = "Choose an instance, press Play, and arrive at Factorio's menu with the selected environment already in effect."
-golden_journey = "find Factorio -> create or select an instance -> choose version, profile, modpack, account, and settings -> review readiness -> Play to the game menu -> exit -> relaunch"
+charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
+golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
 current_work_unit = "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01"
 next_work_unit = "FACMAN-INSTANCE-SPEC-AND-READINESS-01"
@@ -67,12 +67,33 @@ machine_local_record = "InstanceBinding"
 readiness_model = "computed_projection_not_authoritative_state"
 ui_aggregate = "InstanceView"
 preparation_model = "federated_typed_subplans_by_owner"
-default_launch_intent = "open_game_menu"
+default_launch_intent = "menu"
 save_role = "optional_content_within_instance"
-composition = ["installation", "profile", "preset_provenance", "modpack", "modset_lock", "account_ref", "settings", "resources"]
+composition = [
+  "installation", "instance_data_root", "template_provenance", "pinned_preset",
+  "ordered_profiles", "modset_spec", "modset_lock", "account_bindings",
+  "settings", "saves", "resources", "launch_intent",
+]
+launch_intents = [
+  "menu", "continue_last", "load_save", "new_game", "map_editor",
+  "connect_server", "start_server", "benchmark", "instrumented_dev",
+]
+profile_families = [
+  "LaunchProfile", "GraphicsProfile", "AudioProfile", "InterfaceProfile",
+  "MultiplayerProfile", "ServerProfile", "NewGameProfile", "BackupProfile",
+]
+account_binding_types = [
+  "PlatformAccountBinding", "FactorioAccountBinding", "PlayerIdentityProfile",
+  "ServerCredentialBinding",
+]
+mod_content_records = ["ModsetSpec", "ModsetLock", "ModpackBundle"]
+world_save_work_unit = "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01"
+templates_are_initializers = true
+conflicts_silently_resolved = false
 portable_factorio_binaries = false
 credential_values_in_instance = false
 presets_grant_authority = false
+foreign_installation_mutation = false
 runtime_authority = false
 
 [operation_permit_program]

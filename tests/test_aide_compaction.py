@@ -6,6 +6,7 @@ from __future__ import annotations
 import unittest
 import json
 import hashlib
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -64,8 +65,20 @@ class AideCompactionTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("FacMan's primary product and UX aggregate is a **game instance**", architecture)
-        self.assertIn("`facman play <instance>` means `open_game_menu`", architecture)
+        self.assertIn("`facman play <instance>` means `menu`", architecture)
         self.assertIn("A save or world is optional", architecture)
+        self.assertIn("`PlatformAccountBinding`", architecture)
+        self.assertIn("ModsetSpec", architecture)
+        self.assertIn("continue_last", architecture)
+        self.assertIn("FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01", architecture)
+        self.assertIn("## Safety laws", architecture)
+        safety_laws = architecture.split("## Safety laws", maxsplit=1)[1].split(
+            "## Candidate stable workflow surface", maxsplit=1
+        )[0]
+        self.assertEqual(
+            15,
+            sum(1 for line in safety_laws.splitlines() if re.match(r"^\d+\. ", line)),
+        )
         self.assertIn("It never contains", architecture)
         self.assertRegex(architecture, r"credential\s+values")
         self.assertIn("superseded", superseded)
@@ -84,12 +97,27 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("InstanceSpec", instance_program["portable_record"])
         self.assertEqual("InstanceBinding", instance_program["machine_local_record"])
         self.assertEqual("InstanceView", instance_program["ui_aggregate"])
-        self.assertEqual("open_game_menu", instance_program["default_launch_intent"])
+        self.assertEqual("menu", instance_program["default_launch_intent"])
         self.assertEqual("optional_content_within_instance", instance_program["save_role"])
-        self.assertIn("account_ref", instance_program["composition"])
-        self.assertIn("modpack", instance_program["composition"])
+        self.assertIn("account_bindings", instance_program["composition"])
+        self.assertIn("modset_spec", instance_program["composition"])
+        self.assertEqual("menu", instance_program["launch_intents"][0])
+        self.assertIn("map_editor", instance_program["launch_intents"])
+        self.assertIn("GraphicsProfile", instance_program["profile_families"])
+        self.assertIn("FactorioAccountBinding", instance_program["account_binding_types"])
+        self.assertEqual(
+            ["ModsetSpec", "ModsetLock", "ModpackBundle"],
+            instance_program["mod_content_records"],
+        )
+        self.assertEqual(
+            "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01",
+            instance_program["world_save_work_unit"],
+        )
+        self.assertTrue(instance_program["templates_are_initializers"])
+        self.assertFalse(instance_program["conflicts_silently_resolved"])
         self.assertFalse(instance_program["credential_values_in_instance"])
         self.assertFalse(instance_program["presets_grant_authority"])
+        self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual("dev_integrated_reviewed_reproduced", data["product"]["truth_scope"])
         self.assertFalse(data["product"]["canonical_integration"])

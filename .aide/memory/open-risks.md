@@ -33,6 +33,26 @@
     host diagnostics, and unlicensed binaries, and request a player-owned source
     explicitly during reconstruction.
 
+- Risk: "Any combination" could be misread as a promise to execute impossible,
+  unowned, or unsupported configurations.
+  - Status: active product risk
+  - Mitigation: Represent every request, but return typed ready/preparable/
+    incompatible/source/account/platform/recovery outcomes and refuse silent
+    substitution, entitlement emulation, or unsupported execution.
+
+- Risk: Ordered profiles, presets, and overrides could conceal conflicts or
+  cause an existing instance to change when a reusable source is edited.
+  - Status: active design risk
+  - Mitigation: Pin reusable inputs, expose per-value provenance, surface equal-
+    precedence conflicts, and require an explicit previewed upgrade.
+
+- Risk: Account bindings or shared save paths could cross instance isolation
+  boundaries.
+  - Status: active security risk
+  - Mitigation: Keep secrets in owning credential providers, treat Steam's
+    active session as external evidence, and refuse silently shared writable
+    saves across concurrently runnable instances.
+
 - Risk: Host-environment scope could turn FacMan into a generic machine repair
   or optimization tool.
   - Status: active

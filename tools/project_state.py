@@ -386,7 +386,13 @@ def markdown(data: dict[str, Any]) -> str:
         f"- readiness: `{data['instance_product_program']['readiness_model']}`;",
         f"- preparation: `{data['instance_product_program']['preparation_model']}`;",
         f"- default launch intent: `{data['instance_product_program']['default_launch_intent']}`;",
+        f"- launch intents: `{', '.join(data['instance_product_program']['launch_intents'])}`;",
         f"- save role: `{data['instance_product_program']['save_role']}`;",
+        f"- profile families: `{', '.join(data['instance_product_program']['profile_families'])}`;",
+        f"- account bindings: "
+        f"`{', '.join(data['instance_product_program']['account_binding_types'])}`;",
+        f"- secondary save/world WorkUnit: "
+        f"`{data['instance_product_program']['world_save_work_unit']}`;",
         f"- runtime authority: `{str(data['instance_product_program']['runtime_authority']).lower()}`;",
         "",
         "## Operation-permit programme",
@@ -531,8 +537,9 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "6. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.",
         "7. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
         "8. In parallel after closeout, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
-        "9. Deepen portable instance reconstruction, managed install reconciliation, content preparation, and host repair from observed player needs.",
-        "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
+        "9. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
+        "10. Deepen portable instance reconstruction, managed install reconciliation, content preparation, and host repair from observed player needs.",
+        "11. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new "
         "Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.",
@@ -716,15 +723,33 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "readiness_model": "computed_projection_not_authoritative_state",
         "ui_aggregate": "InstanceView",
         "preparation_model": "federated_typed_subplans_by_owner",
-        "default_launch_intent": "open_game_menu",
+        "default_launch_intent": "menu",
         "save_role": "optional_content_within_instance",
         "composition": [
-            "installation", "profile", "preset_provenance", "modpack",
-            "modset_lock", "account_ref", "settings", "resources",
+            "installation", "instance_data_root", "template_provenance", "pinned_preset",
+            "ordered_profiles", "modset_spec", "modset_lock", "account_bindings",
+            "settings", "saves", "resources", "launch_intent",
         ],
+        "launch_intents": [
+            "menu", "continue_last", "load_save", "new_game", "map_editor",
+            "connect_server", "start_server", "benchmark", "instrumented_dev",
+        ],
+        "profile_families": [
+            "LaunchProfile", "GraphicsProfile", "AudioProfile", "InterfaceProfile",
+            "MultiplayerProfile", "ServerProfile", "NewGameProfile", "BackupProfile",
+        ],
+        "account_binding_types": [
+            "PlatformAccountBinding", "FactorioAccountBinding", "PlayerIdentityProfile",
+            "ServerCredentialBinding",
+        ],
+        "mod_content_records": ["ModsetSpec", "ModsetLock", "ModpackBundle"],
+        "world_save_work_unit": "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01",
+        "templates_are_initializers": True,
+        "conflicts_silently_resolved": False,
         "portable_factorio_binaries": False,
         "credential_values_in_instance": False,
         "presets_grant_authority": False,
+        "foreign_installation_mutation": False,
         "runtime_authority": False,
     }:
         problems.append("instance programme must remain decomposed, menu-first, portable, and non-authoritative")

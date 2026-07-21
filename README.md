@@ -56,10 +56,10 @@ FacMan ships as the first serious Factorio product binding.
 
 **Phase:** `multi_version_install_lifecycle`. **Active WorkUnit:** `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`. **Next:** `FACMAN-INSTANCE-SPEC-AND-READINESS-01`.
 
-> Choose an instance, press Play, and arrive at Factorio's menu with the selected environment already in effect.
+> Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
-`find Factorio -> create or select an instance -> choose version, profile, modpack, account, and settings -> review readiness -> Play to the game menu -> exit -> relaunch`.
+`find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
 This reviewed and reproduced dev-integrated tree enumerates 123 commands, 250 schemas, and 217 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 

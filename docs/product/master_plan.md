@@ -6,8 +6,9 @@ lives in `release/index/project_status.v2.toml`; historical proof remains in
 
 ## Product outcome
 
-> Choose an instance, press Play, and arrive at Factorio's menu with the
-> selected environment already in effect.
+> FacMan lets players create any number of independent Factorio setups, select
+> one, and launch the normal game as though Factorio had always been installed
+> and configured exactly that way.
 
 The Windows-first golden journey is:
 
@@ -83,8 +84,10 @@ decomposed: portable `InstanceSpec`, machine-local `InstanceBinding`, computed
 configuration plus recent operation/recovery history. An instance composes an
 installation/version, profile, resolved preset provenance, modpack/modset
 lock, account reference, settings, resources, and optional saves. Its default
-launch intent is `open_game_menu`; direct save loading is an explicit optional
-intent. A top-level preparation plan composes FacMan, Universal Launcher,
+launch intent is `menu`; direct save loading is an explicit optional
+intent. Other explicit intents include continue-last, new-game, map-editor,
+connect/start-server, benchmark, and instrumented-development workflows. A
+top-level preparation plan composes FacMan, Universal Launcher,
 credential/platform providers, and Universal Setup subplans without becoming
 a new mutation kernel. See
 [`instance_product_model.md`](../architecture/instance_product_model.md).
@@ -236,6 +239,10 @@ escape. No real Factorio authority is inferred.
 - Compose installation/version, profile, resolved preset provenance,
   modpack/modset lock, account reference, settings, resources, and optional
   saves into one explicit environment.
+- Model typed Launch, Graphics, Audio, Interface, Multiplayer, Server, NewGame,
+  and Backup profiles; distinguish `ModsetSpec`, `ModsetLock`, and
+  `ModpackBundle`; and separate platform, Factorio, player-identity, and server
+  credential bindings.
 - Compute readiness from installation, executable, configuration, content,
   account, environment, launch, operation, and recovery evidence; do not
   persist readiness as authority.
@@ -243,7 +250,7 @@ escape. No real Factorio authority is inferred.
   and safe next actions.
 - Compose `InstanceView` for task-oriented frontends while preserving the
   command explorer as the advanced automation surface.
-- Make `open_game_menu` the default launch intent. A save, scenario, benchmark,
+- Make `menu` the default launch intent. A save, scenario, benchmark,
   or server target must be explicit and separately validated.
 - Keep canonical human-readable state separate from rebuildable indexes.
 
@@ -299,12 +306,13 @@ may follow. Only one route must pass before the first controlled playable alpha.
 
 `FACMAN-INSTANCE-CENTRIC-ALPHA-01`
 
-Build the task UI around Instances, create/clone/import, Configure, readiness,
-Play, last run, profiles, presets, modpacks, account references, saves/backups,
-snapshots, Recovery Center, Installation Library, and the advanced command
-explorer. Play opens Factorio's menu by default. Every refusal supplies a safe
-next action and every dangerous operation previews effects and recovery
-disposition.
+Build primary navigation around Instances, Installations, Modpacks, Profiles
+and Presets, Saves and Worlds, Accounts, Backups and Snapshots, Recovery
+Center, Environments, and Advanced. Instance actions include Play, Configure,
+Make Ready, Clone, Snapshot, Export, Repair, and Archive. The Play menu exposes
+main menu, Continue, Load Save, New Game, Map Editor, and Join Server while
+main-menu Play remains prominent. Every refusal supplies a safe next action
+and every dangerous operation previews effects and recovery disposition.
 
 Targets: median download-to-first-play under five minutes, no external guide
 for the golden path, zero data-loss incidents, no silent foreign mutation,
@@ -313,6 +321,10 @@ becomes an architecture input.
 
 ### 5. Parallel value lanes
 
+- **`FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01`:** preserve World as a
+  secondary content lane for portable metadata, version/modset/content
+  compatibility, save import/export, and creating or preparing an instance
+  from a world bundle.
 - **`FACMAN-PORTABLE-INSTANCE-BUNDLE-01`:** export portable instance intent,
   resolved preset provenance, profiles, modpack requirements, modset locks,
   selected saves, hashes, and legal resource requirements; import through

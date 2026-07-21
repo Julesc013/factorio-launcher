@@ -16,9 +16,15 @@ and project status explicitly mark them available.
 
 ## Product promise
 
-> Choose an instance, press Play, and arrive at Factorio's menu with the chosen
-> version, mods, profile, account context, settings, saves, and resources
-> already in effect.
+> FacMan lets players create any number of independent Factorio setups, select
+> one, and launch the normal game as though Factorio had always been installed
+> and configured exactly that way.
+
+Each instance may independently select its Factorio version and installation,
+content capabilities, modpack or modset, mod and game settings, graphics/audio/
+interface profiles, player identity and supported account bindings, save
+library, scenarios, server configuration, blueprint/script data, execution
+environment, isolation guarantee, and backup/snapshot/recovery policy.
 
 The intended player flow is:
 
@@ -35,11 +41,12 @@ find or add Factorio installations
   -> exit, observe, and relaunch the same environment
 ```
 
-"Any combination" means any combination that is compatible, legally
-available to the player, and supported by the selected providers. FacMan must
-explain version/mod/DLC/platform/account incompatibilities; it must not bypass
-entitlement, fabricate compatibility, redistribute Factorio, or silently fall
-back to another version, modset, account, or settings profile.
+"Any combination" means every request can be represented, compared, planned,
+and explained. Preparation or execution still requires compatibility, legal
+availability to the player, provider support, and policy admission. FacMan
+must explain version/mod/DLC/platform/account incompatibilities; it must not
+bypass entitlement, fabricate compatibility, redistribute Factorio, or
+silently fall back to another version, modset, account, or settings profile.
 
 ## Resource model
 
@@ -64,6 +71,106 @@ reference a version constraint, profile, modpack, data policy, or launch mode.
 Applying a preset produces explicit instance intent with provenance; later
 changes to the preset do not silently mutate an existing instance.
 
+### Installation application closure
+
+An `Installation` is the application image: Factorio binaries, exact
+version/build, platform/architecture, base game data, observed expansion or
+content files, entrypoints, source/provenance, ownership, and lifecycle
+authority. It may be Steam-managed, vendor-installed, portable/reference-only,
+FacMan-managed, explicitly adopted, headless, or an archived/cached source.
+
+Multiple instances may share one verified installation only while its
+application closure is immutable for those launches. Installed content files
+are capability evidence, not entitlement proof.
+
+### Isolated instance home
+
+An `Instance` is a complete isolated Factorio home: selected installation,
+write-data root, config, mods, mod settings, saves, scenarios, script output,
+logs, crash state, player settings, profile bindings, account references,
+launch settings, snapshots, and recovery state. Application binaries may be
+shared; mutable data is instance-owned and cannot be silently shared between
+concurrently runnable instances.
+
+### Typed profiles and versioned presets
+
+Profiles are reusable, independently inspectable, versioned configuration
+facets. Initial profile families are:
+
+```text
+LaunchProfile
+GraphicsProfile
+AudioProfile
+InterfaceProfile
+MultiplayerProfile
+ServerProfile
+NewGameProfile
+BackupProfile
+```
+
+An instance may pin an ordered set of profiles when reproducibility matters.
+Every applied value retains visible provenance. Profiles cannot grant process,
+network, credential, setup, signing, or publication authority.
+
+Presets are versioned bundles of initial defaults and profile references—for
+example Vanilla 2.0, Space Age, a named overhaul modpack, low-spec laptop,
+headless server, mod development, or speedrunning. They may initialize version
+requirements, content, modsets, profiles, data/backup policy, and launch mode.
+Applying or explicitly upgrading a preset previews the resulting differences;
+later preset edits never mutate existing instances implicitly.
+
+### Desired, locked, and bundled mod content
+
+```text
+ModsetSpec
+  desired mods
+  version constraints
+  optional features
+  compatibility policy
+
+ModsetLock
+  exact versions
+  dependency closure
+  hashes
+  load state
+  startup-settings identity
+
+ModpackBundle
+  portable metadata
+  ModsetLock
+  permitted local artifacts or references
+```
+
+The lock, not an informal mod list, establishes reproducible content. A lock
+does not prove that its artifacts are present, trusted, distributable, or
+compatible with the selected Factorio version.
+
+### Account and identity bindings
+
+The instance model keeps independent identity domains:
+
+| Binding | Meaning |
+| --- | --- |
+| `PlatformAccountBinding` | Steam or another external-platform session |
+| `FactorioAccountBinding` | Factorio website or Mod Portal identity |
+| `PlayerIdentityProfile` | Player name, colour, and non-secret presentation state |
+| `ServerCredentialBinding` | Server-password or RCON credential reference |
+
+Only logical credential references appear in instance configuration. Secret
+values remain in an OS-backed credential provider. FacMan cannot silently
+switch the active Steam client account, bypass authentication or entitlement,
+or emulate an unsupported account/installation combination. Account-route
+availability is readiness evidence and unsupported combinations are explained
+and refused.
+
+### Save and world library
+
+An instance may contain zero, one, or many saves, plus new-game templates,
+scenarios, autosaves, and server saves. They appear normally inside Factorio's
+menu. Portable save/world metadata may record required Factorio version,
+content capabilities, modset, and last-known-compatible configuration, but a
+save remains secondary content rather than the mandatory launch identity.
+
 ## Decomposed instance aggregate
 
 ```text
@@ -72,7 +179,7 @@ InstanceView
   + InstanceBinding
   + InstanceReadiness
   + effective configuration summary
-  + recent operation and recovery history
+  + recent run, snapshot, operation, and recovery history
 ```
 
 These components have different portability, authority, freshness, and
@@ -85,13 +192,14 @@ machine:
 
 - instance identity and display name;
 - Factorio version constraint and required content/DLC capabilities;
-- profile reference plus explicit setting overrides;
-- preset provenance after its values have been resolved;
-- modpack reference and optional exact modset-lock identity;
-- logical account requirement or account-reference selector;
-- isolation, storage, backup, retention, and update policies;
-- optional save library, scenario, benchmark, or server requirements;
-- default launch intent, which is `open_game_menu`.
+- ordered typed-profile references plus explicit setting overrides;
+- template provenance and pinned preset identity/version after resolution;
+- `ModsetSpec`, modpack, and optional exact `ModsetLock` identity;
+- logical platform, Factorio, player-identity, and server-credential requirements;
+- data-routing, save-library, isolation, storage, backup, retention, and update
+  policies;
+- optional scenario, benchmark, server, blueprint, and script-data requirements;
+- default `LaunchIntent`, which is `menu`.
 
 It contains logical references and content identities. It never contains
 absolute machine paths, drive letters, process IDs, registry keys, credential
@@ -110,9 +218,10 @@ rewrite existing workspaces or infer authority from legacy fields.
 - the instance data root and effective configuration identity;
 - exact profile, preset-resolution, modpack, and modset-lock identities;
 - resolved mod artifacts and content capabilities;
-- provider-scoped account reference, never credential material;
+- provider-scoped platform, Factorio, and server credential-reference IDs,
+  never credential material;
 - host, execution, isolation, graphics, filesystem, and storage providers;
-- local save/content-cache locations;
+- local mod-cache, save, blueprint, and script-data locations;
 - provider revisions and the evidence digest used for resolution.
 
 A binding is replaceable and machine-local. Rebinding an instance on another
@@ -124,6 +233,12 @@ credential-reference IDs, or storage placement differ.
 Readiness is recomputed from installation, executable, profile, mod, account,
 content, save, environment, launch, operation, and recovery evidence. It is
 never persisted as an authority flag.
+
+It answers whether the exact Factorio version is available and healthy,
+required content exists, the modset is resolved and version-compatible,
+startup settings are valid, account routes are available, saves are
+structurally compatible, the execution environment and requested isolation
+mode are available, recovery is pending, and the launch plan is still current.
 
 The result is one of:
 
@@ -144,11 +259,30 @@ invalidation rules.
 ### `InstanceView`: task-oriented UI projection
 
 `InstanceView` composes the current spec, binding, readiness, effective
-configuration summary, and latest operation history. It supports **Play**,
+configuration summary, and latest run/snapshot/operation/recovery history. It supports **Play**,
 **Configure**, **Change Version**, **Choose Profile**, **Choose Modpack**,
 **Manage Saves**, **Snapshot**, **Export**, and **Recover**. Generated command
 metadata remains the advanced automation surface rather than the primary
 player navigation model.
+
+The default card makes the resolved setup legible before launch:
+
+```text
+Space Age 2.0 — Main Setup
+
+Factorio        2.0.77
+Installation    Managed standalone
+Modpack         Space Age QoL — 34 mods locked
+Account         Factorio account: Jules
+Saves           7
+Preset          Desktop / High quality
+Isolation       Hermetic
+Backup          Current
+Last run        Clean exit
+Status          Ready
+
+[Play]
+```
 
 ## Launch-intent law
 
@@ -156,18 +290,42 @@ The launch intent is explicit and bound into readiness, plans, permits, and
 post-run evidence:
 
 ```text
-open_game_menu    default player action
-load_save         optional explicit direct-load action
-new_game          optional explicit scenario/map-generation action
+menu              default player action
+continue_last     explicit last-save shortcut
+load_save         explicit direct-load action
+new_game          explicit scenario/map-generation action
+map_editor        explicit editor action
+connect_server    explicit multiplayer action
+start_server      explicit server workflow
 benchmark         advanced explicit action
-headless_server   separate server workflow
+instrumented_dev  advanced development workflow
 ```
 
-`facman play <instance>` means `open_game_menu` unless the player explicitly
+`facman play <instance>` means `menu` unless the player explicitly
 selects another supported intent. The default launch plan must not add a save
 path, map, benchmark, or server flag. Exiting Factorio returns to the same
 instance record; the save chosen inside Factorio does not redefine the
 instance.
+
+The prominent action is **Play — open main menu**. Continue, Load Save, Start
+New Game, Map Editor, Join Server, and advanced modes are explicit shortcuts,
+not implicit behavior derived from the presence of saves.
+
+The implemented launch builder already provides the compatible foundation: it
+generates an instance-specific config whose `read-data` selects the
+installation, whose `write-data` selects the instance, and whose update checks
+are disabled. Its ordinary shape is:
+
+```text
+factorio
+  --config <instance>/config/config.ini
+  --mod-directory <instance>/mods
+```
+
+Without an intent-specific save, scenario, connection, server, benchmark, or
+editor argument, Factorio opens its normal menu and sees that instance's mods,
+saves, settings, and player data. This architectural fit is not evidence that
+real Factorio execution is currently available.
 
 ## Effective configuration and provenance
 
@@ -176,18 +334,86 @@ The effective environment is deterministic and explainable:
 ```text
 product defaults
   < platform defaults
-  < workspace policy
-  < resolved preset values
-  < profile
+  < template initial values
+  < pinned preset values
+  < ordered typed profiles
   < instance overrides
-  < explicit launch request
+  < explicit one-run override
 ```
 
-Every effective value exposes its source. Later edits to presets, profiles,
-modpacks, or account selections make dependent readiness stale; they do not
-silently alter a running or already prepared instance. Configuration may
-restrict authority but can never grant process, setup, network, credential,
-signing, or publication authority.
+Workspace and security policies constrain the resolved result rather than
+silently winning a value conflict. Templates normally initialize an instance;
+later template changes do not alter it. Preset/profile upgrades are pinned and
+previewed. Incompatible values or equally ranked conflicting profile values
+produce explicit differences or blockers rather than undocumented tie-breaks.
+
+Modset locks, account bindings, machine binding, and launch intent join the
+resolved configuration as independently identified inputs. Every effective
+value exposes its provenance and overridden sources, for example:
+
+```json
+{
+  "value": "high",
+  "source": "graphics_profile",
+  "source_id": "desktop-high-v3",
+  "overrides": ["product_default", "preset:space-age"]
+}
+```
+
+Later edits to presets, profiles, modpacks, account selections, or local
+bindings make dependent readiness stale; they do not silently alter a running
+or already prepared instance. Configuration may restrict authority but can
+never grant process, setup, network, credential, signing, or publication
+authority.
+
+## Universal representation, conservative execution
+
+FacMan may model, compare, and diagnose any requested combination, including a
+contradictory one such as Factorio 1.1 plus 2.0-only expansion content, a
+2.0-only mod, an old save, a standalone install, a Steam session, and a server
+profile. Representation never implies compatibility or authority.
+
+The resolver returns one of:
+
+```text
+ready
+can_be_prepared
+can_be_prepared_with_changes
+blocked_by_incompatibility
+blocked_by_missing_owned_source
+blocked_by_entitlement_or_account_requirement
+blocked_by_unsupported_platform
+recovery_required
+```
+
+The result explains viable alternatives such as selecting a compatible
+Factorio/mod version, disabling an unavailable content requirement, cloning
+before a downgrade, providing a player-owned standalone source, or using the
+active Steam account. It never silently substitutes a version, modset,
+installation, account, entitlement, or settings profile.
+
+## Instance lifecycle law
+
+The completed product supports creating an empty instance or one from a
+template/preset, cloning, renaming, archiving/restoring, moving, switching
+version or installation, attaching/updating modsets and profiles, attaching
+account references, importing/branching saves, resetting settings, snapshot,
+verification, repair of FacMan-owned state, export/import/rebind, Play,
+recovery, and deletion of only the FacMan-owned closure.
+
+A version, modset, preset, or material profile change follows:
+
+```text
+snapshot
+  -> preview differences
+  -> prepare
+  -> verify
+  -> switch
+  -> retain rollback
+```
+
+When the desired combination is materially different, cloning is the preferred
+safe action over repeatedly rewriting the only known-good instance.
 
 ## Federated instance preparation
 
@@ -236,6 +462,53 @@ Factorio binaries. Import classifies locally satisfied resources,
 reconstructable resources, player-owned source/account requirements, and
 policy conflicts before any mutation.
 
+## Player navigation
+
+The primary navigation is:
+
+```text
+Instances
+Installations
+Modpacks
+Profiles and Presets
+Saves and Worlds
+Accounts
+Backups and Snapshots
+Recovery Center
+Environments
+Advanced
+```
+
+Instance actions are Play, Configure, Make Ready, Clone, Snapshot, Export,
+Repair, and Archive. The Play menu offers Play — open main menu, Continue Last
+Save, Load Save, Start New Game, Map Editor, and Join Server. The first remains
+the prominent default. Generated command forms remain the advanced automation
+surface rather than the player's mental model.
+
+## Safety laws
+
+1. An instance binds one exact installation for each launch.
+2. Installation application files remain read-only unless Universal Setup has
+   explicit authority for the exact operation.
+3. Mutable Factorio data belongs to the instance.
+4. The default `LaunchIntent` is `menu`.
+5. A save is never loaded without an explicit launch intent.
+6. Accounts are references to authenticated identities; instance files never
+   store secret values.
+7. Steam identity remains owned by the active Steam session.
+8. Installed expansion/content files do not prove entitlement.
+9. Profile, preset, and template changes are versioned and previewed.
+10. A modset is reproducible only when locked to exact versions and hashes.
+11. Writable saves are not silently shared across concurrently runnable
+    instances.
+12. Readiness never creates authority.
+13. Every process launch binds an exact instance, installation, plan, isolation
+    mode, and permit.
+14. Every material change declares verification and honest rollback or recovery
+    disposition.
+15. Foreign installations remain read-only unless explicitly and safely
+    adopted through a later authorised lifecycle.
+
 ## Candidate stable workflow surface
 
 ```text
@@ -276,9 +549,19 @@ an optional launch intent rather than the product's default entry point.
 5. **`FACMAN-INSTANCE-CENTRIC-ALPHA-01`:** expose Instances, readiness,
    Configure, Play, last run, saves/backups, recovery, installations, and the
    advanced explorer to real players.
-6. Continue portable reconstruction, managed installation lifecycle, content
-   preparation, and host support as parallel value lanes. Signed self-update
-   blocks public beta, not the first controlled playable alpha.
+6. **`FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01`:** add portable save/world
+   metadata, required version/modset/content analysis, save import/export, and
+   creation or preparation of an instance from a world bundle. World remains a
+   secondary content lane.
+7. Continue portable instance reconstruction, managed installation lifecycle,
+   content preparation, and host support as parallel value lanes. Signed
+   self-update blocks public beta, not the first controlled playable alpha.
+
+The product ceiling is an instance-centric Factorio environment manager in
+which each instance behaves like an independent Factorio setup. Selecting one
+opens the normal game with its exact version, modpack, settings, identity
+bindings, saves, profiles, presets, resources, and safety policies already in
+effect.
 
 Steam-aware Play remains an independent gate. Dynamic plugins, a daemon,
 marketplace, cloud synchronization, remote administration, and advisory AI

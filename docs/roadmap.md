@@ -16,8 +16,9 @@ The active phase is **multi_version_install_lifecycle** and the active WorkUnit 
 6. Prefer `FACMAN-HERMETIC-STANDALONE-PLAY-01` as the first real-product gate; keep Steam-aware Play independent.
 7. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.
 8. In parallel after closeout, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.
-9. Deepen portable instance reconstruction, managed install reconciliation, content preparation, and host repair from observed player needs.
-10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.
+9. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.
+10. Deepen portable instance reconstruction, managed install reconciliation, content preparation, and host repair from observed player needs.
+11. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.
 
 The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.
 The multi-version lifecycle is active pre-alpha work because it enables the selected local standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,

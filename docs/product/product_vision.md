@@ -5,8 +5,9 @@ launcher and environment manager for Factorio.
 
 Its user promise is:
 
-> Choose an instance, press Play, and arrive at Factorio's menu with the
-> selected environment already in effect.
+> FacMan lets players create any number of independent Factorio setups, select
+> one, and launch the normal game as though Factorio had always been installed
+> and configured exactly that way.
 
 Its long-term outcome is to make every player-defined Factorio environment
 understandable, playable, reproducible, repairable, portable, and recoverable
@@ -46,6 +47,11 @@ then relaunch the same instance with an explainable last-run result.
 Saves/worlds are optional content inside an instance, not the required launch
 aggregate. Direct save loading may exist as an explicit launch intent, but
 `facman play <instance>` opens the game menu by default.
+
+Any requested combination can be represented, compared, planned, and
+explained. Only compatible, player-owned, provider-supported, policy-admitted
+combinations can be prepared or executed; FacMan does not emulate entitlement
+or silently substitute versions, mods, accounts, installations, or settings.
 
 Advanced installation, instance, profile, preset, modpack/modset, account,
 save, diagnostic, and automation surfaces remain available through the CLI,
