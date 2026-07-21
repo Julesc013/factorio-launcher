@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
 title: Implement exact hermetic standalone Play candidate
-status: planned
-lifecycle_state: planned
-planning_state: planned
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-07-21T16:23:41Z
 owner: unassigned
 objective: >
@@ -101,3 +101,4 @@ closeout_checklist:
   - exact bounded issuer and provider-consumption path reviewed
   - protected-root and process-tree observation gaps force Inconclusive
   - no human verdict inferred from automated candidate proof
+active_at: 2026-07-21T17:52:42Z

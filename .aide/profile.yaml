@@ -8,17 +8,17 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: hermetic-standalone-play-policy-closeout
+  phase: hermetic-standalone-play-candidate
   primary_goal: >
-    Preserve the reviewed exact Gate 4A policy digest while it is promoted as
-    a no-authority canonical baseline and synchronized back into dev.
+    Implement the exact frozen Gate 4B candidate against the canonically
+    promoted Gate 4A policy without broadening its claim or recording a human verdict.
   next_task: >
-    Promote the accepted policy-only dev checkpoint to main, synchronize main
-    ancestry back into dev without changing the accepted tree, and only then
-    activate the separately scoped implementation candidate bound to the
-    accepted InstanceSpec, InstanceBinding, and InstanceReadiness. Keep menu as the default
-    and only candidate launch intent. The later human verdict remains a
-    distinct WorkUnit.
+    Bind one Windows x64 Factorio 2.0.77 standalone non-Steam launch, with
+    menu as the default and only candidate intent, to
+    the accepted InstanceSpec, InstanceBinding, and InstanceReadiness plus
+    exact executable, plan, installation, configuration, permit, provider,
+    writable-root, protected-root, and observation identities. Keep the later
+    human-reviewed result in its distinct verdict WorkUnit.
   authoritative_command_slice:
     - installs.scan
     - installs.import
