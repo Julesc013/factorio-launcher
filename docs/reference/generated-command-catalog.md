@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `671764ee966fe44d269d6787664049383ff461152616762b4312b0a1789abfdb`.
+Source digest: `4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -43,8 +43,10 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `instances.archive` | `instances.archive` | `instances_archive` | yes | - | available | workspace_read, workspace_write | `facman instances archive <instance-id> --json` |
 | `instances.clone` | `instances.clone` | `instances_clone` | yes | - | available | workspace_read, workspace_write | `facman instances clone <source-id> <destination-id> [--name <display-name>] [--install <install-id>] --json` |
 | `instances.create` | `instance.create` | `instance_create` | yes | - | available | workspace_read, workspace_write | `facman instances create <name> --install <install-id> [--import-data <install-root>] --json` |
+| `instances.describe` | `instances.describe` | `instances_describe` | no | - | implemented | workspace_read | `facman instances describe <instance-id> [--intent menu] --json` |
 | `instances.diff` | `instances.diff` | `instances_diff` | no | - | available | workspace_read | `facman instances diff <left-instance-id> <right-instance-or-snapshot> --json` |
 | `instances.inspect` | `instances.inspect` | `instances_inspect` | no | - | available | workspace_read | `facman instances inspect <instance-id> --json` |
+| `instances.readiness` | `instances.readiness` | `instances_readiness` | no | - | implemented | workspace_read | `facman instances readiness <instance-id> [--intent menu] --json` |
 | `instances.rename` | `instances.rename` | `instances_rename` | yes | - | available | workspace_read, workspace_write | `facman instances rename <instance-id> --name <display-name> --json` |
 | `instances.restore` | `instances.restore` | `instances_restore` | yes | - | available | workspace_read, workspace_write | `facman instances restore <archive-id> [--new-id <instance-id>] --json` |
 | `instances.verify` | `instances.verify` | `instances_verify` | no | - | available | workspace_read | `facman instances verify <instance-id> --json` |

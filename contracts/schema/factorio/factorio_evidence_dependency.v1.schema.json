@@ -1,0 +1,16 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_evidence_dependency.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Factorio evidence dependency",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {"type": "string", "minLength": 1},
+    "identity": {"type": "string", "minLength": 1},
+    "state": {
+      "enum": ["observed", "not_observed", "missing", "stale", "unavailable"]
+    },
+    "revalidate_before_use": {"type": "boolean"}
+  },
+  "required": ["kind", "identity", "state", "revalidate_before_use"]
+}

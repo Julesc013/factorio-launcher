@@ -2305,6 +2305,78 @@
         ],
         "path": [
           "instances",
+          "describe"
+        ],
+        "positionals": [
+          {
+            "name": "instance-id",
+            "required": true
+          }
+        ],
+        "usage": "facman instances describe <instance-id> [--intent menu] --json"
+      },
+      "command_id": "instances.describe",
+      "deprecation": "active",
+      "frontend_category": "instances",
+      "localization_keys": [
+        "command.instances.describe.title",
+        "command.instances.describe.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "instances_describe",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [
+            "menu",
+            "continue_last",
+            "load_save",
+            "new_game",
+            "map_editor",
+            "connect_server",
+            "start_server",
+            "benchmark",
+            "instrumented_dev"
+          ],
+          "default": null,
+          "name": "intent",
+          "repeatable": false,
+          "request_field": "intent",
+          "required": false,
+          "type": "enum"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "instances.describe",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "instances",
           "diff"
         ],
         "positionals": [
@@ -2406,6 +2478,78 @@
       ],
       "risk_tier": "read_only",
       "runtime_id": "instances.inspect",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "instances",
+          "readiness"
+        ],
+        "positionals": [
+          {
+            "name": "instance-id",
+            "required": true
+          }
+        ],
+        "usage": "facman instances readiness <instance-id> [--intent menu] --json"
+      },
+      "command_id": "instances.readiness",
+      "deprecation": "active",
+      "frontend_category": "instances",
+      "localization_keys": [
+        "command.instances.readiness.title",
+        "command.instances.readiness.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "instances_readiness",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "instance_id",
+          "repeatable": false,
+          "request_field": "instance_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [
+            "menu",
+            "continue_last",
+            "load_save",
+            "new_game",
+            "map_editor",
+            "connect_server",
+            "start_server",
+            "benchmark",
+            "instrumented_dev"
+          ],
+          "default": null,
+          "name": "intent",
+          "repeatable": false,
+          "request_field": "intent",
+          "required": false,
+          "type": "enum"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "instances.readiness",
       "schema": "facman.command.v2",
       "visibility": "public"
     },
@@ -8354,5 +8498,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "671764ee966fe44d269d6787664049383ff461152616762b4312b0a1789abfdb"
+  "source_digest": "4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba"
 }

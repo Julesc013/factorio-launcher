@@ -1,0 +1,108 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_spec.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portable Factorio instance specification projection",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.instance_spec.v1"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "instance_id": {"type": "string", "minLength": 1},
+    "display_name": {"type": "string"},
+    "factorio_version_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["exact", "not_recorded"]},
+        "value": {"type": ["string", "null"]}
+      },
+      "required": ["kind", "value"]
+    },
+    "required_content_capabilities": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "installation_selection_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {"const": "compatible_registered_installation"},
+        "ownership_requirement": {"const": "none"}
+      },
+      "required": ["strategy", "ownership_requirement"]
+    },
+    "template_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "template_id": {"type": "string", "minLength": 1},
+        "application": {"const": "initialized_legacy_record"},
+        "live_mutable_dependency": {"const": false}
+      },
+      "required": ["template_id", "application", "live_mutable_dependency"]
+    },
+    "ordered_profile_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {"const": "legacy_launch_profile"},
+          "id": {"type": "string", "minLength": 1},
+          "revision": {"type": "string", "minLength": 1},
+          "provenance": {"const": "factorio.instance.v1"}
+        },
+        "required": ["kind", "id", "revision", "provenance"]
+      },
+      "minItems": 1
+    },
+    "modset_lock_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {"enum": ["not_recorded", "legacy_lock_projected"]},
+        "reference": {"type": ["string", "null"]},
+        "lock_digest": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"}
+      },
+      "required": ["status", "reference", "lock_digest"]
+    },
+    "explicit_setting_overrides_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "count": {"type": "integer", "minimum": 0},
+        "source": {"enum": ["not_configured", "factorio.instance_overrides.v1"]}
+      },
+      "required": ["count", "source"]
+    },
+    "isolation_requirement": {"const": "not_recorded"},
+    "backup_policy_reference": {"const": "not_configured"},
+    "account_requirement": {"const": "not_configured"},
+    "default_launch_intent": {"const": "menu"},
+    "compatibility_projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_record_schema": {"enum": ["factorio.instance.v1", "factorio.instance.legacy"]},
+        "projection_schema": {"const": "factorio.instance_spec.v1"},
+        "persisted_record_rewritten": {"const": false},
+        "conservative_defaults_applied": {"const": true},
+        "missing_authority_default": {"const": "none"},
+        "default_launch_intent": {"const": "menu"}
+      },
+      "required": ["source_record_schema", "projection_schema", "persisted_record_rewritten", "conservative_defaults_applied", "missing_authority_default", "default_launch_intent"]
+    },
+    "spec_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": [
+    "schema", "canonicalization_version", "instance_id", "display_name",
+    "factorio_version_requirement", "required_content_capabilities",
+    "installation_selection_requirement", "template_provenance",
+    "ordered_profile_references", "modset_lock_requirement",
+    "explicit_setting_overrides_summary", "isolation_requirement",
+    "backup_policy_reference", "account_requirement", "default_launch_intent",
+    "compatibility_projection", "spec_digest"
+  ]
+}

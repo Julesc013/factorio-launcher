@@ -1,0 +1,102 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_readiness.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Evidence-backed Factorio instance readiness",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "dimension": {"type": "string", "minLength": 1},
+        "severity": {"enum": ["info", "warning", "error"]},
+        "detail": {"type": "string", "minLength": 1}
+      },
+      "required": ["code", "dimension", "severity", "detail"]
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "label": {"type": "string", "minLength": 1},
+        "command": {"type": ["string", "null"]},
+        "requires_authority": {"type": "boolean"}
+      },
+      "required": ["id", "label", "command", "requires_authority"]
+    },
+    "guarantees": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mutation_executed": {"const": false},
+        "preparation_executed": {"const": false},
+        "execution_started": {"const": false},
+        "permit_issued": {"const": false},
+        "credential_accessed": {"const": false},
+        "network_accessed": {"const": false}
+      },
+      "required": ["mutation_executed", "preparation_executed", "execution_started", "permit_issued", "credential_accessed", "network_accessed"]
+    }
+  },
+  "properties": {
+    "schema": {"const": "factorio.instance_readiness.v1"},
+    "command": {"const": "instances.readiness"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "policy_revision": {"const": "factorio.instance-readiness-policy.v1"},
+    "instance_id": {"type": "string", "minLength": 1},
+    "launch_intent": {"const": "menu"},
+    "instance_spec_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "instance_binding_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "overall_state": {"enum": ["ready", "degraded", "blocked", "recovery_required"]},
+    "configuration_state": {"enum": ["ready", "degraded", "blocked"]},
+    "preparation_state": {"enum": ["already_prepared", "changes_required", "unavailable"]},
+    "play_authority_state": {"const": "unavailable"},
+    "dimensions": {
+      "type": "array",
+      "items": {"$ref": "factorio_readiness_dimension.v1.schema.json"},
+      "minItems": 1
+    },
+    "satisfied_requirements": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "resource_requirements": {
+      "type": "array",
+      "items": {"$ref": "factorio_instance_resource_requirement.v1.schema.json"},
+      "minItems": 1
+    },
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "blockers": {"type": "array", "items": {"$ref": "factorio_instance_blocker.v1.schema.json"}, "minItems": 1},
+    "safe_next_actions": {"type": "array", "items": {"$ref": "#/$defs/action"}, "minItems": 1},
+    "dependency_identities": {
+      "type": "array",
+      "items": {"$ref": "factorio_evidence_dependency.v1.schema.json"},
+      "minItems": 1
+    },
+    "freshness": {"enum": ["current", "stale"]},
+    "readiness_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "mutation_executed": {"const": false},
+    "preparation_executed": {"const": false},
+    "execution_started": {"const": false},
+    "permit_issued": {"const": false},
+    "credential_accessed": {"const": false},
+    "network_accessed": {"const": false},
+    "preparation_available": {"const": false},
+    "execution_available": {"const": false},
+    "operation_guarantees": {"$ref": "#/$defs/guarantees"}
+  },
+  "required": [
+    "schema", "command", "canonicalization_version", "policy_revision", "instance_id",
+    "launch_intent", "instance_spec_digest", "instance_binding_digest", "overall_state",
+    "configuration_state", "preparation_state", "play_authority_state", "dimensions",
+    "satisfied_requirements", "resource_requirements", "findings", "blockers",
+    "safe_next_actions", "dependency_identities", "freshness", "readiness_digest",
+    "mutation_executed", "preparation_executed", "execution_started", "permit_issued",
+    "credential_accessed", "network_accessed", "preparation_available", "execution_available",
+    "operation_guarantees"
+  ]
+}

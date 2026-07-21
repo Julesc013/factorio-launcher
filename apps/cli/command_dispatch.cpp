@@ -578,6 +578,17 @@ int command_instances(const Options& options)
         return emit_basic(call(options, "instance.create", payload, false), flag(options.args, "--json"), "Created instance " + id);
     }
     const std::string action = options.args[1];
+    if ((action == "describe" || action == "readiness") && options.args.size() >= 3) {
+        for (std::size_t index = 3; index < options.args.size(); ++index) {
+            if (options.args[index] == "--json") continue;
+            if (options.args[index] != "--intent" || index + 1 >= options.args.size()) return 2;
+            ++index;
+        }
+        return emit_basic(
+            call(options, "instances." + action, fields_payload({
+                {"instance_id", options.args[2]}, {"intent", option(options.args, "--intent")}})),
+            flag(options.args, "--json"), "Instance " + action + " completed");
+    }
     if ((action == "inspect" || action == "verify" || action == "archive") && options.args.size() >= 3) {
         for (std::size_t index = 3; index < options.args.size(); ++index) if (options.args[index] != "--json") return 2;
         return emit_basic(

@@ -81,6 +81,7 @@ affected_strict_validators:
   - tools/frontend_parity_check.py
   - tools/frontend_transport_truth_check.py
   - tools/instance_lifecycle_check.py
+  - tools/instance_model_check.py
   - tools/m1_system_proof_check.py
   - tools/mod_inventory_check.py
   - tools/modset_solver_check.py

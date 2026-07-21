@@ -376,11 +376,35 @@
         "required": true
       }
     ],
+    "instances.describe": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "intent",
+        "required": false
+      }
+    ],
     "instances.inspect": [
       {
         "kind": "identifier",
         "name": "instance_id",
         "required": true
+      }
+    ],
+    "instances.readiness": [
+      {
+        "kind": "identifier",
+        "name": "instance_id",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "intent",
+        "required": false
       }
     ],
     "instances.rename": [

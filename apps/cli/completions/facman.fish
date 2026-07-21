@@ -1,4 +1,4 @@
-# generated source-sha256: 671764ee966fe44d269d6787664049383ff461152616762b4312b0a1789abfdb
+# generated source-sha256: 4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -34,9 +34,11 @@
 # path: instances archive
 # path: instances clone
 # path: instances create
+# path: instances describe
 # path: instances diff
 # path: instances inspect
 # path: instances list
+# path: instances readiness
 # path: instances rename
 # path: instances restore
 # path: instances verify
@@ -166,6 +168,7 @@ complete -c facman -f -a preview
 complete -c facman -f -a product
 complete -c facman -f -a profiles
 complete -c facman -f -a rcon
+complete -c facman -f -a readiness
 complete -c facman -f -a reconcile
 complete -c facman -f -a recovery
 complete -c facman -f -a redact

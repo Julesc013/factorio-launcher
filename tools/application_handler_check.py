@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 APPLICATION = ROOT / "runtime/factorio/application"
+MAX_COMPOSITION_LINES = 270
 
 
 def validate() -> list[str]:
@@ -56,14 +57,14 @@ def validate() -> list[str]:
         for suffix in (".h", ".cpp"):
             if not (handlers / f"{name}{suffix}").is_file():
                 problems.append(f"missing typed command-family handler: {name}{suffix}")
-    for module in ("installation_module", "launch_module"):
+    for module in ("installation_module", "instance_module", "launch_module"):
         for suffix in (".h", ".cpp"):
             if not (modules / f"{module}{suffix}").is_file():
                 problems.append(f"missing application module seam: {module}{suffix}")
 
     entrypoint = (APPLICATION / "flb_factorio_application.cpp").read_text(encoding="utf-8")
     dispatch = (APPLICATION / "command_dispatch.cpp").read_text(encoding="utf-8")
-    if len(entrypoint.splitlines()) > 260:
+    if len(entrypoint.splitlines()) > MAX_COMPOSITION_LINES:
         problems.append("application entrypoint regrew beyond the composition boundary")
     for forbidden in (
         "json::parse(",
@@ -88,6 +89,8 @@ def validate() -> list[str]:
         problems.append("application entrypoint does not route through the launch module seam")
     if "installation_module_.handles(request.command)" not in entrypoint:
         problems.append("application entrypoint does not route through the installation module seam")
+    if "instance_module_.handles(request.command)" not in entrypoint:
+        problems.append("application entrypoint does not route through the instance projection module seam")
     for migrated in (
         "case CommandId::launch_plan_build:",
         "case CommandId::launch_plan_preflight:",
@@ -129,6 +132,10 @@ def validate() -> list[str]:
                    "handlers::plan_install_reconciliation("):
         if anchor not in installation_module:
             problems.append(f"authoritative installation module route missing: {anchor}")
+    instance_module = (modules / "instance_module.cpp").read_text(encoding="utf-8")
+    for anchor in ("handlers::describe_instance(", "handlers::readiness_instance("):
+        if anchor not in instance_module:
+            problems.append(f"authoritative instance projection module route missing: {anchor}")
     return problems
 
 

@@ -1,0 +1,15 @@
+{
+  "schema": "facman.safety_refusal.v1",
+  "command": "instances.readiness",
+  "operation": "instances.readiness",
+  "status": "refused",
+  "refusal": {
+    "schema": "common.refusal.v1",
+    "code": "unknown_instance",
+    "reason": "Instance lifecycle operation was refused",
+    "detail": "workspace_record_missing",
+    "recoverable": true,
+    "retryable": true,
+    "severity": "blocked"
+  }
+}

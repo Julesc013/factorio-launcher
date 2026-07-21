@@ -667,6 +667,15 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "source_data_root", typed.source_data_root, detail)) return false;
         request.payload = std::move(typed); return true;
     }
+    case CommandId::instances_describe:
+    case CommandId::instances_readiness: {
+        if (!validate_fields(payload, {"instance_id", "intent"}, detail)) return false;
+        InstanceProjectionRequest typed;
+        if (!required_string(payload, "instance_id", typed.instance_id, detail) ||
+            !optional_string(payload, "intent", typed.launch_intent, detail)) return false;
+        request.payload = std::move(typed);
+        return true;
+    }
     case CommandId::instances_inspect:
     case CommandId::instances_verify:
     case CommandId::instances_archive: {

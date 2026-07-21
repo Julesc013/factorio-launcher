@@ -1,0 +1,86 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_instance_binding.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Machine-local Factorio instance binding",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.instance_binding.v1"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "instance_id": {"type": "string", "minLength": 1},
+    "selected_installation_id": {"type": ["string", "null"]},
+    "installation_evidence_digest": {
+      "anyOf": [
+        {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        {"const": "not_observed"}
+      ]
+    },
+    "instance_root": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "observed_identity": {"type": "string", "minLength": 1},
+        "state": {"enum": ["observed", "missing_or_unsafe"]}
+      },
+      "required": ["path", "observed_identity", "state"]
+    },
+    "effective_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "digest": {
+          "anyOf": [
+            {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+            {"const": "not_observed"}
+          ]
+        },
+        "state": {"enum": ["valid", "missing_or_invalid"]}
+      },
+      "required": ["path", "digest", "state"]
+    },
+    "read_data_path": {"type": "string"},
+    "write_data_path": {"type": "string", "minLength": 1},
+    "mod_root_path": {"type": "string", "minLength": 1},
+    "modset_lock_identity": {"type": "string", "minLength": 1},
+    "profile_template_identities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {"type": "string", "minLength": 1},
+        "profile_revision": {"type": "string", "minLength": 1},
+        "template_id": {"type": "string", "minLength": 1},
+        "template_revision": {"type": "string", "minLength": 1}
+      },
+      "required": ["profile_id", "profile_revision", "template_id", "template_revision"]
+    },
+    "execution_environment_identity": {"type": "string", "minLength": 1},
+    "provider_revisions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "instance_projection": {"const": "factorio.instance-model.v1"},
+        "installation_projection": {"const": "factorio.installation_model.v2"},
+        "profile_projection": {"const": "factorio.launch-profile.v1"},
+        "modset_projection": {"const": "factorio.modset-structural.v1"},
+        "launch_preflight": {"const": "factorio.launch-preflight.v1"}
+      },
+      "required": ["instance_projection", "installation_projection", "profile_projection", "modset_projection", "launch_preflight"]
+    },
+    "binding_dependencies": {
+      "type": "array",
+      "items": {"$ref": "factorio_evidence_dependency.v1.schema.json"},
+      "minItems": 1
+    },
+    "freshness_state": {"enum": ["current", "stale"]},
+    "binding_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": [
+    "schema", "canonicalization_version", "instance_id", "selected_installation_id",
+    "installation_evidence_digest", "instance_root", "effective_config", "read_data_path",
+    "write_data_path", "mod_root_path", "modset_lock_identity",
+    "profile_template_identities", "execution_environment_identity", "provider_revisions",
+    "binding_dependencies", "freshness_state", "binding_digest"
+  ]
+}
