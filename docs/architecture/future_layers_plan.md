@@ -18,15 +18,17 @@ wave. Its autonomous lane is complete.
 1. Review, commit, and cleanly reproduce product convergence, the
    capability-scoped execution foundation, and installation-model-v2 without
    promoting real execution or setup authority.
-2. Add portable `WorldSpec`, machine-local `WorldBinding`, computed readiness,
-   and the read-only world list/inspect/readiness surface. `World` is the UX
-   aggregate, not a monolithic persisted object or mutation kernel.
+2. Add portable `InstanceSpec`, machine-local `InstanceBinding`, computed
+   readiness, and the read-only instance list/inspect/readiness surface.
+   `Instance` is the UX aggregate composed from installation/version, profile,
+   preset provenance, modpack/modset lock, account reference, settings,
+   resources, and optional saves. Default Play opens Factorio's menu.
 3. Add short-lived `OperationPermit`s bound to one reviewed plan, exact
    resources, evidence, policy, machine, and providers. Global admission and
    each authority-bearing provider revalidate independently.
 4. Prefer hermetic standalone Play as the first revision-pinned real-product
    gate. Steam-aware Play remains separate; at least one human-reviewed route
-   must pass before the world-centric playable alpha.
+   must pass before the instance-centric playable alpha.
 5. In parallel after gate 1, add workflow-specific read-only host
    list/inspect/doctor, bounded support export, and the first no-admin Windows
    Sandbox profile. Host support must not block an unrelated native Play route.
@@ -59,7 +61,7 @@ a stronger product claim.
 
 The implemented execution-foundation boundary is documented in
 [`execution_foundation.md`](execution_foundation.md).
-The planned world aggregate and operation authority are documented in
-[`world_product_model.md`](world_product_model.md).
+The planned instance aggregate and operation authority are documented in
+[`instance_product_model.md`](instance_product_model.md).
 The prerequisite-gated but Play-independent host support lane is documented in
 [`host_environment_lifecycle.md`](host_environment_lifecycle.md).

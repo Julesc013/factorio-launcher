@@ -57,7 +57,7 @@ native_direction:
         text = project_state.summary(project_state.collect())
         self.assertIn("phase: multi_version_install_lifecycle (active)", text)
         self.assertIn("active_work_unit: FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01", text)
-        self.assertIn("next_work_unit: FACMAN-WORLD-SPEC-AND-READINESS-01", text)
+        self.assertIn("next_work_unit: FACMAN-INSTANCE-SPEC-AND-READINESS-01", text)
         self.assertIn("instance_isolated=unproven", text)
         self.assertIn("hermetic=unproven", text)
 

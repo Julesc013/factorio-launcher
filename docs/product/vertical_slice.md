@@ -25,9 +25,11 @@ Factorio, repair installs, write to the global Factorio data directory, or use
 the Mod Portal.
 
 The current product sequence is defined in
-[`master_plan.md`](master_plan.md). The next executable vertical slice is a
-fake-process world-to-Play journey under `FACMAN-EXECUTION-FOUNDATION-01`;
-that proof will not itself authorise real Factorio execution.
+[`master_plan.md`](master_plan.md). The completed execution-foundation slice is
+a fake-process instance launch journey under
+`FACMAN-EXECUTION-FOUNDATION-01`; that proof does not authorise real Factorio
+execution. The future real route defaults to opening Factorio's main menu, not
+loading a specific save implicitly.
 
 Run it through the normal unit suite:
 

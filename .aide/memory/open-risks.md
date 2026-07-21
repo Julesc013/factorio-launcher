@@ -1,12 +1,12 @@
 # FacMan Open Risks
 
-- Risk: A monolithic persisted `World` could couple portable player intent to
+- Risk: A monolithic persisted `Instance` could couple portable player intent to
   machine paths, providers, credentials, caches, and operation history.
   - Status: active design risk
-  - Mitigation: Keep `WorldSpec`, `WorldBinding`, computed readiness, and
-    `WorldView` separate, with versioned logical references between them.
+  - Mitigation: Keep `InstanceSpec`, `InstanceBinding`, computed readiness, and
+    `InstanceView` separate, with versioned logical references between them.
 
-- Risk: World readiness could become a new cross-repository mutation kernel.
+- Risk: Instance readiness could become a new cross-repository mutation kernel.
   - Status: active design risk
   - Mitigation: Compose immutable typed subplans while preserving FacMan,
     Universal Launcher, and Universal Setup ownership and provider-side
@@ -22,8 +22,8 @@
 - Risk: Host support work could delay the first trustworthy playable journey.
   - Status: active
   - Mitigation: Keep host inspection and remedies on a parallel lane. They may
-    block only a world whose selected workflow actually requires that host
-    capability, never unrelated World, permit, Play, or alpha work.
+    block only an instance whose selected workflow actually requires that host
+    capability, never unrelated instance, permit, Play, or alpha work.
 
 - Risk: Portable bundles could leak local secrets or unlawfully redistribute
   proprietary Factorio binaries.
@@ -77,8 +77,9 @@
 - Risk: The command-complete interfaces may still be unintuitive for players.
   - Status: active
   - Mitigation: Measure a Windows-first first-run journey—find Factorio,
-    choose or create a world, review readiness, Play—before broadening product
-    scope. Keep the command explorer as an advanced interface.
+    create or select an instance, choose version/profile/modpack/account and
+    settings, review readiness, then Play to the game menu—before broadening
+    product scope. Keep the command explorer as an advanced interface.
 
 - Risk: The project has no real-player validation despite substantial proof
   infrastructure.

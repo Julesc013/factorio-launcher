@@ -1,26 +1,30 @@
 # Product Charter
 
-FacMan is an unofficial, native, portable, scriptable, world-centric launcher
-and environment manager for Factorio.
+FacMan is an unofficial, native, portable, scriptable, instance-centric
+launcher and environment manager for Factorio.
 
 Its user promise is:
 
-> Choose a world, press Play, and remain in control of everything that changes.
+> Choose an instance, press Play, and arrive at Factorio's menu with the
+> selected environment already in effect.
 
-Its long-term outcome is to make every player-owned Factorio world
+Its long-term outcome is to make every player-defined Factorio environment
 understandable, playable, reproducible, repairable, portable, and recoverable
 without silently taking ownership of foreign software or data.
 
-The primary persona is a Factorio player who wants multiple safe,
-reproducible worlds without learning launcher internals or constructing JSON.
+The primary persona is a Factorio player who wants multiple complete, isolated
+game environments without rebuilding versions, mods, profiles, accounts,
+settings, and resources by hand or learning launcher internals.
 
 Its value is not simply launching Factorio. Its value is:
 
 ```text
-one install, many isolated worlds
-many Factorio versions, safely pinned
-many modsets, reproducibly locked
-many saves, protected and backed up
+many installations and Factorio versions, safely selected
+many isolated instances, each independently reproducible
+many profiles and presets, explicitly composed
+many modpacks and modsets, reproducibly locked
+many account references, provider-scoped and secret-free
+many saves/worlds per instance, protected and backed up
 many frontends, one command graph
 many platforms, one native core
 many products later, one universal launcher pattern
@@ -30,15 +34,22 @@ The golden journey is:
 
 ```text
 Find Factorio,
-choose or create a world,
+create, clone, import, or select an instance,
+choose its version, profile, preset, modpack, account, settings, and resources,
 review readiness and the advertised isolation guarantee,
-press Play,
+press Play and arrive at Factorio's main menu,
+select or create a save inside Factorio,
 save and exit,
-then relaunch the same world with an explainable last-run result.
+then relaunch the same instance with an explainable last-run result.
 ```
 
-Advanced instance, install, modset, save, profile, diagnostic, and automation
-surfaces remain available through the CLI, TUI, and command explorer.
+Saves/worlds are optional content inside an instance, not the required launch
+aggregate. Direct save loading may exist as an explicit launch intent, but
+`facman play <instance>` opens the game menu by default.
+
+Advanced installation, instance, profile, preset, modpack/modset, account,
+save, diagnostic, and automation surfaces remain available through the CLI,
+TUI, and command explorer.
 
 ## Execution Guarantees
 
@@ -67,13 +78,14 @@ Factorio evidence and human review can promote either execution claim.
 
 ## v1 Shape
 
-v1 is useful when it has one proven real Play route, read-only install
-discovery, ownership classification, multiple isolated worlds, portable world
-specifications with explicit local rebinding, computed readiness, dry-run
-launch and preparation plans, safe launch execution, local content
-preparation, modset lockfiles, save backup, rollback and recovery, managed
-standalone lifecycle, diagnostics, signed primary packages, a task-oriented
-GUI, complete CLI coverage, and a documented stable workflow-contract subset.
+v1 is useful when it has one proven real Play-to-menu route, read-only install
+discovery, ownership classification, multiple isolated instances, portable
+instance specifications with explicit local rebinding, profiles, presets,
+modpacks and exact modset locks, provider-scoped account references, computed
+readiness, dry-run launch/preparation plans, safe launch execution, local
+content preparation, save backup, rollback/recovery, managed standalone
+lifecycle, diagnostics, signed primary packages, a task-oriented GUI, complete
+CLI coverage, and a documented stable workflow-contract subset.
 
 v1 should not require every GUI toolkit, Steam-aware Play when standalone Play
 is proven, full Mod Portal automation, a headless server manager, remote

@@ -1,12 +1,21 @@
 # FacMan Decisions
 
-- Decision: `World` is the product and UX aggregate, while persistence remains
-  decomposed into portable `WorldSpec`, machine-local `WorldBinding`, computed
-  `WorldReadiness`, and a `WorldView` projection.
+- Decision: `Instance` is the product and UX aggregate, composed from an
+  installation/version, profile, resolved preset provenance, modpack/modset
+  lock, account reference, settings, resources, and optional saves. Persistence
+  remains decomposed into portable `InstanceSpec`, machine-local
+  `InstanceBinding`, computed `InstanceReadiness`, and `InstanceView`.
+  - Status: accepted target architecture; supersedes the earlier World aggregate
+  - Rationale: Players select a complete game environment and expect Factorio's
+    own menu. A save/world is optional content inside that environment, not the
+    required identity of every launch.
+
+- Decision: `facman play <instance>` defaults to the `open_game_menu` launch
+  intent.
   - Status: accepted target architecture
-  - Rationale: Players need one coherent playable concept without coupling
-    portable intent to paths, credentials, providers, caches, or mutation
-    records on one machine.
+  - Rationale: Direct save loading, new-game setup, benchmarks, and headless
+    servers are explicit optional intents and must never be inferred from the
+    presence of saves or other instance content.
 
 - Decision: Authority-bearing operations use short-lived, plan-bound
   `OperationPermit`s rather than long-lived capability grants.
@@ -15,18 +24,19 @@
     principal, nonce, and expiry must stay bound to the reviewed plan. Global
     admission and each provider revalidate independently.
 
-- Decision: World readiness composes federated typed subplans and never becomes
+- Decision: Instance readiness composes federated typed subplans and never becomes
   a universal mutation kernel.
   - Status: accepted target architecture
   - Rationale: FacMan owns Factorio and player policy, Universal Launcher owns
-    runnable-state orchestration, and Universal Setup owns installation and
-    host mutation.
+    runnable-state orchestration, Universal Setup owns installation and host
+    mutation, and credential/platform providers retain account secrets and
+    session enforcement.
 
 - Decision: The host-environment programme is a parallel support lane and does
   not block a native Play route that does not depend on a host remedy.
   - Status: accepted
   - Rationale: Early list, inspect, doctor, support export, and user-scoped
-    Sandbox profiles are useful, but World, operation permits, hermetic Play,
+    Sandbox profiles are useful, but Instance, operation permits, hermetic Play,
     and player validation remain the primary product path.
 
 - Decision: Human-readable portable records are authoritative and performance
@@ -56,11 +66,11 @@
   - Rationale: Arbitrary scripts, global authority flags, and uncoordinated
     HNS/Hyper-V/WSL/Sandbox changes cannot provide bounded product safety.
 
-- Decision: The product promise is "choose a world, press Play, and remain in
-  control of everything that changes."
+- Decision: The product promise is "choose an instance, press Play, and arrive
+  at Factorio's menu with the selected environment already in effect."
   - Status: accepted
-  - Rationale: FacMan is a world-centric environment manager, not a command
-    catalogue or a generic architecture demonstration.
+  - Rationale: FacMan is an instance-centric environment manager, not a command
+    catalogue, a save-only launcher, or a generic architecture demonstration.
 
 - Decision: Execution exposes two distinct guarantees: instance-isolated and
   hermetic standalone.
@@ -72,7 +82,7 @@
 - Decision: M3 existing-portable adoption is authorised backlog after the
   playable alpha.
   - Status: accepted
-  - Rationale: More setup authority does not unlock the current world-to-Play
+  - Rationale: More setup authority does not unlock the current instance-to-menu
     bottleneck. Existing M3 read-only and planning proof remains preserved.
 
 - Decision: Refactor now only within the Play-driven convergence ceiling.

@@ -7,12 +7,12 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Current product truth
 
 - phase: `multi_version_install_lifecycle` / `active`;
-- charter: Choose a world, press Play, and remain in control of everything that changes.
-- persona: A Factorio player who wants multiple safe, reproducible worlds without managing launcher internals.
-- golden journey: `find Factorio -> choose or create a world -> review readiness -> Play -> exit -> relaunch`;
+- charter: Choose an instance, press Play, and arrive at Factorio's menu with the selected environment already in effect.
+- persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
+- golden journey: `find Factorio -> create or select an instance -> choose version, profile, modpack, account, and settings -> review readiness -> Play to the game menu -> exit -> relaunch`;
 - checkpoint: `multi-version-install-lifecycle`;
 - active WorkUnit: `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`;
-- next WorkUnit: `FACMAN-WORLD-SPEC-AND-READINESS-01`;
+- next WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
 - next authority gate: `real-play-isolation`;
 - truth scope: `dev_integrated_reviewed_reproduced`; canonical integration: `false`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
@@ -35,19 +35,21 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - `instance_isolated`: product mode `accepted`, claim `unproven`, next gate `FACMAN-STEAM-AWARE-PLAY-01`. FacMan-owned instance data is isolated; enumerated Steam/platform state may change after explicit disclosure.
 - `hermetic`: product mode `accepted`, claim `unproven`, next gate `FACMAN-HERMETIC-STANDALONE-PLAY-01`. No persistent change may occur outside the authorised FacMan workspace.
 
-## World product programme
+## Instance product programme
 
 - status: `planned_after_installation_model_v2_closeout`;
-- next WorkUnit: `FACMAN-WORLD-SPEC-AND-READINESS-01`;
-- portable record: `WorldSpec`;
-- machine-local record: `WorldBinding`;
+- next WorkUnit: `FACMAN-INSTANCE-SPEC-AND-READINESS-01`;
+- portable record: `InstanceSpec`;
+- machine-local record: `InstanceBinding`;
 - readiness: `computed_projection_not_authoritative_state`;
 - preparation: `federated_typed_subplans_by_owner`;
+- default launch intent: `open_game_menu`;
+- save role: `optional_content_within_instance`;
 - runtime authority: `false`;
 
 ## Operation-permit programme
 
-- status: `planned_after_world_readiness`;
+- status: `planned_after_instance_readiness`;
 - WorkUnit: `FACMAN-OPERATION-PERMIT-01`;
 - authority model: `short_lived_plan_bound_exact_resource_permit`;
 - provider revalidation required: `true`;
@@ -112,7 +114,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - The local Wube-signed Factorio 2.0.77 conversion succeeded, but FacMan does not yet expose authenticated source inspection or transaction-backed lifecycle apply as product commands.
 - Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
 - Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.
-- The current desktop UI exposes commands rather than the first-run world-to-Play journey.
+- The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 
