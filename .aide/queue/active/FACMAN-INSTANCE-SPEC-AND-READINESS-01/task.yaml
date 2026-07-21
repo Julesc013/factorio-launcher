@@ -1,0 +1,121 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-INSTANCE-SPEC-AND-READINESS-01
+title: Instance specification, binding, readiness, and view
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-21T04:25:36Z
+owner: unassigned
+objective: >
+  Implement a minimal read-only instance vertical slice with portable InstanceSpec, machine-local InstanceBinding, evidence-derived InstanceReadiness, player-facing InstanceView, and menu as the explicit default launch intent, without preparation or execution authority.
+allowed_paths:
+  - .aide/queue/**
+  - runtime/factorio/instance/**
+  - contracts/**
+  - apps/**
+  - docs/**
+  - release/index/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_abi_layout_smoke
+  - facman_client_smoke
+  - facman_diagnostic_traversal_smoke
+  - facman_isolation_lock_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+  - flb_factorio_install_model_smoke
+  - m1_three_repository_system_proof
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_cli
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_diagnostic_export
+  - tests.test_discovery
+  - tests.test_discovery_goldens
+  - tests.test_frontend_contract
+  - tests.test_frontend_parity
+  - tests.test_gui_surface
+  - tests.test_instance_lifecycle
+  - tests.test_instance_snapshots
+  - tests.test_local_mod_inventory
+  - tests.test_local_modset_solver
+  - tests.test_m1_system_proof
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_profiles_templates
+  - tests.test_refusal_contract
+  - tests.test_release_structure
+  - tests.test_save_index_retention
+  - tests.test_save_transfer
+  - tests.test_schema_tools
+  - tests.test_server_plan
+  - tests.test_vertical_slice
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/application_handler_check.py
+  - tools/capability_policy_check.py
+  - tools/client_cli_boundary_check.py
+  - tools/command_contract_check.py
+  - tools/diagnostic_export_check.py
+  - tools/discovery_golden_check.py
+  - tools/frontend_contract_check.py
+  - tools/frontend_parity_check.py
+  - tools/frontend_transport_truth_check.py
+  - tools/instance_lifecycle_check.py
+  - tools/m1_system_proof_check.py
+  - tools/mod_inventory_check.py
+  - tools/modset_solver_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/profile_template_check.py
+  - tools/provenance_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_structure_check.py
+  - tools/save_index_check.py
+  - tools/schema_validate.py
+  - tools/server_plan_check.py
+  - tools/snapshot_lifecycle_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - Instance is the primary selectable and playable aggregate
+  - saves and worlds are optional content inside an instance
+  - InstanceSpec contains portable logical intent and no machine path or secret values
+  - InstanceBinding contains machine-local resolution and evidence identities
+  - InstanceReadiness is a computed read-only projection and never grants authority
+  - menu is the explicit default LaunchIntent and no save is inferred
+  - the initial slice exposes list, inspect, and readiness only
+  - preparation, permit issuance, and real Factorio execution remain unavailable
+depends_on:
+  - FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-21T04:32:50Z

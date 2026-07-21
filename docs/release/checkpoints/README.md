@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `multi_version_install_lifecycle` and the active WorkUnit is `FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `instance_spec_and_readiness` and the active WorkUnit is `FACMAN-INSTANCE-SPEC-AND-READINESS-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -15,6 +15,14 @@ reproduction, reviewed merge to `dev`, and exact merged-dev workflows and
 reproduction. It promotes only current integrated development-state truth;
 execution, installation apply, host mutation, playability, signing, and
 publication remain unavailable.
+
+The bounded
+[`Gate 1 installation model v2 read-only closeout`](gate1-installation-model-v2-readonly-closeout.md)
+binds PR #37, evidence-bound deterministic reconciliation identity, canonical
+plan effects, explicit source trust, zero-write proof, exact merged-`dev`
+workflows, and a clean pinned three-repository reconstruction. It transfers the
+remaining managed lifecycle to a separate future WorkUnit and activates the
+minimal read-only Instance slice without adding apply or execution authority.
 
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),
