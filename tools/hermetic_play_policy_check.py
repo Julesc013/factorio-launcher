@@ -420,10 +420,12 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
         "public_command", "permit_issuance_authority", "real_factorio_execution",
         "product_apply_route", "setup_authority", "credential_authority",
         "network_authority", "host_mutation_authority", "authority_promotion",
-        "playability_promotion", "canonical_main_promotion", "signing", "publication",
+        "playability_promotion", "signing", "publication",
     ):
         if policy_truth.get(key) is not False:
             problems.append(f"project policy truth promotes forbidden authority: {key}")
+    if policy_truth.get("canonical_main_promotion") is not True:
+        problems.append("project policy truth does not record the policy-only canonical promotion")
     return problems
 
 
