@@ -8,18 +8,18 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: operation-permit
+  phase: hermetic-standalone-play-policy
   primary_goal: >
-    Implement the canonical short-lived OperationPermit contract and
-    independent provider revalidation needed to authorize one exact reviewed
-    operation without granting broad preparation or execution authority.
+    Freeze the exact standalone Factorio Play-to-menu candidate, protected and
+    writable roots, evidence, interruption matrix, observation method, and
+    human verdict law without issuing a permit or launching a process.
   next_task: >
-    Bind the accepted InstanceSpec, InstanceBinding, readiness evidence, and
-    menu as the default launch intent into a permit for one operation kind,
-    exact resources, plan and evidence digests, isolation mode, provider and
-    policy revisions, principal, nonce, and expiry. Require independent
-    provider revalidation, replay refusal, and zero authority from readiness
-    alone; follow with the hermetic standalone Play-to-menu gate.
+    Use the accepted InstanceSpec, InstanceBinding, and InstanceReadiness to
+    review and freeze one exact non-Steam standalone candidate class with
+    menu as the default and only candidate launch intent, complete resource and
+    protected-root evidence, explicit interruption cases, and separate Pass,
+    Fail, and Inconclusive human criteria. Follow with a separately reviewed
+    implementation candidate and a separately reviewed operator verdict.
   authoritative_command_slice:
     - installs.scan
     - installs.import

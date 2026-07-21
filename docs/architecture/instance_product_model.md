@@ -548,9 +548,14 @@ an optional launch intent rather than the product's default entry point.
    projection, and read-only list/inspect/readiness commands.
 3. **`FACMAN-OPERATION-PERMIT-01`:** add exact operation-bound authority and
    provider-side independent revalidation.
-4. **`FACMAN-HERMETIC-STANDALONE-PLAY-01`:** prove one exact standalone
-   instance opens to the Factorio menu, can select/create/save content, exits,
-   and relaunches without persistent writes outside the authorised boundary.
+4. **Hermetic standalone Play:** freeze the exact route in
+   `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`, implement only that route in
+   `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`, and record the independent
+   human `Pass`, `Fail`, or `Inconclusive` result in
+   `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`. A Pass proves one exact
+   standalone instance opens to the Factorio menu, can select/create/save
+   content, exits, and relaunches without persistent writes outside the
+   authorised boundary.
 5. **`FACMAN-INSTANCE-CENTRIC-ALPHA-01`:** expose Instances, readiness,
    Configure, Play, last run, saves/backups, recovery, installations, and the
    advanced explorer to real players.

@@ -116,5 +116,8 @@ infrastructure is reviewed and accepted.
 
 Real Factorio execution, instance preparation, installation apply, credentials,
 network access, host mutation, canonical `main`, signing, publication, and Safe
-beta remain unpromoted. The next intended real-product gate remains
-`FACMAN-HERMETIC-STANDALONE-PLAY-01` with explicit `menu` intent.
+beta remain unpromoted. The next intended real-product programme freezes policy
+in `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`, implements only that reviewed
+candidate in `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`, and records the
+separate human result in `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`, always
+with explicit `menu` intent.

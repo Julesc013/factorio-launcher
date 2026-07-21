@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-21T11:45:31Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01/evidence/
+active_at: 2026-07-21T11:45:32Z
