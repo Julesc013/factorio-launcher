@@ -252,7 +252,7 @@ launch::CandidatePlanInput plan_input(
         resource("factorio.operation-state", "operation-record", "operation:fixture:record",
             launch_provider, {"workspace_read", "workspace_write"}),
     };
-    for (const std::string& id : {
+    for (const std::string id : {
              "instance.config", "instance.locks", "instance.logs", "instance.mods",
              "instance.saves", "instance.state", "operation.record", "operation.temporary"}) {
         input.permit_resources.push_back(resource(
