@@ -8,17 +8,17 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: hermetic-standalone-play-candidate
+  phase: hermetic-standalone-play-verdict
   primary_goal: >
-    Implement the exact frozen Gate 4B candidate against the canonically
-    promoted Gate 4A policy without broadening its claim or recording a human verdict.
+    Run and record the exact human-reviewed Gate 4C journey against the frozen
+    Gate 4A policy and accepted Gate 4B candidate without self-promoting authority.
   next_task: >
-    Bind one Windows x64 Factorio 2.0.77 standalone non-Steam launch, with
-    menu as the default and only candidate intent, to
-    the accepted InstanceSpec, InstanceBinding, and InstanceReadiness plus
-    exact executable, plan, installation, configuration, permit, provider,
-    writable-root, protected-root, and observation identities. Keep the later
-    human-reviewed result in its distinct verdict WorkUnit.
+    Pin the exact Windows x64 Factorio 2.0.77 standalone non-Steam candidate,
+    bind the accepted InstanceSpec, InstanceBinding, and InstanceReadiness,
+    keep menu as the default and only intent, review its plan, obtain fresh
+    exact authority, complete the frozen menu/save/exit/relaunch journey, and
+    bind Pass, Fail, or Inconclusive to one hash-closed packet. Do not repair
+    code or enable a product route in the verdict WorkUnit.
   authoritative_command_slice:
     - installs.scan
     - installs.import

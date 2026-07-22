@@ -114,6 +114,7 @@ def collect() -> dict[str, Any]:
         "gate3_operation_permit_closeout": status["gate3_operation_permit_closeout"],
         "gate3_public_integration": status["gate3_public_integration"],
         "hermetic_standalone_play_policy": status["hermetic_standalone_play_policy"],
+        "hermetic_standalone_play_candidate": status["hermetic_standalone_play_candidate"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
         "gate2_instance_spec_and_readiness_closeout": status["gate2_instance_spec_and_readiness_closeout"],
@@ -382,6 +383,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Gate 4A hermetic Play policy: "
         f"`{data['hermetic_standalone_play_policy']['status']}` with digest "
         f"`{data['hermetic_standalone_play_policy']['policy_digest']}`;",
+        f"- Gate 4B hermetic Play candidate: "
+        f"`{data['hermetic_standalone_play_candidate']['technical_disposition']}` at dev "
+        f"`{data['hermetic_standalone_play_candidate']['dev_integration_revision']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
@@ -720,6 +724,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "safety": "permit_infrastructure_proven_real_play_unproven",
             "execution_reason": "real_play_gate_not_passed",
         },
+        "hermetic_standalone_play_verdict": {
+            "checkpoint": "hermetic-standalone-play-verdict",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
+            "safety": "candidate_eligible_human_verdict_real_play_unproven",
+            "execution_reason": "real_play_verdict_pending",
+            "truth_scope": "dev_integrated_candidate_reviewed_reproduced",
+            "canonical_integration": False,
+            "current_gate_status": "candidate_complete_awaiting_human_verdict",
+        },
     }
     product = status.get("product", {})
     phase = product.get("phase")
@@ -743,8 +758,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "current_work_unit": phase_contract["active"],
         "next_work_unit": phase_contract["next"],
         "m3_disposition": "authorized_backlog_after_playable_alpha",
-        "truth_scope": "canonical_main_promoted_dev_synchronized",
-        "canonical_integration": True,
+        "truth_scope": phase_contract.get(
+            "truth_scope", "canonical_main_promoted_dev_synchronized"
+        ),
+        "canonical_integration": phase_contract.get("canonical_integration", True),
         "local_counts_promoted": True,
     }
     for key, expected in expected_product.items():
@@ -1035,6 +1052,56 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     if hermetic_policy != expected_hermetic_policy:
         problems.append("hermetic standalone Play policy truth must bind exact frozen criteria without promoting authority")
+    hermetic_candidate = status.get("hermetic_standalone_play_candidate", {})
+    expected_hermetic_candidate = {
+        "status": "accepted_reviewed_dev_integration_eligible_for_human_verdict",
+        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+        "implementation_pull_request": 52,
+        "reviewed_head_revision": "da3e2274a3dc8a5757078b20276a1a6a93084860",
+        "dev_integration_revision": "e9c1e69fee1ae815f62638db8b7263cb01b70389",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_push_ci_run": "29909515085",
+        "exact_push_code_security_run": "29909515064",
+        "exact_push_security_policy_run": "29909514463",
+        "exact_head_ci_run": "29909518558",
+        "exact_head_code_security_run": "29909518660",
+        "exact_head_schema_check_run": "29909518641",
+        "exact_head_security_policy_run": "29909518606",
+        "exact_dev_ci_run": "29910544402",
+        "exact_dev_code_security_run": "29910544923",
+        "exact_dev_schema_check_run": "29910545091",
+        "exact_dev_security_policy_run": "29910544435",
+        "local_full_matrix": True,
+        "exact_head_clean_reproduction": True,
+        "clean_reproduction_seconds": 548.3,
+        "native_test_count": 48,
+        "python_test_count": 375,
+        "python_target_specific_skip_count": 313,
+        "schema_count": 279,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 242,
+        "policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "required_evidence_binding_count": 31,
+        "writable_resource_count": 8,
+        "technical_disposition": "eligible_for_human_verdict",
+        "human_verdict": "unset",
+        "public_command": False,
+        "product_permit_issuance": False,
+        "real_factorio_execution": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if hermetic_candidate != expected_hermetic_candidate:
+        problems.append("Gate 4B candidate truth must bind exact reviewed and reproduced evidence without recording a human verdict or promoting authority")
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {
         "status": "accepted_reviewed_dev_integration",
@@ -1821,8 +1888,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical H1 Fail must bind a sanitized proof record")
     if execution.get("operator_verdict_scope") != "historical_steam_backed_h1_only":
         problems.append("historical H1 verdict must remain explicitly scoped")
-    if execution.get("current_gate_status") != "not_started":
-        problems.append("real-play execution gates must remain not started")
+    expected_gate_status = phase_contract.get("current_gate_status", "not_started")
+    if execution.get("current_gate_status") != expected_gate_status:
+        problems.append("real-play execution gate status must match the current product phase")
     return problems
 
 
@@ -1875,6 +1943,9 @@ def summary(data: dict[str, Any]) -> str:
         f"Gate 4A hermetic Play policy: "
         f"{data['hermetic_standalone_play_policy']['status']} "
         f"({data['hermetic_standalone_play_policy']['policy_digest']})",
+        f"Gate 4B hermetic Play candidate: "
+        f"{data['hermetic_standalone_play_candidate']['technical_disposition']} "
+        f"({data['hermetic_standalone_play_candidate']['dev_integration_revision']})",
         f"golden_journey: {data['product']['golden_journey']}",
         f"playability: {data['readiness']['playability']}",
         f"execution: {data['execution']['status']} ({data['execution']['reason']})",

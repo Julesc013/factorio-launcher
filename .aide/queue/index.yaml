@@ -4,11 +4,17 @@ canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Implement exact hermetic standalone Play candidate
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/evidence
+  - id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01
+    status: active
+    lifecycle_state: active
+    title: Record the human-reviewed hermetic standalone Play verdict
+    task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01/evidence
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
     status: passed
     lifecycle_state: closed

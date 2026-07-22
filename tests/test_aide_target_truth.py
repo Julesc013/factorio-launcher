@@ -36,7 +36,7 @@ roots:
     def test_profile_evidence_authorities_exist(self) -> None:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
-        self.assertIn("phase: hermetic-standalone-play-candidate", text)
+        self.assertIn("phase: hermetic-standalone-play-verdict", text)
         self.assertIn("InstanceSpec", text)
         self.assertIn("menu as the default", text)
         self.assertNotIn("portable WorldSpec", text)
@@ -60,20 +60,21 @@ native_direction:
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
         self.assertIn(
-            "phase: hermetic_standalone_play_candidate (active)",
+            "phase: hermetic_standalone_play_verdict (active)",
             text,
         )
         self.assertIn(
-            "active_work_unit: FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "active_work_unit: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
             text,
         )
         self.assertIn(
-            "next_work_unit: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+            "next_work_unit: FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)
         self.assertIn("hermetic=unproven", text)
         self.assertIn("Gate 4A hermetic Play policy", text)
+        self.assertIn("Gate 4B hermetic Play candidate: eligible_for_human_verdict", text)
 
     def test_claim_ledger_rejects_stable_abi_promotion(self) -> None:
         problems = aide_target_truth_check.validate_claim_ledger_text(
