@@ -30,11 +30,13 @@ namespace factorio_launch = facman::factorio::launch;
 constexpr const char* kDigestA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 constexpr const char* kDigestB = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
+#ifdef _WIN32
 std::string digest(const std::string& value)
 {
     return facman::base::sha256_hex_bytes(
         reinterpret_cast<const unsigned char*>(value.data()), value.size());
 }
+#endif
 
 struct TemporaryTree {
     fs::path path;
@@ -71,12 +73,14 @@ void write_text(const fs::path& path, const std::string& text)
     std::ofstream(path, std::ios::binary | std::ios::trunc) << text;
 }
 
+#ifdef _WIN32
 std::string read_text(const fs::path& path)
 {
     std::ifstream input(path, std::ios::binary);
     return std::string(
         std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
 }
+#endif
 
 fs::path executable_path(const fs::path& install)
 {
