@@ -61,6 +61,13 @@ ancestry synchronization, shared tree identity, and final synchronized-`dev`
 workflows. It activates the separately scoped candidate WorkUnit without
 granting permit issuance, execution, Play, signing, publication, or Safe beta.
 
+The evidence-only
+[`Gate 4B public integration proof`](gate4b-public-integration-proof.md) binds
+PRs #52-#53, the reviewed candidate, the separate closeout, exact head and
+merged-`dev` workflows, and the clean pinned three-repository reconstruction.
+It closes only as `eligible_for_human_verdict`; public Play and real execution
+remain unavailable.
+
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),
 frozen at implementation proof revision

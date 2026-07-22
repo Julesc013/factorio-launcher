@@ -223,7 +223,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertTrue(hermetic_policy["canonical_main_promotion"])
         hermetic_candidate = data["hermetic_standalone_play_candidate"]
         self.assertEqual(
-            "accepted_reviewed_dev_integration_eligible_for_human_verdict",
+            "accepted_closed_reviewed_dev_integration_eligible_for_human_verdict",
             hermetic_candidate["status"],
         )
         self.assertEqual(52, hermetic_candidate["implementation_pull_request"])
@@ -234,6 +234,22 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(
             "e9c1e69fee1ae815f62638db8b7263cb01b70389",
             hermetic_candidate["dev_integration_revision"],
+        )
+        self.assertEqual(53, hermetic_candidate["closeout_pull_request"])
+        self.assertEqual(
+            "7fe12635f7309e4fd709810dd192d43ff920592f",
+            hermetic_candidate["closeout_dev_revision"],
+        )
+        self.assertEqual("29912502213", hermetic_candidate["closeout_dev_ci_run"])
+        self.assertEqual(
+            "29912502124", hermetic_candidate["closeout_dev_code_security_run"]
+        )
+        self.assertEqual(
+            "not_triggered_truth_only_local_strict_pass",
+            hermetic_candidate["closeout_dev_schema_check"],
+        )
+        self.assertEqual(
+            "29912502140", hermetic_candidate["closeout_dev_security_policy_run"]
         )
         self.assertTrue(hermetic_candidate["exact_head_clean_reproduction"])
         self.assertEqual(48, hermetic_candidate["native_test_count"])
