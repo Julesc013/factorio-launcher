@@ -71,37 +71,105 @@ def normalize_trace_text(value: str) -> str:
     return value.replace("\\\\", "\\").replace("/", "\\").casefold()
 
 
+def line_has_pid(
+    line: str,
+    process_id: int,
+    *,
+    fields: tuple[str, ...] = ("pid", "processid"),
+) -> bool:
+    names = "|".join(re.escape(field) for field in fields)
+    return (
+        re.search(
+            rf"(?:^|[,;\s])(?:{names})\s*[:=]\s*{process_id}(?![0-9])",
+            line,
+            flags=re.IGNORECASE,
+        )
+        is not None
+    )
+
+
+def domain_attribution(
+    dump: str,
+    *,
+    marker: str,
+    process_id: int,
+    event_tokens: tuple[str, ...],
+    additional_process_id: int | None = None,
+    additional_pid_fields: tuple[str, ...] = ("parentpid", "parentprocessid"),
+) -> dict[str, Any]:
+    marker_normalized = normalize_trace_text(marker)
+    lines = [
+        line
+        for line in dump.splitlines()
+        if marker_normalized in normalize_trace_text(line)
+    ]
+    pid_lines = [line for line in lines if line_has_pid(line, process_id)]
+    event_lines = [
+        line
+        for line in pid_lines
+        if any(token in line.casefold() for token in event_tokens)
+    ]
+    additional_pid_observed = (
+        True
+        if additional_process_id is None
+        else any(
+            line_has_pid(
+                line,
+                additional_process_id,
+                fields=additional_pid_fields,
+            )
+            for line in event_lines
+        )
+    )
+    return {
+        "marker_observed": bool(lines),
+        "expected_process_id": process_id,
+        "pid_attributed": bool(pid_lines),
+        "event_class_observed": bool(event_lines),
+        "additional_process_id": additional_process_id,
+        "additional_process_id_observed": additional_pid_observed,
+        "matching_line_count": len(lines),
+        "complete": bool(event_lines) and additional_pid_observed,
+    }
+
+
 def classify_dump(
     dump: str,
     *,
-    process_id: int,
+    parent_process_id: int,
+    child_process_id: int,
     file_marker: str,
     registry_marker: str,
     process_marker: str,
 ) -> dict[str, Any]:
-    normalized = normalize_trace_text(dump)
-    pid_tokens = (f",{process_id},", f" {process_id} ", f"pid={process_id}", f"pid: {process_id}")
-    file_present = normalize_trace_text(file_marker) in normalized
-    registry_present = registry_marker.casefold() in normalized
-    process_present = process_marker.casefold() in normalized
-    pid_present = any(token.casefold() in normalized for token in pid_tokens)
-    relevant_lines = [
-        line
-        for line in dump.splitlines()
-        if file_marker.casefold() in normalize_trace_text(line)
-        or registry_marker.casefold() in line.casefold()
-        or process_marker.casefold() in line.casefold()
-    ]
-    pid_attributed = any(str(process_id) in line for line in relevant_lines)
+    file_result = domain_attribution(
+        dump,
+        marker=file_marker,
+        process_id=parent_process_id,
+        event_tokens=("fileio/", "fileio ", "file/"),
+    )
+    registry_result = domain_attribution(
+        dump,
+        marker=registry_marker,
+        process_id=parent_process_id,
+        event_tokens=("registry/", "registry "),
+    )
+    process_result = domain_attribution(
+        dump,
+        marker=process_marker,
+        process_id=child_process_id,
+        additional_process_id=parent_process_id,
+        event_tokens=("process/start", "process start", "process/dcstart"),
+    )
     return {
-        "file_probe_observed": file_present,
-        "registry_probe_observed": registry_present,
-        "process_probe_observed": process_present,
-        "process_id_observed": pid_present,
-        "probe_event_pid_attributed": pid_attributed,
-        "relevant_line_count": len(relevant_lines),
+        "parent_process_id": parent_process_id,
+        "child_process_id": child_process_id,
+        "file": file_result,
+        "registry": registry_result,
+        "process_start": process_result,
         "attribution_complete": all(
-            [file_present, registry_present, process_present, pid_present, pid_attributed]
+            item["complete"]
+            for item in (file_result, registry_result, process_result)
         ),
     }
 
@@ -145,6 +213,23 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         "xperf.exe",
         r"C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\xperf.exe",
     )
+    wpaexporter = tool(
+        "wpaexporter.exe",
+        r"C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\wpaexporter.exe",
+    )
+    host_session = PREFLIGHT.host_session_identity()
+    tooling = PREFLIGHT.repository_tool_identity(ROOT)
+    observer_tools = {
+        "wpr": PREFLIGHT.executable_tool_identity(wpr),
+        "xperf": PREFLIGHT.executable_tool_identity(xperf),
+        "wpaexporter": PREFLIGHT.executable_tool_identity(wpaexporter),
+    }
+    if not host_session.get("valid"):
+        raise PREFLIGHT.PreflightError("current machine and boot-session identity is unavailable")
+    if not tooling.get("valid"):
+        raise PREFLIGHT.PreflightError("observer self-test requires a clean, committed tooling revision")
+    if not all(item.get("valid") for item in observer_tools.values()):
+        raise PREFLIGHT.PreflightError("observer tool identity could not be hash-closed")
     status = command([wpr, "-status"])
     if status.returncode != 0 or "is not recording" not in (status.stdout + status.stderr).lower():
         raise PREFLIGHT.PreflightError("WPR already has an active or indeterminate recording")
@@ -189,7 +274,7 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
             [
                 sys.executable,
                 "-c",
-                "import os,sys; print(sys.argv[1], os.getpid())",
+                "import os,sys; print(sys.argv[1], os.getpid(), os.getppid())",
                 process_marker,
             ],
             timeout=30,
@@ -236,9 +321,18 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
 
     dump_text = dump.read_text(encoding="utf-8", errors="replace") if dump.is_file() else ""
     stats_text = stats.read_text(encoding="utf-8", errors="replace") if stats.is_file() else ""
+    child_match = re.fullmatch(
+        rf"{re.escape(process_marker)}\s+([0-9]+)\s+([0-9]+)\s*",
+        child.stdout,
+    )
+    child_process_id = int(child_match.group(1)) if child_match else -1
+    child_parent_process_id = int(child_match.group(2)) if child_match else -1
+    if not child_match or child_parent_process_id != os.getpid():
+        errors.append("process_probe_identity_unresolved")
     classification = classify_dump(
         dump_text,
-        process_id=os.getpid(),
+        parent_process_id=os.getpid(),
+        child_process_id=child_process_id,
         file_marker=str(probe),
         registry_marker=registry_marker,
         process_marker=process_marker,
@@ -252,19 +346,26 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         errors.append("probe_attribution_incomplete")
 
     core: dict[str, Any] = {
-        "schema": "factorio.gate4c_observer_self_test.v1",
+        "schema": PREFLIGHT.OBSERVER_SELF_TEST_SCHEMA,
         "canonicalization_version": "facman.sorted-json.v1",
         "generated_at": utc_now(),
         "work_unit": PREFLIGHT.WORK_UNIT,
+        "candidate_revision": PREFLIGHT.CANDIDATE_REVISION,
         "status": "pass" if not errors else "inconclusive",
         "run_id": run_id,
         "elevated": True,
+        "machine_binding_id": host_session["machine_binding_id"],
+        "boot_identity": host_session["boot_identity"],
+        "tooling": tooling,
+        "observer_tools": observer_tools,
         "provider": {
-            "id": "factorio.play.process-tree-observer",
-            "revision": "gate4c-etw-file-registry-process.v1",
+            "id": PREFLIGHT.OBSERVER_PROVIDER_ID,
+            "revision": PREFLIGHT.OBSERVER_PROVIDER_REVISION,
             "profiles": ["GeneralProfile", "FileIO", "Registry"],
         },
         "probe_process_id": os.getpid(),
+        "child_process_id": child_process_id,
+        "child_parent_process_id": child_parent_process_id,
         "classification": classification,
         "attribution_complete": classification["attribution_complete"],
         "lost_events": lost_events,

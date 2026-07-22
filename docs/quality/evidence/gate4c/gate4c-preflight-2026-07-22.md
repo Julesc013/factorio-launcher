@@ -53,8 +53,9 @@ record is produced:
 3. `observer_elevation_required`: the current medium-integrity session cannot
    enable the FileIO/Registry WPR profiles; the attempted self-test returned
    `0xc5585011` and WPR confirmed that no recording remained active.
-4. `observer_self_test_missing`: no complete, zero-loss, attribution-complete
-   observer self-test artifact exists yet.
+4. `observer_self_test_missing_or_stale`: no complete, fresh, exact-machine,
+   exact-tooling, zero-loss, per-domain attribution-complete observer self-test
+   artifact exists yet.
 5. `quiet_host_attestation_missing`: the operator has not yet attested that
    pending restart, competing FacMan/Factorio processes, unrelated install or
    synchronization activity, and sleep/restart risk are controlled for the
@@ -84,9 +85,11 @@ observer probe and refuses to run without elevation. Neither tool can issue a
 permit, start Factorio, modify runtime code, change the policy, or record the
 human verdict.
 
-The quiet-host attestation is a strict JSON object with schema
-`factorio.gate4c_quiet_host_attestation.v1`, an `attested_at` value, a
-provider-scoped `reviewer_id`, and exactly these true booleans:
+The hardened quiet-host attestation is a strict JSON object with schema
+`factorio.gate4c_quiet_host_attestation.v2`. It binds a UTC `attested_at`, a
+provider-scoped `reviewer_id`, the current opaque machine and boot identities,
+the exact observer self-test digest, the current host-state digest, and exactly
+these true booleans:
 
 ```text
 pending_restart_cleared
@@ -95,3 +98,53 @@ unrelated_factorio_facman_closed
 install_backup_sync_activity_paused
 sleep_and_restart_prevented_for_run
 ```
+
+The timestamp may be at most 30 seconds in the future and the attestation
+expires after 600 seconds. A ready preflight records the same deadline as
+`baseline_must_begin_before`; the complete preflight must be rerun immediately
+before baseline capture. The attestation must be newer than the bound observer
+self-test, and the baseline deadline is the earlier of the observer and
+attestation expiries. A restart, observer replacement/failure, competing
+Steam/Factorio/FacMan process-state change, sleep, installation activity, or
+other materially changed host state requires a new attestation.
+
+## Pre-execution evidence hardening
+
+The PR #55 review hardened four prerequisites before any baseline, permit, or
+Factorio process is allowed:
+
+1. Source evidence is now an operator-supplied, recognized Wube Windows
+   installer. Its PE product, description, original filename, Wube signer and
+   timestamp signer are recorded; its product version is exactly `2.0.77`; and
+   both its stable file identity and SHA-256 must differ from the installed
+   `factorio.exe`. Installed executables, unrelated Wube-signed executables,
+   wrong-version installers, unsigned renamed files, and reparse paths are
+   refused.
+2. Attestation timestamps are parsed as UTC and bounded by the 600-second
+   lease. Provider-less reviewer strings, stale or future timestamps, and any
+   machine/boot/observer/host-state mismatch are refused.
+3. `factorio.gate4c_observer_self_test.v2` binds the WorkUnit, candidate
+   revision, provider ID/revision, clean FacMan tool commit, both evidence-tool
+   script hashes, opaque machine and current boot, elevation, generation time,
+   WPR/XPerf/WPAExporter identities and versions, trace/dump/stats hashes, and a
+   canonical self-test digest. It expires after 900 seconds.
+4. ETW attribution is no longer aggregate. FileIO and Registry markers must
+   each identify the parent probe PID and correct event class. Process-start
+   evidence must identify the parsed child PID and its expected parent PID.
+   A wrong PID or event class in any one domain makes
+   `attribution_complete = false`.
+
+These changes remain evidence tooling only. They do not alter runtime code, the
+frozen policy, the Gate 4B candidate, product authority, or the historic
+`blocked_before_baseline_or_permit` result above.
+
+The hardening diff passed 21 focused tests (two host-privilege-dependent
+symlink cases skipped, with an unconditional mocked reparse refusal also
+passing), `source_format_check.py`, `strict_check.py`, and the portable AIDE
+Lite test. A task-owned external Windows Debug build then passed the complete
+native CTest and Python matrix: 396 Python tests passed with 30 intentional
+target/toolkit skips. The external build lived only under the recorded Gate 4C
+temporary root; no source-repository build tree was created. Its exact-root
+cleanup command was rejected by the command guard before deletion, so the
+owned `pr55-hardening-build` subtree remains retained with its ownership marker
+instead of being removed through a bypass.
