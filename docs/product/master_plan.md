@@ -298,7 +298,9 @@ Use three separately reviewed WorkUnits for the first real-product gate:
    matrix, observation method, and human verdict criteria without running it.
 2. `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01` implements exact menu-plan,
    permit issuance/consumption, process identity, supervision, journal, and
-   observation only for the frozen candidate.
+   observation only for the frozen candidate. The implementation remains an
+   internal technical path whose strongest result is
+   `eligible_for_human_verdict`; it exposes no product Play route.
 3. `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01` runs the reviewed procedure and
    records `Pass`, `Fail`, or `Inconclusive` as a human verdict.
 
@@ -307,6 +309,9 @@ executable and effective configuration immediately before launch; prove the
 default plan opens the main menu without an implicit save target, then exercise
 load or create, save, clean exit, relaunch, crash, cancellation, timeout, child
 escape, concurrent refusal, post-run indexing, and protected-root observation.
+
+The candidate implementation and its remaining Gate 4C boundary are described
+in [`hermetic_standalone_play_candidate.md`](../architecture/hermetic_standalone_play_candidate.md).
 
 `FACMAN-STEAM-AWARE-PLAY-01` remains an independent, weaker-guarantee gate and
 may follow. Only one route must pass before the first controlled playable alpha.

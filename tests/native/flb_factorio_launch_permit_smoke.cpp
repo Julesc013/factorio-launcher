@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_operation_permit.h"
+#include "fl_sha256.h"
+#include "flb_factorio_candidate_projection.h"
 #include "flb_factorio_discovery.h"
+#include "flb_factorio_hermetic_candidate.h"
 #include "flb_factorio_launch_permit.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_permit_projection.h"
@@ -26,6 +29,12 @@ namespace factorio_launch = facman::factorio::launch;
 
 constexpr const char* kDigestA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 constexpr const char* kDigestB = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+std::string digest(const std::string& value)
+{
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(value.data()), value.size());
+}
 
 struct TemporaryTree {
     fs::path path;
@@ -60,6 +69,13 @@ void write_text(const fs::path& path, const std::string& text)
 {
     fs::create_directories(path.parent_path());
     std::ofstream(path, std::ios::binary | std::ios::trunc) << text;
+}
+
+std::string read_text(const fs::path& path)
+{
+    std::ifstream input(path, std::ios::binary);
+    return std::string(
+        std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
 }
 
 fs::path executable_path(const fs::path& install)
@@ -171,9 +187,9 @@ int fail(int code)
 
 int main()
 {
-    const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
-    TemporaryTree fixture {fs::temp_directory_path() /
-        ("facman-launch-permit-smoke-" + std::to_string(nonce))};
+    TemporaryTree fixture {fs::path(FACMAN_TEST_TEMP_ROOT) / "fixture"};
+    std::error_code cleanup_error;
+    fs::remove_all(fixture.path, cleanup_error);
     const fs::path workspace = fixture.path / "workspace";
     const fs::path install = fixture.path / "install";
     make_fixture(workspace, install);
@@ -190,6 +206,68 @@ int main()
         if (resource.logical_id.find(fixture.path.string()) != std::string::npos ||
             resource.permitted_effects != std::vector<std::string>{"workspace_read"}) return fail(2);
     }
+
+#ifdef _WIN32
+    const std::string canonical_policy = read_text(
+        fs::path(FACMAN_TEST_SOURCE_ROOT) / "contracts" / "generated-index" /
+        "hermetic_standalone_play_policy.v1.canonical.json");
+    auto frozen_policy = factorio_launch::FrozenHermeticPlayPolicy::verify_canonical_document(
+        canonical_policy);
+    if (!frozen_policy) return fail(16);
+    factorio_instance::HermeticCandidateProjectionRequest candidate_request;
+    candidate_request.workspace = workspace;
+    candidate_request.instance_id = "main";
+    candidate_request.operation_id = "candidate-fixture";
+    candidate_request.installation_root = install;
+    candidate_request.executable = executable_path(install);
+    candidate_request.expected_executable_sha256 = digest("fixture-not-executable");
+    candidate_request.authenticated_source_artifact_digest = digest("source-artifact");
+    candidate_request.source_authentication_evidence_digest = digest("source-authentication");
+    candidate_request.facman_source_revision_digest = digest("facman-source-revision");
+    candidate_request.facman_build_identity_digest = digest("facman-build-identity");
+    candidate_request.protected_baseline_digest = digest("protected-baseline");
+    candidate_request.writable_baseline_digest = digest("writable-baseline");
+    candidate_request.machine_binding_id = "machine:fixture";
+    candidate_request.principal = {
+        "local.fixture", "principal:fixture", "application-session:fixture"};
+    candidate_request.windows_system_root = "C:/Windows";
+    candidate_request.policy = frozen_policy.value();
+    auto candidate_plan = factorio_instance::project_hermetic_candidate_plan(candidate_request);
+    auto repeated_candidate_plan = factorio_instance::project_hermetic_candidate_plan(candidate_request);
+    auto reobserved_candidate = factorio_instance::reobserve_hermetic_candidate_context(
+        candidate_request);
+    if (!candidate_plan || !repeated_candidate_plan || !reobserved_candidate ||
+        candidate_plan.value().plan_digest != repeated_candidate_plan.value().plan_digest ||
+        reobserved_candidate.value().plan.plan_digest != candidate_plan.value().plan_digest ||
+        candidate_plan.value().permit_resources.size() != 24U ||
+        candidate_plan.value().writable_resource_ids.size() != 8U ||
+        factorio_launch::hermetic_candidate_plan_json(candidate_plan.value()).find(
+            fixture.path.generic_string()) != std::string::npos) return fail(17);
+    const auto temp_environment = std::find_if(
+        candidate_plan.value().process.environment.begin(),
+        candidate_plan.value().process.environment.end(),
+        [](const auto& value) { return value.name == "TEMP"; });
+    const auto profile_environment = std::find_if(
+        candidate_plan.value().process.environment.begin(),
+        candidate_plan.value().process.environment.end(),
+        [](const auto& value) { return value.name == "USERPROFILE"; });
+    if (temp_environment == candidate_plan.value().process.environment.end() ||
+        profile_environment == candidate_plan.value().process.environment.end() ||
+        fs::path(temp_environment->value) !=
+            workspace / "temporary" / "candidate-fixture" / "process" ||
+        fs::path(profile_environment->value) !=
+            workspace / "instances" / "main" / "state" / "userprofile") return fail(171);
+    const std::string original_config = read_text(
+        workspace / "instances" / "main" / "config" / "config.ini");
+    write_text(workspace / "instances" / "main" / "config" / "config.ini", original_config + "\n# drift\n");
+    auto config_drift_plan = factorio_instance::project_hermetic_candidate_plan(candidate_request);
+    if (!config_drift_plan ||
+        config_drift_plan.value().plan_digest == candidate_plan.value().plan_digest) return fail(18);
+    write_text(workspace / "instances" / "main" / "config" / "config.ini", original_config);
+    write_text(executable_path(install), "replacement-executable");
+    if (factorio_instance::project_hermetic_candidate_plan(candidate_request)) return fail(19);
+    write_text(executable_path(install), "fixture-not-executable");
+#endif
 
     FixtureEntropy process_entropy;
     auto authenticator = permit::ProcessSessionAuthenticator::create(process_entropy);

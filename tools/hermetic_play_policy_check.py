@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 POLICY = ROOT / "contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml"
+CANONICAL_POLICY = ROOT / "contracts/generated-index/hermetic_standalone_play_policy.v1.canonical.json"
 SCHEMA_ROOT = ROOT / "contracts/schema/factorio"
 
 SCHEMAS = {
@@ -434,7 +435,16 @@ def check() -> list[str]:
         policy = load_policy()
     except (OSError, tomllib.TOMLDecodeError) as exc:
         return [f"{POLICY.relative_to(ROOT)}: {exc}"]
-    return validate_policy(policy)
+    problems = validate_policy(policy)
+    expected_canonical = canonical_policy_bytes(policy)
+    try:
+        actual_canonical = CANONICAL_POLICY.read_bytes()
+    except OSError as exc:
+        problems.append(f"{CANONICAL_POLICY.relative_to(ROOT)}: {exc}")
+    else:
+        if actual_canonical not in {expected_canonical, expected_canonical + b"\n"}:
+            problems.append("canonical Gate 4A policy mirror is absent or stale")
+    return problems
 
 
 def main() -> int:

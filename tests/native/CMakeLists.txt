@@ -32,7 +32,17 @@ target_compile_features(flb_factorio_instance_model_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_instance_model_smoke PRIVATE flb_factorio_instance_static facman_core_static)
 facman_native_test(flb_factorio_launch_permit_smoke flb_factorio_launch_permit_smoke.cpp "fast-unit;contract;security;filesystem")
 target_compile_features(flb_factorio_launch_permit_smoke PRIVATE cxx_std_17)
+target_compile_definitions(flb_factorio_launch_permit_smoke PRIVATE
+  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/launch-permit-smoke")
 target_link_libraries(flb_factorio_launch_permit_smoke PRIVATE flb_factorio_instance_static facman_permit_static)
+facman_native_test(facman_hermetic_play_candidate_smoke facman_hermetic_play_candidate_smoke.cpp "fast-unit;contract;security;filesystem;platform")
+target_compile_features(facman_hermetic_play_candidate_smoke PRIVATE cxx_std_17)
+target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
+  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/candidate-smoke")
+target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
+  flb_factorio_launch_static facman_permit_static facman_platform_static)
 facman_native_test(flb_factorio_setup_recipe_smoke flb_factorio_setup_recipe_smoke.cpp "fast-unit;security;contract")
 target_compile_features(flb_factorio_setup_recipe_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_setup_recipe_smoke PRIVATE flb_factorio_install_validation_static)
@@ -61,7 +71,8 @@ target_compile_features(facman_execution_foundation_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_execution_foundation_smoke PRIVATE
   flb_factorio_launch_static facman_base_static facman_platform_static)
 target_compile_definitions(facman_execution_foundation_smoke PRIVATE
-  FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
+  FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>"
+  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/execution-foundation-smoke")
 add_dependencies(facman_execution_foundation_smoke facman_process_probe)
 if(TARGET facman_cli)
   facman_native_test(facman_workspace_resolver_smoke facman_workspace_resolver_smoke.cpp "fast-unit;platform;frontend")

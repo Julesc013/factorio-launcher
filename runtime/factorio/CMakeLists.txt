@@ -3,7 +3,9 @@
 
 add_library(flb_factorio_launch_static STATIC
   launch/flb_factorio_execution.cpp launch/flb_factorio_launch_plan.cpp
-  launch/flb_factorio_launch_permit.cpp)
+  launch/flb_factorio_launch_permit.cpp
+  launch/flb_factorio_candidate_manifest.cpp
+  launch/flb_factorio_hermetic_candidate.cpp)
 target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
 target_link_libraries(flb_factorio_launch_static PUBLIC
@@ -64,6 +66,7 @@ target_link_libraries(flb_factorio_saves_static PUBLIC
 add_library(flb_factorio_instance_static
   instance/flb_factorio_instance_model.cpp
   instance/flb_factorio_permit_projection.cpp
+  instance/flb_factorio_candidate_projection.cpp
   instance/flb_factorio_instance_lifecycle.cpp
   instance/flb_factorio_local_data_import.cpp)
 target_compile_features(flb_factorio_instance_static PUBLIC cxx_std_17)

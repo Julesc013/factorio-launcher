@@ -1,0 +1,33 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_play_candidate_protected_comparison.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hash-closed stable protected-resource comparison",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.play_candidate_protected_comparison.v1"},
+    "provider_id": {"const": "factorio.play.protected-comparison"},
+    "provider_revision": {"const": "stable-protected-comparison.v1"},
+    "complete": {"type": "boolean"},
+    "resources": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "resource_id": {"type": "string", "minLength": 1},
+          "before_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "after_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "complete": {"type": "boolean"},
+          "changed": {"type": "boolean"}
+        },
+        "required": ["resource_id", "before_digest", "after_digest", "complete", "changed"]
+      }
+    },
+    "output_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "provider_id", "provider_revision", "complete", "resources", "output_digest"]
+}

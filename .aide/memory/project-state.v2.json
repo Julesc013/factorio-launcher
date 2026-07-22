@@ -392,6 +392,11 @@
       "limitation": "process-tree claim only; no candidate, issuance, execution, verdict, or authority"
     },
     {
+      "claim": "Hermetic Play candidate",
+      "level": "synthetic technical proof",
+      "limitation": "no Factorio run, verdict, public authority, Steam, network, credentials, or Setup"
+    },
+    {
       "claim": "Package hashes authenticate publisher",
       "level": "not claimed",
       "limitation": "signatures or trusted external metadata required"
@@ -427,7 +432,7 @@
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 274
+    "schemas": 279
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",

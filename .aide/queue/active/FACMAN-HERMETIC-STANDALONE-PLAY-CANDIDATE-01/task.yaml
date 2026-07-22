@@ -33,6 +33,7 @@ forbidden_paths:
   - .aide.local/**
   - .aide/history/**
 affected_native_targets:
+  - facman_hermetic_play_candidate_smoke
   - facman_client_smoke
   - facman_execution_foundation_smoke
   - facman_operation_permit_smoke
@@ -50,6 +51,7 @@ affected_python_tests:
   - tests.test_frontend_contract
   - tests.test_frontend_parity
   - tests.test_hermetic_play_policy
+  - tests.test_hermetic_play_candidate
   - tests.test_operation_permit_contract
   - tests.test_refusal_contract
   - tests.test_schema_tools
@@ -63,6 +65,7 @@ affected_strict_validators:
   - tools/frontend_contract_check.py
   - tools/frontend_parity_check.py
   - tools/hermetic_play_policy_check.py
+  - tools/hermetic_play_candidate_check.py
   - tools/operation_permit_check.py
   - tools/refusal_contract_check.py
   - tools/schema_validate.py
