@@ -7,6 +7,10 @@ frozen Gate 4A policy. PR #52 merged reviewed head
 `da3e2274a3dc8a5757078b20276a1a6a93084860` at `dev` revision
 `e9c1e69fee1ae815f62638db8b7263cb01b70389`.
 
+PR #53 then merged the evidence-only closeout head
+`e60ff931317aaa6a68b7cbfd820afb4b4fce3676` at final closeout `dev` revision
+`7fe12635f7309e4fd709810dd192d43ff920592f`.
+
 Its sole disposition is:
 
 ```text
@@ -48,6 +52,12 @@ WinForms, AppKit, TUI, strict, and Python proof all passed.
 The exact merge revision passed CI run `29910544402`, code-security run
 `29910544923`, schema run `29910545091`, and security-policy run
 `29910544435`.
+
+The separate closeout head passed push and pull-request CI, code-security, and
+security-policy workflows. Its exact merged `dev` revision passed CI run
+`29912502213`, code-security run `29912502124`, and security-policy run
+`29912502140`. The schema workflow was correctly path-filtered for that
+truth-only change; local strict validation passed all 279 unchanged schemas.
 
 A clean detached, no-hardlink reconstruction pinned FacMan at the reviewed
 head, Universal Launcher at `7bd4425f0c35414f738159b45d8bec42edf70235`,

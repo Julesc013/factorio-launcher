@@ -74,3 +74,23 @@ eligible_for_human_verdict
 
 It does not record `Pass`, `Fail`, or `Inconclusive`; issue a reusable product
 permit; expose public Play; run Factorio; or promote any authority.
+
+## Closeout and public-integration proof
+
+PR #53 merged the evidence-only closeout head
+`e60ff931317aaa6a68b7cbfd820afb4b4fce3676` into `dev` at
+`7fe12635f7309e4fd709810dd192d43ff920592f`.
+
+The closeout head passed push CI `29911647564`, push code-security
+`29911647498`, push security-policy `29911647205`, pull-request CI
+`29911672399`, pull-request code-security `29911672382`, and pull-request
+security-policy `29911672471`. The truth-only diff did not trigger the
+path-filtered schema workflow; local strict validation passed all 279 schemas.
+
+The exact closeout merge revision passed CI `29912502213`, code-security
+`29912502124`, and security-policy `29912502140`. The schema workflow again
+did not trigger for the truth-only path set, and no schema or contract changed.
+
+This closes Gate 4B as `eligible_for_human_verdict` and activates Gate 4C. It
+does not record a human verdict, make FacMan playable, or promote execution or
+permit-issuance authority.
