@@ -20,3 +20,15 @@ Workspace proof tools:
   FacMan refusal contract.
 - `release_contract_check.py` runs the release/distribution validators under
   `tools/validators/release/`.
+
+Gate 4C evidence tools:
+
+- `gate4c_verdict_preflight.py` creates a hash-closed, non-executing preflight
+  record for the exact frozen Windows x64 / Factorio 2.0.77 / standalone /
+  menu / hermetic candidate. Missing source, observer, host, repository, or
+  instance evidence is a blocker; the tool cannot issue a permit or start a
+  process.
+- `gate4c_observer_self_test.py` is an elevated Windows-only ETW self-test for
+  the independent FileIO, Registry, and process observation prerequisites. It
+  exercises only task-owned probe state and cannot start Factorio or record a
+  human verdict.
