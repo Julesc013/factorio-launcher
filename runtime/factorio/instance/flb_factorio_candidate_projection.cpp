@@ -33,6 +33,7 @@ facman::core::Error projection_error(
     return {std::move(code), std::move(message), std::move(path), kind};
 }
 
+#ifdef _WIN32
 bool lowercase_digest(const std::string& value)
 {
     return value.size() == 64U &&
@@ -212,6 +213,7 @@ permit::ResourceBinding resource(
     return {std::move(kind), std::move(role), std::move(id), std::move(identity),
         std::move(provider), std::move(effects)};
 }
+#endif
 
 } // namespace
 
