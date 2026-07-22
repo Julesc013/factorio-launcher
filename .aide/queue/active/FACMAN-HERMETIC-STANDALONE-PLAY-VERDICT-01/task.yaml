@@ -1,0 +1,71 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01
+title: Record the human-reviewed hermetic standalone Play verdict
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-22T10:19:18Z
+owner: unassigned
+objective: >
+  Run the exact Gate 4C Windows x64 Factorio 2.0.77 standalone non-Steam menu journey against the frozen policy and reviewed Gate 4B candidate, preserve the hash-closed technical packet and human observations, and record exactly Pass, Fail, or Inconclusive without automatically enabling a product route or broadening authority.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/profile.yaml
+  - README.md
+  - docs/**
+  - release/index/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml
+  - runtime/**
+affected_native_targets:
+  - facman_hermetic_play_candidate_smoke
+  - facman_execution_foundation_smoke
+  - flb_factorio_launch_permit_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_hermetic_play_candidate
+  - tests.test_hermetic_play_policy
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/hermetic_play_candidate_check.py
+  - tools/hermetic_play_policy_check.py
+  - tools/strict_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - the Gate 4A policy digest remains immutable
+  - the Gate 4B reviewed candidate revision and provider pins are exact
+  - only Windows x64 Factorio 2.0.77 standalone non-Steam menu hermetic is exercised
+  - the observer starts before process creation and any observation gap forces Inconclusive
+  - the human reviewer confirms the normal menu, no inferred save, save persistence, exit, and relaunch
+  - the verdict is exactly Pass, Fail, or Inconclusive and binds one hash-closed evidence packet
+  - verdict work records evidence only and cannot repair candidate code or weaken frozen policy
+  - a Pass is evidence for a later exact-route promotion decision and does not enable itself
+  - Fail and Inconclusive grant no authority
+  - Setup, credentials, networking, Steam, alternate intents, signing, publication, and general Play remain unavailable
+depends_on:
+  - FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
+  - FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - exact policy, candidate, provider, executable, instance, plan, and packet identities pinned
+  - pre-run readiness and protected/writable baselines complete
+  - fresh exact permit independently revalidated and consumed once
+  - normal menu and no inferred save human-observed
+  - save, exit, last-run report, fresh-authority relaunch, and save visibility human-observed
+  - process-tree observation and protected-state comparison complete without gaps
+  - verdict bound to the exact hash-closed packet
+  - no product route or authority automatically promoted
+  - structured commit and complete evidence checks pass
+active_at: 2026-07-22T10:19:18Z

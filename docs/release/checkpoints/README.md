@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `hermetic_standalone_play_candidate` and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `hermetic_standalone_play_verdict` and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

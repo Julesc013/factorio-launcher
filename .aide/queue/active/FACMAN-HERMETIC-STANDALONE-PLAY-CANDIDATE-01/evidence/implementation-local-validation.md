@@ -65,6 +65,8 @@ verdict, public permit issuer, public Play command, product execution route,
 Setup authority, network, credentials, Steam behavior, signing, publication,
 or playability promotion.
 
-Hosted cross-platform workflows, clean pinned three-repository reproduction,
-exact merged-`dev` proof, and Gate 4B closeout remain pending until the reviewed
-implementation commit is integrated.
+The final reviewed head subsequently passed hosted cross-platform workflows,
+a clean pinned three-repository reproduction, and exact merged-`dev` proof.
+Those immutable identifiers and results are recorded in `validation.md` and the
+Gate 4B closeout checkpoint. This local evidence still records no real
+Factorio run or human verdict.

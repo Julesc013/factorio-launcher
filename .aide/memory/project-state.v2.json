@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+  "active_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
   "capabilities": [
     {
       "commands": [],
@@ -393,8 +393,8 @@
     },
     {
       "claim": "Hermetic Play candidate",
-      "level": "synthetic technical proof",
-      "limitation": "no Factorio run, verdict, public authority, Steam, network, credentials, or Setup"
+      "level": "reviewed dev; verdict eligible",
+      "limitation": "no Factorio run/verdict/authority; Steam, network, credentials, and Setup excluded"
     },
     {
       "claim": "Package hashes authenticate publisher",
@@ -440,7 +440,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "hermetic-standalone-play-candidate",
+  "current_checkpoint": "hermetic-standalone-play-verdict",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
@@ -448,11 +448,11 @@
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
-    "current_gate_status": "not_started",
+    "current_gate_status": "candidate_complete_awaiting_human_verdict",
     "operator_verdict": "Fail",
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "real_play_gate_not_passed",
+    "reason": "real_play_verdict_pending",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -675,6 +675,53 @@
     "synchronization_pull_request": 45,
     "trees_equal_at_synchronization": true
   },
+  "hermetic_standalone_play_candidate": {
+    "authority_promotion": false,
+    "canonical_main_promotion": false,
+    "clean_reproduction_seconds": 548.3,
+    "command_count": 125,
+    "credential_authority": false,
+    "dev_integration_revision": "e9c1e69fee1ae815f62638db8b7263cb01b70389",
+    "exact_dev_ci_run": "29910544402",
+    "exact_dev_code_security_run": "29910544923",
+    "exact_dev_schema_check_run": "29910545091",
+    "exact_dev_security_policy_run": "29910544435",
+    "exact_head_ci_run": "29909518558",
+    "exact_head_clean_reproduction": true,
+    "exact_head_code_security_run": "29909518660",
+    "exact_head_schema_check_run": "29909518641",
+    "exact_head_security_policy_run": "29909518606",
+    "exact_push_ci_run": "29909515085",
+    "exact_push_code_security_run": "29909515064",
+    "exact_push_security_policy_run": "29909514463",
+    "host_mutation_authority": false,
+    "human_verdict": "unset",
+    "implementation_pull_request": 52,
+    "local_full_matrix": true,
+    "native_test_count": 48,
+    "network_authority": false,
+    "playability_promotion": false,
+    "policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+    "product_permit_issuance": false,
+    "public_command": false,
+    "publication": false,
+    "python_target_specific_skip_count": 313,
+    "python_test_count": 375,
+    "real_factorio_execution": false,
+    "refusal_code_count": 242,
+    "registered_route_count": 123,
+    "required_evidence_binding_count": 31,
+    "reviewed_head_revision": "da3e2274a3dc8a5757078b20276a1a6a93084860",
+    "schema_count": 279,
+    "setup_authority": false,
+    "signing": false,
+    "status": "accepted_reviewed_dev_integration_eligible_for_human_verdict",
+    "technical_disposition": "eligible_for_human_verdict",
+    "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+    "writable_resource_count": 8
+  },
   "hermetic_standalone_play_policy": {
     "architecture": "x86_64",
     "authority_promotion": false,
@@ -879,7 +926,7 @@
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+  "last_closed_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -1775,20 +1822,20 @@
     }
   ],
   "product": {
-    "canonical_integration": true,
+    "canonical_integration": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+    "current_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
-    "phase": "hermetic_standalone_play_candidate",
+    "next_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
+    "phase": "hermetic_standalone_play_verdict",
     "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "canonical_main_promoted_dev_synchronized"
+    "truth_scope": "dev_integrated_candidate_reviewed_reproduced"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -1842,7 +1889,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "permit_infrastructure_proven_real_play_unproven",
+    "safety_authority": "candidate_eligible_human_verdict_real_play_unproven",
     "user_validation": "not_started",
     "user_workflow": "advanced_command_surface_only"
   },

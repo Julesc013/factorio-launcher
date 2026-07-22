@@ -1,13 +1,13 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "hermetic-standalone-play-candidate"
+current_checkpoint = "hermetic-standalone-play-verdict"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01"
-last_closed_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01"
+active_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+last_closed_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -34,25 +34,25 @@ quarantined_capabilities = [
 ]
 
 [product]
-phase = "hermetic_standalone_play_candidate"
+phase = "hermetic_standalone_play_verdict"
 phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01"
-next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+current_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "canonical_main_promoted_dev_synchronized"
-canonical_integration = true
+truth_scope = "dev_integrated_candidate_reviewed_reproduced"
+canonical_integration = false
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "permit_infrastructure_proven_real_play_unproven"
+safety_authority = "candidate_eligible_human_verdict_real_play_unproven"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -296,6 +296,53 @@ host_mutation_authority = false
 authority_promotion = false
 playability_promotion = false
 canonical_main_promotion = true
+signing = false
+publication = false
+
+[hermetic_standalone_play_candidate]
+status = "accepted_reviewed_dev_integration_eligible_for_human_verdict"
+work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01"
+implementation_pull_request = 52
+reviewed_head_revision = "da3e2274a3dc8a5757078b20276a1a6a93084860"
+dev_integration_revision = "e9c1e69fee1ae815f62638db8b7263cb01b70389"
+universal_launcher_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
+universal_setup_revision = "3f8489275077347c2918f3bb03614ec6431362ff"
+exact_push_ci_run = "29909515085"
+exact_push_code_security_run = "29909515064"
+exact_push_security_policy_run = "29909514463"
+exact_head_ci_run = "29909518558"
+exact_head_code_security_run = "29909518660"
+exact_head_schema_check_run = "29909518641"
+exact_head_security_policy_run = "29909518606"
+exact_dev_ci_run = "29910544402"
+exact_dev_code_security_run = "29910544923"
+exact_dev_schema_check_run = "29910545091"
+exact_dev_security_policy_run = "29910544435"
+local_full_matrix = true
+exact_head_clean_reproduction = true
+clean_reproduction_seconds = 548.3
+native_test_count = 48
+python_test_count = 375
+python_target_specific_skip_count = 313
+schema_count = 279
+command_count = 125
+registered_route_count = 123
+refusal_code_count = 242
+policy_digest = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
+required_evidence_binding_count = 31
+writable_resource_count = 8
+technical_disposition = "eligible_for_human_verdict"
+human_verdict = "unset"
+public_command = false
+product_permit_issuance = false
+real_factorio_execution = false
+setup_authority = false
+credential_authority = false
+network_authority = false
+host_mutation_authority = false
+authority_promotion = false
+playability_promotion = false
+canonical_main_promotion = false
 signing = false
 publication = false
 
@@ -1244,11 +1291,11 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "real_play_gate_not_passed"
+reason = "real_play_verdict_pending"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
-current_gate_status = "not_started"
+current_gate_status = "candidate_complete_awaiting_human_verdict"
 
 [release]
 status = "unpublished"

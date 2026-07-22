@@ -15,3 +15,10 @@
   historical directories outside the exact temporary root.
 
 Recorded before first use of the task-owned temporary root.
+
+At Gate 4B truth-closeout preparation the exact root remained temporarily
+retained because it contained the final clean reconstruction plus obsolete
+failed/replaced reconstruction attempts. Two validated recursive-removal
+commands were refused by the command safety layer before deleting anything.
+No alternate shell or deletion bypass was used. Final disposition must report
+either verified removal of this exact root or its retained path and reason.
