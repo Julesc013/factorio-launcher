@@ -10,8 +10,10 @@
 #include <csignal>
 #include <cstring>
 #include <fcntl.h>
+#include <fstream>
 #include <limits>
 #include <pthread.h>
+#include <sstream>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <thread>
@@ -109,6 +111,31 @@ void terminate_group(pid_t child, std::chrono::milliseconds grace, bool& process
     if (kill(-child, SIGKILL) == 0) process_tree_terminated = true;
 }
 
+std::string posix_start_identity(pid_t process_id) noexcept
+{
+#ifdef __linux__
+    try {
+        std::ifstream input("/proc/" + std::to_string(process_id) + "/stat");
+        std::string text;
+        std::getline(input, text);
+        const std::size_t command_end = text.rfind(')');
+        if (!input && text.empty()) return {};
+        if (command_end == std::string::npos || command_end + 2U >= text.size()) return {};
+        std::istringstream fields(text.substr(command_end + 2U));
+        std::string value;
+        for (std::size_t index = 0; index <= 19U; ++index) {
+            if (!(fields >> value)) return {};
+        }
+        return "linux-process-v1:" + std::to_string(process_id) + ":" + value;
+    } catch (...) {
+        return {};
+    }
+#else
+    (void)process_id;
+    return {};
+#endif
+}
+
 } // namespace
 
 ProcessResult supervise_process(const ProcessRequest& request)
@@ -190,7 +217,14 @@ ProcessResult supervise_process(const ProcessRequest& request)
     }
 
     close_fd(input[0]); close_fd(output[1]); close_fd(error[1]);
-    result.identity = {static_cast<std::uint64_t>(child), "posix-pid"};
+    result.identity = {
+        static_cast<std::uint64_t>(child),
+#ifdef __linux__
+        "linux-process-v1",
+#else
+        "posix-pid",
+#endif
+        posix_start_identity(child)};
     if (request.started) request.started(result.identity);
     {
         ScopedSigpipeBlock sigpipe;
@@ -256,6 +290,18 @@ bool process_identity_alive(std::uint64_t process_id) noexcept
     if (process_id == 0 || process_id > static_cast<std::uint64_t>(std::numeric_limits<pid_t>::max())) return false;
     const int status = kill(static_cast<pid_t>(process_id), 0);
     return status == 0 || errno == EPERM;
+}
+
+
+bool process_identity_alive(const ProcessIdentity& identity) noexcept
+{
+    if (identity.process_id == 0 ||
+        identity.process_id > static_cast<std::uint64_t>(std::numeric_limits<pid_t>::max()) ||
+        identity.stable_start_identity.empty()) return false;
+    const pid_t process_id = static_cast<pid_t>(identity.process_id);
+    const int status = kill(process_id, 0);
+    if (status != 0 && errno != EPERM) return false;
+    return posix_start_identity(process_id) == identity.stable_start_identity;
 }
 
 } // namespace facman::platform

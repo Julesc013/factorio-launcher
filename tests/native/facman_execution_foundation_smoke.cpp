@@ -79,7 +79,8 @@ int main()
 {
     facman::platform::RealClock clock;
     facman::platform::RandomIdGenerator ids;
-    TemporaryTree tree {fs::temp_directory_path() / ids.next("facman-execution-foundation")};
+    TemporaryTree tree {
+        fs::temp_directory_path() / ids.next("facman-execution-foundation")};
     std::error_code error;
     fs::create_directories(tree.path, error);
     if (error) return 1;
@@ -95,8 +96,15 @@ int main()
                   << success.error().message << " (" << success.error().detail << ")\n";
         return 2;
     }
+#if defined(_WIN32) || defined(__linux__)
+    const bool restart_identity_missing =
+        !success.value().process.identity.restart_safe();
+#else
+    const bool restart_identity_missing = false;
+#endif
     if (!success.value().successful || !success.value().complete ||
         success.value().recovery_required || success.value().current_state != "complete" ||
+        restart_identity_missing ||
         success.value().process.standard_output.find("value with space") == std::string::npos ||
         success.value().process.standard_output.find("&echo escaped>shell-escaped.txt") == std::string::npos ||
         fs::exists(tree.path / "shell-escaped.txt") ||
@@ -109,6 +117,17 @@ int main()
                   << " complete=" << success.value().complete
                   << " recovery=" << success.value().recovery_required
                   << " state=" << success.value().current_state
+                  << " restart_safe=" << success.value().process.identity.restart_safe()
+                  << " process_platform=" << success.value().process.identity.platform
+                  << " process_id=" << success.value().process.identity.process_id
+                  << " successful=" << success.value().successful
+                  << " shell_file=" << fs::exists(tree.path / "shell-escaped.txt")
+                  << " requested=" << has_state(success.value(), "requested")
+                  << " preflighted=" << has_state(success.value(), "preflighted")
+                  << " authorised=" << has_state(success.value(), "authorised")
+                  << " running=" << has_state(success.value(), "running")
+                  << " exited=" << has_state(success.value(), "exited")
+                  << " journal=" << fs::is_regular_file(success.value().journal_path)
                   << " stdout=" << success.value().process.standard_output
                   << " stderr=" << success.value().process.standard_error
                   << " process_error=" << success.value().process.error << '\n';

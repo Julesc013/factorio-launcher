@@ -53,6 +53,38 @@ struct FileIdentity {
     }
 };
 
+enum class PathObjectKind {
+    absent,
+    regular_file,
+    directory,
+    other,
+};
+
+struct PathIdentity {
+    bool exists = false;
+    bool reparse_or_link = false;
+    bool fixed_local_volume = false;
+    PathObjectKind kind = PathObjectKind::absent;
+    std::uint64_t device = 0;
+    std::uint64_t object = 0;
+    std::uint64_t size = 0;
+    std::uint64_t last_write_ticks = 0;
+    std::string filesystem_name;
+
+    bool same_object(const PathIdentity& other) const noexcept
+    {
+        return exists == other.exists && kind == other.kind &&
+            (!exists || (device == other.device && object == other.object));
+    }
+    bool unchanged(const PathIdentity& other) const noexcept
+    {
+        return same_object(other) && reparse_or_link == other.reparse_or_link &&
+            fixed_local_volume == other.fixed_local_volume && size == other.size &&
+            last_write_ticks == other.last_write_ticks &&
+            filesystem_name == other.filesystem_name;
+    }
+};
+
 class StableInputFile {
 public:
     StableInputFile();
@@ -103,6 +135,9 @@ IoStatus replace_existing_durable(
 IoStatus remove_exact_object(
     const std::filesystem::path& path,
     const FileIdentity& expected);
+IoStatus inspect_path_no_follow(
+    const std::filesystem::path& path,
+    PathIdentity& identity);
 std::filesystem::path path_from_utf8(const std::string& value);
 std::string path_to_utf8(const std::filesystem::path& value);
 

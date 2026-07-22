@@ -181,6 +181,17 @@ void terminate_tree(HANDLE job, ProcessResult& result, unsigned int code)
     if (TerminateJobObject(job, code)) result.process_tree_terminated = true;
 }
 
+std::string windows_start_identity(HANDLE process, DWORD process_id) noexcept
+{
+    FILETIME creation {}, exit {}, kernel {}, user {};
+    if (!GetProcessTimes(process, &creation, &exit, &kernel, &user)) return {};
+    const std::uint64_t ticks =
+        (static_cast<std::uint64_t>(creation.dwHighDateTime) << 32U) |
+        static_cast<std::uint64_t>(creation.dwLowDateTime);
+    return "windows-process-v1:" + std::to_string(process_id) + ":" +
+        std::to_string(ticks);
+}
+
 } // namespace
 
 ProcessResult supervise_process(const ProcessRequest& request)
@@ -251,7 +262,10 @@ ProcessResult supervise_process(const ProcessRequest& request)
     child_input_read.reset();
     child_output_write.reset();
     child_error_write.reset();
-    result.identity = {static_cast<std::uint64_t>(process.dwProcessId), "windows-pid"};
+    result.identity = {
+        static_cast<std::uint64_t>(process.dwProcessId),
+        "windows-process-v1",
+        windows_start_identity(process_handle.get(), process.dwProcessId)};
     if (ResumeThread(thread_handle.get()) == static_cast<DWORD>(-1)) {
         terminate_tree(job.get(), result, 1);
         result.error = "ResumeThread failed";
@@ -325,6 +339,21 @@ bool process_identity_alive(std::uint64_t process_id) noexcept
     if (process_id == 0 || process_id > static_cast<std::uint64_t>(MAXDWORD)) return false;
     Handle process(OpenProcess(SYNCHRONIZE, FALSE, static_cast<DWORD>(process_id)));
     return process && WaitForSingleObject(process.get(), 0) == WAIT_TIMEOUT;
+}
+
+bool process_identity_alive(const ProcessIdentity& identity) noexcept
+{
+    if (identity.process_id == 0 ||
+        identity.process_id > static_cast<std::uint64_t>(MAXDWORD) ||
+        identity.stable_start_identity.empty()) return false;
+    Handle process(OpenProcess(
+        SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
+        FALSE,
+        static_cast<DWORD>(identity.process_id)));
+    if (!process || WaitForSingleObject(process.get(), 0) != WAIT_TIMEOUT) return false;
+    return windows_start_identity(
+        process.get(), static_cast<DWORD>(identity.process_id)) ==
+        identity.stable_start_identity;
 }
 
 } // namespace facman::platform
