@@ -71,8 +71,7 @@ target_compile_features(facman_execution_foundation_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_execution_foundation_smoke PRIVATE
   flb_factorio_launch_static facman_base_static facman_platform_static)
 target_compile_definitions(facman_execution_foundation_smoke PRIVATE
-  FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>"
-  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/execution-foundation-smoke")
+  FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
 add_dependencies(facman_execution_foundation_smoke facman_process_probe)
 if(TARGET facman_cli)
   facman_native_test(facman_workspace_resolver_smoke facman_workspace_resolver_smoke.cpp "fast-unit;platform;frontend")
