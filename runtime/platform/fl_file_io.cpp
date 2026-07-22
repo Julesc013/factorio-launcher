@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
+#include <cwchar>
 #include <limits>
 
 #ifdef _WIN32
@@ -44,6 +45,49 @@ FileIdentity identity_from_info(const BY_HANDLE_FILE_INFORMATION& info)
         (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0;
     return identity;
 }
+
+PathIdentity path_identity_from_info(
+    const std::filesystem::path& path,
+    HANDLE handle,
+    const BY_HANDLE_FILE_INFORMATION& info)
+{
+    PathIdentity identity;
+    identity.exists = true;
+    identity.reparse_or_link =
+        (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+    identity.kind = (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0
+        ? PathObjectKind::directory
+        : (identity.reparse_or_link ? PathObjectKind::other : PathObjectKind::regular_file);
+    identity.device = info.dwVolumeSerialNumber;
+    identity.object =
+        (static_cast<std::uint64_t>(info.nFileIndexHigh) << 32U) |
+        static_cast<std::uint64_t>(info.nFileIndexLow);
+    identity.size =
+        (static_cast<std::uint64_t>(info.nFileSizeHigh) << 32U) |
+        static_cast<std::uint64_t>(info.nFileSizeLow);
+    identity.last_write_ticks =
+        (static_cast<std::uint64_t>(info.ftLastWriteTime.dwHighDateTime) << 32U) |
+        static_cast<std::uint64_t>(info.ftLastWriteTime.dwLowDateTime);
+    wchar_t filesystem[64] {};
+    if (GetVolumeInformationByHandleW(
+            handle, nullptr, 0, nullptr, nullptr, nullptr,
+            filesystem, static_cast<DWORD>(sizeof(filesystem) / sizeof(filesystem[0])))) {
+        const int characters = static_cast<int>(std::wcslen(filesystem));
+        const int bytes = WideCharToMultiByte(
+            CP_UTF8, WC_ERR_INVALID_CHARS, filesystem, characters,
+            nullptr, 0, nullptr, nullptr);
+        if (bytes > 0) {
+            identity.filesystem_name.resize(static_cast<std::size_t>(bytes));
+            (void)WideCharToMultiByte(
+                CP_UTF8, WC_ERR_INVALID_CHARS, filesystem, characters,
+                identity.filesystem_name.data(), bytes, nullptr, nullptr);
+        }
+    }
+    const std::filesystem::path root = std::filesystem::absolute(path).root_path();
+    identity.fixed_local_volume = !root.empty() &&
+        GetDriveTypeW(root.c_str()) == DRIVE_FIXED;
+    return identity;
+}
 #else
 using NativeHandle = int;
 constexpr NativeHandle kInvalidHandle = -1;
@@ -56,6 +100,30 @@ FileIdentity identity_from_stat(const struct stat& info)
     identity.size = static_cast<std::uint64_t>(info.st_size);
     identity.link_count = static_cast<std::uint64_t>(info.st_nlink);
     identity.regular_file = S_ISREG(info.st_mode);
+    return identity;
+}
+
+PathIdentity path_identity_from_stat(const struct stat& info)
+{
+    PathIdentity identity;
+    identity.exists = true;
+    identity.reparse_or_link = S_ISLNK(info.st_mode);
+    identity.kind = S_ISREG(info.st_mode)
+        ? PathObjectKind::regular_file
+        : (S_ISDIR(info.st_mode) ? PathObjectKind::directory : PathObjectKind::other);
+    identity.device = static_cast<std::uint64_t>(info.st_dev);
+    identity.object = static_cast<std::uint64_t>(info.st_ino);
+    identity.size = static_cast<std::uint64_t>(info.st_size);
+#if defined(__APPLE__)
+    identity.last_write_ticks =
+        static_cast<std::uint64_t>(info.st_mtimespec.tv_sec) * 1000000000ULL +
+        static_cast<std::uint64_t>(info.st_mtimespec.tv_nsec);
+#else
+    identity.last_write_ticks =
+        static_cast<std::uint64_t>(info.st_mtim.tv_sec) * 1000000000ULL +
+        static_cast<std::uint64_t>(info.st_mtim.tv_nsec);
+#endif
+    identity.filesystem_name = "posix";
     return identity;
 }
 
@@ -302,6 +370,49 @@ IoStatus remove_exact_object(const std::filesystem::path& path, const FileIdenti
     return flush_directory(path.parent_path());
 #endif
     return IoStatus::success(DurabilityLevel::best_effort_platform_limit);
+}
+
+IoStatus inspect_path_no_follow(
+    const std::filesystem::path& path,
+    PathIdentity& identity)
+{
+    identity = {};
+#ifdef _WIN32
+    const std::wstring native_path = windows_extended_path(path);
+    HANDLE handle = CreateFileW(
+        native_path.c_str(), FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (handle == INVALID_HANDLE_VALUE) {
+        const DWORD error = GetLastError();
+        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) {
+            identity.kind = PathObjectKind::absent;
+            return IoStatus::success();
+        }
+        return IoStatus::failure("path_identity_failed", windows_error("CreateFileW"));
+    }
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(handle, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(handle);
+        return IoStatus::failure("path_identity_failed", detail);
+    }
+    identity = path_identity_from_info(path, handle, info);
+    CloseHandle(handle);
+#else
+    struct stat info {};
+    if (::lstat(path.c_str(), &info) != 0) {
+        if (errno == ENOENT || errno == ENOTDIR) {
+            identity.kind = PathObjectKind::absent;
+            return IoStatus::success();
+        }
+        return IoStatus::failure("path_identity_failed", std::strerror(errno));
+    }
+    identity = path_identity_from_stat(info);
+#endif
+    return IoStatus::success();
 }
 
 std::filesystem::path path_from_utf8(const std::string& value) { return std::filesystem::u8path(value); }
