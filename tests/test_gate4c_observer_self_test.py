@@ -93,7 +93,7 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             }.get(name)
 
         def tool_identity(value: str | Path | None) -> dict[str, object]:
-            stem = Path(str(value)).stem.casefold()
+            stem = Path(str(value).replace("\\", "/")).stem.casefold()
             return dict(tools[stem])
 
         status = subprocess.CompletedProcess(
