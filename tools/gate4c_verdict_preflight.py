@@ -24,7 +24,7 @@ import subprocess
 import sys
 import zipfile
 from datetime import datetime, timedelta, timezone
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 
@@ -56,6 +56,9 @@ MAX_SOURCE_PACKAGE_ENTRIES = 50_000
 MAX_SOURCE_PACKAGE_UNCOMPRESSED_BYTES = 16 * 1024 * 1024 * 1024
 MAX_SOURCE_PACKAGE_EXPANSION_RATIO = 20
 MAX_SOURCE_EXECUTABLE_BYTES = 256 * 1024 * 1024
+WINDOWS_PERFORMANCE_TOOLKIT_ROOT = Path(
+    r"C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit"
+)
 PROVIDER_SCOPED_REVIEWER = re.compile(
     r"^[a-z][a-z0-9._-]{1,63}:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$"
 )
@@ -397,6 +400,36 @@ def executable_tool_identity(path: Path | str | None) -> dict[str, Any]:
     }
 
 
+def observer_tool_paths() -> dict[str, str | None]:
+    toolkit = {
+        name: WINDOWS_PERFORMANCE_TOOLKIT_ROOT / filename
+        for name, filename in (
+            ("wpr", "wpr.exe"),
+            ("xperf", "xperf.exe"),
+            ("wpaexporter", "wpaexporter.exe"),
+        )
+    }
+    if all(path.is_file() for path in toolkit.values()):
+        return {name: str(path) for name, path in toolkit.items()}
+    return {name: None for name in toolkit}
+
+
+def observer_toolchain_coherent(paths: dict[str, str | None]) -> bool:
+    if not all(paths.values()):
+        return False
+    parents: set[str] = set()
+    for value in paths.values():
+        assert value is not None
+        text = str(value)
+        parent = (
+            str(PureWindowsPath(text).parent)
+            if "\\" in text or re.match(r"^[A-Za-z]:", text)
+            else str(Path(text).parent)
+        )
+        parents.add(parent.casefold())
+    return len(parents) == 1
+
+
 def repository_tool_identity(repo_root: Path) -> dict[str, Any]:
     revision = run(["git", "rev-parse", "HEAD"], cwd=repo_root)
     status = run(["git", "status", "--short"], cwd=repo_root)
@@ -536,17 +569,11 @@ def observer_prerequisites(
     session: dict[str, Any],
     now: datetime | None = None,
 ) -> dict[str, Any]:
-    wpr = shutil.which("wpr.exe") or shutil.which("wpr")
-    xperf = shutil.which("xperf.exe") or shutil.which("xperf")
-    if xperf is None:
-        candidate = Path(r"C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\xperf.exe")
-        if candidate.is_file():
-            xperf = str(candidate)
-    wpa_exporter = shutil.which("wpaexporter.exe") or shutil.which("wpaexporter")
-    if wpa_exporter is None:
-        candidate = Path(r"C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\wpaexporter.exe")
-        if candidate.is_file():
-            wpa_exporter = str(candidate)
+    paths = observer_tool_paths()
+    wpr = paths["wpr"]
+    xperf = paths["xperf"]
+    wpa_exporter = paths["wpaexporter"]
+    coherent_toolchain = observer_toolchain_coherent(paths)
     recording = None
     status_output = ""
     if wpr:
@@ -659,7 +686,9 @@ def observer_prerequisites(
         "wpr": wpr,
         "xperf": xperf,
         "wpaexporter": wpa_exporter,
-        "tools_available": all([wpr, xperf, wpa_exporter]),
+        "toolchain_coherent": coherent_toolchain,
+        "tools_available": all([wpr, xperf, wpa_exporter])
+        and coherent_toolchain,
         "elevated": is_elevated(),
         "recording_active": recording,
         "status_output": status_output,
@@ -670,6 +699,7 @@ def observer_prerequisites(
         "self_test_validation": validation,
         "self_test_passed": self_test_passed,
         "ready": all([wpr, xperf, wpa_exporter])
+        and coherent_toolchain
         and is_elevated()
         and recording is False
         and session.get("valid") is True
