@@ -50,6 +50,7 @@ def parse_lost_events(stats: str) -> int | None:
         r"events\s+lost\s*[:=]\s*([0-9]+)",
         r"eventslost\s*[:=]\s*([0-9]+)",
         r"lost\s+events\s*[:=]\s*([0-9]+)",
+        r"dropped\s+([0-9]+)\s+events",
     )
     values: list[int] = []
     for pattern in patterns:
@@ -61,6 +62,21 @@ def wpr_is_not_recording(result: subprocess.CompletedProcess[str]) -> bool:
     return result.returncode == 0 and "is not recording" in (
         result.stdout + result.stderr
     ).casefold()
+
+
+def wpr_start_arguments(wpr: str, profile: Path, run_root: Path) -> list[str]:
+    selector = (
+        f"{profile}!{PREFLIGHT.OBSERVER_PROFILE_NAME}."
+        f"{PREFLIGHT.OBSERVER_PROFILE_DETAIL_LEVEL}"
+    )
+    return [
+        wpr,
+        "-start",
+        selector,
+        "-filemode",
+        "-recordtempto",
+        str(run_root),
+    ]
 
 
 def normalize_trace_text(value: str) -> str:
@@ -214,6 +230,9 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
     wpaexporter = str(observer_paths["wpaexporter"])
     host_session = PREFLIGHT.host_session_identity()
     tooling = PREFLIGHT.repository_tool_identity(ROOT)
+    profile = PREFLIGHT.observer_profile_identity(ROOT)
+    provider = PREFLIGHT.observer_provider_identity(ROOT)
+    profile_path = ROOT / PREFLIGHT.OBSERVER_PROFILE_RELATIVE_PATH
     observer_tools = {
         "wpr": PREFLIGHT.executable_tool_identity(wpr),
         "xperf": PREFLIGHT.executable_tool_identity(xperf),
@@ -223,6 +242,8 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         raise PREFLIGHT.PreflightError("current machine and boot-session identity is unavailable")
     if not tooling.get("valid"):
         raise PREFLIGHT.PreflightError("observer self-test requires a clean, committed tooling revision")
+    if not profile.get("valid"):
+        raise PREFLIGHT.PreflightError("observer profile does not match the reviewed closed contract")
     if not all(item.get("valid") for item in observer_tools.values()):
         raise PREFLIGHT.PreflightError("observer tool identity could not be hash-closed")
     status = command([wpr, "-status"])
@@ -242,18 +263,7 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
     commands: list[dict[str, Any]] = []
     errors: list[str] = []
     try:
-        start_args = [
-            wpr,
-            "-start",
-            "GeneralProfile",
-            "-start",
-            "FileIO",
-            "-start",
-            "Registry",
-            "-filemode",
-            "-recordtempto",
-            str(run_root),
-        ]
+        start_args = wpr_start_arguments(wpr, profile_path, run_root)
         start = command(start_args)
         commands.append({"args": start_args, "returncode": start.returncode, "stdout": start.stdout, "stderr": start.stderr})
         if start.returncode != 0:
@@ -346,7 +356,18 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         registry_marker=registry_marker,
         process_marker=process_marker,
     )
-    lost_events = parse_lost_events(stats_text)
+    loss_text = "\n".join(
+        (
+            stop.stdout,
+            stop.stderr,
+            dump_result.stdout,
+            dump_result.stderr,
+            stats_result.stdout,
+            stats_result.stderr,
+            stats_text,
+        )
+    )
+    lost_events = parse_lost_events(loss_text)
     if lost_events is None:
         errors.append("lost_event_count_unresolved")
     if lost_events:
@@ -367,11 +388,7 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         "boot_identity": host_session["boot_identity"],
         "tooling": tooling,
         "observer_tools": observer_tools,
-        "provider": {
-            "id": PREFLIGHT.OBSERVER_PROVIDER_ID,
-            "revision": PREFLIGHT.OBSERVER_PROVIDER_REVISION,
-            "profiles": ["GeneralProfile", "FileIO", "Registry"],
-        },
+        "provider": provider,
         "probe_process_id": os.getpid(),
         "child_process_id": child_process_id,
         "child_parent_process_id": child_parent_process_id,

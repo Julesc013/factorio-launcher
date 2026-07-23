@@ -78,3 +78,54 @@ This remains a pre-baseline evidence-tool correction. The incomplete ETW
 attempt directories are preserved, no baseline has been captured, no permit
 has been issued, no Factorio process has started, and the verdict remains
 unset.
+
+## Observer capacity correction before baseline
+
+The first self-test using the corrected coherent toolkit completed WPR stop
+and produced a hash-closed self-test record, but it correctly returned
+`inconclusive`. WPR reported 77,091 dropped events; XPerf refused to decode the
+incomplete 618,659,840-byte trace, so file, Registry, and process attribution
+could not be established. WPR post-stop status proved that no recording
+remained active.
+
+The preserved result is:
+
+```text
+self-test digest
+  5f19f9d70f52bf82cc4bdac35936f000910ca83d5971fb86b9e7632b890650af
+
+self-test file SHA-256
+  69a12fd6da19b726ca438ef6c4e03fc0cc9dfe21590874ef608d1534619561d0
+
+trace SHA-256
+  c82a884fbbd9e1281159d7973fae468246af605bb1f86451564ff92d0acc1ac6
+```
+
+The observer had combined the broad built-in `GeneralProfile`, `FileIO`, and
+`Registry` profiles. The bounded correction replaces those profiles with one
+repository-owned WPRP whose only system keywords are `ProcessThread`,
+`FileIO`, `FileIOInit`, and `Registry`. The file-mode collector uses 1 MiB
+buffers and 256 buffers, enables no stacks and no user-mode event providers,
+and is hash-bound into the provider/tool identity. The observer schema and
+provider revision advance to v3 so no v2 proof can satisfy fresh preflight.
+Loss parsing also covers WPR's `dropped N events` stop message instead of
+depending solely on a decodable XPerf statistics report.
+
+The reviewed LF-normalized canonical profile SHA-256 is
+`57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40`.
+Each self-test additionally binds the SHA-256 of the exact materialized bytes
+passed to WPR, so Windows CRLF checkout identity remains explicit without
+changing the reviewed XML contract.
+
+This correction follows Microsoft's documented lost-event controls: use fewer
+profiles/providers, larger buffers, and more buffers. It does not ignore,
+waive, or reinterpret the retained loss. The failed capture remains
+observer-self-test evidence only, not the human Gate 4C verdict. No baseline,
+attestation, permit, Factorio process, or verdict exists.
+
+Pre-commit correction validation ran 34 focused Gate 4C evidence tests
+(32 passed; two host-privilege-dependent symlink cases skipped) and the
+complete 409-test Python matrix (315 intentional platform/tool skips). It also
+passed the retained external Windows Debug
+native matrix (47/47), strict/source-format/code-security/policy validation,
+the WPR profile parser, and the complete portable AIDE Lite test.

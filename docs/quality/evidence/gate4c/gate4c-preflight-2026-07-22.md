@@ -244,3 +244,86 @@ temporary root; no source-repository build tree was created. Its exact-root
 cleanup command was rejected by the command guard before deletion, so the
 owned `pr55-hardening-build` subtree remains retained with its ownership marker
 instead of being removed through a bypass.
+
+## Pre-baseline observer capacity correction
+
+The first capture with the coherent Windows Performance Toolkit completed, but
+the self-test disposition was correctly `inconclusive`. The broad built-in
+`GeneralProfile`, `FileIO`, and `Registry` combination generated a
+618,659,840-byte trace and WPR reported 77,091 dropped events. XPerf then
+refused to decode the incomplete trace. The per-domain attribution result was
+therefore false and no self-test proof could be accepted.
+
+The exact retained evidence is:
+
+```text
+result
+  E:\Temporary\FacMan\FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01\
+    observer-selftest\observer-self-test-20260723T115641Z-e511e514\
+    observer-self-test.json
+
+self-test digest
+  5f19f9d70f52bf82cc4bdac35936f000910ca83d5971fb86b9e7632b890650af
+
+self-test file SHA-256
+  69a12fd6da19b726ca438ef6c4e03fc0cc9dfe21590874ef608d1534619561d0
+
+trace SHA-256
+  c82a884fbbd9e1281159d7973fae468246af605bb1f86451564ff92d0acc1ac6
+```
+
+WPR post-stop status returned `WPR is not recording`. No baseline, quiet-host
+attestation, permit, Factorio process, or Gate 4C verdict was created. The
+capture directory remains preserved and must not be edited into a passing
+artifact.
+
+Microsoft documents that custom WPR profiles can select exact sessions,
+providers, keywords, buffer sizes, and buffer counts, and recommends fewer
+profiles/providers plus larger and additional buffers when avoiding lost
+events:
+
+- <https://learn.microsoft.com/en-us/windows-hardware/test/wpt/authoring-recording-profiles>
+- <https://learn.microsoft.com/en-us/windows-hardware/test/wpt/wpr-how-to-topics#avoid-lost-events>
+- <https://learn.microsoft.com/en-us/windows-hardware/test/wpt/logging-mode>
+
+The bounded correction adds one repository-owned custom profile. It uses one
+file-mode kernel collector, 1 MiB buffers, 256 buffers, and only these system
+keywords:
+
+```text
+ProcessThread
+FileIO
+FileIOInit
+Registry
+```
+
+It enables no stacks and no user-mode event providers. The profile's no-follow
+identity and SHA-256 join the repository tooling and provider bindings. The
+observer proof schema and provider revision advance to v3, invalidating all v2
+self-tests. WPR and XPerf loss output are combined so a stop-time
+`dropped N events` warning remains a closed failure even when the trace cannot
+be decoded.
+
+The reviewed LF-normalized canonical profile SHA-256 is
+`57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40`.
+The provider binding also records the exact SHA-256 of the materialized profile
+bytes supplied to WPR. This keeps Windows CRLF checkout identity explicit while
+the canonical reviewed XML identity remains cross-checkout deterministic.
+
+This is an observation-capacity/tooling correction before baseline. It changes
+neither the frozen policy nor runtime/candidate code, resources, permit scope,
+execution authority, or verdict law.
+
+Pre-commit validation passed:
+
+```text
+focused Gate 4C evidence tests     34 run; 32 passed, 2 privilege skips
+complete Python matrix             409 run; 315 intentional skips
+retained external native matrix    47/47 passed (Windows Debug)
+strict validation                  passed
+source-format validation           passed
+code-security validation           passed
+frozen-policy validation           passed; digest unchanged
+portable AIDE Lite                 passed
+WPR custom-profile validation      accepted by toolkit 10.0.26100
+```
