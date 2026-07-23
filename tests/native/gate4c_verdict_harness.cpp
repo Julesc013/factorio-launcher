@@ -35,13 +35,13 @@ namespace instance = facman::factorio::instance;
 namespace launch = facman::factorio::launch;
 namespace platform = facman::platform;
 
+#ifdef _WIN32
+
 constexpr const char* kSessionSchema = "factorio.gate4c_verdict_session.v1";
 constexpr const char* kComparisonSchema =
     "factorio.gate4c_baseline_comparison.v1";
 constexpr const char* kWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01";
-
-#ifdef _WIN32
 
 std::string digest(const std::string& value)
 {
