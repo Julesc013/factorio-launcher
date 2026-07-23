@@ -46,9 +46,10 @@ The preflight verified:
 The run is prohibited until all five blockers are resolved and a new preflight
 record is produced:
 
-1. `authenticated_source_evidence_missing`: the original installer/source
-   artifact is unavailable. The installed signed executable is not substituted
-   for the frozen policy's source-artifact evidence.
+1. `authenticated_source_evidence_missing`: at the time of this historical
+   preflight, no original installer/source artifact had been supplied to the
+   tool. The installed signed executable was not substituted for the frozen
+   policy's source-artifact evidence.
 2. `host_not_quiet`: Steam and Steam Web Helper processes are active.
 3. `observer_elevation_required`: the current medium-integrity session cannot
    enable the FileIO/Registry WPR profiles; the attempted self-test returned
@@ -137,6 +138,70 @@ Factorio process is allowed:
 These changes remain evidence tooling only. They do not alter runtime code, the
 frozen policy, the Gate 4B candidate, product authority, or the historic
 `blocked_before_baseline_or_permit` result above.
+
+## Pre-baseline source-package correction
+
+Blocker clearing subsequently located genuine Wube Factorio 2.0.77 Inno
+installers and the owned standalone Windows package in the operator's
+read-only source inventory. Both the base-game and Space Age installer loaders
+have valid Wube Authenticode signatures and appropriate product descriptions,
+but their PE `ProductVersion` and `FileVersion` resources are blank. The PR #55
+installer predicate therefore cannot establish their exact Factorio version.
+It correctly refuses them rather than trusting an unsigned filename, but that
+also makes the genuine installer route unusable.
+
+The owned standalone package provides a stronger non-executing evidence chain:
+
+```text
+source package:
+  E:\Inbox\factorio-space-age_win_2.0.77.zip
+  SHA-256:
+  ad36e0591e336400e731d5b400038e37c8361fdc71c76c0f6db96ee31741b4c2
+
+exact package member:
+  Factorio_2.0.77/bin/x64/factorio.exe
+  SHA-256:
+  d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b
+
+installed executable SHA-256:
+  d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b
+
+member signature:
+  valid Wube Software Ltd Authenticode
+  ProductVersion = 2.0.77
+  FileVersion = 2.0.77.84539
+```
+
+The bounded correction accepts this class only when:
+
+- the outer ZIP is an ordinary non-reparse file with an exact stable identity
+  and SHA-256 distinct from the installed executable, and its identity and
+  digest remain unchanged across inspection;
+- the archive has a bounded entry count, bounded uncompressed size and
+  expansion ratio, no encrypted entries, no duplicate or case-colliding names,
+  and no unsafe, absolute, traversal, backslash, alternate-stream, or symlink
+  entry;
+- there is exactly one
+  `Factorio_2.0.77/bin/x64/factorio.exe` and the base content marker is present;
+- a no-follow inspection copy under the exact Gate 4C task root matches that
+  ZIP member byte-for-byte and remains identity/content stable while its
+  signature is inspected;
+- the ZIP member matches the installed executable byte-for-byte;
+- the inspection copy has a valid Wube signature and exact 2.0.77 version
+  metadata.
+
+Space Age content is recorded as an observed package capability only.
+Installed or packaged content does not prove entitlement. The source package
+is never executed or installed, and the correction cannot capture a baseline,
+issue a permit, start Factorio, or record a verdict.
+
+Pre-commit correction validation passed 28 focused Gate 4C evidence tests
+(two host-privilege-dependent symlink cases skipped), the real 4.36 GiB source
+package inspection, the full native-backed Python matrix (403 tests passed
+with 9 intentional target/tool skips), the retained external native CTest
+matrix (47/47 passed), `strict_check.py`, and the portable AIDE Lite test. The
+real source inspection produced authentication-evidence digest
+`13d2b5953f8d57eee48e290bfc67058522102b3b10de709b27f4372a92af19c0`.
 
 The hardening diff passed 21 focused tests (two host-privilege-dependent
 symlink cases skipped, with an unconditional mocked reparse refusal also

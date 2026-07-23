@@ -22,8 +22,9 @@ import shutil
 import stat
 import subprocess
 import sys
+import zipfile
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -51,6 +52,10 @@ ATTESTATION_MAX_AGE_SECONDS = 600
 OBSERVER_SELF_TEST_MAX_AGE_SECONDS = 900
 MAX_FUTURE_SKEW_SECONDS = 30
 WINDOWS_REPARSE_ATTRIBUTE = 0x400
+MAX_SOURCE_PACKAGE_ENTRIES = 50_000
+MAX_SOURCE_PACKAGE_UNCOMPRESSED_BYTES = 16 * 1024 * 1024 * 1024
+MAX_SOURCE_PACKAGE_EXPANSION_RATIO = 20
+MAX_SOURCE_EXECUTABLE_BYTES = 256 * 1024 * 1024
 PROVIDER_SCOPED_REVIEWER = re.compile(
     r"^[a-z][a-z0-9._-]{1,63}:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$"
 )
@@ -192,6 +197,54 @@ def sha256_file(path: Path) -> str:
     finally:
         os.close(descriptor)
     return digest.hexdigest()
+
+
+def path_is_within(path: Path, root: Path) -> bool:
+    candidate = os.path.normcase(os.path.abspath(path))
+    boundary = os.path.normcase(os.path.abspath(root))
+    try:
+        return os.path.commonpath((candidate, boundary)) == boundary
+    except ValueError:
+        return False
+
+
+def safe_zip_member(info: zipfile.ZipInfo) -> bool:
+    name = info.filename
+    if not name or "\x00" in name or "\\" in name:
+        return False
+    parsed = PurePosixPath(name)
+    if parsed.is_absolute() or any(part in {"", ".", ".."} for part in parsed.parts):
+        return False
+    if any(":" in part for part in parsed.parts):
+        return False
+    normalized = parsed.as_posix() + ("/" if info.is_dir() else "")
+    if normalized != name:
+        return False
+    mode = (info.external_attr >> 16) & 0xFFFF
+    if mode and stat.S_ISLNK(mode):
+        return False
+    return not bool(info.flag_bits & 0x1)
+
+
+def sha256_zip_member(
+    archive: zipfile.ZipFile,
+    info: zipfile.ZipInfo,
+) -> tuple[str, int]:
+    if info.file_size > MAX_SOURCE_EXECUTABLE_BYTES:
+        raise PreflightError("source package executable exceeds the inspection limit")
+    digest = hashlib.sha256()
+    observed = 0
+    with archive.open(info, "r") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            observed += len(block)
+            if observed > MAX_SOURCE_EXECUTABLE_BYTES:
+                raise PreflightError(
+                    "source package executable exceeded the inspection limit"
+                )
+            digest.update(block)
+    if observed != info.file_size:
+        raise PreflightError("source package executable size changed during inspection")
+    return digest.hexdigest(), observed
 
 
 def run(args: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
@@ -664,22 +717,14 @@ def recognized_source_artifact(path: Path, signature: dict[str, Any]) -> bool:
     )
 
 
-def source_evidence(path: Path | None, installed_executable: Path | None = None) -> dict[str, Any]:
-    if path is None:
-        return {
-            "status": "missing",
-            "valid": False,
-            "reason": "operator_supplied_authenticated_wube_source_required",
-        }
-    audit = audit_no_follow(path, require_file=True)
-    if not audit["safe"]:
-        return {"status": "invalid", "valid": False, "path_audit": audit}
+def source_installer_evidence(
+    path: Path,
+    *,
+    audit: dict[str, Any],
+    installed_audit: dict[str, Any],
+    installed_executable: Path | None,
+) -> dict[str, Any]:
     signature = authenticode(path)
-    installed_audit = (
-        audit_no_follow(installed_executable, require_file=True)
-        if installed_executable is not None
-        else {"safe": False}
-    )
     artifact_hash = sha256_file(path)
     installed_hash = (
         sha256_file(installed_executable) if installed_audit.get("safe") else None
@@ -722,6 +767,328 @@ def source_evidence(path: Path | None, installed_executable: Path | None = None)
     record["status"] = "verified" if record["valid"] else "invalid"
     record["authentication_evidence_digest"] = digest_value(record)
     return record
+
+
+def source_package_evidence(
+    path: Path,
+    *,
+    audit: dict[str, Any],
+    installed_executable: Path | None,
+    installed_audit: dict[str, Any],
+    source_member_executable: Path | None,
+    task_root: Path | None,
+) -> dict[str, Any]:
+    artifact_hash = sha256_file(path)
+    source_identity = stable_identity_digest(audit)
+    installed_identity = stable_identity_digest(installed_audit)
+    installed_hash = (
+        sha256_file(installed_executable) if installed_audit.get("safe") else None
+    )
+    package_distinct = bool(
+        installed_identity
+        and source_identity
+        and source_identity != installed_identity
+        and artifact_hash != installed_hash
+    )
+    expected_member = (
+        f"Factorio_{EXPECTED_FACTORIO_VERSION}/bin/x64/factorio.exe"
+    )
+    expected_base = f"Factorio_{EXPECTED_FACTORIO_VERSION}/data/base/info.json"
+    expected_space_age = (
+        f"Factorio_{EXPECTED_FACTORIO_VERSION}/data/space-age/info.json"
+    )
+    package_structure: dict[str, Any] = {
+        "entry_count": 0,
+        "total_uncompressed_bytes": 0,
+        "expansion_ratio": None,
+        "directory_digest": None,
+        "expected_executable_member": expected_member,
+        "expected_executable_member_count": 0,
+        "unsafe_entry_count": 0,
+        "duplicate_entry_count": 0,
+        "encrypted_entry_count": 0,
+        "base_content_present": False,
+        "space_age_content_present": False,
+        "content_files_do_not_prove_entitlement": True,
+        "valid": False,
+    }
+    member_hash: str | None = None
+    member_size: int | None = None
+    package_reason = "package_not_inspected"
+    try:
+        with zipfile.ZipFile(path, "r") as archive:
+            entries = archive.infolist()
+            directory_records: list[dict[str, Any]] = []
+            names: dict[str, int] = {}
+            unsafe = 0
+            encrypted = 0
+            total_uncompressed = 0
+            expected_infos: list[zipfile.ZipInfo] = []
+            for info in entries:
+                folded = info.filename.casefold()
+                names[folded] = names.get(folded, 0) + 1
+                if not safe_zip_member(info):
+                    unsafe += 1
+                if info.flag_bits & 0x1:
+                    encrypted += 1
+                total_uncompressed += info.file_size
+                if info.filename == expected_member:
+                    expected_infos.append(info)
+                directory_records.append(
+                    {
+                        "name": info.filename,
+                        "size": info.file_size,
+                        "compressed_size": info.compress_size,
+                        "crc32": f"{info.CRC:08x}",
+                        "compression": info.compress_type,
+                        "flags": info.flag_bits,
+                        "external_attributes": info.external_attr,
+                    }
+                )
+            duplicates = sum(count - 1 for count in names.values() if count > 1)
+            expansion_ratio = total_uncompressed / max(audit.get("size", 0), 1)
+            package_structure.update(
+                {
+                    "entry_count": len(entries),
+                    "total_uncompressed_bytes": total_uncompressed,
+                    "expansion_ratio": expansion_ratio,
+                    "directory_digest": digest_value(
+                        sorted(
+                            directory_records,
+                            key=lambda item: (
+                                str(item["name"]).casefold(),
+                                str(item["name"]),
+                            ),
+                        )
+                    ),
+                    "expected_executable_member_count": len(expected_infos),
+                    "unsafe_entry_count": unsafe,
+                    "duplicate_entry_count": duplicates,
+                    "encrypted_entry_count": encrypted,
+                    "base_content_present": names.get(expected_base.casefold(), 0) == 1,
+                    "space_age_content_present": (
+                        names.get(expected_space_age.casefold(), 0) == 1
+                    ),
+                }
+            )
+            structure_valid = (
+                0 < len(entries) <= MAX_SOURCE_PACKAGE_ENTRIES
+                and total_uncompressed <= MAX_SOURCE_PACKAGE_UNCOMPRESSED_BYTES
+                and expansion_ratio <= MAX_SOURCE_PACKAGE_EXPANSION_RATIO
+                and unsafe == 0
+                and duplicates == 0
+                and encrypted == 0
+                and len(expected_infos) == 1
+                and package_structure["base_content_present"]
+            )
+            if structure_valid:
+                member_hash, member_size = sha256_zip_member(
+                    archive, expected_infos[0]
+                )
+                package_reason = "ok"
+            else:
+                package_reason = "source_package_structure_invalid"
+            package_structure["valid"] = structure_valid
+    except (
+        OSError,
+        RuntimeError,
+        NotImplementedError,
+        PreflightError,
+        zipfile.BadZipFile,
+        zipfile.LargeZipFile,
+    ) as exc:
+        package_reason = f"source_package_inspection_failed:{type(exc).__name__}"
+
+    member_audit = (
+        audit_no_follow(source_member_executable, require_file=True)
+        if source_member_executable is not None
+        else {"safe": False, "reason": "source_package_member_inspection_required"}
+    )
+    member_within_task = bool(
+        source_member_executable is not None
+        and task_root is not None
+        and path_is_within(source_member_executable, task_root)
+    )
+    inspected_member_hash = (
+        sha256_file(source_member_executable) if member_audit.get("safe") else None
+    )
+    member_signature = (
+        authenticode(source_member_executable)
+        if member_audit.get("safe") and member_within_task
+        else {
+            "available": False,
+            "valid": False,
+            "reason": (
+                "source_package_member_outside_task_root"
+                if member_audit.get("safe")
+                else member_audit.get("reason")
+            ),
+        }
+    )
+    post_audit = audit_no_follow(path, require_file=True)
+    post_artifact_hash = sha256_file(path) if post_audit.get("safe") else None
+    package_stable_during_inspection = bool(
+        post_audit.get("safe")
+        and stable_identity_digest(post_audit) == source_identity
+        and post_artifact_hash == artifact_hash
+    )
+    post_member_audit = (
+        audit_no_follow(source_member_executable, require_file=True)
+        if source_member_executable is not None
+        else {"safe": False, "reason": "source_package_member_inspection_required"}
+    )
+    post_member_hash = (
+        sha256_file(source_member_executable)
+        if post_member_audit.get("safe")
+        else None
+    )
+    member_stable_during_inspection = bool(
+        member_audit.get("safe")
+        and post_member_audit.get("safe")
+        and stable_identity_digest(member_audit)
+        == stable_identity_digest(post_member_audit)
+        and inspected_member_hash == post_member_hash
+    )
+    inspection_matches_package = bool(
+        member_hash
+        and inspected_member_hash
+        and member_hash == inspected_member_hash
+        and member_size == member_audit.get("size")
+    )
+    member_matches_installed = bool(
+        member_hash and installed_hash and member_hash == installed_hash
+    )
+    exact_version = exact_factorio_version(member_signature)
+    artifact_class_valid = bool(
+        package_structure["valid"]
+        and package_stable_during_inspection
+        and member_within_task
+        and member_stable_during_inspection
+        and inspection_matches_package
+        and member_matches_installed
+        and member_signature.get("valid") is True
+        and exact_version
+    )
+    failure_reason = package_reason
+    if package_reason == "ok":
+        if not package_stable_during_inspection:
+            failure_reason = "source_package_changed_during_inspection"
+        elif not member_audit.get("safe"):
+            failure_reason = str(
+                member_audit.get(
+                    "reason", "source_package_member_inspection_required"
+                )
+            )
+        elif not member_within_task:
+            failure_reason = "source_package_member_outside_task_root"
+        elif not member_stable_during_inspection:
+            failure_reason = "source_package_member_changed_during_inspection"
+        elif not inspection_matches_package:
+            failure_reason = "source_package_member_inspection_mismatch"
+        elif not member_matches_installed:
+            failure_reason = "source_package_member_does_not_match_installed"
+        elif member_signature.get("valid") is not True:
+            failure_reason = "source_package_member_authentication_failed"
+        elif not exact_version:
+            failure_reason = "source_package_member_version_mismatch"
+    record = {
+        "status": "invalid",
+        "reason": failure_reason,
+        "evidence_origin": "operator_supplied",
+        "source_artifact_kind": (
+            "wube_windows_standalone_package"
+            if artifact_class_valid
+            else "unrecognized"
+        ),
+        "path_audit": audit,
+        "stable_identity_digest": source_identity,
+        "artifact_sha256": artifact_hash,
+        "inspection_stability": {
+            "post_path_audit": post_audit,
+            "post_sha256": post_artifact_hash,
+            "stable": package_stable_during_inspection,
+        },
+        "package_structure": package_structure,
+        "source_member": {
+            "archive_path": expected_member,
+            "sha256": member_hash,
+            "bytes": member_size,
+            "inspection_copy": {
+                "path_audit": member_audit,
+                "within_gate4c_task_root": member_within_task,
+                "sha256": inspected_member_hash,
+                "matches_archive_member": inspection_matches_package,
+                "post_path_audit": post_member_audit,
+                "post_sha256": post_member_hash,
+                "stable": member_stable_during_inspection,
+            },
+            "signature": member_signature,
+        },
+        "installed_executable_comparison": {
+            "path_audit": installed_audit,
+            "stable_identity_digest": installed_identity,
+            "sha256": installed_hash,
+            "distinct_stable_identity_and_content": package_distinct,
+            "package_member_matches_installed_executable": member_matches_installed,
+        },
+        "artifact_class_valid": artifact_class_valid,
+        "exact_version": exact_version,
+        "expected_version": EXPECTED_FACTORIO_VERSION,
+    }
+    record["valid"] = bool(
+        artifact_class_valid
+        and package_distinct
+    )
+    record["status"] = "verified" if record["valid"] else "invalid"
+    if record["valid"]:
+        record["reason"] = "ok"
+    record["authentication_evidence_digest"] = digest_value(record)
+    return record
+
+
+def source_evidence(
+    path: Path | None,
+    installed_executable: Path | None = None,
+    *,
+    source_member_executable: Path | None = None,
+    task_root: Path | None = None,
+) -> dict[str, Any]:
+    if path is None:
+        return {
+            "status": "missing",
+            "valid": False,
+            "reason": "operator_supplied_authenticated_wube_source_required",
+        }
+    audit = audit_no_follow(path, require_file=True)
+    if not audit["safe"]:
+        return {"status": "invalid", "valid": False, "path_audit": audit}
+    installed_audit = (
+        audit_no_follow(installed_executable, require_file=True)
+        if installed_executable is not None
+        else {"safe": False}
+    )
+    if path.suffix.casefold() == ".zip":
+        return source_package_evidence(
+            path,
+            audit=audit,
+            installed_executable=installed_executable,
+            installed_audit=installed_audit,
+            source_member_executable=source_member_executable,
+            task_root=task_root,
+        )
+    if source_member_executable is not None:
+        return {
+            "status": "invalid",
+            "valid": False,
+            "reason": "source_member_only_valid_for_source_package",
+            "path_audit": audit,
+        }
+    return source_installer_evidence(
+        path,
+        audit=audit,
+        installed_audit=installed_audit,
+        installed_executable=installed_executable,
+    )
 
 
 def factorio_evidence(path: Path) -> dict[str, Any]:
@@ -913,6 +1280,12 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
     source = source_evidence(
         Path(args.source_artifact) if args.source_artifact else None,
         factorio,
+        source_member_executable=(
+            Path(args.source_member_executable)
+            if args.source_member_executable
+            else None
+        ),
+        task_root=task_root,
     )
     instance = instance_evidence(facman, workspace, args.instance_id)
     processes = process_inventory()
@@ -1058,6 +1431,14 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--instance-id", default=EXPECTED_INSTANCE_ID)
     value.add_argument("--factorio-exe", required=True, type=Path)
     value.add_argument("--source-artifact", type=Path)
+    value.add_argument(
+        "--source-member-executable",
+        type=Path,
+        help=(
+            "Task-root inspection copy of the exact signed Factorio executable "
+            "inside a portable source package"
+        ),
+    )
     value.add_argument("--observer-self-test", type=Path)
     value.add_argument("--operator-attestation", type=Path)
     value.add_argument("--out", required=True, type=Path)

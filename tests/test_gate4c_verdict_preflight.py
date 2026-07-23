@@ -8,6 +8,7 @@ import importlib.util
 import json
 import tempfile
 import unittest
+import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
@@ -174,6 +175,354 @@ class Gate4CVerdictPreflightTests(unittest.TestCase):
                 return_value=self.source_signature(valid=False),
             ):
                 self.assertFalse(PREFLIGHT.source_evidence(source, installed)["valid"])
+
+    def test_genuine_installer_without_version_resources_remains_unverified(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            installed = root / "factorio.exe"
+            source = root / "Setup_Factorio_2.0.77.exe"
+            installed.write_bytes(b"installed")
+            source.write_bytes(b"installer")
+            signature = self.source_signature()
+            signature["product_version"] = ""
+            signature["file_version"] = ""
+            with mock.patch.object(
+                PREFLIGHT, "authenticode", return_value=signature
+            ):
+                result = PREFLIGHT.source_evidence(source, installed)
+            self.assertFalse(result["valid"])
+            self.assertFalse(result["exact_version"])
+
+    def test_signed_portable_package_binds_exact_installed_executable(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / PREFLIGHT.WORK_UNIT
+            inspection = task_root / "source" / "inspection" / "factorio.exe"
+            inspection.parent.mkdir(parents=True)
+            installed = root / "installed" / "factorio.exe"
+            installed.parent.mkdir()
+            package = root / "factorio-space-age_win_2.0.77.zip"
+            executable = b"signed exact Factorio executable"
+            installed.write_bytes(executable)
+            inspection.write_bytes(executable)
+            with zipfile.ZipFile(package, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe", executable
+                )
+                archive.writestr(
+                    "Factorio_2.0.77/data/base/info.json", b'{"name":"base"}'
+                )
+                archive.writestr(
+                    "Factorio_2.0.77/data/space-age/info.json",
+                    b'{"name":"space-age"}',
+                )
+            signature = self.source_signature(
+                original_filename="factorio.exe", description="Factorio"
+            )
+            with mock.patch.object(
+                PREFLIGHT, "authenticode", return_value=signature
+            ):
+                result = PREFLIGHT.source_evidence(
+                    package,
+                    installed,
+                    source_member_executable=inspection,
+                    task_root=task_root,
+                )
+            self.assertTrue(result["valid"])
+            self.assertEqual(
+                "wube_windows_standalone_package",
+                result["source_artifact_kind"],
+            )
+            self.assertTrue(result["package_structure"]["base_content_present"])
+            self.assertTrue(result["package_structure"]["space_age_content_present"])
+            self.assertTrue(
+                result["package_structure"][
+                    "content_files_do_not_prove_entitlement"
+                ]
+            )
+            self.assertTrue(
+                result["source_member"]["inspection_copy"][
+                    "matches_archive_member"
+                ]
+            )
+            self.assertTrue(
+                result["installed_executable_comparison"][
+                    "package_member_matches_installed_executable"
+                ]
+            )
+
+    def test_portable_package_refuses_unbound_or_mismatched_member(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / PREFLIGHT.WORK_UNIT
+            task_root.mkdir()
+            installed = root / "factorio.exe"
+            installed.write_bytes(b"expected executable")
+            package = root / "factorio_win_2.0.77.zip"
+            with zipfile.ZipFile(package, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe",
+                    b"expected executable",
+                )
+                archive.writestr(
+                    "Factorio_2.0.77/data/base/info.json", b'{"name":"base"}'
+                )
+            signature = self.source_signature(
+                original_filename="factorio.exe", description="Factorio"
+            )
+            with mock.patch.object(
+                PREFLIGHT, "authenticode", return_value=signature
+            ):
+                missing = PREFLIGHT.source_evidence(
+                    package, installed, task_root=task_root
+                )
+            self.assertFalse(missing["valid"])
+
+            inspection = task_root / "factorio.exe"
+            inspection.write_bytes(b"different executable")
+            with mock.patch.object(
+                PREFLIGHT, "authenticode", return_value=signature
+            ):
+                mismatch = PREFLIGHT.source_evidence(
+                    package,
+                    installed,
+                    source_member_executable=inspection,
+                    task_root=task_root,
+                )
+            self.assertFalse(mismatch["valid"])
+            self.assertFalse(
+                mismatch["source_member"]["inspection_copy"][
+                    "matches_archive_member"
+                ]
+            )
+
+    def test_portable_package_refuses_wrong_version_and_unsafe_structure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / PREFLIGHT.WORK_UNIT
+            task_root.mkdir()
+            installed = root / "factorio.exe"
+            inspection = task_root / "factorio.exe"
+            executable = b"expected executable"
+            installed.write_bytes(executable)
+            inspection.write_bytes(executable)
+            package = root / "factorio_win_2.0.77.zip"
+            with zipfile.ZipFile(package, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe", executable
+                )
+                archive.writestr(
+                    "Factorio_2.0.77/data/base/info.json", b'{"name":"base"}'
+                )
+            wrong_version = self.source_signature(
+                product_version="2.0.76",
+                original_filename="factorio.exe",
+                description="Factorio",
+            )
+            with mock.patch.object(
+                PREFLIGHT, "authenticode", return_value=wrong_version
+            ):
+                version_result = PREFLIGHT.source_evidence(
+                    package,
+                    installed,
+                    source_member_executable=inspection,
+                    task_root=task_root,
+                )
+            self.assertFalse(version_result["valid"])
+            self.assertFalse(version_result["artifact_class_valid"])
+            self.assertFalse(version_result["exact_version"])
+            self.assertEqual(
+                "source_package_member_version_mismatch",
+                version_result["reason"],
+            )
+
+            unsafe_package = root / "factorio_win_2.0.77-unsafe.zip"
+            with zipfile.ZipFile(
+                unsafe_package, "w", zipfile.ZIP_DEFLATED
+            ) as archive:
+                archive.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe", executable
+                )
+                archive.writestr(
+                    "Factorio_2.0.77/data/base/info.json", b'{"name":"base"}'
+                )
+                archive.writestr("../outside.txt", b"unsafe")
+            signature = self.source_signature(
+                original_filename="factorio.exe", description="Factorio"
+            )
+            with mock.patch.object(
+                PREFLIGHT, "authenticode", return_value=signature
+            ):
+                unsafe_result = PREFLIGHT.source_evidence(
+                    unsafe_package,
+                    installed,
+                    source_member_executable=inspection,
+                    task_root=task_root,
+                )
+            self.assertFalse(unsafe_result["valid"])
+            self.assertFalse(unsafe_result["artifact_class_valid"])
+            self.assertEqual(
+                1, unsafe_result["package_structure"]["unsafe_entry_count"]
+            )
+            self.assertEqual(
+                "source_package_structure_invalid",
+                unsafe_result["reason"],
+            )
+
+    def test_portable_package_refuses_case_colliding_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / PREFLIGHT.WORK_UNIT
+            task_root.mkdir()
+            installed = root / "factorio.exe"
+            inspection = task_root / "factorio.exe"
+            package = root / "factorio_win_2.0.77.zip"
+            executable = b"expected executable"
+            installed.write_bytes(executable)
+            inspection.write_bytes(executable)
+            with zipfile.ZipFile(package, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe", executable
+                )
+                archive.writestr(
+                    "Factorio_2.0.77/data/base/info.json", b'{"name":"base"}'
+                )
+                archive.writestr(
+                    "factorio_2.0.77/DATA/BASE/INFO.JSON", b"collision"
+                )
+            signature = self.source_signature(
+                original_filename="factorio.exe", description="Factorio"
+            )
+            with mock.patch.object(
+                PREFLIGHT, "authenticode", return_value=signature
+            ):
+                result = PREFLIGHT.source_evidence(
+                    package,
+                    installed,
+                    source_member_executable=inspection,
+                    task_root=task_root,
+                )
+            self.assertFalse(result["valid"])
+            self.assertEqual(
+                1, result["package_structure"]["duplicate_entry_count"]
+            )
+
+    def test_portable_package_member_inspection_must_be_task_owned(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / PREFLIGHT.WORK_UNIT
+            task_root.mkdir()
+            installed = root / "factorio.exe"
+            inspection = root / "outside-task-factorio.exe"
+            package = root / "factorio_win_2.0.77.zip"
+            executable = b"expected executable"
+            installed.write_bytes(executable)
+            inspection.write_bytes(executable)
+            with zipfile.ZipFile(package, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe", executable
+                )
+                archive.writestr(
+                    "Factorio_2.0.77/data/base/info.json", b'{"name":"base"}'
+                )
+            signature = self.source_signature(
+                original_filename="factorio.exe", description="Factorio"
+            )
+            with mock.patch.object(
+                PREFLIGHT, "authenticode", return_value=signature
+            ):
+                result = PREFLIGHT.source_evidence(
+                    package,
+                    installed,
+                    source_member_executable=inspection,
+                    task_root=task_root,
+                )
+            self.assertFalse(result["valid"])
+            self.assertFalse(
+                result["source_member"]["inspection_copy"][
+                    "within_gate4c_task_root"
+                ]
+            )
+
+    def test_portable_package_refuses_source_or_member_drift_during_inspection(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / PREFLIGHT.WORK_UNIT
+            task_root.mkdir()
+            installed = root / "factorio.exe"
+            inspection = task_root / "factorio.exe"
+            package = root / "factorio_win_2.0.77.zip"
+            executable = b"expected executable"
+            executable_hash = hashlib.sha256(executable).hexdigest()
+            installed.write_bytes(executable)
+            inspection.write_bytes(executable)
+            with zipfile.ZipFile(package, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe", executable
+                )
+                archive.writestr(
+                    "Factorio_2.0.77/data/base/info.json", b'{"name":"base"}'
+                )
+            signature = self.source_signature(
+                original_filename="factorio.exe", description="Factorio"
+            )
+            with (
+                mock.patch.object(
+                    PREFLIGHT, "authenticode", return_value=signature
+                ),
+                mock.patch.object(
+                    PREFLIGHT,
+                    "sha256_file",
+                    side_effect=[
+                        "package-before",
+                        executable_hash,
+                        executable_hash,
+                        "package-after",
+                        executable_hash,
+                    ],
+                ),
+            ):
+                source_drift = PREFLIGHT.source_evidence(
+                    package,
+                    installed,
+                    source_member_executable=inspection,
+                    task_root=task_root,
+                )
+            self.assertFalse(source_drift["valid"])
+            self.assertEqual(
+                "source_package_changed_during_inspection",
+                source_drift["reason"],
+            )
+
+            with (
+                mock.patch.object(
+                    PREFLIGHT, "authenticode", return_value=signature
+                ),
+                mock.patch.object(
+                    PREFLIGHT,
+                    "sha256_file",
+                    side_effect=[
+                        "package-stable",
+                        executable_hash,
+                        executable_hash,
+                        "package-stable",
+                        "member-after",
+                    ],
+                ),
+            ):
+                member_drift = PREFLIGHT.source_evidence(
+                    package,
+                    installed,
+                    source_member_executable=inspection,
+                    task_root=task_root,
+                )
+            self.assertFalse(member_drift["valid"])
+            self.assertEqual(
+                "source_package_member_changed_during_inspection",
+                member_drift["reason"],
+            )
 
     def test_source_reparse_path_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -41,3 +41,20 @@ no deletion workaround was attempted.
 
 This is not a human `Pass`, `Fail`, or `Inconclusive` verdict. Gate 4C remains
 active and product Play remains unavailable.
+
+## Source-package correction before baseline
+
+Blocker clearing found genuine Wube 2.0.77 Inno installers, but their signed
+loader executables contain blank PE product/file version resources. Trusting
+their filenames would weaken the merged predicate, so they remain unverified.
+
+The owned standalone ZIP package contains one exact Wube-signed Factorio
+2.0.77 executable. Its member SHA-256 equals the selected installed executable
+SHA-256, while the outer package has its own distinct stable identity and
+digest. The bounded correction branch adds static, no-follow, size-limited ZIP
+inspection and binds a task-owned inspection copy to the archive member and
+installed executable.
+
+This correction was opened before baseline capture. The historic blocked
+packet remains unchanged. No permit was issued, no Factorio process started,
+and the verdict remains unset.
