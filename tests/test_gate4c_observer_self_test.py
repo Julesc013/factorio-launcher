@@ -82,15 +82,10 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
         *,
         now: datetime,
     ) -> dict[str, object]:
-        def which(name: str) -> str | None:
-            return {
-                "wpr.exe": "C:\\tools\\wpr.exe",
-                "wpr": None,
-                "xperf.exe": "C:\\tools\\xperf.exe",
-                "xperf": None,
-                "wpaexporter.exe": "C:\\tools\\wpaexporter.exe",
-                "wpaexporter": None,
-            }.get(name)
+        toolkit = path.parent / "observer-tools"
+        toolkit.mkdir(exist_ok=True)
+        for name in ("wpr.exe", "xperf.exe", "wpaexporter.exe"):
+            (toolkit / name).write_bytes(name.encode("utf-8"))
 
         def tool_identity(value: str | Path | None) -> dict[str, object]:
             stem = Path(str(value).replace("\\", "/")).stem.casefold()
@@ -100,7 +95,11 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             ["wpr", "-status"], 0, "WPR is not recording", ""
         )
         with (
-            mock.patch.object(OBSERVER.PREFLIGHT.shutil, "which", side_effect=which),
+            mock.patch.object(
+                OBSERVER.PREFLIGHT,
+                "WINDOWS_PERFORMANCE_TOOLKIT_ROOT",
+                toolkit,
+            ),
             mock.patch.object(OBSERVER.PREFLIGHT, "run", return_value=status),
             mock.patch.object(
                 OBSERVER.PREFLIGHT, "repository_tool_identity", return_value=tooling
@@ -118,6 +117,100 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
                 session=session,
                 now=now,
             )
+
+    def test_observer_tool_selection_prefers_one_complete_toolkit_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for name in ("wpr.exe", "xperf.exe", "wpaexporter.exe"):
+                (root / name).write_bytes(name.encode("utf-8"))
+            with (
+                mock.patch.object(
+                    OBSERVER.PREFLIGHT,
+                    "WINDOWS_PERFORMANCE_TOOLKIT_ROOT",
+                    root,
+                ),
+                mock.patch.object(
+                    OBSERVER.PREFLIGHT.shutil,
+                    "which",
+                    return_value=r"C:\Windows\System32\wpr.exe",
+                ),
+            ):
+                paths = OBSERVER.PREFLIGHT.observer_tool_paths()
+            self.assertEqual(str(root / "wpr.exe"), paths["wpr"])
+            self.assertEqual(str(root / "xperf.exe"), paths["xperf"])
+            self.assertEqual(str(root / "wpaexporter.exe"), paths["wpaexporter"])
+            self.assertTrue(
+                OBSERVER.PREFLIGHT.observer_toolchain_coherent(paths)
+            )
+
+    def test_observer_tool_selection_refuses_incomplete_toolkit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "wpr.exe").write_bytes(b"wpr")
+            with (
+                mock.patch.object(
+                    OBSERVER.PREFLIGHT,
+                    "WINDOWS_PERFORMANCE_TOOLKIT_ROOT",
+                    root,
+                ),
+                mock.patch.object(
+                    OBSERVER.PREFLIGHT.shutil,
+                    "which",
+                    return_value=r"C:\Windows\System32\wpr.exe",
+                ),
+            ):
+                paths = OBSERVER.PREFLIGHT.observer_tool_paths()
+            self.assertEqual(
+                {"wpr": None, "xperf": None, "wpaexporter": None},
+                paths,
+            )
+            self.assertFalse(
+                OBSERVER.PREFLIGHT.observer_toolchain_coherent(paths)
+            )
+
+    def test_observer_tool_selection_refuses_mixed_roots(self) -> None:
+        paths = {
+            "wpr": r"C:\Windows\System32\wpr.exe",
+            "xperf": (
+                r"C:\Program Files (x86)\Windows Kits\10"
+                r"\Windows Performance Toolkit\xperf.exe"
+            ),
+            "wpaexporter": (
+                r"C:\Program Files (x86)\Windows Kits\10"
+                r"\Windows Performance Toolkit\wpaexporter.exe"
+            ),
+        }
+        self.assertFalse(
+            OBSERVER.PREFLIGHT.observer_toolchain_coherent(paths)
+        )
+
+    def test_wpr_status_requires_successful_not_recording_result(self) -> None:
+        self.assertTrue(
+            OBSERVER.wpr_is_not_recording(
+                subprocess.CompletedProcess(
+                    ["wpr", "-status"],
+                    0,
+                    "WPR is not recording",
+                    "",
+                )
+            )
+        )
+        for result in (
+            subprocess.CompletedProcess(
+                ["wpr", "-status"],
+                1,
+                "WPR is not recording",
+                "",
+            ),
+            subprocess.CompletedProcess(
+                ["wpr", "-status"],
+                0,
+                "WPR recording is active",
+                "",
+            ),
+        ):
+            with self.subTest(result=result):
+                self.assertFalse(OBSERVER.wpr_is_not_recording(result))
 
     def test_lost_event_parser_is_closed_on_unknown_format(self) -> None:
         self.assertIsNone(OBSERVER.parse_lost_events("trace complete without a count"))

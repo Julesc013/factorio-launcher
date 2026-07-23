@@ -58,3 +58,23 @@ installed executable.
 This correction was opened before baseline capture. The historic blocked
 packet remains unchanged. No permit was issued, no Factorio process started,
 and the verdict remains unset.
+
+## Observer toolchain correction before baseline
+
+Two elevated self-test attempts after the required restart failed before
+producing a self-test record. The second attempt reached WPR stop and returned
+`RPC_E_CHANGED_MODE (0x80010106)`. WPR cleanup left no active recording, but
+the attempt remains incomplete and cannot satisfy preflight.
+
+Inspection found that PATH selected the inbox Windows WPR `10.0.19041.7548`
+while XPerf and WPAExporter came from the installed Windows Performance
+Toolkit. The complete toolkit also contains WPR `10.0.26100.7705`. The bounded
+correction therefore selects all three observer tools from that one exact
+toolkit root and refuses mixed-root toolchains. It also rechecks WPR status
+after stop and retains cleanup responsibility until WPR proves that recording
+has ended.
+
+This remains a pre-baseline evidence-tool correction. The incomplete ETW
+attempt directories are preserved, no baseline has been captured, no permit
+has been issued, no Factorio process has started, and the verdict remains
+unset.

@@ -11,7 +11,6 @@ import importlib.util
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import time
@@ -32,15 +31,6 @@ SPEC.loader.exec_module(PREFLIGHT)
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-
-
-def tool(name: str, fallback: str | None = None) -> str:
-    value = shutil.which(name)
-    if value:
-        return value
-    if fallback and Path(fallback).is_file():
-        return fallback
-    raise PREFLIGHT.PreflightError(f"required observer tool is unavailable: {name}")
 
 
 def command(args: list[str], *, timeout: int = 180) -> subprocess.CompletedProcess[str]:
@@ -65,6 +55,12 @@ def parse_lost_events(stats: str) -> int | None:
     for pattern in patterns:
         values.extend(int(item) for item in re.findall(pattern, stats, flags=re.IGNORECASE))
     return max(values) if values else None
+
+
+def wpr_is_not_recording(result: subprocess.CompletedProcess[str]) -> bool:
+    return result.returncode == 0 and "is not recording" in (
+        result.stdout + result.stderr
+    ).casefold()
 
 
 def normalize_trace_text(value: str) -> str:
@@ -208,15 +204,14 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
     if not task_audit["safe"] or task_root.name != PREFLIGHT.WORK_UNIT:
         raise PREFLIGHT.PreflightError("the self-test root must be the exact Gate 4C task root")
 
-    wpr = tool("wpr.exe")
-    xperf = tool(
-        "xperf.exe",
-        r"C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\xperf.exe",
-    )
-    wpaexporter = tool(
-        "wpaexporter.exe",
-        r"C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\wpaexporter.exe",
-    )
+    observer_paths = PREFLIGHT.observer_tool_paths()
+    if not PREFLIGHT.observer_toolchain_coherent(observer_paths):
+        raise PREFLIGHT.PreflightError(
+            "observer tools must come from one coherent Windows Performance Toolkit root"
+        )
+    wpr = str(observer_paths["wpr"])
+    xperf = str(observer_paths["xperf"])
+    wpaexporter = str(observer_paths["wpaexporter"])
     host_session = PREFLIGHT.host_session_identity()
     tooling = PREFLIGHT.repository_tool_identity(ROOT)
     observer_tools = {
@@ -231,7 +226,7 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
     if not all(item.get("valid") for item in observer_tools.values()):
         raise PREFLIGHT.PreflightError("observer tool identity could not be hash-closed")
     status = command([wpr, "-status"])
-    if status.returncode != 0 or "is not recording" not in (status.stdout + status.stderr).lower():
+    if not wpr_is_not_recording(status):
         raise PREFLIGHT.PreflightError("WPR already has an active or indeterminate recording")
 
     run_id = f"observer-self-test-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
@@ -293,8 +288,22 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         stop_args = [wpr, "-stop", str(trace), "FacMan Gate 4C observer self-test", "-skipPdbGen"]
         stop = command(stop_args, timeout=300)
         commands.append({"args": stop_args, "returncode": stop.returncode, "stdout": stop.stdout, "stderr": stop.stderr})
-        started = False
-        if stop.returncode != 0 or not trace.is_file():
+        post_stop_status = command([wpr, "-status"])
+        commands.append(
+            {
+                "args": [wpr, "-status"],
+                "returncode": post_stop_status.returncode,
+                "stdout": post_stop_status.stdout,
+                "stderr": post_stop_status.stderr,
+            }
+        )
+        if wpr_is_not_recording(post_stop_status):
+            started = False
+        if (
+            stop.returncode != 0
+            or not trace.is_file()
+            or not wpr_is_not_recording(post_stop_status)
+        ):
             raise PREFLIGHT.PreflightError(f"WPR stop failed: {stop.stderr or stop.stdout}")
     finally:
         if started:

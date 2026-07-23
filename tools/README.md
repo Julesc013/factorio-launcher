@@ -40,5 +40,8 @@ Gate 4C evidence tools:
   binds the current machine/boot, exact FacMan tooling commit and script hashes,
   WPR/XPerf/WPAExporter identities, and its trace/dump/stats hashes. File,
   Registry, and child-process events must each match the expected PID and event
-  class. Self-tests expire after 15 minutes. The tool exercises only task-owned
-  probe state and cannot start Factorio or record a human verdict.
+  class. All three executables must come from one coherent Windows Performance
+  Toolkit root; a PATH-selected system WPR mixed with toolkit decoders is
+  refused. WPR status is rechecked after stop before cleanup responsibility is
+  released. Self-tests expire after 15 minutes. The tool exercises only
+  task-owned probe state and cannot start Factorio or record a human verdict.

@@ -203,6 +203,37 @@ matrix (47/47 passed), `strict_check.py`, and the portable AIDE Lite test. The
 real source inspection produced authentication-evidence digest
 `13d2b5953f8d57eee48e290bfc67058522102b3b10de709b27f4372a92af19c0`.
 
+## Pre-baseline observer toolchain correction
+
+After the source blocker cleared, the operator restarted Windows and invoked
+the elevated observer self-test. No self-test passed:
+
+- the first attempt did not produce a result and left only incomplete
+  task-owned ETW staging data;
+- the next attempt reached WPR stop, which returned
+  `RPC_E_CHANGED_MODE (0x80010106): Cannot change thread mode after it is set`;
+- the cleanup path left `wpr -status` reporting `WPR is not recording`;
+- neither attempt produced `observer-self-test.json`, and neither can be used
+  as evidence.
+
+The selected tools were not one coherent installation. PATH resolved WPR to
+`C:\Windows\System32\wpr.exe` version `10.0.19041.7548`, while XPerf and
+WPAExporter resolved from the installed Windows Performance Toolkit. That
+toolkit contains its own WPR version `10.0.26100.7705`.
+
+The bounded correction now prefers the complete Windows Performance Toolkit
+root for WPR, XPerf, and WPAExporter together. A partial or mixed-root
+toolchain is refused. After `wpr -stop`, the self-test independently runs
+`wpr -status`; cleanup responsibility is retained until status proves that
+recording has ended. The exact selected executable identities and hashes
+remain bound into the self-test and are independently revalidated by
+preflight.
+
+This correction changes evidence tooling only. It does not change the frozen
+policy, runtime, candidate, protected or writable resources, permit scope,
+Factorio execution, or verdict law. No baseline, permit, Factorio process, or
+human verdict existed when the defect was found.
+
 The hardening diff passed 21 focused tests (two host-privilege-dependent
 symlink cases skipped, with an unconditional mocked reparse refusal also
 passing), `source_format_check.py`, `strict_check.py`, and the portable AIDE
