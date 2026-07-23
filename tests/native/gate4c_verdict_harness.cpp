@@ -41,6 +41,8 @@ constexpr const char* kComparisonSchema =
 constexpr const char* kWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01";
 
+#ifdef _WIN32
+
 std::string digest(const std::string& value)
 {
     return facman::base::sha256_hex_bytes(
@@ -72,6 +74,8 @@ std::string stable_read(const fs::path& path, std::size_t maximum_bytes)
     }
     return output;
 }
+
+#endif
 
 const json::Value& require_member(const json::Value& object, const char* key)
 {
