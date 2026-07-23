@@ -26,11 +26,15 @@ Gate 4C evidence tools:
 - `gate4c_verdict_preflight.py` creates a hash-closed, non-executing preflight
   record for the exact frozen Windows x64 / Factorio 2.0.77 / standalone /
   menu / hermetic candidate. Missing source, observer, host, repository, or
-  instance evidence is a blocker. Source evidence must be a recognized,
-  operator-supplied Wube installer with a stable identity and content digest
-  distinct from the installed executable. Quiet-host attestations expire after
-  10 minutes and bind the current machine, boot, observer proof, and host-state
-  digest. The tool cannot issue a permit or start a process.
+  instance evidence is a blocker. Source evidence must be either a recognized,
+  exact-version Wube installer or an operator-supplied standalone ZIP package
+  containing the exact installed executable. Portable packages are bounded and
+  structurally inspected; the task-owned inspection copy must match the package
+  member and installed executable byte-for-byte, and that member must carry a
+  valid Wube signature and exact `2.0.77` version metadata. Package contents do
+  not prove entitlement. Quiet-host attestations expire after 10 minutes and
+  bind the current machine, boot, observer proof, and host-state digest. The
+  tool cannot issue a permit or start a process.
 - `gate4c_observer_self_test.py` is an elevated Windows-only ETW self-test for
   the independent FileIO, Registry, and process observation prerequisites. It
   binds the current machine/boot, exact FacMan tooling commit and script hashes,
