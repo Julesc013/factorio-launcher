@@ -6,8 +6,10 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import re
@@ -58,6 +60,22 @@ def parse_lost_events(stats: str) -> int | None:
     return max(values) if values else None
 
 
+def resolve_lost_events(
+    active_collector_status: str,
+    completion_output: str,
+) -> tuple[int | None, dict[str, Any]]:
+    active = parse_lost_events(active_collector_status)
+    completion = parse_lost_events(completion_output)
+    resolved = None if active is None else max(active, completion or 0)
+    return resolved, {
+        "active_collector_events_lost": active,
+        "completion_reported_events_lost": completion,
+        "active_collector_count_required": True,
+        "completion_loss_report_present": completion is not None,
+        "resolved": resolved is not None,
+    }
+
+
 def wpr_is_not_recording(result: subprocess.CompletedProcess[str]) -> bool:
     return result.returncode == 0 and "is not recording" in (
         result.stdout + result.stderr
@@ -79,69 +97,83 @@ def wpr_start_arguments(wpr: str, profile: Path, run_root: Path) -> list[str]:
     ]
 
 
+def wpr_collector_status_arguments(wpr: str) -> list[str]:
+    return [wpr, "-status", "collectors", "-details"]
+
+
 def normalize_trace_text(value: str) -> str:
     return value.replace("\\\\", "\\").replace("/", "\\").casefold()
 
 
-def line_has_pid(
-    line: str,
-    process_id: int,
-    *,
-    fields: tuple[str, ...] = ("pid", "processid"),
-) -> bool:
-    names = "|".join(re.escape(field) for field in fields)
-    return (
-        re.search(
-            rf"(?:^|[,;\s])(?:{names})\s*[:=]\s*{process_id}(?![0-9])",
-            line,
-            flags=re.IGNORECASE,
-        )
-        is not None
-    )
+def xperf_rows(dump: str) -> list[tuple[str, ...]]:
+    rows: list[tuple[str, ...]] = []
+    for row in csv.reader(io.StringIO(dump)):
+        fields = tuple(field.strip() for field in row)
+        if not fields or not fields[0] or fields[0] in {"BeginHeader", "EndHeader"}:
+            continue
+        rows.append(fields)
+    return rows
 
 
-def domain_attribution(
-    dump: str,
+def process_name_pid(value: str) -> int | None:
+    match = re.search(r"\(\s*([0-9]+)\s*\)\s*$", value)
+    return int(match.group(1)) if match else None
+
+
+def positional_domain_attribution(
+    rows: list[tuple[str, ...]],
     *,
     marker: str,
     process_id: int,
-    event_tokens: tuple[str, ...],
+    process_field: int,
+    event_prefixes: tuple[str, ...] = (),
+    exact_events: tuple[str, ...] = (),
     additional_process_id: int | None = None,
-    additional_pid_fields: tuple[str, ...] = ("parentpid", "parentprocessid"),
+    additional_process_field: int | None = None,
 ) -> dict[str, Any]:
     marker_normalized = normalize_trace_text(marker)
-    lines = [
-        line
-        for line in dump.splitlines()
-        if marker_normalized in normalize_trace_text(line)
+    marker_rows = [
+        row
+        for row in rows
+        if any(marker_normalized in normalize_trace_text(field) for field in row)
     ]
-    pid_lines = [line for line in lines if line_has_pid(line, process_id)]
-    event_lines = [
-        line
-        for line in pid_lines
-        if any(token in line.casefold() for token in event_tokens)
+    event_rows = [
+        row
+        for row in marker_rows
+        if (
+            row[0].casefold() in exact_events
+            or any(row[0].casefold().startswith(prefix) for prefix in event_prefixes)
+        )
+    ]
+    pid_rows = [
+        row
+        for row in event_rows
+        if len(row) > process_field
+        and process_name_pid(row[process_field]) == process_id
     ]
     additional_pid_observed = (
         True
         if additional_process_id is None
         else any(
-            line_has_pid(
-                line,
-                additional_process_id,
-                fields=additional_pid_fields,
-            )
-            for line in event_lines
+            additional_process_field is not None
+            and len(row) > additional_process_field
+            and row[additional_process_field].strip() == str(additional_process_id)
+            for row in pid_rows
         )
     )
     return {
-        "marker_observed": bool(lines),
+        "format": "xperf_dumper_csv",
+        "marker_observed": bool(marker_rows),
         "expected_process_id": process_id,
-        "pid_attributed": bool(pid_lines),
-        "event_class_observed": bool(event_lines),
+        "process_field": process_field,
+        "pid_attributed": bool(pid_rows),
+        "event_class_observed": bool(event_rows),
+        "matching_event_classes": sorted({row[0] for row in event_rows}),
         "additional_process_id": additional_process_id,
+        "additional_process_field": additional_process_field,
         "additional_process_id_observed": additional_pid_observed,
-        "matching_line_count": len(lines),
-        "complete": bool(event_lines) and additional_pid_observed,
+        "matching_line_count": len(marker_rows),
+        "complete": bool(pid_rows) and additional_pid_observed,
     }
 
 
@@ -154,24 +186,29 @@ def classify_dump(
     registry_marker: str,
     process_marker: str,
 ) -> dict[str, Any]:
-    file_result = domain_attribution(
-        dump,
+    rows = xperf_rows(dump)
+    file_result = positional_domain_attribution(
+        rows,
         marker=file_marker,
         process_id=parent_process_id,
-        event_tokens=("fileio/", "fileio ", "file/"),
+        process_field=2,
+        event_prefixes=("fileio",),
     )
-    registry_result = domain_attribution(
-        dump,
+    registry_result = positional_domain_attribution(
+        rows,
         marker=registry_marker,
         process_id=parent_process_id,
-        event_tokens=("registry/", "registry "),
+        process_field=3,
+        event_prefixes=("reg",),
     )
-    process_result = domain_attribution(
-        dump,
+    process_result = positional_domain_attribution(
+        rows,
         marker=process_marker,
         process_id=child_process_id,
+        process_field=2,
         additional_process_id=parent_process_id,
-        event_tokens=("process/start", "process start", "process/dcstart"),
+        additional_process_field=3,
+        exact_events=("p-start",),
     )
     return {
         "parent_process_id": parent_process_id,
@@ -295,6 +332,18 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         if child.returncode != 0:
             errors.append("process_probe_failed")
         time.sleep(2)
+        collector_status_args = wpr_collector_status_arguments(wpr)
+        collector_status = command(collector_status_args)
+        commands.append(
+            {
+                "args": collector_status_args,
+                "returncode": collector_status.returncode,
+                "stdout": collector_status.stdout,
+                "stderr": collector_status.stderr,
+            }
+        )
+        if collector_status.returncode != 0:
+            errors.append("active_collector_status_failed")
         stop_args = [wpr, "-stop", str(trace), "FacMan Gate 4C observer self-test", "-skipPdbGen"]
         stop = command(stop_args, timeout=300)
         commands.append({"args": stop_args, "returncode": stop.returncode, "stdout": stop.stdout, "stderr": stop.stderr})
@@ -356,7 +405,7 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         registry_marker=registry_marker,
         process_marker=process_marker,
     )
-    loss_text = "\n".join(
+    completion_loss_text = "\n".join(
         (
             stop.stdout,
             stop.stderr,
@@ -367,7 +416,13 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
             stats_text,
         )
     )
-    lost_events = parse_lost_events(loss_text)
+    active_loss_text = "\n".join(
+        (collector_status.stdout, collector_status.stderr)
+    )
+    lost_events, loss_evidence = resolve_lost_events(
+        active_loss_text,
+        completion_loss_text,
+    )
     if lost_events is None:
         errors.append("lost_event_count_unresolved")
     if lost_events:
@@ -395,6 +450,7 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         "classification": classification,
         "attribution_complete": classification["attribution_complete"],
         "lost_events": lost_events,
+        "loss_evidence": loss_evidence,
         "errors": errors,
         "commands": commands,
         "artifacts": {

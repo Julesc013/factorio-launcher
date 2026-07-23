@@ -46,9 +46,9 @@ EXPECTED_FACTORIO_SHA256 = "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee
 EXPECTED_FACMAN_SHA256 = "47ccf1f151eb65daea1ae4d8ff782f48df08bbedd92d9434e5ca6fd86536270a"
 EXPECTED_SIGNER = "Wube Software Ltd"
 ATTESTATION_SCHEMA = "factorio.gate4c_quiet_host_attestation.v2"
-OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v3"
+OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v4"
 OBSERVER_PROVIDER_ID = "factorio.play.process-tree-observer"
-OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v3"
+OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v4"
 OBSERVER_PROFILE_RELATIVE_PATH = "tools/gate4c_process_tree_observer.wprp"
 OBSERVER_PROFILE_CANONICAL_SHA256 = (
     "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40"
@@ -815,6 +815,22 @@ def observer_prerequisites(
                 "artifacts": artifact_valid,
                 "self_test_digest": claimed_digest == digest_value(digest_core),
                 "zero_loss": loaded.get("lost_events") == 0,
+                "zero_loss_evidence": (
+                    isinstance(loaded.get("loss_evidence"), dict)
+                    and loaded["loss_evidence"].get(
+                        "active_collector_count_required"
+                    )
+                    is True
+                    and loaded["loss_evidence"].get(
+                        "active_collector_events_lost"
+                    )
+                    == 0
+                    and loaded["loss_evidence"].get(
+                        "completion_reported_events_lost"
+                    )
+                    in (None, 0)
+                    and loaded["loss_evidence"].get("resolved") is True
+                ),
                 "exact_attribution": loaded.get("attribution_complete") is True,
                 "status": loaded.get("status") == "pass",
             }

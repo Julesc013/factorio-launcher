@@ -62,6 +62,13 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             "provider": OBSERVER.PREFLIGHT.observer_provider_identity(ROOT),
             "attribution_complete": True,
             "lost_events": 0,
+            "loss_evidence": {
+                "active_collector_count_required": True,
+                "active_collector_events_lost": 0,
+                "completion_reported_events_lost": None,
+                "completion_loss_report_present": False,
+                "resolved": True,
+            },
             "artifacts": artifacts,
         }
         record["self_test_digest"] = OBSERVER.PREFLIGHT.digest_value(record)
@@ -217,6 +224,29 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             77091,
         )
 
+    def test_loss_resolution_requires_live_count_and_honors_stop_warning(self) -> None:
+        resolved, evidence = OBSERVER.resolve_lost_events(
+            "Collector Name: NT Kernel Logger\nEvents Lost : 0",
+            "The trace was successfully saved.",
+        )
+        self.assertEqual(resolved, 0)
+        self.assertFalse(evidence["completion_loss_report_present"])
+
+        resolved, evidence = OBSERVER.resolve_lost_events(
+            "Collector Name: NT Kernel Logger\nEvents Lost : 0",
+            "This trace has dropped 7 events.",
+        )
+        self.assertEqual(resolved, 7)
+        self.assertEqual(evidence["completion_reported_events_lost"], 7)
+        self.assertTrue(evidence["completion_loss_report_present"])
+
+        unresolved, evidence = OBSERVER.resolve_lost_events(
+            "collector status without an events-lost field",
+            "The trace was successfully saved.",
+        )
+        self.assertIsNone(unresolved)
+        self.assertFalse(evidence["resolved"])
+
     def test_observer_profile_is_narrow_closed_and_capacity_bound(self) -> None:
         profile = OBSERVER.PREFLIGHT.observer_profile_identity(ROOT)
         self.assertTrue(profile["valid"])
@@ -279,14 +309,30 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
         for broad_profile in ("GeneralProfile", "FileIO", "Registry"):
             self.assertNotIn(broad_profile, args)
 
+    def test_wpr_live_loss_query_requests_collector_details(self) -> None:
+        self.assertEqual(
+            OBSERVER.wpr_collector_status_arguments("wpr.exe"),
+            ["wpr.exe", "-status", "collectors", "-details"],
+        )
+
     def test_probe_attribution_requires_all_domains_and_pid(self) -> None:
         parent_process_id = 4242
         child_process_id = 5151
         dump = "\n".join(
             [
-                r"FileIo/Write,pid=4242,C:\Gate4C\probe.txt",
-                r"Registry/SetValue,pid=4242,FacManGate4CRegistryProbe-test",
-                r"Process/Start,pid=5151,parentpid=4242,FacManGate4CProcessProbe-test",
+                (
+                    r'FileIoCreate,100,python.exe (4242),77,python.exe (4242),'
+                    r'77,2,irp,file,options,attributes,share,'
+                    r'"C:\Gate4C\probe.txt"'
+                ),
+                (
+                    r"RegCreateKey,101,kcb,python.exe (4242),77,status,elapsed,"
+                    r"Software\FacManGate4CRegistryProbe-test"
+                ),
+                (
+                    r'P-Start,102,python.exe (5151),4242,1,key,table,flags,user,'
+                    r'"python -c probe,with,commas FacManGate4CProcessProbe-test"'
+                ),
             ]
         )
         result = OBSERVER.classify_dump(
@@ -310,22 +356,54 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
         self.assertFalse(incomplete["attribution_complete"])
 
     def test_each_domain_refuses_wrong_pid(self) -> None:
-        base = "\n".join(
-            [
-                r"FileIo/Write,pid=4242,C:\Gate4C\probe.txt",
-                r"Registry/SetValue,pid=4242,FacManGate4CRegistryProbe-test",
-                r"Process/Start,pid=5151,parentpid=4242,FacManGate4CProcessProbe-test",
-            ]
-        )
-        mutations = (
-            base.replace("FileIo/Write,pid=4242", "FileIo/Write,pid=9999"),
-            base.replace(
-                "FileIo/Write,pid=4242",
-                "FileIo/Write,pid=9999,unrelated=4242",
+        rows = [
+            (
+                r'FileIoCreate,100,python.exe (4242),77,python.exe (4242),'
+                r'77,2,irp,file,options,attributes,share,'
+                r'"C:\Gate4C\probe.txt"'
             ),
-            base.replace("Registry/SetValue,pid=4242", "Registry/SetValue,pid=9999"),
-            base.replace("Process/Start,pid=5151", "Process/Start,pid=9999"),
-            base.replace("parentpid=4242", "parentpid=9999"),
+            (
+                r"RegCreateKey,101,kcb,python.exe (4242),77,status,elapsed,"
+                r"Software\FacManGate4CRegistryProbe-test"
+            ),
+            (
+                r"P-Start,102,python.exe (5151),4242,1,key,table,flags,user,"
+                r"FacManGate4CProcessProbe-test"
+            ),
+        ]
+        base = "\n".join(rows)
+        mutations = (
+            "\n".join(
+                [
+                    rows[0].replace(
+                        "python.exe (4242),77,python.exe (4242)",
+                        "python.exe (9999),77,python.exe (4242)",
+                    ),
+                    rows[1],
+                    rows[2],
+                ]
+            ),
+            "\n".join(
+                [
+                    rows[0],
+                    rows[1].replace("python.exe (4242)", "python.exe (9999)"),
+                    rows[2],
+                ]
+            ),
+            "\n".join(
+                [
+                    rows[0],
+                    rows[1],
+                    rows[2].replace("python.exe (5151)", "python.exe (9999)"),
+                ]
+            ),
+            "\n".join(
+                [
+                    rows[0],
+                    rows[1],
+                    rows[2].replace(",4242,1,", ",9999,1,"),
+                ]
+            ),
         )
         for dump in mutations:
             with self.subTest(dump=dump):
@@ -341,16 +419,22 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
 
     def test_each_domain_requires_the_expected_event_class(self) -> None:
         base = "\n".join(
-            [
-                r"FileIo/Write,pid=4242,C:\Gate4C\probe.txt",
-                r"Registry/SetValue,pid=4242,FacManGate4CRegistryProbe-test",
-                r"Process/Start,pid=5151,parentpid=4242,FacManGate4CProcessProbe-test",
-            ]
+            (
+                r"FileIoCreate,100,python.exe (4242),77,C:\Gate4C\probe.txt",
+                (
+                    r"RegCreateKey,101,kcb,python.exe (4242),77,status,elapsed,"
+                    r"Software\FacManGate4CRegistryProbe-test"
+                ),
+                (
+                    r"P-Start,102,python.exe (5151),4242,1,key,table,flags,user,"
+                    r"FacManGate4CProcessProbe-test"
+                ),
+            )
         )
         mutations = (
-            base.replace("FileIo/Write", "Network/Write"),
-            base.replace("Registry/SetValue", "Image/Load"),
-            base.replace("Process/Start", "Thread/Start"),
+            base.replace("FileIoCreate", "NetworkWrite"),
+            base.replace("RegCreateKey", "ImageLoad"),
+            base.replace("P-Start", "T-Start"),
         )
         for dump in mutations:
             with self.subTest(dump=dump):
@@ -375,6 +459,7 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             self.assertTrue(result["self_test_passed"])
             self.assertTrue(result["self_test_validation"]["artifacts"])
             self.assertTrue(result["self_test_validation"]["self_test_digest"])
+            self.assertTrue(result["self_test_validation"]["zero_loss_evidence"])
 
             changed_session = {**session, "boot_identity": "new-boot"}
             restarted = self.validate_observer_fixture(
@@ -389,6 +474,26 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             )
             self.assertFalse(updated["self_test_passed"])
             self.assertFalse(updated["self_test_validation"]["observer_tools"])
+
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["loss_evidence"]["active_collector_events_lost"] = None
+            record["self_test_digest"] = OBSERVER.PREFLIGHT.digest_value(
+                {
+                    key: value
+                    for key, value in record.items()
+                    if key != "self_test_digest"
+                }
+            )
+            path.write_text(json.dumps(record), encoding="utf-8")
+            unresolved_loss = self.validate_observer_fixture(
+                path, tooling, tools, session, now=now
+            )
+            self.assertFalse(unresolved_loss["self_test_passed"])
+            self.assertFalse(
+                unresolved_loss["self_test_validation"]["zero_loss_evidence"]
+            )
+
+            path, tooling, tools, session = self.observer_validation_fixture(root)
 
             stale = self.validate_observer_fixture(
                 path,
