@@ -304,8 +304,11 @@ self-tests. WPR and XPerf loss output are combined so a stop-time
 `dropped N events` warning remains a closed failure even when the trace cannot
 be decoded.
 
-The reviewed profile SHA-256 is
+The reviewed LF-normalized canonical profile SHA-256 is
 `57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40`.
+The provider binding also records the exact SHA-256 of the materialized profile
+bytes supplied to WPR. This keeps Windows CRLF checkout identity explicit while
+the canonical reviewed XML identity remains cross-checkout deterministic.
 
 This is an observation-capacity/tooling correction before baseline. It changes
 neither the frozen policy nor runtime/candidate code, resources, permit scope,

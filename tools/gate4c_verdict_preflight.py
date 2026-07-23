@@ -50,7 +50,7 @@ OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v3"
 OBSERVER_PROVIDER_ID = "factorio.play.process-tree-observer"
 OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v3"
 OBSERVER_PROFILE_RELATIVE_PATH = "tools/gate4c_process_tree_observer.wprp"
-OBSERVER_PROFILE_SHA256 = (
+OBSERVER_PROFILE_CANONICAL_SHA256 = (
     "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40"
 )
 OBSERVER_PROFILE_NAME = "FacManGate4CObserver"
@@ -446,15 +446,24 @@ def observer_toolchain_coherent(paths: dict[str, str | None]) -> bool:
     return len(parents) == 1
 
 
+def canonical_text_sha256(path: Path) -> str:
+    content = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(content).hexdigest()
+
+
 def observer_profile_identity(repo_root: Path) -> dict[str, Any]:
     profile = repo_root / OBSERVER_PROFILE_RELATIVE_PATH
     audit = audit_no_follow(profile, require_file=True)
     actual_sha256 = sha256_file(profile) if audit.get("safe") else None
+    canonical_sha256 = (
+        canonical_text_sha256(profile) if audit.get("safe") else None
+    )
     result: dict[str, Any] = {
         "relative_path": OBSERVER_PROFILE_RELATIVE_PATH,
         "path_audit": audit,
         "sha256": actual_sha256,
-        "expected_sha256": OBSERVER_PROFILE_SHA256,
+        "canonical_sha256": canonical_sha256,
+        "expected_canonical_sha256": OBSERVER_PROFILE_CANONICAL_SHA256,
         "name": OBSERVER_PROFILE_NAME,
         "detail_level": OBSERVER_PROFILE_DETAIL_LEVEL,
         "logging_mode": OBSERVER_PROFILE_LOGGING_MODE,
@@ -524,7 +533,7 @@ def observer_profile_identity(repo_root: Path) -> dict[str, Any]:
         and profile_ids == expected_profiles
     )
     valid = bool(
-        actual_sha256 == OBSERVER_PROFILE_SHA256
+        canonical_sha256 == OBSERVER_PROFILE_CANONICAL_SHA256
         and closed
         and collector is not None
         and collector.get("Name") == "NT Kernel Logger"
@@ -559,7 +568,8 @@ def observer_provider_identity(repo_root: Path) -> dict[str, Any]:
             for key in (
                 "relative_path",
                 "sha256",
-                "expected_sha256",
+                "canonical_sha256",
+                "expected_canonical_sha256",
                 "name",
                 "detail_level",
                 "logging_mode",

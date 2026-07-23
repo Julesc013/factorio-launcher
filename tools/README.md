@@ -38,7 +38,8 @@ Gate 4C evidence tools:
 - `gate4c_observer_self_test.py` is an elevated Windows-only ETW self-test for
   the independent FileIO, Registry, and process observation prerequisites. It
   binds the current machine/boot, exact FacMan tooling commit and script hashes,
-  the hash and closed contract of `gate4c_process_tree_observer.wprp`,
+  the materialized byte hash and reviewed LF-normalized canonical hash of
+  `gate4c_process_tree_observer.wprp`,
   WPR/XPerf/WPAExporter identities, and its trace/dump/stats hashes. The custom
   profile enables only `ProcessThread`, `FileIO`, `FileIOInit`, and `Registry`;
   it uses one file-mode kernel collector with 1 MiB buffers and 256 buffers,

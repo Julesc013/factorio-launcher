@@ -111,8 +111,11 @@ provider revision advance to v3 so no v2 proof can satisfy fresh preflight.
 Loss parsing also covers WPR's `dropped N events` stop message instead of
 depending solely on a decodable XPerf statistics report.
 
-The reviewed profile SHA-256 is
+The reviewed LF-normalized canonical profile SHA-256 is
 `57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40`.
+Each self-test additionally binds the SHA-256 of the exact materialized bytes
+passed to WPR, so Windows CRLF checkout identity remains explicit without
+changing the reviewed XML contract.
 
 This correction follows Microsoft's documented lost-event controls: use fewer
 profiles/providers, larger buffers, and more buffers. It does not ignore,

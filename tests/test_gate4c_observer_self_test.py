@@ -221,8 +221,14 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
         profile = OBSERVER.PREFLIGHT.observer_profile_identity(ROOT)
         self.assertTrue(profile["valid"])
         self.assertEqual(
-            profile["sha256"],
+            profile["canonical_sha256"],
             "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40",
+        )
+        self.assertEqual(
+            profile["sha256"],
+            OBSERVER.PREFLIGHT.sha256_file(
+                ROOT / OBSERVER.PREFLIGHT.OBSERVER_PROFILE_RELATIVE_PATH
+            ),
         )
         self.assertEqual(profile["buffer_size_kb"], 1024)
         self.assertEqual(profile["buffer_count"], 256)
@@ -237,8 +243,16 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             changed = root / relative
             changed.parent.mkdir(parents=True)
             source = ROOT / relative
+            normalized = source.read_bytes().replace(b"\r\n", b"\n")
+            changed.write_bytes(normalized.replace(b"\n", b"\r\n"))
+            crlf = OBSERVER.PREFLIGHT.observer_profile_identity(root)
+            self.assertTrue(crlf["valid"])
+            self.assertEqual(
+                crlf["canonical_sha256"], profile["canonical_sha256"]
+            )
+
             changed.write_bytes(
-                source.read_bytes().replace(
+                normalized.replace(
                     b'<Keyword Value="Registry"/>',
                     b'<Keyword Value="DiskIO"/>',
                 )
