@@ -73,11 +73,6 @@ std::string stable_read(const fs::path& path, std::size_t maximum_bytes)
     return output;
 }
 
-std::string stable_sha256(const fs::path& path, std::size_t maximum_bytes)
-{
-    return digest(stable_read(path, maximum_bytes));
-}
-
 const json::Value& require_member(const json::Value& object, const char* key)
 {
     const json::Value* value = object.find(key);
@@ -94,6 +89,13 @@ std::string string_member(const json::Value& object, const char* key)
         throw std::runtime_error(std::string("session member is not a string: ") + key);
     }
     return value.take_value();
+}
+
+#ifdef _WIN32
+
+std::string stable_sha256(const fs::path& path, std::size_t maximum_bytes)
+{
+    return digest(stable_read(path, maximum_bytes));
 }
 
 bool bool_member(const json::Value& object, const char* key)
@@ -499,6 +501,8 @@ std::vector<launch::CandidateAutomatedCaseResult> inherited_automated_proof()
     }
     return output;
 }
+
+#endif
 
 int observation_digest_self_test()
 {
