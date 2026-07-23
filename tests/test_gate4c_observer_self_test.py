@@ -59,11 +59,7 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             "boot_identity": "boot",
             "tooling": tooling,
             "observer_tools": tools,
-            "provider": {
-                "id": OBSERVER.PREFLIGHT.OBSERVER_PROVIDER_ID,
-                "revision": OBSERVER.PREFLIGHT.OBSERVER_PROVIDER_REVISION,
-                "profiles": ["GeneralProfile", "FileIO", "Registry"],
-            },
+            "provider": OBSERVER.PREFLIGHT.observer_provider_identity(ROOT),
             "attribution_complete": True,
             "lost_events": 0,
             "artifacts": artifacts,
@@ -216,6 +212,58 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
         self.assertIsNone(OBSERVER.parse_lost_events("trace complete without a count"))
         self.assertEqual(OBSERVER.parse_lost_events("Events Lost: 0"), 0)
         self.assertEqual(OBSERVER.parse_lost_events("Events Lost: 0\nEvents Lost: 7"), 7)
+        self.assertEqual(
+            OBSERVER.parse_lost_events("This trace has dropped 77091 events."),
+            77091,
+        )
+
+    def test_observer_profile_is_narrow_closed_and_capacity_bound(self) -> None:
+        profile = OBSERVER.PREFLIGHT.observer_profile_identity(ROOT)
+        self.assertTrue(profile["valid"])
+        self.assertEqual(
+            profile["sha256"],
+            "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40",
+        )
+        self.assertEqual(profile["buffer_size_kb"], 1024)
+        self.assertEqual(profile["buffer_count"], 256)
+        self.assertEqual(
+            profile["system_keywords"],
+            ["ProcessThread", "FileIO", "FileIOInit", "Registry"],
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            relative = Path(OBSERVER.PREFLIGHT.OBSERVER_PROFILE_RELATIVE_PATH)
+            changed = root / relative
+            changed.parent.mkdir(parents=True)
+            source = ROOT / relative
+            changed.write_bytes(
+                source.read_bytes().replace(
+                    b'<Keyword Value="Registry"/>',
+                    b'<Keyword Value="DiskIO"/>',
+                )
+            )
+            refused = OBSERVER.PREFLIGHT.observer_profile_identity(root)
+            self.assertFalse(refused["valid"])
+            self.assertEqual(refused["reason"], "profile_contract_mismatch")
+
+    def test_wpr_start_uses_only_the_bound_custom_profile(self) -> None:
+        profile = ROOT / OBSERVER.PREFLIGHT.OBSERVER_PROFILE_RELATIVE_PATH
+        args = OBSERVER.wpr_start_arguments(
+            "wpr.exe",
+            profile,
+            Path(r"E:\Gate4C\observer"),
+        )
+        self.assertEqual(args.count("-start"), 1)
+        self.assertIn(
+            (
+                f"{profile}!{OBSERVER.PREFLIGHT.OBSERVER_PROFILE_NAME}."
+                f"{OBSERVER.PREFLIGHT.OBSERVER_PROFILE_DETAIL_LEVEL}"
+            ),
+            args,
+        )
+        for broad_profile in ("GeneralProfile", "FileIO", "Registry"):
+            self.assertNotIn(broad_profile, args)
 
     def test_probe_attribution_requires_all_domains_and_pid(self) -> None:
         parent_process_id = 4242

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- SPDX-FileCopyrightText: 2026 Jules C -->
+<!-- SPDX-License-Identifier: MIT -->
+<WindowsPerformanceRecorder
+    Author="FacMan"
+    Comments="Gate 4C process-tree file, registry, and process attribution"
+    Company="FacMan"
+    Copyright="2026 Jules C"
+    Team="FacMan"
+    Version="1.0">
+  <Profiles>
+    <SystemCollector
+        Id="FacManGate4CSystemCollector"
+        Name="NT Kernel Logger">
+      <BufferSize Value="1024"/>
+      <Buffers Value="256"/>
+    </SystemCollector>
+    <SystemProvider Id="FacManGate4CSystemProvider">
+      <Keywords>
+        <Keyword Value="ProcessThread"/>
+        <Keyword Value="FileIO"/>
+        <Keyword Value="FileIOInit"/>
+        <Keyword Value="Registry"/>
+      </Keywords>
+    </SystemProvider>
+    <Profile
+        Description="FacMan Gate 4C process-tree observer"
+        DetailLevel="Verbose"
+        Id="FacManGate4CObserver.Verbose.File"
+        LoggingMode="File"
+        Name="FacManGate4CObserver">
+      <ProblemCategories>
+        <ProblemCategory Value="First Level Triage"/>
+      </ProblemCategories>
+      <Collectors>
+        <SystemCollectorId Value="FacManGate4CSystemCollector">
+          <SystemProviderId Value="FacManGate4CSystemProvider"/>
+        </SystemCollectorId>
+      </Collectors>
+    </Profile>
+    <Profile
+        Base="FacManGate4CObserver.Verbose.File"
+        Description="FacMan Gate 4C process-tree observer"
+        DetailLevel="Verbose"
+        Id="FacManGate4CObserver.Verbose.Memory"
+        LoggingMode="Memory"
+        Name="FacManGate4CObserver">
+      <Collectors Operation="Add">
+        <SystemCollectorId Value="FacManGate4CSystemCollector">
+          <Buffers
+              PercentageOfTotalMemory="true"
+              Value="3"/>
+        </SystemCollectorId>
+      </Collectors>
+    </Profile>
+  </Profiles>
+  <TraceMergeProperties>
+    <TraceMergeProperty
+        Id="FacManGate4CTraceMerge"
+        Name="FacManGate4CTraceMerge">
+      <CustomEvents>
+        <CustomEvent Value="ImageId"/>
+        <CustomEvent Value="BuildInfo"/>
+        <CustomEvent Value="VolumeMapping"/>
+        <CustomEvent Value="EventMetadata"/>
+      </CustomEvents>
+    </TraceMergeProperty>
+  </TraceMergeProperties>
+</WindowsPerformanceRecorder>

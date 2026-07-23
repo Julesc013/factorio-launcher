@@ -23,6 +23,7 @@ import stat
 import subprocess
 import sys
 import zipfile
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
@@ -45,9 +46,24 @@ EXPECTED_FACTORIO_SHA256 = "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee
 EXPECTED_FACMAN_SHA256 = "47ccf1f151eb65daea1ae4d8ff782f48df08bbedd92d9434e5ca6fd86536270a"
 EXPECTED_SIGNER = "Wube Software Ltd"
 ATTESTATION_SCHEMA = "factorio.gate4c_quiet_host_attestation.v2"
-OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v2"
+OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v3"
 OBSERVER_PROVIDER_ID = "factorio.play.process-tree-observer"
-OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v2"
+OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v3"
+OBSERVER_PROFILE_RELATIVE_PATH = "tools/gate4c_process_tree_observer.wprp"
+OBSERVER_PROFILE_SHA256 = (
+    "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40"
+)
+OBSERVER_PROFILE_NAME = "FacManGate4CObserver"
+OBSERVER_PROFILE_DETAIL_LEVEL = "Verbose"
+OBSERVER_PROFILE_LOGGING_MODE = "File"
+OBSERVER_PROFILE_BUFFER_SIZE_KB = 1024
+OBSERVER_PROFILE_BUFFER_COUNT = 256
+OBSERVER_PROFILE_SYSTEM_KEYWORDS = (
+    "ProcessThread",
+    "FileIO",
+    "FileIOInit",
+    "Registry",
+)
 ATTESTATION_MAX_AGE_SECONDS = 600
 OBSERVER_SELF_TEST_MAX_AGE_SECONDS = 900
 MAX_FUTURE_SKEW_SECONDS = 30
@@ -430,6 +446,131 @@ def observer_toolchain_coherent(paths: dict[str, str | None]) -> bool:
     return len(parents) == 1
 
 
+def observer_profile_identity(repo_root: Path) -> dict[str, Any]:
+    profile = repo_root / OBSERVER_PROFILE_RELATIVE_PATH
+    audit = audit_no_follow(profile, require_file=True)
+    actual_sha256 = sha256_file(profile) if audit.get("safe") else None
+    result: dict[str, Any] = {
+        "relative_path": OBSERVER_PROFILE_RELATIVE_PATH,
+        "path_audit": audit,
+        "sha256": actual_sha256,
+        "expected_sha256": OBSERVER_PROFILE_SHA256,
+        "name": OBSERVER_PROFILE_NAME,
+        "detail_level": OBSERVER_PROFILE_DETAIL_LEVEL,
+        "logging_mode": OBSERVER_PROFILE_LOGGING_MODE,
+        "buffer_size_kb": OBSERVER_PROFILE_BUFFER_SIZE_KB,
+        "buffer_count": OBSERVER_PROFILE_BUFFER_COUNT,
+        "system_keywords": list(OBSERVER_PROFILE_SYSTEM_KEYWORDS),
+        "valid": False,
+    }
+    if not audit.get("safe"):
+        result["reason"] = "profile_path_unsafe"
+        return result
+    try:
+        root = ET.parse(profile).getroot()
+    except (ET.ParseError, OSError) as exc:
+        result["reason"] = f"profile_xml_invalid:{exc}"
+        return result
+
+    profiles = root.find("Profiles")
+    if root.tag != "WindowsPerformanceRecorder" or profiles is None:
+        result["reason"] = "profile_root_invalid"
+        return result
+    collector = profiles.find("./SystemCollector[@Id='FacManGate4CSystemCollector']")
+    provider = profiles.find("./SystemProvider[@Id='FacManGate4CSystemProvider']")
+    file_profile = profiles.find(
+        "./Profile[@Id='FacManGate4CObserver.Verbose.File']"
+    )
+    memory_profile = profiles.find(
+        "./Profile[@Id='FacManGate4CObserver.Verbose.Memory']"
+    )
+    observed_keywords = (
+        [
+            item.get("Value")
+            for item in provider.findall("./Keywords/Keyword")
+        ]
+        if provider is not None
+        else []
+    )
+    collector_buffer_size = (
+        collector.find("BufferSize").get("Value")
+        if collector is not None and collector.find("BufferSize") is not None
+        else None
+    )
+    collector_buffer_count = (
+        collector.find("Buffers").get("Value")
+        if collector is not None and collector.find("Buffers") is not None
+        else None
+    )
+    file_binding = (
+        file_profile.find(
+            "./Collectors/SystemCollectorId"
+            "[@Value='FacManGate4CSystemCollector']/"
+            "SystemProviderId[@Value='FacManGate4CSystemProvider']"
+        )
+        if file_profile is not None
+        else None
+    )
+    expected_profiles = {
+        "FacManGate4CObserver.Verbose.File",
+        "FacManGate4CObserver.Verbose.Memory",
+    }
+    profile_ids = {item.get("Id") for item in profiles.findall("Profile")}
+    closed = bool(
+        len(profiles.findall("SystemCollector")) == 1
+        and len(profiles.findall("SystemProvider")) == 1
+        and not profiles.findall("EventCollector")
+        and not profiles.findall("EventProvider")
+        and profile_ids == expected_profiles
+    )
+    valid = bool(
+        actual_sha256 == OBSERVER_PROFILE_SHA256
+        and closed
+        and collector is not None
+        and collector.get("Name") == "NT Kernel Logger"
+        and collector_buffer_size == str(OBSERVER_PROFILE_BUFFER_SIZE_KB)
+        and collector_buffer_count == str(OBSERVER_PROFILE_BUFFER_COUNT)
+        and provider is not None
+        and observed_keywords == list(OBSERVER_PROFILE_SYSTEM_KEYWORDS)
+        and provider.find("Stacks") is None
+        and file_profile is not None
+        and file_profile.get("Name") == OBSERVER_PROFILE_NAME
+        and file_profile.get("DetailLevel") == OBSERVER_PROFILE_DETAIL_LEVEL
+        and file_profile.get("LoggingMode") == OBSERVER_PROFILE_LOGGING_MODE
+        and file_binding is not None
+        and memory_profile is not None
+        and memory_profile.get("Base") == "FacManGate4CObserver.Verbose.File"
+        and memory_profile.get("Name") == OBSERVER_PROFILE_NAME
+        and memory_profile.get("DetailLevel") == OBSERVER_PROFILE_DETAIL_LEVEL
+        and memory_profile.get("LoggingMode") == "Memory"
+    )
+    result["valid"] = valid
+    result["reason"] = "valid" if valid else "profile_contract_mismatch"
+    return result
+
+
+def observer_provider_identity(repo_root: Path) -> dict[str, Any]:
+    profile = observer_profile_identity(repo_root)
+    return {
+        "id": OBSERVER_PROVIDER_ID,
+        "revision": OBSERVER_PROVIDER_REVISION,
+        "profile": {
+            key: profile.get(key)
+            for key in (
+                "relative_path",
+                "sha256",
+                "expected_sha256",
+                "name",
+                "detail_level",
+                "logging_mode",
+                "buffer_size_kb",
+                "buffer_count",
+                "system_keywords",
+            )
+        },
+    }
+
+
 def repository_tool_identity(repo_root: Path) -> dict[str, Any]:
     revision = run(["git", "rev-parse", "HEAD"], cwd=repo_root)
     status = run(["git", "status", "--short"], cwd=repo_root)
@@ -437,6 +578,7 @@ def repository_tool_identity(repo_root: Path) -> dict[str, Any]:
     for relative in (
         "tools/gate4c_verdict_preflight.py",
         "tools/gate4c_observer_self_test.py",
+        OBSERVER_PROFILE_RELATIVE_PATH,
     ):
         path = repo_root / relative
         audit = audit_no_follow(path, require_file=True)
@@ -444,16 +586,19 @@ def repository_tool_identity(repo_root: Path) -> dict[str, Any]:
             "path_audit": audit,
             "sha256": sha256_file(path) if audit.get("safe") else None,
         }
+    profile = observer_profile_identity(repo_root)
     valid = (
         revision.returncode == 0
         and status.returncode == 0
         and not status.stdout.strip()
         and all(item["path_audit"].get("safe") for item in files.values())
+        and profile.get("valid") is True
     )
     return {
         "facman_tool_commit": revision.stdout.strip() if revision.returncode == 0 else None,
         "worktree_clean": status.returncode == 0 and not status.stdout.strip(),
         "tool_files": files,
+        "observer_profile": profile,
         "valid": valid,
     }
 
@@ -640,11 +785,7 @@ def observer_prerequisites(
                 "schema": loaded.get("schema") == OBSERVER_SELF_TEST_SCHEMA,
                 "work_unit": loaded.get("work_unit") == WORK_UNIT,
                 "provider": loaded.get("provider")
-                == {
-                    "id": OBSERVER_PROVIDER_ID,
-                    "revision": OBSERVER_PROVIDER_REVISION,
-                    "profiles": ["GeneralProfile", "FileIO", "Registry"],
-                },
+                == observer_provider_identity(repo_root),
                 "candidate_revision": loaded.get("candidate_revision")
                 == CANDIDATE_REVISION,
                 "elevated": loaded.get("elevated") is True,

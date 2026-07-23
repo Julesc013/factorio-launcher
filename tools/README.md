@@ -38,10 +38,16 @@ Gate 4C evidence tools:
 - `gate4c_observer_self_test.py` is an elevated Windows-only ETW self-test for
   the independent FileIO, Registry, and process observation prerequisites. It
   binds the current machine/boot, exact FacMan tooling commit and script hashes,
-  WPR/XPerf/WPAExporter identities, and its trace/dump/stats hashes. File,
-  Registry, and child-process events must each match the expected PID and event
-  class. All three executables must come from one coherent Windows Performance
-  Toolkit root; a PATH-selected system WPR mixed with toolkit decoders is
-  refused. WPR status is rechecked after stop before cleanup responsibility is
-  released. Self-tests expire after 15 minutes. The tool exercises only
-  task-owned probe state and cannot start Factorio or record a human verdict.
+  the hash and closed contract of `gate4c_process_tree_observer.wprp`,
+  WPR/XPerf/WPAExporter identities, and its trace/dump/stats hashes. The custom
+  profile enables only `ProcessThread`, `FileIO`, `FileIOInit`, and `Registry`;
+  it uses one file-mode kernel collector with 1 MiB buffers and 256 buffers,
+  with no stacks or user-mode event providers. File, Registry, and
+  child-process events must each match the expected PID and event class. All
+  three executables must come from one coherent Windows Performance Toolkit
+  root; a PATH-selected system WPR mixed with toolkit decoders is refused. WPR
+  status is rechecked after stop before cleanup responsibility is released.
+  WPR stop and XPerf output are both checked for loss, and any nonzero or
+  unresolved loss remains Inconclusive. Self-tests expire after 15 minutes.
+  The tool exercises only task-owned probe state and cannot start Factorio or
+  record a human verdict.
