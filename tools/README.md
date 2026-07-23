@@ -43,12 +43,15 @@ Gate 4C evidence tools:
   WPR/XPerf/WPAExporter identities, and its trace/dump/stats hashes. The custom
   profile enables only `ProcessThread`, `FileIO`, `FileIOInit`, and `Registry`;
   it uses one file-mode kernel collector with 1 MiB buffers and 256 buffers,
-  with no stacks or user-mode event providers. File, Registry, and
-  child-process events must each match the expected PID and event class. All
+  with no stacks or user-mode event providers. The XPerf dumper output is
+  parsed as positional CSV: FileIO, Registry, and child-process events must
+  each match the unique marker, expected event class, and event-specific PID
+  field on the same row; process start must also match the exact parent PID. All
   three executables must come from one coherent Windows Performance Toolkit
   root; a PATH-selected system WPR mixed with toolkit decoders is refused. WPR
   status is rechecked after stop before cleanup responsibility is released.
-  WPR stop and XPerf output are both checked for loss, and any nonzero or
-  unresolved loss remains Inconclusive. Self-tests expire after 15 minutes.
+  The live `wpr -status collectors -details` loss counters and any WPR
+  stop/XPerf loss report are combined, and any nonzero or unresolved loss
+  remains Inconclusive. Self-tests expire after 15 minutes.
   The tool exercises only task-owned probe state and cannot start Factorio or
   record a human verdict.

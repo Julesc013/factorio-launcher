@@ -129,3 +129,52 @@ complete 409-test Python matrix (315 intentional platform/tool skips). It also
 passed the retained external Windows Debug
 native matrix (47/47), strict/source-format/code-security/policy validation,
 the WPR profile parser, and the complete portable AIDE Lite test.
+
+## Observer decode correction before baseline
+
+The first v3 self-test with the capacity-bound profile completed without a WPR
+drop warning and produced a decodable 17,825,792-byte trace containing 64,643
+events. It still correctly returned `inconclusive` because the evidence tool
+could not resolve an explicit zero-loss count and its classifier did not
+understand XPerf's actual positional dumper CSV.
+
+The preserved result is:
+
+```text
+self-test digest
+  e3585c09c81e8dbe9427c24f33194135ddf44a7c0baae276a8c63995328432ad
+
+self-test file SHA-256
+  26784489407ddd91193f108eb54b09a1586e0e1f0f3a899cd1f0944261a4b011
+
+trace SHA-256
+  987e49668cf11ab9a292a5e6eb7a6c22cf164093637aed0735516bdf6b7a1d58
+
+XPerf dumper SHA-256
+  0de95ba7cfa51e1c743fa90b31dc887d913adedbd65018633ff987ae53a661b3
+```
+
+The trace contains the exact required evidence:
+
+- `FileIoCreate` attributes the unique file probe to parent PID `11808`;
+- `RegCreateKey` and related Registry events attribute the unique Registry
+  probe to parent PID `11808`;
+- `P-Start` attributes the unique child marker to child PID `3104` and parent
+  PID `11808`.
+
+The v3 classifier expected synthetic labeled forms such as `pid=11808` and
+`Process/Start`; XPerf actually emits positional fields such as
+`python.exe (11808)`, `FileIoCreate`, `RegCreateKey`, and `P-Start`. The
+bounded correction parses XPerf CSV with its event-specific field positions
+and requires the marker, event class, primary PID and child-parent PID to match
+on the same parsed row.
+
+WPR exposes the active collector's `Events Lost` counter through
+`wpr -status collectors -details`. The v4 self-test captures that explicit
+counter immediately before stop, combines it with any stop-time dropped-event
+warning, and refuses an unavailable live count. Successful decoding alone
+cannot assert zero loss.
+
+The observer proof schema and provider revision advance to v4, invalidating
+all earlier self-tests. This is evidence-tooling work before baseline. No
+baseline, attestation, permit, Factorio process, or Gate 4C verdict exists.

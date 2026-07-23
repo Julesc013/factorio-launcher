@@ -327,3 +327,74 @@ frozen-policy validation           passed; digest unchanged
 portable AIDE Lite                 passed
 WPR custom-profile validation      accepted by toolkit 10.0.26100
 ```
+
+## Pre-baseline observer decode correction
+
+The first run of the reviewed capacity-bound v3 observer also remained
+`inconclusive`, but for a different and narrower reason. The custom profile
+reduced the trace from 618,659,840 bytes to 17,825,792 bytes. WPR stopped
+successfully without a dropped-event warning, XPerf decoded 64,643 events, and
+post-stop status proved `WPR is not recording`.
+
+The exact retained evidence is:
+
+```text
+result
+  E:\Temporary\FacMan\FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01\
+    observer-selftest\observer-self-test-20260723T130903Z-dd0d86dd\
+    observer-self-test.json
+
+self-test digest
+  e3585c09c81e8dbe9427c24f33194135ddf44a7c0baae276a8c63995328432ad
+
+self-test file SHA-256
+  26784489407ddd91193f108eb54b09a1586e0e1f0f3a899cd1f0944261a4b011
+
+trace SHA-256
+  987e49668cf11ab9a292a5e6eb7a6c22cf164093637aed0735516bdf6b7a1d58
+
+XPerf dumper SHA-256
+  0de95ba7cfa51e1c743fa90b31dc887d913adedbd65018633ff987ae53a661b3
+```
+
+The tool reported `lost_event_count_unresolved` and
+`probe_attribution_incomplete`. Both are evidence-decoder defects:
+
+- `xperf -a dumper -add_fieldnames` emits positional CSV, including
+  `python.exe (11808)`, `FileIoCreate`, `RegCreateKey`, and `P-Start`;
+- the v3 classifier accepted only synthetic labels such as `pid=11808`,
+  `Registry/SetValue`, and `Process/Start`;
+- `xperf -a tracestats -detail` enumerated the complete event population but
+  did not print an explicit zero-loss line.
+
+Manual inspection is diagnostic only and does not convert the v3 artifact into
+a Pass. It does establish that the same real rows contain:
+
+```text
+unique file marker       FileIoCreate   parent PID 11808
+unique Registry marker   RegCreateKey   parent PID 11808
+unique process marker    P-Start        child PID 3104
+child parent field                      parent PID 11808
+```
+
+The bounded v4 correction parses the CSV structure rather than searching
+unstructured lines. Each domain must match its unique marker, exact event
+class, and exact event-specific PID field on the same row. The process-start
+row must additionally bind the exact parent PID.
+
+The self-test now captures `wpr -status collectors -details` while recording.
+WPR exposes each active collector's `Events Lost` counter through this status.
+The resolved count is the maximum of that required live counter and any
+explicit stop/decode loss report. A missing live count, any nonzero value, a
+stop-time dropped-event warning, a decode failure, or an attribution mismatch
+remains Inconclusive.
+
+The proof schema becomes `factorio.gate4c_observer_self_test.v4` and the
+provider revision becomes `gate4c-etw-file-registry-process.v4`. Preflight
+requires the explicit loss-evidence structure in addition to
+`lost_events = 0`. No v2 or v3 artifact can satisfy fresh preflight.
+
+This correction does not modify the frozen policy, runtime, candidate,
+protected or writable resources, permit scope, process authority, or verdict
+law. No baseline, quiet-host attestation, permit, Factorio process, or human
+verdict exists.
