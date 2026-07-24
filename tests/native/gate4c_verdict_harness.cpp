@@ -42,6 +42,8 @@ constexpr const char* kComparisonSchema =
     "factorio.gate4c_baseline_comparison.v1";
 constexpr const char* kWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01";
+constexpr const char* kObserverStartRepairWorkUnit =
+    "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01";
 
 std::string digest(const std::string& value)
 {
@@ -454,6 +456,127 @@ facman::core::Result<platform::ProcessResult> run_python(
     return facman::core::Result<platform::ProcessResult>::success(std::move(result));
 }
 
+std::string helper_result_json(
+    const std::vector<std::string>& arguments,
+    const platform::ProcessResult& result,
+    bool harness_in_job)
+{
+    json::ArrayBuilder argument_values;
+    for (const std::string& argument : arguments) {
+        argument_values.add_string(argument);
+    }
+    json::ObjectBuilder identity;
+    (void)identity.add_unsigned_integer("process_id", result.identity.process_id);
+    identity.add_string("platform", result.identity.platform);
+    identity.add_string(
+        "stable_start_identity", result.identity.stable_start_identity);
+    json::ObjectBuilder document;
+    document.add_string(
+        "schema", "factorio.gate4c_observer_helper_supervision.v1");
+    document.add_string(
+        "work_unit", kObserverStartRepairWorkUnit);
+    document.add_array("arguments", argument_values);
+    document.add_string(
+        "termination", platform::process_termination_name(result.termination));
+    (void)document.add_signed_integer("exit_code", result.exit_code);
+    (void)document.add_signed_integer("native_status", result.native_status);
+    document.add_string("stdout", result.standard_output);
+    document.add_string("stderr", result.standard_error);
+    document.add_string("supervisor_error", result.error);
+    document.add_bool("process_tree_terminated", result.process_tree_terminated);
+    document.add_bool("harness_in_job", harness_in_job);
+    document.add_object("process_identity", identity);
+    return document.serialize();
+}
+
+int observer_start_probe(
+    const fs::path& task_root,
+    const fs::path& python_executable,
+    const std::string& probe_id)
+{
+    if (normalized_absolute(task_root).filename() !=
+            kObserverStartRepairWorkUnit ||
+        probe_id.rfind("gate4c-observer-start-probe-", 0U) != 0U ||
+        !safe_identifier(probe_id)) {
+        throw std::runtime_error("observer-start probe scope is not exact");
+    }
+    std::string detail;
+    const fs::path source_root = FACMAN_TEST_SOURCE_ROOT;
+    const fs::path observer_tool =
+        source_root / "tools" / "gate4c_verdict_session.py";
+    if (facman::base::path_crosses_link_or_reparse_point(task_root, detail) ||
+        facman::base::path_crosses_link_or_reparse_point(
+            python_executable, detail) ||
+        facman::base::path_crosses_link_or_reparse_point(observer_tool, detail)) {
+        throw std::runtime_error(
+            "observer-start probe crosses a link or reparse boundary: " + detail);
+    }
+    const fs::path evidence_root =
+        task_root / "evidence" / "observer-start-probes";
+    const fs::path helper_out = evidence_root / (probe_id + ".json");
+    const fs::path native_out =
+        evidence_root / (probe_id + "-native-supervision.json");
+    const fs::path temporary_root =
+        task_root / "native-helper-temp" / probe_id;
+    if (fs::exists(helper_out) || fs::exists(native_out) ||
+        fs::exists(temporary_root)) {
+        throw std::runtime_error("observer-start probe identity already exists");
+    }
+    std::error_code create_error;
+    fs::create_directories(temporary_root, create_error);
+    if (create_error ||
+        facman::base::path_crosses_link_or_reparse_point(
+            temporary_root, detail)) {
+        throw std::runtime_error(
+            "observer-start probe temporary boundary is unsafe: " + detail);
+    }
+
+    std::vector<std::string> arguments{
+        platform::path_to_utf8(observer_tool),
+        "observer-start-probe",
+        "--task-root", platform::path_to_utf8(task_root),
+        "--probe-id", probe_id,
+        "--out", platform::path_to_utf8(helper_out),
+    };
+    platform::ProcessRequest request;
+    request.executable = python_executable;
+    request.arguments = arguments;
+    request.working_directory = source_root;
+    request.environment = {
+        {"PYTHONDONTWRITEBYTECODE", "1"},
+        {"TEMP", platform::path_to_utf8(temporary_root)},
+        {"TMP", platform::path_to_utf8(temporary_root)}};
+    request.inherit_environment = true;
+    request.timeout = std::chrono::minutes(10);
+    request.maximum_standard_output = 4U * 1024U * 1024U;
+    request.maximum_standard_error = 4U * 1024U * 1024U;
+    platform::ProcessResult result = platform::supervise_process(request);
+    BOOL harness_in_job = FALSE;
+    if (!IsProcessInJob(GetCurrentProcess(), nullptr, &harness_in_job)) {
+        throw std::runtime_error("observer-start probe could not inspect job state");
+    }
+    fs::create_directories(evidence_root, create_error);
+    if (create_error) {
+        throw std::runtime_error("observer-start probe evidence root is unavailable");
+    }
+    write_new(
+        native_out,
+        helper_result_json(arguments, result, harness_in_job != FALSE) + "\n");
+    std::cout
+        << "gate4c-observer-start-native-probe: "
+        << (result.termination == platform::ProcessTermination::exited &&
+                   result.exit_code == 0
+                ? "pass"
+                : "inconclusive")
+        << "\n  helper evidence: " << platform::path_to_utf8(helper_out)
+        << "\n  supervision evidence: " << platform::path_to_utf8(native_out)
+        << "\n";
+    return result.termination == platform::ProcessTermination::exited &&
+            result.exit_code == 0
+        ? 0
+        : 2;
+}
+
 launch::ProtectedComparisonResult load_comparison(const fs::path& path)
 {
     auto parsed = json::parse(
@@ -747,10 +870,20 @@ int main(int argc, char** argv)
             return verify_packet(
                 facman::platform::path_from_utf8(argv[2]), argv[3]);
         }
+#ifdef _WIN32
+        if (argc == 5 && std::string(argv[1]) == "--observer-start-probe") {
+            return observer_start_probe(
+                facman::platform::path_from_utf8(argv[2]),
+                facman::platform::path_from_utf8(argv[3]),
+                argv[4]);
+        }
+#endif
         if (argc != 3 || std::string(argv[1]) != "--run-session") {
             std::cerr
                 << "Evidence-only Gate 4C harness. No public Play route is available.\n"
-                << "Usage: facman_gate4c_verdict_harness --run-session <session.json>\n";
+                << "Usage: facman_gate4c_verdict_harness --run-session <session.json>\n"
+                << "       facman_gate4c_verdict_harness --observer-start-probe "
+                   "<repair-root> <python.exe> <probe-id>\n";
             return 64;
         }
         return run(
