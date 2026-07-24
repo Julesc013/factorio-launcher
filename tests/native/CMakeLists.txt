@@ -43,11 +43,9 @@ target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/candidate-smoke")
 target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
   flb_factorio_launch_static facman_permit_static facman_platform_static)
-add_executable(facman_gate4c_verdict_harness gate4c_verdict_harness.cpp)
-if(WIN32)
-  target_sources(facman_gate4c_verdict_harness PRIVATE
-    gate4c_observer_broker_windows.cpp)
-endif()
+add_executable(facman_gate4c_verdict_harness
+  gate4c_verdict_harness.cpp
+  gate4c_observer_broker_windows.cpp)
 target_compile_features(facman_gate4c_verdict_harness PRIVATE cxx_std_17)
 target_compile_definitions(facman_gate4c_verdict_harness PRIVATE
   FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}")
