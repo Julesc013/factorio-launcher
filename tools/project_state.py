@@ -750,15 +750,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "observer_start_repair_active_before_repeat_verdict",
         },
         "hermetic_standalone_play_verdict_repeat": {
-            "checkpoint": "hermetic-standalone-play-verdict-02",
-            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
-            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+            "checkpoint": "hermetic-standalone-play-verdict-03",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "last_closed": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
             "next": "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
-            "safety": "observer_start_repair_proven_repeat_verdict_no_play_authority",
-            "execution_reason": "real_play_repeat_verdict_pending",
-            "truth_scope": "dev_integrated_observer_start_repair_proven_repeat_verdict_active",
+            "safety": "split_privilege_repair_proven_verdict_03_pending_no_play_authority",
+            "execution_reason": "real_play_verdict_03_pending",
+            "truth_scope": "dev_integrated_privilege_separation_repair_proven_verdict_03_active",
             "canonical_integration": False,
-            "current_gate_status": "observer_start_repair_closed_repeat_verdict_active",
+            "current_gate_status": "privilege_separation_repair_closed_verdict_03_active",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -1154,8 +1154,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("Gate 4B candidate truth must bind exact reviewed and reproduced evidence without recording a human verdict or promoting authority")
     gate4c_verdict = status.get("hermetic_standalone_play_verdict", {})
     expected_gate4c_verdict = {
-        "status": "blocked_before_baseline_privilege_inheritance_defect",
-        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+        "status": "active_fresh_attempt_03_after_privilege_repair",
+        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
         "verdict": "unset",
         "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
         "gate4c_evidence_tooling_revision": "c7c90554295f5de46447c013d7d0fea09dd03b22",
@@ -1194,9 +1194,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "repeat_verdict_blocked_before_baseline": True,
         "privilege_separation_repair_work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
         "privilege_inheritance_defect_established": True,
-        "coordinator_integrity": "unproven_would_be_high_in_current_procedure",
-        "factorio_integrity": "unproven_inherits_calling_process_context",
-        "observer_integrity": "high_required",
+        "privilege_separation_repair_revision": "894b203710b8e14055903c0d33a9d3517fb6aa94",
+        "privilege_separation_repair_status": "PASS",
+        "coordinator_integrity": "medium_required_and_live_probe_proven",
+        "factorio_integrity": "medium_required_pre_resume_gate_proven_real_run_pending",
+        "observer_integrity": "high_required_and_live_probe_proven",
         "public_command": False,
         "product_permit_issuance": False,
         "real_factorio_execution": False,
@@ -1213,16 +1215,23 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if gate4c_verdict != expected_gate4c_verdict:
         problems.append(
             "Gate 4C verdict truth must preserve the previous Inconclusive "
-            "result, bind the reviewed observer repair, block attempt 02 before "
-            "baseline on the privilege-inheritance defect, and remain non-authoritative"
+            "result and blocked attempt 02, bind the reviewed split-privilege "
+            "repair, activate a fresh attempt 03, and remain non-authoritative"
         )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {
-        "status": "implementation_and_live_uac_probe_proven_hosted_matrix_pass_ready_for_reviewed_closeout",
+        "status": "accepted_closed_reviewed_dev_integration",
         "work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
         "finding_revision": "934d4fcca2d3749f1a9710186afcf1fe294f0dc8",
         "implementation_revision": "380c1a44f26cc1d6bacccdfe5ce0c6d2efda36d3",
         "hosted_matrix_revision": "97735a42aebbba818cebd01a20da98693b293d44",
+        "implementation_pull_request": 64,
+        "reviewed_head_revision": "76c59b94b3da8ba5a4905ecfbc8e6fcfd299a0aa",
+        "dev_integration_revision": "894b203710b8e14055903c0d33a9d3517fb6aa94",
+        "merged_dev_ci_run": "30092289051",
+        "merged_dev_code_security_run": "30092289014",
+        "merged_dev_schema_check_run": "30092289006",
+        "merged_dev_security_policy_run": "30092289007",
         "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
         "previous_process_api": "CreateProcessW",
         "previous_child_security_context": "calling_process",
