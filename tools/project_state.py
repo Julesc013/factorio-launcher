@@ -747,6 +747,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "current_gate_status": "observer_start_repair_active_before_repeat_verdict",
         },
+        "hermetic_standalone_play_verdict_repeat": {
+            "checkpoint": "hermetic-standalone-play-verdict-02",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
+            "safety": "observer_start_repair_proven_repeat_verdict_no_play_authority",
+            "execution_reason": "real_play_repeat_verdict_pending",
+            "truth_scope": "dev_integrated_observer_start_repair_proven_repeat_verdict_active",
+            "canonical_integration": False,
+            "current_gate_status": "observer_start_repair_closed_repeat_verdict_active",
+        },
     }
     product = status.get("product", {})
     phase = product.get("phase")
@@ -1130,20 +1141,33 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("Gate 4B candidate truth must bind exact reviewed and reproduced evidence without recording a human verdict or promoting authority")
     gate4c_verdict = status.get("hermetic_standalone_play_verdict", {})
     expected_gate4c_verdict = {
-        "status": "closed_inconclusive_observer_provider_failed_before_process",
-        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
-        "verdict": "Inconclusive",
+        "status": "repeat_verdict_active_after_observer_start_repair",
+        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+        "verdict": "unset",
         "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
-        "gate4c_evidence_tooling_revision": "a8c73eb4e34f8fbac5c2cf2207fdf47d64bcb616",
-        "attempt_count": 2,
-        "observer_self_test_pass_count": 2,
-        "zero_blocker_preflight_count": 2,
-        "completed_baseline_count": 2,
-        "observer_start_failure_count": 2,
-        "provider_refusal_code": "permit_wrong_evidence",
-        "provider_refusal_path": "$candidate.observer",
-        "provider_refusal_message": "independent observer was not active before process boundary",
-        "permit_approved_count": 2,
+        "gate4c_evidence_tooling_revision": "c7c90554295f5de46447c013d7d0fea09dd03b22",
+        "repair_integration_revision": "1a142896328051385a3e44a47f5116c3d0d01bbb",
+        "repair_status": "PASS",
+        "observer_provider_revision": "gate4c-etw-file-registry-process.v5",
+        "observer_self_test_schema": "factorio.gate4c_observer_self_test.v5",
+        "observer_start_live_probe_pass_count": 2,
+        "previous_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+        "previous_verdict": "Inconclusive",
+        "previous_attempt_count": 2,
+        "previous_observer_self_test_pass_count": 2,
+        "previous_zero_blocker_preflight_count": 2,
+        "previous_completed_baseline_count": 2,
+        "previous_observer_start_failure_count": 2,
+        "previous_provider_refusal_code": "permit_wrong_evidence",
+        "previous_provider_refusal_path": "$candidate.observer",
+        "previous_provider_refusal_message": "independent observer was not active before process boundary",
+        "previous_permit_approved_count": 2,
+        "attempt_count": 0,
+        "observer_self_test_pass_count": 0,
+        "zero_blocker_preflight_count": 0,
+        "completed_baseline_count": 0,
+        "observer_start_failure_count": 0,
+        "permit_approved_count": 0,
         "permit_consumed_count": 0,
         "factorio_process_started": False,
         "human_journey_started": False,
@@ -1151,7 +1175,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "technical_packet_created": False,
         "protected_comparison_completed": False,
         "human_observation_recorded": False,
-        "root_cause_established": False,
+        "root_cause_established": True,
         "repair_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
         "repeat_verdict_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
         "public_command": False,
@@ -1169,8 +1193,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     if gate4c_verdict != expected_gate4c_verdict:
         problems.append(
-            "Gate 4C verdict truth must remain Inconclusive, pre-process, "
-            "non-authoritative, and routed to bounded observer repair"
+            "Gate 4C verdict truth must preserve the previous Inconclusive "
+            "result, bind the reviewed observer repair, keep attempt 02 fresh, "
+            "and remain non-authoritative"
         )
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {

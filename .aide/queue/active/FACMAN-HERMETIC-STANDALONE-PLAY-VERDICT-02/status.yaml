@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-24T08:08:48Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence/
+active_at: 2026-07-24T08:08:48Z

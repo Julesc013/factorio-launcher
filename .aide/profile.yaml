@@ -8,7 +8,7 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: hermetic-standalone-play-observer-start-repair
+  phase: hermetic-standalone-play-verdict-repeat
   primary_goal: >
     Run and record the exact human-reviewed Gate 4C journey against the frozen
     Gate 4A policy and accepted Gate 4B candidate without self-promoting authority.
