@@ -47,7 +47,7 @@ constexpr const char* kSessionSchema = "factorio.gate4c_verdict_session.v1";
 constexpr const char* kComparisonSchema =
     "factorio.gate4c_baseline_comparison.v1";
 constexpr const char* kWorkUnit =
-    "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01";
+    "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03";
 constexpr const char* kObserverStartRepairWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01";
 constexpr const char* kPrivilegeRepairWorkUnit =
