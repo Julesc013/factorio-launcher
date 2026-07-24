@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import importlib.util
+import os
 import subprocess
 import tempfile
 import unittest
@@ -37,8 +38,10 @@ class Gate4CVerdictEvidenceTests(unittest.TestCase):
             "xperf": r"C:\ObserverTools\xperf.exe",
             "wpaexporter": r"C:\ObserverTools\wpaexporter.exe",
         }
+        windows_os = mock.Mock(wraps=SESSION.os)
+        windows_os.name = "nt"
         return [
-            mock.patch.object(SESSION.os, "name", "nt"),
+            mock.patch.object(SESSION, "os", windows_os),
             mock.patch.object(SESSION.PREFLIGHT, "is_elevated", return_value=True),
             mock.patch.object(
                 SESSION.PREFLIGHT,
@@ -94,6 +97,13 @@ class Gate4CVerdictEvidenceTests(unittest.TestCase):
             invalid = SESSION.PREFLIGHT.observer_provider_identity(ROOT)
         self.assertFalse(invalid["valid"])
         self.assertEqual(invalid["reason"], "observer_profile_invalid")
+
+    def test_observer_probe_patches_do_not_mutate_process_platform(self) -> None:
+        process_platform = os.name
+        with contextlib.ExitStack() as stack:
+            for patch in self.observer_probe_patches():
+                stack.enter_context(patch)
+            self.assertEqual(os.name, process_platform)
 
     def test_observer_start_probe_preserves_exact_pass_commands(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
