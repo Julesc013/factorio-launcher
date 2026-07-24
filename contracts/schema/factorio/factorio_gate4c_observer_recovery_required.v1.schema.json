@@ -1,0 +1,20 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_gate4c_observer_recovery_required.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fail-closed observer recovery requirement",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.gate4c_observer_recovery_required.v1"},
+    "work_unit": {"const": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"},
+    "policy_digest": {"const": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"},
+    "plan_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "session_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "capture_session_digest": {"type": "string", "pattern": "^[a-f0-9]{0,64}$"},
+    "reason": {"type": "string", "minLength": 1},
+    "factorio_authority_promoted": {"const": false},
+    "human_verdict_recorded": {"const": false},
+    "recovery_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "work_unit", "policy_digest", "plan_digest", "session_digest", "capture_session_digest", "reason", "factorio_authority_promoted", "human_verdict_recorded", "recovery_digest"]
+}

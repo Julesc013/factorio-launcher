@@ -1,0 +1,24 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_gate4c_observer_broker_response.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authenticated verdict-only observer broker response",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.gate4c_observer_broker_response.v1"},
+    "command": {"enum": ["observer_started", "observer_ready", "observer_finished", "observer_aborted", "privilege_probe"]},
+    "status": {"const": "ok"},
+    "nonce": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "request_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "capture_session_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "coordinator_process_id": {"type": "integer", "minimum": 1},
+    "broker_process_id": {"type": "integer", "minimum": 1},
+    "coordinator_integrity": {"const": "medium"},
+    "broker_integrity": {"const": "high"},
+    "windows_session_id": {"type": "integer", "minimum": 0},
+    "principal_sid_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "detail": {"type": "string", "minLength": 1},
+    "response_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "command", "status", "nonce", "request_digest", "capture_session_digest", "coordinator_process_id", "broker_process_id", "coordinator_integrity", "broker_integrity", "windows_session_id", "principal_sid_digest", "detail", "response_digest"]
+}

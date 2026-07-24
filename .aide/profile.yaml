@@ -8,17 +8,16 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: hermetic-standalone-play-verdict-repeat
+  phase: gate4c-privilege-separation-repair
   primary_goal: >
-    Run and record the exact human-reviewed Gate 4C journey against the frozen
-    Gate 4A policy and accepted Gate 4B candidate without self-promoting authority.
+    Separate the elevated WPR observer from the medium-integrity Gate 4C
+    coordinator and Factorio process before any fresh baseline or permit while
+    preserving the accepted portable InstanceSpec and machine-local binding.
   next_task: >
-    Pin the exact Windows x64 Factorio 2.0.77 standalone non-Steam candidate,
-    bind the accepted InstanceSpec, InstanceBinding, and InstanceReadiness,
-    keep menu as the default and only intent, review its plan, obtain fresh
-    exact authority, complete the frozen menu/save/exit/relaunch journey, and
-    bind Pass, Fail, or Inconclusive to one hash-closed packet. Do not repair
-    code or enable a product route in the verdict WorkUnit.
+    Implement and prove a verdict-only one-shot elevated observer helper with
+    bounded authenticated IPC while keeping the coordinator and Factorio at
+    medium integrity. Do not change the frozen policy, start Factorio, add a
+    public route, or grant general privileged-broker authority.
   authoritative_command_slice:
     - installs.scan
     - installs.import
@@ -74,6 +73,7 @@ safety_invariants:
   - no bundled Factorio binaries
   - no ownership bypass
   - no passwords or tokens in manifests
+  - menu as the default launch intent; no save, server, editor, or benchmark is inferred
   - no silent writes to the default Factorio data directory
   - Steam-aware Play must disclose enumerated Steam-owned external-state domains
   - hermetic Play fails on any process-tree-attributable persistent write outside exact authorised roots

@@ -53,6 +53,11 @@ struct ProcessRequest {
     std::size_t maximum_standard_output = 16U * 1024U * 1024U;
     std::size_t maximum_standard_error = 1024U * 1024U;
     std::function<bool()> cancellation_requested;
+    // Windows invokes this after creating and job-binding the process in a
+    // suspended state but before its primary thread can execute. Returning
+    // false refuses the process boundary. Other platforms currently reject
+    // requests that require this Windows-only guarantee.
+    std::function<bool(const ProcessIdentity&)> validate_before_resume;
     std::function<void(const ProcessIdentity&)> started;
 };
 
