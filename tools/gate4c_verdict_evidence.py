@@ -34,7 +34,7 @@ COMPARISON_SCHEMA = "factorio.gate4c_baseline_comparison.v1"
 HUMAN_OBSERVATION_SCHEMA = "factorio.gate4c_human_observation.v1"
 VERDICT_SCHEMA = "factorio.gate4c_human_verdict.v1"
 CLASSIFICATION_SCHEMA = "factorio.gate4c_effect_classification.v1"
-WORK_UNIT = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+WORK_UNIT = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
 POLICY_DIGEST = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
 WINDOWS_REPARSE_ATTRIBUTE = 0x400
 MAXIMUM_MANIFEST_ENTRIES = 250_000
@@ -874,8 +874,8 @@ def validate_native_packet(
 
 
 def prepare_session(args: argparse.Namespace) -> dict[str, Any]:
-    if os.name != "nt" or not PREFLIGHT.is_elevated():
-        raise EvidenceError("Gate 4C baseline capture requires elevated Windows")
+    if os.name != "nt":
+        raise EvidenceError("Gate 4C baseline capture requires Windows")
     preflight = validate_ready_preflight(args.preflight)
     task_root = Path(preflight["task_root"]["path"])
     if task_root.name != WORK_UNIT or Path(os.path.abspath(args.task_root)) != task_root:

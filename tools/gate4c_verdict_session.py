@@ -665,15 +665,6 @@ def classify_filesystem_target(
     return "effects.external_filesystem", "forbidden"
 
 
-def kcb_names(rows: Iterable[tuple[str, ...]]) -> dict[str, str]:
-    result: dict[str, str] = {}
-    for row in rows:
-        if row[0].casefold() != "regkcbcreate" or len(row) < 4:
-            continue
-        result[row[2].casefold()] = row[3].strip()
-    return result
-
-
 def registry_target(
     headers: dict[str, tuple[str, ...]],
     row: tuple[str, ...],
@@ -688,7 +679,249 @@ def registry_target(
         return key_name
     if base and key_name:
         return base.rstrip("\\") + "\\" + key_name.lstrip("\\")
-    return base or key_name or None
+    return base or None
+
+
+def registry_rundown_fallbacks(
+    headers: dict[str, tuple[str, ...]],
+    rows: Iterable[tuple[str, ...]],
+) -> tuple[
+    dict[str, list[tuple[int, str]]],
+    dict[str, list[int]],
+]:
+    rundowns: dict[str, list[tuple[int, str]]] = {}
+    boundaries: dict[str, list[int]] = {}
+    for row in rows:
+        event = row[0].casefold()
+        if event not in {
+            "regkcbcreate",
+            "regkcbdelete",
+            "regkcbbeginrundown",
+            "regkcbendrundown",
+        } or len(row) < 3:
+            continue
+        timestamp = event_timestamp(headers, row)
+        if timestamp is None:
+            continue
+        kcb = row[2].strip().casefold()
+        if not kcb:
+            continue
+        if event in {"regkcbcreate", "regkcbdelete"}:
+            boundaries.setdefault(kcb, []).append(timestamp)
+        elif len(row) >= 4 and row[3].strip():
+            rundowns.setdefault(kcb, []).append((timestamp, row[3].strip()))
+    for values in rundowns.values():
+        values.sort()
+    for values in boundaries.values():
+        values.sort()
+    return rundowns, boundaries
+
+
+def registry_rundown_target(
+    kcb: str,
+    timestamp: int,
+    rundowns: dict[str, list[tuple[int, str]]],
+    boundaries: dict[str, list[int]],
+) -> str | None:
+    for rundown_at, name in rundowns.get(kcb.casefold(), []):
+        if rundown_at < timestamp:
+            continue
+        if not any(
+            timestamp < boundary_at < rundown_at
+            for boundary_at in boundaries.get(kcb.casefold(), [])
+        ):
+            return name
+    return None
+
+
+def file_rundown_fallbacks(
+    headers: dict[str, tuple[str, ...]],
+    rows: Iterable[tuple[str, ...]],
+    mappings: list[tuple[str, str]],
+) -> tuple[
+    dict[str, list[tuple[int, str]]],
+    dict[str, list[int]],
+]:
+    rundowns: dict[str, list[tuple[int, str]]] = {}
+    boundaries: dict[str, list[int]] = {}
+    for row in rows:
+        event = row[0].casefold()
+        if event not in {
+            "filenamecreate",
+            "filenamedelete",
+            "filenamerundown",
+            "fileiocreate",
+            "fileioclose",
+        }:
+            continue
+        timestamp = event_timestamp(headers, row)
+        object_index = header_index(headers, row[0], "FileObject")
+        if (
+            timestamp is None
+            or object_index is None
+            or len(row) <= object_index
+            or not row[object_index].strip()
+        ):
+            continue
+        file_object = row[object_index].strip().casefold()
+        if event != "filenamerundown":
+            boundaries.setdefault(file_object, []).append(timestamp)
+            continue
+        name_index = header_index(headers, row[0], "FileName", last=True)
+        if name_index is None or len(row) <= name_index:
+            continue
+        target = resolve_file_target(row[name_index], mappings)
+        if target is not None:
+            rundowns.setdefault(file_object, []).append((timestamp, target))
+    for values in rundowns.values():
+        values.sort()
+    for values in boundaries.values():
+        values.sort()
+    return rundowns, boundaries
+
+
+def file_rundown_target(
+    file_object: str,
+    timestamp: int,
+    rundowns: dict[str, list[tuple[int, str]]],
+    boundaries: dict[str, list[int]],
+) -> str | None:
+    for rundown_at, name in rundowns.get(file_object.casefold(), []):
+        if rundown_at < timestamp:
+            continue
+        if not any(
+            timestamp < boundary_at < rundown_at
+            for boundary_at in boundaries.get(file_object.casefold(), [])
+        ):
+            return name
+    return None
+
+
+def file_create_outcomes(
+    headers: dict[str, tuple[str, ...]],
+    rows: Iterable[tuple[str, ...]],
+) -> tuple[
+    dict[tuple[str, str], list[tuple[int, int, int]]],
+    dict[tuple[str, str], list[int]],
+]:
+    outcomes: dict[tuple[str, str], list[tuple[int, int, int]]] = {}
+    starts: dict[tuple[str, str], list[int]] = {}
+    for row in rows:
+        event = row[0].casefold()
+        if event not in {"fileiocreate", "fileioopend"}:
+            continue
+        timestamp = event_timestamp(headers, row)
+        irp_index = header_index(headers, row[0], "IrpPtr")
+        object_index = header_index(headers, row[0], "FileObject")
+        if (
+            timestamp is None
+            or irp_index is None
+            or object_index is None
+            or len(row) <= max(irp_index, object_index)
+            or not row[irp_index].strip()
+            or not row[object_index].strip()
+        ):
+            continue
+        operation = (
+            row[irp_index].strip().casefold(),
+            row[object_index].strip().casefold(),
+        )
+        if event == "fileiocreate":
+            starts.setdefault(operation, []).append(timestamp)
+            continue
+        status_index = header_index(headers, row[0], "Status")
+        information_index = header_index(headers, row[0], "ExtraInfo")
+        type_index = header_index(headers, row[0], "Type")
+        if (
+            status_index is None
+            or information_index is None
+            or type_index is None
+            or len(row) <= max(status_index, information_index, type_index)
+            or row[type_index].casefold() != "fileiocreate"
+        ):
+            continue
+        try:
+            status = int(row[status_index], 0)
+            information = int(row[information_index], 0)
+        except ValueError:
+            continue
+        outcomes.setdefault(operation, []).append(
+            (timestamp, status, information)
+        )
+    for values in outcomes.values():
+        values.sort()
+    for values in starts.values():
+        values.sort()
+    return outcomes, starts
+
+
+def file_create_outcome(
+    headers: dict[str, tuple[str, ...]],
+    row: tuple[str, ...],
+    outcomes: dict[tuple[str, str], list[tuple[int, int, int]]],
+    starts: dict[tuple[str, str], list[int]],
+) -> tuple[int, int] | None:
+    timestamp = event_timestamp(headers, row)
+    irp_index = header_index(headers, row[0], "IrpPtr")
+    object_index = header_index(headers, row[0], "FileObject")
+    if (
+        timestamp is None
+        or irp_index is None
+        or object_index is None
+        or len(row) <= max(irp_index, object_index)
+        or not row[irp_index].strip()
+        or not row[object_index].strip()
+    ):
+        return None
+    operation = (
+        row[irp_index].strip().casefold(),
+        row[object_index].strip().casefold(),
+    )
+    for completed_at, status, information in outcomes.get(operation, []):
+        if completed_at < timestamp:
+            continue
+        if any(
+            timestamp < started_at < completed_at
+            for started_at in starts.get(operation, [])
+        ):
+            return None
+        return status, information
+    return None
+
+
+def row_process_thread(
+    headers: dict[str, tuple[str, ...]],
+    row: tuple[str, ...],
+) -> tuple[int, int] | None:
+    process_index = header_index(headers, row[0], "Process Name ( PID)")
+    thread_index = header_index(headers, row[0], "ThreadID")
+    if (
+        process_index is None
+        or thread_index is None
+        or len(row) <= max(process_index, thread_index)
+    ):
+        return None
+    pid = SELFTEST.process_name_pid(row[process_index])
+    try:
+        thread_id = int(row[thread_index], 0)
+    except ValueError:
+        return None
+    if pid is None:
+        return None
+    return pid, thread_id
+
+
+def row_status(
+    headers: dict[str, tuple[str, ...]],
+    row: tuple[str, ...],
+) -> int | None:
+    status_index = header_index(headers, row[0], "Status")
+    if status_index is None or len(row) <= status_index:
+        return None
+    try:
+        return int(row[status_index], 0)
+    except ValueError:
+        return None
 
 
 def process_identity_digest(
@@ -720,7 +953,17 @@ def observation_effects(
         provider_process_ids,
     )
     mappings = volume_mappings(rows)
-    kcbs = kcb_names(rows)
+    file_rundowns, file_boundaries = file_rundown_fallbacks(
+        headers, rows, mappings
+    )
+    create_outcomes, create_starts = file_create_outcomes(headers, rows)
+    registry_rundowns, registry_boundaries = registry_rundown_fallbacks(
+        headers, rows
+    )
+    file_objects: dict[str, str] = {}
+    registry_kcbs: dict[str, str] = {}
+    pending_registry_open: tuple[int, int, int, str] | None = None
+    registry_operation_sequence = 0
     effects: list[dict[str, Any]] = [
         {
             "sequence": 0,
@@ -740,6 +983,87 @@ def observation_effects(
     sequence = 1
     for row in rows:
         event = row[0].casefold()
+        if event in {
+            "regkcbcreate",
+            "regkcbbeginrundown",
+            "regkcbendrundown",
+        }:
+            pending_registry_open = None
+            if len(row) >= 4 and row[2].strip() and row[3].strip():
+                registry_kcbs[row[2].strip().casefold()] = row[3].strip()
+            continue
+        if event == "regkcbdelete":
+            pending_registry_open = None
+            if len(row) >= 3:
+                registry_kcbs.pop(row[2].strip().casefold(), None)
+            continue
+        registry_open_target_for_row: str | None = None
+        if event.startswith("reg"):
+            registry_operation_sequence += 1
+            process_thread = row_process_thread(headers, row)
+            if (
+                pending_registry_open is not None
+                and process_thread is not None
+                and pending_registry_open[0] == process_thread[0]
+                and pending_registry_open[1] == process_thread[1]
+                and pending_registry_open[2] + 1 == registry_operation_sequence
+            ):
+                registry_open_target_for_row = pending_registry_open[3]
+            pending_registry_open = None
+            if (
+                event == "regopenkey"
+                and process_thread is not None
+                and row_status(headers, row) == 0
+            ):
+                opened_target = registry_target(headers, row, registry_kcbs)
+                if opened_target is not None:
+                    pending_registry_open = (
+                        process_thread[0],
+                        process_thread[1],
+                        registry_operation_sequence,
+                        opened_target,
+                    )
+            if event not in MUTATING_REGISTRY_EVENTS:
+                continue
+            registry_status = row_status(headers, row)
+            if registry_status is None:
+                attribution_gap = True
+                continue
+            if registry_status != 0:
+                continue
+        if event in {"filenamecreate", "filenamerundown"}:
+            object_index = header_index(headers, row[0], "FileObject")
+            name_index = header_index(headers, row[0], "FileName", last=True)
+            if (
+                object_index is not None
+                and name_index is not None
+                and len(row) > max(object_index, name_index)
+            ):
+                resolved = resolve_file_target(row[name_index], mappings)
+                if resolved is not None:
+                    file_objects[row[object_index].strip().casefold()] = resolved
+            continue
+        if event == "filenamedelete":
+            object_index = header_index(headers, row[0], "FileObject")
+            if object_index is not None and len(row) > object_index:
+                file_objects.pop(row[object_index].strip().casefold(), None)
+            continue
+        if event == "fileiocreate":
+            object_index = header_index(headers, row[0], "FileObject")
+            name_index = header_index(headers, row[0], "FileName", last=True)
+            if (
+                object_index is not None
+                and name_index is not None
+                and len(row) > max(object_index, name_index)
+            ):
+                resolved = resolve_file_target(row[name_index], mappings)
+                if resolved is not None:
+                    file_objects[row[object_index].strip().casefold()] = resolved
+        if event == "fileioclose":
+            object_index = header_index(headers, row[0], "FileObject")
+            if object_index is not None and len(row) > object_index:
+                file_objects.pop(row[object_index].strip().casefold(), None)
+            continue
         if event not in MUTATING_FILE_EVENTS and event not in MUTATING_REGISTRY_EVENTS:
             continue
         if event == "fileiocreate":
@@ -757,6 +1081,18 @@ def observation_effects(
             # FILE_OPEN (1) is read/open-only. Every other disposition can
             # create, replace, truncate, or supersede persistent state.
             if create_disposition == 1:
+                continue
+            outcome = file_create_outcome(
+                headers, row, create_outcomes, create_starts
+            )
+            if outcome is None:
+                attribution_gap = True
+                continue
+            status, information = outcome
+            if status != 0 or information in {1, 4, 5}:
+                continue
+            if information not in {0, 2, 3}:
+                attribution_gap = True
                 continue
         process_index = header_index(headers, row[0], "Process Name ( PID)")
         timestamp = event_timestamp(headers, row)
@@ -782,6 +1118,23 @@ def observation_effects(
             raw_target = row[target_index] if target_index is not None and len(row) > target_index else ""
             target = resolve_file_target(raw_target, mappings)
             if target is None:
+                object_index = header_index(headers, row[0], "FileObject")
+                file_object = (
+                    row[object_index].strip().casefold()
+                    if object_index is not None and len(row) > object_index
+                    else ""
+                )
+                target = file_objects.get(file_object)
+                if target is None:
+                    target = file_rundown_target(
+                        file_object,
+                        timestamp,
+                        file_rundowns,
+                        file_boundaries,
+                    )
+                    if target is not None:
+                        file_objects[file_object] = target
+            if target is None:
                 unresolved_target = True
                 logical_resource, classification = "effects.external_filesystem", "unresolved"
                 target_text = raw_target or "unresolved"
@@ -790,7 +1143,30 @@ def observation_effects(
                 target_text = target
             domain = "filesystem"
         else:
-            target = registry_target(headers, row, kcbs)
+            target = registry_target(headers, row, registry_kcbs)
+            if target is None:
+                kcb_index = header_index(headers, row[0], "KCB")
+                kcb = (
+                    row[kcb_index].strip().casefold()
+                    if kcb_index is not None and len(row) > kcb_index
+                    else ""
+                )
+                fallback = registry_rundown_target(
+                    kcb,
+                    timestamp,
+                    registry_rundowns,
+                    registry_boundaries,
+                )
+                if fallback:
+                    registry_kcbs[kcb] = fallback
+                    target = registry_target(headers, row, registry_kcbs)
+            if (
+                target is None
+                and registry_open_target_for_row is not None
+                and kcb
+            ):
+                registry_kcbs[kcb] = registry_open_target_for_row
+                target = registry_target(headers, row, registry_kcbs)
             if target is None:
                 unresolved_target = True
                 target = "unresolved"
@@ -978,7 +1354,7 @@ def finish_capture(args: argparse.Namespace) -> dict[str, Any]:
         "capture_complete": capture_complete,
         "effect_count": len(effects),
     }
-    atomic_json(operation_root / "candidate-artifacts" / "observation-result.json", diagnostic)
+    atomic_json(operation_root / "observer-artifacts" / "observation-result.json", diagnostic)
     return {"observation_path": str(observation_path), "diagnostic": diagnostic}
 
 
@@ -1034,7 +1410,7 @@ def abort_capture(args: argparse.Namespace) -> dict[str, Any]:
         "recording_stopped": stopped,
     }
     result["abort_digest"] = digest_value(result)
-    out = operation_root / "candidate-artifacts" / "observer-abort.json"
+    out = operation_root / "observer-artifacts" / "observer-abort.json"
     atomic_json(out, result)
     if not stopped:
         raise SessionError("WPR remained active after fail-closed abort")

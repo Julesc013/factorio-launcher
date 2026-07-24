@@ -267,8 +267,9 @@ launch::CandidatePlanInput plan_input(
     input.process.arguments = {
         "--config", "C:/FacMan/instances/main/config/config.ini",
         "--mod-directory", "C:/FacMan/instances/main/mods"};
-    input.process.working_directory = "C:/Factorio/2.0.77/bin/x64";
+    input.process.working_directory = "C:/FacMan/temporary/fixture/process";
     input.process.environment = {
+        {"SDL_DIRECTINPUT_ENABLED", "0"},
         {"SystemRoot", "C:/Windows"},
         {"TEMP", "C:/FacMan/temporary/fixture/process"},
         {"TMP", "C:/FacMan/temporary/fixture/process"},
@@ -277,7 +278,7 @@ launch::CandidatePlanInput plan_input(
     };
     input.process.inherit_environment = false;
     input.process.timeout = std::chrono::minutes(30);
-    input.environment_revision = "factorio.menu-minimal.v1";
+    input.environment_revision = "factorio.menu-minimal.v2";
     return input;
 }
 
@@ -345,6 +346,11 @@ int main()
         if (value.name == "TEMP" || value.name == "TMP") value.value = "C:/Windows/Temp";
     }
     if (launch::build_hermetic_candidate_plan(std::move(escaped_temporary))) return fail(81);
+    auto direct_input_enabled = plan_input(policy.value());
+    for (auto& value : direct_input_enabled.process.environment) {
+        if (value.name == "SDL_DIRECTINPUT_ENABLED") value.value = "1";
+    }
+    if (launch::build_hermetic_candidate_plan(std::move(direct_input_enabled))) return fail(811);
     auto write_escalation = plan_input(policy.value());
     write_escalation.permit_resources.front().permitted_effects.push_back("workspace_write");
     if (launch::build_hermetic_candidate_plan(std::move(write_escalation))) return fail(82);
@@ -462,6 +468,14 @@ int main()
     TemporaryTree artifacts {fs::path(FACMAN_TEST_TEMP_ROOT) / "artifact-fixture"};
     std::error_code artifact_error;
     fs::remove_all(artifacts.path, artifact_error);
+    const fs::path observer_artifacts =
+        artifacts.path / "temporary" / "operation-fixture" /
+        "observer-artifacts";
+    fs::create_directories(observer_artifacts, artifact_error);
+    if (artifact_error) return fail(139);
+    write_text(
+        observer_artifacts / "observation-result.json",
+        "{\"schema\":\"factorio.gate4c_observer_capture_result.v1\"}\n");
     auto persisted = launch::persist_candidate_artifacts(
         artifacts.path, "operation-fixture", packet.value(), executed.value().process);
     if (!persisted) return fail(140);

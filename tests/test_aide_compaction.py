@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "hermetic-standalone-play-verdict-03",
+            "windows-instance-isolated-play-policy",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+            "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "dev_integrated_privilege_separation_repair_proven_verdict_03_active",
+            "local_postrun_repair_proven_instance_isolated_policy_active",
             data["product"]["truth_scope"],
         )
         self.assertFalse(data["product"]["canonical_integration"])
@@ -268,17 +268,21 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(hermetic_candidate["playability_promotion"])
         self.assertFalse(hermetic_candidate["canonical_main_promotion"])
         gate4c_verdict = data["hermetic_standalone_play_verdict"]
-        self.assertEqual("unset", gate4c_verdict["verdict"])
+        self.assertEqual("Inconclusive", gate4c_verdict["verdict"])
         self.assertEqual("Inconclusive", gate4c_verdict["previous_verdict"])
         self.assertEqual(2, gate4c_verdict["previous_attempt_count"])
         self.assertEqual(2, gate4c_verdict["previous_observer_start_failure_count"])
-        self.assertEqual(0, gate4c_verdict["attempt_count"])
+        self.assertEqual(1, gate4c_verdict["attempt_count"])
         self.assertEqual(0, gate4c_verdict["observer_start_failure_count"])
         self.assertEqual(2, gate4c_verdict["observer_start_live_probe_pass_count"])
-        self.assertEqual(0, gate4c_verdict["permit_consumed_count"])
-        self.assertFalse(gate4c_verdict["factorio_process_started"])
-        self.assertFalse(gate4c_verdict["capture_token_created"])
+        self.assertEqual(1, gate4c_verdict["permit_consumed_count"])
+        self.assertTrue(gate4c_verdict["factorio_process_started"])
+        self.assertTrue(gate4c_verdict["capture_token_created"])
         self.assertFalse(gate4c_verdict["technical_packet_created"])
+        self.assertTrue(gate4c_verdict["protected_comparison_completed"])
+        self.assertTrue(gate4c_verdict["attempt_03_unresolved_target"])
+        self.assertTrue(gate4c_verdict["attempt_03_protected_changed"])
+        self.assertFalse(gate4c_verdict["attempt_03_packet_hash_closed"])
         self.assertFalse(gate4c_verdict["authority_promotion"])
         self.assertTrue(gate4c_verdict["root_cause_established"])
         self.assertEqual("PASS", gate4c_verdict["repair_status"])
@@ -293,7 +297,7 @@ class AideCompactionTests(unittest.TestCase):
             gate4c_verdict["privilege_separation_repair_work_unit"],
         )
         self.assertEqual(
-            "medium_required_pre_resume_gate_proven_real_run_pending",
+            "medium_verified_before_resume_in_first_real_run",
             gate4c_verdict["factorio_integrity"],
         )
         self.assertEqual(
@@ -435,7 +439,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+            "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -763,15 +767,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "hermetic-standalone-play-verdict-03",
+            "windows-instance-isolated-play-policy",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+            "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

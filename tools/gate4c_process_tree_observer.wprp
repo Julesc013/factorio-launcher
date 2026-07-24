@@ -18,6 +18,7 @@
     <SystemProvider Id="FacManGate4CSystemProvider">
       <Keywords>
         <Keyword Value="ProcessThread"/>
+        <Keyword Value="DiskIO"/>
         <Keyword Value="FileIO"/>
         <Keyword Value="FileIOInit"/>
         <Keyword Value="Registry"/>

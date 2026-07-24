@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 find_package(Threads REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 function(facman_native_test target source labels)
   add_executable(${target} ${source})
@@ -48,7 +49,8 @@ add_executable(facman_gate4c_verdict_harness
   gate4c_observer_broker_windows.cpp)
 target_compile_features(facman_gate4c_verdict_harness PRIVATE cxx_std_17)
 target_compile_definitions(facman_gate4c_verdict_harness PRIVATE
-  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}")
+  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+  FACMAN_TEST_PYTHON_EXECUTABLE="${Python3_EXECUTABLE}")
 target_link_libraries(facman_gate4c_verdict_harness PRIVATE
   flb_factorio_instance_static flb_factorio_launch_static
   facman_permit_static facman_platform_static)
@@ -197,7 +199,6 @@ facman_native_test(
   "contract;integration;setup")
 target_link_libraries(m2_wu6_launcher_handoff_smoke PRIVATE ulk_static)
 
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
 set(FACMAN_ABI_SYMBOL_ARGS)
 if(FACMAN_ENABLE_SANITIZERS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
   list(APPEND FACMAN_ABI_SYMBOL_ARGS --symbols-only)

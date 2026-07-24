@@ -215,7 +215,8 @@ bool exact_process_shape(const facman::platform::ProcessRequest& process)
     }
     std::set<std::string> environment_names;
     static const std::set<std::string> required_environment = {
-        "SystemRoot", "TEMP", "TMP", "USERPROFILE", "WINDIR",
+        "SDL_DIRECTINPUT_ENABLED", "SystemRoot", "TEMP", "TMP", "USERPROFILE",
+        "WINDIR",
     };
     for (const auto& entry : process.environment) {
         if (entry.name.empty() || entry.value.empty() ||
@@ -229,7 +230,7 @@ bool exact_process_shape(const facman::platform::ProcessRequest& process)
         facman::platform::path_from_utf8(process.arguments[1]).lexically_normal();
     const std::filesystem::path mods =
         facman::platform::path_from_utf8(process.arguments[3]).lexically_normal();
-    if (!candidate_absolute_path(executable) || working_directory != executable.parent_path() ||
+    if (!candidate_absolute_path(executable) ||
         !candidate_absolute_path(config) || !candidate_absolute_path(mods) ||
         config.filename() != "config.ini" || config.parent_path().filename() != "config") {
         return false;
@@ -241,8 +242,11 @@ bool exact_process_shape(const facman::platform::ProcessRequest& process)
     std::string temporary;
     std::string temporary_alias;
     std::string user_profile;
+    std::string direct_input_enabled;
     for (const auto& entry : process.environment) {
-        if (entry.name == "TEMP") temporary = entry.value;
+        if (entry.name == "SDL_DIRECTINPUT_ENABLED") {
+            direct_input_enabled = entry.value;
+        } else if (entry.name == "TEMP") temporary = entry.value;
         else if (entry.name == "TMP") temporary_alias = entry.value;
         else if (entry.name == "USERPROFILE") user_profile = entry.value;
     }
@@ -254,12 +258,15 @@ bool exact_process_shape(const facman::platform::ProcessRequest& process)
         facman::platform::path_from_utf8(user_profile).lexically_normal();
     const std::filesystem::path operation_root = temporary_path.parent_path();
     std::string operation_detail;
-    return candidate_absolute_path(temporary_path) && temporary_path.filename() == "process" &&
+    return candidate_absolute_path(temporary_path) &&
+        working_directory == temporary_path &&
+        temporary_path.filename() == "process" &&
         temporary_alias_path == temporary_path &&
         operation_root.parent_path() == workspace / "temporary" &&
         facman::base::validate_identifier(
             operation_root.filename().generic_string(), operation_detail) &&
-        profile_path == instance_root / "state" / "userprofile";
+        profile_path == instance_root / "state" / "userprofile" &&
+        direct_input_enabled == "0";
 }
 
 bool exact_resource_closure(
@@ -650,7 +657,7 @@ facman::core::Result<HermeticCandidatePlan> build_hermetic_candidate_plan(
             "permit_wrong_evidence", "candidate does not bind the exact 31 policy evidence requirements",
             "$candidate.evidence"));
     }
-    if (!exact_process_shape(input.process) || input.environment_revision != "factorio.menu-minimal.v1") {
+    if (!exact_process_shape(input.process) || input.environment_revision != "factorio.menu-minimal.v2") {
         return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
             "permit_wrong_plan", "candidate process request is not exact menu/minimal-environment shape",
             "$candidate.process"));

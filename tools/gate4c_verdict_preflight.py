@@ -29,7 +29,7 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 
-WORK_UNIT = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+WORK_UNIT = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
 POLICY_DIGEST = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
 CANDIDATE_REVISION = "da3e2274a3dc8a5757078b20276a1a6a93084860"
 CANDIDATE_MERGE = "e9c1e69fee1ae815f62638db8b7263cb01b70389"
@@ -40,18 +40,18 @@ UNIVERSAL_SETUP_REVISION = "3f8489275077347c2918f3bb03614ec6431362ff"
 EXPECTED_FACTORIO_VERSION = "2.0.77"
 EXPECTED_INSTANCE_ID = "gate-4c-disposable-2-0-77"
 EXPECTED_SPEC_DIGEST = "1930126ce9449328c5d333a03c07dcf10234ca337dfe1a563edc213efe24bc28"
-EXPECTED_BINDING_DIGEST = "a309925da310a7a5eaa633477ca99a48fd97bc72e18e001b5a627b50edbe121f"
-EXPECTED_READINESS_DIGEST = "8b7604d9aead7e7bffdf486d2e6d44365dd32b6e22dc33acd3eaffb3f16ff3ab"
+EXPECTED_BINDING_DIGEST = "b5a27b41459a9287681894dc9bcd08a2e04c614d754f18f507030738050530a2"
+EXPECTED_READINESS_DIGEST = "21c3b86fac164ba3d0f202cf26687f5d1e882cb048d6343b7e0242b68a4bc2d1"
 EXPECTED_FACTORIO_SHA256 = "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b"
 EXPECTED_FACMAN_SHA256 = "47ccf1f151eb65daea1ae4d8ff782f48df08bbedd92d9434e5ca6fd86536270a"
 EXPECTED_SIGNER = "Wube Software Ltd"
 ATTESTATION_SCHEMA = "factorio.gate4c_quiet_host_attestation.v2"
 OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v5"
 OBSERVER_PROVIDER_ID = "factorio.play.process-tree-observer"
-OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v5"
+OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v6"
 OBSERVER_PROFILE_RELATIVE_PATH = "tools/gate4c_process_tree_observer.wprp"
 OBSERVER_PROFILE_CANONICAL_SHA256 = (
-    "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40"
+    "df5daf34e8338602922977b15890dad7bf16cac6b667673d9a60c498a4bf6979"
 )
 OBSERVER_PROFILE_NAME = "FacManGate4CObserver"
 OBSERVER_PROFILE_DETAIL_LEVEL = "Verbose"
@@ -60,6 +60,7 @@ OBSERVER_PROFILE_BUFFER_SIZE_KB = 1024
 OBSERVER_PROFILE_BUFFER_COUNT = 256
 OBSERVER_PROFILE_SYSTEM_KEYWORDS = (
     "ProcessThread",
+    "DiskIO",
     "FileIO",
     "FileIOInit",
     "Registry",
@@ -870,7 +871,6 @@ def observer_prerequisites(
         "self_test_passed": self_test_passed,
         "ready": all([wpr, xperf, wpa_exporter])
         and coherent_toolchain
-        and is_elevated()
         and recording is False
         and session.get("valid") is True
         and self_test_passed,
@@ -1549,8 +1549,6 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
         add_blocker(blockers, "host_session_identity_unavailable", "The opaque machine and current boot-session identities could not be established.")
     if not observer.get("tools_available"):
         add_blocker(blockers, "observer_tools_missing", "WPR, XPerf, and WPAExporter are required.")
-    if not observer.get("elevated"):
-        add_blocker(blockers, "observer_elevation_required", "The ETW FileIO/Registry observer self-test requires an elevated operator session.")
     if observer.get("recording_active") is not False:
         add_blocker(blockers, "observer_session_busy_or_unknown", "WPR must report no active recording before baseline capture.")
     if not observer.get("self_test_passed"):

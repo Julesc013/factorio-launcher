@@ -3,24 +3,24 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/facman-product-convergence-01
-- current_commit: fde5ca5f7010f37a20f92106d9f23e97ac6ea87c
-- current_branch_role: task
+- current_branch: evidence/gate4c-hermetic-play-verdict-03
+- current_commit: d04aa200da6d6fd558f363e54a4ee79b5e79e690
+- current_branch_role: unknown
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
 - canonical_branch: main
 - integration_branch: dev
-- recommended_next_action: classify dirty tree before branch-sensitive work
+- recommended_next_action: inspect branch policy and repo docs before editing
 
 ## Branch Summary
 
-- local_branches: 8
-- remote_branches: 33
+- local_branches: 9
+- remote_branches: 34
 - tags_count: 2
 
 ## Warnings
 
-- dirty_tree_detected
+- current_branch_role_unknown
 
 ## Q28 Boundary
 

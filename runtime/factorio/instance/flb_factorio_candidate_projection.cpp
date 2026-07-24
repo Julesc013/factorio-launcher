@@ -363,10 +363,11 @@ project_hermetic_candidate_plan(
     process.arguments = {
         "--config", facman::platform::path_to_utf8(instance_root / "config" / "config.ini"),
         "--mod-directory", facman::platform::path_to_utf8(instance_root / "mods")};
-    process.working_directory = executable.parent_path();
     const fs::path operation_temporary =
         request.workspace / "temporary" / request.operation_id / "process";
+    process.working_directory = operation_temporary;
     process.environment = {
+        {"SDL_DIRECTINPUT_ENABLED", "0"},
         {"SystemRoot", facman::platform::path_to_utf8(request.windows_system_root)},
         {"TEMP", facman::platform::path_to_utf8(operation_temporary)},
         {"TMP", facman::platform::path_to_utf8(operation_temporary)},
@@ -382,7 +383,7 @@ project_hermetic_candidate_plan(
     launch_command.add_string("executable_identity", executable_identity.value());
     launch_command.add_string("executable_sha256", executable_sha256.value());
     launch_command.add_array("argument_digests", arguments);
-    launch_command.add_string("environment_revision", "factorio.menu-minimal.v1");
+    launch_command.add_string("environment_revision", "factorio.menu-minimal.v2");
     launch_command.add_string("intent", "menu");
     launch_command.add_string("isolation", "hermetic");
     const std::string launch_command_digest = sha256_text(launch_command.serialize());
@@ -441,7 +442,7 @@ project_hermetic_candidate_plan(
         "instance.saves", "instance.state", "operation.record", "operation.temporary"};
     plan.protected_resource_ids = play::hermetic_policy_protected_resource_ids();
     plan.process = std::move(process);
-    plan.environment_revision = "factorio.menu-minimal.v1";
+    plan.environment_revision = "factorio.menu-minimal.v2";
     return play::build_hermetic_candidate_plan(std::move(plan));
 #endif
 }

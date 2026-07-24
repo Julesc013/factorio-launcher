@@ -116,6 +116,8 @@ def collect() -> dict[str, Any]:
         "hermetic_standalone_play_policy": status["hermetic_standalone_play_policy"],
         "hermetic_standalone_play_candidate": status["hermetic_standalone_play_candidate"],
         "hermetic_standalone_play_verdict": status["hermetic_standalone_play_verdict"],
+        "gate4c_verdict03_postrun_repair": status["gate4c_verdict03_postrun_repair"],
+        "windows_instance_isolated_play_policy": status["windows_instance_isolated_play_policy"],
         "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -522,7 +524,7 @@ def readme_status(data: dict[str, Any]) -> str:
         "development-state counts, not release, playability, or authority claims.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
-        "Steam-aware `instance_isolated` and standalone `hermetic`. "
+        "Normal-host `instance_isolated` and enforced `hermetic`. "
         "`run.execute` remains unavailable because "
         f"`{data['execution']['reason']}`; no real-play gate has passed.",
         f"Readiness is playability `{data['readiness']['playability']}`, workflow "
@@ -568,15 +570,15 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
         "3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.",
         "4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.",
-        "5. Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`, then implement `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01` and record `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`; keep Steam-aware Play independent.",
+        "5. Freeze `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01`, then implement and review its exact candidate; keep enforced hermetic and Steam-aware route qualifications independent.",
         "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
         "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
         "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
         "9. Deepen portable instance reconstruction, permit-backed managed install reconciliation, content preparation, and host repair from observed player needs.",
         "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
         "",
-        "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new "
-        "Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.",
+        "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new",
+        "normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.",
         "The installation model is accepted read-only infrastructure for the selected local "
         "standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,",
         "server processes, daemon publication, signing, and publication remain unavailable.",
@@ -759,6 +761,28 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "truth_scope": "dev_integrated_privilege_separation_repair_proven_verdict_03_active",
             "canonical_integration": False,
             "current_gate_status": "privilege_separation_repair_closed_verdict_03_active",
+        },
+        "gate4c_verdict03_postrun_repair": {
+            "checkpoint": "gate4c-verdict03-postrun-repair",
+            "active": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-04",
+            "safety": "verdict_03_inconclusive_postrun_repair_active_no_play_authority",
+            "execution_reason": "verdict_03_incomplete_packet_unresolved_target_and_protected_change",
+            "truth_scope": "local_verdict_03_inconclusive_postrun_repair_active",
+            "canonical_integration": False,
+            "current_gate_status": "verdict_03_inconclusive_postrun_repair_active",
+        },
+        "windows_instance_isolated_play_policy": {
+            "checkpoint": "windows-instance-isolated-play-policy",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "last_closed": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            "safety": "normal_host_instance_isolated_policy_active_no_play_authority",
+            "execution_reason": "frozen_hermetic_claim_mismatch_requires_separate_normal_host_policy",
+            "truth_scope": "local_postrun_repair_proven_instance_isolated_policy_active",
+            "canonical_integration": False,
+            "current_gate_status": "postrun_repair_passed_instance_isolated_policy_active",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -1154,9 +1178,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("Gate 4B candidate truth must bind exact reviewed and reproduced evidence without recording a human verdict or promoting authority")
     gate4c_verdict = status.get("hermetic_standalone_play_verdict", {})
     expected_gate4c_verdict = {
-        "status": "active_fresh_attempt_03_after_privilege_repair",
+        "status": "inconclusive_attempt_03_postrun_repair_active",
         "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
-        "verdict": "unset",
+        "verdict": "Inconclusive",
         "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
         "gate4c_evidence_tooling_revision": "c7c90554295f5de46447c013d7d0fea09dd03b22",
         "repair_integration_revision": "1a142896328051385a3e44a47f5116c3d0d01bbb",
@@ -1175,18 +1199,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "previous_provider_refusal_path": "$candidate.observer",
         "previous_provider_refusal_message": "independent observer was not active before process boundary",
         "previous_permit_approved_count": 2,
-        "attempt_count": 0,
-        "observer_self_test_pass_count": 0,
-        "zero_blocker_preflight_count": 0,
-        "completed_baseline_count": 0,
+        "attempt_count": 1,
+        "observer_self_test_pass_count": 1,
+        "zero_blocker_preflight_count": 1,
+        "completed_baseline_count": 1,
         "observer_start_failure_count": 0,
-        "permit_approved_count": 0,
-        "permit_consumed_count": 0,
-        "factorio_process_started": False,
-        "human_journey_started": False,
-        "capture_token_created": False,
+        "permit_approved_count": 1,
+        "permit_consumed_count": 1,
+        "factorio_process_started": True,
+        "human_journey_started": True,
+        "capture_token_created": True,
         "technical_packet_created": False,
-        "protected_comparison_completed": False,
+        "protected_comparison_completed": True,
         "human_observation_recorded": False,
         "root_cause_established": True,
         "observer_start_repair_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
@@ -1197,8 +1221,21 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "privilege_separation_repair_revision": "894b203710b8e14055903c0d33a9d3517fb6aa94",
         "privilege_separation_repair_status": "PASS",
         "coordinator_integrity": "medium_required_and_live_probe_proven",
-        "factorio_integrity": "medium_required_pre_resume_gate_proven_real_run_pending",
+        "factorio_integrity": "medium_verified_before_resume_in_first_real_run",
         "observer_integrity": "high_required_and_live_probe_proven",
+        "attempt_03_operation_id": "gate4c-verdict03-launch1-20260725a",
+        "attempt_03_session_digest": "b04a04e5d6c3ef22e14cce1f48bb020cf320b035f80e40cc282e8bf594189d62",
+        "attempt_03_plan_digest": "38736cd70515ba9eca3f269bb5691f1592659e7760241fefbb563934599f31e9",
+        "attempt_03_observer_self_test_digest": "67a62c6b6ed637bc002a1c1fe3be8ab46645cd5928d9e6c19b2b2c43b906a206",
+        "attempt_03_lost_events": 0,
+        "attempt_03_unresolved_target": True,
+        "attempt_03_packet_hash_closed": False,
+        "attempt_03_second_launch_started": False,
+        "attempt_03_protected_changed": True,
+        "attempt_03_changed_resource": "installation.selected",
+        "attempt_03_protected_change": "bin/x64/NVIDIA Corporation/umdlogs created",
+        "attempt_03_persistence_refusal": "permit_wrong_resource: candidate operation artifact directory already exists",
+        "postrun_repair_work_unit": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
         "public_command": False,
         "product_permit_issuance": False,
         "real_factorio_execution": False,
@@ -1215,8 +1252,70 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if gate4c_verdict != expected_gate4c_verdict:
         problems.append(
             "Gate 4C verdict truth must preserve the previous Inconclusive "
-            "result and blocked attempt 02, bind the reviewed split-privilege "
-            "repair, activate a fresh attempt 03, and remain non-authoritative"
+            "result and blocked attempt 02, record attempt 03 as Inconclusive "
+            "with its exact evidence findings, activate a bounded repair, and "
+            "remain non-authoritative"
+        )
+    postrun_repair = status.get("gate4c_verdict03_postrun_repair", {})
+    expected_postrun_repair = {
+        "status": "passed_exact_head_hosted",
+        "work_unit": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+        "source_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+        "source_verdict": "Inconclusive",
+        "source_operation_id": "gate4c-verdict03-launch1-20260725a",
+        "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "artifact_staging_collision": True,
+        "unresolved_etw_target": True,
+        "protected_installation_changed": True,
+        "protected_change_path": "bin/x64/NVIDIA Corporation/umdlogs",
+        "verdict03_root_retained": True,
+        "implementation_revision": "8382cb5768bd5d2690a6b34a2b6aa2e646b3d8b0",
+        "pull_request": 66,
+        "artifact_staging_repaired": True,
+        "observer_provider_revision": "gate4c-etw-file-registry-process.v6",
+        "process_environment_revision": "factorio.menu-minimal.v2",
+        "working_directory_bound_to_operation_temporary": True,
+        "directinput_disabled": True,
+        "retained_trace_reprocessed": True,
+        "normal_host_hermetic_policy_satisfied": False,
+        "next_verdict_automatically_authorized": False,
+        "factorio_execution_allowed": False,
+        "frozen_policy_mutation_allowed": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "authority_promotion": False,
+    }
+    if postrun_repair != expected_postrun_repair:
+        problems.append(
+            "Gate 4C Verdict 03 post-run repair truth must bind the incomplete "
+            "packet, unresolved target, protected installation change, retained "
+            "evidence, and no-authority boundary"
+        )
+    instance_isolated_policy = status.get("windows_instance_isolated_play_policy", {})
+    expected_instance_isolated_policy = {
+        "status": "active",
+        "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+        "source_repair": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+        "source_verdict": "Inconclusive",
+        "candidate_class": "Windows x64 Factorio 2.0.77 standalone non-Steam menu",
+        "isolation_mode": "instance_isolated",
+        "writable_boundary": "exact FacMan-owned instance closure",
+        "protected_software_roots_immutable": True,
+        "os_driver_effects_observed_and_disclosed": True,
+        "whole_host_immutability_claimed": False,
+        "enforced_sandbox_claimed": False,
+        "frozen_hermetic_policy_mutation_allowed": False,
+        "runtime_mutation_allowed": False,
+        "factorio_execution_allowed": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "authority_promotion": False,
+    }
+    if instance_isolated_policy != expected_instance_isolated_policy:
+        problems.append(
+            "Windows instance-isolated Play policy truth must bind the exact "
+            "normal-host claim, keep protected software immutable, disclose "
+            "OS/driver effects, and remain policy-only and non-authoritative"
         )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {

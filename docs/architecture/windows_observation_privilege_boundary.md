@@ -4,7 +4,7 @@
 
 FacMan's player process and Factorio must run with the interactive user's
 normal medium-integrity token. Windows kernel ETW control is isolated in a
-separate one-shot high-integrity observer.
+separate verdict-scoped high-integrity observer.
 
 ```text
 FacMan coordinator   medium integrity
@@ -37,15 +37,19 @@ repeat the frozen verdict:
    the Windows `runas` verb.
 5. Both peers independently verify the other process's PID, executable path,
    user SID, Windows session, and integrity level.
-6. The broker revalidates the frozen policy, session, plan, resources, provider
+6. The broker first runs the exact fixed observer-v5 self-test; it cannot run a
+   caller-selected program.
+7. The broker revalidates the frozen policy, session, plan, resources, provider
    revision, nonce, and expiry.
-7. The broker starts WPR and returns `observer_ready`.
-8. The normal coordinator retains plan admission and one-use permit
+8. The broker starts WPR and returns `observer_ready`.
+9. The normal coordinator retains plan admission and one-use permit
    consumption.
-9. The Windows supervisor creates Factorio suspended, verifies its token is
+10. The Windows supervisor creates Factorio suspended, verifies its token is
    the exact medium-integrity interactive principal/session, and only then
    resumes its primary thread.
-10. After Factorio exits, the broker stops WPR, closes the evidence, and exits.
+11. After launch one, the broker refreshes its observer self-test while the
+    coordinator creates the second fresh preflight and baseline.
+12. After launch two, the broker stops WPR, closes the evidence, and exits.
 
 The high-integrity process cannot launch Factorio, Setup, a network client, a
 credential provider, or a caller-selected executable.
@@ -53,7 +57,8 @@ credential provider, or a caller-selected executable.
 ## IPC authentication
 
 The local pipe is protected by a DACL for the exact interactive user SID. The
-pipe rejects remote clients and allows one connection.
+pipe rejects remote clients and carries exactly two sequential observation
+sessions for one bounded Verdict 03 coordinator lifetime.
 
 The coordinator binds the client PID to the process handle returned by
 `ShellExecuteExW`. The broker binds the server PID to the claimed coordinator.

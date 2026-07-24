@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03
 title: Run the split-privilege hermetic standalone Play verdict
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed_with_notes
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-24T12:26:59Z
 owner: unassigned
 objective: >
@@ -90,3 +90,8 @@ closeout_checklist:
   - no product route or authority automatically promoted
   - structured commit and complete evidence checks pass
 active_at: 2026-07-24T12:26:59Z
+verified_at: 2026-07-24T14:46:15Z
+reviewed_at: 2026-07-24T14:46:15Z
+closed_at: 2026-07-24T14:46:15Z
+implementation_state: first_launch_completed_postrun_evidence_incomplete
+result: INCONCLUSIVE
