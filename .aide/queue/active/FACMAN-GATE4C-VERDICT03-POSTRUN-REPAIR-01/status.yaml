@@ -1,0 +1,15 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-24T14:46:15Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01/evidence/
+active_at: 2026-07-24T14:46:15Z
+source_verdict: Inconclusive
+source_operation: gate4c-verdict03-launch1-20260725a
+source_task_root: E:\Temporary\FacMan\FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03
+factorio_execution_allowed: false
+frozen_policy_mutation_allowed: false
+authority_promotion: false

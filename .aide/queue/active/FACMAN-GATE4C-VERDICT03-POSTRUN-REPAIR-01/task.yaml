@@ -1,0 +1,78 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01
+title: Repair the Verdict 03 post-run evidence boundary
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-24T14:46:15Z
+owner: unassigned
+objective: >
+  Preserve the complete Verdict 03 attempt, reproduce its post-run lifecycle
+  staging collision and unresolved ETW target classification without Factorio,
+  establish attribution for the NVIDIA umdlogs directories created inside the
+  protected installation, and implement only the bounded correction required
+  before a completely fresh verdict attempt against the unchanged policy.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/profile.yaml
+  - README.md
+  - docs/**
+  - release/index/**
+  - tests/**
+  - tools/**
+  - runtime/factorio/launch/flb_factorio_hermetic_candidate.cpp
+  - runtime/factorio/launch/flb_factorio_hermetic_candidate.h
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml
+  - apps/**
+  - runtime/application/**
+  - runtime/core/permit/**
+  - runtime/platform/**
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+  - facman_hermetic_play_candidate_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_session
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/hermetic_play_candidate_check.py
+  - tools/hermetic_play_policy_check.py
+  - tools/strict_check.py
+affected_package_profiles: []
+architecture_invariants:
+  - the Gate 4A policy digest remains immutable
+  - the complete Verdict 03 root remains retained and byte-identifiable
+  - no Verdict 03 artifact, baseline, permit, comparison, or observation is reused for a later attempt
+  - no Factorio process starts during diagnosis or correction validation
+  - the lifecycle packet staging root is exclusively owned and cannot collide with observer-side artifacts
+  - every ETW effect target is resolved or the result remains Inconclusive
+  - the selected installation change is never waived or reclassified as writable
+  - no protected installation content is deleted or modified during repair
+  - any launch-semantics change requires a separately reviewed candidate repair before another verdict
+  - no public Play route or product permit issuance authority is added
+  - Setup, credentials, networking, Steam, alternate intents, signing, and publication remain unavailable
+  - unrelated IR4 worktrees and ambiguous scratch roots remain untouched
+depends_on:
+  - FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03
+  - FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - preserve and digest the complete Verdict 03 retained evidence
+  - reproduce the candidate-artifact staging collision without Factorio
+  - prove one exclusive lifecycle staging owner with adversarial collision tests
+  - classify every unresolved ETW target or preserve an explicit Inconclusive result
+  - attribute the NVIDIA umdlogs creation or establish why attribution is impossible
+  - determine whether the protected change requires a separate candidate repair
+  - run focused native, Python, strict, policy, and cross-platform validation
+  - activate a wholly fresh verdict only after reviewed repair closeout
+active_at: 2026-07-24T14:46:15Z

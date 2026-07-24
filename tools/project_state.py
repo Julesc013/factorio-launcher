@@ -116,6 +116,7 @@ def collect() -> dict[str, Any]:
         "hermetic_standalone_play_policy": status["hermetic_standalone_play_policy"],
         "hermetic_standalone_play_candidate": status["hermetic_standalone_play_candidate"],
         "hermetic_standalone_play_verdict": status["hermetic_standalone_play_verdict"],
+        "gate4c_verdict03_postrun_repair": status["gate4c_verdict03_postrun_repair"],
         "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -760,6 +761,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "current_gate_status": "privilege_separation_repair_closed_verdict_03_active",
         },
+        "gate4c_verdict03_postrun_repair": {
+            "checkpoint": "gate4c-verdict03-postrun-repair",
+            "active": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-04",
+            "safety": "verdict_03_inconclusive_postrun_repair_active_no_play_authority",
+            "execution_reason": "verdict_03_incomplete_packet_unresolved_target_and_protected_change",
+            "truth_scope": "local_verdict_03_inconclusive_postrun_repair_active",
+            "canonical_integration": False,
+            "current_gate_status": "verdict_03_inconclusive_postrun_repair_active",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1154,9 +1166,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("Gate 4B candidate truth must bind exact reviewed and reproduced evidence without recording a human verdict or promoting authority")
     gate4c_verdict = status.get("hermetic_standalone_play_verdict", {})
     expected_gate4c_verdict = {
-        "status": "active_fresh_attempt_03_after_privilege_repair",
+        "status": "inconclusive_attempt_03_postrun_repair_active",
         "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
-        "verdict": "unset",
+        "verdict": "Inconclusive",
         "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
         "gate4c_evidence_tooling_revision": "c7c90554295f5de46447c013d7d0fea09dd03b22",
         "repair_integration_revision": "1a142896328051385a3e44a47f5116c3d0d01bbb",
@@ -1175,18 +1187,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "previous_provider_refusal_path": "$candidate.observer",
         "previous_provider_refusal_message": "independent observer was not active before process boundary",
         "previous_permit_approved_count": 2,
-        "attempt_count": 0,
-        "observer_self_test_pass_count": 0,
-        "zero_blocker_preflight_count": 0,
-        "completed_baseline_count": 0,
+        "attempt_count": 1,
+        "observer_self_test_pass_count": 1,
+        "zero_blocker_preflight_count": 1,
+        "completed_baseline_count": 1,
         "observer_start_failure_count": 0,
-        "permit_approved_count": 0,
-        "permit_consumed_count": 0,
-        "factorio_process_started": False,
-        "human_journey_started": False,
-        "capture_token_created": False,
+        "permit_approved_count": 1,
+        "permit_consumed_count": 1,
+        "factorio_process_started": True,
+        "human_journey_started": True,
+        "capture_token_created": True,
         "technical_packet_created": False,
-        "protected_comparison_completed": False,
+        "protected_comparison_completed": True,
         "human_observation_recorded": False,
         "root_cause_established": True,
         "observer_start_repair_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
@@ -1197,8 +1209,21 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "privilege_separation_repair_revision": "894b203710b8e14055903c0d33a9d3517fb6aa94",
         "privilege_separation_repair_status": "PASS",
         "coordinator_integrity": "medium_required_and_live_probe_proven",
-        "factorio_integrity": "medium_required_pre_resume_gate_proven_real_run_pending",
+        "factorio_integrity": "medium_verified_before_resume_in_first_real_run",
         "observer_integrity": "high_required_and_live_probe_proven",
+        "attempt_03_operation_id": "gate4c-verdict03-launch1-20260725a",
+        "attempt_03_session_digest": "b04a04e5d6c3ef22e14cce1f48bb020cf320b035f80e40cc282e8bf594189d62",
+        "attempt_03_plan_digest": "38736cd70515ba9eca3f269bb5691f1592659e7760241fefbb563934599f31e9",
+        "attempt_03_observer_self_test_digest": "67a62c6b6ed637bc002a1c1fe3be8ab46645cd5928d9e6c19b2b2c43b906a206",
+        "attempt_03_lost_events": 0,
+        "attempt_03_unresolved_target": True,
+        "attempt_03_packet_hash_closed": False,
+        "attempt_03_second_launch_started": False,
+        "attempt_03_protected_changed": True,
+        "attempt_03_changed_resource": "installation.selected",
+        "attempt_03_protected_change": "bin/x64/NVIDIA Corporation/umdlogs created",
+        "attempt_03_persistence_refusal": "permit_wrong_resource: candidate operation artifact directory already exists",
+        "postrun_repair_work_unit": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
         "public_command": False,
         "product_permit_issuance": False,
         "real_factorio_execution": False,
@@ -1215,8 +1240,34 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if gate4c_verdict != expected_gate4c_verdict:
         problems.append(
             "Gate 4C verdict truth must preserve the previous Inconclusive "
-            "result and blocked attempt 02, bind the reviewed split-privilege "
-            "repair, activate a fresh attempt 03, and remain non-authoritative"
+            "result and blocked attempt 02, record attempt 03 as Inconclusive "
+            "with its exact evidence findings, activate a bounded repair, and "
+            "remain non-authoritative"
+        )
+    postrun_repair = status.get("gate4c_verdict03_postrun_repair", {})
+    expected_postrun_repair = {
+        "status": "active",
+        "work_unit": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+        "source_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+        "source_verdict": "Inconclusive",
+        "source_operation_id": "gate4c-verdict03-launch1-20260725a",
+        "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "artifact_staging_collision": True,
+        "unresolved_etw_target": True,
+        "protected_installation_changed": True,
+        "protected_change_path": "bin/x64/NVIDIA Corporation/umdlogs",
+        "verdict03_root_retained": True,
+        "factorio_execution_allowed": False,
+        "frozen_policy_mutation_allowed": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "authority_promotion": False,
+    }
+    if postrun_repair != expected_postrun_repair:
+        problems.append(
+            "Gate 4C Verdict 03 post-run repair truth must bind the incomplete "
+            "packet, unresolved target, protected installation change, retained "
+            "evidence, and no-authority boundary"
         )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {
