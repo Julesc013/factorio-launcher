@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 find_package(Threads REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 function(facman_native_test target source labels)
   add_executable(${target} ${source})
@@ -198,7 +199,6 @@ facman_native_test(
   "contract;integration;setup")
 target_link_libraries(m2_wu6_launcher_handoff_smoke PRIVATE ulk_static)
 
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
 set(FACMAN_ABI_SYMBOL_ARGS)
 if(FACMAN_ENABLE_SANITIZERS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
   list(APPEND FACMAN_ABI_SYMBOL_ARGS --symbols-only)

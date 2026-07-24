@@ -2255,6 +2255,16 @@ int privilege_protocol_self_test()
 
 int observation_digest_self_test()
 {
+    const fs::path configured_python =
+        platform::path_from_utf8(FACMAN_TEST_PYTHON_EXECUTABLE);
+    std::error_code python_error;
+    if (configured_python.empty() ||
+        !fs::is_regular_file(configured_python, python_error) ||
+        python_error) {
+        std::cerr
+            << "Gate 4C verdict harness has no configured Python interpreter.\n";
+        return 1;
+    }
     launch::CandidateObservationResult observation;
     observation.plan_digest = std::string(64U, '1');
     observation.capture_session_digest = std::string(64U, '2');
