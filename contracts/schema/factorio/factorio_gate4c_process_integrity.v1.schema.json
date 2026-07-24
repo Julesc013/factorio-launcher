@@ -1,0 +1,20 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_gate4c_process_integrity.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pre-resume Factorio token-integrity evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.gate4c_process_integrity.v1"},
+    "work_unit": {"const": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"},
+    "plan_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "process_id": {"type": "integer", "minimum": 1},
+    "stable_process_identity": {"type": "string", "minLength": 1},
+    "integrity": {"const": "medium"},
+    "windows_session_id": {"type": "integer", "minimum": 0},
+    "principal_sid_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "executable_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "evidence_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "work_unit", "plan_digest", "process_id", "stable_process_identity", "integrity", "windows_session_id", "principal_sid_digest", "executable_sha256", "evidence_digest"]
+}

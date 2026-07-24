@@ -982,6 +982,111 @@ def finish_capture(args: argparse.Namespace) -> dict[str, Any]:
     return {"observation_path": str(observation_path), "diagnostic": diagnostic}
 
 
+def abort_capture(args: argparse.Namespace) -> dict[str, Any]:
+    if os.name != "nt" or not PREFLIGHT.is_elevated():
+        raise SessionError("aborting the Gate 4C capture requires an elevated Windows session")
+    task_root = exact_task_root(args.task_root)
+    operation_root = exact_operation_root(task_root, args.operation_root)
+    expected_token = operation_root / "process" / "observation" / "capture-token.json"
+    token_audit = PREFLIGHT.audit_no_follow(args.capture_token, require_file=True)
+    if (
+        not token_audit["safe"]
+        or os.path.normcase(os.path.abspath(args.capture_token))
+        != os.path.normcase(os.path.abspath(expected_token))
+    ):
+        raise SessionError("capture token is unsafe")
+    token = json.loads(args.capture_token.read_text(encoding="utf-8"))
+    claimed = token.get("capture_session_digest")
+    core = dict(token)
+    core.pop("capture_session_digest", None)
+    if (
+        token.get("schema") != CAPTURE_SCHEMA
+        or token.get("operation_root") != str(operation_root)
+        or token.get("active") is not True
+        or not lowercase_digest(claimed)
+        or digest_value(core) != claimed
+        or claimed != args.capture_session_digest
+    ):
+        raise SessionError("capture token identity is invalid")
+
+    observer_paths = PREFLIGHT.observer_tool_paths()
+    if not PREFLIGHT.observer_toolchain_coherent(observer_paths):
+        raise SessionError("observer toolchain changed during capture")
+    wpr = str(observer_paths["wpr"])
+    before = SELFTEST.command([wpr, "-status"])
+    cancel = None
+    if not SELFTEST.wpr_is_not_recording(before):
+        cancel = SELFTEST.command([wpr, "-cancel"])
+    after = SELFTEST.command([wpr, "-status"])
+    stopped = SELFTEST.wpr_is_not_recording(after)
+    result: dict[str, Any] = {
+        "schema": "factorio.gate4c_observer_abort.v1",
+        "canonicalization_version": "facman.sorted-json.v1",
+        "generated_at": utc_now(),
+        "operation_id": operation_root.name,
+        "capture_session_digest": claimed,
+        "reason": args.reason,
+        "wpr_status_before": command_record(before, [wpr, "-status"]),
+        "wpr_cancel": (
+            command_record(cancel, [wpr, "-cancel"]) if cancel is not None else None
+        ),
+        "wpr_status_after": command_record(after, [wpr, "-status"]),
+        "recording_stopped": stopped,
+    }
+    result["abort_digest"] = digest_value(result)
+    out = operation_root / "candidate-artifacts" / "observer-abort.json"
+    atomic_json(out, result)
+    if not stopped:
+        raise SessionError("WPR remained active after fail-closed abort")
+    return result
+
+
+def status_capture(args: argparse.Namespace) -> dict[str, Any]:
+    if os.name != "nt" or not PREFLIGHT.is_elevated():
+        raise SessionError("checking the Gate 4C capture requires an elevated Windows session")
+    task_root = exact_task_root(args.task_root)
+    operation_root = exact_operation_root(task_root, args.operation_root)
+    expected_token = operation_root / "process" / "observation" / "capture-token.json"
+    token_audit = PREFLIGHT.audit_no_follow(args.capture_token, require_file=True)
+    if (
+        not token_audit["safe"]
+        or os.path.normcase(os.path.abspath(args.capture_token))
+        != os.path.normcase(os.path.abspath(expected_token))
+    ):
+        raise SessionError("capture token is unsafe")
+    token = json.loads(args.capture_token.read_text(encoding="utf-8"))
+    claimed = token.get("capture_session_digest")
+    core = dict(token)
+    core.pop("capture_session_digest", None)
+    if (
+        token.get("schema") != CAPTURE_SCHEMA
+        or token.get("operation_root") != str(operation_root)
+        or token.get("active") is not True
+        or not lowercase_digest(claimed)
+        or digest_value(core) != claimed
+        or claimed != args.capture_session_digest
+    ):
+        raise SessionError("capture token identity is invalid")
+    observer_paths = PREFLIGHT.observer_tool_paths()
+    if not PREFLIGHT.observer_toolchain_coherent(observer_paths):
+        raise SessionError("observer toolchain changed during capture")
+    wpr = str(observer_paths["wpr"])
+    status = SELFTEST.command([wpr, "-status"])
+    if SELFTEST.wpr_is_not_recording(status):
+        raise SessionError("WPR is not active for the bound capture")
+    result: dict[str, Any] = {
+        "schema": "factorio.gate4c_observer_status.v1",
+        "canonicalization_version": "facman.sorted-json.v1",
+        "generated_at": utc_now(),
+        "operation_id": operation_root.name,
+        "capture_session_digest": claimed,
+        "active": True,
+        "wpr_status": command_record(status, [wpr, "-status"]),
+    }
+    result["status_digest"] = digest_value(result)
+    return result
+
+
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(description="Gate 4C evidence-only verdict-session backend.")
     sub = value.add_subparsers(dest="command", required=True)
@@ -1001,6 +1106,21 @@ def parser() -> argparse.ArgumentParser:
     finish.add_argument("--executable", required=True)
     finish.add_argument("--classification-roots", type=Path, required=True)
     finish.add_argument("--quiescence-seconds", type=int, default=2)
+    abort = sub.add_parser("observer-abort")
+    abort.add_argument("--task-root", type=Path, required=True)
+    abort.add_argument("--operation-root", type=Path, required=True)
+    abort.add_argument("--capture-token", type=Path, required=True)
+    abort.add_argument("--capture-session-digest", required=True)
+    abort.add_argument(
+        "--reason",
+        choices=("coordinator_disconnected", "launch_refused", "operator_cancelled"),
+        required=True,
+    )
+    status = sub.add_parser("observer-status")
+    status.add_argument("--task-root", type=Path, required=True)
+    status.add_argument("--operation-root", type=Path, required=True)
+    status.add_argument("--capture-token", type=Path, required=True)
+    status.add_argument("--capture-session-digest", required=True)
     probe = sub.add_parser("observer-start-probe")
     probe.add_argument("--task-root", type=Path, required=True)
     probe.add_argument("--probe-id", required=True)
@@ -1021,8 +1141,16 @@ def main() -> int:
         record = start_capture(args)
         print(f"gate4c-observer-start: active ({record['capture_session_digest']})")
         return 0
-    result = finish_capture(args)
-    print(f"gate4c-observer-finish: {result['observation_path']}")
+    if args.command == "observer-finish":
+        result = finish_capture(args)
+        print(f"gate4c-observer-finish: {result['observation_path']}")
+        return 0
+    if args.command == "observer-status":
+        result = status_capture(args)
+        print(f"gate4c-observer-status: active ({result['status_digest']})")
+        return 0
+    result = abort_capture(args)
+    print(f"gate4c-observer-abort: stopped ({result['abort_digest']})")
     return 0
 
 

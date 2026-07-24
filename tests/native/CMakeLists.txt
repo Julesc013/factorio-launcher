@@ -44,6 +44,10 @@ target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
 target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
   flb_factorio_launch_static facman_permit_static facman_platform_static)
 add_executable(facman_gate4c_verdict_harness gate4c_verdict_harness.cpp)
+if(WIN32)
+  target_sources(facman_gate4c_verdict_harness PRIVATE
+    gate4c_observer_broker_windows.cpp)
+endif()
 target_compile_features(facman_gate4c_verdict_harness PRIVATE cxx_std_17)
 target_compile_definitions(facman_gate4c_verdict_harness PRIVATE
   FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}")
@@ -57,6 +61,12 @@ add_test(
 set_tests_properties(
   facman_gate4c_verdict_harness_canonical_smoke
   PROPERTIES LABELS "fast-unit;contract;security")
+add_test(
+  NAME facman_gate4c_verdict_harness_privilege_protocol_smoke
+  COMMAND facman_gate4c_verdict_harness --self-test-privilege-protocol)
+set_tests_properties(
+  facman_gate4c_verdict_harness_privilege_protocol_smoke
+  PROPERTIES LABELS "fast-unit;contract;security;platform")
 facman_native_test(flb_factorio_setup_recipe_smoke flb_factorio_setup_recipe_smoke.cpp "fast-unit;security;contract")
 target_compile_features(flb_factorio_setup_recipe_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_setup_recipe_smoke PRIVATE flb_factorio_install_validation_static)
@@ -87,6 +97,16 @@ target_link_libraries(facman_execution_foundation_smoke PRIVATE
 target_compile_definitions(facman_execution_foundation_smoke PRIVATE
   FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
 add_dependencies(facman_execution_foundation_smoke facman_process_probe)
+facman_native_test(
+  facman_process_pre_resume_smoke
+  facman_process_pre_resume_smoke.cpp
+  "fast-unit;platform;security")
+target_compile_features(facman_process_pre_resume_smoke PRIVATE cxx_std_17)
+target_link_libraries(facman_process_pre_resume_smoke PRIVATE
+  facman_platform_static)
+target_compile_definitions(facman_process_pre_resume_smoke PRIVATE
+  FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
+add_dependencies(facman_process_pre_resume_smoke facman_process_probe)
 if(TARGET facman_cli)
   facman_native_test(facman_workspace_resolver_smoke facman_workspace_resolver_smoke.cpp "fast-unit;platform;frontend")
   target_compile_features(facman_workspace_resolver_smoke PRIVATE cxx_std_17)

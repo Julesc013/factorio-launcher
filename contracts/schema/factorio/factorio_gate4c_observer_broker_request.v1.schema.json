@@ -1,0 +1,51 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_gate4c_observer_broker_request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Closed verdict-only observer broker request",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.gate4c_observer_broker_request.v1"},
+    "command": {"enum": ["observer_start", "observer_status", "observer_finish", "observer_abort"]},
+    "coordinator_process_id": {"type": "integer", "minimum": 1},
+    "operation_id": {"type": "string", "pattern": "^gate4c-[a-z0-9-]+$"},
+    "session_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "preflight_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "policy_digest": {"const": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"},
+    "plan_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "observer_provider_revision": {"const": "gate4c-etw-file-registry-process.v5"},
+    "resource_binding_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "nonce": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "not_before_unix_ms": {"type": "integer", "minimum": 0},
+    "expires_at_unix_ms": {"type": "integer", "minimum": 1},
+    "start_request_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "capture_session_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "process_id": {"type": "integer", "minimum": 1},
+    "process_stable_identity": {"type": "string", "minLength": 1},
+    "executable": {"type": "string", "minLength": 1},
+    "classification_roots": {"type": "string", "minLength": 1},
+    "reason": {"enum": ["coordinator_disconnected", "launch_refused", "operator_cancelled"]},
+    "request_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "command", "operation_id", "session_digest", "nonce", "request_digest"],
+  "allOf": [
+    {
+      "if": {"properties": {"command": {"const": "observer_start"}}},
+      "then": {
+        "required": ["coordinator_process_id", "preflight_digest", "policy_digest", "plan_digest", "observer_provider_revision", "resource_binding_digest", "not_before_unix_ms", "expires_at_unix_ms"]
+      }
+    },
+    {
+      "if": {"properties": {"command": {"const": "observer_status"}}},
+      "then": {"required": ["start_request_digest", "capture_session_digest"]}
+    },
+    {
+      "if": {"properties": {"command": {"const": "observer_finish"}}},
+      "then": {"required": ["plan_digest", "start_request_digest", "capture_session_digest", "process_id", "process_stable_identity", "executable", "classification_roots"]}
+    },
+    {
+      "if": {"properties": {"command": {"const": "observer_abort"}}},
+      "then": {"required": ["start_request_digest", "capture_session_digest", "reason"]}
+    }
+  ]
+}
