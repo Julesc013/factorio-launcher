@@ -59,6 +59,8 @@ constexpr const char* kBrokerResponseSchema =
     "factorio.gate4c_observer_broker_response.v1";
 constexpr const char* kVerdict03BrokerReadySchema =
     "factorio.gate4c_verdict03_broker_ready.v1";
+constexpr const char* kVerdict03BrokerFailureSchema =
+    "factorio.gate4c_verdict03_broker_failure.v1";
 constexpr const char* kVerdict03CoordinatorConfigSchema =
     "factorio.gate4c_verdict03_coordinator_config.v1";
 constexpr const char* kPrivilegeProbeRequestSchema =
@@ -991,6 +993,35 @@ std::string verdict03_broker_ready_json(
     return closed.serialize();
 }
 
+std::string verdict03_broker_failure_json(
+    const std::string& detail,
+    std::uint64_t generation,
+    const gate4c::ProcessSecurityIdentity& coordinator,
+    const gate4c::ProcessSecurityIdentity& broker)
+{
+    json::ObjectBuilder document;
+    document.add_string("schema", kVerdict03BrokerFailureSchema);
+    document.add_string("work_unit", kWorkUnit);
+    (void)document.add_unsigned_integer("generation", generation);
+    (void)document.add_unsigned_integer(
+        "coordinator_process_id", coordinator.process_id);
+    (void)document.add_unsigned_integer(
+        "broker_process_id", broker.process_id);
+    document.add_string("detail", detail);
+    const std::string core = document.serialize();
+    auto parsed = json::parse(core);
+    if (!parsed) {
+        throw std::runtime_error(
+            "Verdict 03 broker-failure evidence encoding failed");
+    }
+    json::ObjectBuilder closed;
+    for (const std::string& key : parsed.value().object_keys()) {
+        closed.add_value(key, require_member(parsed.value(), key.c_str()));
+    }
+    closed.add_string("failure_digest", canonical_object_digest(core));
+    return closed.serialize();
+}
+
 ObserverSelfTestResult validate_verdict03_broker_ready(
     const std::string& text,
     std::uint64_t expected_generation,
@@ -998,6 +1029,38 @@ ObserverSelfTestResult validate_verdict03_broker_ready(
     const gate4c::ProcessSecurityIdentity& coordinator,
     const gate4c::ProcessSecurityIdentity& broker)
 {
+    auto parsed = json::parse(
+        text, {1024U * 1024U, 8U, 128U, 256U * 1024U});
+    if (parsed && parsed.value().is_object() &&
+        string_member(parsed.value(), "schema") ==
+            kVerdict03BrokerFailureSchema) {
+        const json::Value failure = parse_bounded_object(
+            text,
+            {
+                "broker_process_id",
+                "coordinator_process_id",
+                "detail",
+                "failure_digest",
+                "generation",
+                "schema",
+                "work_unit",
+            },
+            "Verdict 03 broker-failure response");
+        if (string_member(failure, "work_unit") != kWorkUnit ||
+            unsigned_member(failure, "generation") != expected_generation ||
+            unsigned_member(failure, "coordinator_process_id") !=
+                coordinator.process_id ||
+            unsigned_member(failure, "broker_process_id") !=
+                broker.process_id ||
+            string_member(failure, "failure_digest") !=
+                digest(canonical_without(failure, "failure_digest"))) {
+            throw std::runtime_error(
+                "Verdict 03 broker-failure response binding is invalid");
+        }
+        throw std::runtime_error(
+            "elevated Verdict 03 observer broker refused: " +
+            string_member(failure, "detail"));
+    }
     const std::set<std::string> expected_keys{
         "broker_integrity",
         "broker_process_id",
@@ -1750,35 +1813,42 @@ int run_verdict03_observer_broker(
             pipe_name, expected_coordinator_process_id, running_harness,
             std::chrono::minutes(2));
     for (std::uint64_t generation = 1U; generation <= 2U; ++generation) {
-        const ObserverSelfTestResult self_test =
-            run_fresh_observer_self_test(config);
-        connection.channel.write_frame(verdict03_broker_ready_json(
-            self_test, generation, connection.coordinator_identity, broker));
-        const std::string start_text =
-            connection.channel.read_frame(1024U * 1024U);
-        const json::Value start = parse_bounded_object(
-            start_text, kStartRequestKeys,
-            "Verdict 03 observer broker start request");
-        const fs::path session_path =
-            normalized_absolute(platform::path_from_utf8(
-                string_member(start, "session_path")));
-        if (!path_beneath(config.task_root, session_path) ||
-            normalized_absolute(session_path.parent_path()) !=
-                normalized_absolute(
-                    config.task_root / "evidence" / "sessions")) {
-            throw std::runtime_error(
-                "Verdict 03 broker session path is outside the exact evidence root");
+        try {
+            const ObserverSelfTestResult self_test =
+                run_fresh_observer_self_test(config);
+            connection.channel.write_frame(verdict03_broker_ready_json(
+                self_test, generation, connection.coordinator_identity, broker));
+            const std::string start_text =
+                connection.channel.read_frame(1024U * 1024U);
+            const json::Value start = parse_bounded_object(
+                start_text, kStartRequestKeys,
+                "Verdict 03 observer broker start request");
+            const fs::path session_path =
+                normalized_absolute(platform::path_from_utf8(
+                    string_member(start, "session_path")));
+            if (!path_beneath(config.task_root, session_path) ||
+                normalized_absolute(session_path.parent_path()) !=
+                    normalized_absolute(
+                        config.task_root / "evidence" / "sessions")) {
+                throw std::runtime_error(
+                    "Verdict 03 broker session path is outside the exact evidence root");
+            }
+            Session session = load_session(session_path, running_harness);
+            if ((generation == 1U &&
+                    session.operation_id != config.first_operation_id) ||
+                (generation == 2U &&
+                    session.operation_id != config.second_operation_id)) {
+                throw std::runtime_error(
+                    "Verdict 03 broker launch order or operation identity changed");
+            }
+            (void)run_observer_broker_session(
+                session, connection, broker, start_text);
+        } catch (const std::exception& exception) {
+            connection.channel.write_frame(verdict03_broker_failure_json(
+                exception.what(), generation,
+                connection.coordinator_identity, broker));
+            return 2;
         }
-        Session session = load_session(session_path, running_harness);
-        if ((generation == 1U &&
-                session.operation_id != config.first_operation_id) ||
-            (generation == 2U &&
-                session.operation_id != config.second_operation_id)) {
-            throw std::runtime_error(
-                "Verdict 03 broker launch order or operation identity changed");
-        }
-        (void)run_observer_broker_session(
-            session, connection, broker, start_text);
     }
     return 0;
 }
