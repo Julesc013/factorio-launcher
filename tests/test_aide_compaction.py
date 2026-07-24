@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "hermetic-standalone-play-verdict-02",
+            "gate4c-privilege-separation-repair",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,7 +101,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+            "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -109,7 +109,7 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "dev_integrated_observer_start_repair_proven_repeat_verdict_active",
+            "dev_integrated_gate4c_privilege_inheritance_defect_repair_active",
             data["product"]["truth_scope"],
         )
         self.assertFalse(data["product"]["canonical_integration"])
@@ -284,8 +284,24 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("PASS", gate4c_verdict["repair_status"])
         self.assertEqual(
             "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
-            gate4c_verdict["repair_work_unit"],
+            gate4c_verdict["observer_start_repair_work_unit"],
         )
+        self.assertTrue(gate4c_verdict["repeat_verdict_blocked_before_baseline"])
+        self.assertTrue(gate4c_verdict["privilege_inheritance_defect_established"])
+        self.assertEqual(
+            "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+            gate4c_verdict["privilege_separation_repair_work_unit"],
+        )
+        self.assertEqual(
+            "unproven_inherits_calling_process_context",
+            gate4c_verdict["factorio_integrity"],
+        )
+        privilege_repair = data["gate4c_privilege_separation_repair"]
+        self.assertEqual("CreateProcessW", privilege_repair["current_process_api"])
+        self.assertEqual("medium", privilege_repair["required_factorio_integrity"])
+        self.assertEqual("high", privilege_repair["required_observer_integrity"])
+        self.assertFalse(privilege_repair["privileged_broker_authority"])
+        self.assertFalse(privilege_repair["factorio_process_started"])
         self.assertFalse(data["host_environment_program"]["blocks_real_play"])
         self.assertTrue(
             data["host_environment_program"]["installation_model_v2_reviewed_committed_clean"]
@@ -707,11 +723,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "hermetic-standalone-play-verdict-02",
+            "gate4c-privilege-separation-repair",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+            "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
             data["active_work_unit"],
         )
         self.assertEqual(

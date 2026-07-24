@@ -116,6 +116,7 @@ def collect() -> dict[str, Any]:
         "hermetic_standalone_play_policy": status["hermetic_standalone_play_policy"],
         "hermetic_standalone_play_candidate": status["hermetic_standalone_play_candidate"],
         "hermetic_standalone_play_verdict": status["hermetic_standalone_play_verdict"],
+        "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
         "gate2_instance_spec_and_readiness_closeout": status["gate2_instance_spec_and_readiness_closeout"],
@@ -520,8 +521,9 @@ def readme_status(data: dict[str, Any]) -> str:
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
         "",
-        "Two execution modes are accepted product designs but remain unproven: Steam-aware "
-        "`instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because "
+        "Two execution modes are accepted product designs but remain unproven:",
+        "Steam-aware `instance_isolated` and standalone `hermetic`. "
+        "`run.execute` remains unavailable because "
         f"`{data['execution']['reason']}`; no real-play gate has passed.",
         f"Readiness is playability `{data['readiness']['playability']}`, workflow "
         f"`{data['readiness']['user_workflow']}`, user validation `{data['readiness']['user_validation']}`, "
@@ -757,6 +759,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "truth_scope": "dev_integrated_observer_start_repair_proven_repeat_verdict_active",
             "canonical_integration": False,
             "current_gate_status": "observer_start_repair_closed_repeat_verdict_active",
+        },
+        "gate4c_privilege_separation_repair": {
+            "checkpoint": "gate4c-privilege-separation-repair",
+            "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "safety": "privilege_inheritance_defect_blocked_before_baseline_no_play_authority",
+            "execution_reason": "gate4c_privilege_separation_repair_active",
+            "truth_scope": "dev_integrated_gate4c_privilege_inheritance_defect_repair_active",
+            "canonical_integration": False,
+            "current_gate_status": "verdict_02_blocked_before_baseline_privilege_repair_active",
         },
     }
     product = status.get("product", {})
@@ -1141,7 +1154,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("Gate 4B candidate truth must bind exact reviewed and reproduced evidence without recording a human verdict or promoting authority")
     gate4c_verdict = status.get("hermetic_standalone_play_verdict", {})
     expected_gate4c_verdict = {
-        "status": "repeat_verdict_active_after_observer_start_repair",
+        "status": "blocked_before_baseline_privilege_inheritance_defect",
         "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
         "verdict": "unset",
         "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
@@ -1176,8 +1189,14 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "protected_comparison_completed": False,
         "human_observation_recorded": False,
         "root_cause_established": True,
-        "repair_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+        "observer_start_repair_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
         "repeat_verdict_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+        "repeat_verdict_blocked_before_baseline": True,
+        "privilege_separation_repair_work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+        "privilege_inheritance_defect_established": True,
+        "coordinator_integrity": "unproven_would_be_high_in_current_procedure",
+        "factorio_integrity": "unproven_inherits_calling_process_context",
+        "observer_integrity": "high_required",
         "public_command": False,
         "product_permit_issuance": False,
         "real_factorio_execution": False,
@@ -1194,8 +1213,42 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if gate4c_verdict != expected_gate4c_verdict:
         problems.append(
             "Gate 4C verdict truth must preserve the previous Inconclusive "
-            "result, bind the reviewed observer repair, keep attempt 02 fresh, "
-            "and remain non-authoritative"
+            "result, bind the reviewed observer repair, block attempt 02 before "
+            "baseline on the privilege-inheritance defect, and remain non-authoritative"
+        )
+    privilege_repair = status.get("gate4c_privilege_separation_repair", {})
+    expected_privilege_repair = {
+        "status": "active_before_implementation",
+        "work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+        "finding_revision": "934d4fcca2d3749f1a9710186afcf1fe294f0dc8",
+        "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "current_process_api": "CreateProcessW",
+        "current_child_security_context": "calling_process",
+        "required_coordinator_integrity": "medium",
+        "required_factorio_integrity": "medium",
+        "required_observer_integrity": "high",
+        "verdict_02_blocked_before_baseline": True,
+        "baseline_capture_started": False,
+        "permit_issued": False,
+        "factorio_process_started": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "privileged_broker_authority": False,
+        "real_factorio_execution": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if privilege_repair != expected_privilege_repair:
+        problems.append(
+            "Gate 4C privilege-separation repair truth must bind the confirmed "
+            "CreateProcessW inheritance defect without granting broker or Play authority"
         )
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {

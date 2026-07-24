@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-24T10:24:58Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence/
+active_at: 2026-07-24T10:24:58Z
+implementation_state: finding_confirmed_design_pending
+factorio_process_started: false
+baseline_capture_started: false
+permit_issued: false
+frozen_policy_changed: false
