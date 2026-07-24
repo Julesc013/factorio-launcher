@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
 title: Repeat the human-reviewed hermetic standalone Play verdict
-status: active
-lifecycle_state: active
-planning_state: active
+status: blocked
+lifecycle_state: blocked
+planning_state: blocked
 created_at: 2026-07-24T08:08:48Z
 owner: unassigned
 objective: >
@@ -81,3 +81,11 @@ closeout_checklist:
   - no product route or authority automatically promoted
   - structured commit and complete evidence checks pass
 active_at: 2026-07-24T08:08:48Z
+blocked_at: 2026-07-24T10:24:58Z
+blocked_by: FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01
+blocker: >
+  The verdict harness must hold an elevated token to control the frozen WPR
+  kernel trace, but its current Windows supervisor starts Factorio with
+  CreateProcessW in the calling process security context. A real run would
+  therefore risk launching Factorio at high integrity. Attempt 02 stopped
+  before self-test, attestation, preflight, baseline, permit, or execution.

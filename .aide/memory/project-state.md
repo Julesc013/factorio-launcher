@@ -6,15 +6,15 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Current product truth
 
-- phase: `hermetic_standalone_play_verdict_repeat` / `active`;
+- phase: `gate4c_privilege_separation_repair` / `active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `hermetic-standalone-play-verdict-02`;
-- active WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02`;
-- next WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01`;
+- checkpoint: `gate4c-privilege-separation-repair`;
+- active WorkUnit: `FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01`;
+- next WorkUnit: `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `dev_integrated_observer_start_repair_proven_repeat_verdict_active`; canonical integration: `false`; local counts promoted: `true`;
+- truth scope: `dev_integrated_gate4c_privilege_inheritance_defect_repair_active`; canonical integration: `false`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -22,7 +22,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `real_play_repeat_verdict_pending`;
+- execution: `unavailable` / `gate4c_privilege_separation_repair_active`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
@@ -30,7 +30,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 - playability: `not_yet_playable`;
 - user workflow: `advanced_command_surface_only`;
-- safety authority: `observer_start_repair_proven_repeat_verdict_no_play_authority`;
+- safety authority: `privilege_inheritance_defect_blocked_before_baseline_no_play_authority`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -102,7 +102,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `279` / `242`;
+- schemas / refusal codes: `286` / `242`;
 - command catalog digest: `4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
@@ -125,7 +125,8 @@ work or promote execution, network, credential, signing, or publication authorit
 - Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.
 - Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
 - Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.
-- Gate 4C verdict attempt 01 is Inconclusive; the observer-start defect is repaired and live-proven without Factorio, and fresh attempt 02 is active before baseline capture.
+- Gate 4C verdict attempt 01 is Inconclusive; the observer-start defect is repaired and live-proven without Factorio.
+- Gate 4C verdict attempt 02 is blocked before baseline because the elevated harness would create Factorio in its calling security context; privilege separation repair is active.
 - The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.

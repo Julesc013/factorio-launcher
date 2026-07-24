@@ -266,6 +266,21 @@ ProcessResult supervise_process(const ProcessRequest& request)
         static_cast<std::uint64_t>(process.dwProcessId),
         "windows-process-v1",
         windows_start_identity(process_handle.get(), process.dwProcessId)};
+    if (request.validate_before_resume) {
+        bool accepted = false;
+        try {
+            accepted = request.validate_before_resume(result.identity);
+        } catch (...) {
+            accepted = false;
+        }
+        if (!accepted) {
+            terminate_tree(job.get(), result, 1);
+            result.termination = ProcessTermination::start_failed;
+            result.error =
+                "process identity validation refused before primary-thread resume";
+            return result;
+        }
+    }
     if (ResumeThread(thread_handle.get()) == static_cast<DWORD>(-1)) {
         terminate_tree(job.get(), result, 1);
         result.error = "ResumeThread failed";

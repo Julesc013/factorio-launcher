@@ -1,0 +1,22 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_gate4c_privilege_boundary.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gate 4C split-privilege observation evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.gate4c_privilege_boundary.v1"},
+    "work_unit": {"const": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"},
+    "policy_digest": {"const": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"},
+    "plan_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "session_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "coordinator_integrity": {"const": "medium"},
+    "factorio_required_integrity": {"const": "medium"},
+    "observer_broker_integrity": {"const": "high"},
+    "start": {"$ref": "factorio_gate4c_observer_broker_response.v1.schema.json"},
+    "status": {"$ref": "factorio_gate4c_observer_broker_response.v1.schema.json"},
+    "finish": {"$ref": "factorio_gate4c_observer_broker_response.v1.schema.json"},
+    "evidence_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "work_unit", "policy_digest", "plan_digest", "session_digest", "coordinator_integrity", "factorio_required_integrity", "observer_broker_integrity", "start", "status", "finish", "evidence_digest"]
+}

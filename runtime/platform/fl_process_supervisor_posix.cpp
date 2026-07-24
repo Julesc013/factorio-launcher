@@ -141,6 +141,12 @@ std::string posix_start_identity(pid_t process_id) noexcept
 ProcessResult supervise_process(const ProcessRequest& request)
 {
     ProcessResult result;
+    if (request.validate_before_resume) {
+        result.termination = ProcessTermination::start_failed;
+        result.error =
+            "pre-resume process validation is unavailable on this platform";
+        return result;
+    }
     result.termination = ProcessTermination::start_failed;
     if (request.executable.empty() || request.timeout.count() <= 0) {
         result.error = "process request requires an executable and positive timeout";

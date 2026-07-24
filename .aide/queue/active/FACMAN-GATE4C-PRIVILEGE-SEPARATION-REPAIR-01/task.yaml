@@ -1,0 +1,88 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01
+title: Separate Gate 4C observer elevation from Factorio execution
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-24T10:24:58Z
+owner: unassigned
+objective: >
+  Repair the Gate 4C verdict-only process boundary so a medium-integrity
+  coordinator launches Factorio at medium integrity while one narrowly scoped,
+  one-shot elevated helper controls only the frozen WPR observer; bind exact
+  principal, session, process-integrity, policy, plan, provider, nonce, expiry,
+  and evidence identities; prove fail-closed behavior without starting
+  Factorio; and make a completely fresh verdict attempt eligible without
+  enabling public Play or a general privilege broker.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/profile.yaml
+  - README.md
+  - docs/**
+  - release/index/**
+  - contracts/schema/**
+  - contracts/generated-index/**
+  - tests/**
+  - tools/**
+  - runtime/platform/**
+  - runtime/factorio/launch/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml
+  - apps/**
+  - runtime/application/**
+  - runtime/core/permit/**
+  - runtime/factorio/setup/**
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+  - facman_hermetic_play_candidate_smoke
+  - facman_execution_foundation_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_preflight
+  - tests.test_hermetic_play_candidate
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/hermetic_play_candidate_check.py
+  - tools/hermetic_play_policy_check.py
+  - tools/strict_check.py
+affected_package_profiles: []
+architecture_invariants:
+  - the Gate 4A frozen policy bytes and digest remain immutable
+  - Verdict attempt 02 remains blocked before baseline and cannot be resumed in place
+  - the main coordinator and Factorio execute at medium integrity
+  - only the one-shot observer helper executes at high integrity
+  - the elevated helper cannot launch Factorio or any caller-selected executable
+  - the elevated helper exposes only exact start, status, finish, and abort observer operations
+  - IPC is local, bounded, authenticated, ACL-restricted, nonce-bound, expiring, replay-resistant, and exact-session-scoped
+  - both IPC peers independently validate principal, session, binary, policy, provider, operation, and resource identities
+  - observer readiness is established before any process boundary
+  - observer loss, IPC failure, broker exit, identity mismatch, or integrity mismatch forces Inconclusive or refusal
+  - no product permit issuer, public Play route, persistent service, Setup, credential, network, Steam, signing, or publication authority is added
+  - no real Factorio process starts during repair validation
+depends_on:
+  - FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01
+  - FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - current elevated-harness inheritance defect preserved as exact evidence
+  - coordinator medium-integrity requirement enforced
+  - Factorio medium-integrity requirement bound and independently observed
+  - observer helper high-integrity requirement enforced
+  - exact interactive user and session bound on both sides
+  - broker command surface closed and incapable of generic execution
+  - authenticated IPC refuses wrong caller, broker, nonce, expiry, operation, policy, plan, provider, resource, and replay
+  - broker starts before process boundary and stops after quiescence
+  - broker secrets are memory-only, zeroed, and absent from logs and support artifacts
+  - elevated and non-elevated synthetic probes pass without Factorio
+  - cross-platform native, Python, strict, sanitizer, CodeQL, package, and clean reproduction pass
+  - fresh verdict WorkUnit is activated only after reviewed closeout
+active_at: 2026-07-24T10:24:58Z

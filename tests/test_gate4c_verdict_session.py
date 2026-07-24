@@ -3,9 +3,15 @@
 
 from __future__ import annotations
 
+import argparse
+import contextlib
 import importlib.util
+import json
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +52,145 @@ EndHeader
 
 
 class Gate4CVerdictSessionTests(unittest.TestCase):
+    def capture_fixture(self, root: Path) -> tuple[Path, Path, dict[str, object]]:
+        task_root = root / SESSION.PREFLIGHT.WORK_UNIT
+        operation_root = (
+            task_root / "workspace" / "temporary" / "gate4c-broker-test"
+        )
+        observation_root = operation_root / "process" / "observation"
+        observation_root.mkdir(parents=True)
+        token_path = observation_root / "capture-token.json"
+        core: dict[str, object] = {
+            "schema": SESSION.CAPTURE_SCHEMA,
+            "operation_root": str(operation_root),
+            "active": True,
+        }
+        token = dict(core)
+        token["capture_session_digest"] = SESSION.digest_value(core)
+        token_path.write_text(json.dumps(token), encoding="utf-8")
+        return task_root, operation_root, token
+
+    def capture_patches(
+        self, task_root: Path, operation_root: Path
+    ) -> list[mock._patch]:
+        windows_os = mock.Mock(wraps=SESSION.os)
+        windows_os.name = "nt"
+        return [
+            mock.patch.object(SESSION, "os", windows_os),
+            mock.patch.object(SESSION.PREFLIGHT, "is_elevated", return_value=True),
+            mock.patch.object(
+                SESSION, "exact_task_root", return_value=task_root
+            ),
+            mock.patch.object(
+                SESSION, "exact_operation_root", return_value=operation_root
+            ),
+            mock.patch.object(
+                SESSION.PREFLIGHT,
+                "audit_no_follow",
+                return_value={"safe": True},
+            ),
+            mock.patch.object(
+                SESSION.PREFLIGHT,
+                "observer_tool_paths",
+                return_value={"wpr": Path(r"C:\Tools\wpr.exe")},
+            ),
+            mock.patch.object(
+                SESSION.PREFLIGHT,
+                "observer_toolchain_coherent",
+                return_value=True,
+            ),
+        ]
+
+    def test_broker_status_revalidates_bound_active_capture(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root, operation_root, token = self.capture_fixture(
+                Path(temporary)
+            )
+            token_path = (
+                operation_root / "process" / "observation" / "capture-token.json"
+            )
+            status_result = subprocess.CompletedProcess(
+                ["wpr", "-status"], 0, "WPR is recording", ""
+            )
+            with contextlib.ExitStack() as stack:
+                for patch in self.capture_patches(task_root, operation_root):
+                    stack.enter_context(patch)
+                stack.enter_context(
+                    mock.patch.object(
+                        SESSION.SELFTEST, "command", return_value=status_result
+                    )
+                )
+                stack.enter_context(
+                    mock.patch.object(
+                        SESSION.SELFTEST,
+                        "wpr_is_not_recording",
+                        return_value=False,
+                    )
+                )
+                result = SESSION.status_capture(
+                    argparse.Namespace(
+                        task_root=task_root,
+                        operation_root=operation_root,
+                        capture_token=token_path,
+                        capture_session_digest=token["capture_session_digest"],
+                    )
+                )
+            self.assertTrue(result["active"])
+            self.assertEqual(
+                result["capture_session_digest"],
+                token["capture_session_digest"],
+            )
+
+    def test_broker_abort_cancels_and_records_exact_capture(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root, operation_root, token = self.capture_fixture(
+                Path(temporary)
+            )
+            token_path = (
+                operation_root / "process" / "observation" / "capture-token.json"
+            )
+            results = [
+                subprocess.CompletedProcess(
+                    ["wpr", "-status"], 0, "WPR is recording", ""
+                ),
+                subprocess.CompletedProcess(["wpr", "-cancel"], 0, "", ""),
+                subprocess.CompletedProcess(
+                    ["wpr", "-status"], 0, "WPR is not recording", ""
+                ),
+            ]
+            with contextlib.ExitStack() as stack:
+                for patch in self.capture_patches(task_root, operation_root):
+                    stack.enter_context(patch)
+                stack.enter_context(
+                    mock.patch.object(
+                        SESSION.SELFTEST, "command", side_effect=results
+                    )
+                )
+                stack.enter_context(
+                    mock.patch.object(
+                        SESSION.SELFTEST,
+                        "wpr_is_not_recording",
+                        side_effect=(False, True),
+                    )
+                )
+                result = SESSION.abort_capture(
+                    argparse.Namespace(
+                        task_root=task_root,
+                        operation_root=operation_root,
+                        capture_token=token_path,
+                        capture_session_digest=token["capture_session_digest"],
+                        reason="launch_refused",
+                    )
+                )
+            self.assertTrue(result["recording_stopped"])
+            self.assertTrue(
+                (
+                    operation_root
+                    / "candidate-artifacts"
+                    / "observer-abort.json"
+                ).is_file()
+            )
+
     def test_observation_digest_matches_reviewed_cpp_field_order(self) -> None:
         observation = {
             "schema": SESSION.OBSERVATION_SCHEMA,

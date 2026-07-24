@@ -55,3 +55,10 @@ Gate 4C evidence tools:
   remains Inconclusive. Self-tests expire after 15 minutes.
   The tool exercises only task-owned probe state and cannot start Factorio or
   record a human verdict.
+- `gate4c_verdict_session.py` exposes the frozen observer backend used only by
+  the one-shot high-integrity Gate 4C broker. Its closed operations are start,
+  status, finish, and fail-closed abort; it cannot launch Factorio.
+- `gate4c_privilege_separation_check.py` validates the medium-integrity
+  coordinator/game boundary, high-integrity observer-only boundary, closed
+  named-pipe protocol, pre-resume token validation, evidence schemas, and
+  unchanged no-authority truth.

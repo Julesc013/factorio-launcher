@@ -22,11 +22,17 @@ items:
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01/evidence
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
-    status: active
-    lifecycle_state: active
+    status: blocked
+    lifecycle_state: blocked
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
+  - id: FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01
+    status: active
+    lifecycle_state: active
+    title: Separate Gate 4C observer elevation from Factorio execution
+    task: .aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
     status: passed
     lifecycle_state: closed

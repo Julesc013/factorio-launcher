@@ -1,0 +1,18 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_gate4c_privilege_probe.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "No-WPR no-Factorio split-privilege probe",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.gate4c_privilege_probe.v1"},
+    "work_unit": {"const": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"},
+    "probe_id": {"type": "string", "pattern": "^gate4c-privilege-probe-[a-z0-9-]+$"},
+    "frozen_policy_digest": {"const": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"},
+    "factorio_started": {"const": false},
+    "wpr_started": {"const": false},
+    "authenticated_response": {"$ref": "factorio_gate4c_observer_broker_response.v1.schema.json"},
+    "probe_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "work_unit", "probe_id", "frozen_policy_digest", "factorio_started", "wpr_started", "authenticated_response", "probe_digest"]
+}
