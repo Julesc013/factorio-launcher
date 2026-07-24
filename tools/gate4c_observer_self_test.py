@@ -281,6 +281,8 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         raise PREFLIGHT.PreflightError("observer self-test requires a clean, committed tooling revision")
     if not profile.get("valid"):
         raise PREFLIGHT.PreflightError("observer profile does not match the reviewed closed contract")
+    if not provider.get("valid"):
+        raise PREFLIGHT.PreflightError("observer provider identity is not valid")
     if not all(item.get("valid") for item in observer_tools.values()):
         raise PREFLIGHT.PreflightError("observer tool identity could not be hash-closed")
     status = command([wpr, "-status"])

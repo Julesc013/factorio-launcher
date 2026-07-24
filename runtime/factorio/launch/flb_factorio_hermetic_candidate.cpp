@@ -1151,7 +1151,11 @@ HermeticCandidateLaunchProvider::consume_and_execute(
             "$candidate.provider.policy"));
     }
     auto observer_started = observer.begin(reviewed_plan);
-    if (!observer_started || !observer.active()) {
+    if (!observer_started) {
+        return facman::core::Result<CandidateExecutionRecord>::failure(
+            observer_started.error());
+    }
+    if (!observer.active()) {
         return facman::core::Result<CandidateExecutionRecord>::failure(candidate_error(
             "permit_wrong_evidence", "independent observer was not active before process boundary",
             "$candidate.observer", facman::core::OutcomeKind::unavailable));

@@ -371,6 +371,16 @@ int main()
         return facman::core::Result<permit::PermitValidationContext>::success(
             launch::candidate_permit_context(first_plan.value()));
     };
+    observer.fail_begin = true;
+    auto observer_start_refused = provider.consume_and_execute(
+        envelope.value(), first_plan.value(), current, *authenticator.value(),
+        ledger, clock, observer, supervisor);
+    if (observer_start_refused ||
+        observer_start_refused.error().code != "permit_wrong_evidence" ||
+        observer_start_refused.error().message != "synthetic observer refused" ||
+        observer_start_refused.error().path != "$test.observer" ||
+        supervisor.calls != 0) return fail(101);
+    observer.fail_begin = false;
     auto executed = provider.consume_and_execute(
         envelope.value(), first_plan.value(), current, *authenticator.value(),
         ledger, clock, observer, supervisor);

@@ -46,9 +46,9 @@ EXPECTED_FACTORIO_SHA256 = "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee
 EXPECTED_FACMAN_SHA256 = "47ccf1f151eb65daea1ae4d8ff782f48df08bbedd92d9434e5ca6fd86536270a"
 EXPECTED_SIGNER = "Wube Software Ltd"
 ATTESTATION_SCHEMA = "factorio.gate4c_quiet_host_attestation.v2"
-OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v4"
+OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v5"
 OBSERVER_PROVIDER_ID = "factorio.play.process-tree-observer"
-OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v4"
+OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v5"
 OBSERVER_PROFILE_RELATIVE_PATH = "tools/gate4c_process_tree_observer.wprp"
 OBSERVER_PROFILE_CANONICAL_SHA256 = (
     "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40"
@@ -560,9 +560,12 @@ def observer_profile_identity(repo_root: Path) -> dict[str, Any]:
 
 def observer_provider_identity(repo_root: Path) -> dict[str, Any]:
     profile = observer_profile_identity(repo_root)
+    valid = profile.get("valid") is True
     return {
         "id": OBSERVER_PROVIDER_ID,
         "revision": OBSERVER_PROVIDER_REVISION,
+        "valid": valid,
+        "reason": "valid" if valid else "observer_profile_invalid",
         "profile": {
             key: profile.get(key)
             for key in (

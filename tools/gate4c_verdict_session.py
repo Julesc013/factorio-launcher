@@ -18,6 +18,7 @@ import io
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -43,6 +44,10 @@ CAPTURE_SCHEMA = "factorio.gate4c_observer_capture.v1"
 CLASSIFICATION_SCHEMA = "factorio.gate4c_effect_classification.v1"
 OBSERVATION_SCHEMA = "factorio.play_candidate_observation.v1"
 BOUND_PROVIDER_REVISION = "bound-observation-artifact.v1"
+OBSERVER_START_PROBE_SCHEMA = "factorio.gate4c_observer_start_probe.v1"
+OBSERVER_START_REPAIR_WORK_UNIT = (
+    "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01"
+)
 MUTATING_FILE_EVENTS = {
     "fileiocreate",
     "fileiowrite",
@@ -190,6 +195,167 @@ def command_record(result: Any, args: list[str]) -> dict[str, Any]:
         "stdout": result.stdout,
         "stderr": result.stderr,
     }
+
+
+def observer_start_probe(args: argparse.Namespace) -> dict[str, Any]:
+    """Exercise the exact WPR start boundary without a permit or Factorio."""
+    if os.name != "nt":
+        raise SessionError("the Gate 4C observer-start probe is Windows-only")
+    if not PREFLIGHT.is_elevated():
+        raise SessionError("the Gate 4C observer-start probe requires elevation")
+    task_root = Path(os.path.abspath(args.task_root))
+    task_audit = PREFLIGHT.audit_no_follow(task_root, require_file=False)
+    if (
+        not task_audit["safe"]
+        or task_root.name != OBSERVER_START_REPAIR_WORK_UNIT
+    ):
+        raise SessionError("probe root is not the exact observer-start repair root")
+    if re.fullmatch(r"gate4c-observer-start-probe-[a-z0-9-]+", args.probe_id) is None:
+        raise SessionError("observer-start probe identity is invalid")
+    evidence_root = task_root / "evidence" / "observer-start-probes"
+    run_root = task_root / "observer-start-probes" / args.probe_id
+    expected_out = evidence_root / f"{args.probe_id}.json"
+    if (
+        os.path.normcase(os.path.abspath(args.out))
+        != os.path.normcase(os.path.abspath(expected_out))
+        or expected_out.exists()
+        or run_root.exists()
+    ):
+        raise SessionError("observer-start probe outputs are not new and exact")
+    evidence_root.mkdir(parents=True, exist_ok=True)
+    run_root.mkdir(parents=True, exist_ok=False)
+    if (
+        not PREFLIGHT.audit_no_follow(evidence_root, require_file=False)["safe"]
+        or not PREFLIGHT.audit_no_follow(run_root, require_file=False)["safe"]
+    ):
+        raise SessionError("observer-start probe output boundary is unsafe")
+
+    observer_paths = PREFLIGHT.observer_tool_paths()
+    if not PREFLIGHT.observer_toolchain_coherent(observer_paths):
+        raise SessionError("observer tools are not one coherent reviewed toolchain")
+    profile = PREFLIGHT.observer_profile_identity(ROOT)
+    provider = PREFLIGHT.observer_provider_identity(ROOT)
+    tooling = PREFLIGHT.repository_tool_identity(ROOT)
+    if not profile.get("valid") or not provider.get("valid"):
+        raise SessionError("observer profile or provider identity is invalid")
+
+    wpr = str(observer_paths["wpr"])
+    trace = run_root / "observer-start-probe.etl"
+    commands: list[dict[str, Any]] = []
+    errors: list[str] = []
+    recording_started = False
+
+    def probe_command(
+        arguments: list[str],
+        *,
+        timeout: int = 180,
+    ) -> subprocess.CompletedProcess[str] | None:
+        try:
+            result = SELFTEST.command(arguments, timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            commands.append(
+                {
+                    "args": arguments,
+                    "returncode": None,
+                    "stdout": str(exc.stdout or ""),
+                    "stderr": str(exc.stderr or ""),
+                    "timed_out": True,
+                }
+            )
+            return None
+        record = command_record(result, arguments)
+        record["timed_out"] = False
+        commands.append(record)
+        return result
+
+    try:
+        initial_status = probe_command([wpr, "-status"])
+        if initial_status is None:
+            errors.append("wpr_status_timed_out_before_start")
+        elif not SELFTEST.wpr_is_not_recording(initial_status):
+            errors.append("wpr_busy_or_indeterminate_before_start")
+        else:
+            start_args = SELFTEST.wpr_start_arguments(
+                wpr,
+                ROOT / PREFLIGHT.OBSERVER_PROFILE_RELATIVE_PATH,
+                run_root,
+            )
+            started = probe_command(start_args)
+            if started is None:
+                errors.append("wpr_start_timed_out")
+            elif started.returncode != 0:
+                errors.append("wpr_start_failed")
+            else:
+                recording_started = True
+                live_status = probe_command([wpr, "-status"])
+                if (
+                    live_status is None
+                    or live_status.returncode != 0
+                    or SELFTEST.wpr_is_not_recording(live_status)
+                ):
+                    errors.append("wpr_not_active_after_start")
+
+        if recording_started:
+            stop_args = [
+                wpr,
+                "-stop",
+                str(trace),
+                "FacMan Gate 4C observer-start repair probe",
+                "-skipPdbGen",
+            ]
+            stopped = probe_command(stop_args, timeout=300)
+            if stopped is None:
+                errors.append("wpr_stop_timed_out")
+            elif stopped.returncode != 0:
+                errors.append("wpr_stop_failed")
+            post_status = probe_command([wpr, "-status"])
+            if post_status is not None:
+                recording_started = not SELFTEST.wpr_is_not_recording(post_status)
+            if not trace.is_file():
+                errors.append("wpr_trace_missing")
+    finally:
+        if recording_started:
+            cancelled = probe_command([wpr, "-cancel"])
+            final_status = probe_command([wpr, "-status"])
+            recording_started = (
+                final_status is None
+                or not SELFTEST.wpr_is_not_recording(final_status)
+            )
+            if cancelled is None:
+                errors.append("wpr_cancel_timed_out")
+            if recording_started:
+                errors.append("wpr_recording_remained_active")
+
+    core: dict[str, Any] = {
+        "schema": OBSERVER_START_PROBE_SCHEMA,
+        "canonicalization_version": "facman.sorted-json.v1",
+        "work_unit": OBSERVER_START_REPAIR_WORK_UNIT,
+        "probe_id": args.probe_id,
+        "generated_at": utc_now(),
+        "elevated": True,
+        "process_id": os.getpid(),
+        "parent_process_id": os.getppid(),
+        "machine_session": PREFLIGHT.host_session_identity(),
+        "provider": provider,
+        "profile": profile,
+        "tooling": tooling,
+        "observer_tools": {
+            key: PREFLIGHT.executable_tool_identity(path)
+            for key, path in observer_paths.items()
+        },
+        "commands": commands,
+        "trace": {
+            "path": str(trace),
+            "present": trace.is_file(),
+            "sha256": PREFLIGHT.sha256_file(trace) if trace.is_file() else None,
+        },
+        "recording_active_after_probe": recording_started,
+        "errors": errors,
+        "status": "pass" if not errors else "inconclusive",
+    }
+    core["probe_digest"] = digest_value(core)
+    atomic_json(expected_out, core)
+    return core
 
 
 def start_capture(args: argparse.Namespace) -> dict[str, Any]:
@@ -835,11 +1001,22 @@ def parser() -> argparse.ArgumentParser:
     finish.add_argument("--executable", required=True)
     finish.add_argument("--classification-roots", type=Path, required=True)
     finish.add_argument("--quiescence-seconds", type=int, default=2)
+    probe = sub.add_parser("observer-start-probe")
+    probe.add_argument("--task-root", type=Path, required=True)
+    probe.add_argument("--probe-id", required=True)
+    probe.add_argument("--out", type=Path, required=True)
     return value
 
 
 def main() -> int:
     args = parser().parse_args()
+    if args.command == "observer-start-probe":
+        record = observer_start_probe(args)
+        print(
+            "gate4c-observer-start-probe: "
+            f"{record['status']} ({record['probe_digest']})"
+        )
+        return 0 if record["status"] == "pass" else 2
     if args.command == "observer-start":
         record = start_capture(args)
         print(f"gate4c-observer-start: active ({record['capture_session_digest']})")
