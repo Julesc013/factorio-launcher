@@ -1,9 +1,13 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-24T01:00:46Z
-result: PENDING
+result: PASS
 evidence_path: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01/evidence/
 active_at: 2026-07-24T01:00:46Z
+verified_at: 2026-07-24T08:08:48Z
+reviewed_at: 2026-07-24T08:08:48Z
+closed_at: 2026-07-24T08:08:48Z
+implementation_state: implemented_reviewed_live_observer_start_proven

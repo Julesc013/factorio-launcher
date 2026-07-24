@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `hermetic_standalone_play_observer_start_repair` and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `hermetic_standalone_play_verdict_repeat` and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

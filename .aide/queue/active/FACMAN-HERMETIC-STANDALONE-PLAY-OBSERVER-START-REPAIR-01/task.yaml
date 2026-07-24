@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01
 title: Diagnose and repair the Gate 4C observer-start boundary
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-24T01:00:46Z
 owner: unassigned
 objective: >
@@ -20,11 +20,14 @@ allowed_paths:
   - docs/**
   - release/index/**
   - tests/native/gate4c_verdict_harness.cpp
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
   - tests/test_gate4c_verdict_evidence.py
   - tools/gate4c_observer_self_test.py
   - tools/gate4c_verdict_evidence.py
   - tools/gate4c_verdict_preflight.py
   - tools/gate4c_verdict_session.py
+  - tools/project_state.py
   - runtime/factorio/launch/flb_factorio_hermetic_candidate.cpp
   - runtime/factorio/launch/flb_factorio_hermetic_candidate.h
 forbidden_paths:
@@ -78,3 +81,8 @@ closeout_checklist:
   - produce a reviewed correction candidate with no authority promotion
   - activate FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02 only after closeout
 active_at: 2026-07-24T01:00:46Z
+verified_at: 2026-07-24T08:08:48Z
+reviewed_at: 2026-07-24T08:08:48Z
+closed_at: 2026-07-24T08:08:48Z
+implementation_state: implemented_reviewed_live_observer_start_proven
+result: PASS

@@ -1,13 +1,17 @@
 schema_version: aide.queue-task.v1
-id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01
-title: Record the human-reviewed hermetic standalone Play verdict
-status: passed_with_notes
-lifecycle_state: closed
-planning_state: closed
-created_at: 2026-07-22T10:19:18Z
+id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
+title: Repeat the human-reviewed hermetic standalone Play verdict
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-24T08:08:48Z
 owner: unassigned
 objective: >
-  Run the exact Gate 4C Windows x64 Factorio 2.0.77 standalone non-Steam menu journey against the frozen policy and reviewed Gate 4B candidate, preserve the hash-closed technical packet and human observations, and record exactly Pass, Fail, or Inconclusive without automatically enabling a product route or broadening authority.
+  Run one completely fresh Gate 4C Windows x64 Factorio 2.0.77 standalone
+  non-Steam menu journey against the unchanged frozen policy, reviewed Gate 4B
+  candidate, and repaired observer provider v5; preserve the hash-closed
+  technical packet and human observations; and record exactly Pass, Fail, or
+  Inconclusive without automatically enabling a product route.
 allowed_paths:
   - .aide/queue/**
   - .aide/memory/**
@@ -24,12 +28,16 @@ forbidden_paths:
   - contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml
   - runtime/**
 affected_native_targets:
+  - facman_gate4c_verdict_harness
   - facman_hermetic_play_candidate_smoke
   - facman_execution_foundation_smoke
   - flb_factorio_launch_permit_smoke
 affected_python_tests:
   - tests.test_aide_compaction
   - tests.test_aide_target_truth
+  - tests.test_gate4c_observer_self_test
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_preflight
   - tests.test_hermetic_play_candidate
   - tests.test_hermetic_play_policy
 affected_strict_validators:
@@ -39,38 +47,37 @@ affected_strict_validators:
   - tools/hermetic_play_candidate_check.py
   - tools/hermetic_play_policy_check.py
   - tools/strict_check.py
-affected_package_profiles:
-  []
+affected_package_profiles: []
 architecture_invariants:
   - the Gate 4A policy digest remains immutable
-  - the Gate 4B reviewed candidate revision and provider pins are exact
+  - the Gate 4B candidate and provider pins remain exact
+  - observer provider revision v5 is valid before WPR start
+  - all self-test, attestation, preflight, baseline, plan, permit, capture, and verdict evidence is newly generated
+  - no attempt-01 baseline, plan, permit, capture token, or operation closure is reused
   - only Windows x64 Factorio 2.0.77 standalone non-Steam menu hermetic is exercised
   - the observer starts before process creation and any observation gap forces Inconclusive
-  - the human reviewer confirms the normal menu, no inferred save, save persistence, exit, and relaunch
+  - the human reviewer confirms the normal menu, no inferred save, save persistence, exit, and fresh-authority relaunch
   - the verdict is exactly Pass, Fail, or Inconclusive and binds one hash-closed evidence packet
-  - verdict work records evidence only and cannot repair candidate code or weaken frozen policy
+  - evidence work cannot repair runtime code or weaken the frozen policy after baseline capture
   - a Pass is evidence for a later exact-route promotion decision and does not enable itself
   - Fail and Inconclusive grant no authority
   - Setup, credentials, networking, Steam, alternate intents, signing, publication, and general Play remain unavailable
 depends_on:
   - FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
   - FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
+  - FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01
 claim_ledger_rows:
   - docs/quality/safety_claim_ledger.md
 commit_template: .aide/git/commit-template.md
 closeout_checklist:
-  - exact policy, candidate, provider, executable, instance, plan, and packet identities pinned
-  - pre-run readiness and protected/writable baselines complete
-  - fresh exact permit independently revalidated and consumed once
+  - exact policy, candidate, provider v5, executable, instance, plan, and packet identities pinned
+  - fresh observer self-test and quiet-host attestation valid
+  - fresh pre-run readiness and protected/writable baselines complete
+  - fresh exact permit independently revalidated and consumed once for each launch
   - normal menu and no inferred save human-observed
   - save, exit, last-run report, fresh-authority relaunch, and save visibility human-observed
   - process-tree observation and protected-state comparison complete without gaps
   - verdict bound to the exact hash-closed packet
   - no product route or authority automatically promoted
   - structured commit and complete evidence checks pass
-active_at: 2026-07-22T10:19:18Z
-verified_at: 2026-07-24T01:00:46Z
-reviewed_at: 2026-07-24T01:00:46Z
-closed_at: 2026-07-24T01:00:46Z
-implementation_state: evidence_only_observer_provider_failed_before_process
-result: INCONCLUSIVE
+active_at: 2026-07-24T08:08:48Z

@@ -1,13 +1,13 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "hermetic-standalone-play-observer-start-repair"
+current_checkpoint = "hermetic-standalone-play-verdict-02"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01"
-last_closed_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+active_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02"
+last_closed_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -15,7 +15,7 @@ known_blockers = [
   "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
   "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
   "Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.",
-  "Gate 4C verdict attempt 01 is Inconclusive: the independent observer failed before the process boundary in two fresh operations, Factorio did not start, and observer-start diagnosis/repair is active.",
+  "Gate 4C verdict attempt 01 is Inconclusive; the observer-start defect is repaired and live-proven without Factorio, and fresh attempt 02 is active before baseline capture.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -35,25 +35,25 @@ quarantined_capabilities = [
 ]
 
 [product]
-phase = "hermetic_standalone_play_observer_start_repair"
+phase = "hermetic_standalone_play_verdict_repeat"
 phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01"
-next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02"
+current_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02"
+next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "dev_integrated_gate4c_inconclusive_observer_repair_active"
+truth_scope = "dev_integrated_observer_start_repair_proven_repeat_verdict_active"
 canonical_integration = false
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "gate4c_inconclusive_observer_provider_failed_no_play_authority"
+safety_authority = "observer_start_repair_proven_repeat_verdict_no_play_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -362,20 +362,33 @@ signing = false
 publication = false
 
 [hermetic_standalone_play_verdict]
-status = "closed_inconclusive_observer_provider_failed_before_process"
-work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
-verdict = "Inconclusive"
+status = "repeat_verdict_active_after_observer_start_repair"
+work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02"
+verdict = "unset"
 frozen_policy_digest = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
-gate4c_evidence_tooling_revision = "a8c73eb4e34f8fbac5c2cf2207fdf47d64bcb616"
-attempt_count = 2
-observer_self_test_pass_count = 2
-zero_blocker_preflight_count = 2
-completed_baseline_count = 2
-observer_start_failure_count = 2
-provider_refusal_code = "permit_wrong_evidence"
-provider_refusal_path = "$candidate.observer"
-provider_refusal_message = "independent observer was not active before process boundary"
-permit_approved_count = 2
+gate4c_evidence_tooling_revision = "c7c90554295f5de46447c013d7d0fea09dd03b22"
+repair_integration_revision = "1a142896328051385a3e44a47f5116c3d0d01bbb"
+repair_status = "PASS"
+observer_provider_revision = "gate4c-etw-file-registry-process.v5"
+observer_self_test_schema = "factorio.gate4c_observer_self_test.v5"
+observer_start_live_probe_pass_count = 2
+previous_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+previous_verdict = "Inconclusive"
+previous_attempt_count = 2
+previous_observer_self_test_pass_count = 2
+previous_zero_blocker_preflight_count = 2
+previous_completed_baseline_count = 2
+previous_observer_start_failure_count = 2
+previous_provider_refusal_code = "permit_wrong_evidence"
+previous_provider_refusal_path = "$candidate.observer"
+previous_provider_refusal_message = "independent observer was not active before process boundary"
+previous_permit_approved_count = 2
+attempt_count = 0
+observer_self_test_pass_count = 0
+zero_blocker_preflight_count = 0
+completed_baseline_count = 0
+observer_start_failure_count = 0
+permit_approved_count = 0
 permit_consumed_count = 0
 factorio_process_started = false
 human_journey_started = false
@@ -383,7 +396,7 @@ capture_token_created = false
 technical_packet_created = false
 protected_comparison_completed = false
 human_observation_recorded = false
-root_cause_established = false
+root_cause_established = true
 repair_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01"
 repeat_verdict_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02"
 public_command = false
@@ -1344,14 +1357,15 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "gate4c_inconclusive_observer_start"
+reason = "real_play_repeat_verdict_pending"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
-gate4c_verdict = "Inconclusive"
+gate4c_verdict = "unset"
+previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = false
-current_gate_status = "observer_start_repair_active_before_repeat_verdict"
+current_gate_status = "observer_start_repair_closed_repeat_verdict_active"
 
 [release]
 status = "unpublished"
