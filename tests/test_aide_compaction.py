@@ -30,6 +30,7 @@ class AideCompactionTests(unittest.TestCase):
             "gate3_public_integration",
             "hermetic_standalone_play_policy",
             "hermetic_standalone_play_candidate",
+            "hermetic_standalone_play_verdict",
             "m2_live_portable_setup",
             "m2_wu1_target_policy",
             "m2_wu2_public_lifecycle",
@@ -92,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "hermetic-standalone-play-verdict",
+            "hermetic-standalone-play-observer-start-repair",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -100,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -140,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "dev_integrated_candidate_reviewed_reproduced",
+            "dev_integrated_gate4c_inconclusive_observer_repair_active",
             data["product"]["truth_scope"],
         )
         self.assertFalse(data["product"]["canonical_integration"])
@@ -266,6 +267,19 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(hermetic_candidate["authority_promotion"])
         self.assertFalse(hermetic_candidate["playability_promotion"])
         self.assertFalse(hermetic_candidate["canonical_main_promotion"])
+        gate4c_verdict = data["hermetic_standalone_play_verdict"]
+        self.assertEqual("Inconclusive", gate4c_verdict["verdict"])
+        self.assertEqual(2, gate4c_verdict["attempt_count"])
+        self.assertEqual(2, gate4c_verdict["observer_start_failure_count"])
+        self.assertEqual(0, gate4c_verdict["permit_consumed_count"])
+        self.assertFalse(gate4c_verdict["factorio_process_started"])
+        self.assertFalse(gate4c_verdict["capture_token_created"])
+        self.assertFalse(gate4c_verdict["technical_packet_created"])
+        self.assertFalse(gate4c_verdict["authority_promotion"])
+        self.assertEqual(
+            "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+            gate4c_verdict["repair_work_unit"],
+        )
         self.assertFalse(data["host_environment_program"]["blocks_real_play"])
         self.assertTrue(
             data["host_environment_program"]["installation_model_v2_reviewed_committed_clean"]
@@ -359,7 +373,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -687,15 +701,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "hermetic-standalone-play-verdict",
+            "hermetic-standalone-play-observer-start-repair",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

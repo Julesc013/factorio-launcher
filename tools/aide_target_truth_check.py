@@ -116,6 +116,7 @@ def validate_profile_text(text: str) -> list[str]:
         "hermetic-standalone-play-policy-closeout",
         "hermetic-standalone-play-candidate",
         "hermetic-standalone-play-verdict",
+        "hermetic-standalone-play-observer-start-repair",
     }
     if phase not in allowed_phases:
         problems.append(f"profile phase is {phase!r}, expected a current product or real-play gate phase")

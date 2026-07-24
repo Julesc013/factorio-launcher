@@ -1,9 +1,13 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed_with_notes
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-22T10:19:18Z
-result: PENDING
+result: INCONCLUSIVE
 evidence_path: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01/evidence/
 active_at: 2026-07-22T10:19:18Z
+verified_at: 2026-07-24T01:00:46Z
+reviewed_at: 2026-07-24T01:00:46Z
+closed_at: 2026-07-24T01:00:46Z
+implementation_state: evidence_only_observer_provider_failed_before_process

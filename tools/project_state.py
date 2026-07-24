@@ -115,6 +115,7 @@ def collect() -> dict[str, Any]:
         "gate3_public_integration": status["gate3_public_integration"],
         "hermetic_standalone_play_policy": status["hermetic_standalone_play_policy"],
         "hermetic_standalone_play_candidate": status["hermetic_standalone_play_candidate"],
+        "hermetic_standalone_play_verdict": status["hermetic_standalone_play_verdict"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
         "gate2_instance_spec_and_readiness_closeout": status["gate2_instance_spec_and_readiness_closeout"],
@@ -735,6 +736,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "current_gate_status": "candidate_complete_awaiting_human_verdict",
         },
+        "hermetic_standalone_play_observer_start_repair": {
+            "checkpoint": "hermetic-standalone-play-observer-start-repair",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+            "safety": "gate4c_inconclusive_observer_provider_failed_no_play_authority",
+            "execution_reason": "gate4c_inconclusive_observer_start",
+            "truth_scope": "dev_integrated_gate4c_inconclusive_observer_repair_active",
+            "canonical_integration": False,
+            "current_gate_status": "observer_start_repair_active_before_repeat_verdict",
+        },
     }
     product = status.get("product", {})
     phase = product.get("phase")
@@ -1116,6 +1128,50 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     if hermetic_candidate != expected_hermetic_candidate:
         problems.append("Gate 4B candidate truth must bind exact reviewed and reproduced evidence without recording a human verdict or promoting authority")
+    gate4c_verdict = status.get("hermetic_standalone_play_verdict", {})
+    expected_gate4c_verdict = {
+        "status": "closed_inconclusive_observer_provider_failed_before_process",
+        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+        "verdict": "Inconclusive",
+        "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "gate4c_evidence_tooling_revision": "a8c73eb4e34f8fbac5c2cf2207fdf47d64bcb616",
+        "attempt_count": 2,
+        "observer_self_test_pass_count": 2,
+        "zero_blocker_preflight_count": 2,
+        "completed_baseline_count": 2,
+        "observer_start_failure_count": 2,
+        "provider_refusal_code": "permit_wrong_evidence",
+        "provider_refusal_path": "$candidate.observer",
+        "provider_refusal_message": "independent observer was not active before process boundary",
+        "permit_approved_count": 2,
+        "permit_consumed_count": 0,
+        "factorio_process_started": False,
+        "human_journey_started": False,
+        "capture_token_created": False,
+        "technical_packet_created": False,
+        "protected_comparison_completed": False,
+        "human_observation_recorded": False,
+        "root_cause_established": False,
+        "repair_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+        "repeat_verdict_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+        "public_command": False,
+        "product_permit_issuance": False,
+        "real_factorio_execution": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate4c_verdict != expected_gate4c_verdict:
+        problems.append(
+            "Gate 4C verdict truth must remain Inconclusive, pre-process, "
+            "non-authoritative, and routed to bounded observer repair"
+        )
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {
         "status": "accepted_reviewed_dev_integration",

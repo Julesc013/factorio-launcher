@@ -6,9 +6,9 @@ leaving setup mutation to Universal Setup.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The active phase is **hermetic_standalone_play_verdict** and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`.
+The active phase is **hermetic_standalone_play_observer_start_repair** and the active WorkUnit is `FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01`.
 
-1. Complete `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`.
+1. Complete `FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01`.
 2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.
 3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.
 4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.
