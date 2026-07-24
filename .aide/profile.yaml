@@ -8,16 +8,17 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: gate4c-privilege-separation-repair
+  phase: hermetic-standalone-play-verdict-repeat
   primary_goal: >
-    Separate the elevated WPR observer from the medium-integrity Gate 4C
-    coordinator and Factorio process before any fresh baseline or permit while
-    preserving the accepted portable InstanceSpec and machine-local binding.
+    Run one completely fresh Gate 4C Verdict 03 attempt with the reviewed
+    split-privilege boundary: medium-integrity coordinator and Factorio,
+    one-shot high-integrity WPR observer broker, and no authority beyond the
+    exact frozen candidate while preserving InstanceSpec and InstanceBinding.
   next_task: >
-    Implement and prove a verdict-only one-shot elevated observer helper with
-    bounded authenticated IPC while keeping the coordinator and Factorio at
-    medium integrity. Do not change the frozen policy, start Factorio, add a
-    public route, or grant general privileged-broker authority.
+    Generate fresh observer, attestation, preflight, baseline, permit, process,
+    protected-state, and human evidence under the Verdict03 task root and
+    record exactly Pass, Fail, or Inconclusive. Do not change runtime or the
+    frozen policy and do not promote a public route.
   authoritative_command_slice:
     - installs.scan
     - installs.import

@@ -1,13 +1,13 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "gate4c-privilege-separation-repair"
+current_checkpoint = "hermetic-standalone-play-verdict-03"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"
-last_closed_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01"
+active_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
+last_closed_work_unit = "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -16,7 +16,7 @@ known_blockers = [
   "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
   "Steam-aware instance-isolated Play and hermetic standalone Play are independent, unproven real-product gates.",
   "Gate 4C verdict attempt 01 is Inconclusive; the observer-start defect is repaired and live-proven without Factorio.",
-  "Gate 4C verdict attempt 02 is blocked before baseline because the elevated harness would create Factorio in its calling security context; privilege separation repair is active.",
+  "Gate 4C verdict attempt 02 is blocked before baseline; the reviewed split-privilege repair is accepted on dev and a completely fresh Verdict 03 evidence attempt is active.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -36,25 +36,25 @@ quarantined_capabilities = [
 ]
 
 [product]
-phase = "gate4c_privilege_separation_repair"
+phase = "hermetic_standalone_play_verdict_repeat"
 phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"
-next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
+current_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
+next_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "dev_integrated_gate4c_privilege_inheritance_defect_repair_active"
+truth_scope = "dev_integrated_privilege_separation_repair_proven_verdict_03_active"
 canonical_integration = false
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "privilege_inheritance_defect_blocked_before_baseline_no_play_authority"
+safety_authority = "split_privilege_repair_proven_verdict_03_pending_no_play_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -363,8 +363,8 @@ signing = false
 publication = false
 
 [hermetic_standalone_play_verdict]
-status = "blocked_before_baseline_privilege_inheritance_defect"
-work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02"
+status = "active_fresh_attempt_03_after_privilege_repair"
+work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
 verdict = "unset"
 frozen_policy_digest = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
 gate4c_evidence_tooling_revision = "c7c90554295f5de46447c013d7d0fea09dd03b22"
@@ -403,9 +403,11 @@ repeat_verdict_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02"
 repeat_verdict_blocked_before_baseline = true
 privilege_separation_repair_work_unit = "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"
 privilege_inheritance_defect_established = true
-coordinator_integrity = "unproven_would_be_high_in_current_procedure"
-factorio_integrity = "unproven_inherits_calling_process_context"
-observer_integrity = "high_required"
+privilege_separation_repair_revision = "894b203710b8e14055903c0d33a9d3517fb6aa94"
+privilege_separation_repair_status = "PASS"
+coordinator_integrity = "medium_required_and_live_probe_proven"
+factorio_integrity = "medium_required_pre_resume_gate_proven_real_run_pending"
+observer_integrity = "high_required_and_live_probe_proven"
 public_command = false
 product_permit_issuance = false
 real_factorio_execution = false
@@ -420,11 +422,18 @@ signing = false
 publication = false
 
 [gate4c_privilege_separation_repair]
-status = "implementation_and_live_uac_probe_proven_hosted_matrix_pass_ready_for_reviewed_closeout"
+status = "accepted_closed_reviewed_dev_integration"
 work_unit = "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"
 finding_revision = "934d4fcca2d3749f1a9710186afcf1fe294f0dc8"
 implementation_revision = "380c1a44f26cc1d6bacccdfe5ce0c6d2efda36d3"
 hosted_matrix_revision = "97735a42aebbba818cebd01a20da98693b293d44"
+implementation_pull_request = 64
+reviewed_head_revision = "76c59b94b3da8ba5a4905ecfbc8e6fcfd299a0aa"
+dev_integration_revision = "894b203710b8e14055903c0d33a9d3517fb6aa94"
+merged_dev_ci_run = "30092289051"
+merged_dev_code_security_run = "30092289014"
+merged_dev_schema_check_run = "30092289006"
+merged_dev_security_policy_run = "30092289007"
 frozen_policy_digest = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
 previous_process_api = "CreateProcessW"
 previous_child_security_context = "calling_process"
@@ -1429,7 +1438,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "gate4c_privilege_separation_repair_active"
+reason = "real_play_verdict_03_pending"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1437,7 +1446,7 @@ gate4c_verdict = "unset"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = false
-current_gate_status = "verdict_02_blocked_before_baseline_privilege_repair_active"
+current_gate_status = "privilege_separation_repair_closed_verdict_03_active"
 
 [release]
 status = "unpublished"
