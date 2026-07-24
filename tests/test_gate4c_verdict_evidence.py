@@ -57,11 +57,6 @@ class Gate4CVerdictEvidenceTests(unittest.TestCase):
             ),
             mock.patch.object(
                 SESSION.PREFLIGHT,
-                "observer_provider_identity",
-                return_value={"valid": True, "identity": "provider"},
-            ),
-            mock.patch.object(
-                SESSION.PREFLIGHT,
                 "repository_tool_identity",
                 return_value={"valid": True, "revision": "fixture"},
             ),
@@ -76,6 +71,29 @@ class Gate4CVerdictEvidenceTests(unittest.TestCase):
                 return_value={"valid": True, "identity": "tool"},
             ),
         ]
+
+    def test_observer_provider_identity_propagates_profile_validity(self) -> None:
+        with mock.patch.object(
+            SESSION.PREFLIGHT,
+            "observer_profile_identity",
+            return_value={"valid": True},
+        ):
+            valid = SESSION.PREFLIGHT.observer_provider_identity(ROOT)
+        self.assertTrue(valid["valid"])
+        self.assertEqual(valid["reason"], "valid")
+        self.assertEqual(
+            valid["revision"],
+            SESSION.PREFLIGHT.OBSERVER_PROVIDER_REVISION,
+        )
+
+        with mock.patch.object(
+            SESSION.PREFLIGHT,
+            "observer_profile_identity",
+            return_value={"valid": False},
+        ):
+            invalid = SESSION.PREFLIGHT.observer_provider_identity(ROOT)
+        self.assertFalse(invalid["valid"])
+        self.assertEqual(invalid["reason"], "observer_profile_invalid")
 
     def test_observer_start_probe_preserves_exact_pass_commands(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
