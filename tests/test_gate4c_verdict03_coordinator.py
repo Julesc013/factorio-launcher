@@ -82,6 +82,13 @@ class Gate4CVerdict03CoordinatorTests(unittest.TestCase):
             )
         ]
         self.assertNotIn("is_elevated", function)
+        preflight_source = Path(
+            COORDINATOR.PREFLIGHT.__file__
+        ).read_text(encoding="utf-8")
+        self.assertNotIn(
+            'add_blocker(blockers, "observer_elevation_required"',
+            preflight_source,
+        )
 
     def test_human_pass_sets_every_frozen_check(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

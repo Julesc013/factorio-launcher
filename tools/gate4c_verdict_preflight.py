@@ -1548,8 +1548,6 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
         add_blocker(blockers, "host_session_identity_unavailable", "The opaque machine and current boot-session identities could not be established.")
     if not observer.get("tools_available"):
         add_blocker(blockers, "observer_tools_missing", "WPR, XPerf, and WPAExporter are required.")
-    if not observer.get("elevated"):
-        add_blocker(blockers, "observer_elevation_required", "The ETW FileIO/Registry observer self-test requires an elevated operator session.")
     if observer.get("recording_active") is not False:
         add_blocker(blockers, "observer_session_busy_or_unknown", "WPR must report no active recording before baseline capture.")
     if not observer.get("self_test_passed"):
