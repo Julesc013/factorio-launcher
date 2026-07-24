@@ -1,987 +1,2236 @@
 {
   "follow_up": [
     {
-      "commit": "129f70d13058",
-      "summary": "Review and close the implementation WorkUnit, merge it to dev, and bind exact hosted workflow identities separately."
+      "commit": "b0d5f388c312",
+      "summary": "Implement exact Factorio permit resources and an execution-free owning-provider verifier."
     },
     {
-      "commit": "129f70d13058",
-      "summary": "Review and close the implementation WorkUnit, merge it to dev, and bind exact hosted workflow identities separately."
+      "commit": "b0d5f388c312",
+      "summary": "Implement exact Factorio permit resources and an execution-free owning-provider verifier."
     },
     {
-      "commit": "129f70d13058",
-      "summary": "Review and close the implementation WorkUnit, merge it to dev, and bind exact hosted workflow identities separately."
+      "commit": "b0d5f388c312",
+      "summary": "Implement exact Factorio permit resources and an execution-free owning-provider verifier."
     },
     {
-      "commit": "e4b03c82b649",
-      "summary": "Push the reviewed branch, merge it to dev after green checks, and add a separate exact-dev integration record."
+      "commit": "b0d5f388c312",
+      "summary": "Implement exact Factorio permit resources and an execution-free owning-provider verifier."
     },
     {
-      "commit": "e4b03c82b649",
-      "summary": "Push the reviewed branch, merge it to dev after green checks, and add a separate exact-dev integration record."
+      "commit": "b0d5f388c312",
+      "summary": "Implement exact Factorio permit resources and an execution-free owning-provider verifier."
     },
     {
-      "commit": "f051731b80b5",
-      "summary": "Re-run the helper plan from a clean tree, then push and open the reviewed dev PR."
+      "commit": "b0d5f388c312",
+      "summary": "Implement exact Factorio permit resources and an execution-free owning-provider verifier."
     },
     {
-      "commit": "2c55d1d111a2",
-      "summary": "Bind merge/run identities, validate project truth, close the task, and land the record on dev."
+      "commit": "e883ab5cf18b",
+      "summary": "Implement and wire the permit envelope and canonical claims fuzz harnesses."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "Review and close this evidence WorkUnit, land it on dev, then open WU3 live evidence packet work."
+      "commit": "e883ab5cf18b",
+      "summary": "Implement and wire the permit envelope and canonical claims fuzz harnesses."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "Review and close this evidence WorkUnit, land it on dev, then open WU3 live evidence packet work."
+      "commit": "e883ab5cf18b",
+      "summary": "Implement and wire the permit envelope and canonical claims fuzz harnesses."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "Review and close this evidence WorkUnit, land it on dev, then open WU3 live evidence packet work."
+      "commit": "e883ab5cf18b",
+      "summary": "Implement and wire the permit envelope and canonical claims fuzz harnesses."
     },
     {
-      "commit": "cad50062c955",
-      "summary": "Land this evidence-only record on dev and then open WU3 for the sanitized live evidence packet."
+      "commit": "7c351e77b0ad",
+      "summary": "Harden process-session entropy construction and run hosted CI on the exact head."
     },
     {
-      "commit": "cad50062c955",
-      "summary": "Land this evidence-only record on dev and then open WU3 for the sanitized live evidence packet."
+      "commit": "7c351e77b0ad",
+      "summary": "Harden process-session entropy construction and run hosted CI on the exact head."
     },
     {
-      "commit": "53ebb488daad",
-      "summary": "Run the clean helper plan, push, and merge the evidence-only PR after exact-head checks."
+      "commit": "7c351e77b0ad",
+      "summary": "Harden process-session entropy construction and run hosted CI on the exact head."
     },
     {
-      "commit": "5f93f42f9708",
-      "summary": "Open the reviewed task-to-dev pull request and require exact-head workflows before merge."
+      "commit": "7c351e77b0ad",
+      "summary": "Harden process-session entropy construction and run hosted CI on the exact head."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+      "commit": "7c351e77b0ad",
+      "summary": "Harden process-session entropy construction and run hosted CI on the exact head."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+      "commit": "7c351e77b0ad",
+      "summary": "Harden process-session entropy construction and run hosted CI on the exact head."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+      "commit": "407fa0471ffb",
+      "summary": "Run hosted proof and resolve any platform-specific findings before Gate 3 closeout."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+      "commit": "407fa0471ffb",
+      "summary": "Run hosted proof and resolve any platform-specific findings before Gate 3 closeout."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Open M2-WU4 and exercise install, verify, repair, move, foreign-content refusal, and clean uninstall in the dedicated acceptance root."
+      "commit": "407fa0471ffb",
+      "summary": "Run hosted proof and resolve any platform-specific findings before Gate 3 closeout."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+      "commit": "407fa0471ffb",
+      "summary": "Run hosted proof and resolve any platform-specific findings before Gate 3 closeout."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+      "commit": "407fa0471ffb",
+      "summary": "Run hosted proof and resolve any platform-specific findings before Gate 3 closeout."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+      "commit": "5f9f122d6d3e",
+      "summary": "Re-run PR #42 on the repaired exact head and merge only after complete green proof."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+      "commit": "5f9f122d6d3e",
+      "summary": "Re-run PR #42 on the repaired exact head and merge only after complete green proof."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+      "commit": "5f9f122d6d3e",
+      "summary": "Re-run PR #42 on the repaired exact head and merge only after complete green proof."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+      "commit": "5f9f122d6d3e",
+      "summary": "Re-run PR #42 on the repaired exact head and merge only after complete green proof."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Bind exact task/dev workflows after reviewed merge and begin M2-WU5 fault-injected interruption recovery."
+      "commit": "5f9f122d6d3e",
+      "summary": "Re-run PR #42 on the repaired exact head and merge only after complete green proof."
     },
     {
-      "commit": "a6cfe28c704d",
-      "summary": "Merge WU5 recovery proof into dev and bind its exact integration workflows."
+      "commit": "ec4159f05678",
+      "summary": "Complete FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01, then use separate candidate and verdict reviews."
     },
     {
-      "commit": "480a58ca4c10",
-      "summary": "Run the complete exact-pin validation matrix and close WU6 through reviewed dev integration."
+      "commit": "ec4159f05678",
+      "summary": "Complete FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01, then use separate candidate and verdict reviews."
     },
     {
-      "commit": "d746454ca850",
-      "summary": "Close the WU6 task, publish its PR, and bind exact-dev workflows after merge."
+      "commit": "ec4159f05678",
+      "summary": "Complete FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01, then use separate candidate and verdict reviews."
     },
     {
-      "commit": "f0b27c2e7f21",
-      "summary": "Publish and merge WU6 through exact-head CI, then bind the immutable dev evidence."
+      "commit": "ec4159f05678",
+      "summary": "Complete FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01, then use separate candidate and verdict reviews."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
+      "commit": "ff57488e3cd5",
+      "summary": "Publish the ancestry-only branch, require hosted proof, merge through PR, and verify exact synchronized dev."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
+      "commit": "ff57488e3cd5",
+      "summary": "Publish the ancestry-only branch, require hosted proof, merge through PR, and verify exact synchronized dev."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Extend read-only lifecycle routing and bind exact WU6 dev integration evidence."
+      "commit": "dac01182292b",
+      "summary": "Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01` in a separate review before implementing or running a real Play candidate."
     },
     {
-      "commit": "a64037693f4b",
-      "summary": "Complete and integrate the WU7 Factorio workflow candidate."
+      "commit": "dac01182292b",
+      "summary": "Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01` in a separate review before implementing or running a real Play candidate."
     },
     {
-      "commit": "952c46a629f0",
-      "summary": "Run the complete native, Python, strict, package, and reproducibility matrix."
+      "commit": "dac01182292b",
+      "summary": "Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01` in a separate review before implementing or running a real Play candidate."
     },
     {
-      "commit": "952c46a629f0",
-      "summary": "Run the complete native, Python, strict, package, and reproducibility matrix."
+      "commit": "dac01182292b",
+      "summary": "Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01` in a separate review before implementing or running a real Play candidate."
     },
     {
-      "commit": "00ca569368dd",
-      "summary": "Repeat the complete Python matrix, then package and reproducibility proof."
+      "commit": "dac01182292b",
+      "summary": "Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01` in a separate review before implementing or running a real Play candidate."
     },
     {
-      "commit": "00ca569368dd",
-      "summary": "Repeat the complete Python matrix, then package and reproducibility proof."
+      "commit": "cf674d852e16",
+      "summary": "Complete exact-head review and clean pinned reproduction, close Gate 4A on dev, promote the policy-only digest to main, synchronize ancestry to dev, and only then activate the separate candidate WorkUnit."
     },
     {
-      "commit": "0e50b6fe0e90",
-      "summary": "Regenerate final package identities at this closeout state, then open a reviewed dev PR."
+      "commit": "cf674d852e16",
+      "summary": "Complete exact-head review and clean pinned reproduction, close Gate 4A on dev, promote the policy-only digest to main, synchronize ancestry to dev, and only then activate the separate candidate WorkUnit."
     },
     {
-      "commit": "0e50b6fe0e90",
-      "summary": "Regenerate final package identities at this closeout state, then open a reviewed dev PR."
+      "commit": "cf674d852e16",
+      "summary": "Complete exact-head review and clean pinned reproduction, close Gate 4A on dev, promote the policy-only digest to main, synchronize ancestry to dev, and only then activate the separate candidate WorkUnit."
     },
     {
-      "commit": "526d6f5a2d1c",
-      "summary": "Publish the reviewed WU7 branch and merge it to dev after exact-head workflows pass."
+      "commit": "cf674d852e16",
+      "summary": "Complete exact-head review and clean pinned reproduction, close Gate 4A on dev, promote the policy-only digest to main, synchronize ancestry to dev, and only then activate the separate candidate WorkUnit."
     },
     {
-      "commit": "1b029ead969e",
-      "summary": "Generate the clean task-to-dev landing plan, push, and open the reviewed PR."
+      "commit": "cf674d852e16",
+      "summary": "Complete exact-head review and clean pinned reproduction, close Gate 4A on dev, promote the policy-only digest to main, synchronize ancestry to dev, and only then activate the separate candidate WorkUnit."
     },
     {
-      "commit": "d3b5458645e2",
-      "summary": "Generate and consume the shared setup-review workflow contract across all four clients."
+      "commit": "cf674d852e16",
+      "summary": "Complete exact-head review and clean pinned reproduction, close Gate 4A on dev, promote the policy-only digest to main, synchronize ancestry to dev, and only then activate the separate candidate WorkUnit."
     },
     {
-      "commit": "d3b5458645e2",
-      "summary": "Generate and consume the shared setup-review workflow contract across all four clients."
+      "commit": "d46aab915432",
+      "summary": "Promote this exact no-authority policy checkpoint to main, synchronize main ancestry into dev without changing the accepted tree, record public-integration evidence, and only then start the planned candidate WorkUnit."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
+      "commit": "d46aab915432",
+      "summary": "Promote this exact no-authority policy checkpoint to main, synchronize main ancestry into dev without changing the accepted tree, record public-integration evidence, and only then start the planned candidate WorkUnit."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
+      "commit": "d46aab915432",
+      "summary": "Promote this exact no-authority policy checkpoint to main, synchronize main ancestry into dev without changing the accepted tree, record public-integration evidence, and only then start the planned candidate WorkUnit."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "Run the complete repository validation and package proof, then bind WU8 checkpoint evidence."
+      "commit": "d46aab915432",
+      "summary": "Promote this exact no-authority policy checkpoint to main, synchronize main ancestry into dev without changing the accepted tree, record public-integration evidence, and only then start the planned candidate WorkUnit."
     },
     {
-      "commit": "6ca7e62889f6",
-      "summary": "Rerun the complete 340-test corpus against regenerated truth and produce the zero-skip package proof."
+      "commit": "d46aab915432",
+      "summary": "Promote this exact no-authority policy checkpoint to main, synchronize main ancestry into dev without changing the accepted tree, record public-integration evidence, and only then start the planned candidate WorkUnit."
     },
     {
-      "commit": "6ca7e62889f6",
-      "summary": "Rerun the complete 340-test corpus against regenerated truth and produce the zero-skip package proof."
+      "commit": "d46aab915432",
+      "summary": "Promote this exact no-authority policy checkpoint to main, synchronize main ancestry into dev without changing the accepted tree, record public-integration evidence, and only then start the planned candidate WorkUnit."
     },
     {
-      "commit": "d59d22a27b08",
-      "summary": "Rerun the complete Python corpus and package proof from the remediated task head."
+      "commit": "690728884f7e",
+      "summary": "Implement FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01 against policy digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2."
     },
     {
-      "commit": "d59d22a27b08",
-      "summary": "Rerun the complete Python corpus and package proof from the remediated task head."
+      "commit": "690728884f7e",
+      "summary": "Implement FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01 against policy digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
+      "commit": "690728884f7e",
+      "summary": "Implement FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01 against policy digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
+      "commit": "690728884f7e",
+      "summary": "Implement FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01 against policy digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "Push the task branch, obtain exact-head CI/CodeQL/security success, merge PR to dev, and bind exact-dev integration evidence."
+      "commit": "690728884f7e",
+      "summary": "Implement FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01 against policy digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2."
     },
     {
-      "commit": "d40596f0654b",
-      "summary": "Push the task branch and open the reviewed task-to-dev pull request."
+      "commit": "690728884f7e",
+      "summary": "Implement FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01 against policy digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2."
+    },
+    {
+      "commit": "690728884f7e",
+      "summary": "Implement FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01 against policy digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2."
+    },
+    {
+      "commit": "da2a52b6ca39",
+      "summary": "Consume these identities in the exact hermetic Play candidate."
+    },
+    {
+      "commit": "da2a52b6ca39",
+      "summary": "Consume these identities in the exact hermetic Play candidate."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "Run hosted exact-head validation and clean pinned three-repository reproduction, then close Gate 4B as eligible_for_human_verdict only."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "Run hosted exact-head validation and clean pinned three-repository reproduction, then close Gate 4B as eligible_for_human_verdict only."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "Run hosted exact-head validation and clean pinned three-repository reproduction, then close Gate 4B as eligible_for_human_verdict only."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "Run hosted exact-head validation and clean pinned three-repository reproduction, then close Gate 4B as eligible_for_human_verdict only."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "Run hosted exact-head validation and clean pinned three-repository reproduction, then close Gate 4B as eligible_for_human_verdict only."
+    },
+    {
+      "commit": "678d985ad984",
+      "summary": "Repeat the complete clean pinned three-repository reproduction from the exact final candidate head."
+    },
+    {
+      "commit": "678d985ad984",
+      "summary": "Repeat the complete clean pinned three-repository reproduction from the exact final candidate head."
+    },
+    {
+      "commit": "5335b8777fef",
+      "summary": "Push the exact fix to PR #52 and require replacement Linux, macOS, Windows, security, schema, and policy checks to pass."
+    },
+    {
+      "commit": "5335b8777fef",
+      "summary": "Push the exact fix to PR #52 and require replacement Linux, macOS, Windows, security, schema, and policy checks to pass."
+    },
+    {
+      "commit": "67110899db21",
+      "summary": "Require the new exact-head hosted matrix and clean pinned three-repository reproduction to pass before review or merge."
+    },
+    {
+      "commit": "67110899db21",
+      "summary": "Require the new exact-head hosted matrix and clean pinned three-repository reproduction to pass before review or merge."
+    },
+    {
+      "commit": "da3e2274a3dc",
+      "summary": "Require Linux to compile and run the complete candidate smoke before beginning the final exact-head clean reproduction."
+    },
+    {
+      "commit": "da3e2274a3dc",
+      "summary": "Require Linux to compile and run the complete candidate smoke before beginning the final exact-head clean reproduction."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "Merge the truth-only closeout after hosted validation, record its exact merged-dev proof separately, clean the exact task-owned temporary root if the safety layer permits, and hand off the pinned human-reviewed Gate 4C procedure."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "Merge the truth-only closeout after hosted validation, record its exact merged-dev proof separately, clean the exact task-owned temporary root if the safety layer permits, and hand off the pinned human-reviewed Gate 4C procedure."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "Merge the truth-only closeout after hosted validation, record its exact merged-dev proof separately, clean the exact task-owned temporary root if the safety layer permits, and hand off the pinned human-reviewed Gate 4C procedure."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "Merge the truth-only closeout after hosted validation, record its exact merged-dev proof separately, clean the exact task-owned temporary root if the safety layer permits, and hand off the pinned human-reviewed Gate 4C procedure."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "Merge the truth-only closeout after hosted validation, record its exact merged-dev proof separately, clean the exact task-owned temporary root if the safety layer permits, and hand off the pinned human-reviewed Gate 4C procedure."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "Merge the truth-only closeout after hosted validation, record its exact merged-dev proof separately, clean the exact task-owned temporary root if the safety layer permits, and hand off the pinned human-reviewed Gate 4C procedure."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "Conduct only the separately scoped Gate 4C operator-reviewed journey under the frozen policy; any route enablement requires a later independent promotion decision."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "Conduct only the separately scoped Gate 4C operator-reviewed journey under the frozen policy; any route enablement requires a later independent promotion decision."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "Conduct only the separately scoped Gate 4C operator-reviewed journey under the frozen policy; any route enablement requires a later independent promotion decision."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "Conduct only the separately scoped Gate 4C operator-reviewed journey under the frozen policy; any route enablement requires a later independent promotion decision."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "Conduct only the separately scoped Gate 4C operator-reviewed journey under the frozen policy; any route enablement requires a later independent promotion decision."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "Complete the frozen Gate 4C preflight without changing runtime or policy code."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "Complete the frozen Gate 4C preflight without changing runtime or policy code."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "Complete the frozen Gate 4C preflight without changing runtime or policy code."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "Complete the frozen Gate 4C preflight without changing runtime or policy code."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "Complete the frozen Gate 4C preflight without changing runtime or policy code."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "Complete the frozen Gate 4C preflight without changing runtime or policy code."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "Obtain exact-head hosted review proof, merge the tooling-only PR to dev, and create a fresh verdict-evidence branch from the immutable merged revision."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "Obtain exact-head hosted review proof, merge the tooling-only PR to dev, and create a fresh verdict-evidence branch from the immutable merged revision."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "Obtain exact-head hosted review proof, merge the tooling-only PR to dev, and create a fresh verdict-evidence branch from the immutable merged revision."
+    },
+    {
+      "commit": "6b3a300aa6d7",
+      "summary": "Re-run the full hosted matrix on the new exact PR head before merge."
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Complete exact-head review and hosted verification before source blocker"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Complete exact-head review and hosted verification before source blocker"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Complete exact-head review and hosted verification before source blocker"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Complete exact-head review and hosted verification before source blocker"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Complete exact-head review and hosted verification before source blocker"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Complete exact-head review and hosted verification before source blocker"
+    },
+    {
+      "commit": "b8d91bceded1",
+      "summary": "Review and merge this evidence-only correction, fast-forward the Gate 4C"
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "Rerun the elevated observer self-test from the exact merged evidence revision."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "Rerun the elevated observer self-test from the exact merged evidence revision."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "Rerun the elevated observer self-test from the exact merged evidence revision."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "Rerun the elevated observer self-test from the exact merged evidence revision."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "Rerun the elevated observer self-test from the exact merged evidence revision."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "Rerun the elevated observer self-test from the exact merged evidence revision."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "Rerun the elevated observer self-test from the exact merged evidence revision."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "Complete exact-head CI/CodeQL/security-policy review."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "Complete exact-head CI/CodeQL/security-policy review."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "Complete exact-head CI/CodeQL/security-policy review."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "Complete exact-head CI/CodeQL/security-policy review."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "Complete exact-head CI/CodeQL/security-policy review."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "Complete exact-head CI/CodeQL/security-policy review."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "Complete exact-head CI/CodeQL/security-policy review."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "Complete exact-head review and hosted validation, then merge to `dev`."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "Complete exact-head review and hosted validation, then merge to `dev`."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "Complete exact-head review and hosted validation, then merge to `dev`."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "Freeze the merged tooling revision, regenerate observer/attestation/preflight evidence, and execute Gate 4C without changing interpretation after baseline capture."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "Freeze the merged tooling revision, regenerate observer/attestation/preflight evidence, and execute Gate 4C without changing interpretation after baseline capture."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "Freeze the merged tooling revision, regenerate observer/attestation/preflight evidence, and execute Gate 4C without changing interpretation after baseline capture."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "Freeze the merged tooling revision, regenerate observer/attestation/preflight evidence, and execute Gate 4C without changing interpretation after baseline capture."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "Freeze the merged tooling revision, regenerate observer/attestation/preflight evidence, and execute Gate 4C without changing interpretation after baseline capture."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "Re-run the complete PR CI and CodeQL matrices."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "Re-run the complete PR CI and CodeQL matrices."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "Re-run the complete PR CI and CodeQL matrices."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "Re-run the complete PR CI and CodeQL matrices."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "Re-run the exact-head PR matrices."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "Re-run the exact-head PR matrices."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "Re-run the exact-head PR matrices."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "Re-run the exact-head GitHub matrices."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "Re-run the exact-head GitHub matrices."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "Re-run the exact-head GitHub matrices."
     }
   ],
   "highlights": [
     {
       "breaking": false,
       "category": "Security",
-      "commit": "129f70d13058",
-      "subject": "docs(m2): bind the public lifecycle proof",
-      "summary": "recovery.apply and ordinary live apply remain unavailable."
+      "commit": "b0d5f388c312",
+      "subject": "feat(permit): implement authenticated one-time core",
+      "summary": "add process-bound HMAC, exact closed scopes, monotonic expiry, revocation, and atomic replay refusal."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "e4b03c82b649",
-      "subject": "chore(m2): close the public lifecycle work unit",
-      "summary": "pending human verdict, ordinary live apply hold, recovery hold, and execution ban are unchanged."
+      "commit": "e883ab5cf18b",
+      "subject": "chore(aide): authorize hosted permit fuzz proof",
+      "summary": "keep workflow scope limited to existing sanitizer and fuzz lanes."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "182ada6be86d",
-      "subject": "docs(m2): bind the exact WU2 dev integration",
-      "summary": "ordinary managed apply, recovery apply, execution, and publication remain unavailable."
+      "commit": "7c351e77b0ad",
+      "subject": "feat(permit): prove exact dormant provider binding",
+      "summary": "independently authenticate, reobserve, and consume one foundation permit at the dormant launch-provider boundary."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "cad50062c955",
-      "subject": "chore(m2): close the WU2 dev integration proof",
-      "summary": "all human, recovery, execution, and publication holds remain unchanged."
+      "commit": "407fa0471ffb",
+      "subject": "fix(permit): require explicit secure entropy",
+      "summary": "require an explicit cryptographic entropy dependency for process-session permit authentication."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "99f8cd8319ad",
-      "subject": "feat(setup): route Factorio installs through target-bound planning",
-      "summary": "No apply authority; default and incomplete configurations refuse."
+      "commit": "5f9f122d6d3e",
+      "subject": "fix(ci): compile permit fuzz entry in normal proof",
+      "summary": "retain fail-closed clang-tidy coverage with no allowlist exception."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "0e50b6fe0e90",
-      "subject": "docs(checkpoint): close WU7 portable planning candidate",
-      "summary": "Human acceptance remains non-automatable and every setup apply remains blocked."
+      "commit": "ec4159f05678",
+      "subject": "docs(checkpoint): close Gate 3 permit infrastructure",
+      "summary": "Keep permit issuance, Factorio execution, Setup, credentials, networking, signing, publication, and main unpromoted."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "991ff78c5cc3",
-      "subject": "feat(frontend): generate the portable setup review workflow",
-      "summary": "retained Universal Setup policy ownership and the live_target_acceptance_required gate."
+      "commit": "ff57488e3cd5",
+      "subject": "chore(sync): merge canonical Gates 0-3 ancestry into dev",
+      "summary": "No tree content or authority changes."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "d59d22a27b08",
-      "subject": "fix(probe): preserve supervision deadlines under host load",
-      "summary": "protected-root observation still terminates timed-out children and records the skipped observation truthfully."
+      "commit": "dac01182292b",
+      "subject": "docs(checkpoint): record Gates 0-3 canonical integration",
+      "summary": "explicitly retain false permit issuance, real execution, signing, publication, and authority-promotion claims."
     },
     {
       "breaking": false,
       "category": "Security",
-      "commit": "79577fd7eb8a",
-      "subject": "docs(checkpoint): close the WU8 generated workflow proof",
-      "summary": "retained Universal Setup policy ownership and human-gated apply."
+      "commit": "cf674d852e16",
+      "subject": "feat(policy): freeze hermetic standalone Play law",
+      "summary": "exact no-follow resources, independent observation, evidence closure, and Pass/Fail/Inconclusive law cannot grant authority."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "d46aab915432",
+      "subject": "docs(checkpoint): close Gate 4A policy review",
+      "summary": "freeze the process-tree claim and retain Inconclusive for every observation gap."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "690728884f7e",
+      "subject": "docs(gate4a): record canonical policy integration",
+      "summary": "kept issuance, process execution, real Play, setup, credentials, networking, host mutation, signing, and publication unavailable."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "da2a52b6ca39",
+      "subject": "feat(platform): bind stable candidate object identities",
+      "summary": "reject stable-object and process-restart ambiguity at the candidate boundary."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "4e20ff3a44d5",
+      "subject": "feat(play): implement the frozen hermetic candidate",
+      "summary": "bind plan integrity, exact resources, stable objects, process starts, provider audience, one-time nonce, observation completeness, and packet self-hash."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "5335b8777fef",
+      "subject": "fix(play): isolate Windows candidate helpers",
+      "summary": "retain fail-closed non-Windows candidate unavailability without weakening Windows validation."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "e60ff931317a",
+      "subject": "docs(play): close Gate 4B candidate",
+      "summary": "preserve frozen policy, exact candidate identities, unset human verdict, and zero product authority."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "4bc2ec135fe2",
+      "subject": "docs(checkpoint): record Gate 4B public integration",
+      "summary": "preserve unavailable product issuance, public Play, real Factorio execution, Setup, credentials, networking, Steam, host mutation, signing, and publication."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "71fc4f95e274",
+      "subject": "feat(gate4c): bind exact verdict preflight blockers",
+      "summary": "Missing provenance or observation evidence is a closed blocker and cannot grant authority."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "1aebc65dcdc3",
+      "subject": "fix(gate4c): harden preflight evidence bindings",
+      "summary": "Bind source, attestation, and observer evidence to exact, fresh identities and reject per-domain attribution ambiguity."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "f03d771ce218",
+      "subject": "fix(gate4c): bind signed portable source packages",
+      "summary": "package/member substitution, unsafe ZIP structure, reparse paths,"
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "dfc741e107c3",
+      "subject": "fix(evidence): bound Gate 4C observer capture capacity",
+      "summary": "Lost or undecodable ETW events still fail closed; no observation gap is waived."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "0800e2f26bf5",
+      "subject": "fix(evidence): normalize observer profile identity",
+      "summary": "The exact materialized raw SHA-256 remains bound; canonicalization is limited to XML line endings."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "dd8438593980",
+      "subject": "fix(evidence): parse exact Gate 4C XPerf rows",
+      "summary": "Missing live loss counts and same-row PID mismatches fail closed."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "995e6130210d",
+      "subject": "test(gate4c): add exact evidence-only verdict harness",
+      "summary": "exact closed resource paths, stable identities, append-only outputs, authenticated one-use permit consumption, replay resistance, and fail-closed observation gaps."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "89d69de0884a",
+      "subject": "fix(gate4c): isolate Windows-only harness implementation",
+      "summary": "the non-Windows harness remains refusal-only; no execution boundary changed."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "9c080e704633",
+      "subject": "fix(gate4c): complete portable compile boundary",
+      "summary": "non-Windows behavior remains refusal-only."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "2684056aaf4d",
+      "subject": "fix(gate4c): guard Windows session constants",
+      "summary": "non-Windows behavior remains refusal-only."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "129f70d13058",
-      "subject": "docs(m2): bind the public lifecycle proof",
-      "summary": "immutable M2-WU2 implementation and package proof."
+      "commit": "b0d5f388c312",
+      "subject": "feat(permit): implement authenticated one-time core",
+      "summary": "authenticated provider-neutral permit infrastructure."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "2c55d1d111a2",
-      "subject": "chore(m2): open the WU2 dev integration proof",
-      "summary": "evidence-only WU2 dev integration closeout lane."
+      "commit": "7c351e77b0ad",
+      "subject": "feat(permit): prove exact dormant provider binding",
+      "summary": "exact Gate 2 instance-evidence projection for future menu permits."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "182ada6be86d",
-      "subject": "docs(m2): bind the exact WU2 dev integration",
-      "summary": "immutable exact-dev WU2 integration evidence."
+      "commit": "cf674d852e16",
+      "subject": "feat(policy): freeze hermetic standalone Play law",
+      "summary": "immutable Gate 4A process-tree-hermetic standalone Play policy and component contracts."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "a286b5c42736",
-      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
-      "summary": "retained live synthetic install lifecycle evidence."
+      "commit": "690728884f7e",
+      "subject": "docs(gate4a): record canonical policy integration",
+      "summary": "durable Gate 4A canonical public-integration evidence."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "480a58ca4c10",
-      "subject": "feat(handoff): integrate Launcher recovery projection",
-      "summary": "stable managed_install_recovery_required handoff with stale launch-plan projection."
+      "commit": "4e20ff3a44d5",
+      "subject": "feat(play): implement the frozen hermetic candidate",
+      "summary": "internal exact-candidate planning, issuance, observation, and evidence-packet infrastructure."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "99f8cd8319ad",
-      "subject": "feat(setup): route Factorio installs through target-bound planning",
-      "summary": "Real target-bound Factorio portable install planning."
+      "commit": "e60ff931317a",
+      "subject": "docs(play): close Gate 4B candidate",
+      "summary": "bounded Gate 4C human-verdict WorkUnit and immutable activation boundary."
     },
     {
       "breaking": false,
       "category": "Added",
-      "commit": "991ff78c5cc3",
-      "subject": "feat(frontend): generate the portable setup review workflow",
-      "summary": "consistent managed-portable setup review workflow across all shipped client families."
+      "commit": "71fc4f95e274",
+      "subject": "feat(gate4c): bind exact verdict preflight blockers",
+      "summary": "Gate 4C preflight and ETW observer self-test tooling."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "995e6130210d",
+      "subject": "test(gate4c): add exact evidence-only verdict harness",
+      "summary": "evidence-only Gate 4C observer, baseline, operator harness, finalizer, tests, and procedure."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "129f70d13058",
-      "subject": "docs(m2): bind the public lifecycle proof",
-      "summary": "project truth now distinguishes implementation proof from dev integration and human acceptance."
+      "commit": "dac01182292b",
+      "subject": "docs(checkpoint): record Gates 0-3 canonical integration",
+      "summary": "repository truth now records canonical main promotion and synchronized dev ancestry."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "e4b03c82b649",
-      "subject": "chore(m2): close the public lifecycle work unit",
-      "summary": "WU2 is closed locally pending reviewed dev integration."
+      "commit": "cf674d852e16",
+      "subject": "feat(policy): freeze hermetic standalone Play law",
+      "summary": "development truth now records policy implemented and frozen pending reviewed closeout."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "f051731b80b5",
-      "subject": "chore(aide): refresh the WU2 branch identity",
-      "summary": "branch governance evidence now reflects the completed WU2 head."
+      "commit": "d46aab915432",
+      "subject": "docs(checkpoint): close Gate 4A policy review",
+      "summary": "project truth now records accepted dev integration pending canonical policy promotion."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "182ada6be86d",
-      "subject": "docs(m2): bind the exact WU2 dev integration",
-      "summary": "public lifecycle is dev-integrated pending operator acceptance."
+      "commit": "690728884f7e",
+      "subject": "docs(gate4a): record canonical policy integration",
+      "summary": "product phase from policy closeout to the bounded candidate."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "cad50062c955",
-      "subject": "chore(m2): close the WU2 dev integration proof",
-      "summary": "WU2 exact-dev integration is fully closed."
+      "commit": "4e20ff3a44d5",
+      "subject": "feat(play): implement the frozen hermetic candidate",
+      "summary": "generated development truth now records 279 schemas while command and refusal counts remain unchanged."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "53ebb488daad",
-      "subject": "chore(aide): refresh the integration proof branch",
-      "summary": "publication governance reports now match the closed evidence head."
+      "commit": "e60ff931317a",
+      "subject": "docs(play): close Gate 4B candidate",
+      "summary": "Gate 4B development truth is accepted as reviewed, reproduced, and eligible for human verdict."
     },
     {
       "breaking": false,
       "category": "Changed",
-      "commit": "a286b5c42736",
-      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
-      "summary": "project truth now points at the canonical WU4 provider."
+      "commit": "4bc2ec135fe2",
+      "subject": "docs(checkpoint): record Gate 4B public integration",
+      "summary": "project truth now records the reviewed closeout as eligible for human verdict."
     },
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "a286b5c42736",
-      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
-      "summary": "rebuilt preferred native CLI to align runtime status with provider lock."
+      "commit": "5f9f122d6d3e",
+      "subject": "fix(ci): compile permit fuzz entry in normal proof",
+      "summary": "make the conditional permit fuzz entry visible to strict changed-source analysis."
     },
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "952c46a629f0",
-      "subject": "test(cli): prove configured setup planning stays read only",
-      "summary": "Retained precise legacy archive refusal ordering."
+      "commit": "678d985ad984",
+      "subject": "fix(test): keep execution journals below Windows path limits",
+      "summary": "execution-foundation clean reproductions no longer inherit an avoidably deep journal path from the build tree."
     },
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "00ca569368dd",
-      "subject": "fix(contracts): complete install plan success truth",
-      "summary": "Implemented command contract now has both success and dynamic refusal evidence."
+      "commit": "5335b8777fef",
+      "subject": "fix(play): isolate Windows candidate helpers",
+      "summary": "Linux and macOS warnings-as-errors builds no longer compile implementation helpers for the Windows-only frozen candidate."
     },
     {
       "breaking": false,
       "category": "Fixed",
-      "commit": "d59d22a27b08",
-      "subject": "fix(probe): preserve supervision deadlines under host load",
-      "summary": "process supervision now honors short deadlines under a slow Windows process-query provider."
+      "commit": "67110899db21",
+      "subject": "fix(test): isolate Windows candidate fixtures",
+      "summary": "Linux and macOS warnings-as-errors builds no longer compile Windows-only candidate fixture helpers."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "da3e2274a3dc",
+      "subject": "fix(test): make writable fixture copies explicit",
+      "summary": "candidate smoke fixtures compile cleanly with GCC range-loop warnings treated as errors."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "f03d771ce218",
+      "subject": "fix(gate4c): bind signed portable source packages",
+      "summary": "source provenance can now represent an exact signed standalone"
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "b8d91bceded1",
+      "subject": "fix(gate4c): bind one observer toolkit",
+      "summary": "Gate 4C observer evidence now refuses mixed WPR/decoder toolchains."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "dfc741e107c3",
+      "subject": "fix(evidence): bound Gate 4C observer capture capacity",
+      "summary": "Gate 4C observer self-test no longer records three unnecessarily broad WPR profiles."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "0800e2f26bf5",
+      "subject": "fix(evidence): normalize observer profile identity",
+      "summary": "Windows CRLF checkout materialization no longer invalidates the reviewed observer profile contract."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "dd8438593980",
+      "subject": "fix(evidence): parse exact Gate 4C XPerf rows",
+      "summary": "Gate 4C observation proof now understands actual XPerf CSV fields."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "89d69de0884a",
+      "subject": "fix(gate4c): isolate Windows-only harness implementation",
+      "summary": "portable native builds no longer compile unreachable Windows-only operator helpers."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "9c080e704633",
+      "subject": "fix(gate4c): complete portable compile boundary",
+      "summary": "complete separation of the Windows-only interactive implementation from portable harness modes."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "2684056aaf4d",
+      "subject": "fix(gate4c): guard Windows session constants",
+      "summary": "AppleClang no longer sees unused Windows session constants."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "067397e592ce",
-      "subject": "docs(m2): bind WU3 exact-dev integration proof",
-      "summary": "accepted WU3 reviewed dev integration evidence."
+      "commit": "ec4159f05678",
+      "subject": "docs(checkpoint): close Gate 3 permit infrastructure",
+      "summary": "Add the durable Gate 3 infrastructure-only closeout and exact proof."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "a286b5c42736",
-      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
-      "summary": "bind run, packet, journal, audit, state, and package identities."
+      "commit": "dac01182292b",
+      "subject": "docs(checkpoint): record Gates 0-3 canonical integration",
+      "summary": "add a durable canonical integration proof for Gates 0-3."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "a6cfe28c704d",
-      "subject": "docs(state): accept exact-dev WU4 integration",
-      "summary": "WU4 is now accepted as dev-integrated while its human verdict remains pending."
+      "commit": "cf674d852e16",
+      "subject": "feat(policy): freeze hermetic standalone Play law",
+      "summary": "define measurable hermetic scope and the human-reviewed menu-first journey."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "a64037693f4b",
-      "subject": "docs(checkpoint): bind WU6 exact dev integration evidence",
-      "summary": "WU6 now records accepted dev integration proof pending only the human M2 verdict."
+      "commit": "d46aab915432",
+      "subject": "docs(checkpoint): close Gate 4A policy review",
+      "summary": "add the reviewed Gate 4A policy closeout and exact evidence record."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "00ca569368dd",
-      "subject": "fix(contracts): complete install plan success truth",
-      "summary": "WU6 compaction law now matches its accepted dev integration."
+      "commit": "4e20ff3a44d5",
+      "subject": "feat(play): implement the frozen hermetic candidate",
+      "summary": "record the Gate 4B technical boundary and preserve Gate 4C as a separate human-reviewed run."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "0e50b6fe0e90",
-      "subject": "docs(checkpoint): close WU7 portable planning candidate",
-      "summary": "Added the M2-WU7 immutable implementation checkpoint."
+      "commit": "e60ff931317a",
+      "subject": "docs(play): close Gate 4B candidate",
+      "summary": "add complete reviewed-head, merged-dev, reproduction, risk, storage, and checkpoint evidence."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "526d6f5a2d1c",
-      "subject": "docs(evidence): bind final WU7 package identities",
-      "summary": "Final package evidence is revision-pinned and immutable."
+      "commit": "4bc2ec135fe2",
+      "subject": "docs(checkpoint): record Gate 4B public integration",
+      "summary": "add durable Gate 4B public-integration proof."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "d3b5458645e2",
-      "subject": "docs(checkpoint): bind WU7 exact dev integration evidence",
-      "summary": "recorded WU7 exact dev integration evidence."
+      "commit": "71fc4f95e274",
+      "subject": "feat(gate4c): bind exact verdict preflight blockers",
+      "summary": "Record exact preflight identities, blockers, and retained scratch disposition."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "6ca7e62889f6",
-      "subject": "docs(state): record the WU8 four-client proof candidate",
-      "summary": "recorded the WU8 local proof candidate."
+      "commit": "1aebc65dcdc3",
+      "subject": "fix(gate4c): harden preflight evidence bindings",
+      "summary": "Record the v2 evidence contracts, bounded leases, and cleanup disposition."
     },
     {
       "breaking": false,
       "category": "Docs",
-      "commit": "79577fd7eb8a",
-      "subject": "docs(checkpoint): close the WU8 generated workflow proof",
-      "summary": "published the local WU8 implementation and package checkpoint."
+      "commit": "f03d771ce218",
+      "subject": "fix(gate4c): bind signed portable source packages",
+      "summary": "recorded the pre-baseline defect and bounded correction."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "dfc741e107c3",
+      "subject": "fix(evidence): bound Gate 4C observer capture capacity",
+      "summary": "Preserved the exact lossy self-test identities and bounded correction rationale."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "0800e2f26bf5",
+      "subject": "fix(evidence): normalize observer profile identity",
+      "summary": "Distinguished raw execution bytes from reviewed canonical profile content."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "dd8438593980",
+      "subject": "fix(evidence): parse exact Gate 4C XPerf rows",
+      "summary": "Preserve the exact pre-baseline v3 Inconclusive evidence."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "067397e592ce",
-      "subject": "docs(m2): bind WU3 exact-dev integration proof",
-      "summary": "enforce immutable integration identities and retained human gate."
+      "commit": "b0d5f388c312",
+      "subject": "feat(permit): implement authenticated one-time core",
+      "summary": "add foundation-only adversarial and concurrent native proof."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "a286b5c42736",
-      "subject": "chore(m2): close WU4 live synthetic acceptance proof",
-      "summary": "enforce pending verdict and zero authority promotion."
+      "commit": "7c351e77b0ad",
+      "subject": "feat(permit): prove exact dormant provider binding",
+      "summary": "add mutation, drift, replay, no-write, parser-corpus, sanitizer, and bounded libFuzzer coverage."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "d746454ca850",
-      "subject": "test(proof): bind complete WU6 validation identities",
-      "summary": "complete Launcher handoff proof and immutable WU5 dev evidence are now recorded."
+      "commit": "407fa0471ffb",
+      "subject": "fix(permit): require explicit secure entropy",
+      "summary": "prove both successful construction and fail-closed unavailable entropy."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "99f8cd8319ad",
-      "subject": "feat(setup): route Factorio installs through target-bound planning",
-      "summary": "Correct synthetic ZIP CRC metadata and prove planning causes no state or target creation."
+      "commit": "5f9f122d6d3e",
+      "subject": "fix(ci): compile permit fuzz entry in normal proof",
+      "summary": "fuzz the instrumented permit core rather than only the entry executable."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "952c46a629f0",
-      "subject": "test(cli): prove configured setup planning stays read only",
-      "summary": "Added CLI-level immutable plan and no-write coverage."
+      "commit": "ec4159f05678",
+      "subject": "docs(checkpoint): close Gate 3 permit infrastructure",
+      "summary": "Bind compaction and contributor-truth assertions to the policy phase."
     },
     {
       "breaking": false,
       "category": "Tests",
-      "commit": "991ff78c5cc3",
-      "subject": "feat(frontend): generate the portable setup review workflow",
-      "summary": "pinned every required workflow label and authority boundary."
+      "commit": "dac01182292b",
+      "subject": "docs(checkpoint): record Gates 0-3 canonical integration",
+      "summary": "lock exact integration identities and authority exclusions in project-state regression checks."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "cf674d852e16",
+      "subject": "feat(policy): freeze hermetic standalone Play law",
+      "summary": "add canonical digest, mutation, broad-root, verdict, exclusion, and truth regression coverage."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "d46aab915432",
+      "subject": "docs(checkpoint): close Gate 4A policy review",
+      "summary": "bind exact review, merge, reproduction, counts, no-active-task checkpoint, and no-authority state."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "690728884f7e",
+      "subject": "docs(gate4a): record canonical policy integration",
+      "summary": "bound project-state and policy validation to canonical promotion, ancestry, tree identity, and candidate activation."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "4e20ff3a44d5",
+      "subject": "feat(play): implement the frozen hermetic candidate",
+      "summary": "add synthetic execution and adversarial proof without running Factorio."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "678d985ad984",
+      "subject": "fix(test): keep execution journals below Windows path limits",
+      "summary": "retain precise failure diagnostics for process identity, lifecycle progression, and journal persistence."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "67110899db21",
+      "subject": "fix(test): isolate Windows candidate fixtures",
+      "summary": "preserve platform-specific candidate assertions without weakening cross-platform foundation coverage."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "da3e2274a3dc",
+      "subject": "fix(test): make writable fixture copies explicit",
+      "summary": "make temporary string construction explicit without changing fixture semantics."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "e60ff931317a",
+      "subject": "docs(play): close Gate 4B candidate",
+      "summary": "update generated-truth and target-profile assertions for the verdict phase."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "4bc2ec135fe2",
+      "subject": "docs(checkpoint): record Gate 4B public integration",
+      "summary": "lock exact closeout revisions, workflow identities, and path-filtered schema disposition."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "71fc4f95e274",
+      "subject": "feat(gate4c): bind exact verdict preflight blockers",
+      "summary": "Cover evidence mutation, path safety, source non-inference, and observer parsing."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "1aebc65dcdc3",
+      "subject": "fix(gate4c): harden preflight evidence bindings",
+      "summary": "Add adversarial mutation coverage for every reviewed evidence boundary."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "6b3a300aa6d7",
+      "subject": "test(gate4c): normalize mocked Windows tool paths",
+      "summary": "Make synthetic Windows observer-tool identity fixtures host-independent."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "f03d771ce218",
+      "subject": "fix(gate4c): bind signed portable source packages",
+      "summary": "added signed-package, mismatch, wrong-version, unsafe-path,"
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "dfc741e107c3",
+      "subject": "fix(evidence): bound Gate 4C observer capture capacity",
+      "summary": "Added exact profile, buffer, keyword, mutation, start-argument, and WPR loss-message coverage."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "0800e2f26bf5",
+      "subject": "fix(evidence): normalize observer profile identity",
+      "summary": "Added explicit LF/CRLF identity parity and retained semantic mutation refusal."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "995e6130210d",
+      "subject": "test(gate4c): add exact evidence-only verdict harness",
+      "summary": "canonical cross-language digest, external/protected-write, wrong-image, wrong-PID, PID-reuse, source-boundary, and human-verdict-law coverage."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "89d69de0884a",
+      "subject": "fix(gate4c): isolate Windows-only harness implementation",
+      "summary": "cross-platform canonicalization remains enabled."
     }
   ],
   "preview_only": true,
   "risk_summary": [
     {
-      "commit": "129f70d13058",
-      "summary": "Hosted FacMan dev workflows and the human live-target verdict are still pending."
+      "commit": "b0d5f388c312",
+      "summary": "The core is reachable only by internal native callers; product issuance and every real effect remain unavailable."
     },
     {
-      "commit": "129f70d13058",
-      "summary": "Hosted FacMan dev workflows and the human live-target verdict are still pending."
+      "commit": "b0d5f388c312",
+      "summary": "The core is reachable only by internal native callers; product issuance and every real effect remain unavailable."
     },
     {
-      "commit": "129f70d13058",
-      "summary": "Hosted FacMan dev workflows and the human live-target verdict are still pending."
+      "commit": "b0d5f388c312",
+      "summary": "The core is reachable only by internal native callers; product issuance and every real effect remain unavailable."
     },
     {
-      "commit": "e4b03c82b649",
-      "summary": "Hosted PR and exact dev workflow evidence remain unavailable until publication and merge."
+      "commit": "b0d5f388c312",
+      "summary": "The core is reachable only by internal native callers; product issuance and every real effect remain unavailable."
     },
     {
-      "commit": "e4b03c82b649",
-      "summary": "Hosted PR and exact dev workflow evidence remain unavailable until publication and merge."
+      "commit": "b0d5f388c312",
+      "summary": "The core is reachable only by internal native callers; product issuance and every real effect remain unavailable."
     },
     {
-      "commit": "f051731b80b5",
-      "summary": "No remote branch, pull request, or repository setting has changed in this commit."
+      "commit": "b0d5f388c312",
+      "summary": "The core is reachable only by internal native callers; product issuance and every real effect remain unavailable."
     },
     {
-      "commit": "2c55d1d111a2",
-      "summary": "No product behavior or authority changes; the human M2 verdict remains pending."
+      "commit": "e883ab5cf18b",
+      "summary": "Scope authorization alone changes no CI behavior or product authority."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "The human M2 verdict remains pending and no live acceptance lifecycle has run."
+      "commit": "e883ab5cf18b",
+      "summary": "Scope authorization alone changes no CI behavior or product authority."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "The human M2 verdict remains pending and no live acceptance lifecycle has run."
+      "commit": "e883ab5cf18b",
+      "summary": "Scope authorization alone changes no CI behavior or product authority."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "The human M2 verdict remains pending and no live acceptance lifecycle has run."
+      "commit": "e883ab5cf18b",
+      "summary": "Scope authorization alone changes no CI behavior or product authority."
     },
     {
-      "commit": "cad50062c955",
-      "summary": "M2 live operator acceptance remains future WU3-WU10 work."
+      "commit": "7c351e77b0ad",
+      "summary": "Real Play remains impossible because exact executable and launch-plan bindings and issuance authority do not exist."
     },
     {
-      "commit": "cad50062c955",
-      "summary": "M2 live operator acceptance remains future WU3-WU10 work."
+      "commit": "7c351e77b0ad",
+      "summary": "Real Play remains impossible because exact executable and launch-plan bindings and issuance authority do not exist."
     },
     {
-      "commit": "53ebb488daad",
-      "summary": "No product or remote state changes in this commit."
+      "commit": "7c351e77b0ad",
+      "summary": "Real Play remains impossible because exact executable and launch-plan bindings and issuance authority do not exist."
     },
     {
-      "commit": "5f93f42f9708",
-      "summary": "Historical malformed commit messages remain reported for review; no history was rewritten."
+      "commit": "7c351e77b0ad",
+      "summary": "Real Play remains impossible because exact executable and launch-plan bindings and issuance authority do not exist."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+      "commit": "7c351e77b0ad",
+      "summary": "Real Play remains impossible because exact executable and launch-plan bindings and issuance authority do not exist."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+      "commit": "7c351e77b0ad",
+      "summary": "Real Play remains impossible because exact executable and launch-plan bindings and issuance authority do not exist."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+      "commit": "407fa0471ffb",
+      "summary": "This intentionally leaves product permit issuance unavailable."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+      "commit": "407fa0471ffb",
+      "summary": "This intentionally leaves product permit issuance unavailable."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "Human M2 verdict remains pending; recovery.apply remains unavailable."
+      "commit": "407fa0471ffb",
+      "summary": "This intentionally leaves product permit issuance unavailable."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "407fa0471ffb",
+      "summary": "This intentionally leaves product permit issuance unavailable."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "407fa0471ffb",
+      "summary": "This intentionally leaves product permit issuance unavailable."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "5f9f122d6d3e",
+      "summary": "Local Clang/libFuzzer execution remains unavailable; hosted Linux must verify the dedicated configuration."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "5f9f122d6d3e",
+      "summary": "Local Clang/libFuzzer execution remains unavailable; hosted Linux must verify the dedicated configuration."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "5f9f122d6d3e",
+      "summary": "Local Clang/libFuzzer execution remains unavailable; hosted Linux must verify the dedicated configuration."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "5f9f122d6d3e",
+      "summary": "Local Clang/libFuzzer execution remains unavailable; hosted Linux must verify the dedicated configuration."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "Human verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "5f9f122d6d3e",
+      "summary": "Local Clang/libFuzzer execution remains unavailable; hosted Linux must verify the dedicated configuration."
     },
     {
-      "commit": "a6cfe28c704d",
-      "summary": "Ordinary live apply and every excluded execution or system authority remain unavailable."
+      "commit": "ec4159f05678",
+      "summary": "Real Play and product issuance remain unavailable; no human isolation verdict exists."
     },
     {
-      "commit": "480a58ca4c10",
-      "summary": "Full repository, package, reproducibility, and hosted integration proof remain pending; human verdict and ordinary live apply remain unavailable."
+      "commit": "ec4159f05678",
+      "summary": "Real Play and product issuance remain unavailable; no human isolation verdict exists."
     },
     {
-      "commit": "d746454ca850",
-      "summary": "WU6 still requires reviewed hosted integration; the M2 human verdict and ordinary live apply remain pending."
+      "commit": "ec4159f05678",
+      "summary": "Real Play and product issuance remain unavailable; no human isolation verdict exists."
     },
     {
-      "commit": "f0b27c2e7f21",
-      "summary": "Exact-head and exact-dev hosted workflows remain required; human setup verdict remains pending."
+      "commit": "ec4159f05678",
+      "summary": "Real Play and product issuance remain unavailable; no human isolation verdict exists."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
+      "commit": "ff57488e3cd5",
+      "summary": "The synchronization is not accepted until its exact head is reviewed and merged through dev."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
+      "commit": "ff57488e3cd5",
+      "summary": "The synchronization is not accepted until its exact head is reviewed and merged through dev."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Lifecycle verify, repair, move, uninstall, and recovery activation remain gated pending the operator verdict."
+      "commit": "dac01182292b",
+      "summary": "This checkpoint is evidence-only and does not make FacMan playable."
     },
     {
-      "commit": "a64037693f4b",
-      "summary": "The operator verdict remains pending and no setup mutation authority changes."
+      "commit": "dac01182292b",
+      "summary": "This checkpoint is evidence-only and does not make FacMan playable."
     },
     {
-      "commit": "952c46a629f0",
-      "summary": "Apply remains blocked; this test grants no mutation authority."
+      "commit": "dac01182292b",
+      "summary": "This checkpoint is evidence-only and does not make FacMan playable."
     },
     {
-      "commit": "952c46a629f0",
-      "summary": "Apply remains blocked; this test grants no mutation authority."
+      "commit": "dac01182292b",
+      "summary": "This checkpoint is evidence-only and does not make FacMan playable."
     },
     {
-      "commit": "00ca569368dd",
-      "summary": "No setup apply, execution, or human-verdict authority changed."
+      "commit": "dac01182292b",
+      "summary": "This checkpoint is evidence-only and does not make FacMan playable."
     },
     {
-      "commit": "00ca569368dd",
-      "summary": "No setup apply, execution, or human-verdict authority changed."
+      "commit": "cf674d852e16",
+      "summary": "No concrete executable, candidate build revision, provider revision, stable machine identity, manifest, issuer, process authority, or real verdict exists yet."
     },
     {
-      "commit": "0e50b6fe0e90",
-      "summary": "Dev integration, the M2 human verdict, real Factorio archive acceptance, and all execution authority remain pending."
+      "commit": "cf674d852e16",
+      "summary": "No concrete executable, candidate build revision, provider revision, stable machine identity, manifest, issuer, process authority, or real verdict exists yet."
     },
     {
-      "commit": "0e50b6fe0e90",
-      "summary": "Dev integration, the M2 human verdict, real Factorio archive acceptance, and all execution authority remain pending."
+      "commit": "cf674d852e16",
+      "summary": "No concrete executable, candidate build revision, provider revision, stable machine identity, manifest, issuer, process authority, or real verdict exists yet."
     },
     {
-      "commit": "526d6f5a2d1c",
-      "summary": "Publisher authenticity remains unproven; the evidence is unsigned and unpublished."
+      "commit": "cf674d852e16",
+      "summary": "No concrete executable, candidate build revision, provider revision, stable machine identity, manifest, issuer, process authority, or real verdict exists yet."
     },
     {
-      "commit": "1b029ead969e",
-      "summary": "None; this commit changes no product or authority surface."
+      "commit": "cf674d852e16",
+      "summary": "No concrete executable, candidate build revision, provider revision, stable machine identity, manifest, issuer, process authority, or real verdict exists yet."
     },
     {
-      "commit": "d3b5458645e2",
-      "summary": "Human M2 verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "cf674d852e16",
+      "summary": "No concrete executable, candidate build revision, provider revision, stable machine identity, manifest, issuer, process authority, or real verdict exists yet."
     },
     {
-      "commit": "d3b5458645e2",
-      "summary": "Human M2 verdict remains pending and ordinary live apply remains unavailable."
+      "commit": "d46aab915432",
+      "summary": "The policy is reviewed on dev but not yet canonical on main."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
+      "commit": "d46aab915432",
+      "summary": "The policy is reviewed on dev but not yet canonical on main."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
+      "commit": "d46aab915432",
+      "summary": "The policy is reviewed on dev but not yet canonical on main."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "AppKit runtime execution remains CI-only on macOS; local static generation and surface checks pass."
+      "commit": "d46aab915432",
+      "summary": "The policy is reviewed on dev but not yet canonical on main."
     },
     {
-      "commit": "6ca7e62889f6",
-      "summary": "Package proof, hosted dev integration, and the human operator verdict remain pending."
+      "commit": "d46aab915432",
+      "summary": "The policy is reviewed on dev but not yet canonical on main."
     },
     {
-      "commit": "6ca7e62889f6",
-      "summary": "Package proof, hosted dev integration, and the human operator verdict remain pending."
+      "commit": "d46aab915432",
+      "summary": "The policy is reviewed on dev but not yet canonical on main."
     },
     {
-      "commit": "d59d22a27b08",
-      "summary": "Very short runs intentionally report child-process observation as not_attempted; long acceptance runs retain periodic observation."
+      "commit": "690728884f7e",
+      "summary": "The candidate has not been implemented or executed; green policy and integration evidence do not prove Play."
     },
     {
-      "commit": "d59d22a27b08",
-      "summary": "Very short runs intentionally report child-process observation as not_attempted; long acceptance runs retain periodic observation."
+      "commit": "690728884f7e",
+      "summary": "The candidate has not been implemented or executed; green policy and integration evidence do not prove Play."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
+      "commit": "690728884f7e",
+      "summary": "The candidate has not been implemented or executed; green policy and integration evidence do not prove Play."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
+      "commit": "690728884f7e",
+      "summary": "The candidate has not been implemented or executed; green policy and integration evidence do not prove Play."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "Hosted target CI, reviewed dev integration, and the human M2 verdict remain pending."
+      "commit": "690728884f7e",
+      "summary": "The candidate has not been implemented or executed; green policy and integration evidence do not prove Play."
     },
     {
-      "commit": "d40596f0654b",
-      "summary": "Hosted branch and exact-head workflow evidence remain pending until push."
+      "commit": "690728884f7e",
+      "summary": "The candidate has not been implemented or executed; green policy and integration evidence do not prove Play."
+    },
+    {
+      "commit": "690728884f7e",
+      "summary": "The candidate has not been implemented or executed; green policy and integration evidence do not prove Play."
+    },
+    {
+      "commit": "da2a52b6ca39",
+      "summary": "macOS keeps the conservative unavailable start identity because the frozen candidate is Windows-only."
+    },
+    {
+      "commit": "da2a52b6ca39",
+      "summary": "macOS keeps the conservative unavailable start identity because the frozen candidate is Windows-only."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "The independent Windows capture backend, registry evidence, real Factorio behavior, and human UI journey remain unproven until Gate 4C."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "The independent Windows capture backend, registry evidence, real Factorio behavior, and human UI journey remain unproven until Gate 4C."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "The independent Windows capture backend, registry evidence, real Factorio behavior, and human UI journey remain unproven until Gate 4C."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "The independent Windows capture backend, registry evidence, real Factorio behavior, and human UI journey remain unproven until Gate 4C."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "The independent Windows capture backend, registry evidence, real Factorio behavior, and human UI journey remain unproven until Gate 4C."
+    },
+    {
+      "commit": "678d985ad984",
+      "summary": "Test callers must continue to redirect TEMP/TMP when storage policy requires a task-owned external scratch root."
+    },
+    {
+      "commit": "678d985ad984",
+      "summary": "Test callers must continue to redirect TEMP/TMP when storage policy requires a task-owned external scratch root."
+    },
+    {
+      "commit": "5335b8777fef",
+      "summary": "The non-Windows compiler result remains subject to the replacement hosted exact-head runs."
+    },
+    {
+      "commit": "5335b8777fef",
+      "summary": "The non-Windows compiler result remains subject to the replacement hosted exact-head runs."
+    },
+    {
+      "commit": "67110899db21",
+      "summary": "The replacement hosted non-Windows builds remain the authoritative compiler proof."
+    },
+    {
+      "commit": "67110899db21",
+      "summary": "The replacement hosted non-Windows builds remain the authoritative compiler proof."
+    },
+    {
+      "commit": "da3e2274a3dc",
+      "summary": "The replacement hosted Linux and macOS builds remain the authoritative compiler proof."
+    },
+    {
+      "commit": "da3e2274a3dc",
+      "summary": "The replacement hosted Linux and macOS builds remain the authoritative compiler proof."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "No real Factorio process has run through the candidate and no Pass, Fail, or Inconclusive verdict exists."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "No real Factorio process has run through the candidate and no Pass, Fail, or Inconclusive verdict exists."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "No real Factorio process has run through the candidate and no Pass, Fail, or Inconclusive verdict exists."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "No real Factorio process has run through the candidate and no Pass, Fail, or Inconclusive verdict exists."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "No real Factorio process has run through the candidate and no Pass, Fail, or Inconclusive verdict exists."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "No real Factorio process has run through the candidate and no Pass, Fail, or Inconclusive verdict exists."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "FacMan remains not yet playable; the first real Factorio journey and human verdict have not occurred."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "FacMan remains not yet playable; the first real Factorio journey and human verdict have not occurred."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "FacMan remains not yet playable; the first real Factorio journey and human verdict have not occurred."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "FacMan remains not yet playable; the first real Factorio journey and human verdict have not occurred."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "FacMan remains not yet playable; the first real Factorio journey and human verdict have not occurred."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "No real Factorio run can begin until all five preflight blockers close."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "No real Factorio run can begin until all five preflight blockers close."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "No real Factorio run can begin until all five preflight blockers close."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "No real Factorio run can begin until all five preflight blockers close."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "No real Factorio run can begin until all five preflight blockers close."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "No real Factorio run can begin until all five preflight blockers close."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "The original authenticated Factorio source artifact remains unavailable."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "The original authenticated Factorio source artifact remains unavailable."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "The original authenticated Factorio source artifact remains unavailable."
+    },
+    {
+      "commit": "6b3a300aa6d7",
+      "summary": "None to product behavior; this commit changes one test-only path-normalization expression."
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "No baseline, permit, process, or verdict behavior is added. The frozen policy,"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "No baseline, permit, process, or verdict behavior is added. The frozen policy,"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "No baseline, permit, process, or verdict behavior is added. The frozen policy,"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "No baseline, permit, process, or verdict behavior is added. The frozen policy,"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "No baseline, permit, process, or verdict behavior is added. The frozen policy,"
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "No baseline, permit, process, or verdict behavior is added. The frozen policy,"
+    },
+    {
+      "commit": "b8d91bceded1",
+      "summary": "The correction deliberately supports only the frozen Windows candidate's"
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "The corrected profile is WPR-schema-valid but remains target-host-unproven until the post-merge elevated self-test."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "The corrected profile is WPR-schema-valid but remains target-host-unproven until the post-merge elevated self-test."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "The corrected profile is WPR-schema-valid but remains target-host-unproven until the post-merge elevated self-test."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "The corrected profile is WPR-schema-valid but remains target-host-unproven until the post-merge elevated self-test."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "The corrected profile is WPR-schema-valid but remains target-host-unproven until the post-merge elevated self-test."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "The corrected profile is WPR-schema-valid but remains target-host-unproven until the post-merge elevated self-test."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "The corrected profile is WPR-schema-valid but remains target-host-unproven until the post-merge elevated self-test."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "None beyond the existing need for a post-merge elevated observer self-test."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "None beyond the existing need for a post-merge elevated observer self-test."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "None beyond the existing need for a post-merge elevated observer self-test."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "None beyond the existing need for a post-merge elevated observer self-test."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "None beyond the existing need for a post-merge elevated observer self-test."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "None beyond the existing need for a post-merge elevated observer self-test."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "None beyond the existing need for a post-merge elevated observer self-test."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "The v4 observer still requires one fresh elevated operator run on Windows."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "The v4 observer still requires one fresh elevated operator run on Windows."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "The v4 observer still requires one fresh elevated operator run on Windows."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "ETW observation and human UI facts can only be proven during the later elevated interactive session; no verdict is inferred here."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "ETW observation and human UI facts can only be proven during the later elevated interactive session; no verdict is inferred here."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "ETW observation and human UI facts can only be proven during the later elevated interactive session; no verdict is inferred here."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "ETW observation and human UI facts can only be proven during the later elevated interactive session; no verdict is inferred here."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "ETW observation and human UI facts can only be proven during the later elevated interactive session; no verdict is inferred here."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "None beyond pending hosted verification of the new exact head."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "None beyond pending hosted verification of the new exact head."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "None beyond pending hosted verification of the new exact head."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "None beyond pending hosted verification of the new exact head."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "None beyond pending hosted verification."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "None beyond pending hosted verification."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "None beyond pending hosted verification."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "None beyond pending hosted verification."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "None beyond pending hosted verification."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "None beyond pending hosted verification."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "f1a9996d391ba19a4c5ce4e418193e6067bfd722",
+  "source_head": "a8c73eb4e34f8fbac5c2cf2207fdf47d64bcb616",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
     {
-      "commit": "129f70d13058",
-      "summary": "Clean three-repository reconstruction: PASS."
+      "commit": "b0d5f388c312",
+      "summary": "MinGW GCC facman_operation_permit_smoke build: PASS."
     },
     {
-      "commit": "129f70d13058",
-      "summary": "Clean three-repository reconstruction: PASS."
+      "commit": "b0d5f388c312",
+      "summary": "MinGW GCC facman_operation_permit_smoke build: PASS."
     },
     {
-      "commit": "129f70d13058",
-      "summary": "Clean three-repository reconstruction: PASS."
+      "commit": "b0d5f388c312",
+      "summary": "MinGW GCC facman_operation_permit_smoke build: PASS."
     },
     {
-      "commit": "e4b03c82b649",
-      "summary": "AIDE task inspection: PASS and complete with no missing evidence."
+      "commit": "b0d5f388c312",
+      "summary": "MinGW GCC facman_operation_permit_smoke build: PASS."
     },
     {
-      "commit": "e4b03c82b649",
-      "summary": "AIDE task inspection: PASS and complete with no missing evidence."
+      "commit": "b0d5f388c312",
+      "summary": "MinGW GCC facman_operation_permit_smoke build: PASS."
     },
     {
-      "commit": "f051731b80b5",
-      "summary": "AIDE git detect: PASS with high-confidence task/dev/main roles."
+      "commit": "b0d5f388c312",
+      "summary": "MinGW GCC facman_operation_permit_smoke build: PASS."
     },
     {
-      "commit": "2c55d1d111a2",
-      "summary": "Exact dev CI, CodeQL, and security policy: PASS."
+      "commit": "e883ab5cf18b",
+      "summary": "py -3 tools/aide_queue_state_check.py --strict: PASS."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "Exact dev CI 29326004461: PASS."
+      "commit": "e883ab5cf18b",
+      "summary": "py -3 tools/aide_queue_state_check.py --strict: PASS."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "Exact dev CI 29326004461: PASS."
+      "commit": "e883ab5cf18b",
+      "summary": "py -3 tools/aide_queue_state_check.py --strict: PASS."
     },
     {
-      "commit": "182ada6be86d",
-      "summary": "Exact dev CI 29326004461: PASS."
+      "commit": "e883ab5cf18b",
+      "summary": "py -3 tools/aide_queue_state_check.py --strict: PASS."
     },
     {
-      "commit": "cad50062c955",
-      "summary": "AIDE task inspection: PASS and complete with three evidence files."
+      "commit": "7c351e77b0ad",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors build: PASS."
     },
     {
-      "commit": "cad50062c955",
-      "summary": "AIDE task inspection: PASS and complete with three evidence files."
+      "commit": "7c351e77b0ad",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors build: PASS."
     },
     {
-      "commit": "53ebb488daad",
-      "summary": "AIDE git detect: PASS."
+      "commit": "7c351e77b0ad",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors build: PASS."
     },
     {
-      "commit": "5f93f42f9708",
-      "summary": "AIDE Lite test: PASS."
+      "commit": "7c351e77b0ad",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors build: PASS."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "exact-dev CI 29332570822: PASS."
+      "commit": "7c351e77b0ad",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors build: PASS."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "exact-dev CI 29332570822: PASS."
+      "commit": "7c351e77b0ad",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors build: PASS."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "exact-dev CI 29332570822: PASS."
+      "commit": "407fa0471ffb",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors rebuild: PASS."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "exact-dev CI 29332570822: PASS."
+      "commit": "407fa0471ffb",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors rebuild: PASS."
     },
     {
-      "commit": "067397e592ce",
-      "summary": "exact-dev CI 29332570822: PASS."
+      "commit": "407fa0471ffb",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors rebuild: PASS."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "combined Release CTest 39/39: PASS."
+      "commit": "407fa0471ffb",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors rebuild: PASS."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "combined Release CTest 39/39: PASS."
+      "commit": "407fa0471ffb",
+      "summary": "Visual Studio 2022 x64 Debug warnings-as-errors rebuild: PASS."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "combined Release CTest 39/39: PASS."
+      "commit": "5f9f122d6d3e",
+      "summary": "Visual Studio 2022 standalone permit fuzz target rebuild: PASS."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "combined Release CTest 39/39: PASS."
+      "commit": "5f9f122d6d3e",
+      "summary": "Visual Studio 2022 standalone permit fuzz target rebuild: PASS."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "combined Release CTest 39/39: PASS."
+      "commit": "5f9f122d6d3e",
+      "summary": "Visual Studio 2022 standalone permit fuzz target rebuild: PASS."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "combined Release CTest 39/39: PASS."
+      "commit": "5f9f122d6d3e",
+      "summary": "Visual Studio 2022 standalone permit fuzz target rebuild: PASS."
     },
     {
-      "commit": "a286b5c42736",
-      "summary": "combined Release CTest 39/39: PASS."
+      "commit": "5f9f122d6d3e",
+      "summary": "Visual Studio 2022 standalone permit fuzz target rebuild: PASS."
     },
     {
-      "commit": "a6cfe28c704d",
-      "summary": "project_state.py, test_aide_compaction, and strict_check.py: PASS."
+      "commit": "ec4159f05678",
+      "summary": "py -3 tools/project_state.py: PASS."
     },
     {
-      "commit": "480a58ca4c10",
-      "summary": "Six focused exact-pin native and SDK tests, project-state checks, and strict validation: PASS."
+      "commit": "ec4159f05678",
+      "summary": "py -3 tools/project_state.py: PASS."
     },
     {
-      "commit": "d746454ca850",
-      "summary": "Native 41/41, Python 339 plus one opt-in skip, Windows package 14/14, AIDE, strict, and byte reproducibility: PASS."
+      "commit": "ec4159f05678",
+      "summary": "py -3 tools/project_state.py: PASS."
     },
     {
-      "commit": "f0b27c2e7f21",
-      "summary": "AIDE verify, review, close, project state, compaction, strict, and diff checks: PASS."
+      "commit": "ec4159f05678",
+      "summary": "py -3 tools/project_state.py: PASS."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
+      "commit": "ff57488e3cd5",
+      "summary": "pre-merge dev/main tree identity: PASS."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
+      "commit": "ff57488e3cd5",
+      "summary": "pre-merge dev/main tree identity: PASS."
     },
     {
-      "commit": "99f8cd8319ad",
-      "summary": "Metadata generation, setup workflow law, alpha goldens, and M1 proof checks: PASS."
+      "commit": "dac01182292b",
+      "summary": "`py -3 tools/project_state.py`: PASS."
     },
     {
-      "commit": "a64037693f4b",
-      "summary": "All three exact-dev workflow conclusions: PASS."
+      "commit": "dac01182292b",
+      "summary": "`py -3 tools/project_state.py`: PASS."
     },
     {
-      "commit": "952c46a629f0",
-      "summary": "Debug facman_cli build: PASS."
+      "commit": "dac01182292b",
+      "summary": "`py -3 tools/project_state.py`: PASS."
     },
     {
-      "commit": "952c46a629f0",
-      "summary": "Debug facman_cli build: PASS."
+      "commit": "dac01182292b",
+      "summary": "`py -3 tools/project_state.py`: PASS."
     },
     {
-      "commit": "00ca569368dd",
-      "summary": "Focused command and compaction tests: PASS."
+      "commit": "dac01182292b",
+      "summary": "`py -3 tools/project_state.py`: PASS."
     },
     {
-      "commit": "00ca569368dd",
-      "summary": "Focused command and compaction tests: PASS."
+      "commit": "cf674d852e16",
+      "summary": "py -3 tools/hermetic_play_policy_check.py: PASS; 13 writable, 18 protected/disclosed, 31 evidence, 29 cases; exact digest locked."
     },
     {
-      "commit": "0e50b6fe0e90",
-      "summary": "Release CTest 41/41: PASS."
+      "commit": "cf674d852e16",
+      "summary": "py -3 tools/hermetic_play_policy_check.py: PASS; 13 writable, 18 protected/disclosed, 31 evidence, 29 cases; exact digest locked."
     },
     {
-      "commit": "0e50b6fe0e90",
-      "summary": "Release CTest 41/41: PASS."
+      "commit": "cf674d852e16",
+      "summary": "py -3 tools/hermetic_play_policy_check.py: PASS; 13 writable, 18 protected/disclosed, 31 evidence, 29 cases; exact digest locked."
     },
     {
-      "commit": "526d6f5a2d1c",
-      "summary": "Required Windows package proof 14/14 with zero skips: PASS."
+      "commit": "cf674d852e16",
+      "summary": "py -3 tools/hermetic_play_policy_check.py: PASS; 13 writable, 18 protected/disclosed, 31 evidence, 29 cases; exact digest locked."
     },
     {
-      "commit": "1b029ead969e",
-      "summary": "AIDE git policy and workflow detection: PASS."
+      "commit": "cf674d852e16",
+      "summary": "py -3 tools/hermetic_play_policy_check.py: PASS; 13 writable, 18 protected/disclosed, 31 evidence, 29 cases; exact digest locked."
     },
     {
-      "commit": "d3b5458645e2",
-      "summary": "project state generator and validator: PASS."
+      "commit": "cf674d852e16",
+      "summary": "py -3 tools/hermetic_play_policy_check.py: PASS; 13 writable, 18 protected/disclosed, 31 evidence, 29 cases; exact digest locked."
     },
     {
-      "commit": "d3b5458645e2",
-      "summary": "project state generator and validator: PASS."
+      "commit": "d46aab915432",
+      "summary": "PR #47 push and pull-request CI, CodeQL, schema, and security-policy workflows: PASS at exact head cf674d8."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "metadata generation check: PASS."
+      "commit": "d46aab915432",
+      "summary": "PR #47 push and pull-request CI, CodeQL, schema, and security-policy workflows: PASS at exact head cf674d8."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "metadata generation check: PASS."
+      "commit": "d46aab915432",
+      "summary": "PR #47 push and pull-request CI, CodeQL, schema, and security-policy workflows: PASS at exact head cf674d8."
     },
     {
-      "commit": "991ff78c5cc3",
-      "summary": "metadata generation check: PASS."
+      "commit": "d46aab915432",
+      "summary": "PR #47 push and pull-request CI, CodeQL, schema, and security-policy workflows: PASS at exact head cf674d8."
     },
     {
-      "commit": "6ca7e62889f6",
-      "summary": "project state generator and validator: PASS."
+      "commit": "d46aab915432",
+      "summary": "PR #47 push and pull-request CI, CodeQL, schema, and security-policy workflows: PASS at exact head cf674d8."
     },
     {
-      "commit": "6ca7e62889f6",
-      "summary": "project state generator and validator: PASS."
+      "commit": "d46aab915432",
+      "summary": "PR #47 push and pull-request CI, CodeQL, schema, and security-policy workflows: PASS at exact head cf674d8."
     },
     {
-      "commit": "d59d22a27b08",
-      "summary": "timeout and termination test repeated five times: PASS at approximately 0.2 seconds each."
+      "commit": "690728884f7e",
+      "summary": "`py -3 -m unittest tests.test_aide_compaction tests.test_aide_target_truth tests.test_hermetic_play_policy`: PASS (25 tests)."
     },
     {
-      "commit": "d59d22a27b08",
-      "summary": "timeout and termination test repeated five times: PASS at approximately 0.2 seconds each."
+      "commit": "690728884f7e",
+      "summary": "`py -3 -m unittest tests.test_aide_compaction tests.test_aide_target_truth tests.test_hermetic_play_policy`: PASS (25 tests)."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "exact-pin Release CTest 41/41: PASS."
+      "commit": "690728884f7e",
+      "summary": "`py -3 -m unittest tests.test_aide_compaction tests.test_aide_target_truth tests.test_hermetic_play_policy`: PASS (25 tests)."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "exact-pin Release CTest 41/41: PASS."
+      "commit": "690728884f7e",
+      "summary": "`py -3 -m unittest tests.test_aide_compaction tests.test_aide_target_truth tests.test_hermetic_play_policy`: PASS (25 tests)."
     },
     {
-      "commit": "79577fd7eb8a",
-      "summary": "exact-pin Release CTest 41/41: PASS."
+      "commit": "690728884f7e",
+      "summary": "`py -3 -m unittest tests.test_aide_compaction tests.test_aide_target_truth tests.test_hermetic_play_policy`: PASS (25 tests)."
     },
     {
-      "commit": "d40596f0654b",
-      "summary": "AIDE git policy: PASS."
+      "commit": "690728884f7e",
+      "summary": "`py -3 -m unittest tests.test_aide_compaction tests.test_aide_target_truth tests.test_hermetic_play_policy`: PASS (25 tests)."
+    },
+    {
+      "commit": "690728884f7e",
+      "summary": "`py -3 -m unittest tests.test_aide_compaction tests.test_aide_target_truth tests.test_hermetic_play_policy`: PASS (25 tests)."
+    },
+    {
+      "commit": "da2a52b6ca39",
+      "summary": "`cmake --build <task-root>/build-debug --config Debug --parallel 4`: PASS."
+    },
+    {
+      "commit": "da2a52b6ca39",
+      "summary": "`cmake --build <task-root>/build-debug --config Debug --parallel 4`: PASS."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "`cmake --build E:/Temporary/FacMan/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/build-debug --config Debug --parallel 4`: PASS."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "`cmake --build E:/Temporary/FacMan/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/build-debug --config Debug --parallel 4`: PASS."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "`cmake --build E:/Temporary/FacMan/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/build-debug --config Debug --parallel 4`: PASS."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "`cmake --build E:/Temporary/FacMan/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/build-debug --config Debug --parallel 4`: PASS."
+    },
+    {
+      "commit": "4e20ff3a44d5",
+      "summary": "`cmake --build E:/Temporary/FacMan/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/build-debug --config Debug --parallel 4`: PASS."
+    },
+    {
+      "commit": "678d985ad984",
+      "summary": "`cmake --build <task-root>/build-debug --target facman_execution_foundation_smoke facman_process_probe --config Debug --parallel 2`: PASS."
+    },
+    {
+      "commit": "678d985ad984",
+      "summary": "`cmake --build <task-root>/build-debug --target facman_execution_foundation_smoke facman_process_probe --config Debug --parallel 2`: PASS."
+    },
+    {
+      "commit": "5335b8777fef",
+      "summary": "Hosted PR #52 Linux native logs: root cause identified as five unused Windows-only helpers."
+    },
+    {
+      "commit": "5335b8777fef",
+      "summary": "Hosted PR #52 Linux native logs: root cause identified as five unused Windows-only helpers."
+    },
+    {
+      "commit": "67110899db21",
+      "summary": "Hosted PR #52 Linux native logs: root cause identified as two unused Windows-only fixture helpers."
+    },
+    {
+      "commit": "67110899db21",
+      "summary": "Hosted PR #52 Linux native logs: root cause identified as two unused Windows-only fixture helpers."
+    },
+    {
+      "commit": "da3e2274a3dc",
+      "summary": "Hosted PR #52 Linux native logs: root cause identified at the writable-resource fixture loop."
+    },
+    {
+      "commit": "da3e2274a3dc",
+      "summary": "Hosted PR #52 Linux native logs: root cause identified at the writable-resource fixture loop."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "PR #52 exact head: CI, CodeQL for all configured languages, schema, and security policy PASS for push and pull-request events."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "PR #52 exact head: CI, CodeQL for all configured languages, schema, and security policy PASS for push and pull-request events."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "PR #52 exact head: CI, CodeQL for all configured languages, schema, and security policy PASS for push and pull-request events."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "PR #52 exact head: CI, CodeQL for all configured languages, schema, and security policy PASS for push and pull-request events."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "PR #52 exact head: CI, CodeQL for all configured languages, schema, and security policy PASS for push and pull-request events."
+    },
+    {
+      "commit": "e60ff931317a",
+      "summary": "PR #52 exact head: CI, CodeQL for all configured languages, schema, and security policy PASS for push and pull-request events."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "`python tools/project_state.py`: PASS."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "`python tools/project_state.py`: PASS."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "`python tools/project_state.py`: PASS."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "`python tools/project_state.py`: PASS."
+    },
+    {
+      "commit": "4bc2ec135fe2",
+      "summary": "`python tools/project_state.py`: PASS."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test tests.test_hermetic_play_candidate tests.test_hermetic_play_policy`: PASS."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test tests.test_hermetic_play_candidate tests.test_hermetic_play_policy`: PASS."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test tests.test_hermetic_play_candidate tests.test_hermetic_play_policy`: PASS."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test tests.test_hermetic_play_candidate tests.test_hermetic_play_policy`: PASS."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test tests.test_hermetic_play_candidate tests.test_hermetic_play_policy`: PASS."
+    },
+    {
+      "commit": "71fc4f95e274",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test tests.test_hermetic_play_candidate tests.test_hermetic_play_policy`: PASS."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test -v`: PASS (21 tests; 2 privilege-dependent symlink skips with unconditional reparse refusal also passing)."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test -v`: PASS (21 tests; 2 privilege-dependent symlink skips with unconditional reparse refusal also passing)."
+    },
+    {
+      "commit": "1aebc65dcdc3",
+      "summary": "`python -m unittest tests.test_gate4c_verdict_preflight tests.test_gate4c_observer_self_test -v`: PASS (21 tests; 2 privilege-dependent symlink skips with unconditional reparse refusal also passing)."
+    },
+    {
+      "commit": "6b3a300aa6d7",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (21 tests; 2 local privilege-dependent symlink skips)."
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Focused Gate 4C evidence tests: PASS (28 tests; 2 expected privilege skips)."
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Focused Gate 4C evidence tests: PASS (28 tests; 2 expected privilege skips)."
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Focused Gate 4C evidence tests: PASS (28 tests; 2 expected privilege skips)."
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Focused Gate 4C evidence tests: PASS (28 tests; 2 expected privilege skips)."
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Focused Gate 4C evidence tests: PASS (28 tests; 2 expected privilege skips)."
+    },
+    {
+      "commit": "f03d771ce218",
+      "summary": "Focused Gate 4C evidence tests: PASS (28 tests; 2 expected privilege skips)."
+    },
+    {
+      "commit": "b8d91bceded1",
+      "summary": "PASS: 32 focused Gate 4C observer/preflight tests; two expected"
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips)."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips)."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips)."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips)."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips)."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips)."
+    },
+    {
+      "commit": "dfc741e107c3",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips)."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips), including explicit CRLF parity."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips), including explicit CRLF parity."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips), including explicit CRLF parity."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips), including explicit CRLF parity."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips), including explicit CRLF parity."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips), including explicit CRLF parity."
+    },
+    {
+      "commit": "0800e2f26bf5",
+      "summary": "`python -m unittest tests.test_gate4c_observer_self_test tests.test_gate4c_verdict_preflight -v`: PASS (34 run; 32 passed; 2 privilege-dependent skips), including explicit CRLF parity."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "PASS: real retained v3 CSV reclassified all three domains with exact PIDs."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "PASS: real retained v3 CSV reclassified all three domains with exact PIDs."
+    },
+    {
+      "commit": "dd8438593980",
+      "summary": "PASS: real retained v3 CSV reclassified all three domains with exact PIDs."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "`ctest --test-dir <task-build> -C Debug --output-on-failure`: PASS, 48/48."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "`ctest --test-dir <task-build> -C Debug --output-on-failure`: PASS, 48/48."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "`ctest --test-dir <task-build> -C Debug --output-on-failure`: PASS, 48/48."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "`ctest --test-dir <task-build> -C Debug --output-on-failure`: PASS, 48/48."
+    },
+    {
+      "commit": "995e6130210d",
+      "summary": "`ctest --test-dir <task-build> -C Debug --output-on-failure`: PASS, 48/48."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "89d69de0884a",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "9c080e704633",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
+    },
+    {
+      "commit": "2684056aaf4d",
+      "summary": "`cmake --build <task-build> --config Debug --target facman_gate4c_verdict_harness`: PASS."
     }
   ],
   "warnings": [
-    "747b4442cf22 merge commit ignored",
-    "178de3192f3c merge commit ignored",
-    "a8b298a35cd1 merge commit ignored",
-    "476813e6fc74 merge commit ignored",
-    "5563e3b8de43 merge commit ignored",
-    "f4b02ac022ee merge commit ignored",
-    "8c1ed5351133 merge commit ignored",
-    "37c83c653882 merge commit ignored",
-    "f1a9996d391b merge commit ignored",
-    "14 malformed or legacy commits require review"
+    "91c2aa4fe0a3 merge commit ignored",
+    "11feb2e53539 merge commit ignored",
+    "810e92ccd52a merge commit ignored",
+    "08d4318ffd32 merge commit ignored",
+    "6dcfb29ed556 merge commit ignored",
+    "51f4fc24c916 merge commit ignored",
+    "cb7b951b1fc8 merge commit ignored",
+    "ca9ca5db4435 merge commit ignored",
+    "0b8783325233 merge commit ignored",
+    "df580f00600c merge commit ignored",
+    "e9c1e69fee1a merge commit ignored",
+    "5b2459bf1642 merge commit ignored",
+    "6ade64d41927 merge commit ignored",
+    "14ce6ded2b04 merge commit ignored",
+    "802b3fdda510 merge commit ignored",
+    "8d95513fe815 merge commit ignored",
+    "a8c73eb4e34f merge commit ignored",
+    "2 malformed or legacy commits require review"
   ]
 }

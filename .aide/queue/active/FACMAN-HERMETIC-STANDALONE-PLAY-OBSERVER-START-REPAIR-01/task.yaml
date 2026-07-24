@@ -1,0 +1,80 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01
+title: Diagnose and repair the Gate 4C observer-start boundary
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-24T01:00:46Z
+owner: unassigned
+objective: >
+  Reproduce the exact pre-process observer-start failure without launching
+  Factorio, preserve the underlying helper command result and stderr, identify
+  the bounded cause, correct only the observer-start and diagnostic boundary,
+  and produce a reviewed candidate eligible for a new Gate 4C verdict attempt
+  against the unchanged frozen policy.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/profile.yaml
+  - README.md
+  - docs/**
+  - release/index/**
+  - tests/native/gate4c_verdict_harness.cpp
+  - tests/test_gate4c_verdict_evidence.py
+  - tools/gate4c_observer_self_test.py
+  - tools/gate4c_verdict_evidence.py
+  - tools/gate4c_verdict_preflight.py
+  - tools/gate4c_verdict_session.py
+  - runtime/factorio/launch/flb_factorio_hermetic_candidate.cpp
+  - runtime/factorio/launch/flb_factorio_hermetic_candidate.h
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml
+  - apps/**
+  - runtime/application/**
+  - runtime/core/permit/**
+  - runtime/platform/**
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+  - facman_hermetic_play_candidate_smoke
+affected_python_tests:
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_hermetic_play_candidate
+  - tests.test_hermetic_play_policy
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/hermetic_play_candidate_check.py
+  - tools/hermetic_play_policy_check.py
+  - tools/strict_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - the Gate 4A policy digest remains immutable
+  - the Gate 4B candidate scope does not widen
+  - no Factorio process may start during diagnosis or correction validation
+  - the exact observer-start helper command result and stderr are preserved
+  - observer startup must be proven active before any process boundary
+  - a provider failure remains Inconclusive and cannot be converted to Pass
+  - no failed permit, baseline, plan, or operation closure is reused
+  - the repair cannot add a public Play route or product issuance authority
+  - Setup, credentials, networking, Steam, alternate intents, signing, and publication remain unavailable
+depends_on:
+  - FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01
+  - FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - reproduce the observer-start failure without Factorio
+  - preserve exact helper command, exit status, stdout, and stderr
+  - identify and document one bounded root cause
+  - add a regression that fails on the observed condition
+  - prove observer active-before-process ordering with a non-Factorio probe
+  - prove observer-start failure remains fail-closed and Inconclusive
+  - run focused native, Python, strict, policy, and cross-platform validation
+  - produce a reviewed correction candidate with no authority promotion
+  - activate FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02 only after closeout
+active_at: 2026-07-24T01:00:46Z
