@@ -454,7 +454,8 @@ ElevatedBrokerConnection ElevatedBrokerConnection::launch(
     }
 
     if ((broker_mode != L"--observer-broker" &&
-            broker_mode != L"--observer-broker-probe") ||
+            broker_mode != L"--observer-broker-probe" &&
+            broker_mode != L"--verdict03-observer-broker") ||
         trailing_arguments.size() > 4U) {
         throw std::runtime_error(
             "elevated observer broker launch mode is outside the closed surface");

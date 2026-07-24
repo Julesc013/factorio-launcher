@@ -40,8 +40,8 @@ UNIVERSAL_SETUP_REVISION = "3f8489275077347c2918f3bb03614ec6431362ff"
 EXPECTED_FACTORIO_VERSION = "2.0.77"
 EXPECTED_INSTANCE_ID = "gate-4c-disposable-2-0-77"
 EXPECTED_SPEC_DIGEST = "1930126ce9449328c5d333a03c07dcf10234ca337dfe1a563edc213efe24bc28"
-EXPECTED_BINDING_DIGEST = "a309925da310a7a5eaa633477ca99a48fd97bc72e18e001b5a627b50edbe121f"
-EXPECTED_READINESS_DIGEST = "8b7604d9aead7e7bffdf486d2e6d44365dd32b6e22dc33acd3eaffb3f16ff3ab"
+EXPECTED_BINDING_DIGEST = "b5a27b41459a9287681894dc9bcd08a2e04c614d754f18f507030738050530a2"
+EXPECTED_READINESS_DIGEST = "21c3b86fac164ba3d0f202cf26687f5d1e882cb048d6343b7e0242b68a4bc2d1"
 EXPECTED_FACTORIO_SHA256 = "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b"
 EXPECTED_FACMAN_SHA256 = "47ccf1f151eb65daea1ae4d8ff782f48df08bbedd92d9434e5ca6fd86536270a"
 EXPECTED_SIGNER = "Wube Software Ltd"
@@ -870,7 +870,6 @@ def observer_prerequisites(
         "self_test_passed": self_test_passed,
         "ready": all([wpr, xperf, wpa_exporter])
         and coherent_toolchain
-        and is_elevated()
         and recording is False
         and session.get("valid") is True
         and self_test_passed,

@@ -874,8 +874,8 @@ def validate_native_packet(
 
 
 def prepare_session(args: argparse.Namespace) -> dict[str, Any]:
-    if os.name != "nt" or not PREFLIGHT.is_elevated():
-        raise EvidenceError("Gate 4C baseline capture requires elevated Windows")
+    if os.name != "nt":
+        raise EvidenceError("Gate 4C baseline capture requires Windows")
     preflight = validate_ready_preflight(args.preflight)
     task_root = Path(preflight["task_root"]["path"])
     if task_root.name != WORK_UNIT or Path(os.path.abspath(args.task_root)) != task_root:

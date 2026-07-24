@@ -58,7 +58,8 @@ produce Gate 4C evidence.
 
 `tools/gate4c_verdict_evidence.py`
 
-- Refuses non-elevated or expired ready preflights.
+- Captures stable baselines from the medium-integrity coordinator and refuses
+  incomplete or unreadable protected domains.
 - Creates one exact operation-owned temporary closure.
 - Captures stable no-follow filesystem manifests and registry value sets.
 - Binds the native harness, Python interpreter, evidence tools, baseline,
@@ -84,7 +85,9 @@ produce Gate 4C evidence.
 - Is built only when tests are enabled.
 - Refuses ordinary invocation.
 - Self-verifies its binary and every supporting evidence artifact.
-- Requires an exact typed plan-digest approval before issuing a permit.
+- Requires one exact hash-closed plan-approval artifact before each permit.
+- Keeps one UAC-approved, verdict-scoped observer broker alive across the
+  fresh observer self-tests and both launch observations.
 - Uses `CandidatePermitIssuer`,
   `HermeticCandidateLaunchProvider`,
   `PlatformProcessSupervisor`, and
@@ -94,47 +97,43 @@ produce Gate 4C evidence.
   that the interactive session reran that synthetic matrix.
 - Never records a human verdict.
 
-## Per-launch procedure
+## Verdict 03 procedure
 
 Build the exact merged tooling revision into the task-owned root:
 
 ```powershell
 cmake -S . `
-  -B 'E:\Temporary\FacMan\FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01\verdict-harness\build' `
+  -B 'E:\Temporary\FacMan\FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03\verdict-harness\build' `
   -G 'Visual Studio 18 2026' -A x64 `
   -DFACMAN_BUILD_TESTS=ON `
   -DFLAUNCH_UNIVERSAL_LAUNCHER_ROOT='D:\Projects\Universal\universal-launcher' `
   -DFLAUNCH_UNIVERSAL_SETUP_ROOT='D:\Projects\Universal\universal-setup'
 
 cmake --build `
-  'E:\Temporary\FacMan\FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01\verdict-harness\build' `
+  'E:\Temporary\FacMan\FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03\verdict-harness\build' `
   --config Release --target facman_gate4c_verdict_harness
 ```
 
-After a fresh elevated observer self-test, quiet-host attestation, and
-zero-blocker preflight, begin the baseline before the ready-preflight deadline:
+Stage the exact reviewed Gate 4B candidate and fresh disposable workspace with
+`tools/gate4c_verdict03_coordinator.py stage`. Then start the complete
+coordinator from a normal, non-elevated terminal:
 
 ```powershell
-python tools\gate4c_verdict_evidence.py prepare `
-  --preflight '<fresh-ready-preflight.json>' `
-  --task-root 'E:\Temporary\FacMan\FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01' `
-  --operation-id 'gate4c-menu-first-<unique-id>' `
-  --harness '<exact-facman_gate4c_verdict_harness.exe>' `
-  --baseline-out '<task-root>\evidence\sessions\<operation>-baseline.json' `
-  --classification-out '<task-root>\evidence\sessions\<operation>-roots.json' `
-  --session-out '<task-root>\evidence\sessions\<operation>-session.json'
+& '<task-root>\verdict-harness\build\Release\facman_gate4c_verdict_harness.exe' `
+  --run-verdict03 '<task-root>\operator\verdict03-config.json'
 ```
 
-Then run the exact session from the same elevated terminal:
+The coordinator causes one UAC prompt for the exact reviewed observer broker.
+That broker runs one fresh elevated observer self-test before each launch,
+controls WPR for both observations, accepts only the closed
+`start/status/finish/abort` surface, and exits after launch two. The coordinator
+remains medium integrity throughout. It creates each quiet-host attestation,
+preflight, baseline, and session only after the corresponding fresh self-test.
 
-```powershell
-& '<exact-facman_gate4c_verdict_harness.exe>' `
-  --run-session '<task-root>\evidence\sessions\<operation>-session.json'
-```
-
-The harness prints the exact plan digest. The operator must inspect the plan and
-type the complete requested approval string. Any other input exits without a
-permit or process.
+For each launch, the coordinator prints the exact plan and waits for a separate
+canonical approval artifact bound to its plan digest. No phrase typing is
+required. After each normal game exit it waits for a packet-bound human
+observation artifact. The second baseline, plan, and permit are all fresh.
 
 The first launch human observation covers:
 

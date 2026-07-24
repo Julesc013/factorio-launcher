@@ -22,6 +22,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #ifdef _WIN32
@@ -56,6 +57,10 @@ constexpr const char* kBrokerRequestSchema =
     "factorio.gate4c_observer_broker_request.v1";
 constexpr const char* kBrokerResponseSchema =
     "factorio.gate4c_observer_broker_response.v1";
+constexpr const char* kVerdict03BrokerReadySchema =
+    "factorio.gate4c_verdict03_broker_ready.v1";
+constexpr const char* kVerdict03CoordinatorConfigSchema =
+    "factorio.gate4c_verdict03_coordinator_config.v1";
 constexpr const char* kPrivilegeProbeRequestSchema =
     "factorio.gate4c_privilege_probe_request.v1";
 constexpr const char* kObserverProviderRevision =
@@ -290,6 +295,129 @@ struct Session {
     fs::path plan_out;
     std::string session_digest;
 };
+
+struct Verdict03CoordinatorConfig {
+    fs::path config_path;
+    fs::path task_root;
+    fs::path repository_root;
+    fs::path launcher_repository;
+    fs::path setup_repository;
+    fs::path artifact_manifest;
+    fs::path facman_artifact;
+    fs::path workspace;
+    std::string instance_id;
+    fs::path factorio_executable;
+    fs::path source_artifact;
+    fs::path source_member_executable;
+    std::string reviewer_id;
+    std::string first_operation_id;
+    std::string second_operation_id;
+};
+
+Verdict03CoordinatorConfig load_verdict03_config(const fs::path& path)
+{
+    const std::string text = stable_read(path, 1024U * 1024U);
+    auto parsed = json::parse(text, {1024U * 1024U, 8U, 128U, 256U * 1024U});
+    if (!parsed || !parsed.value().is_object()) {
+        throw std::runtime_error(
+            "Verdict 03 coordinator configuration is not bounded strict JSON");
+    }
+    const json::Value& value = parsed.value();
+    require_closed_keys(
+        value,
+        {
+            "artifact_manifest",
+            "facman_artifact",
+            "factorio_executable",
+            "first_operation_id",
+            "instance_id",
+            "launcher_repository",
+            "repository_root",
+            "reviewer_id",
+            "schema",
+            "second_operation_id",
+            "setup_repository",
+            "source_artifact",
+            "source_member_executable",
+            "task_root",
+            "workspace",
+        },
+        "Verdict 03 coordinator configuration");
+    if (string_member(value, "schema") !=
+            kVerdict03CoordinatorConfigSchema) {
+        throw std::runtime_error(
+            "Verdict 03 coordinator configuration schema is unsupported");
+    }
+    Verdict03CoordinatorConfig output;
+    output.config_path = normalized_absolute(path);
+    output.task_root = normalized_absolute(platform::path_from_utf8(
+        string_member(value, "task_root")));
+    output.repository_root = normalized_absolute(platform::path_from_utf8(
+        string_member(value, "repository_root")));
+    output.launcher_repository = normalized_absolute(platform::path_from_utf8(
+        string_member(value, "launcher_repository")));
+    output.setup_repository = normalized_absolute(platform::path_from_utf8(
+        string_member(value, "setup_repository")));
+    output.artifact_manifest = normalized_absolute(platform::path_from_utf8(
+        string_member(value, "artifact_manifest")));
+    output.facman_artifact = normalized_absolute(platform::path_from_utf8(
+        string_member(value, "facman_artifact")));
+    output.workspace = normalized_absolute(platform::path_from_utf8(
+        string_member(value, "workspace")));
+    output.instance_id = string_member(value, "instance_id");
+    output.factorio_executable = normalized_absolute(
+        platform::path_from_utf8(
+            string_member(value, "factorio_executable")));
+    output.source_artifact = normalized_absolute(platform::path_from_utf8(
+        string_member(value, "source_artifact")));
+    output.source_member_executable =
+        normalized_absolute(platform::path_from_utf8(
+            string_member(value, "source_member_executable")));
+    output.reviewer_id = string_member(value, "reviewer_id");
+    output.first_operation_id =
+        string_member(value, "first_operation_id");
+    output.second_operation_id =
+        string_member(value, "second_operation_id");
+
+    if (output.task_root.filename() != kWorkUnit ||
+        normalized_absolute(output.repository_root) !=
+            normalized_absolute(FACMAN_TEST_SOURCE_ROOT) ||
+        normalized_absolute(output.config_path.parent_path()) !=
+            normalized_absolute(output.task_root / "operator") ||
+        normalized_absolute(output.workspace) !=
+            normalized_absolute(output.task_root / "workspace") ||
+        !safe_identifier(output.instance_id) ||
+        !safe_identifier(output.first_operation_id) ||
+        !safe_identifier(output.second_operation_id) ||
+        output.first_operation_id.rfind("gate4c-verdict03-", 0U) != 0U ||
+        output.second_operation_id.rfind("gate4c-verdict03-", 0U) != 0U ||
+        output.first_operation_id == output.second_operation_id ||
+        output.reviewer_id.rfind("windows:", 0U) != 0U) {
+        throw std::runtime_error(
+            "Verdict 03 coordinator configuration scope is not exact");
+    }
+    for (const fs::path& inspected : {
+             output.config_path,
+             output.task_root,
+             output.repository_root,
+             output.launcher_repository,
+             output.setup_repository,
+             output.artifact_manifest,
+             output.facman_artifact,
+             output.workspace,
+             output.factorio_executable,
+             output.source_artifact,
+             output.source_member_executable}) {
+        std::string detail;
+        if (facman::base::path_crosses_link_or_reparse_point(
+                inspected, detail)) {
+            throw std::runtime_error(
+                "Verdict 03 coordinator path crosses a link or reparse boundary: " +
+                detail);
+        }
+    }
+    return output;
+}
 
 Session load_session(
     const fs::path& path,
@@ -552,6 +680,8 @@ std::string start_request_json(
     (void)document.add_unsigned_integer(
         "coordinator_process_id", coordinator_process_id);
     document.add_string("operation_id", session.operation_id);
+    document.add_string(
+        "session_path", platform::path_to_utf8(session.session_path));
     document.add_string("session_digest", session.session_digest);
     document.add_string("preflight_digest", session.preflight_digest);
     document.add_string(
@@ -722,6 +852,198 @@ facman::core::Result<platform::ProcessResult> run_python(
     return facman::core::Result<platform::ProcessResult>::success(std::move(result));
 }
 
+platform::ProcessResult run_verdict03_python(
+    const Verdict03CoordinatorConfig& config,
+    std::vector<std::string> arguments,
+    std::chrono::milliseconds timeout)
+{
+    const fs::path python = normalized_absolute(FACMAN_TEST_PYTHON_EXECUTABLE);
+    const fs::path temporary =
+        config.task_root / "operator" / "process-temporary";
+    std::error_code error;
+    fs::create_directories(temporary, error);
+    if (error) {
+        throw std::runtime_error(
+            "Verdict 03 process-temporary root could not be created: " +
+            error.message());
+    }
+    platform::ProcessRequest request;
+    request.executable = python;
+    request.arguments = std::move(arguments);
+    request.working_directory = config.repository_root;
+    request.environment = {
+        {"PYTHONDONTWRITEBYTECODE", "1"},
+        {"TEMP", platform::path_to_utf8(temporary)},
+        {"TMP", platform::path_to_utf8(temporary)}};
+    request.inherit_environment = true;
+    request.timeout = timeout;
+    request.maximum_standard_output = 8U * 1024U * 1024U;
+    request.maximum_standard_error = 8U * 1024U * 1024U;
+    platform::ProcessResult result = platform::supervise_process(request);
+    if (result.termination != platform::ProcessTermination::exited ||
+        result.exit_code != 0) {
+        throw std::runtime_error(
+            "Verdict 03 helper failed: " + result.error + "\n" +
+            result.standard_error + result.standard_output);
+    }
+    return result;
+}
+
+struct ObserverSelfTestResult {
+    fs::path path;
+    std::string digest;
+};
+
+ObserverSelfTestResult run_fresh_observer_self_test(
+    const Verdict03CoordinatorConfig& config)
+{
+    const fs::path tool =
+        config.repository_root / "tools" / "gate4c_observer_self_test.py";
+    platform::ProcessResult result = run_verdict03_python(
+        config,
+        {
+            platform::path_to_utf8(tool),
+            "--task-root", platform::path_to_utf8(config.task_root),
+        },
+        std::chrono::minutes(10));
+    const std::string prefix = "gate4c-observer-self-test: pass (";
+    const std::size_t start = result.standard_output.rfind(prefix);
+    const std::size_t separator = start == std::string::npos
+        ? std::string::npos
+        : result.standard_output.find("; ", start + prefix.size());
+    const std::size_t end = separator == std::string::npos
+        ? std::string::npos
+        : result.standard_output.find(')', separator + 2U);
+    if (start == std::string::npos || separator == std::string::npos ||
+        end == std::string::npos) {
+        throw std::runtime_error(
+            "fresh observer self-test did not return a bounded passing identity");
+    }
+    ObserverSelfTestResult output;
+    output.digest = result.standard_output.substr(
+        start + prefix.size(),
+        separator - (start + prefix.size()));
+    output.path = normalized_absolute(platform::path_from_utf8(
+        result.standard_output.substr(separator + 2U, end - separator - 2U)));
+    if (!lowercase_hex(output.digest, 64U) ||
+        !path_beneath(config.task_root, output.path)) {
+        throw std::runtime_error(
+            "fresh observer self-test identity is outside Verdict 03");
+    }
+    const std::string text = stable_read(output.path, 16U * 1024U * 1024U);
+    auto parsed = json::parse(
+        text, {16U * 1024U * 1024U, 24U, 100000U, 2U * 1024U * 1024U});
+    if (!parsed || !parsed.value().is_object() ||
+        string_member(parsed.value(), "schema") !=
+            "factorio.gate4c_observer_self_test.v5" ||
+        string_member(parsed.value(), "work_unit") != kWorkUnit ||
+        string_member(parsed.value(), "status") != "pass" ||
+        string_member(parsed.value(), "self_test_digest") != output.digest ||
+        !bool_member(parsed.value(), "elevated") ||
+        unsigned_member(parsed.value(), "lost_events") != 0U ||
+        !bool_member(parsed.value(), "attribution_complete")) {
+        throw std::runtime_error(
+            "fresh observer self-test artifact failed native closure checks");
+    }
+    return output;
+}
+
+std::string verdict03_broker_ready_json(
+    const ObserverSelfTestResult& self_test,
+    std::uint64_t generation,
+    const gate4c::ProcessSecurityIdentity& coordinator,
+    const gate4c::ProcessSecurityIdentity& broker)
+{
+    json::ObjectBuilder document;
+    document.add_string("schema", kVerdict03BrokerReadySchema);
+    document.add_string("work_unit", kWorkUnit);
+    (void)document.add_unsigned_integer("generation", generation);
+    document.add_string(
+        "observer_self_test_path",
+        platform::path_to_utf8(self_test.path));
+    document.add_string(
+        "observer_self_test_digest", self_test.digest);
+    (void)document.add_unsigned_integer(
+        "coordinator_process_id", coordinator.process_id);
+    (void)document.add_unsigned_integer(
+        "broker_process_id", broker.process_id);
+    document.add_string(
+        "coordinator_integrity",
+        gate4c::integrity_label(coordinator.integrity_rid));
+    document.add_string(
+        "broker_integrity",
+        gate4c::integrity_label(broker.integrity_rid));
+    (void)document.add_unsigned_integer(
+        "windows_session_id", coordinator.windows_session_id);
+    document.add_string(
+        "principal_sid_digest", digest(coordinator.user_sid));
+    const std::string core = document.serialize();
+    auto parsed = json::parse(core);
+    if (!parsed) {
+        throw std::runtime_error(
+            "Verdict 03 broker-ready evidence encoding failed");
+    }
+    json::ObjectBuilder closed;
+    for (const std::string& key : parsed.value().object_keys()) {
+        closed.add_value(key, require_member(parsed.value(), key.c_str()));
+    }
+    closed.add_string("ready_digest", canonical_object_digest(core));
+    return closed.serialize();
+}
+
+ObserverSelfTestResult validate_verdict03_broker_ready(
+    const std::string& text,
+    std::uint64_t expected_generation,
+    const Verdict03CoordinatorConfig& config,
+    const gate4c::ProcessSecurityIdentity& coordinator,
+    const gate4c::ProcessSecurityIdentity& broker)
+{
+    const std::set<std::string> expected_keys{
+        "broker_integrity",
+        "broker_process_id",
+        "coordinator_integrity",
+        "coordinator_process_id",
+        "generation",
+        "observer_self_test_digest",
+        "observer_self_test_path",
+        "principal_sid_digest",
+        "ready_digest",
+        "schema",
+        "windows_session_id",
+        "work_unit",
+    };
+    const json::Value value = parse_bounded_object(
+        text, expected_keys, "Verdict 03 broker-ready response");
+    if (string_member(value, "schema") != kVerdict03BrokerReadySchema ||
+        string_member(value, "work_unit") != kWorkUnit ||
+        unsigned_member(value, "generation") != expected_generation ||
+        unsigned_member(value, "coordinator_process_id") !=
+            coordinator.process_id ||
+        unsigned_member(value, "broker_process_id") != broker.process_id ||
+        string_member(value, "coordinator_integrity") != "medium" ||
+        string_member(value, "broker_integrity") != "high" ||
+        unsigned_member(value, "windows_session_id") !=
+            coordinator.windows_session_id ||
+        string_member(value, "principal_sid_digest") !=
+            digest(coordinator.user_sid) ||
+        string_member(value, "ready_digest") !=
+            digest(canonical_without(value, "ready_digest"))) {
+        throw std::runtime_error(
+            "Verdict 03 broker-ready response binding is invalid");
+    }
+    ObserverSelfTestResult output{
+        normalized_absolute(platform::path_from_utf8(
+            string_member(value, "observer_self_test_path"))),
+        string_member(value, "observer_self_test_digest"),
+    };
+    if (!lowercase_hex(output.digest, 64U) ||
+        !path_beneath(config.task_root, output.path)) {
+        throw std::runtime_error(
+            "Verdict 03 broker returned an out-of-scope self-test");
+    }
+    return output;
+}
+
 const std::set<std::string> kStartRequestKeys{
     "command",
     "coordinator_process_id",
@@ -736,6 +1058,7 @@ const std::set<std::string> kStartRequestKeys{
     "request_digest",
     "resource_binding_digest",
     "schema",
+    "session_path",
     "session_digest",
 };
 
@@ -885,10 +1208,12 @@ class ObserverBrokerClient {
 public:
     ObserverBrokerClient(
         const Session& session,
-        std::string plan_digest)
+        std::string plan_digest,
+        gate4c::ElevatedBrokerConnection* shared_connection = nullptr)
         : session_(session),
           plan_digest_(std::move(plan_digest)),
-          coordinator_(gate4c::current_process_security_identity())
+          coordinator_(gate4c::current_process_security_identity()),
+          connection_(shared_connection)
     {
         if (!gate4c::is_exact_medium_integrity(coordinator_)) {
             throw std::runtime_error(
@@ -904,7 +1229,8 @@ public:
     facman::core::Result<std::string> begin()
     {
         try {
-            connection_ =
+            if (connection_ == nullptr) {
+                owned_connection_ =
                 std::make_unique<gate4c::ElevatedBrokerConnection>(
                     gate4c::ElevatedBrokerConnection::launch(
                         session_.harness_path, L"--observer-broker",
@@ -913,6 +1239,8 @@ public:
                             std::to_wstring(coordinator_.process_id),
                         },
                         std::chrono::minutes(2)));
+                connection_ = owned_connection_.get();
+            }
             nonce_ = gate4c::secure_nonce_hex(32U);
             const std::uint64_t now = unix_time_milliseconds();
             const std::string core = start_request_json(
@@ -998,11 +1326,13 @@ public:
                 connection_->broker_identity());
             write_privilege_evidence();
             active_ = false;
-            connection_->close_channel();
-            if (connection_->wait_for_exit(std::chrono::seconds(30)) !=
-                WAIT_OBJECT_0) {
-                throw std::runtime_error(
-                    "observer broker did not terminate after finish");
+            if (owned_connection_) {
+                connection_->close_channel();
+                if (connection_->wait_for_exit(std::chrono::seconds(30)) !=
+                    WAIT_OBJECT_0) {
+                    throw std::runtime_error(
+                        "observer broker did not terminate after finish");
+                }
             }
             return facman::core::Result<fs::path>::success(
                 session_.operation_root / "process" / "observation" /
@@ -1082,14 +1412,17 @@ private:
                 "broker_abort_or_channel_failed_wpr_state_requires_elevated_check");
         }
         active_ = false;
-        connection_->close_channel();
-        (void)connection_->wait_for_exit(std::chrono::seconds(30));
+        if (owned_connection_) {
+            connection_->close_channel();
+            (void)connection_->wait_for_exit(std::chrono::seconds(30));
+        }
     }
 
     const Session& session_;
     std::string plan_digest_;
     gate4c::ProcessSecurityIdentity coordinator_;
-    std::unique_ptr<gate4c::ElevatedBrokerConnection> connection_;
+    std::unique_ptr<gate4c::ElevatedBrokerConnection> owned_connection_;
+    gate4c::ElevatedBrokerConnection* connection_ = nullptr;
     std::string nonce_;
     std::string start_request_digest_;
     std::string capture_session_digest_;
@@ -1126,25 +1459,15 @@ void abort_capture(
     }
 }
 
-int run_observer_broker(
-    const std::wstring& pipe_name,
-    const fs::path& session_path,
-    DWORD expected_coordinator_process_id,
-    const fs::path& running_harness)
+int run_observer_broker_session(
+    const Session& session,
+    gate4c::BrokerServerConnection& connection,
+    const gate4c::ProcessSecurityIdentity& broker,
+    const std::string& start_text)
 {
-    Session session = load_session(session_path, running_harness);
-    const gate4c::ProcessSecurityIdentity broker =
-        gate4c::current_process_security_identity();
-    gate4c::BrokerServerConnection connection =
-        gate4c::connect_to_coordinator(
-            pipe_name, expected_coordinator_process_id, running_harness,
-            std::chrono::minutes(2));
-
     bool capture_active = false;
     std::string capture_session_digest;
     try {
-        const std::string start_text =
-            connection.channel.read_frame(1024U * 1024U);
         const json::Value start = parse_bounded_object(
             start_text, kStartRequestKeys, "observer broker start request");
         validate_request_digest(start, {});
@@ -1161,6 +1484,9 @@ int run_observer_broker(
             unsigned_member(start, "coordinator_process_id") !=
                 connection.coordinator_identity.process_id ||
             string_member(start, "operation_id") != session.operation_id ||
+            normalized_absolute(platform::path_from_utf8(
+                string_member(start, "session_path"))) !=
+                normalized_absolute(session.session_path) ||
             string_member(start, "session_digest") != session.session_digest ||
             string_member(start, "preflight_digest") !=
                 session.preflight_digest ||
@@ -1388,6 +1714,73 @@ int run_observer_broker(
         }
         throw;
     }
+}
+
+int run_observer_broker(
+    const std::wstring& pipe_name,
+    const fs::path& session_path,
+    DWORD expected_coordinator_process_id,
+    const fs::path& running_harness)
+{
+    Session session = load_session(session_path, running_harness);
+    const gate4c::ProcessSecurityIdentity broker =
+        gate4c::current_process_security_identity();
+    gate4c::BrokerServerConnection connection =
+        gate4c::connect_to_coordinator(
+            pipe_name, expected_coordinator_process_id, running_harness,
+            std::chrono::minutes(2));
+    const std::string start_text =
+        connection.channel.read_frame(1024U * 1024U);
+    return run_observer_broker_session(
+        session, connection, broker, start_text);
+}
+
+int run_verdict03_observer_broker(
+    const std::wstring& pipe_name,
+    const fs::path& config_path,
+    DWORD expected_coordinator_process_id,
+    const fs::path& running_harness)
+{
+    const Verdict03CoordinatorConfig config =
+        load_verdict03_config(config_path);
+    const gate4c::ProcessSecurityIdentity broker =
+        gate4c::current_process_security_identity();
+    gate4c::BrokerServerConnection connection =
+        gate4c::connect_to_coordinator(
+            pipe_name, expected_coordinator_process_id, running_harness,
+            std::chrono::minutes(2));
+    for (std::uint64_t generation = 1U; generation <= 2U; ++generation) {
+        const ObserverSelfTestResult self_test =
+            run_fresh_observer_self_test(config);
+        connection.channel.write_frame(verdict03_broker_ready_json(
+            self_test, generation, connection.coordinator_identity, broker));
+        const std::string start_text =
+            connection.channel.read_frame(1024U * 1024U);
+        const json::Value start = parse_bounded_object(
+            start_text, kStartRequestKeys,
+            "Verdict 03 observer broker start request");
+        const fs::path session_path =
+            normalized_absolute(platform::path_from_utf8(
+                string_member(start, "session_path")));
+        if (!path_beneath(config.task_root, session_path) ||
+            normalized_absolute(session_path.parent_path()) !=
+                normalized_absolute(
+                    config.task_root / "evidence" / "sessions")) {
+            throw std::runtime_error(
+                "Verdict 03 broker session path is outside the exact evidence root");
+        }
+        Session session = load_session(session_path, running_harness);
+        if ((generation == 1U &&
+                session.operation_id != config.first_operation_id) ||
+            (generation == 2U &&
+                session.operation_id != config.second_operation_id)) {
+            throw std::runtime_error(
+                "Verdict 03 broker launch order or operation identity changed");
+        }
+        (void)run_observer_broker_session(
+            session, connection, broker, start_text);
+    }
+    return 0;
 }
 
 const std::set<std::string> kPrivilegeProbeRequestKeys{
@@ -1830,7 +2223,74 @@ int verify_packet(const fs::path& path, const std::string& expected_digest)
     return 0;
 }
 
-int run(const fs::path& session_path, const fs::path& running_harness)
+#ifdef _WIN32
+
+struct Verdict03RunOutcome {
+    fs::path session_path;
+    fs::path packet_path;
+    std::string packet_digest;
+    std::string plan_digest;
+    std::string operation_id;
+    std::string technical_disposition;
+};
+
+void wait_for_verdict03_plan_approval(
+    const Session& session,
+    const std::string& plan_digest)
+{
+    const fs::path approval =
+        session.task_root / "operator" / "approvals" /
+        (session.operation_id + "-plan-approval.json");
+    std::cout
+        << "  approval request: " << platform::path_to_utf8(approval)
+        << "\n  waiting for exact reviewed plan approval...\n"
+        << std::flush;
+    const auto deadline =
+        std::chrono::steady_clock::now() + std::chrono::minutes(30);
+    while (!fs::exists(approval)) {
+        if (std::chrono::steady_clock::now() >= deadline) {
+            throw std::runtime_error(
+                "exact Verdict 03 plan approval was not supplied before timeout");
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    }
+    const json::Value value = parse_bounded_object(
+        stable_read(approval, 64U * 1024U),
+        {
+            "approval_digest",
+            "approved_at",
+            "approved_by",
+            "operation_id",
+            "plan_digest",
+            "schema",
+            "work_unit",
+        },
+        "Verdict 03 plan approval");
+    if (string_member(value, "schema") !=
+            "factorio.gate4c_exact_plan_approval.v1" ||
+        string_member(value, "work_unit") != kWorkUnit ||
+        string_member(value, "operation_id") != session.operation_id ||
+        string_member(value, "plan_digest") != plan_digest ||
+        string_member(value, "approved_by") != "codex:root" ||
+        string_member(value, "approved_at").empty() ||
+        string_member(value, "approval_digest") !=
+            digest(canonical_without(value, "approval_digest"))) {
+        throw std::runtime_error(
+            "Verdict 03 plan approval is stale, malformed, or mismatched");
+    }
+}
+
+#endif
+
+int run(
+    const fs::path& session_path,
+    const fs::path& running_harness
+#ifdef _WIN32
+    ,
+    gate4c::ElevatedBrokerConnection* shared_connection = nullptr,
+    Verdict03RunOutcome* verdict03_outcome = nullptr
+#endif
+    )
 {
 #ifndef _WIN32
     (void)session_path;
@@ -1946,13 +2406,20 @@ int run(const fs::path& session_path, const fs::path& running_harness)
         << "  plan evidence: " << platform::path_to_utf8(session.plan_out) << "\n\n"
         << "This issues one 30-second, one-use permit and starts the exact reviewed\n"
         << "Factorio candidate. It does not record a human verdict.\n\n"
-        << "Type exactly:\nISSUE EXACT MENU PERMIT " << plan.value().plan_digest << "\n> "
         << std::flush;
-    std::string approval;
-    std::getline(std::cin, approval);
-    if (approval != "ISSUE EXACT MENU PERMIT " + plan.value().plan_digest) {
-        std::cout << "No permit issued; candidate was not started.\n";
-        return 3;
+    if (shared_connection != nullptr) {
+        wait_for_verdict03_plan_approval(
+            session, plan.value().plan_digest);
+    } else {
+        std::cout << "Type exactly:\nISSUE EXACT MENU PERMIT "
+                  << plan.value().plan_digest << "\n> " << std::flush;
+        std::string approval;
+        std::getline(std::cin, approval);
+        if (approval !=
+            "ISSUE EXACT MENU PERMIT " + plan.value().plan_digest) {
+            std::cout << "No permit issued; candidate was not started.\n";
+            return 3;
+        }
     }
 
     std::unique_ptr<ObserverBrokerClient> observer_broker;
@@ -1960,7 +2427,7 @@ int run(const fs::path& session_path, const fs::path& running_harness)
         [&](const launch::HermeticCandidatePlan&) {
             observer_broker =
                 std::make_unique<ObserverBrokerClient>(
-                    session, plan.value().plan_digest);
+                    session, plan.value().plan_digest, shared_connection);
             return observer_broker->begin();
         },
         [&](const launch::HermeticCandidatePlan& reviewed,
@@ -2054,9 +2521,222 @@ int run(const fs::path& session_path, const fs::path& running_harness)
         << platform::path_to_utf8(persisted.value().lifecycle_packet_path)
         << "\n  human verdict: unset\n"
         << "  product authority promoted: false\n";
+    if (verdict03_outcome != nullptr) {
+        verdict03_outcome->session_path = session.session_path;
+        verdict03_outcome->packet_path =
+            persisted.value().lifecycle_packet_path;
+        verdict03_outcome->packet_digest = packet.value().packet_digest;
+        verdict03_outcome->plan_digest = plan.value().plan_digest;
+        verdict03_outcome->operation_id = session.operation_id;
+        verdict03_outcome->technical_disposition =
+            launch::candidate_technical_disposition_name(
+                packet.value().technical_disposition);
+    }
     return 0;
 #endif
 }
+
+#ifdef _WIN32
+
+Session prepare_verdict03_launch(
+    const Verdict03CoordinatorConfig& config,
+    const ObserverSelfTestResult& self_test,
+    const std::string& operation_id,
+    const fs::path& running_harness)
+{
+    const fs::path tool =
+        config.repository_root / "tools" /
+        "gate4c_verdict03_coordinator.py";
+    (void)run_verdict03_python(
+        config,
+        {
+            platform::path_to_utf8(tool),
+            "prepare",
+            "--config", platform::path_to_utf8(config.config_path),
+            "--observer-self-test",
+            platform::path_to_utf8(self_test.path),
+            "--operation-id", operation_id,
+            "--harness", platform::path_to_utf8(running_harness),
+        },
+        std::chrono::minutes(20));
+    const fs::path session_path =
+        config.task_root / "evidence" / "sessions" /
+        (operation_id + "-session.json");
+    return load_session(session_path, running_harness);
+}
+
+void print_human_checklist(
+    const Verdict03RunOutcome& outcome,
+    std::size_t launch_index,
+    const fs::path& human_path)
+{
+    std::cout
+        << "\nGate 4C human observation checkpoint — launch "
+        << launch_index << "\n";
+    if (launch_index == 1U) {
+        std::cout
+            << "  [ ] Normal Factorio main menu appeared.\n"
+            << "  [ ] No save or alternate intent opened automatically.\n"
+            << "  [ ] The isolated disposable game was created.\n"
+            << "  [ ] Saving as FACMAN-GATE4C-DISPOSABLE-03 succeeded.\n"
+            << "  [ ] Return to menu and normal exit succeeded.\n"
+            << "  [ ] FacMan last-run evidence is accurate.\n";
+    } else {
+        std::cout
+            << "  [ ] Normal Factorio main menu appeared again.\n"
+            << "  [ ] No save or alternate intent opened automatically.\n"
+            << "  [ ] FACMAN-GATE4C-DISPOSABLE-03 is visible.\n"
+            << "  [ ] Return to menu and normal exit succeeded.\n"
+            << "  [ ] FacMan last-run evidence is accurate.\n";
+    }
+    std::cout
+        << "  technical disposition: " << outcome.technical_disposition
+        << "\n  packet digest: " << outcome.packet_digest
+        << "\n  human evidence request: "
+        << platform::path_to_utf8(human_path)
+        << "\n  waiting for the exact human observation artifact...\n"
+        << std::flush;
+}
+
+void wait_for_human_observation(
+    const Verdict03RunOutcome& outcome,
+    const fs::path& human_path)
+{
+    const auto deadline =
+        std::chrono::steady_clock::now() + std::chrono::hours(2);
+    while (!fs::exists(human_path)) {
+        if (std::chrono::steady_clock::now() >= deadline) {
+            throw std::runtime_error(
+                "human observation was not supplied before timeout");
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+    const json::Value value = parse_bounded_object(
+        stable_read(human_path, 256U * 1024U),
+        {
+            "attestation_digest",
+            "canonicalization_version",
+            "checks",
+            "disposition",
+            "notes",
+            "observed_at",
+            "operation_id",
+            "packet_digest",
+            "reviewer_id",
+            "schema",
+            "session_digest",
+            "work_unit",
+        },
+        "Verdict 03 human observation");
+    if (string_member(value, "schema") !=
+            "factorio.gate4c_human_observation.v1" ||
+        string_member(value, "work_unit") != kWorkUnit ||
+        string_member(value, "operation_id") != outcome.operation_id ||
+        string_member(value, "packet_digest") != outcome.packet_digest ||
+        string_member(value, "disposition") != "Pass" ||
+        string_member(value, "attestation_digest") !=
+            digest(canonical_without(value, "attestation_digest"))) {
+        throw std::runtime_error(
+            "Verdict 03 human observation is not an exact passing checkpoint");
+    }
+}
+
+int run_verdict03(
+    const fs::path& config_path,
+    const fs::path& running_harness)
+{
+    const gate4c::ProcessSecurityIdentity coordinator =
+        gate4c::current_process_security_identity();
+    if (!gate4c::is_exact_medium_integrity(coordinator)) {
+        throw std::runtime_error(
+            "Verdict 03 coordinator must start at medium integrity");
+    }
+    const Verdict03CoordinatorConfig config =
+        load_verdict03_config(config_path);
+    auto connection = gate4c::ElevatedBrokerConnection::launch(
+        running_harness,
+        L"--verdict03-observer-broker",
+        {
+            config.config_path.wstring(),
+            std::to_wstring(coordinator.process_id),
+        },
+        std::chrono::minutes(12));
+
+    std::array<Verdict03RunOutcome, 2U> outcomes;
+    std::array<fs::path, 2U> human_paths;
+    const std::array<std::string, 2U> operations{
+        config.first_operation_id,
+        config.second_operation_id,
+    };
+    for (std::size_t index = 0; index < operations.size(); ++index) {
+        const ObserverSelfTestResult self_test =
+            validate_verdict03_broker_ready(
+                connection.channel().read_frame(1024U * 1024U),
+                static_cast<std::uint64_t>(index + 1U),
+                config, coordinator, connection.broker_identity());
+        std::cout
+            << "\nFresh elevated observer self-test "
+            << (index + 1U) << "/2 passed.\n"
+            << "  digest: " << self_test.digest
+            << "\n  evidence: " << platform::path_to_utf8(self_test.path)
+            << "\n  capturing a fresh medium-integrity preflight and baseline...\n"
+            << std::flush;
+        Session session = prepare_verdict03_launch(
+            config, self_test, operations[index], running_harness);
+        const int result = run(
+            session.session_path, running_harness, &connection,
+            &outcomes[index]);
+        if (result != 0) {
+            throw std::runtime_error(
+                "Verdict 03 launch session did not complete");
+        }
+        human_paths[index] =
+            config.task_root / "evidence" / "human" /
+            (operations[index] + "-human.json");
+        print_human_checklist(
+            outcomes[index], index + 1U, human_paths[index]);
+        wait_for_human_observation(outcomes[index], human_paths[index]);
+    }
+    connection.close_channel();
+    if (connection.wait_for_exit(std::chrono::seconds(30)) != WAIT_OBJECT_0) {
+        throw std::runtime_error(
+            "Verdict 03 observer broker did not terminate after two launches");
+    }
+    const fs::path verdict_path =
+        config.task_root / "evidence" / "verdict" /
+        "gate4c-verdict03.json";
+    const fs::path tool =
+        config.repository_root / "tools" /
+        "gate4c_verdict03_coordinator.py";
+    const platform::ProcessResult finalized = run_verdict03_python(
+        config,
+        {
+            platform::path_to_utf8(tool),
+            "finalize-auto",
+            "--first-session",
+            platform::path_to_utf8(outcomes[0].session_path),
+            "--first-packet",
+            platform::path_to_utf8(outcomes[0].packet_path),
+            "--first-human",
+            platform::path_to_utf8(human_paths[0]),
+            "--second-session",
+            platform::path_to_utf8(outcomes[1].session_path),
+            "--second-packet",
+            platform::path_to_utf8(outcomes[1].packet_path),
+            "--second-human",
+            platform::path_to_utf8(human_paths[1]),
+            "--out", platform::path_to_utf8(verdict_path),
+        },
+        std::chrono::minutes(5));
+    std::cout
+        << "\nGate 4C Verdict 03 is hash-closed.\n"
+        << "  " << finalized.standard_output
+        << "  verdict evidence: " << platform::path_to_utf8(verdict_path)
+        << "\n  product Play authority promoted: false\n";
+    return 0;
+}
+
+#endif
 
 } // namespace
 
@@ -2108,11 +2788,42 @@ int main(int argc, char** argv)
                 static_cast<DWORD>(process_id),
                 fs::absolute(facman::platform::path_from_utf8(argv[0])));
         }
+        if (argc == 5 &&
+            std::string(argv[1]) == "--verdict03-observer-broker") {
+            const unsigned long process_id = std::stoul(argv[4]);
+            if (process_id == 0UL ||
+                process_id > static_cast<unsigned long>(
+                    std::numeric_limits<DWORD>::max())) {
+                throw std::runtime_error(
+                    "Verdict 03 broker coordinator PID is invalid");
+            }
+            return run_verdict03_observer_broker(
+                gate4c::utf8_to_wide(argv[2]),
+                facman::platform::path_from_utf8(argv[3]),
+                static_cast<DWORD>(process_id),
+                fs::absolute(facman::platform::path_from_utf8(argv[0])));
+        }
         if (argc == 5 && std::string(argv[1]) == "--observer-start-probe") {
             return observer_start_probe(
                 facman::platform::path_from_utf8(argv[2]),
                 facman::platform::path_from_utf8(argv[3]),
                 argv[4]);
+        }
+#endif
+#ifdef _WIN32
+        if (argc == 3 &&
+            std::string(argv[1]) == "--validate-verdict03-config") {
+            const auto config = load_verdict03_config(
+                facman::platform::path_from_utf8(argv[2]));
+            std::cout
+                << "gate4c-verdict03-config: valid ("
+                << platform::path_to_utf8(config.config_path) << ")\n";
+            return 0;
+        }
+        if (argc == 3 && std::string(argv[1]) == "--run-verdict03") {
+            return run_verdict03(
+                facman::platform::path_from_utf8(argv[2]),
+                fs::absolute(facman::platform::path_from_utf8(argv[0])));
         }
 #endif
         if (argc != 3 || std::string(argv[1]) != "--run-session") {
@@ -2124,7 +2835,11 @@ int main(int argc, char** argv)
                 << "       facman_gate4c_verdict_harness "
                    "--privilege-boundary-probe <repair-root> <probe-id>\n"
                 << "       facman_gate4c_verdict_harness --observer-start-probe "
-                   "<repair-root> <python.exe> <probe-id>\n";
+                   "<repair-root> <python.exe> <probe-id>\n"
+                << "       facman_gate4c_verdict_harness --run-verdict03 "
+                   "<coordinator-config.json>\n"
+                << "       facman_gate4c_verdict_harness "
+                   "--validate-verdict03-config <coordinator-config.json>\n";
             return 64;
         }
         return run(
