@@ -8,17 +8,17 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: hermetic-standalone-play-verdict-repeat
+  phase: windows-instance-isolated-play-policy
   primary_goal: >
-    Run one completely fresh Gate 4C Verdict 03 attempt with the reviewed
-    split-privilege boundary: medium-integrity coordinator and Factorio,
-    one-shot high-integrity WPR observer broker, and no authority beyond the
-    exact frozen candidate while preserving InstanceSpec and InstanceBinding.
+    Freeze one truthful Windows normal-host instance-isolated Play claim from
+    the retained Verdict 03 evidence while preserving the distinct canonical
+    hermetic claim, InstanceSpec, InstanceBinding, exact permit scope, and all
+    current no-authority boundaries.
   next_task: >
-    Generate fresh observer, attestation, preflight, baseline, permit, process,
-    protected-state, and human evidence under the Verdict03 task root and
-    record exactly Pass, Fail, or Inconclusive. Do not change runtime or the
-    frozen policy and do not promote a public route.
+    Define the exact FacMan-owned writable instance closure, immutable protected
+    software roots, disclosed OS/driver effects, observation requirements, and
+    Pass, Fail, and Inconclusive law. Do not change runtime, mutate the frozen
+    hermetic policy, execute Factorio, or promote a public route.
   authoritative_command_slice:
     - installs.scan
     - installs.import

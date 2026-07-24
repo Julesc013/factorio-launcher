@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01
 title: Repair the Verdict 03 post-run evidence boundary
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-24T14:46:15Z
 owner: unassigned
 objective: >
@@ -84,3 +84,8 @@ closeout_checklist:
   - run focused native, Python, strict, policy, and cross-platform validation
   - record whether the unchanged frozen policy permits another verdict after reviewed repair closeout
 active_at: 2026-07-24T14:46:15Z
+verified_at: 2026-07-24T16:08:25Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-24T16:08:25Z
+closed_at: 2026-07-24T16:08:26Z

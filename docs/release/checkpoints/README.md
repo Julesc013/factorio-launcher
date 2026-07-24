@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `gate4c_verdict03_postrun_repair` and the active WorkUnit is `FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `windows_instance_isolated_play_policy` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
