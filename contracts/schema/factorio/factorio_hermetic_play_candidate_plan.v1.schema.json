@@ -33,13 +33,13 @@
         "argument_digests": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
         "environment": {
           "type": "array",
-          "minItems": 5,
-          "maxItems": 5,
+          "minItems": 6,
+          "maxItems": 6,
           "items": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "name": {"enum": ["SystemRoot", "TEMP", "TMP", "USERPROFILE", "WINDIR"]},
+              "name": {"enum": ["SDL_DIRECTINPUT_ENABLED", "SystemRoot", "TEMP", "TMP", "USERPROFILE", "WINDIR"]},
               "value_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
             },
             "required": ["name", "value_digest"]
@@ -73,7 +73,7 @@
         "provider_revisions": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"$ref": "../common/permit_provider_identity.v1.schema.json"}},
         "writable_resource_ids": {"type": "array", "minItems": 1, "maxItems": 12, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
         "protected_resource_ids": {"type": "array", "minItems": 18, "maxItems": 18, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
-        "environment_revision": {"const": "factorio.menu-minimal.v1"},
+        "environment_revision": {"const": "factorio.menu-minimal.v2"},
         "process_binding": {"$ref": "#/$defs/process_binding"}
       },
       "required": ["schema", "canonicalization_version", "policy_id", "policy_revision", "policy_digest", "candidate", "instance_id", "machine_binding_id", "principal_provider", "principal_id", "application_session_id", "operation", "launch_intent", "isolation_mode", "evidence_digest", "permit_resources", "provider_revisions", "writable_resource_ids", "protected_resource_ids", "environment_revision", "process_binding"]

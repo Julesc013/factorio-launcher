@@ -13,7 +13,7 @@
     "preflight_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "policy_digest": {"const": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"},
     "plan_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "observer_provider_revision": {"const": "gate4c-etw-file-registry-process.v5"},
+    "observer_provider_revision": {"const": "gate4c-etw-file-registry-process.v6"},
     "resource_binding_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "nonce": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "not_before_unix_ms": {"type": "integer", "minimum": 0},

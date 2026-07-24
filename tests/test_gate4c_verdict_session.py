@@ -42,9 +42,19 @@ P-Start,TimeStamp,Process Name ( PID),ParentPID,SessionID,UniqueKey,DirectoryTab
 P-End,TimeStamp,Process Name ( PID),ParentPID,SessionID,UniqueKey,Status,DirectoryTableBase,Flags,UserSid,Command Line,Package Full Name,Package Relative Application Id
 FileIoWrite,TimeStamp,Process Name ( PID),ThreadID,LoggingProcessName ( PID),LoggingThreadID,CPU,IrpPtr,FileObject,ByteOffset,Size,Flags,ExtraFlags,Priority,FileName,ParsedFlags
 FileIoCreate,TimeStamp,Process Name ( PID),ThreadID,LoggingProcessName ( PID),LoggingThreadID,CPU,IrpPtr,FileObject,Options,Attributes,ShareAccess,FileName,ParsedOptions,ParsedAttributes,ParsedShareAccess
+FileIoOpEnd,TimeStamp,Process Name ( PID),ThreadID,LoggingProcessName ( PID),LoggingThreadID,CPU,IrpPtr,FileObject,ElapsedTime,Status,ExtraInfo,Type,FileName
 FileIoSetInfo,TimeStamp,Process Name ( PID),ThreadID,LoggingProcessName ( PID),LoggingThreadID,CPU,IrpPtr,FileObject,ExtraInfo,InfoClass,FileName
+FileIoClose,TimeStamp,Process Name ( PID),ThreadID,LoggingProcessName ( PID),LoggingThreadID,CPU,IrpPtr,FileObject,FileName
+FileNameCreate,TimeStamp,FileObject,FileName,NT FileName
+FileNameDelete,TimeStamp,FileObject,FileName,NT FileName
+FileNameRundown,TimeStamp,FileObject,FileName,NT FileName
 RegKcbCreate,TimeStamp,KCB,Key Name
+RegKcbDelete,TimeStamp,KCB,Key Name
+RegKcbEndRundown,TimeStamp,KCB,Key Name
+RegOpenKey,TimeStamp,KCB,Process Name ( PID),ThreadID,Status,ElapsedTime,Key Name
+RegQueryKey,TimeStamp,KCB,Process Name ( PID),ThreadID,Status,ElapsedTime,InfoClass
 RegSetValue,TimeStamp,KCB,Process Name ( PID),ThreadID,Status,ElapsedTime,Key Name
+RegSetInformation,TimeStamp,KCB,Process Name ( PID),ThreadID,Status,ElapsedTime
 VolumeMapping,TimeStamp,NtPath,DosPath
 EndHeader
 """
@@ -186,7 +196,7 @@ class Gate4CVerdictSessionTests(unittest.TestCase):
             self.assertTrue(
                 (
                     operation_root
-                    / "candidate-artifacts"
+                    / "observer-artifacts"
                     / "observer-abort.json"
                 ).is_file()
             )
@@ -312,6 +322,183 @@ class Gate4CVerdictSessionTests(unittest.TestCase):
         self.assertEqual(effects[1]["logical_resource_id"], "effects.external_registry")
         self.assertEqual(effects[1]["classification"], "forbidden")
 
+    def test_failed_registry_mutation_is_not_a_persistent_effect(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r"RegKcbCreate,2,0xffff,\REGISTRY\USER\S-1\Software\Wube Software\Factorio",
+            'RegSetValue,3,0xffff,"factorio.exe (100)",7,0xC0000022,1,Setting',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertEqual(len(effects), 1)
+
+    def test_unknown_file_name_resolves_from_temporal_file_object(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r'FileIoCreate,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x1,0xabc,0x03000060,0,0,E:\Gate4C\instance\saves\gate4c.zip,,,',
+            r'FileIoOpEnd,3,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x1,0xabc,1,0x00000000,3,FileIoCreate,E:\Gate4C\instance\saves\gate4c.zip',
+            r'FileIoWrite,4,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0,0xabc,0,4,0,0,0,"Unknown (0x123)",0',
+            r'FileIoClose,5,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0,0xabc,"Unknown (0x123)"',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertEqual(
+            [effect["logical_resource_id"] for effect in effects[1:]],
+            ["instance.saves", "instance.saves"],
+        )
+        self.assertTrue(
+            all(effect["classification"] == "writable" for effect in effects[1:])
+        )
+
+    def test_preexisting_file_object_resolves_from_future_rundown(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r'FileIoWrite,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0,0xabc,0,4,0,0,0,"Unknown (0x123)",0',
+            r"FileNameRundown,3,0xabc,\Device\HarddiskVolume9\Gate4C\instance\saves\gate4c.zip,\Device\HarddiskVolume9\Gate4C\instance\saves\gate4c.zip",
+            r"VolumeMapping,0,\Device\HarddiskVolume9,E:",
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertEqual(effects[1]["logical_resource_id"], "instance.saves")
+
+    def test_file_object_reuse_boundary_refuses_stale_rundown(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r'FileIoWrite,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0,0xabc,0,4,0,0,0,"Unknown (0x123)",0',
+            r'FileIoClose,3,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0,0xabc,"Unknown (0x123)"',
+            r"FileNameRundown,4,0xabc,E:\Gate4C\instance\saves\other.zip,E:\Gate4C\instance\saves\other.zip",
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertTrue(gaps["unresolved_target"])
+        self.assertEqual(effects[1]["classification"], "unresolved")
+
+    def test_registry_kcb_reuse_is_resolved_at_event_time(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r"RegKcbCreate,2,0xffff,\REGISTRY\USER\S-1\Software\First",
+            'RegSetValue,3,0xffff,"factorio.exe (100)",7,0,1,Setting',
+            r"RegKcbDelete,4,0xffff,\REGISTRY\USER\S-1\Software\First",
+            r"RegKcbCreate,5,0xffff,\REGISTRY\USER\S-1\Software\Second",
+            'RegSetValue,6,0xffff,"factorio.exe (100)",7,0,1,Setting',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertNotEqual(
+            effects[1]["target_identity_digest"],
+            effects[2]["target_identity_digest"],
+        )
+
+    def test_registry_rundown_resolves_preexisting_kcb(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            'RegSetValue,2,0xffff,"factorio.exe (100)",7,0,1,Setting',
+            r"RegKcbEndRundown,3,0xffff,\REGISTRY\MACHINE\Software\Preexisting",
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertEqual(effects[1]["classification"], "forbidden")
+
+    def test_immediate_same_thread_open_handoff_resolves_result_kcb(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r"RegKcbCreate,2,0xbase,\REGISTRY\MACHINE",
+            r'RegOpenKey,3,0xbase,"factorio.exe (100)",7,0x00000000,1,SYSTEM\CurrentControlSet\Control\Cryptography\ECCParameters',
+            r'RegSetInformation,4,0xresult,"factorio.exe (100)",7,0x00000000,1',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertEqual(effects[1]["classification"], "forbidden")
+
+    def test_open_handoff_requires_success_same_thread_and_immediacy(self) -> None:
+        cases = {
+            "wrong_thread": (
+                r'RegOpenKey,3,0xbase,"factorio.exe (100)",7,0x00000000,1,Software\Exact',
+                r'RegSetInformation,4,0xresult,"factorio.exe (100)",8,0x00000000,1',
+            ),
+            "failed_open": (
+                r'RegOpenKey,3,0xbase,"factorio.exe (100)",7,0xC0000022,1,Software\Exact',
+                r'RegSetInformation,4,0xresult,"factorio.exe (100)",7,0x00000000,1',
+            ),
+            "intervening_operation": (
+                r'RegOpenKey,3,0xbase,"factorio.exe (100)",7,0x00000000,1,Software\Exact',
+                r'RegQueryKey,4,0xbase,"factorio.exe (100)",7,0x00000000,1,0',
+                r'RegSetInformation,5,0xresult,"factorio.exe (100)",7,0x00000000,1',
+            ),
+        }
+        for name, events in cases.items():
+            with self.subTest(name=name):
+                text = dump(
+                    'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+                    r"RegKcbCreate,2,0xbase,\REGISTRY\MACHINE",
+                    *events,
+                )
+                effects, gaps = SESSION.observation_effects(
+                    text,
+                    primary_pid=100,
+                    primary_stable_identity="windows:100:12345",
+                    executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+                    roots=ROOTS,
+                )
+                self.assertTrue(gaps["unresolved_target"])
+                self.assertEqual(effects[1]["classification"], "unresolved")
+
+    def test_unknown_file_object_remains_inconclusive(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r'FileIoWrite,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0,0xabc,0,4,0,0,0,"Unknown (0x123)",0',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertTrue(gaps["unresolved_target"])
+        self.assertEqual(effects[1]["classification"], "unresolved")
+
     def test_wrong_pid_mutations_are_ignored_but_primary_start_is_required(self) -> None:
         text = dump(
             r'FileIoWrite,3,"other.exe (999)",7,"other.exe (999)",7,0,0,0,0,4,0,0,0,C:\escape.tmp,0'
@@ -381,8 +568,9 @@ class Gate4CVerdictSessionTests(unittest.TestCase):
     def test_file_create_disposition_distinguishes_open_from_mutation(self) -> None:
         text = dump(
             'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
-            r'FileIoCreate,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0,0,0x01000060,0,0,C:\read-only.txt,,,',
-            r'FileIoCreate,3,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0,0,0x05000060,0,0,E:\Gate4C\instance\saves\empty-directory,,,',
+            r'FileIoCreate,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x1,0,0x01000060,0,0,C:\read-only.txt,,,',
+            r'FileIoCreate,3,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x2,0,0x05000060,0,0,E:\Gate4C\instance\saves\empty-directory,,,',
+            r'FileIoOpEnd,4,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x2,0,1,0x00000000,2,FileIoCreate,E:\Gate4C\instance\saves\empty-directory',
         )
         effects, gaps = SESSION.observation_effects(
             text,
@@ -394,6 +582,38 @@ class Gate4CVerdictSessionTests(unittest.TestCase):
         self.assertFalse(any(gaps.values()))
         self.assertEqual(len(effects), 2)
         self.assertEqual(effects[1]["logical_resource_id"], "instance.saves")
+
+    def test_failed_file_create_is_not_a_persistent_effect(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r'FileIoCreate,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x3,0,0x05000060,0,0,C:\Windows\Temp\refused,,,',
+            r'FileIoOpEnd,3,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x3,0,1,0xC0000022,0,FileIoCreate,C:\Windows\Temp\refused',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertEqual(len(effects), 1)
+
+    def test_file_create_requires_matching_completion_event_class(self) -> None:
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r'FileIoCreate,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x3,0,0x05000060,0,0,C:\Windows\Temp\unknown,,,',
+            r'FileIoOpEnd,3,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x3,0,1,0x00000000,2,FileIoCleanup,C:\Windows\Temp\unknown',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=ROOTS,
+        )
+        self.assertTrue(gaps["attribution_gap"])
+        self.assertEqual(len(effects), 1)
 
     def test_reused_child_pid_after_process_end_is_not_attributed(self) -> None:
         text = dump(

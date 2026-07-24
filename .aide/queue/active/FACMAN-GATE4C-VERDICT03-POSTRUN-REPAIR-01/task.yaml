@@ -10,8 +10,9 @@ objective: >
   Preserve the complete Verdict 03 attempt, reproduce its post-run lifecycle
   staging collision and unresolved ETW target classification without Factorio,
   establish attribution for the NVIDIA umdlogs directories created inside the
-  protected installation, and implement only the bounded correction required
-  before a completely fresh verdict attempt against the unchanged policy.
+  protected installation, classify the successful external Registry mutations,
+  and implement only bounded corrections without assuming that another verdict
+  attempt is eligible under the unchanged policy.
 allowed_paths:
   - .aide/queue/**
   - .aide/memory/**
@@ -21,8 +22,12 @@ allowed_paths:
   - release/index/**
   - tests/**
   - tools/**
+  - contracts/schema/factorio/factorio_gate4c_observer_broker_request.v1.schema.json
+  - contracts/schema/factorio/factorio_hermetic_play_candidate_plan.v1.schema.json
   - runtime/factorio/launch/flb_factorio_hermetic_candidate.cpp
   - runtime/factorio/launch/flb_factorio_hermetic_candidate.h
+  - runtime/factorio/instance/flb_factorio_candidate_projection.cpp
+  - runtime/factorio/instance/flb_factorio_candidate_projection.h
 forbidden_paths:
   - .git/**
   - .aide.local/**
@@ -54,7 +59,9 @@ architecture_invariants:
   - no Factorio process starts during diagnosis or correction validation
   - the lifecycle packet staging root is exclusively owned and cannot collide with observer-side artifacts
   - every ETW effect target is resolved or the result remains Inconclusive
+  - observer profile or process-environment changes receive new provider or environment revisions
   - the selected installation change is never waived or reclassified as writable
+  - successful external Registry mutations remain fail-eligible under the frozen policy
   - no protected installation content is deleted or modified during repair
   - any launch-semantics change requires a separately reviewed candidate repair before another verdict
   - no public Play route or product permit issuance authority is added
@@ -73,6 +80,7 @@ closeout_checklist:
   - classify every unresolved ETW target or preserve an explicit Inconclusive result
   - attribute the NVIDIA umdlogs creation or establish why attribution is impossible
   - determine whether the protected change requires a separate candidate repair
+  - determine whether successful DirectInput and Windows BAM Registry writes block the frozen route
   - run focused native, Python, strict, policy, and cross-platform validation
-  - activate a wholly fresh verdict only after reviewed repair closeout
+  - record whether the unchanged frozen policy permits another verdict after reviewed repair closeout
 active_at: 2026-07-24T14:46:15Z

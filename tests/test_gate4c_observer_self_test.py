@@ -252,7 +252,7 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
         self.assertTrue(profile["valid"])
         self.assertEqual(
             profile["canonical_sha256"],
-            "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40",
+            "df5daf34e8338602922977b15890dad7bf16cac6b667673d9a60c498a4bf6979",
         )
         self.assertEqual(
             profile["sha256"],
@@ -264,7 +264,7 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
         self.assertEqual(profile["buffer_count"], 256)
         self.assertEqual(
             profile["system_keywords"],
-            ["ProcessThread", "FileIO", "FileIOInit", "Registry"],
+            ["ProcessThread", "DiskIO", "FileIO", "FileIOInit", "Registry"],
         )
 
         with tempfile.TemporaryDirectory() as temporary:
@@ -284,7 +284,7 @@ class Gate4CObserverSelfTestTests(unittest.TestCase):
             changed.write_bytes(
                 normalized.replace(
                     b'<Keyword Value="Registry"/>',
-                    b'<Keyword Value="DiskIO"/>',
+                    b'<Keyword Value="DiskFlushInit"/>',
                 )
             )
             refused = OBSERVER.PREFLIGHT.observer_profile_identity(root)

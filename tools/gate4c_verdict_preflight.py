@@ -48,10 +48,10 @@ EXPECTED_SIGNER = "Wube Software Ltd"
 ATTESTATION_SCHEMA = "factorio.gate4c_quiet_host_attestation.v2"
 OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v5"
 OBSERVER_PROVIDER_ID = "factorio.play.process-tree-observer"
-OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v5"
+OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v6"
 OBSERVER_PROFILE_RELATIVE_PATH = "tools/gate4c_process_tree_observer.wprp"
 OBSERVER_PROFILE_CANONICAL_SHA256 = (
-    "57d5301961d0c9877d769f9d4a175aae7fa4d558769f89fb32481f2046b2fd40"
+    "df5daf34e8338602922977b15890dad7bf16cac6b667673d9a60c498a4bf6979"
 )
 OBSERVER_PROFILE_NAME = "FacManGate4CObserver"
 OBSERVER_PROFILE_DETAIL_LEVEL = "Verbose"
@@ -60,6 +60,7 @@ OBSERVER_PROFILE_BUFFER_SIZE_KB = 1024
 OBSERVER_PROFILE_BUFFER_COUNT = 256
 OBSERVER_PROFILE_SYSTEM_KEYWORDS = (
     "ProcessThread",
+    "DiskIO",
     "FileIO",
     "FileIOInit",
     "Registry",

@@ -66,7 +66,7 @@ constexpr const char* kVerdict03CoordinatorConfigSchema =
 constexpr const char* kPrivilegeProbeRequestSchema =
     "factorio.gate4c_privilege_probe_request.v1";
 constexpr const char* kObserverProviderRevision =
-    "gate4c-etw-file-registry-process.v5";
+    "gate4c-etw-file-registry-process.v6";
 
 std::string digest(const std::string& value)
 {
@@ -1260,7 +1260,7 @@ void record_broker_recovery_required(
         closed.add_string(
             "recovery_digest", canonical_object_digest(core));
         write_new(
-            session.operation_root / "candidate-artifacts" /
+            session.operation_root / "observer-artifacts" /
                 "observer-recovery-required.json",
             closed.serialize() + "\n");
     } catch (...) {
@@ -1446,7 +1446,7 @@ private:
         }
         closed.add_string("evidence_digest", digest(core));
         write_new(
-            session_.operation_root / "candidate-artifacts" /
+            session_.operation_root / "observer-artifacts" /
                 "privilege-boundary.json",
             closed.serialize() + "\n");
     }
@@ -2461,7 +2461,7 @@ int run(
                 }
                 closed.add_string("evidence_digest", digest(core));
                 write_new(
-                    session.operation_root / "candidate-artifacts" /
+                    session.operation_root / "observer-artifacts" /
                         "factorio-integrity.json",
                     closed.serialize() + "\n");
                 factorio_security = observed;
