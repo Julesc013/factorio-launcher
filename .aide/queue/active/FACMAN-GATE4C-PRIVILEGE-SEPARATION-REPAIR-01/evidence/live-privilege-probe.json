@@ -1,0 +1,25 @@
+{
+  "authenticated_response": {
+    "broker_integrity": "high",
+    "broker_process_id": 29428,
+    "capture_session_digest": "243ffa2eeced1cbfa18357fe8edf03833381b9a83359bf0930ae5e8e862ab30e",
+    "command": "privilege_probe",
+    "coordinator_integrity": "medium",
+    "coordinator_process_id": 16596,
+    "detail": "mutual_process_token_and_binary_identity_verified",
+    "nonce": "507ee44ca02ff8f68ba6d05dbe31001d7eef18dc119fd56135e9f41105600bc4",
+    "principal_sid_digest": "8d7de340764c8e4e40499835f54b1f357fbc3837e032fa38339d636c8f8504fd",
+    "request_digest": "f3ca5b724ab3f70bef1989b95aa650056b66b5dcd333d61282f35d0e160b93a4",
+    "response_digest": "8ded3340f2d6de60d83041e6a480129294e44d4e5c3f27cc76b2a26905fd4c2d",
+    "schema": "factorio.gate4c_observer_broker_response.v1",
+    "status": "ok",
+    "windows_session_id": 1
+  },
+  "factorio_started": false,
+  "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+  "probe_id": "gate4c-privilege-probe-live-02",
+  "schema": "factorio.gate4c_privilege_probe.v1",
+  "work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+  "wpr_started": false,
+  "probe_digest": "e74f276c6ee43d2c436b09bade4d265fd0165903f963ae09f7f0e8e61bad105b"
+}

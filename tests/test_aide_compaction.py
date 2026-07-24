@@ -313,7 +313,20 @@ class AideCompactionTests(unittest.TestCase):
             ["start", "status", "finish", "abort"],
             privilege_repair["observer_commands"],
         )
-        self.assertFalse(privilege_repair["live_privilege_probe"])
+        self.assertTrue(privilege_repair["live_privilege_probe"])
+        self.assertEqual(
+            "gate4c-privilege-probe-live-02",
+            privilege_repair["live_privilege_probe_id"],
+        )
+        self.assertEqual(
+            "medium", privilege_repair["live_probe_coordinator_integrity"]
+        )
+        self.assertEqual(
+            "high", privilege_repair["live_probe_broker_integrity"]
+        )
+        self.assertFalse(privilege_repair["live_probe_wpr_started"])
+        self.assertFalse(privilege_repair["live_probe_factorio_started"])
+        self.assertTrue(privilege_repair["live_probe_processes_terminated"])
         self.assertFalse(privilege_repair["privileged_broker_authority"])
         self.assertFalse(privilege_repair["factorio_process_started"])
         self.assertFalse(data["host_environment_program"]["blocks_real_play"])

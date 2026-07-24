@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import tomllib
@@ -11,6 +12,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_DIGEST = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
+LIVE_PROBE_DIGEST = "e74f276c6ee43d2c436b09bade4d265fd0165903f963ae09f7f0e8e61bad105b"
+LIVE_RESPONSE_DIGEST = "8ded3340f2d6de60d83041e6a480129294e44d4e5c3f27cc76b2a26905fd4c2d"
+LIVE_PROBE_PATH = (
+    ROOT
+    / ".aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"
+    / "evidence/live-privilege-probe.json"
+)
 SCHEMAS = (
     "factorio_gate4c_observer_broker_request.v1.schema.json",
     "factorio_gate4c_observer_broker_response.v1.schema.json",
@@ -33,6 +41,13 @@ def required_anchors(
     for anchor in anchors:
         if anchor not in text:
             problems.append(f"{path.relative_to(ROOT)} lacks boundary anchor: {anchor}")
+
+
+def canonical_digest(value: object) -> str:
+    payload = json.dumps(
+        value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def check() -> list[str]:
@@ -117,6 +132,50 @@ def check() -> list[str]:
     repair = status.get("gate4c_privilege_separation_repair", {})
     if repair.get("frozen_policy_digest") != POLICY_DIGEST:
         problems.append("privilege repair truth changed the frozen policy digest")
+    try:
+        live_probe = json.loads(LIVE_PROBE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        problems.append(f"{LIVE_PROBE_PATH.relative_to(ROOT)}: {exc}")
+        live_probe = {}
+    probe_core = dict(live_probe)
+    probe_digest = probe_core.pop("probe_digest", None)
+    response = live_probe.get("authenticated_response", {})
+    response_core = dict(response) if isinstance(response, dict) else {}
+    response_digest = response_core.pop("response_digest", None)
+    expected_probe_values = {
+        "schema": "factorio.gate4c_privilege_probe.v1",
+        "work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+        "probe_id": "gate4c-privilege-probe-live-02",
+        "frozen_policy_digest": POLICY_DIGEST,
+        "factorio_started": False,
+        "wpr_started": False,
+    }
+    for key, value in expected_probe_values.items():
+        if live_probe.get(key) != value:
+            problems.append(f"live privilege probe changed exact value: {key}")
+    expected_response_values = {
+        "schema": "factorio.gate4c_observer_broker_response.v1",
+        "command": "privilege_probe",
+        "status": "ok",
+        "coordinator_integrity": "medium",
+        "broker_integrity": "high",
+        "detail": "mutual_process_token_and_binary_identity_verified",
+        "capture_session_digest": hashlib.sha256(b"not_applicable").hexdigest(),
+    }
+    for key, value in expected_response_values.items():
+        if response.get(key) != value:
+            problems.append(f"live privilege response changed exact value: {key}")
+    if probe_digest != LIVE_PROBE_DIGEST or canonical_digest(probe_core) != probe_digest:
+        problems.append("live privilege probe canonical digest is invalid")
+    if (
+        response_digest != LIVE_RESPONSE_DIGEST
+        or canonical_digest(response_core) != response_digest
+    ):
+        problems.append("live privilege response canonical digest is invalid")
+    if repair.get("live_privilege_probe_digest") != LIVE_PROBE_DIGEST:
+        problems.append("privilege repair truth does not bind the live probe digest")
+    if repair.get("live_privilege_probe_response_digest") != LIVE_RESPONSE_DIGEST:
+        problems.append("privilege repair truth does not bind the broker response digest")
     for key in (
         "public_command",
         "product_permit_issuance",
