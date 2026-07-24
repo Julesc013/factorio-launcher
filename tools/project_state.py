@@ -1218,15 +1218,37 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {
-        "status": "active_before_implementation",
+        "status": "implementation_committed_local_matrix_pass_live_uac_probe_pending",
         "work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
         "finding_revision": "934d4fcca2d3749f1a9710186afcf1fe294f0dc8",
+        "implementation_revision": "380c1a44f26cc1d6bacccdfe5ce0c6d2efda36d3",
         "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
-        "current_process_api": "CreateProcessW",
-        "current_child_security_context": "calling_process",
+        "previous_process_api": "CreateProcessW",
+        "previous_child_security_context": "calling_process",
+        "current_process_api": "CreateProcessW_suspended_with_pre_resume_token_gate",
+        "current_child_security_context": "exact_medium_interactive_principal_and_session",
         "required_coordinator_integrity": "medium",
         "required_factorio_integrity": "medium",
         "required_observer_integrity": "high",
+        "named_pipe_single_user_acl": True,
+        "named_pipe_remote_clients_rejected": True,
+        "mutual_peer_pid_image_sid_session_integrity_validation": True,
+        "closed_nonce_expiry_replay_bound_protocol": True,
+        "observer_commands": ["start", "status", "finish", "abort"],
+        "observer_can_launch_factorio": False,
+        "observer_can_execute_caller_selected_command": False,
+        "factorio_pre_resume_token_gate": True,
+        "posix_pre_resume_guarantee_refused": True,
+        "recovery_required_artifact_on_unproven_abort": True,
+        "local_release_native_test_count": 50,
+        "local_python_test_count": 434,
+        "local_python_expected_skip_count": 30,
+        "schema_count": 286,
+        "local_package_runtime_proof": True,
+        "local_strict_proof": True,
+        "live_privilege_probe": False,
+        "live_privilege_probe_disposition": "pending_interactive_desktop_background_tool_channel_could_not_surface_uac",
+        "wpr_idle_after_background_probe": True,
         "verdict_02_blocked_before_baseline": True,
         "baseline_capture_started": False,
         "permit_issued": False,
@@ -1248,7 +1270,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if privilege_repair != expected_privilege_repair:
         problems.append(
             "Gate 4C privilege-separation repair truth must bind the confirmed "
-            "CreateProcessW inheritance defect without granting broker or Play authority"
+            "CreateProcessW inheritance defect, locally proven repair, pending "
+            "live UAC boundary, and no broker or Play authority"
         )
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {

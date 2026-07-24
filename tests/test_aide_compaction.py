@@ -297,9 +297,23 @@ class AideCompactionTests(unittest.TestCase):
             gate4c_verdict["factorio_integrity"],
         )
         privilege_repair = data["gate4c_privilege_separation_repair"]
-        self.assertEqual("CreateProcessW", privilege_repair["current_process_api"])
+        self.assertEqual(
+            "CreateProcessW_suspended_with_pre_resume_token_gate",
+            privilege_repair["current_process_api"],
+        )
         self.assertEqual("medium", privilege_repair["required_factorio_integrity"])
         self.assertEqual("high", privilege_repair["required_observer_integrity"])
+        self.assertTrue(privilege_repair["factorio_pre_resume_token_gate"])
+        self.assertTrue(
+            privilege_repair[
+                "mutual_peer_pid_image_sid_session_integrity_validation"
+            ]
+        )
+        self.assertEqual(
+            ["start", "status", "finish", "abort"],
+            privilege_repair["observer_commands"],
+        )
+        self.assertFalse(privilege_repair["live_privilege_probe"])
         self.assertFalse(privilege_repair["privileged_broker_authority"])
         self.assertFalse(privilege_repair["factorio_process_started"])
         self.assertFalse(data["host_environment_program"]["blocks_real_play"])
