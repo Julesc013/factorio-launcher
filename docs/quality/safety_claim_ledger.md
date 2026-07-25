@@ -47,6 +47,8 @@ reported as stronger runtime evidence.
 | Instance readiness | reviewed read-only `dev` integration | PRs #39/#40, exact workflows, zero-write and clean three-repo proof | menu only; no preparation, permit, credentials, network, or execution |
 | OperationPermit infrastructure | canonical `main`; synchronized `dev` | PRs #42-#45; authenticated claims; CI, replay, provider and reproduction proof | no issuance, Play, Setup, credentials, network, signing, or publication authority |
 | Hermetic standalone Play policy | frozen criteria; no runtime result | policy digest, schemas, validator, negative controls | process-tree claim only; no candidate, issuance, execution, verdict, or authority |
+| Hermetic Play candidate | Inconclusive after one bounded launch | exact permit, split privilege, medium Factorio, zero-loss WPR, protected comparison | no Pass; normal-host behavior mismatched the hermetic claim |
+| Windows instance-isolated Play policy | frozen criteria under review | digest-bound policy, retained inventory, exact Instance object, closed taxonomy | BAM only; no candidate, execution, verdict, route, or authority |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 find_package(Threads REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 function(facman_native_test target source labels)
   add_executable(${target} ${source})
@@ -32,7 +33,40 @@ target_compile_features(flb_factorio_instance_model_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_instance_model_smoke PRIVATE flb_factorio_instance_static facman_core_static)
 facman_native_test(flb_factorio_launch_permit_smoke flb_factorio_launch_permit_smoke.cpp "fast-unit;contract;security;filesystem")
 target_compile_features(flb_factorio_launch_permit_smoke PRIVATE cxx_std_17)
+target_compile_definitions(flb_factorio_launch_permit_smoke PRIVATE
+  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/launch-permit-smoke")
 target_link_libraries(flb_factorio_launch_permit_smoke PRIVATE flb_factorio_instance_static facman_permit_static)
+facman_native_test(facman_hermetic_play_candidate_smoke facman_hermetic_play_candidate_smoke.cpp "fast-unit;contract;security;filesystem;platform")
+target_compile_features(facman_hermetic_play_candidate_smoke PRIVATE cxx_std_17)
+target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
+  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/candidate-smoke")
+target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
+  flb_factorio_launch_static facman_permit_static facman_platform_static)
+add_executable(facman_gate4c_verdict_harness
+  gate4c_verdict_harness.cpp
+  gate4c_observer_broker_windows.cpp)
+target_compile_features(facman_gate4c_verdict_harness PRIVATE cxx_std_17)
+target_compile_definitions(facman_gate4c_verdict_harness PRIVATE
+  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+  FACMAN_TEST_PYTHON_EXECUTABLE="${Python3_EXECUTABLE}")
+target_link_libraries(facman_gate4c_verdict_harness PRIVATE
+  flb_factorio_instance_static flb_factorio_launch_static
+  facman_permit_static facman_platform_static)
+facman_apply_policies(facman_gate4c_verdict_harness)
+add_test(
+  NAME facman_gate4c_verdict_harness_canonical_smoke
+  COMMAND facman_gate4c_verdict_harness --self-test-observation-digest)
+set_tests_properties(
+  facman_gate4c_verdict_harness_canonical_smoke
+  PROPERTIES LABELS "fast-unit;contract;security")
+add_test(
+  NAME facman_gate4c_verdict_harness_privilege_protocol_smoke
+  COMMAND facman_gate4c_verdict_harness --self-test-privilege-protocol)
+set_tests_properties(
+  facman_gate4c_verdict_harness_privilege_protocol_smoke
+  PROPERTIES LABELS "fast-unit;contract;security;platform")
 facman_native_test(flb_factorio_setup_recipe_smoke flb_factorio_setup_recipe_smoke.cpp "fast-unit;security;contract")
 target_compile_features(flb_factorio_setup_recipe_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_setup_recipe_smoke PRIVATE flb_factorio_install_validation_static)
@@ -63,6 +97,16 @@ target_link_libraries(facman_execution_foundation_smoke PRIVATE
 target_compile_definitions(facman_execution_foundation_smoke PRIVATE
   FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
 add_dependencies(facman_execution_foundation_smoke facman_process_probe)
+facman_native_test(
+  facman_process_pre_resume_smoke
+  facman_process_pre_resume_smoke.cpp
+  "fast-unit;platform;security")
+target_compile_features(facman_process_pre_resume_smoke PRIVATE cxx_std_17)
+target_link_libraries(facman_process_pre_resume_smoke PRIVATE
+  facman_platform_static)
+target_compile_definitions(facman_process_pre_resume_smoke PRIVATE
+  FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
+add_dependencies(facman_process_pre_resume_smoke facman_process_probe)
 if(TARGET facman_cli)
   facman_native_test(facman_workspace_resolver_smoke facman_workspace_resolver_smoke.cpp "fast-unit;platform;frontend")
   target_compile_features(facman_workspace_resolver_smoke PRIVATE cxx_std_17)
@@ -155,7 +199,6 @@ facman_native_test(
   "contract;integration;setup")
 target_link_libraries(m2_wu6_launcher_handoff_smoke PRIVATE ulk_static)
 
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
 set(FACMAN_ABI_SYMBOL_ARGS)
 if(FACMAN_ENABLE_SANITIZERS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
   list(APPEND FACMAN_ABI_SYMBOL_ARGS --symbols-only)

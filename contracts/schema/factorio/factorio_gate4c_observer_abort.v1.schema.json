@@ -1,0 +1,34 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_gate4c_observer_abort.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fail-closed Gate 4C WPR abort result",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "command": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "args": {"type": "array", "items": {"type": "string"}},
+        "returncode": {"type": "integer"},
+        "stdout": {"type": "string"},
+        "stderr": {"type": "string"}
+      },
+      "required": ["args", "returncode", "stdout", "stderr"]
+    }
+  },
+  "properties": {
+    "schema": {"const": "factorio.gate4c_observer_abort.v1"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "generated_at": {"type": "string", "minLength": 1},
+    "operation_id": {"type": "string", "pattern": "^gate4c-[a-z0-9-]+$"},
+    "capture_session_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "reason": {"enum": ["coordinator_disconnected", "launch_refused", "operator_cancelled"]},
+    "wpr_status_before": {"$ref": "#/$defs/command"},
+    "wpr_cancel": {"$ref": "#/$defs/command"},
+    "wpr_status_after": {"$ref": "#/$defs/command"},
+    "recording_stopped": {"const": true},
+    "abort_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "canonicalization_version", "generated_at", "operation_id", "capture_session_digest", "reason", "wpr_status_before", "wpr_cancel", "wpr_status_after", "recording_stopped", "abort_digest"]
+}

@@ -1,7 +1,7 @@
 # Hermetic standalone Play policy
 
-Status: frozen criteria, no candidate implementation, no run, no verdict, and
-no authority.
+Status: frozen criteria; the separately scoped technical candidate is
+implemented; no real run, verdict, product route, or authority.
 
 Canonical policy identity:
 
@@ -53,8 +53,8 @@ The policy admits only this class:
 | Temporary state | exact workspace operation-temporary root only |
 
 The policy binds current Universal Launcher and Universal Setup dependency
-revisions. The future FacMan candidate, process provider, and observation
-provider must each bind an exact reviewed revision in the candidate evidence;
+revisions. The FacMan candidate, process provider, and observation provider
+must each bind an exact reviewed revision in the candidate evidence;
 the policy does not invent those future identities.
 
 ## Resource law

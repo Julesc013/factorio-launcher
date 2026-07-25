@@ -1,8 +1,0 @@
-schema_version: aide.queue-status.v1
-task_id: FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
-status: planned
-lifecycle_state: planned
-planning_state: planned
-created_at: 2026-07-21T16:23:41Z
-result: PENDING
-evidence_path: .aide/queue/next/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/evidence/

@@ -1,0 +1,55 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_play_candidate_evidence_packet.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gate 4B hash-closed candidate evidence packet without human verdict",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.play_candidate_evidence_packet.v1"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "technical_disposition": {"enum": ["refused_before_process", "fail_evidence", "inconclusive", "eligible_for_human_verdict"]},
+    "policy_digest": {"const": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"},
+    "plan_id": {"type": "string", "pattern": "^play-plan-[a-f0-9]{32}$"},
+    "plan_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "evidence_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "permit_id": {"type": "string", "pattern": "^permit-[a-f0-9]{32,128}$"},
+    "permit_claims_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "permit_consumed": {"type": "boolean"},
+    "process_identity_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "process_termination": {"enum": ["pending", "exited", "cancelled", "timed_out", "killed", "crashed", "start_failed"]},
+    "observation": {"$ref": "factorio_play_candidate_observation.v1.schema.json"},
+    "protected_comparison": {"$ref": "factorio_play_candidate_protected_comparison.v1.schema.json"},
+    "process_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "standard_output_bytes": {"type": "integer", "minimum": 0},
+        "standard_error_bytes": {"type": "integer", "minimum": 0},
+        "standard_output_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "standard_error_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "combined_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "required": ["standard_output_bytes", "standard_error_bytes", "standard_output_digest", "standard_error_digest", "combined_digest"]
+    },
+    "automated_cases": {
+      "type": "array",
+      "minItems": 25,
+      "maxItems": 25,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "case_id": {"type": "string", "minLength": 1},
+          "passed": {"type": "boolean"}
+        },
+        "required": ["case_id", "passed"]
+      }
+    },
+    "human_verdict": {"const": "unset"},
+    "grants_authority": {"const": false},
+    "product_route_available": {"const": false},
+    "packet_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "canonicalization_version", "technical_disposition", "policy_digest", "plan_id", "plan_digest", "evidence_digest", "permit_id", "permit_claims_digest", "permit_consumed", "process_identity_digest", "process_termination", "observation", "protected_comparison", "process_output", "automated_cases", "human_verdict", "grants_authority", "product_route_available", "packet_digest"]
+}

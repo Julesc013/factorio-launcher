@@ -1,0 +1,50 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_play_candidate_observation.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hash-closed attributed process-tree observation",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "gap_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lost_events": {"type": "boolean"},
+        "buffer_overflow": {"type": "boolean"},
+        "unknown_process_identity": {"type": "boolean"},
+        "unresolved_target": {"type": "boolean"},
+        "delayed_events": {"type": "boolean"},
+        "attribution_gap": {"type": "boolean"},
+        "provider_failure": {"type": "boolean"}
+      },
+      "required": ["lost_events", "buffer_overflow", "unknown_process_identity", "unresolved_target", "delayed_events", "attribution_gap", "provider_failure"]
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 0},
+        "domain": {"enum": ["filesystem", "registry", "process", "provider"]},
+        "process_identity_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "target_identity_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "logical_resource_id": {"type": "string", "minLength": 1},
+        "classification": {"enum": ["writable", "protected", "forbidden", "external_unexpected", "external_unobserved", "unresolved"]}
+      },
+      "required": ["sequence", "domain", "process_identity_digest", "target_identity_digest", "logical_resource_id", "classification"]
+    }
+  },
+  "properties": {
+    "schema": {"const": "factorio.play_candidate_observation.v1"},
+    "provider_id": {"const": "factorio.play.process-tree-observer"},
+    "provider_revision": {"const": "bound-observation-artifact.v1"},
+    "plan_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "capture_session_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "raw_artifact_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "active_before_process": {"type": "boolean"},
+    "capture_complete": {"type": "boolean"},
+    "gaps": {"$ref": "#/$defs/gap_state"},
+    "effects": {"type": "array", "items": {"$ref": "#/$defs/effect"}},
+    "output_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "provider_id", "provider_revision", "plan_digest", "capture_session_digest", "raw_artifact_digest", "active_before_process", "capture_complete", "gaps", "effects", "output_digest"]
+}

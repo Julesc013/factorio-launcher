@@ -20,3 +20,45 @@ Workspace proof tools:
   FacMan refusal contract.
 - `release_contract_check.py` runs the release/distribution validators under
   `tools/validators/release/`.
+
+Gate 4C evidence tools:
+
+- `gate4c_verdict_preflight.py` creates a hash-closed, non-executing preflight
+  record for the exact frozen Windows x64 / Factorio 2.0.77 / standalone /
+  menu / hermetic candidate. Missing source, observer, host, repository, or
+  instance evidence is a blocker. Source evidence must be either a recognized,
+  exact-version Wube installer or an operator-supplied standalone ZIP package
+  containing the exact installed executable. Portable packages are bounded and
+  structurally inspected; the task-owned inspection copy must match the package
+  member and installed executable byte-for-byte, and that member must carry a
+  valid Wube signature and exact `2.0.77` version metadata. Package contents do
+  not prove entitlement. Quiet-host attestations expire after 10 minutes and
+  bind the current machine, boot, observer proof, and host-state digest. The
+  tool cannot issue a permit or start a process.
+- `gate4c_observer_self_test.py` is an elevated Windows-only ETW self-test for
+  the independent FileIO, Registry, and process observation prerequisites. It
+  binds the current machine/boot, exact FacMan tooling commit and script hashes,
+  the materialized byte hash and reviewed LF-normalized canonical hash of
+  `gate4c_process_tree_observer.wprp`,
+  WPR/XPerf/WPAExporter identities, and its trace/dump/stats hashes. The custom
+  profile enables only `ProcessThread`, `FileIO`, `FileIOInit`, and `Registry`;
+  it uses one file-mode kernel collector with 1 MiB buffers and 256 buffers,
+  with no stacks or user-mode event providers. The XPerf dumper output is
+  parsed as positional CSV: FileIO, Registry, and child-process events must
+  each match the unique marker, expected event class, and event-specific PID
+  field on the same row; process start must also match the exact parent PID. All
+  three executables must come from one coherent Windows Performance Toolkit
+  root; a PATH-selected system WPR mixed with toolkit decoders is refused. WPR
+  status is rechecked after stop before cleanup responsibility is released.
+  The live `wpr -status collectors -details` loss counters and any WPR
+  stop/XPerf loss report are combined, and any nonzero or unresolved loss
+  remains Inconclusive. Self-tests expire after 15 minutes.
+  The tool exercises only task-owned probe state and cannot start Factorio or
+  record a human verdict.
+- `gate4c_verdict_session.py` exposes the frozen observer backend used only by
+  the one-shot high-integrity Gate 4C broker. Its closed operations are start,
+  status, finish, and fail-closed abort; it cannot launch Factorio.
+- `gate4c_privilege_separation_check.py` validates the medium-integrity
+  coordinator/game boundary, high-integrity observer-only boundary, closed
+  named-pipe protocol, pre-resume token validation, evidence schemas, and
+  unchanged no-authority truth.

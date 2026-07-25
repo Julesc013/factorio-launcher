@@ -33,6 +33,12 @@ const char* process_termination_name(ProcessTermination value) noexcept;
 struct ProcessIdentity {
     std::uint64_t process_id = 0;
     std::string platform;
+    // Opaque provider-produced start identity. On the Windows candidate this
+    // binds the PID to the process creation FILETIME so a recycled PID cannot
+    // satisfy a recovery or observation check.
+    std::string stable_start_identity;
+
+    bool restart_safe() const noexcept { return !stable_start_identity.empty(); }
 };
 
 struct ProcessRequest {
@@ -47,6 +53,11 @@ struct ProcessRequest {
     std::size_t maximum_standard_output = 16U * 1024U * 1024U;
     std::size_t maximum_standard_error = 1024U * 1024U;
     std::function<bool()> cancellation_requested;
+    // Windows invokes this after creating and job-binding the process in a
+    // suspended state but before its primary thread can execute. Returning
+    // false refuses the process boundary. Other platforms currently reject
+    // requests that require this Windows-only guarantee.
+    std::function<bool(const ProcessIdentity&)> validate_before_resume;
     std::function<void(const ProcessIdentity&)> started;
 };
 
@@ -65,6 +76,7 @@ struct ProcessResult {
 
 ProcessResult supervise_process(const ProcessRequest& request);
 bool process_identity_alive(std::uint64_t process_id) noexcept;
+bool process_identity_alive(const ProcessIdentity& identity) noexcept;
 
 } // namespace facman::platform
 

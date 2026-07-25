@@ -1,0 +1,35 @@
+{
+  "$id": "https://facman.invalid/schema/factorio/factorio_play_candidate_stable_manifest.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded no-follow stable filesystem manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.play_candidate_stable_manifest.v1"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "resource_id": {"type": "string", "minLength": 1},
+    "root_present": {"type": "boolean"},
+    "complete": {"type": "boolean"},
+    "root_identity_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "entries": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "relative_path": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["file", "directory"]},
+          "identity_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "content_digest": {"type": "string", "pattern": "^$|^[a-f0-9]{64}$"},
+          "size": {"type": "integer", "minimum": 0}
+        },
+        "required": ["relative_path", "kind", "identity_digest", "content_digest", "size"]
+      }
+    },
+    "gap_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "bytes_hashed": {"type": "integer", "minimum": 0},
+    "manifest_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schema", "canonicalization_version", "resource_id", "root_present", "complete", "root_identity_digest", "entries", "gap_codes", "bytes_hashed", "manifest_digest"]
+}

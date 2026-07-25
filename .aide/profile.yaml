@@ -8,17 +8,17 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: hermetic-standalone-play-policy-closeout
+  phase: windows-instance-isolated-play-policy-closeout
   primary_goal: >
-    Preserve the reviewed exact Gate 4A policy digest while it is promoted as
-    a no-authority canonical baseline and synchronized back into dev.
+    Preserve the reviewed Windows instance-isolated policy digest while the
+    no-authority checkpoint is promoted to canonical main and synchronized
+    back into dev.
   next_task: >
     Promote the accepted policy-only dev checkpoint to main, synchronize main
     ancestry back into dev without changing the accepted tree, and only then
-    activate the separately scoped implementation candidate bound to the
-    accepted InstanceSpec, InstanceBinding, and InstanceReadiness. Keep menu as the default
-    and only candidate launch intent. The later human verdict remains a
-    distinct WorkUnit.
+    activate the separately scoped implementation candidate bound to
+    InstanceSpec, InstanceBinding, and InstanceReadiness. Keep the later human
+    verdict separate and retain every no-authority boundary.
   authoritative_command_slice:
     - installs.scan
     - installs.import
@@ -74,6 +74,7 @@ safety_invariants:
   - no bundled Factorio binaries
   - no ownership bypass
   - no passwords or tokens in manifests
+  - menu as the default launch intent; no save, server, editor, or benchmark is inferred
   - no silent writes to the default Factorio data directory
   - Steam-aware Play must disclose enumerated Steam-owned external-state domains
   - hermetic Play fails on any process-tree-attributable persistent write outside exact authorised roots

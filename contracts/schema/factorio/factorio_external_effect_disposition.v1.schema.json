@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.external_effect_disposition.v1.schema.json",
+  "title": "Closed external-effect disposition taxonomy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "classification",
+    "ownership",
+    "permit_authorized",
+    "pass_eligible",
+    "verdict_impact",
+    "definition"
+  ],
+  "properties": {
+    "schema": {"const": "factorio.external_effect_disposition.v1"},
+    "classification": {
+      "enum": [
+        "instance_owned",
+        "operation_owned",
+        "protected_software",
+        "expected_external_disclosed",
+        "unexpected_external",
+        "unresolved",
+        "observation_gap"
+      ]
+    },
+    "ownership": {"enum": ["facman", "machine_external", "unknown"]},
+    "permit_authorized": {"type": "boolean"},
+    "pass_eligible": {"type": "boolean"},
+    "verdict_impact": {"enum": ["allowed", "Fail", "Inconclusive"]},
+    "definition": {"type": "string", "minLength": 20, "maxLength": 512}
+  }
+}

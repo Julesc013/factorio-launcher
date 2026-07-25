@@ -114,6 +114,11 @@ def collect() -> dict[str, Any]:
         "gate3_operation_permit_closeout": status["gate3_operation_permit_closeout"],
         "gate3_public_integration": status["gate3_public_integration"],
         "hermetic_standalone_play_policy": status["hermetic_standalone_play_policy"],
+        "hermetic_standalone_play_candidate": status["hermetic_standalone_play_candidate"],
+        "hermetic_standalone_play_verdict": status["hermetic_standalone_play_verdict"],
+        "gate4c_verdict03_postrun_repair": status["gate4c_verdict03_postrun_repair"],
+        "windows_instance_isolated_play_policy": status["windows_instance_isolated_play_policy"],
+        "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
         "gate2_instance_spec_and_readiness_closeout": status["gate2_instance_spec_and_readiness_closeout"],
@@ -361,8 +366,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
         f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
-        f"- truth scope: `{data['product']['truth_scope']}`; canonical integration: "
-        f"`{str(data['product']['canonical_integration']).lower()}`; local counts promoted: "
+        f"- truth scope: `{data['product']['truth_scope']}`; canonical main promotion: "
+        f"`{str(data['product']['canonical_main_promotion']).lower()}`; local counts promoted: "
         f"`{str(data['product']['local_counts_promoted']).lower()}`;",
         f"- Gate 0 integration: `{data['gate0_product_convergence_integration']['status']}` at dev "
         f"`{data['gate0_product_convergence_integration']['dev_integration_revision']}`;",
@@ -382,6 +387,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"- Gate 4A hermetic Play policy: "
         f"`{data['hermetic_standalone_play_policy']['status']}` with digest "
         f"`{data['hermetic_standalone_play_policy']['policy_digest']}`;",
+        f"- Gate 4B hermetic Play candidate: "
+        f"`{data['hermetic_standalone_play_candidate']['technical_disposition']}` at dev "
+        f"`{data['hermetic_standalone_play_candidate']['dev_integration_revision']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
@@ -515,8 +523,9 @@ def readme_status(data: dict[str, Any]) -> str:
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
         "",
-        "Two execution modes are accepted product designs but remain unproven: Steam-aware "
-        "`instance_isolated` and standalone `hermetic`. `run.execute` remains unavailable because "
+        "Two execution modes are accepted product designs but remain unproven:",
+        "Normal-host `instance_isolated` and enforced `hermetic`. "
+        "`run.execute` remains unavailable because "
         f"`{data['execution']['reason']}`; no real-play gate has passed.",
         f"Readiness is playability `{data['readiness']['playability']}`, workflow "
         f"`{data['readiness']['user_workflow']}`, user validation `{data['readiness']['user_validation']}`, "
@@ -529,9 +538,9 @@ def readme_status(data: dict[str, Any]) -> str:
         "Gate 3 exact permit infrastructure is closed with provider-side revalidation and no "
         "product issuance.",
         "Gates 0-3 are canonically promoted and dev-synchronized without "
-        "authority promotion. The active path now freezes the hermetic standalone Play-to-menu policy.",
-        "Gate 4A now has a digest-bound process-tree-hermetic Windows x64 / Factorio 2.0.77 policy "
-        "candidate; it adds no issuer, process route, real Play result, or authority.",
+        "authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.",
+        "The Windows instance-isolated policy is accepted on reviewed `dev` and awaits a "
+        "separate no-authority canonical promotion before its candidate may start.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -550,7 +559,8 @@ def roadmap_status(data: dict[str, Any]) -> str:
     first_step = (
         f"1. Complete `{active}`."
         if active else
-        "1. Freeze one independent real-Play gate policy and obtain explicit operator acknowledgement."
+        "1. Promote the accepted Windows instance-isolated policy to canonical `main`, "
+        "synchronize its ancestry into `dev`, and only then activate its exact candidate."
     )
     return "\n".join([
         "## Current Product Sequence",
@@ -561,15 +571,15 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
         "3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.",
         "4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.",
-        "5. Freeze `FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01`, then implement `FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01` and record `FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01`; keep Steam-aware Play independent.",
+        "5. Preserve the frozen `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01`, then implement and review its exact candidate after canonical synchronization; keep enforced hermetic and Steam-aware route qualifications independent.",
         "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
         "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
         "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
         "9. Deepen portable instance reconstruction, permit-backed managed install reconciliation, content preparation, and host repair from observed player needs.",
         "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
         "",
-        "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new "
-        "Steam-aware instance-isolated product mode. Neither new execution mode has authority yet.",
+        "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new",
+        "normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.",
         "The installation model is accepted read-only infrastructure for the selected local "
         "standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,",
         "server processes, daemon publication, signing, and publication remain unavailable.",
@@ -712,6 +722,92 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "safety": "permit_infrastructure_proven_real_play_unproven",
             "execution_reason": "real_play_gate_not_passed",
         },
+        "hermetic_standalone_play_candidate": {
+            "checkpoint": "hermetic-standalone-play-candidate",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+            "safety": "permit_infrastructure_proven_real_play_unproven",
+            "execution_reason": "real_play_gate_not_passed",
+        },
+        "hermetic_standalone_play_verdict": {
+            "checkpoint": "hermetic-standalone-play-verdict",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
+            "safety": "candidate_eligible_human_verdict_real_play_unproven",
+            "execution_reason": "real_play_verdict_pending",
+            "truth_scope": "dev_integrated_candidate_reviewed_reproduced",
+            "canonical_integration": False,
+            "current_gate_status": "candidate_complete_awaiting_human_verdict",
+        },
+        "hermetic_standalone_play_observer_start_repair": {
+            "checkpoint": "hermetic-standalone-play-observer-start-repair",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+            "safety": "gate4c_inconclusive_observer_provider_failed_no_play_authority",
+            "execution_reason": "gate4c_inconclusive_observer_start",
+            "truth_scope": "dev_integrated_gate4c_inconclusive_observer_repair_active",
+            "canonical_integration": False,
+            "current_gate_status": "observer_start_repair_active_before_repeat_verdict",
+        },
+        "hermetic_standalone_play_verdict_repeat": {
+            "checkpoint": "hermetic-standalone-play-verdict-03",
+            "active": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "last_closed": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-ROUTE-PROMOTION-01",
+            "safety": "split_privilege_repair_proven_verdict_03_pending_no_play_authority",
+            "execution_reason": "real_play_verdict_03_pending",
+            "truth_scope": "dev_integrated_privilege_separation_repair_proven_verdict_03_active",
+            "canonical_integration": False,
+            "current_gate_status": "privilege_separation_repair_closed_verdict_03_active",
+        },
+        "gate4c_verdict03_postrun_repair": {
+            "checkpoint": "gate4c-verdict03-postrun-repair",
+            "active": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-04",
+            "safety": "verdict_03_inconclusive_postrun_repair_active_no_play_authority",
+            "execution_reason": "verdict_03_incomplete_packet_unresolved_target_and_protected_change",
+            "truth_scope": "local_verdict_03_inconclusive_postrun_repair_active",
+            "canonical_integration": False,
+            "current_gate_status": "verdict_03_inconclusive_postrun_repair_active",
+        },
+        "windows_instance_isolated_play_policy": {
+            "checkpoint": "windows-instance-isolated-play-policy",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "last_closed": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            "safety": "normal_host_instance_isolated_policy_active_no_play_authority",
+            "execution_reason": "frozen_hermetic_claim_mismatch_requires_separate_normal_host_policy",
+            "truth_scope": "dev_integrated_postrun_repair_proven_instance_isolated_policy_active",
+            "canonical_main_promotion": False,
+            "current_gate_status": "postrun_repair_passed_instance_isolated_policy_active",
+        },
+        "windows_instance_isolated_play_policy_closeout": {
+            "checkpoint": "windows-instance-isolated-play-policy-closeout",
+            "active": "",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            "phase_status": "accepted_dev_pending_canonical_policy_promotion",
+            "safety": "normal_host_instance_isolated_policy_accepted_no_play_authority",
+            "execution_reason": "instance_isolated_policy_accepted_real_play_unproven",
+            "truth_scope": "dev_integrated_instance_isolated_policy_accepted_pending_canonical_promotion",
+            "canonical_main_promotion": False,
+            "current_gate_status": "instance_isolated_policy_accepted_pending_canonical_promotion",
+        },
+        "gate4c_privilege_separation_repair": {
+            "checkpoint": "gate4c-privilege-separation-repair",
+            "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+            "last_closed": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+            "next": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+            "safety": "privilege_inheritance_defect_blocked_before_baseline_no_play_authority",
+            "execution_reason": "gate4c_privilege_separation_repair_active",
+            "truth_scope": "dev_integrated_gate4c_privilege_inheritance_defect_repair_active",
+            "canonical_integration": False,
+            "current_gate_status": "verdict_02_blocked_before_baseline_privilege_repair_active",
+        },
     }
     product = status.get("product", {})
     phase = product.get("phase")
@@ -735,8 +831,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "current_work_unit": phase_contract["active"],
         "next_work_unit": phase_contract["next"],
         "m3_disposition": "authorized_backlog_after_playable_alpha",
-        "truth_scope": "canonical_main_promoted_dev_synchronized",
-        "canonical_integration": True,
+        "truth_scope": phase_contract.get(
+            "truth_scope", "canonical_main_promoted_dev_synchronized"
+        ),
+        "canonical_main_promotion": phase_contract.get(
+            "canonical_main_promotion",
+            phase_contract.get("canonical_integration", True),
+        ),
         "local_counts_promoted": True,
     }
     for key, expected in expected_product.items():
@@ -912,7 +1013,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("Gate 3 public integration must bind exact canonical and synchronized proof without promoting authority")
     hermetic_policy = status.get("hermetic_standalone_play_policy", {})
     expected_hermetic_policy = {
-        "status": "accepted_reviewed_dev_integration_pending_canonical_promotion",
+        "status": "accepted_canonical_main_dev_synchronized",
         "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01",
         "implementation_pull_request": 47,
         "reviewed_head_revision": "cf674d852e16ceb237ab83dc9254b37b0d900aa2",
@@ -931,6 +1032,48 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "exact_dev_code_security_run": "29847230890",
         "exact_dev_schema_check_run": "29847230200",
         "exact_dev_security_policy_run": "29847230265",
+        "closeout_pull_request": 48,
+        "closeout_head_revision": "d46aab915432a47cfdcc520138bbbbf70b4311fb",
+        "closeout_dev_revision": "cb7b951b1fc847c1bc1c0a56bff07763a4044d13",
+        "closeout_push_ci_run": "29848919084",
+        "closeout_push_code_security_run": "29848919045",
+        "closeout_push_security_policy_run": "29848919052",
+        "closeout_head_ci_run": "29848923709",
+        "closeout_head_code_security_run": "29848923567",
+        "closeout_head_security_policy_run": "29848923639",
+        "closeout_dev_ci_run": "29849914549",
+        "closeout_dev_code_security_run": "29849914687",
+        "closeout_dev_security_policy_run": "29849914655",
+        "promotion_pull_request": 49,
+        "promotion_source_revision": "cb7b951b1fc847c1bc1c0a56bff07763a4044d13",
+        "canonical_main_revision": "ca9ca5db443544868f3add2802593b7073a5cb20",
+        "shared_tree_identity": "c65b6e580385a9421e00ba145ce08d814568ed8e",
+        "promotion_push_ci_run": "29850902593",
+        "promotion_push_code_security_run": "29850902581",
+        "promotion_push_security_policy_run": "29850902606",
+        "promotion_head_ci_run": "29850906191",
+        "promotion_head_code_security_run": "29850906373",
+        "promotion_head_schema_check_run": "29850906413",
+        "promotion_head_security_policy_run": "29850906192",
+        "exact_main_ci_run": "29851839515",
+        "exact_main_code_security_run": "29851840822",
+        "exact_main_schema_check_run": "29851840768",
+        "exact_main_security_policy_run": "29851840676",
+        "synchronization_pull_request": 50,
+        "synchronization_head_revision": "ca9ca5db443544868f3add2802593b7073a5cb20",
+        "synchronization_push_ci_run": "29852774687",
+        "synchronization_push_code_security_run": "29852774689",
+        "synchronization_push_security_policy_run": "29852774831",
+        "synchronization_head_ci_run": "29852778523",
+        "synchronization_head_code_security_run": "29852778712",
+        "synchronization_head_security_policy_run": "29852778832",
+        "synchronization_schema_disposition": "identical_to_exact_main_schema_pass_29851840768",
+        "final_dev_revision": "0b87833252330b8c60df8b096a322fd481a18589",
+        "final_dev_ci_run": "29853752527",
+        "final_dev_code_security_run": "29853752922",
+        "final_dev_security_policy_run": "29853753034",
+        "main_is_ancestor_of_dev": True,
+        "trees_equal_at_synchronization": True,
         "local_full_matrix": True,
         "exact_dev_clean_reproduction": True,
         "clean_reproduction_seconds": 404.8,
@@ -979,12 +1122,339 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "host_mutation_authority": False,
         "authority_promotion": False,
         "playability_promotion": False,
-        "canonical_main_promotion": False,
+        "canonical_main_promotion": True,
         "signing": False,
         "publication": False,
     }
     if hermetic_policy != expected_hermetic_policy:
         problems.append("hermetic standalone Play policy truth must bind exact frozen criteria without promoting authority")
+    hermetic_candidate = status.get("hermetic_standalone_play_candidate", {})
+    expected_hermetic_candidate = {
+        "status": "accepted_closed_reviewed_dev_integration_eligible_for_human_verdict",
+        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+        "implementation_pull_request": 52,
+        "reviewed_head_revision": "da3e2274a3dc8a5757078b20276a1a6a93084860",
+        "dev_integration_revision": "e9c1e69fee1ae815f62638db8b7263cb01b70389",
+        "closeout_pull_request": 53,
+        "closeout_head_revision": "e60ff931317aaa6a68b7cbfd820afb4b4fce3676",
+        "closeout_dev_revision": "7fe12635f7309e4fd709810dd192d43ff920592f",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_push_ci_run": "29909515085",
+        "exact_push_code_security_run": "29909515064",
+        "exact_push_security_policy_run": "29909514463",
+        "exact_head_ci_run": "29909518558",
+        "exact_head_code_security_run": "29909518660",
+        "exact_head_schema_check_run": "29909518641",
+        "exact_head_security_policy_run": "29909518606",
+        "exact_dev_ci_run": "29910544402",
+        "exact_dev_code_security_run": "29910544923",
+        "exact_dev_schema_check_run": "29910545091",
+        "exact_dev_security_policy_run": "29910544435",
+        "closeout_push_ci_run": "29911647564",
+        "closeout_push_code_security_run": "29911647498",
+        "closeout_push_security_policy_run": "29911647205",
+        "closeout_head_ci_run": "29911672399",
+        "closeout_head_code_security_run": "29911672382",
+        "closeout_head_schema_check": "not_triggered_truth_only_local_strict_pass",
+        "closeout_head_security_policy_run": "29911672471",
+        "closeout_dev_ci_run": "29912502213",
+        "closeout_dev_code_security_run": "29912502124",
+        "closeout_dev_schema_check": "not_triggered_truth_only_local_strict_pass",
+        "closeout_dev_security_policy_run": "29912502140",
+        "local_full_matrix": True,
+        "exact_head_clean_reproduction": True,
+        "clean_reproduction_seconds": 548.3,
+        "native_test_count": 48,
+        "python_test_count": 375,
+        "python_target_specific_skip_count": 313,
+        "schema_count": 279,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 242,
+        "policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "required_evidence_binding_count": 31,
+        "writable_resource_count": 8,
+        "technical_disposition": "eligible_for_human_verdict",
+        "human_verdict": "unset",
+        "public_command": False,
+        "product_permit_issuance": False,
+        "real_factorio_execution": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if hermetic_candidate != expected_hermetic_candidate:
+        problems.append("Gate 4B candidate truth must bind exact reviewed and reproduced evidence without recording a human verdict or promoting authority")
+    gate4c_verdict = status.get("hermetic_standalone_play_verdict", {})
+    expected_gate4c_verdict = {
+        "status": "inconclusive_attempt_03_postrun_repair_active",
+        "work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+        "verdict": "Inconclusive",
+        "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "gate4c_evidence_tooling_revision": "c7c90554295f5de46447c013d7d0fea09dd03b22",
+        "repair_integration_revision": "1a142896328051385a3e44a47f5116c3d0d01bbb",
+        "repair_status": "PASS",
+        "observer_provider_revision": "gate4c-etw-file-registry-process.v5",
+        "observer_self_test_schema": "factorio.gate4c_observer_self_test.v5",
+        "observer_start_live_probe_pass_count": 2,
+        "previous_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01",
+        "previous_verdict": "Inconclusive",
+        "previous_attempt_count": 2,
+        "previous_observer_self_test_pass_count": 2,
+        "previous_zero_blocker_preflight_count": 2,
+        "previous_completed_baseline_count": 2,
+        "previous_observer_start_failure_count": 2,
+        "previous_provider_refusal_code": "permit_wrong_evidence",
+        "previous_provider_refusal_path": "$candidate.observer",
+        "previous_provider_refusal_message": "independent observer was not active before process boundary",
+        "previous_permit_approved_count": 2,
+        "attempt_count": 1,
+        "observer_self_test_pass_count": 1,
+        "zero_blocker_preflight_count": 1,
+        "completed_baseline_count": 1,
+        "observer_start_failure_count": 0,
+        "permit_approved_count": 1,
+        "permit_consumed_count": 1,
+        "factorio_process_started": True,
+        "human_journey_started": True,
+        "capture_token_created": True,
+        "technical_packet_created": False,
+        "protected_comparison_completed": True,
+        "human_observation_recorded": False,
+        "root_cause_established": True,
+        "observer_start_repair_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01",
+        "repeat_verdict_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+        "repeat_verdict_blocked_before_baseline": True,
+        "privilege_separation_repair_work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+        "privilege_inheritance_defect_established": True,
+        "privilege_separation_repair_revision": "894b203710b8e14055903c0d33a9d3517fb6aa94",
+        "privilege_separation_repair_status": "PASS",
+        "coordinator_integrity": "medium_required_and_live_probe_proven",
+        "factorio_integrity": "medium_verified_before_resume_in_first_real_run",
+        "observer_integrity": "high_required_and_live_probe_proven",
+        "attempt_03_operation_id": "gate4c-verdict03-launch1-20260725a",
+        "attempt_03_session_digest": "b04a04e5d6c3ef22e14cce1f48bb020cf320b035f80e40cc282e8bf594189d62",
+        "attempt_03_plan_digest": "38736cd70515ba9eca3f269bb5691f1592659e7760241fefbb563934599f31e9",
+        "attempt_03_observer_self_test_digest": "67a62c6b6ed637bc002a1c1fe3be8ab46645cd5928d9e6c19b2b2c43b906a206",
+        "attempt_03_lost_events": 0,
+        "attempt_03_unresolved_target": True,
+        "attempt_03_packet_hash_closed": False,
+        "attempt_03_second_launch_started": False,
+        "attempt_03_protected_changed": True,
+        "attempt_03_changed_resource": "installation.selected",
+        "attempt_03_protected_change": "bin/x64/NVIDIA Corporation/umdlogs created",
+        "attempt_03_persistence_refusal": "permit_wrong_resource: candidate operation artifact directory already exists",
+        "postrun_repair_work_unit": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+        "public_command": False,
+        "product_permit_issuance": False,
+        "real_factorio_execution": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if gate4c_verdict != expected_gate4c_verdict:
+        problems.append(
+            "Gate 4C verdict truth must preserve the previous Inconclusive "
+            "result and blocked attempt 02, record attempt 03 as Inconclusive "
+            "with its exact evidence findings, activate a bounded repair, and "
+            "remain non-authoritative"
+        )
+    postrun_repair = status.get("gate4c_verdict03_postrun_repair", {})
+    expected_postrun_repair = {
+        "status": "accepted_reviewed_dev_integration",
+        "work_unit": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+        "source_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
+        "source_verdict": "Inconclusive",
+        "source_operation_id": "gate4c-verdict03-launch1-20260725a",
+        "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "artifact_staging_collision": True,
+        "unresolved_etw_target": True,
+        "protected_installation_changed": True,
+        "protected_change_path": "bin/x64/NVIDIA Corporation/umdlogs",
+        "verdict03_root_retained": True,
+        "implementation_revision": "8382cb5768bd5d2690a6b34a2b6aa2e646b3d8b0",
+        "pull_request": 66,
+        "artifact_staging_repaired": True,
+        "observer_provider_revision": "gate4c-etw-file-registry-process.v6",
+        "process_environment_revision": "factorio.menu-minimal.v2",
+        "working_directory_bound_to_operation_temporary": True,
+        "directinput_disabled": True,
+        "retained_trace_reprocessed": True,
+        "normal_host_hermetic_policy_satisfied": False,
+        "next_verdict_automatically_authorized": False,
+        "factorio_execution_allowed": False,
+        "frozen_policy_mutation_allowed": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "authority_promotion": False,
+    }
+    if postrun_repair != expected_postrun_repair:
+        problems.append(
+            "Gate 4C Verdict 03 post-run repair truth must bind the incomplete "
+            "packet, unresolved target, protected installation change, retained "
+            "evidence, and no-authority boundary"
+        )
+    instance_isolated_policy = status.get("windows_instance_isolated_play_policy", {})
+    expected_instance_isolated_policy = {
+        "status": "accepted_reviewed_dev_integration_pending_canonical_promotion",
+        "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+        "source_repair": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+        "source_verdict": "Inconclusive",
+        "implementation_pull_request": 67,
+        "reviewed_head_revision": "c25491e5250f80d9b1f9813ddf37910315bcc96c",
+        "dev_integration_revision": "28495de937f1184dacc745f41dcac675756ef931",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_push_ci_run": "30144796327",
+        "exact_push_code_security_run": "30144796337",
+        "exact_push_schema_check_run": "30144796328",
+        "exact_push_security_policy_run": "30144796329",
+        "exact_head_ci_run": "30144805820",
+        "exact_head_code_security_run": "30144805795",
+        "exact_head_schema_check_run": "30144805851",
+        "exact_head_security_policy_run": "30144805806",
+        "exact_dev_ci_run": "30145199265",
+        "exact_dev_code_security_run": "30145199294",
+        "exact_dev_schema_check_run": "30145199268",
+        "exact_dev_security_policy_run": "30145199267",
+        "local_full_matrix": True,
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 455.2,
+        "native_test_count": 50,
+        "python_test_count": 466,
+        "python_expected_skips": 315,
+        "schema_count": 292,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 242,
+        "policy_path": "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml",
+        "policy_schema": "factorio.windows_instance_isolated_play_policy.v1",
+        "policy_id": "facman.windows-instance-isolated-play.2.0.77.x64.v1",
+        "policy_revision": "1",
+        "canonicalization_version": "facman.sorted-json.v1",
+        "policy_digest": "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
+        "claim_id": "factorio.windows_instance_isolated_process_tree.v1",
+        "user_label": "Instance-isolated — Windows",
+        "candidate_class": "Windows x64 Factorio 2.0.77 standalone non-Steam menu",
+        "isolation_mode": "instance_isolated",
+        "writable_boundary": "exact stable FacMan-owned instance directory object and descendants",
+        "writable_resource_count": 7,
+        "protected_resource_count": 12,
+        "external_disclosure_count": 1,
+        "expected_external_disclosures": [
+            "windows.bam.factorio_process_execution.v1"
+        ],
+        "protected_software_roots_immutable": True,
+        "os_driver_effects_observed_and_disclosed": True,
+        "external_effects_are_permit_resources": False,
+        "whole_host_immutability_claimed": False,
+        "enforced_sandbox_claimed": False,
+        "frozen_hermetic_policy_mutation_allowed": False,
+        "runtime_mutation_allowed": False,
+        "factorio_execution_allowed": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "canonical_main_promotion": False,
+        "authority_promotion": False,
+    }
+    if instance_isolated_policy != expected_instance_isolated_policy:
+        problems.append(
+            "Windows instance-isolated Play policy truth must bind the exact "
+            "normal-host claim, keep protected software immutable, disclose "
+            "OS/driver effects, and remain policy-only and non-authoritative"
+        )
+    privilege_repair = status.get("gate4c_privilege_separation_repair", {})
+    expected_privilege_repair = {
+        "status": "accepted_closed_reviewed_dev_integration",
+        "work_unit": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+        "finding_revision": "934d4fcca2d3749f1a9710186afcf1fe294f0dc8",
+        "implementation_revision": "380c1a44f26cc1d6bacccdfe5ce0c6d2efda36d3",
+        "hosted_matrix_revision": "97735a42aebbba818cebd01a20da98693b293d44",
+        "implementation_pull_request": 64,
+        "reviewed_head_revision": "76c59b94b3da8ba5a4905ecfbc8e6fcfd299a0aa",
+        "dev_integration_revision": "894b203710b8e14055903c0d33a9d3517fb6aa94",
+        "merged_dev_ci_run": "30092289051",
+        "merged_dev_code_security_run": "30092289014",
+        "merged_dev_schema_check_run": "30092289006",
+        "merged_dev_security_policy_run": "30092289007",
+        "frozen_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "previous_process_api": "CreateProcessW",
+        "previous_child_security_context": "calling_process",
+        "current_process_api": "CreateProcessW_suspended_with_pre_resume_token_gate",
+        "current_child_security_context": "exact_medium_interactive_principal_and_session",
+        "required_coordinator_integrity": "medium",
+        "required_factorio_integrity": "medium",
+        "required_observer_integrity": "high",
+        "named_pipe_single_user_acl": True,
+        "named_pipe_remote_clients_rejected": True,
+        "mutual_peer_pid_image_sid_session_integrity_validation": True,
+        "closed_nonce_expiry_replay_bound_protocol": True,
+        "observer_commands": ["start", "status", "finish", "abort"],
+        "observer_can_launch_factorio": False,
+        "observer_can_execute_caller_selected_command": False,
+        "factorio_pre_resume_token_gate": True,
+        "posix_pre_resume_guarantee_refused": True,
+        "recovery_required_artifact_on_unproven_abort": True,
+        "local_release_native_test_count": 50,
+        "local_python_test_count": 434,
+        "local_python_expected_skip_count": 30,
+        "schema_count": 286,
+        "local_package_runtime_proof": True,
+        "local_strict_proof": True,
+        "live_privilege_probe": True,
+        "live_privilege_probe_id": "gate4c-privilege-probe-live-02",
+        "live_privilege_probe_digest": "e74f276c6ee43d2c436b09bade4d265fd0165903f963ae09f7f0e8e61bad105b",
+        "live_privilege_probe_file_sha256": "e8e614cf37feab54efb9f52133e35025984d38bdc35b376d55139bc734c5f841",
+        "live_privilege_probe_response_digest": "8ded3340f2d6de60d83041e6a480129294e44d4e5c3f27cc76b2a26905fd4c2d",
+        "live_privilege_probe_evidence": ".aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence/live-privilege-probe.json",
+        "live_privilege_probe_disposition": "pass_authenticated_medium_coordinator_high_broker_no_wpr_no_factorio",
+        "live_probe_coordinator_integrity": "medium",
+        "live_probe_broker_integrity": "high",
+        "live_probe_same_principal_and_windows_session": True,
+        "live_probe_mutual_process_and_binary_identity": True,
+        "live_probe_wpr_started": False,
+        "live_probe_factorio_started": False,
+        "live_probe_processes_terminated": True,
+        "live_probe_wpr_idle_after": True,
+        "background_probe_disposition": "uac_ui_unavailable_no_broker_no_wpr_no_factorio",
+        "wpr_idle_after_background_probe": True,
+        "verdict_02_blocked_before_baseline": True,
+        "baseline_capture_started": False,
+        "permit_issued": False,
+        "factorio_process_started": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "privileged_broker_authority": False,
+        "real_factorio_execution": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if privilege_repair != expected_privilege_repair:
+        problems.append(
+            "Gate 4C privilege-separation repair truth must bind the confirmed "
+            "CreateProcessW inheritance defect, locally and hosted-proven "
+            "repair, authenticated live UAC boundary, and no broker or Play authority"
+        )
     gate2 = status.get("gate2_instance_spec_and_readiness_closeout", {})
     expected_gate2 = {
         "status": "accepted_reviewed_dev_integration",
@@ -1771,8 +2241,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical H1 Fail must bind a sanitized proof record")
     if execution.get("operator_verdict_scope") != "historical_steam_backed_h1_only":
         problems.append("historical H1 verdict must remain explicitly scoped")
-    if execution.get("current_gate_status") != "not_started":
-        problems.append("real-play execution gates must remain not started")
+    expected_gate_status = phase_contract.get("current_gate_status", "not_started")
+    if execution.get("current_gate_status") != expected_gate_status:
+        problems.append("real-play execution gate status must match the current product phase")
     return problems
 
 
@@ -1825,6 +2296,9 @@ def summary(data: dict[str, Any]) -> str:
         f"Gate 4A hermetic Play policy: "
         f"{data['hermetic_standalone_play_policy']['status']} "
         f"({data['hermetic_standalone_play_policy']['policy_digest']})",
+        f"Gate 4B hermetic Play candidate: "
+        f"{data['hermetic_standalone_play_candidate']['technical_disposition']} "
+        f"({data['hermetic_standalone_play_candidate']['dev_integration_revision']})",
         f"golden_journey: {data['product']['golden_journey']}",
         f"playability: {data['readiness']['playability']}",
         f"execution: {data['execution']['status']} ({data['execution']['reason']})",
