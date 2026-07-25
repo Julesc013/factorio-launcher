@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `windows_instance_isolated_play_policy_closeout` and the active WorkUnit is `none (operator gate required)`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `windows_instance_isolated_play_candidate` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -75,6 +75,14 @@ one BAM disclosure, immutable protected software roots, exact reviewed-head
 and merged-`dev` workflows, and clean pinned three-repository reproduction.
 It preserves the distinct hermetic claim and grants no Play or permit
 authority.
+
+The evidence-only
+[`Windows Instance-Isolated Play policy canonical integration`](windows-instance-isolated-play-policy-public-integration.md)
+binds PRs #68-#70, the exact closeout, policy-only canonical promotion,
+zero-diff ancestry synchronization, shared tree identity, and final
+synchronized-`dev` workflows. It activates only the separately scoped
+candidate WorkUnit; public Play, execution, permit issuance, and every
+excluded authority remain unavailable.
 
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),

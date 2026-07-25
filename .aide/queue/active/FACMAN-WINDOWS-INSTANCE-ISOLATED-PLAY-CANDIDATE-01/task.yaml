@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01
 title: Implement exact Windows instance-isolated Play candidate
-status: planned
-lifecycle_state: planned
-planning_state: planned
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-07-25T05:22:56Z
 owner: unassigned
 objective: >
@@ -104,3 +104,4 @@ closeout_checklist:
   - affected and full validation pass
   - project truth and claim ledger remain honest
   - structured commit check passes
+active_at: 2026-07-25T06:54:05Z

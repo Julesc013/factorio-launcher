@@ -93,20 +93,23 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "windows-instance-isolated-play-policy-closeout",
+            "windows-instance-isolated-play-candidate",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual(
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            data["active_work_unit"],
+        )
         self.assertEqual(
             "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -138,10 +141,10 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "dev_integrated_instance_isolated_policy_accepted_pending_canonical_promotion",
+            "canonical_instance_isolated_policy_dev_synchronized_candidate_active",
             data["product"]["truth_scope"],
         )
-        self.assertFalse(data["product"]["canonical_main_promotion"])
+        self.assertTrue(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
         self.assertTrue(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
@@ -304,7 +307,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         instance_policy = data["windows_instance_isolated_play_policy"]
         self.assertEqual(
-            "accepted_reviewed_dev_integration_pending_canonical_promotion",
+            "accepted_canonical_main_dev_synchronized",
             instance_policy["status"],
         )
         self.assertEqual(67, instance_policy["implementation_pull_request"])
@@ -329,7 +332,20 @@ class AideCompactionTests(unittest.TestCase):
             instance_policy["expected_external_disclosures"],
         )
         self.assertFalse(instance_policy["external_effects_are_permit_resources"])
-        self.assertFalse(instance_policy["canonical_main_promotion"])
+        self.assertEqual(68, instance_policy["closeout_pull_request"])
+        self.assertEqual(69, instance_policy["promotion_pull_request"])
+        self.assertEqual(70, instance_policy["synchronization_pull_request"])
+        self.assertEqual(
+            "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5",
+            instance_policy["canonical_main_revision"],
+        )
+        self.assertEqual(
+            "c49a9b5cf1a660e63730cae02778af3e00894a87",
+            instance_policy["final_dev_revision"],
+        )
+        self.assertTrue(instance_policy["main_is_ancestor_of_dev"])
+        self.assertTrue(instance_policy["trees_equal_at_synchronization"])
+        self.assertTrue(instance_policy["canonical_main_promotion"])
         self.assertFalse(instance_policy["authority_promotion"])
         privilege_repair = data["gate4c_privilege_separation_repair"]
         self.assertEqual(
@@ -794,10 +810,13 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "windows-instance-isolated-play-policy-closeout",
+            "windows-instance-isolated-play-candidate",
             data["current_checkpoint"],
         )
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual(
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            data["active_work_unit"],
+        )
         self.assertEqual(
             "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
             data["last_closed_work_unit"],

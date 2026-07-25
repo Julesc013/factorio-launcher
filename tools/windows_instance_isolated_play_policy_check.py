@@ -633,11 +633,11 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
     product = status.get("product", {})
     if (
         product.get("truth_scope")
-        != "dev_integrated_instance_isolated_policy_accepted_pending_canonical_promotion"
+        != "canonical_instance_isolated_policy_dev_synchronized_candidate_active"
     ):
-        problems.append("project truth must record reviewed policy dev integration")
-    if product.get("canonical_main_promotion") is not False:
-        problems.append("project truth must explicitly record no canonical main promotion")
+        problems.append("project truth must record canonical policy synchronization and candidate activation")
+    if product.get("canonical_main_promotion") is not True:
+        problems.append("project truth must explicitly record policy-only canonical main promotion")
     if "canonical_integration" in product:
         problems.append(
             "ambiguous product canonical_integration field must be replaced by "
@@ -650,7 +650,7 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
 
     policy_truth = status.get("windows_instance_isolated_play_policy", {})
     expected_truth = {
-        "status": "accepted_reviewed_dev_integration_pending_canonical_promotion",
+        "status": "accepted_canonical_main_dev_synchronized",
         "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
         "source_repair": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
         "source_verdict": "Inconclusive",
@@ -671,6 +671,49 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
         "exact_dev_code_security_run": "30145199294",
         "exact_dev_schema_check_run": "30145199268",
         "exact_dev_security_policy_run": "30145199267",
+        "closeout_pull_request": 68,
+        "closeout_head_revision": "e535f279c539477c127915ae3fd56b451dae4291",
+        "closeout_dev_revision": "5267d17b8fc8095d31448044dded6d42eda75fda",
+        "closeout_push_ci_run": "30145909636",
+        "closeout_push_code_security_run": "30145909643",
+        "closeout_push_security_policy_run": "30145909646",
+        "closeout_head_ci_run": "30145919714",
+        "closeout_head_code_security_run": "30145919721",
+        "closeout_head_security_policy_run": "30145919719",
+        "closeout_schema_disposition": "unchanged_from_exact_implementation_schema_pass_30145199268",
+        "closeout_dev_ci_run": "30146288814",
+        "closeout_dev_code_security_run": "30146288802",
+        "closeout_dev_security_policy_run": "30146288806",
+        "promotion_pull_request": 69,
+        "promotion_source_revision": "5267d17b8fc8095d31448044dded6d42eda75fda",
+        "canonical_main_revision": "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5",
+        "shared_tree_identity": "d7cbe1339423b1dcda2763231aa9e99d4a59476a",
+        "promotion_push_ci_run": "30146680925",
+        "promotion_push_code_security_run": "30146680930",
+        "promotion_push_security_policy_run": "30146680926",
+        "promotion_head_ci_run": "30146702107",
+        "promotion_head_code_security_run": "30146702121",
+        "promotion_head_schema_check_run": "30146702112",
+        "promotion_head_security_policy_run": "30146702129",
+        "exact_main_ci_run": "30147122318",
+        "exact_main_code_security_run": "30147122296",
+        "exact_main_schema_check_run": "30147122303",
+        "exact_main_security_policy_run": "30147122308",
+        "synchronization_pull_request": 70,
+        "synchronization_head_revision": "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5",
+        "synchronization_push_ci_run": "30147488160",
+        "synchronization_push_code_security_run": "30147488155",
+        "synchronization_push_security_policy_run": "30147488152",
+        "synchronization_head_ci_run": "30147496286",
+        "synchronization_head_code_security_run": "30147496272",
+        "synchronization_head_security_policy_run": "30147496288",
+        "synchronization_schema_disposition": "identical_to_exact_main_schema_pass_30147122303",
+        "final_dev_revision": "c49a9b5cf1a660e63730cae02778af3e00894a87",
+        "final_dev_ci_run": "30147917473",
+        "final_dev_code_security_run": "30147917492",
+        "final_dev_security_policy_run": "30147917475",
+        "main_is_ancestor_of_dev": True,
+        "trees_equal_at_synchronization": True,
         "local_full_matrix": True,
         "exact_dev_clean_reproduction": True,
         "clean_reproduction_seconds": 455.2,
@@ -711,13 +754,13 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
         "factorio_execution_allowed": False,
         "public_command": False,
         "product_permit_issuance": False,
-        "canonical_main_promotion": False,
+        "canonical_main_promotion": True,
         "authority_promotion": False,
     }
     if policy_truth != expected_truth:
         problems.append(
-            "Windows instance-isolated policy truth must bind reviewed dev "
-            "integration, frozen resources, disclosure, and no-authority boundary"
+            "Windows instance-isolated policy truth must bind canonical promotion, "
+            "dev synchronization, frozen resources, disclosure, and no-authority boundary"
         )
 
     if status.get("execution", {}).get("status") != "unavailable":
