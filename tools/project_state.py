@@ -121,6 +121,7 @@ def collect() -> dict[str, Any]:
         "windows_instance_isolated_play_candidate": status["windows_instance_isolated_play_candidate"],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
+        "facman_application_module_decomposition": status["facman_application_module_decomposition"],
         "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -873,6 +874,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "current_gate_status": "instance_isolated_verdict_deferred_application_module_decomposition_active",
         },
+        "facman_ulk_integration_proof": {
+            "checkpoint": "facman-ulk-integration-proof",
+            "active": "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "last_closed": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "next": "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "phase_status": "active",
+            "safety": "three_repository_integration_proof_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_three_repository_integration_proof_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_three_repository_integration_proof_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_three_repository_integration_proof_active",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1619,6 +1632,45 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "ULK reference-model extraction truth must bind the exact provider "
             "revision and ABI, separate invalid identity from stale revisions, "
             "retain Factorio composition, and grant no runtime authority"
+        )
+    module_decomposition = status.get("facman_application_module_decomposition", {})
+    expected_module_decomposition = {
+        "status": "accepted_local_clean_matrix",
+        "work_unit": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+        "module_contract": "ApplicationModule",
+        "registered_modules": [
+            "WorkspaceApplicationModule",
+            "SetupApplicationModule",
+            "InstallationApplicationModule",
+            "InstanceApplicationModule",
+            "ProfileApplicationModule",
+            "ContentApplicationModule",
+            "RecoveryApplicationModule",
+            "DiagnosticsApplicationModule",
+            "LaunchApplicationModule",
+        ],
+        "registered_module_count": 9,
+        "central_entrypoint_line_count": 210,
+        "central_direct_command_cases": 0,
+        "request_decoding_owner": "command_dispatch",
+        "global_admission_before_module_execution": True,
+        "module_lookup_owner": "factorio_application_composition_root",
+        "result_envelope_owner": "factorio_application_composition_root",
+        "boundary_exception_containment": True,
+        "clean_build_root_honored_by_package_proof": True,
+        "local_release_native_test_count": 52,
+        "local_python_test_count": 482,
+        "local_python_expected_skip_count": 30,
+        "required_windows_package_proof": "pass",
+        "strict_validation": "pass",
+        "real_factorio_execution": False,
+        "runtime_authority": False,
+        "authority_promotion": False,
+    }
+    if module_decomposition != expected_module_decomposition:
+        problems.append(
+            "application module decomposition truth must retain the nine-module "
+            "composition root, clean package proof, and no runtime authority"
         )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {

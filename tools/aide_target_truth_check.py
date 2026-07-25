@@ -125,6 +125,7 @@ def validate_profile_text(text: str) -> list[str]:
         "ulk-client-transport-extraction",
         "ulk-reference-model-extraction",
         "facman-application-module-decomposition",
+        "facman-ulk-integration-proof",
         "gate4c-privilege-separation-repair",
     }
     if phase not in allowed_phases:

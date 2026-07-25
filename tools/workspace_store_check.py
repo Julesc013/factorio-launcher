@@ -26,7 +26,7 @@ def validate() -> list[str]:
     source = (ROOT / "runtime/workspace/fl_workspace_store.cpp").read_text(encoding="utf-8")
     cmake = (ROOT / "runtime/workspace/CMakeLists.txt").read_text(encoding="utf-8")
     tests_cmake = (ROOT / "tests/native/CMakeLists.txt").read_text(encoding="utf-8")
-    app = (ROOT / "runtime/factorio/application/flb_factorio_application.cpp").read_text(encoding="utf-8")
+    app = (ROOT / "runtime/factorio/application/modules/recovery_module.cpp").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
     index = (ROOT / "contracts/command/factorio/index.v1.toml").read_text(encoding="utf-8")
 

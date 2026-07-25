@@ -20,6 +20,7 @@ from tools import package_hash_manifest
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_ROOT = Path(os.environ.get("FACMAN_NATIVE_BUILD_ROOT", ROOT / "build" / "native-smoke"))
+BUILD_CONFIGURATION = os.environ.get("FACMAN_NATIVE_CONFIGURATION", "Debug")
 SECRET_CORPUS = ROOT / "tests" / "fixtures" / "redaction" / "secrets_corpus.v1.json"
 
 
@@ -160,7 +161,7 @@ class BuiltPackageOutputOwnershipTests(unittest.TestCase):
 class WindowsPortableCliPackageProofTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        facman = BUILD_ROOT / "Debug" / "facman.exe"
+        facman = BUILD_ROOT / BUILD_CONFIGURATION / "facman.exe"
         if not facman.is_file():
             raise AssertionError(f"required Windows package proof binary is missing: {facman}")
         cls._tmp = tempfile.TemporaryDirectory(prefix="facman-windows-package-proof-")
@@ -472,7 +473,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
 class WindowsPortableTuiPackageProofTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        tui = BUILD_ROOT / "Debug" / "facman-tui.exe"
+        tui = BUILD_ROOT / BUILD_CONFIGURATION / "facman-tui.exe"
         if not tui.is_file():
             raise unittest.SkipTest(f"functional TUI build is missing: {tui}")
         cls._tmp = tempfile.TemporaryDirectory(prefix="facman-windows-tui-package-")

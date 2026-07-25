@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-ULK-INTEGRATION-PROOF-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-25T13:22:47Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-ULK-INTEGRATION-PROOF-01/evidence/
+active_at: 2026-07-25T13:22:48Z

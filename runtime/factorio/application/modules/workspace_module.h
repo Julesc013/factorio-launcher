@@ -1,16 +1,17 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
 
-#ifndef FACMAN_FACTORIO_APPLICATION_INSTALLATION_MODULE_H
-#define FACMAN_FACTORIO_APPLICATION_INSTALLATION_MODULE_H
+#ifndef FACMAN_FACTORIO_APPLICATION_WORKSPACE_MODULE_H
+#define FACMAN_FACTORIO_APPLICATION_WORKSPACE_MODULE_H
 
 #include "modules/application_module.h"
 
 namespace facman::factorio::application {
 
-class InstallationApplicationModule final : public ApplicationModule {
+class WorkspaceApplicationModule final : public ApplicationModule {
 public:
     bool handles(CommandId command) const noexcept override;
+    bool requires_workspace(CommandId command) const noexcept override;
     ApplicationResult execute(
         ApplicationContext& context,
         const ApplicationRequest& request,

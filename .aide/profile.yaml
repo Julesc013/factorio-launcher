@@ -8,15 +8,14 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: facman-application-module-decomposition
+  phase: facman-ulk-integration-proof
   primary_goal: >
-    Move the frontend-neutral command client and transport contracts into
-    Universal Launcher and make FacMan consume the new pinned provider.
+    Reconstruct the exact pinned three-repository product train and prove its
+    source boundaries, native behavior, installed package, and local workflow.
   next_task: >
-    Implement and independently validate ULK client, direct, process, and
-    daemon transport surfaces; preserve Factorio workspace resolution,
-    InstanceSpec, and menu as the default without exposing Play; then update
-    the FacMan workspace pin and integration proof.
+    Run provider and consumer validation in clean task-owned roots, verify
+    exact dependency revisions and branch governance, then record one bounded
+    cross-repository compatibility checkpoint without exposing Play.
   authoritative_command_slice:
     - installs.scan
     - installs.import

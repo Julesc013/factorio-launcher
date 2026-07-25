@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
 
-#ifndef FACMAN_FACTORIO_APPLICATION_INSTALLATION_MODULE_H
-#define FACMAN_FACTORIO_APPLICATION_INSTALLATION_MODULE_H
+#ifndef FACMAN_FACTORIO_APPLICATION_SETUP_MODULE_H
+#define FACMAN_FACTORIO_APPLICATION_SETUP_MODULE_H
 
 #include "modules/application_module.h"
 
 namespace facman::factorio::application {
 
-class InstallationApplicationModule final : public ApplicationModule {
+class SetupApplicationModule final : public ApplicationModule {
 public:
     bool handles(CommandId command) const noexcept override;
     ApplicationResult execute(

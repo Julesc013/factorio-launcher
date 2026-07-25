@@ -6,15 +6,15 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Current product truth
 
-- phase: `facman_application_module_decomposition` / `active`;
+- phase: `facman_ulk_integration_proof` / `active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-application-module-decomposition`;
-- active WorkUnit: `FACMAN-APPLICATION-MODULE-DECOMPOSITION-01`;
-- next WorkUnit: `FACMAN-ULK-INTEGRATION-PROOF-01`;
+- checkpoint: `facman-ulk-integration-proof`;
+- active WorkUnit: `FACMAN-ULK-INTEGRATION-PROOF-01`;
+- next WorkUnit: `FACMAN-IGNORED-BUILD-TREE-CLEANUP-01`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `instance_isolated_candidate_technical_pass_historical_revalidation_required_application_module_decomposition_active`; canonical main promotion: `true`; local counts promoted: `true`;
+- truth scope: `instance_isolated_candidate_technical_pass_historical_revalidation_required_three_repository_integration_proof_active`; canonical main promotion: `true`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -22,7 +22,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `instance_isolated_candidate_revalidation_required_application_module_decomposition_no_play_authority`;
+- execution: `unavailable` / `instance_isolated_candidate_revalidation_required_three_repository_integration_proof_no_play_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
@@ -30,7 +30,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 - playability: `not_yet_playable`;
 - user workflow: `advanced_command_surface_only`;
-- safety authority: `application_module_decomposition_no_runtime_authority`;
+- safety authority: `three_repository_integration_proof_no_runtime_authority`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -88,7 +88,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `ULK-REFERENCE-MODEL-EXTRACTION-01`;
+- last closed WorkUnit: `FACMAN-APPLICATION-MODULE-DECOMPOSITION-01`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `e78cc9f3a23f748130749ebe7241dbd1166f8b25` / `3f8489275077347c2918f3bb03614ec6431362ff`;

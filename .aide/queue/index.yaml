@@ -4,8 +4,8 @@ canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
   - id: FACMAN-APPLICATION-MODULE-DECOMPOSITION-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Decompose the FacMan application dispatcher
     task: .aide/queue/active/FACMAN-APPLICATION-MODULE-DECOMPOSITION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-APPLICATION-MODULE-DECOMPOSITION-01/evidence
@@ -93,6 +93,12 @@ items:
     title: Exact operation permit contract and revalidation
     task: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence
+  - id: FACMAN-ULK-INTEGRATION-PROOF-01
+    status: active
+    lifecycle_state: active
+    title: Prove the pinned three-repository integration
+    task: .aide/queue/active/FACMAN-ULK-INTEGRATION-PROOF-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-ULK-INTEGRATION-PROOF-01/evidence
   - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01
     status: passed
     lifecycle_state: closed

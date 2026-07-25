@@ -22,6 +22,7 @@ Architecture:
 - [Coding Standards](architecture/coding_standards.md)
 - [Command Graph](architecture/command_graph.md)
 - [Module Graph](architecture/module_graph.md)
+- [Application Module Composition](architecture/application-module-composition.md)
 - [Data Flow](architecture/data_flow.md)
 - [Apps Model](architecture/apps_model.md)
 - [JSON RPC](architecture/json_rpc.md)

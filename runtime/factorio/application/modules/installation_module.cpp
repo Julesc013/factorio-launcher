@@ -20,7 +20,9 @@ bool InstallationApplicationModule::handles(CommandId command) const noexcept
 
 ApplicationResult InstallationApplicationModule::execute(
     ApplicationContext& context,
-    const ApplicationRequest& request) const
+    const ApplicationRequest& request,
+    const CommandAdmissionDecision&,
+    const std::string&) const
 {
     switch (request.command) {
     case CommandId::install_list:
