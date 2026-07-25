@@ -8,15 +8,14 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: facman-ulk-integration-proof
+  phase: ignored-build-tree-cleanup
   primary_goal: >
-    Reconstruct the exact pinned three-repository product train and prove its
-    source boundaries, native behavior, installed package, and local workflow
-    while preserving the Factorio-owned InstanceSpec.
+    Remove only the two inventoried ignored Universal build roots and preserve
+    clean source repositories, exact dependency pins, and Factorio InstanceSpec.
   next_task: >
-    Run provider and consumer validation in clean task-owned roots, verify
-    exact dependency revisions and branch governance, then record one bounded
-    cross-repository compatibility checkpoint without exposing Play.
+    Verify exact paths, ignore status, size, and repository cleanliness before
+    removal; then prove the source roots remain intact and direct future builds
+    to task-owned E:\Temporary\FacMan roots.
   authoritative_command_slice:
     - installs.scan
     - installs.import

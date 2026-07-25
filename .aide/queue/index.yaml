@@ -63,6 +63,12 @@ items:
     title: Run the split-privilege hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03/evidence
+  - id: FACMAN-IGNORED-BUILD-TREE-CLEANUP-01
+    status: active
+    lifecycle_state: active
+    title: Remove ignored Universal build trees
+    task: .aide/queue/active/FACMAN-IGNORED-BUILD-TREE-CLEANUP-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-IGNORED-BUILD-TREE-CLEANUP-01/evidence
   - id: FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01
     status: passed
     lifecycle_state: closed
@@ -94,8 +100,8 @@ items:
     task: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence
   - id: FACMAN-ULK-INTEGRATION-PROOF-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Prove the pinned three-repository integration
     task: .aide/queue/active/FACMAN-ULK-INTEGRATION-PROOF-01/task.yaml
     evidence: .aide/queue/active/FACMAN-ULK-INTEGRATION-PROOF-01/evidence

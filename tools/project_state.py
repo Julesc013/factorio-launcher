@@ -122,6 +122,7 @@ def collect() -> dict[str, Any]:
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
+        "facman_ulk_integration_proof": status["facman_ulk_integration_proof"],
         "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -885,6 +886,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_three_repository_integration_proof_active",
             "canonical_main_promotion": True,
             "current_gate_status": "instance_isolated_verdict_deferred_three_repository_integration_proof_active",
+        },
+        "ignored_build_tree_cleanup": {
+            "checkpoint": "ignored-build-tree-cleanup",
+            "active": "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "last_closed": "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "phase_status": "active",
+            "safety": "filesystem_hygiene_exact_roots_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_filesystem_hygiene_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_ignored_build_tree_cleanup_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_ignored_build_tree_cleanup_active",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -1671,6 +1684,49 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append(
             "application module decomposition truth must retain the nine-module "
             "composition root, clean package proof, and no runtime authority"
+        )
+    integration_proof = status.get("facman_ulk_integration_proof", {})
+    expected_integration_proof = {
+        "status": "accepted_local_clean_reconstruction",
+        "work_unit": "FACMAN-ULK-INTEGRATION-PROOF-01",
+        "facman_proof_revision": "83980f140b365ab3206d5631db7c38db929b61fb",
+        "universal_launcher_revision": "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "detached_source_worktrees": True,
+        "source_worktrees_clean": True,
+        "final_build_root_initially_absent": True,
+        "final_matrix_seconds": 423.5,
+        "universal_launcher_native_test_count": 4,
+        "universal_launcher_strict_validation": "pass",
+        "universal_setup_native_test_count": 16,
+        "universal_setup_strict_validation": "pass",
+        "facman_native_test_count": 53,
+        "facman_python_test_count": 486,
+        "facman_python_expected_skip_count": 29,
+        "facman_aide_validation": "pass",
+        "facman_strict_validation": "pass",
+        "installed_sdk_proof": "pass",
+        "windows_cli_package_proof": "pass",
+        "package_files_verified": 478,
+        "package_archive_sha256": "c6551405ca0d0d2f100c34b1daea92368ae51fe78e61398499c7b027c8f9ca0d",
+        "package_provenance_sha256": "d5ffaeb8dd4063c350662405dd25b6d3f02809ae25bb287bdebeb0600c0f79a9",
+        "package_integrity": "sha256_consistent",
+        "package_authenticity": "not_proven_unsigned",
+        "branch_governance": "documented_asymmetric",
+        "universal_dev_branches_created": False,
+        "candidate_revalidation_required": True,
+        "real_factorio_execution": False,
+        "human_verdict": "not_performed",
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+        "runtime_authority": False,
+        "authority_promotion": False,
+    }
+    if integration_proof != expected_integration_proof:
+        problems.append(
+            "three-repository integration truth must bind the exact clean "
+            "matrix and unsigned package without promoting authority"
         )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {

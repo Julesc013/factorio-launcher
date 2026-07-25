@@ -38,6 +38,12 @@ Architecture:
 - [Workspace Layout](reference/workspace-layout.md)
 - [Repro Workspace Smoke](reference/repro-workspace-smoke.md)
 
+Development:
+
+- [Getting Started](development/getting-started.md)
+- [Testing](development/testing.md)
+- [Repository Branch Governance](development/repository-branch-governance.md)
+
 Product:
 
 - [Product Vision](product/product_vision.md)

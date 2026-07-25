@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-ulk-integration-proof",
+            "ignored-build-tree-cleanup",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "FACMAN-ULK-INTEGRATION-PROOF-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "instance_isolated_candidate_technical_pass_historical_revalidation_required_three_repository_integration_proof_active",
+            "instance_isolated_candidate_technical_pass_historical_revalidation_required_ignored_build_tree_cleanup_active",
             data["product"]["truth_scope"],
         )
         self.assertTrue(data["product"]["canonical_main_promotion"])
@@ -482,7 +482,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "FACMAN-ULK-INTEGRATION-PROOF-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -610,6 +610,7 @@ class AideCompactionTests(unittest.TestCase):
         client_extraction = data["ulk_client_transport_extraction"]
         reference_extraction = data["ulk_reference_model_extraction"]
         module_decomposition = data["facman_application_module_decomposition"]
+        integration_proof = data["facman_ulk_integration_proof"]
         self.assertEqual(
             reference_extraction["universal_launcher_previous_revision"],
             client_extraction["universal_launcher_revision"],
@@ -639,6 +640,23 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(482, module_decomposition["local_python_test_count"])
         self.assertEqual("pass", module_decomposition["required_windows_package_proof"])
         self.assertFalse(module_decomposition["runtime_authority"])
+        self.assertEqual(
+            data["provider_pins"]["universal_launcher"]["revision"],
+            integration_proof["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            data["provider_pins"]["universal_setup"]["revision"],
+            integration_proof["universal_setup_revision"],
+        )
+        self.assertTrue(integration_proof["detached_source_worktrees"])
+        self.assertTrue(integration_proof["final_build_root_initially_absent"])
+        self.assertEqual(53, integration_proof["facman_native_test_count"])
+        self.assertEqual(486, integration_proof["facman_python_test_count"])
+        self.assertEqual("pass", integration_proof["windows_cli_package_proof"])
+        self.assertEqual("sha256_consistent", integration_proof["package_integrity"])
+        self.assertEqual("not_proven_unsigned", integration_proof["package_authenticity"])
+        self.assertFalse(integration_proof["canonical_main_promotion"])
+        self.assertFalse(integration_proof["runtime_authority"])
         self.assertEqual("1.3", m2_wu6["launcher_abi_version"])
         self.assertEqual("1.3", m2_wu6["facman_binding_abi_version"])
         self.assertTrue(m2_wu6["recovery_without_install_reference"])
@@ -845,15 +863,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-ulk-integration-proof",
+            "ignored-build-tree-cleanup",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "FACMAN-ULK-INTEGRATION-PROOF-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

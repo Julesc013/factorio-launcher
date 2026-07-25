@@ -55,6 +55,17 @@ class ComponentOwnershipTests(unittest.TestCase):
         ]
         self.assertFalse(component_ownership_check.is_covered("runtime/client", components))
 
+    def test_application_modules_are_factorio_owned_after_decomposition(self) -> None:
+        with component_ownership_check.MANIFEST.open("rb") as handle:
+            manifest = tomllib.load(handle)
+        application = next(
+            component
+            for component in manifest["component"]
+            if component["path"] == "runtime/factorio/application"
+        )
+        self.assertEqual(application["owner"], "factorio_binding")
+        self.assertNotIn("final_owner", application)
+
 
 if __name__ == "__main__":
     unittest.main()

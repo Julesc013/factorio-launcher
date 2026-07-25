@@ -183,11 +183,10 @@ def check(*, require_siblings: bool = False) -> list[str]:
             problems.append(f"unclassified runtime or contract component: {path}")
 
     expected_incubators = {
-        "runtime/client": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+        "runtime/client": "ULK-CPP-CLIENT-ADAPTER-EXTRACTION-01",
         "runtime/platform": "ULK-EXECUTION-FOUNDATION-EXTRACTION-01",
-        "runtime/workspace": "ULK-REFERENCE-MODEL-EXTRACTION-01",
-        "runtime/transaction": "ULK-REFERENCE-MODEL-EXTRACTION-01",
-        "runtime/factorio/application": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+        "runtime/workspace": "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01",
+        "runtime/transaction": "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01",
     }
     indexed = {
         str(component.get("path")): component
@@ -204,6 +203,11 @@ def check(*, require_siblings: bool = False) -> list[str]:
             problems.append(
                 f"{path} must remain an explicit Universal Launcher incubator"
             )
+    application = indexed.get("runtime/factorio/application", {})
+    if application.get("owner") != "factorio_binding":
+        problems.append(
+            "runtime/factorio/application must remain Factorio-owned after module decomposition"
+        )
     return problems
 
 
