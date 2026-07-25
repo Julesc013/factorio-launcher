@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01
 title: Enforce Universal dependency pins in local and package workflows
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-25T11:59:21Z
 owner: unassigned
 objective: >
@@ -61,3 +61,8 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-25T11:59:21Z
+verified_at: 2026-07-25T12:03:24Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-25T12:03:25Z
+closed_at: 2026-07-25T12:03:25Z

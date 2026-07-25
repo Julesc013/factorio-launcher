@@ -54,7 +54,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `local_dependency_pin_enforcement`. **Active WorkUnit:** `FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01`. **Next:** `ULK-CLIENT-TRANSPORT-EXTRACTION-01`.
+**Phase:** `ulk_client_transport_extraction`. **Active WorkUnit:** `ULK-CLIENT-TRANSPORT-EXTRACTION-01`. **Next:** `ULK-REFERENCE-MODEL-EXTRACTION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -64,7 +64,7 @@ M3 existing-portable adoption is authorised backlog after the playable alpha, no
 This reviewed and reproduced dev-integrated tree enumerates 125 commands, 295 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `instance_isolated_candidate_technical_pass_dependency_pin_enforcement_no_play_authority`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `instance_isolated_candidate_technical_pass_ulk_client_extraction_no_play_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

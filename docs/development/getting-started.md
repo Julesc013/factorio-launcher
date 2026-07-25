@@ -13,10 +13,15 @@ ctest --test-dir build/native-smoke -C Debug --output-on-failure
 py -3 tools/dev.py test --fast
 ```
 
+`doctor` requires both Universal repository `HEAD`s to match
+`release/index/workspace_lock.v1.toml`. It reports drift without checking out,
+switching, or otherwise aligning either dependency.
+
 The CLI is normally `build/native-smoke/Debug/facman.exe` on a multi-config
 Windows build and `build/native-smoke/facman` on a single-config Unix build.
 Use `tools/dev.py test --affected` while iterating and `verify-all` before a
-promotion handoff.
+promotion handoff. `verify-all` checks the pinned dependency revisions before
+building or running tests.
 
 Current project truth is generated into `.aide/memory/project-state.v2.json`.
 Run `py -3 tools/project_state.py --write` after changing its canonical inputs.

@@ -8,14 +8,15 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: local-dependency-pin-enforcement
+  phase: ulk-client-transport-extraction
   primary_goal: >
-    Reject local Universal Launcher or Universal Setup revisions that differ
-    from FacMan's workspace lock without changing dependency branches.
+    Move the frontend-neutral command client and transport contracts into
+    Universal Launcher and make FacMan consume the new pinned provider.
   next_task: >
-    Integrate read-only pin verification into workspace doctor, verify-all,
-    and package preflight; preserve InstanceSpec and menu as the default
-    without exposing Play; then begin the Universal Launcher client extraction.
+    Implement and independently validate ULK client, direct, process, and
+    daemon transport surfaces; preserve Factorio workspace resolution,
+    InstanceSpec, and menu as the default without exposing Play; then update
+    the FacMan workspace pin and integration proof.
   authoritative_command_slice:
     - installs.scan
     - installs.import

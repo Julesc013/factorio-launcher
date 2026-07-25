@@ -19,7 +19,9 @@ stay bounded and must not invoke the full strict chain indirectly.
 `verify-all` is the canonical exhaustive local gate: it builds the default
 native graph, runs all CTest and Python tests, then runs every strict validator.
 It is intentionally slower and is required before a WorkUnit closeout; a green
-fast run does not replace it.
+fast run does not replace it. The first gate is a read-only comparison of both
+Universal dependency `HEAD`s with the workspace lock; a mismatch stops the run
+without aligning branches.
 
 The affected map is `contracts/policy/test_impact.v1.json`. It selects focused
 native targets, Python modules, strict validators, and platform package lanes.

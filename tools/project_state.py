@@ -835,6 +835,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "current_gate_status": "instance_isolated_verdict_deferred_dependency_pin_enforcement_active",
         },
+        "ulk_client_transport_extraction": {
+            "checkpoint": "ulk-client-transport-extraction",
+            "active": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+            "last_closed": "FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01",
+            "next": "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "phase_status": "active",
+            "safety": "ulk_client_transport_extraction_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_technical_pass_ulk_client_extraction_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_ulk_client_transport_extraction_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_ulk_client_extraction_active",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",

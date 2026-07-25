@@ -196,6 +196,7 @@ def main() -> int:
     elif args.command == "package":
         package_command(args)
     else:
+        run([sys.executable, "tools/verify_dependency_revisions.py"])
         test_args = argparse.Namespace(mode="full", build_root=args.build_root, configuration=args.configuration)
         test_command(test_args)
         run([sys.executable, "tools/strict_check.py"])

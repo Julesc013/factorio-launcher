@@ -2,7 +2,9 @@
 
 1. Reconcile `.aide/memory/project-state.v2.json`, the roadmap, claim ledger,
    workspace lock, and release profile.
-2. Require a clean source tree and exact provider pins.
+2. Require a clean source tree and exact provider pins. Local package
+   preflight refuses mismatched Universal repository `HEAD`s before creating
+   or cleaning any package output.
 3. Run Debug and Release native tests, the full Python suite, strict/AIDE
    checks, required sanitizer/fuzz/coverage/ABI lanes, and every target package
    proof with zero required skips.
