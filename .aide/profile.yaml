@@ -8,17 +8,17 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: windows-instance-isolated-play-policy
+  phase: windows-instance-isolated-play-policy-closeout
   primary_goal: >
-    Freeze one truthful Windows normal-host instance-isolated Play claim from
-    the retained Verdict 03 evidence while preserving the distinct canonical
-    hermetic claim, InstanceSpec, InstanceBinding, exact permit scope, and all
-    current no-authority boundaries.
+    Preserve the reviewed Windows instance-isolated policy digest while the
+    no-authority checkpoint is promoted to canonical main and synchronized
+    back into dev.
   next_task: >
-    Define the exact FacMan-owned writable instance closure, immutable protected
-    software roots, disclosed OS/driver effects, observation requirements, and
-    Pass, Fail, and Inconclusive law. Do not change runtime, mutate the frozen
-    hermetic policy, execute Factorio, or promote a public route.
+    Promote the accepted policy-only dev checkpoint to main, synchronize main
+    ancestry back into dev without changing the accepted tree, and only then
+    activate the separately scoped implementation candidate bound to
+    InstanceSpec, InstanceBinding, and InstanceReadiness. Keep the later human
+    verdict separate and retain every no-authority boundary.
   authoritative_command_slice:
     - installs.scan
     - installs.import

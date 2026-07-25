@@ -538,9 +538,9 @@ def readme_status(data: dict[str, Any]) -> str:
         "Gate 3 exact permit infrastructure is closed with provider-side revalidation and no "
         "product issuance.",
         "Gates 0-3 are canonically promoted and dev-synchronized without "
-        "authority promotion. The active path now freezes the hermetic standalone Play-to-menu policy.",
-        "Gate 4A now has a digest-bound process-tree-hermetic Windows x64 / Factorio 2.0.77 policy "
-        "candidate; it adds no issuer, process route, real Play result, or authority.",
+        "authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.",
+        "The Windows instance-isolated policy is accepted on reviewed `dev` and awaits a "
+        "separate no-authority canonical promotion before its candidate may start.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -559,7 +559,8 @@ def roadmap_status(data: dict[str, Any]) -> str:
     first_step = (
         f"1. Complete `{active}`."
         if active else
-        "1. Freeze one independent real-Play gate policy and obtain explicit operator acknowledgement."
+        "1. Promote the accepted Windows instance-isolated policy to canonical `main`, "
+        "synchronize its ancestry into `dev`, and only then activate its exact candidate."
     )
     return "\n".join([
         "## Current Product Sequence",
@@ -570,7 +571,7 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
         "3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.",
         "4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.",
-        "5. Freeze `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01`, then implement and review its exact candidate; keep enforced hermetic and Steam-aware route qualifications independent.",
+        "5. Preserve the frozen `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01`, then implement and review its exact candidate after canonical synchronization; keep enforced hermetic and Steam-aware route qualifications independent.",
         "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
         "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
         "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
@@ -783,6 +784,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "truth_scope": "dev_integrated_postrun_repair_proven_instance_isolated_policy_active",
             "canonical_main_promotion": False,
             "current_gate_status": "postrun_repair_passed_instance_isolated_policy_active",
+        },
+        "windows_instance_isolated_play_policy_closeout": {
+            "checkpoint": "windows-instance-isolated-play-policy-closeout",
+            "active": "",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            "phase_status": "accepted_dev_pending_canonical_policy_promotion",
+            "safety": "normal_host_instance_isolated_policy_accepted_no_play_authority",
+            "execution_reason": "instance_isolated_policy_accepted_real_play_unproven",
+            "truth_scope": "dev_integrated_instance_isolated_policy_accepted_pending_canonical_promotion",
+            "canonical_main_promotion": False,
+            "current_gate_status": "instance_isolated_policy_accepted_pending_canonical_promotion",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -1296,10 +1309,37 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         )
     instance_isolated_policy = status.get("windows_instance_isolated_play_policy", {})
     expected_instance_isolated_policy = {
-        "status": "frozen_criteria_review_pending",
+        "status": "accepted_reviewed_dev_integration_pending_canonical_promotion",
         "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
         "source_repair": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
         "source_verdict": "Inconclusive",
+        "implementation_pull_request": 67,
+        "reviewed_head_revision": "c25491e5250f80d9b1f9813ddf37910315bcc96c",
+        "dev_integration_revision": "28495de937f1184dacc745f41dcac675756ef931",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_push_ci_run": "30144796327",
+        "exact_push_code_security_run": "30144796337",
+        "exact_push_schema_check_run": "30144796328",
+        "exact_push_security_policy_run": "30144796329",
+        "exact_head_ci_run": "30144805820",
+        "exact_head_code_security_run": "30144805795",
+        "exact_head_schema_check_run": "30144805851",
+        "exact_head_security_policy_run": "30144805806",
+        "exact_dev_ci_run": "30145199265",
+        "exact_dev_code_security_run": "30145199294",
+        "exact_dev_schema_check_run": "30145199268",
+        "exact_dev_security_policy_run": "30145199267",
+        "local_full_matrix": True,
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 455.2,
+        "native_test_count": 50,
+        "python_test_count": 466,
+        "python_expected_skips": 315,
+        "schema_count": 292,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 242,
         "policy_path": "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml",
         "policy_schema": "factorio.windows_instance_isolated_play_policy.v1",
         "policy_id": "facman.windows-instance-isolated-play.2.0.77.x64.v1",
