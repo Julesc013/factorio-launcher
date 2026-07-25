@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "canonical_instance_isolated_policy_dev_synchronized_candidate_active",
+            "canonical_instance_isolated_policy_candidate_technical_pass_pending_reviewed_integration",
             data["product"]["truth_scope"],
         )
         self.assertTrue(data["product"]["canonical_main_promotion"])

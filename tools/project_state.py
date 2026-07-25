@@ -118,6 +118,7 @@ def collect() -> dict[str, Any]:
         "hermetic_standalone_play_verdict": status["hermetic_standalone_play_verdict"],
         "gate4c_verdict03_postrun_repair": status["gate4c_verdict03_postrun_repair"],
         "windows_instance_isolated_play_policy": status["windows_instance_isolated_play_policy"],
+        "windows_instance_isolated_play_candidate": status["windows_instance_isolated_play_candidate"],
         "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -539,8 +540,9 @@ def readme_status(data: dict[str, Any]) -> str:
         "product issuance.",
         "Gates 0-3 are canonically promoted and dev-synchronized without "
         "authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.",
-        "The Windows instance-isolated policy is accepted on reviewed `dev` and awaits a "
-        "separate no-authority canonical promotion before its candidate may start.",
+        "The Windows instance-isolated policy is canonical and synchronized. Its exact "
+        "candidate is technically complete without a real Factorio run, human verdict, "
+        "public Play route, or authority promotion.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -802,12 +804,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
             "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
             "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01",
-            "phase_status": "active",
-            "safety": "canonical_instance_isolated_policy_candidate_active_no_play_authority",
-            "execution_reason": "instance_isolated_candidate_not_yet_implemented_or_executed",
-            "truth_scope": "canonical_instance_isolated_policy_dev_synchronized_candidate_active",
+            "phase_status": "implementation_complete_pending_closeout",
+            "safety": "instance_isolated_candidate_technical_pass_no_play_authority",
+            "execution_reason": "instance_isolated_candidate_technically_complete_not_executed_or_human_reviewed",
+            "truth_scope": "canonical_instance_isolated_policy_candidate_technical_pass_pending_reviewed_integration",
             "canonical_main_promotion": True,
-            "current_gate_status": "instance_isolated_candidate_active",
+            "current_gate_status": "instance_isolated_candidate_technical_pass_pending_reviewed_integration",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -1430,6 +1432,59 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "Windows instance-isolated Play policy truth must bind the exact "
             "normal-host claim, keep protected software immutable, disclose "
             "OS/driver effects, and remain policy-only and non-authoritative"
+        )
+    instance_isolated_candidate = status.get(
+        "windows_instance_isolated_play_candidate", {}
+    )
+    expected_instance_isolated_candidate = {
+        "status": "implementation_complete_pending_reviewed_integration",
+        "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+        "policy_id": "facman.windows-instance-isolated-play.2.0.77.x64.v1",
+        "policy_digest": "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
+        "claim_id": "factorio.windows_instance_isolated_process_tree.v1",
+        "candidate_class": "Windows x64 Factorio 2.0.77 standalone non-Steam menu",
+        "isolation_mode": "instance_isolated",
+        "candidate_provider_revision": "windows-instance-isolated-play-candidate.v1",
+        "observer_provider_revision": "gate4c-etw-file-registry-process.v6",
+        "process_environment_revision": "factorio.menu-minimal.v2",
+        "root_authority": "stable_no_follow_instance_directory_object",
+        "writable_resource_count": 7,
+        "protected_resource_count": 12,
+        "required_evidence_binding_count": 35,
+        "external_effect_class_count": 7,
+        "expected_external_disclosures": [
+            "windows.bam.factorio_process_execution.v1"
+        ],
+        "directinput_disabled": True,
+        "provider_revalidation_immediately_before_process": True,
+        "permit_consumption_immediately_before_process": True,
+        "unresolved_or_gap_disposition": "Inconclusive",
+        "wrong_identity_or_protected_write_disposition": "Fail",
+        "technical_disposition": "eligible_for_human_verdict",
+        "local_msvc_native_test_count": 50,
+        "focused_python_test_count": 25,
+        "full_python_test_count": 471,
+        "python_expected_skip_count": 315,
+        "schema_count": 295,
+        "human_verdict": "unset",
+        "real_factorio_execution": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if instance_isolated_candidate != expected_instance_isolated_candidate:
+        problems.append(
+            "Windows instance-isolated Play candidate truth must bind the exact "
+            "policy, stable Instance authority, closed evidence taxonomy, local "
+            "technical disposition, and no-authority boundary"
         )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {
@@ -2354,6 +2409,9 @@ def summary(data: dict[str, Any]) -> str:
         f"Gate 4B hermetic Play candidate: "
         f"{data['hermetic_standalone_play_candidate']['technical_disposition']} "
         f"({data['hermetic_standalone_play_candidate']['dev_integration_revision']})",
+        f"Instance-isolated Play candidate: "
+        f"{data['windows_instance_isolated_play_candidate']['technical_disposition']} "
+        f"({data['windows_instance_isolated_play_candidate']['status']})",
         f"golden_journey: {data['product']['golden_journey']}",
         f"playability: {data['readiness']['playability']}",
         f"execution: {data['execution']['status']} ({data['execution']['reason']})",

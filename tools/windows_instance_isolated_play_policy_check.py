@@ -633,9 +633,12 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
     product = status.get("product", {})
     if (
         product.get("truth_scope")
-        != "canonical_instance_isolated_policy_dev_synchronized_candidate_active"
+        != "canonical_instance_isolated_policy_candidate_technical_pass_pending_reviewed_integration"
     ):
-        problems.append("project truth must record canonical policy synchronization and candidate activation")
+        problems.append(
+            "project truth must record canonical policy synchronization and "
+            "the candidate technical pass pending reviewed integration"
+        )
     if product.get("canonical_main_promotion") is not True:
         problems.append("project truth must explicitly record policy-only canonical main promotion")
     if "canonical_integration" in product:

@@ -237,6 +237,195 @@ const FileIdentity& StableInputFile::identity() const noexcept { return impl_->i
 std::uint64_t StableInputFile::size() const noexcept { return impl_->identity.size; }
 bool StableInputFile::open() const noexcept { return impl_ && impl_->handle != kInvalidHandle; }
 
+struct StableDirectoryObject::Impl {
+    NativeHandle handle = kInvalidHandle;
+    PathIdentity identity;
+    std::filesystem::path path;
+};
+
+StableDirectoryObject::StableDirectoryObject() : impl_(std::make_unique<Impl>()) {}
+StableDirectoryObject::StableDirectoryObject(StableDirectoryObject&&) noexcept = default;
+StableDirectoryObject& StableDirectoryObject::operator=(StableDirectoryObject&&) noexcept = default;
+
+StableDirectoryObject::~StableDirectoryObject()
+{
+#ifdef _WIN32
+    if (impl_ && impl_->handle != kInvalidHandle) CloseHandle(impl_->handle);
+#else
+    if (impl_ && impl_->handle != kInvalidHandle) ::close(impl_->handle);
+#endif
+}
+
+IoStatus StableDirectoryObject::open_no_follow(const std::filesystem::path& path)
+{
+    if (!impl_ || impl_->handle != kInvalidHandle) {
+        return IoStatus::failure("directory_object_already_open", path_to_utf8(path));
+    }
+    std::error_code absolute_error;
+    const std::filesystem::path absolute =
+        std::filesystem::absolute(path, absolute_error).lexically_normal();
+    if (absolute_error || absolute.empty()) {
+        return IoStatus::failure("directory_object_path_invalid", path_to_utf8(path));
+    }
+#ifdef _WIN32
+    const std::wstring native_path = windows_extended_path(absolute);
+    impl_->handle = CreateFileW(
+        native_path.c_str(), FILE_READ_ATTRIBUTES | FILE_LIST_DIRECTORY,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        nullptr, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (impl_->handle == kInvalidHandle) {
+        return IoStatus::failure(
+            "directory_object_open_failed", windows_error("CreateFileW"));
+    }
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(impl_->handle, &info)) {
+        const std::string detail = windows_error("GetFileInformationByHandle");
+        CloseHandle(impl_->handle);
+        impl_->handle = kInvalidHandle;
+        return IoStatus::failure("directory_object_identity_failed", detail);
+    }
+    impl_->identity = path_identity_from_info(absolute, impl_->handle, info);
+#else
+    impl_->handle =
+        ::open(absolute.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (impl_->handle == kInvalidHandle) {
+        return IoStatus::failure("directory_object_open_failed", std::strerror(errno));
+    }
+    struct stat info {};
+    if (::fstat(impl_->handle, &info) != 0) {
+        const std::string detail = std::strerror(errno);
+        ::close(impl_->handle);
+        impl_->handle = kInvalidHandle;
+        return IoStatus::failure("directory_object_identity_failed", detail);
+    }
+    impl_->identity = path_identity_from_stat(info);
+#endif
+    if (!impl_->identity.exists ||
+        impl_->identity.kind != PathObjectKind::directory ||
+        impl_->identity.reparse_or_link) {
+#ifdef _WIN32
+        CloseHandle(impl_->handle);
+#else
+        ::close(impl_->handle);
+#endif
+        impl_->handle = kInvalidHandle;
+        impl_->identity = {};
+        return IoStatus::failure(
+            "directory_object_not_plain_directory", path_to_utf8(absolute));
+    }
+    impl_->path = absolute;
+    return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::revalidate() const
+{
+    if (!open()) return IoStatus::failure("directory_object_not_open", "");
+    PathIdentity held;
+#ifdef _WIN32
+    BY_HANDLE_FILE_INFORMATION info {};
+    if (!GetFileInformationByHandle(impl_->handle, &info)) {
+        return IoStatus::failure(
+            "directory_object_revalidate_failed",
+            windows_error("GetFileInformationByHandle"));
+    }
+    held = path_identity_from_info(impl_->path, impl_->handle, info);
+#else
+    struct stat info {};
+    if (::fstat(impl_->handle, &info) != 0) {
+        return IoStatus::failure(
+            "directory_object_revalidate_failed", std::strerror(errno));
+    }
+    held = path_identity_from_stat(info);
+#endif
+    if (!held.same_object(impl_->identity) ||
+        held.kind != PathObjectKind::directory ||
+        held.reparse_or_link) {
+        return IoStatus::failure(
+            "directory_object_handle_identity_changed", path_to_utf8(impl_->path));
+    }
+    PathIdentity current;
+    const IoStatus observed = inspect_path_no_follow(impl_->path, current);
+    if (!observed.ok()) return observed;
+    if (!current.same_object(impl_->identity) ||
+        current.kind != PathObjectKind::directory ||
+        current.reparse_or_link) {
+        return IoStatus::failure(
+            "directory_object_path_identity_changed", path_to_utf8(impl_->path));
+    }
+    return IoStatus::success();
+}
+
+IoStatus StableDirectoryObject::validate_descendant(
+    const std::filesystem::path& path,
+    bool allow_absent_leaf) const
+{
+    const IoStatus before = revalidate();
+    if (!before.ok()) return before;
+    std::error_code absolute_error;
+    const std::filesystem::path absolute =
+        std::filesystem::absolute(path, absolute_error).lexically_normal();
+    if (absolute_error || absolute.empty()) {
+        return IoStatus::failure("directory_descendant_path_invalid", path_to_utf8(path));
+    }
+    const std::filesystem::path relative = absolute.lexically_relative(impl_->path);
+    if (relative.empty() || relative.is_absolute()) {
+        return IoStatus::failure(
+            "directory_descendant_escape", path_to_utf8(absolute));
+    }
+    const std::string relative_text = relative.generic_string();
+    if (relative_text == ".." || relative_text.rfind("../", 0U) == 0U) {
+        return IoStatus::failure(
+            "directory_descendant_escape", path_to_utf8(absolute));
+    }
+    std::filesystem::path current = impl_->path;
+    std::size_t index = 0U;
+    const std::size_t component_count =
+        static_cast<std::size_t>(std::distance(relative.begin(), relative.end()));
+    for (const auto& component : relative) {
+        if (component == "." || component.empty()) continue;
+        if (component == "..") {
+            return IoStatus::failure(
+                "directory_descendant_escape", path_to_utf8(absolute));
+        }
+        current /= component;
+        PathIdentity identity;
+        const IoStatus observed = inspect_path_no_follow(current, identity);
+        if (!observed.ok()) return observed;
+        const bool final_component = ++index == component_count;
+        if (!identity.exists) {
+            if (allow_absent_leaf && final_component) break;
+            return IoStatus::failure(
+                "directory_descendant_missing", path_to_utf8(current));
+        }
+        if (identity.reparse_or_link || identity.kind == PathObjectKind::other) {
+            return IoStatus::failure(
+                "directory_descendant_reparse_refused", path_to_utf8(current));
+        }
+        if (!final_component && identity.kind != PathObjectKind::directory) {
+            return IoStatus::failure(
+                "directory_descendant_ancestor_not_directory", path_to_utf8(current));
+        }
+    }
+    return revalidate();
+}
+
+const PathIdentity& StableDirectoryObject::identity() const noexcept
+{
+    return impl_->identity;
+}
+
+const std::filesystem::path& StableDirectoryObject::path() const noexcept
+{
+    return impl_->path;
+}
+
+bool StableDirectoryObject::open() const noexcept
+{
+    return impl_ && impl_->handle != kInvalidHandle;
+}
+
 struct DurableOutputFile::Impl {
     NativeHandle handle = kInvalidHandle;
     std::filesystem::path path;

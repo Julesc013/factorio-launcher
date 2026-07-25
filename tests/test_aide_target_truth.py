@@ -60,7 +60,7 @@ native_direction:
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
         self.assertIn(
-            "phase: windows_instance_isolated_play_candidate (active)",
+            "phase: windows_instance_isolated_play_candidate (implementation_complete_pending_closeout)",
             text,
         )
         self.assertIn(
@@ -75,6 +75,10 @@ native_direction:
         self.assertIn("hermetic=unproven", text)
         self.assertIn("Gate 4A hermetic Play policy", text)
         self.assertIn("Gate 4B hermetic Play candidate: eligible_for_human_verdict", text)
+        self.assertIn(
+            "Instance-isolated Play candidate: eligible_for_human_verdict",
+            text,
+        )
 
     def test_claim_ledger_rejects_stable_abi_promotion(self) -> None:
         problems = aide_target_truth_check.validate_claim_ledger_text(

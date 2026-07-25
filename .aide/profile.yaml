@@ -10,16 +10,14 @@ purpose: >
 current_focus:
   phase: windows-instance-isolated-play-candidate
   primary_goal: >
-    Implement the exact Windows instance-isolated candidate against the
-    canonically frozen policy without broadening the claim, exposing public
-    Play, or recording the separate human verdict.
+    Close the technically complete exact Windows instance-isolated candidate
+    against the canonically frozen policy without broadening the claim,
+    exposing public Play, or recording the separate human verdict.
   next_task: >
-    Bind one Windows x64 Factorio 2.0.77 standalone non-Steam menu candidate
-    to the accepted InstanceSpec, InstanceBinding, and InstanceReadiness plus
-    the exact Instance closure, installation, plan, permit, providers,
-    protected roots, external-effect taxonomy, and observer evidence. Keep
-    menu as the default and only candidate intent, retain every no-authority
-    boundary, and keep the later human verdict separate.
+    Preserve the candidate's exact InstanceSpec, InstanceBinding, Instance
+    closure, installation, plan, permit, provider, protected-root,
+    external-effect, and observer bindings; finish local truth and validation
+    closeout; and keep the later real-product verdict separate.
   authoritative_command_slice:
     - installs.scan
     - installs.import

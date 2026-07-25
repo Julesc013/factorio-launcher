@@ -398,8 +398,13 @@
     },
     {
       "claim": "Windows instance-isolated Play policy",
-      "level": "frozen criteria under review",
-      "limitation": "BAM only; no candidate, execution, verdict, route, or authority"
+      "level": "canonical and dev-synchronized",
+      "limitation": "BAM only; no execution, verdict, route, or authority"
+    },
+    {
+      "claim": "Windows instance-isolated Play candidate",
+      "level": "local technical pass pending review",
+      "limitation": "no real Factorio run, human verdict, public route, or authority"
     },
     {
       "claim": "Package hashes authenticate publisher",
@@ -437,7 +442,7 @@
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 292
+    "schemas": 295
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -453,7 +458,7 @@
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
-    "current_gate_status": "instance_isolated_candidate_active",
+    "current_gate_status": "instance_isolated_candidate_technical_pass_pending_reviewed_integration",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -461,7 +466,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "instance_isolated_candidate_not_yet_implemented_or_executed",
+    "reason": "instance_isolated_candidate_technically_complete_not_executed_or_human_reviewed",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -1127,7 +1132,7 @@
     "Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.",
     "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
     "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
-    "The Windows instance-isolated policy is canonical and synchronized; its exact candidate is active but not yet implemented or executed.",
+    "The Windows instance-isolated policy is canonical and synchronized; its exact candidate is technically complete without a real Factorio run or human verdict.",
     "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
@@ -2037,11 +2042,11 @@
     "m3_disposition": "authorized_backlog_after_playable_alpha",
     "next_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01",
     "phase": "windows_instance_isolated_play_candidate",
-    "phase_status": "active",
+    "phase_status": "implementation_complete_pending_closeout",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "canonical_instance_isolated_policy_dev_synchronized_candidate_active"
+    "truth_scope": "canonical_instance_isolated_policy_candidate_technical_pass_pending_reviewed_integration"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -2095,7 +2100,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "canonical_instance_isolated_policy_candidate_active_no_play_authority",
+    "safety_authority": "instance_isolated_candidate_technical_pass_no_play_authority",
     "user_validation": "not_started",
     "user_workflow": "advanced_command_surface_only"
   },
@@ -2142,6 +2147,50 @@
     "release_policy_run": "29299286894",
     "schema_check_run": "29297933368",
     "security_policy_run": "29299245082"
+  },
+  "windows_instance_isolated_play_candidate": {
+    "authority_promotion": false,
+    "candidate_class": "Windows x64 Factorio 2.0.77 standalone non-Steam menu",
+    "candidate_provider_revision": "windows-instance-isolated-play-candidate.v1",
+    "canonical_main_promotion": false,
+    "claim_id": "factorio.windows_instance_isolated_process_tree.v1",
+    "credential_authority": false,
+    "directinput_disabled": true,
+    "expected_external_disclosures": [
+      "windows.bam.factorio_process_execution.v1"
+    ],
+    "external_effect_class_count": 7,
+    "focused_python_test_count": 25,
+    "full_python_test_count": 471,
+    "host_mutation_authority": false,
+    "human_verdict": "unset",
+    "isolation_mode": "instance_isolated",
+    "local_msvc_native_test_count": 50,
+    "network_authority": false,
+    "observer_provider_revision": "gate4c-etw-file-registry-process.v6",
+    "permit_consumption_immediately_before_process": true,
+    "playability_promotion": false,
+    "policy_digest": "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
+    "policy_id": "facman.windows-instance-isolated-play.2.0.77.x64.v1",
+    "process_environment_revision": "factorio.menu-minimal.v2",
+    "product_permit_issuance": false,
+    "protected_resource_count": 12,
+    "provider_revalidation_immediately_before_process": true,
+    "public_command": false,
+    "publication": false,
+    "python_expected_skip_count": 315,
+    "real_factorio_execution": false,
+    "required_evidence_binding_count": 35,
+    "root_authority": "stable_no_follow_instance_directory_object",
+    "schema_count": 295,
+    "setup_authority": false,
+    "signing": false,
+    "status": "implementation_complete_pending_reviewed_integration",
+    "technical_disposition": "eligible_for_human_verdict",
+    "unresolved_or_gap_disposition": "Inconclusive",
+    "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+    "writable_resource_count": 7,
+    "wrong_identity_or_protected_write_disposition": "Fail"
   },
   "windows_instance_isolated_play_policy": {
     "authority_promotion": false,

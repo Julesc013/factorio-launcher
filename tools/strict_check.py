@@ -39,6 +39,7 @@ from tools import (
     gate4c_privilege_separation_check,
     hermetic_play_policy_check,
     hermetic_play_candidate_check,
+    instance_isolated_play_candidate_check,
     instance_lifecycle_check,
     instance_model_check,
     snapshot_lifecycle_check,
@@ -132,6 +133,10 @@ def main() -> int:
             windows_instance_isolated_play_policy_check.main,
         ),
         ("hermetic-play-candidate", hermetic_play_candidate_check.main),
+        (
+            "instance-isolated-play-candidate",
+            instance_isolated_play_candidate_check.main,
+        ),
         ("instance-lifecycle", instance_lifecycle_check.main),
         ("instance-model", instance_model_check.main),
         ("snapshot-lifecycle", snapshot_lifecycle_check.main),

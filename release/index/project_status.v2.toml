@@ -20,7 +20,7 @@ known_blockers = [
   "Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.",
   "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
   "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
-  "The Windows instance-isolated policy is canonical and synchronized; its exact candidate is active but not yet implemented or executed.",
+  "The Windows instance-isolated policy is canonical and synchronized; its exact candidate is technically complete without a real Factorio run or human verdict.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -41,7 +41,7 @@ quarantined_capabilities = [
 
 [product]
 phase = "windows_instance_isolated_play_candidate"
-phase_status = "active"
+phase_status = "implementation_complete_pending_closeout"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
@@ -51,14 +51,14 @@ next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "canonical_instance_isolated_policy_dev_synchronized_candidate_active"
+truth_scope = "canonical_instance_isolated_policy_candidate_technical_pass_pending_reviewed_integration"
 canonical_main_promotion = true
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "canonical_instance_isolated_policy_candidate_active_no_play_authority"
+safety_authority = "instance_isolated_candidate_technical_pass_no_play_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -568,6 +568,48 @@ public_command = false
 product_permit_issuance = false
 canonical_main_promotion = true
 authority_promotion = false
+
+[windows_instance_isolated_play_candidate]
+status = "implementation_complete_pending_reviewed_integration"
+work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01"
+policy_id = "facman.windows-instance-isolated-play.2.0.77.x64.v1"
+policy_digest = "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432"
+claim_id = "factorio.windows_instance_isolated_process_tree.v1"
+candidate_class = "Windows x64 Factorio 2.0.77 standalone non-Steam menu"
+isolation_mode = "instance_isolated"
+candidate_provider_revision = "windows-instance-isolated-play-candidate.v1"
+observer_provider_revision = "gate4c-etw-file-registry-process.v6"
+process_environment_revision = "factorio.menu-minimal.v2"
+root_authority = "stable_no_follow_instance_directory_object"
+writable_resource_count = 7
+protected_resource_count = 12
+required_evidence_binding_count = 35
+external_effect_class_count = 7
+expected_external_disclosures = ["windows.bam.factorio_process_execution.v1"]
+directinput_disabled = true
+provider_revalidation_immediately_before_process = true
+permit_consumption_immediately_before_process = true
+unresolved_or_gap_disposition = "Inconclusive"
+wrong_identity_or_protected_write_disposition = "Fail"
+technical_disposition = "eligible_for_human_verdict"
+local_msvc_native_test_count = 50
+focused_python_test_count = 25
+full_python_test_count = 471
+python_expected_skip_count = 315
+schema_count = 295
+human_verdict = "unset"
+real_factorio_execution = false
+public_command = false
+product_permit_issuance = false
+setup_authority = false
+credential_authority = false
+network_authority = false
+host_mutation_authority = false
+authority_promotion = false
+playability_promotion = false
+canonical_main_promotion = false
+signing = false
+publication = false
 
 [gate4c_privilege_separation_repair]
 status = "accepted_closed_reviewed_dev_integration"
@@ -1586,7 +1628,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "instance_isolated_candidate_not_yet_implemented_or_executed"
+reason = "instance_isolated_candidate_technically_complete_not_executed_or_human_reviewed"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1594,7 +1636,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "instance_isolated_candidate_active"
+current_gate_status = "instance_isolated_candidate_technical_pass_pending_reviewed_integration"
 
 [release]
 status = "unpublished"

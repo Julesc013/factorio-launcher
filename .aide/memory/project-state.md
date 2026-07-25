@@ -6,7 +6,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Current product truth
 
-- phase: `windows_instance_isolated_play_candidate` / `active`;
+- phase: `windows_instance_isolated_play_candidate` / `implementation_complete_pending_closeout`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
@@ -14,7 +14,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - active WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`;
 - next WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `canonical_instance_isolated_policy_dev_synchronized_candidate_active`; canonical main promotion: `true`; local counts promoted: `true`;
+- truth scope: `canonical_instance_isolated_policy_candidate_technical_pass_pending_reviewed_integration`; canonical main promotion: `true`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -22,7 +22,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `instance_isolated_candidate_not_yet_implemented_or_executed`;
+- execution: `unavailable` / `instance_isolated_candidate_technically_complete_not_executed_or_human_reviewed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
@@ -30,7 +30,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 - playability: `not_yet_playable`;
 - user workflow: `advanced_command_surface_only`;
-- safety authority: `canonical_instance_isolated_policy_candidate_active_no_play_authority`;
+- safety authority: `instance_isolated_candidate_technical_pass_no_play_authority`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -102,7 +102,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `292` / `242`;
+- schemas / refusal codes: `295` / `242`;
 - command catalog digest: `4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
@@ -130,7 +130,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.
 - The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.
 - Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.
-- The Windows instance-isolated policy is canonical and synchronized; its exact candidate is active but not yet implemented or executed.
+- The Windows instance-isolated policy is canonical and synchronized; its exact candidate is technically complete without a real Factorio run or human verdict.
 - The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
