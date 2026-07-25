@@ -36,7 +36,7 @@ roots:
     def test_profile_evidence_authorities_exist(self) -> None:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
-        self.assertIn("phase: facman-application-module-decomposition", text)
+        self.assertIn("phase: facman-ulk-integration-proof", text)
         self.assertIn("InstanceSpec", text)
         self.assertIn("menu as the default", text)
         self.assertNotIn("portable WorldSpec", text)

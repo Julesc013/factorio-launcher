@@ -482,7 +482,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -845,15 +845,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-application-module-decomposition",
+            "facman-ulk-integration-proof",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "FACMAN-ULK-INTEGRATION-PROOF-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

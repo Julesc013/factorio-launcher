@@ -11,7 +11,8 @@ current_focus:
   phase: facman-ulk-integration-proof
   primary_goal: >
     Reconstruct the exact pinned three-repository product train and prove its
-    source boundaries, native behavior, installed package, and local workflow.
+    source boundaries, native behavior, installed package, and local workflow
+    while preserving the Factorio-owned InstanceSpec.
   next_task: >
     Run provider and consumer validation in clean task-owned roots, verify
     exact dependency revisions and branch governance, then record one bounded
