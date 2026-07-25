@@ -6,13 +6,13 @@ leaving setup mutation to Universal Setup.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **windows_instance_isolated_play_policy_closeout** and no authority-gate WorkUnit is active.
+The active phase is **windows_instance_isolated_play_candidate** and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`.
 
-1. Promote the accepted Windows instance-isolated policy to canonical `main`, synchronize its ancestry into `dev`, and only then activate its exact candidate.
+1. Complete `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`.
 2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.
 3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.
 4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.
-5. Preserve the frozen `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01`, then implement and review its exact candidate after canonical synchronization; keep enforced hermetic and Steam-aware route qualifications independent.
+5. Implement and review `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01` against the canonically synchronized frozen policy; keep the human verdict, enforced hermetic route, and Steam-aware qualification independent.
 6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.
 7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.
 8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.
