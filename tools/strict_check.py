@@ -82,6 +82,7 @@ from tools import (
     workspace_contract_check,
     workspace_resolver_check,
     workspace_store_check,
+    windows_instance_isolated_play_policy_check,
     version_truth_check,
 )
 
@@ -126,6 +127,10 @@ def main() -> int:
         ("gui-surface", gui_surface_check.main),
         ("gate4c-privilege-separation", gate4c_privilege_separation_check.main),
         ("hermetic-play-policy", hermetic_play_policy_check.main),
+        (
+            "windows-instance-isolated-play-policy",
+            windows_instance_isolated_play_policy_check.main,
+        ),
         ("hermetic-play-candidate", hermetic_play_candidate_check.main),
         ("instance-lifecycle", instance_lifecycle_check.main),
         ("instance-model", instance_model_check.main),

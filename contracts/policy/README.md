@@ -23,6 +23,25 @@ criteria.
 closed sets, canonical policy digest, and false authority claims. The frozen
 policy adds no command, issuer, process route, or runtime authority.
 
+## Windows instance-isolated Play
+
+`factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml`
+freezes the separate normal-host claim. It binds the complete exact
+FacMan-owned Instance directory object and safe descendants as writable while
+keeping installations, sibling Instances, global Factorio data, Steam, source
+artifacts, and package state immutable.
+
+The policy uses a closed seven-class effect taxonomy. Its only initial
+external disclosure is the exact Windows BAM process-execution value for the
+bound Factorio executable. DirectInput and NVIDIA effects are not
+whitelisted. External effects remain machine-owned observations and never
+become permit resources.
+
+`tools/windows_instance_isolated_play_policy_check.py` validates the canonical
+digest, retained Verdict 03 inventory, object-identity resource law, exact BAM
+selector, observation and verdict law, unchanged Gate 4A policy bytes, and
+false authority claims.
+
 ## Effects
 
 `effects.v1.toml` is the shared risk vocabulary for command contracts. Every
