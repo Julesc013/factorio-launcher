@@ -8,14 +8,13 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: ignored-build-tree-cleanup
+  phase: targeted-extraction-complete
   primary_goal: >
-    Remove only the two inventoried ignored Universal build roots and preserve
-    clean source repositories, exact dependency pins, and Factorio InstanceSpec.
+    Preserve the completed targeted cross-repository refactor, clean pinned
+    source train, and Factorio InstanceSpec while runtime authority remains closed.
   next_task: >
-    Verify exact paths, ignore status, size, and repository cleanliness before
-    removal; then prove the source roots remain intact and direct future builds
-    to task-owned E:\Temporary\FacMan roots.
+    Start a separately reviewed Windows instance-isolated Play revalidation
+    WorkUnit against the extracted Universal Launcher contracts.
   authoritative_command_slice:
     - installs.scan
     - installs.import

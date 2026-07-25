@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "ignored-build-tree-cleanup",
+            "targeted-extraction-complete",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,11 +101,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "instance_isolated_candidate_technical_pass_historical_revalidation_required_ignored_build_tree_cleanup_active",
+            "instance_isolated_candidate_technical_pass_targeted_extraction_program_complete_revalidation_pending",
             data["product"]["truth_scope"],
         )
         self.assertTrue(data["product"]["canonical_main_promotion"])
@@ -482,7 +482,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -863,15 +863,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "ignored-build-tree-cleanup",
+            "targeted-extraction-complete",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

@@ -899,6 +899,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "current_gate_status": "instance_isolated_verdict_deferred_ignored_build_tree_cleanup_active",
         },
+        "targeted_extraction_complete": {
+            "checkpoint": "targeted-extraction-complete",
+            "active": "",
+            "last_closed": "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "phase_status": "checkpoint",
+            "safety": "targeted_refactoring_complete_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_after_targeted_extraction_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_targeted_extraction_program_complete_revalidation_pending",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_candidate_revalidation_next_operator_workunit",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",

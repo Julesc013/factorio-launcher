@@ -127,6 +127,7 @@ def validate_profile_text(text: str) -> list[str]:
         "facman-application-module-decomposition",
         "facman-ulk-integration-proof",
         "ignored-build-tree-cleanup",
+        "targeted-extraction-complete",
         "gate4c-privilege-separation-repair",
     }
     if phase not in allowed_phases:

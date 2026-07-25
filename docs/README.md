@@ -41,6 +41,7 @@ Architecture:
 Development:
 
 - [Getting Started](development/getting-started.md)
+- [Build Root Hygiene](development/build-root-hygiene.md)
 - [Testing](development/testing.md)
 - [Repository Branch Governance](development/repository-branch-governance.md)
 
