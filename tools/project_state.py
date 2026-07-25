@@ -120,6 +120,7 @@ def collect() -> dict[str, Any]:
         "windows_instance_isolated_play_policy": status["windows_instance_isolated_play_policy"],
         "windows_instance_isolated_play_candidate": status["windows_instance_isolated_play_candidate"],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
+        "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -860,6 +861,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "current_gate_status": "instance_isolated_verdict_deferred_ulk_reference_model_extraction_active",
         },
+        "facman_application_module_decomposition": {
+            "checkpoint": "facman-application-module-decomposition",
+            "active": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "last_closed": "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "next": "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "phase_status": "active",
+            "safety": "application_module_decomposition_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_application_module_decomposition_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_application_module_decomposition_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_application_module_decomposition_active",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1567,6 +1580,45 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "ULK client transport extraction truth must bind the exact provider "
             "revision and ABI, preserve FacMan adapters, require candidate "
             "revalidation, and grant no runtime authority"
+        )
+    ulk_reference_model = status.get("ulk_reference_model_extraction", {})
+    expected_ulk_reference_model = {
+        "status": "provider_implemented_facman_integration_active",
+        "work_unit": "ULK-REFERENCE-MODEL-EXTRACTION-01",
+        "universal_launcher_previous_revision": "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
+        "universal_launcher_revision": "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+        "launcher_abi_version": "1.5",
+        "reference_contract": "ulk.reference_graph.v1",
+        "record_contracts": [
+            "ulk.product_reference.v1",
+            "ulk.install_reference.v2",
+            "ulk.instance_reference.v2",
+            "ulk.profile_reference.v2",
+            "ulk.artifact_set_reference.v1",
+            "ulk.launch_plan_reference.v2",
+        ],
+        "identity_mismatch_disposition": "invalid",
+        "revision_drift_disposition": "valid_but_stale",
+        "provider_strict_validation": "pass",
+        "provider_python_test_count": 7,
+        "provider_native_test_count": 4,
+        "facman_integration_validation": "pass",
+        "facman_native_test_count": 52,
+        "facman_python_test_count": 482,
+        "facman_python_expected_skip_count": 30,
+        "factorio_workspace_composition_owner": "factorio_binding",
+        "reference_persistence_implemented": False,
+        "candidate_revalidation_required": True,
+        "real_factorio_execution": False,
+        "public_command": False,
+        "runtime_authority": False,
+        "authority_promotion": False,
+    }
+    if ulk_reference_model != expected_ulk_reference_model:
+        problems.append(
+            "ULK reference-model extraction truth must bind the exact provider "
+            "revision and ABI, separate invalid identity from stale revisions, "
+            "retain Factorio composition, and grant no runtime authority"
         )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {

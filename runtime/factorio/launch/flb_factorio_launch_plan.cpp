@@ -6,6 +6,7 @@
 #include "fl_json.h"
 #include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
+#include "ulk/ulk_reference_model.h"
 
 #include <algorithm>
 #include <chrono>
@@ -115,6 +116,139 @@ struct IsolationAssessment {
     bool strict_execution_eligible = false;
     std::string strict_refusal_code;
 };
+
+ulk_string_view reference_view(const std::string& value)
+{
+    return {value.data(), static_cast<ulk_size>(value.size())};
+}
+
+ulk_install_ownership_v1 reference_ownership(const std::string& ownership)
+{
+    if (ownership == "managed") return ULK_INSTALL_OWNERSHIP_MANAGED;
+    if (ownership == "foreign" || ownership == "foreign_owned" ||
+        ownership == "foreign-owned") {
+        return ULK_INSTALL_OWNERSHIP_FOREIGN_OWNED;
+    }
+    return ULK_INSTALL_OWNERSHIP_IMPORTED;
+}
+
+ulk_install_lifecycle_v1 reference_lifecycle(const std::string& lifecycle)
+{
+    if (lifecycle == "verification_failed") {
+        return ULK_INSTALL_LIFECYCLE_VERIFICATION_FAILED;
+    }
+    if (lifecycle == "recovery_required") {
+        return ULK_INSTALL_LIFECYCLE_RECOVERY_REQUIRED;
+    }
+    if (lifecycle == "retired") return ULK_INSTALL_LIFECYCLE_RETIRED;
+    if (lifecycle == "uninstalled") return ULK_INSTALL_LIFECYCLE_UNINSTALLED;
+    return ULK_INSTALL_LIFECYCLE_ACTIVE;
+}
+
+enum class ReferenceProjectionStatus {
+    not_bound,
+    fresh,
+    stale,
+    invalid,
+};
+
+ReferenceProjectionStatus validate_reference_projection(
+    const InstanceLaunchRef& instance,
+    const InstallLaunchRef& install,
+    const std::string& command
+)
+{
+    if (
+        instance.product_id.empty() ||
+        instance.install_id.empty() ||
+        instance.binding_revision.empty() ||
+        install.product_id.empty() ||
+        install.install_id.empty() ||
+        install.exact_product_version.empty() ||
+        install.last_verification_identity.empty() ||
+        install.state_revision.empty()
+    ) {
+        return ReferenceProjectionStatus::not_bound;
+    }
+
+    const std::string entrypoint = path_string(install.executable);
+    const std::string capabilities = "[]";
+    const std::string binding_id = "flb.factorio";
+    const std::string plan_id = command + "." + instance.instance_id;
+    const std::string composition_digest =
+        instance.binding_revision + ":" + install.state_revision;
+    ulk_product_ref_v1 product {
+        sizeof(ulk_product_ref_v1),
+        reference_view(instance.product_id),
+        reference_view(binding_id),
+    };
+    ulk_install_reference_v2 install_reference {
+        sizeof(ulk_install_reference_v2),
+        reference_view(install.install_id),
+        reference_view(install.product_id),
+        reference_ownership(install.ownership),
+        reference_view(install.setup_state_ref),
+        reference_view(install.exact_product_version),
+        reference_view(entrypoint),
+        reference_view(capabilities),
+        reference_lifecycle(install.lifecycle_status),
+        reference_view(install.last_verification_identity),
+        reference_view(install.state_revision),
+    };
+    ulk_instance_ref_v2 instance_reference {
+        sizeof(ulk_instance_ref_v2),
+        reference_view(instance.instance_id),
+        reference_view(instance.product_id),
+        reference_view(instance.install_id),
+        reference_view(instance.profile_id),
+        reference_view(instance.artifact_set_id),
+        reference_view(instance.binding_revision),
+    };
+    ulk_profile_ref_v2 profile_reference {
+        sizeof(ulk_profile_ref_v2),
+        reference_view(instance.profile_id),
+        reference_view(instance.product_id),
+        reference_view(instance.binding_revision),
+    };
+    ulk_artifact_set_ref_v1 artifact_reference {
+        sizeof(ulk_artifact_set_ref_v1),
+        reference_view(instance.product_id),
+        reference_view(instance.artifact_set_id),
+        reference_view(capabilities),
+    };
+    ulk_launch_plan_ref_v2 launch_plan {
+        sizeof(ulk_launch_plan_ref_v2),
+        reference_view(plan_id),
+        reference_view(instance.product_id),
+        reference_view(instance.instance_id),
+        reference_view(instance.install_id),
+        reference_view(instance.profile_id),
+        reference_view(instance.artifact_set_id),
+        reference_view(install.state_revision),
+        reference_view(instance.binding_revision),
+        reference_view(composition_digest),
+    };
+    ulk_reference_graph_v1 graph {
+        sizeof(ulk_reference_graph_v1),
+        &product,
+        &install_reference,
+        &instance_reference,
+        instance.profile_id.empty() ? nullptr : &profile_reference,
+        instance.artifact_set_id.empty() ? nullptr : &artifact_reference,
+        &launch_plan,
+    };
+    ulk_reference_validation_v1 validation {};
+    validation.struct_size = sizeof(validation);
+    if (
+        ulk_reference_graph_validate_v1(&graph, &validation) != ULK_STATUS_OK ||
+        !validation.valid
+    ) {
+        return ReferenceProjectionStatus::invalid;
+    }
+    return validation.launch_plan_status == ULK_LAUNCH_PLAN_STALE
+        ? ReferenceProjectionStatus::stale
+        : ReferenceProjectionStatus::fresh;
+}
 
 IsolationAssessment assess_isolation(const InstallLaunchRef& install)
 {
@@ -493,6 +627,17 @@ LaunchPlanResult build_launch_plan(
     result.forbidden_write_domains = isolation.forbidden_write_domains;
     result.strict_execution_eligible = isolation.strict_execution_eligible;
     result.strict_refusal_code = isolation.strict_refusal_code;
+    const ReferenceProjectionStatus reference_status =
+        validate_reference_projection(instance, install, command);
+    if (
+        reference_status == ReferenceProjectionStatus::invalid ||
+        reference_status == ReferenceProjectionStatus::stale
+    ) {
+        result.strict_execution_eligible = false;
+        result.strict_refusal_code = reference_status == ReferenceProjectionStatus::stale
+            ? "launcher_reference_stale"
+            : "launcher_reference_invalid";
+    }
     return result;
 }
 
@@ -565,6 +710,20 @@ LaunchPreflightResult preflight_launch(
     result.forbidden_write_domains = isolation.forbidden_write_domains;
     result.strict_execution_eligible = isolation.strict_execution_eligible;
     result.strict_refusal_code = isolation.strict_refusal_code;
+    const ReferenceProjectionStatus reference_status =
+        validate_reference_projection(instance, install, command);
+    if (
+        reference_status == ReferenceProjectionStatus::invalid ||
+        reference_status == ReferenceProjectionStatus::stale
+    ) {
+        result.strict_execution_eligible = false;
+        result.strict_refusal_code = reference_status == ReferenceProjectionStatus::stale
+            ? "launcher_reference_stale"
+            : "launcher_reference_invalid";
+        result.problems.push_back(reference_status == ReferenceProjectionStatus::stale
+            ? "Universal Launcher reference binding is stale"
+            : "Universal Launcher reference graph is invalid");
+    }
 
     add_problem_if_missing_directory(result, install.root, "install root does not exist");
     add_problem_if_missing_file(result, install.executable, "install executable does not exist");

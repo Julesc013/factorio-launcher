@@ -5,7 +5,7 @@
 
 set(FacMan_VERSION "@PROJECT_VERSION@")
 set(FacMan_FLB_ABI_VERSION "1.3")
-set(FacMan_REQUIRED_ULK_ABI_VERSION "1.4")
+set(FacMan_REQUIRED_ULK_ABI_VERSION "1.5")
 
 include("${CMAKE_CURRENT_LIST_DIR}/FacManTargets.cmake")
 check_required_components(FacMan)

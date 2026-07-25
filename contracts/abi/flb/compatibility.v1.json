@@ -9,8 +9,8 @@
   },
   "required_ulk_abi": {
     "major": 1,
-    "minor": 4,
-    "encoded": 65540
+    "minor": 5,
+    "encoded": 65541
   },
   "config_v1": {
     "product_root": "reserved_must_be_empty",

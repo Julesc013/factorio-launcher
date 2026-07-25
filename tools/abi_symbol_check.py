@@ -55,8 +55,8 @@ def validate(path: Path, symbols_only: bool = False) -> list[str]:
         required_ulk = library.flb_required_ulk_abi_v1
         required_ulk.argtypes = []
         required_ulk.restype = ctypes.c_uint32
-        if required_ulk() != 0x00010004:
-            return ["flb_required_ulk_abi_v1 did not return ULK ABI version 1.4"]
+        if required_ulk() != 0x00010005:
+            return ["flb_required_ulk_abi_v1 did not return ULK ABI version 1.5"]
         compatible = library.flb_abi_is_compatible_v1
         compatible.argtypes = [ctypes.c_uint32]
         compatible.restype = ctypes.c_int

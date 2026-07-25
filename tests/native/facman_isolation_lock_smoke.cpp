@@ -55,10 +55,19 @@ int main()
     instance.instance_id = "snowman";
     instance.profile_id = "gui";
     instance.local_data_root = instance_root;
+    instance.product_id = "factorio";
+    instance.install_id = "fixture";
+    instance.binding_revision = "binding-1";
     launch::InstallLaunchRef install;
     install.root = install_root;
     install.executable = install_root / "factorio-test";
     install.ownership = "foreign-owned";
+    install.install_id = "fixture";
+    install.product_id = "factorio";
+    install.exact_product_version = "2.0.77";
+    install.lifecycle_status = "active";
+    install.last_verification_identity = "verification-1";
+    install.state_revision = "install-state-1";
     fs::path config_file = instance_root / "config" / "config.ini";
     write_text(config_file, launch::effective_config_ini(instance, install));
 
@@ -73,6 +82,17 @@ int main()
     launch::LaunchPreflightResult preflight = launch::preflight_launch(instance, install);
     if (!preflight.ok || !preflight.problems.empty()) {
         return 11;
+    }
+    instance.install_id = "other-install";
+    preflight = launch::preflight_launch(instance, install);
+    if (preflight.ok ||
+        !has_problem(preflight, "Universal Launcher reference graph is invalid")) {
+        return 14;
+    }
+    instance.install_id = "fixture";
+    preflight = launch::preflight_launch(instance, install);
+    if (!preflight.ok || !preflight.problems.empty()) {
+        return 15;
     }
 
     write_text(

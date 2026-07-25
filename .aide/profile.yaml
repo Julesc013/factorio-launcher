@@ -8,7 +8,7 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: ulk-reference-model-extraction
+  phase: facman-application-module-decomposition
   primary_goal: >
     Move the frontend-neutral command client and transport contracts into
     Universal Launcher and make FacMan consume the new pinned provider.
