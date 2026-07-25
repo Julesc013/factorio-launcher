@@ -33,6 +33,26 @@ class DependencyRevisionEnforcementTests(unittest.TestCase):
                 explicit.resolve(),
             )
 
+    def test_detached_worktree_git_file_is_a_repository_candidate(self) -> None:
+        component = {
+            "id": "universal_launcher",
+            "pin": "a" * 40,
+            "path": "../universal-launcher",
+            "source": "universal-launcher",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            worktree = Path(tmp)
+            worktree.joinpath(".git").write_text(
+                "gitdir: C:/fixture/repository/.git/worktrees/proof\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                verify_dependency_revisions.resolve_repo_path(
+                    component, {"universal_launcher": worktree}
+                ),
+                worktree.resolve(),
+            )
+
     def test_default_verification_reports_drift_without_checkout(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

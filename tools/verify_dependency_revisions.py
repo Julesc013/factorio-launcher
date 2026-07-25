@@ -118,7 +118,7 @@ def resolve_repo_path(
             ]
         )
     for candidate in candidates:
-        if (candidate / ".git").is_dir():
+        if (candidate / ".git").exists():
             return candidate.resolve()
     return None
 
