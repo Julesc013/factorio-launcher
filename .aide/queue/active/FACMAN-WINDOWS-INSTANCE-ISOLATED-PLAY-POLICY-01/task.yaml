@@ -33,11 +33,13 @@ affected_python_tests:
   - tests.test_aide_target_truth
   - tests.test_architecture_fitness
   - tests.test_hermetic_play_policy
+  - tests.test_windows_instance_isolated_play_policy
 affected_strict_validators:
   - tools/aide_compaction_check.py
   - tools/aide_queue_state_check.py
   - tools/aide_target_truth_check.py
   - tools/hermetic_play_policy_check.py
+  - tools/windows_instance_isolated_play_policy_check.py
   - tools/strict_check.py
 affected_package_profiles:
   []

@@ -141,10 +141,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "local_postrun_repair_proven_instance_isolated_policy_active",
+            "dev_integrated_postrun_repair_proven_instance_isolated_policy_active",
             data["product"]["truth_scope"],
         )
-        self.assertFalse(data["product"]["canonical_integration"])
+        self.assertFalse(data["product"]["canonical_main_promotion"])
+        self.assertNotIn("canonical_integration", data["product"])
         self.assertTrue(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])

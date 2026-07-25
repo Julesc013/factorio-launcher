@@ -50,8 +50,8 @@ next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "local_postrun_repair_proven_instance_isolated_policy_active"
-canonical_integration = false
+truth_scope = "dev_integrated_postrun_repair_proven_instance_isolated_policy_active"
+canonical_main_promotion = false
 local_counts_promoted = true
 
 [readiness]
@@ -438,7 +438,7 @@ signing = false
 publication = false
 
 [gate4c_verdict03_postrun_repair]
-status = "passed_exact_head_hosted"
+status = "accepted_reviewed_dev_integration"
 work_unit = "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01"
 source_work_unit = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
 source_verdict = "Inconclusive"
@@ -466,15 +466,28 @@ product_permit_issuance = false
 authority_promotion = false
 
 [windows_instance_isolated_play_policy]
-status = "active"
+status = "frozen_criteria_review_pending"
 work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01"
 source_repair = "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01"
 source_verdict = "Inconclusive"
+policy_path = "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml"
+policy_schema = "factorio.windows_instance_isolated_play_policy.v1"
+policy_id = "facman.windows-instance-isolated-play.2.0.77.x64.v1"
+policy_revision = "1"
+canonicalization_version = "facman.sorted-json.v1"
+policy_digest = "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432"
+claim_id = "factorio.windows_instance_isolated_process_tree.v1"
+user_label = "Instance-isolated — Windows"
 candidate_class = "Windows x64 Factorio 2.0.77 standalone non-Steam menu"
 isolation_mode = "instance_isolated"
-writable_boundary = "exact FacMan-owned instance closure"
+writable_boundary = "exact stable FacMan-owned instance directory object and descendants"
+writable_resource_count = 7
+protected_resource_count = 12
+external_disclosure_count = 1
+expected_external_disclosures = ["windows.bam.factorio_process_execution.v1"]
 protected_software_roots_immutable = true
 os_driver_effects_observed_and_disclosed = true
+external_effects_are_permit_resources = false
 whole_host_immutability_claimed = false
 enforced_sandbox_claimed = false
 frozen_hermetic_policy_mutation_allowed = false
@@ -482,6 +495,7 @@ runtime_mutation_allowed = false
 factorio_execution_allowed = false
 public_command = false
 product_permit_issuance = false
+canonical_main_promotion = false
 authority_promotion = false
 
 [gate4c_privilege_separation_repair]

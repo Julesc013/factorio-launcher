@@ -393,8 +393,13 @@
     },
     {
       "claim": "Hermetic Play candidate",
-      "level": "Inconclusive; fail-closed pre-process",
-      "limitation": "no Factorio, packet, Play authority, Steam, network, credentials, or Setup"
+      "level": "Inconclusive after one bounded launch",
+      "limitation": "no Pass; normal-host behavior mismatched the hermetic claim"
+    },
+    {
+      "claim": "Windows instance-isolated Play policy",
+      "level": "frozen criteria under review",
+      "limitation": "BAM only; no candidate, execution, verdict, route, or authority"
     },
     {
       "claim": "Package hashes authenticate publisher",
@@ -432,7 +437,7 @@
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 286
+    "schemas": 292
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -778,7 +783,7 @@
     "source_operation_id": "gate4c-verdict03-launch1-20260725a",
     "source_verdict": "Inconclusive",
     "source_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
-    "status": "passed_exact_head_hosted",
+    "status": "accepted_reviewed_dev_integration",
     "unresolved_etw_target": true,
     "verdict03_root_retained": true,
     "work_unit": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
@@ -2022,7 +2027,7 @@
     }
   ],
   "product": {
-    "canonical_integration": false,
+    "canonical_main_promotion": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
     "current_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
@@ -2035,7 +2040,7 @@
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "local_postrun_repair_proven_instance_isolated_policy_active"
+    "truth_scope": "dev_integrated_postrun_repair_proven_instance_isolated_policy_active"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -2140,20 +2145,36 @@
   "windows_instance_isolated_play_policy": {
     "authority_promotion": false,
     "candidate_class": "Windows x64 Factorio 2.0.77 standalone non-Steam menu",
+    "canonical_main_promotion": false,
+    "canonicalization_version": "facman.sorted-json.v1",
+    "claim_id": "factorio.windows_instance_isolated_process_tree.v1",
     "enforced_sandbox_claimed": false,
+    "expected_external_disclosures": [
+      "windows.bam.factorio_process_execution.v1"
+    ],
+    "external_disclosure_count": 1,
+    "external_effects_are_permit_resources": false,
     "factorio_execution_allowed": false,
     "frozen_hermetic_policy_mutation_allowed": false,
     "isolation_mode": "instance_isolated",
     "os_driver_effects_observed_and_disclosed": true,
+    "policy_digest": "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
+    "policy_id": "facman.windows-instance-isolated-play.2.0.77.x64.v1",
+    "policy_path": "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml",
+    "policy_revision": "1",
+    "policy_schema": "factorio.windows_instance_isolated_play_policy.v1",
     "product_permit_issuance": false,
+    "protected_resource_count": 12,
     "protected_software_roots_immutable": true,
     "public_command": false,
     "runtime_mutation_allowed": false,
     "source_repair": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
     "source_verdict": "Inconclusive",
-    "status": "active",
+    "status": "frozen_criteria_review_pending",
+    "user_label": "Instance-isolated \u2014 Windows",
     "whole_host_immutability_claimed": false,
     "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
-    "writable_boundary": "exact FacMan-owned instance closure"
+    "writable_boundary": "exact stable FacMan-owned instance directory object and descendants",
+    "writable_resource_count": 7
   }
 }

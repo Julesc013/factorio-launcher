@@ -14,7 +14,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - active WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01`;
 - next WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `local_postrun_repair_proven_instance_isolated_policy_active`; canonical integration: `false`; local counts promoted: `true`;
+- truth scope: `dev_integrated_postrun_repair_proven_instance_isolated_policy_active`; canonical main promotion: `false`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -102,7 +102,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `286` / `242`;
+- schemas / refusal codes: `292` / `242`;
 - command catalog digest: `4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
