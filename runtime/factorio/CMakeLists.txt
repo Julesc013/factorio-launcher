@@ -9,7 +9,7 @@ add_library(flb_factorio_launch_static STATIC
 target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
 target_link_libraries(flb_factorio_launch_static PUBLIC
-  facman_base_static facman_core_static facman_permit_static facman_platform_static)
+  facman_base_static facman_core_static facman_permit_static facman_platform_static ulk_static)
 
 add_library(flb_factorio_discovery_static STATIC
   discovery/discovery_service.cpp discovery/flb_factorio_discovery.cpp
@@ -120,8 +120,11 @@ add_library(flb_factorio_application_static STATIC
   application/handlers/launch.cpp application/handlers/mods.cpp application/handlers/modsets.cpp
   application/handlers/preferences.cpp application/handlers/product.cpp application/handlers/recovery.cpp application/handlers/saves.cpp
   application/handlers/snapshots.cpp
-  application/handlers/profiles.cpp application/modules/installation_module.cpp
-  application/modules/launch_module.cpp
+  application/handlers/profiles.cpp
+  application/modules/content_module.cpp application/modules/diagnostics_module.cpp
+  application/modules/installation_module.cpp application/modules/launch_module.cpp
+  application/modules/profile_module.cpp application/modules/recovery_module.cpp
+  application/modules/setup_module.cpp application/modules/workspace_module.cpp
   application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
 target_sources(flb_factorio_application_static PRIVATE application/modules/instance_module.cpp)
 target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)

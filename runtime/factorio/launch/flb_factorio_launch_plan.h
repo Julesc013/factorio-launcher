@@ -22,6 +22,10 @@ struct InstanceLaunchRef {
     std::filesystem::path local_data_root;
     std::string launch_mode = "gui";
     std::vector<std::string> profile_arguments;
+    std::string product_id;
+    std::string install_id;
+    std::string artifact_set_id;
+    std::string binding_revision;
 };
 
 struct InstallLaunchRef {
@@ -32,6 +36,13 @@ struct InstallLaunchRef {
     std::string platform_integration = "unknown";
     std::string strict_isolation_eligibility = "unproven";
     std::vector<std::string> external_state_domains;
+    std::string install_id;
+    std::string product_id;
+    std::string exact_product_version;
+    std::string setup_state_ref;
+    std::string lifecycle_status;
+    std::string last_verification_identity;
+    std::string state_revision;
 };
 
 struct EffectiveFactorioConfig {

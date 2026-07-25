@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "windows-instance-isolated-play-candidate",
+            "targeted-extraction-complete",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "canonical_instance_isolated_policy_dev_synchronized_candidate_active",
+            "instance_isolated_candidate_technical_pass_targeted_extraction_program_complete_revalidation_pending",
             data["product"]["truth_scope"],
         )
         self.assertTrue(data["product"]["canonical_main_promotion"])
@@ -482,7 +482,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -603,7 +603,60 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("29344174316", m2_wu6["facman_dev_ci_run"])
         self.assertEqual("29344174402", m2_wu6["facman_dev_codeql_run"])
         self.assertEqual("29344174517", m2_wu6["facman_dev_security_policy_run"])
-        self.assertEqual(data["provider_pins"]["universal_launcher"]["revision"], m2_wu6["universal_launcher_main_revision"])
+        self.assertEqual(
+            "7bd4425f0c35414f738159b45d8bec42edf70235",
+            m2_wu6["universal_launcher_main_revision"],
+        )
+        client_extraction = data["ulk_client_transport_extraction"]
+        reference_extraction = data["ulk_reference_model_extraction"]
+        module_decomposition = data["facman_application_module_decomposition"]
+        integration_proof = data["facman_ulk_integration_proof"]
+        self.assertEqual(
+            reference_extraction["universal_launcher_previous_revision"],
+            client_extraction["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            data["provider_pins"]["universal_launcher"]["revision"],
+            reference_extraction["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            m2_wu6["universal_launcher_main_revision"],
+            client_extraction["historical_candidate_provider_revision"],
+        )
+        self.assertTrue(client_extraction["candidate_revalidation_required"])
+        self.assertEqual("1.5", reference_extraction["launcher_abi_version"])
+        self.assertEqual("invalid", reference_extraction["identity_mismatch_disposition"])
+        self.assertEqual(
+            "valid_but_stale",
+            reference_extraction["revision_drift_disposition"],
+        )
+        self.assertFalse(reference_extraction["reference_persistence_implemented"])
+        self.assertTrue(reference_extraction["candidate_revalidation_required"])
+        self.assertEqual(9, module_decomposition["registered_module_count"])
+        self.assertEqual(0, module_decomposition["central_direct_command_cases"])
+        self.assertTrue(module_decomposition["global_admission_before_module_execution"])
+        self.assertTrue(module_decomposition["clean_build_root_honored_by_package_proof"])
+        self.assertEqual(52, module_decomposition["local_release_native_test_count"])
+        self.assertEqual(482, module_decomposition["local_python_test_count"])
+        self.assertEqual("pass", module_decomposition["required_windows_package_proof"])
+        self.assertFalse(module_decomposition["runtime_authority"])
+        self.assertEqual(
+            data["provider_pins"]["universal_launcher"]["revision"],
+            integration_proof["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            data["provider_pins"]["universal_setup"]["revision"],
+            integration_proof["universal_setup_revision"],
+        )
+        self.assertTrue(integration_proof["detached_source_worktrees"])
+        self.assertTrue(integration_proof["final_build_root_initially_absent"])
+        self.assertEqual(53, integration_proof["facman_native_test_count"])
+        self.assertEqual(486, integration_proof["facman_python_test_count"])
+        self.assertEqual("pass", integration_proof["windows_cli_package_proof"])
+        self.assertEqual("sha256_consistent", integration_proof["package_integrity"])
+        self.assertEqual("not_proven_unsigned", integration_proof["package_authenticity"])
+        self.assertFalse(integration_proof["canonical_main_promotion"])
+        self.assertFalse(integration_proof["runtime_authority"])
         self.assertEqual("1.3", m2_wu6["launcher_abi_version"])
         self.assertEqual("1.3", m2_wu6["facman_binding_abi_version"])
         self.assertTrue(m2_wu6["recovery_without_install_reference"])
@@ -810,15 +863,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "windows-instance-isolated-play-candidate",
+            "targeted-extraction-complete",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -848,7 +901,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "7bd4425f0c35414f738159b45d8bec42edf70235",
+            "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]

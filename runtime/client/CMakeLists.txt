@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: MIT
 
 add_library(flaunch_client_static STATIC
-  fl_command_client.c fl_command_client_cabi.c fl_command_client_cabi_execute.c
-  fl_command_client_daemon.c fl_command_client_json.c)
+  fl_command_client_cabi_execute.c)
 target_include_directories(flaunch_client_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include)
+target_link_libraries(flaunch_client_static PUBLIC ulk_static)
 facman_apply_policies(flaunch_client_static)
 
 find_package(Threads REQUIRED)

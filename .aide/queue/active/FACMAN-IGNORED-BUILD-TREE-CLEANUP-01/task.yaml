@@ -1,0 +1,53 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-IGNORED-BUILD-TREE-CLEANUP-01
+title: Remove ignored Universal build trees
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-25T14:01:33Z
+owner: unassigned
+objective: >
+  Inventory and remove only the exact ignored in-repository build roots under Universal Launcher and Universal Setup, preserve source worktrees, and record the cleanup result.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/profile.yaml
+  - README.md
+  - docs/**
+  - release/index/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  []
+affected_python_tests:
+  - tests.test_aide_target_truth
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_target_truth_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-25T14:01:34Z
+verified_at: 2026-07-25T14:10:06Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-25T14:10:07Z
+closed_at: 2026-07-25T14:10:07Z

@@ -1,0 +1,366 @@
+schema = "facman.component_ownership.v1"
+reviewed_on = "2026-07-25"
+classification = [
+  "universal_setup",
+  "universal_launcher",
+  "factorio_binding",
+  "facman_frontend",
+  "product_packaging",
+  "development_governance",
+  "temporary_incubator",
+]
+
+[[repository]]
+id = "factorio-launcher"
+branch_model = "main + integration dev + short-lived task and promotion branches"
+runtime_role = "Factorio binding, FacMan product composition, and product frontends"
+install_mutation_authority = false
+
+[[repository]]
+id = "universal-launcher"
+branch_model = "main + short-lived task branches"
+runtime_role = "Product-neutral runnable-state orchestration and frontend-neutral clients"
+install_mutation_authority = false
+
+[[repository]]
+id = "universal-setup"
+branch_model = "main + short-lived task branches"
+runtime_role = "Product-neutral setup lifecycle, ownership, rollback, recovery, and audit"
+install_mutation_authority = true
+
+[[component]]
+id = "usk-public-api"
+repository = "universal-setup"
+path = "include/usk"
+owner = "universal_setup"
+public_contract = "Versioned USK C ABI"
+
+[[component]]
+id = "usk-runtime"
+repository = "universal-setup"
+path = "runtime/setup"
+owner = "universal_setup"
+public_contract = "Install, verify, repair, move, uninstall, rollback, recovery, ownership, and audit"
+
+[[component]]
+id = "usk-contracts"
+repository = "universal-setup"
+path = "contracts"
+owner = "universal_setup"
+public_contract = "Versioned setup plans, results, state, recovery, and refusal contracts"
+
+[[component]]
+id = "ulk-public-api"
+repository = "universal-launcher"
+path = "include/ulk"
+owner = "universal_launcher"
+public_contract = "Versioned ULK C ABI"
+
+[[component]]
+id = "ulu-public-api"
+repository = "universal-launcher"
+path = "include/ulu"
+owner = "universal_launcher"
+public_contract = "Frontend-neutral utility and UI C ABI"
+
+[[component]]
+id = "ulk-launcher-runtime"
+repository = "universal-launcher"
+path = "runtime/launcher"
+owner = "universal_launcher"
+public_contract = "Product, reference, instance, profile, artifact-set, launch-plan, command-graph, and diagnostic kernel"
+
+[[component]]
+id = "ulk-client-runtime"
+repository = "universal-launcher"
+path = "runtime/client"
+owner = "universal_launcher"
+public_contract = "Frontend-neutral client and transport contracts"
+
+[[component]]
+id = "ulk-daemon-runtime"
+repository = "universal-launcher"
+path = "runtime/daemon"
+owner = "universal_launcher"
+public_contract = "Product-neutral daemon protocol"
+
+[[component]]
+id = "ulk-platform-runtime"
+repository = "universal-launcher"
+path = "runtime/platform"
+owner = "universal_launcher"
+public_contract = "Launcher-owned process and platform service interfaces"
+
+[[component]]
+id = "ulk-contracts"
+repository = "universal-launcher"
+path = "contracts"
+owner = "universal_launcher"
+public_contract = "Versioned launcher command, reference, result, diagnostic, refusal, and setup-handoff contracts"
+
+[[component]]
+id = "facman-factorio-binding"
+repository = "factorio-launcher"
+path = "runtime/factorio"
+owner = "factorio_binding"
+public_contract = "FLB product ABI and Factorio-specific interpretation"
+
+[[component]]
+id = "facman-application-framework"
+repository = "factorio-launcher"
+path = "runtime/factorio/application"
+owner = "factorio_binding"
+public_contract = "Internal Factorio domain-module composition registered through the ULK command graph"
+
+[[component]]
+id = "facman-archive"
+repository = "factorio-launcher"
+path = "runtime/archive"
+owner = "factorio_binding"
+public_contract = "Private bounded archive behavior for Factorio saves, mods, snapshots, and diagnostics"
+
+[[component]]
+id = "facman-base"
+repository = "factorio-launcher"
+path = "runtime/base"
+owner = "factorio_binding"
+public_contract = "Private Factorio-binding safety and identity utilities; not a shared common library"
+
+[[component]]
+id = "facman-client"
+repository = "factorio-launcher"
+path = "runtime/client"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "The command client, response model, and direct, process, and daemon transports are product-neutral."
+public_contract = "FacMan C++ adapters and product response mapping over the extracted ULK C client ABI"
+extraction_dependency = "ULK-CPP-CLIENT-ADAPTER-EXTRACTION-01"
+expires_at = "ULK-CPP-CLIENT-ADAPTER-EXTRACTION-01"
+
+[[component]]
+id = "facman-core-generated"
+repository = "factorio-launcher"
+path = "runtime/core/generated"
+owner = "factorio_binding"
+public_contract = "Generated Factorio command and version projections"
+
+[[component]]
+id = "facman-core-json"
+repository = "factorio-launcher"
+path = "runtime/core/json"
+owner = "factorio_binding"
+public_contract = "Private FLB JSON boundary implementation"
+
+[[component]]
+id = "facman-permit-kernel"
+repository = "factorio-launcher"
+path = "runtime/core/permit"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "The exact operation-permit kernel is product-neutral, but extraction waits for a second real provider consumer to prove the abstraction."
+public_contract = "Authenticated, plan-bound, resource-exact, one-time operation permits"
+extraction_dependency = "ULK-PERMIT-KERNEL-QUALIFICATION-01"
+expires_at = "second_real_provider_consumer_or_explicit_facman_retention_decision"
+
+[[component]]
+id = "facman-package-runtime"
+repository = "factorio-launcher"
+path = "runtime/package"
+owner = "product_packaging"
+public_contract = "FacMan package component location, verification, and extraction"
+
+[[component]]
+id = "facman-platform-runtime"
+repository = "factorio-launcher"
+path = "runtime/platform"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "Process supervision, process identity, job containment, stable launch roots, and observer-broker foundations are launcher-neutral."
+public_contract = "Bounded process session and platform-service interfaces"
+extraction_dependency = "ULK-EXECUTION-FOUNDATION-EXTRACTION-01"
+expires_at = "ULK-EXECUTION-FOUNDATION-EXTRACTION-01"
+
+[[component]]
+id = "facman-preferences"
+repository = "factorio-launcher"
+path = "runtime/preferences"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "The persistence mechanism is generic while preference keys and presentation remain FacMan-owned."
+public_contract = "Versioned launcher preference storage with product extensions"
+extraction_dependency = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
+expires_at = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
+
+[[component]]
+id = "facman-transaction"
+repository = "factorio-launcher"
+path = "runtime/transaction"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "Workspace orchestration journals are launcher-neutral and distinct from Setup mutation transactions."
+public_contract = "Launcher record transaction and recovery journal"
+extraction_dependency = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
+expires_at = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
+
+[[component]]
+id = "facman-workspace"
+repository = "factorio-launcher"
+path = "runtime/workspace"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "Install, instance, profile, artifact-set, and launch-plan references must be split from Factorio workspace composition."
+public_contract = "Product-neutral reference store plus Factorio-owned workspace extensions"
+extraction_dependency = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
+expires_at = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
+
+[[component]]
+id = "facman-apps"
+repository = "factorio-launcher"
+path = "apps"
+owner = "facman_frontend"
+public_contract = "FacMan CLI, TUI, daemon, and product GUI surfaces over the frontend-neutral client"
+
+[[component]]
+id = "facman-content"
+repository = "factorio-launcher"
+path = "content"
+owner = "factorio_binding"
+public_contract = "Factorio strings, templates, recipes, and presentation policy"
+
+[[component]]
+id = "facman-release"
+repository = "factorio-launcher"
+path = "release"
+owner = "product_packaging"
+public_contract = "Pinned workspace, package, provenance, and release profiles"
+
+[[component]]
+id = "facman-flb-abi"
+repository = "factorio-launcher"
+path = "contracts/abi"
+owner = "factorio_binding"
+public_contract = "Experimental FLB ABI compatibility floor"
+
+[[component]]
+id = "facman-factorio-commands"
+repository = "factorio-launcher"
+path = "contracts/command/factorio"
+owner = "factorio_binding"
+public_contract = "Factorio command request, result, and effect descriptors"
+
+[[component]]
+id = "facman-frontend-contracts"
+repository = "factorio-launcher"
+path = "contracts/command/frontend"
+owner = "facman_frontend"
+public_contract = "FacMan frontend projections and generated forms"
+
+[[component]]
+id = "facman-diagnostic-contracts"
+repository = "factorio-launcher"
+path = "contracts/diagnostic"
+owner = "factorio_binding"
+public_contract = "Factorio diagnostic export formats and redaction"
+
+[[component]]
+id = "facman-generated-contract-index"
+repository = "factorio-launcher"
+path = "contracts/generated-index"
+owner = "factorio_binding"
+public_contract = "Generated Factorio binding catalog and refusal index"
+
+[[component]]
+id = "facman-policy-contracts"
+repository = "factorio-launcher"
+path = "contracts/policy"
+owner = "factorio_binding"
+public_contract = "Factorio safety, execution, redaction, and capability policy"
+
+[[component]]
+id = "facman-refusal-contracts"
+repository = "factorio-launcher"
+path = "contracts/refusal"
+owner = "factorio_binding"
+public_contract = "Factorio binding refusal taxonomy"
+
+[[component]]
+id = "facman-result-contracts"
+repository = "factorio-launcher"
+path = "contracts/result"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "The command result envelope is launcher-neutral while Factorio payload schemas remain product-owned."
+public_contract = "ULK response envelope with product-defined payloads"
+extraction_dependency = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
+expires_at = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
+
+[[component]]
+id = "facman-command-schemas"
+repository = "factorio-launcher"
+path = "contracts/schema/command"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "Generic command request and response envelopes belong with the launcher client."
+public_contract = "Versioned command request and response schemas"
+extraction_dependency = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
+expires_at = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
+
+[[component]]
+id = "facman-common-schemas"
+repository = "factorio-launcher"
+path = "contracts/schema/common"
+owner = "factorio_binding"
+public_contract = "Private shared schema fragments used by the Factorio binding"
+
+[[component]]
+id = "facman-product-schemas"
+repository = "factorio-launcher"
+path = "contracts/schema/facman"
+owner = "facman_frontend"
+public_contract = "FacMan product and presentation state"
+
+[[component]]
+id = "facman-factorio-schemas"
+repository = "factorio-launcher"
+path = "contracts/schema/factorio"
+owner = "factorio_binding"
+public_contract = "Factorio installation, instance, content, launch, and evidence contracts"
+
+[[component]]
+id = "facman-release-schemas"
+repository = "factorio-launcher"
+path = "contracts/schema/release"
+owner = "product_packaging"
+public_contract = "FacMan package, provenance, and release schemas"
+
+[[component]]
+id = "facman-transport-schemas"
+repository = "factorio-launcher"
+path = "contracts/schema/transport"
+owner = "temporary_incubator"
+final_owner = "universal_launcher"
+reason = "Direct, process, and daemon transport envelopes are product-neutral."
+public_contract = "Frontend-neutral transport schemas"
+extraction_dependency = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
+expires_at = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
+
+[[component]]
+id = "facman-ui-schemas"
+repository = "factorio-launcher"
+path = "contracts/schema/ui"
+owner = "facman_frontend"
+public_contract = "FacMan UI state and presentation schemas"
+
+[[component]]
+id = "facman-governance"
+repository = "factorio-launcher"
+path = ".aide"
+owner = "development_governance"
+public_contract = "Development-only task, truth, review, and validation records"
+
+[[component]]
+id = "facman-tools"
+repository = "factorio-launcher"
+path = "tools"
+owner = "development_governance"
+public_contract = "Repository validation, generation, packaging, and developer workflows"

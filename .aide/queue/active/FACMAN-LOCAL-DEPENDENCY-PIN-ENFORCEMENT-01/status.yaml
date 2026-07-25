@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-07-25T11:59:21Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01/evidence/
+active_at: 2026-07-25T11:59:21Z
+verified_at: 2026-07-25T12:03:24Z
+implementation_state: implemented
+reviewed_at: 2026-07-25T12:03:25Z
+closed_at: 2026-07-25T12:03:25Z

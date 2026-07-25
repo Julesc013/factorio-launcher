@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-const char* fl_command_client_cabi_transport(void);
-
 int fl_command_client_execute_cabi_v1(
     flb_context* context,
     const ulk_command_request_v1* request,

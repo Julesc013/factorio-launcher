@@ -4,19 +4,20 @@
 #ifndef FACMAN_FACTORIO_APPLICATION_LAUNCH_MODULE_H
 #define FACMAN_FACTORIO_APPLICATION_LAUNCH_MODULE_H
 
-#include "application_context.h"
-#include "application_types.h"
-#include "command_admission.h"
+#include "modules/application_module.h"
 
 namespace facman::factorio::application {
 
-class LaunchApplicationModule {
+class LaunchApplicationModule final : public ApplicationModule {
 public:
-    bool handles(CommandId command) const noexcept;
+    bool handles(CommandId command) const noexcept override;
+    bool accepts_denied_admission(
+        const CommandAdmissionDecision& admission) const noexcept override;
     ApplicationResult execute(
         ApplicationContext& context,
         const ApplicationRequest& request,
-        const CommandAdmissionDecision& admission) const;
+        const CommandAdmissionDecision& admission,
+        const std::string& command_name) const override;
 };
 
 } // namespace facman::factorio::application

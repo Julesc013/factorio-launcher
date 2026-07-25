@@ -118,6 +118,11 @@ def collect() -> dict[str, Any]:
         "hermetic_standalone_play_verdict": status["hermetic_standalone_play_verdict"],
         "gate4c_verdict03_postrun_repair": status["gate4c_verdict03_postrun_repair"],
         "windows_instance_isolated_play_policy": status["windows_instance_isolated_play_policy"],
+        "windows_instance_isolated_play_candidate": status["windows_instance_isolated_play_candidate"],
+        "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
+        "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
+        "facman_application_module_decomposition": status["facman_application_module_decomposition"],
+        "facman_ulk_integration_proof": status["facman_ulk_integration_proof"],
         "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -539,8 +544,9 @@ def readme_status(data: dict[str, Any]) -> str:
         "product issuance.",
         "Gates 0-3 are canonically promoted and dev-synchronized without "
         "authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.",
-        "The Windows instance-isolated policy is accepted on reviewed `dev` and awaits a "
-        "separate no-authority canonical promotion before its candidate may start.",
+        "The Windows instance-isolated policy is canonical and synchronized. Its exact "
+        "candidate is technically complete without a real Factorio run, human verdict, "
+        "public Play route, or authority promotion.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
@@ -571,7 +577,7 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
         "3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.",
         "4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.",
-        "5. Implement and review `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01` against the canonically synchronized frozen policy; keep the human verdict, enforced hermetic route, and Steam-aware qualification independent.",
+        "5. Preserve the technically complete instance-isolated candidate while the ownership and extraction wave runs; keep its real-product verdict, enforced hermetic route, and Steam-aware qualification independent.",
         "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
         "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
         "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
@@ -802,12 +808,108 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
             "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
             "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01",
-            "phase_status": "active",
-            "safety": "canonical_instance_isolated_policy_candidate_active_no_play_authority",
-            "execution_reason": "instance_isolated_candidate_not_yet_implemented_or_executed",
-            "truth_scope": "canonical_instance_isolated_policy_dev_synchronized_candidate_active",
+            "phase_status": "implementation_complete_pending_closeout",
+            "safety": "instance_isolated_candidate_technical_pass_no_play_authority",
+            "execution_reason": "instance_isolated_candidate_technically_complete_not_executed_or_human_reviewed",
+            "truth_scope": "canonical_instance_isolated_policy_candidate_technical_pass_pending_reviewed_integration",
             "canonical_main_promotion": True,
-            "current_gate_status": "instance_isolated_candidate_active",
+            "current_gate_status": "instance_isolated_candidate_technical_pass_pending_reviewed_integration",
+        },
+        "cross_repo_ownership_audit": {
+            "checkpoint": "cross-repo-ownership-audit",
+            "active": "FACMAN-CROSS-REPO-OWNERSHIP-AUDIT-01",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            "next": "FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01",
+            "phase_status": "active",
+            "safety": "cross_repo_ownership_audit_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_technical_pass_architecture_refactor_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_cross_repo_ownership_audit_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_ownership_audit_active",
+        },
+        "local_dependency_pin_enforcement": {
+            "checkpoint": "local-dependency-pin-enforcement",
+            "active": "FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01",
+            "last_closed": "FACMAN-CROSS-REPO-OWNERSHIP-AUDIT-01",
+            "next": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+            "phase_status": "active",
+            "safety": "local_dependency_pin_enforcement_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_technical_pass_dependency_pin_enforcement_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_local_dependency_pin_enforcement_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_dependency_pin_enforcement_active",
+        },
+        "ulk_client_transport_extraction": {
+            "checkpoint": "ulk-client-transport-extraction",
+            "active": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+            "last_closed": "FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01",
+            "next": "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "phase_status": "active",
+            "safety": "ulk_client_transport_extraction_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_technical_pass_ulk_client_extraction_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_ulk_client_transport_extraction_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_ulk_client_extraction_active",
+        },
+        "ulk_reference_model_extraction": {
+            "checkpoint": "ulk-reference-model-extraction",
+            "active": "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "last_closed": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+            "next": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "phase_status": "active",
+            "safety": "ulk_reference_model_extraction_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_ulk_reference_model_extraction_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_ulk_reference_model_extraction_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_ulk_reference_model_extraction_active",
+        },
+        "facman_application_module_decomposition": {
+            "checkpoint": "facman-application-module-decomposition",
+            "active": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "last_closed": "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "next": "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "phase_status": "active",
+            "safety": "application_module_decomposition_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_application_module_decomposition_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_application_module_decomposition_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_application_module_decomposition_active",
+        },
+        "facman_ulk_integration_proof": {
+            "checkpoint": "facman-ulk-integration-proof",
+            "active": "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "last_closed": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "next": "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "phase_status": "active",
+            "safety": "three_repository_integration_proof_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_three_repository_integration_proof_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_three_repository_integration_proof_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_three_repository_integration_proof_active",
+        },
+        "ignored_build_tree_cleanup": {
+            "checkpoint": "ignored-build-tree-cleanup",
+            "active": "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "last_closed": "FACMAN-ULK-INTEGRATION-PROOF-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "phase_status": "active",
+            "safety": "filesystem_hygiene_exact_roots_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_filesystem_hygiene_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_ignored_build_tree_cleanup_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_ignored_build_tree_cleanup_active",
+        },
+        "targeted_extraction_complete": {
+            "checkpoint": "targeted-extraction-complete",
+            "active": "",
+            "last_closed": "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "phase_status": "checkpoint",
+            "safety": "targeted_refactoring_complete_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_after_targeted_extraction_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_targeted_extraction_program_complete_revalidation_pending",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_candidate_revalidation_next_operator_workunit",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -1431,6 +1533,213 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "normal-host claim, keep protected software immutable, disclose "
             "OS/driver effects, and remain policy-only and non-authoritative"
         )
+    instance_isolated_candidate = status.get(
+        "windows_instance_isolated_play_candidate", {}
+    )
+    expected_instance_isolated_candidate = {
+        "status": "implementation_complete_pending_reviewed_integration",
+        "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+        "policy_id": "facman.windows-instance-isolated-play.2.0.77.x64.v1",
+        "policy_digest": "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
+        "claim_id": "factorio.windows_instance_isolated_process_tree.v1",
+        "candidate_class": "Windows x64 Factorio 2.0.77 standalone non-Steam menu",
+        "isolation_mode": "instance_isolated",
+        "candidate_provider_revision": "windows-instance-isolated-play-candidate.v1",
+        "observer_provider_revision": "gate4c-etw-file-registry-process.v6",
+        "process_environment_revision": "factorio.menu-minimal.v2",
+        "root_authority": "stable_no_follow_instance_directory_object",
+        "writable_resource_count": 7,
+        "protected_resource_count": 12,
+        "required_evidence_binding_count": 35,
+        "external_effect_class_count": 7,
+        "expected_external_disclosures": [
+            "windows.bam.factorio_process_execution.v1"
+        ],
+        "directinput_disabled": True,
+        "provider_revalidation_immediately_before_process": True,
+        "permit_consumption_immediately_before_process": True,
+        "unresolved_or_gap_disposition": "Inconclusive",
+        "wrong_identity_or_protected_write_disposition": "Fail",
+        "technical_disposition": "eligible_for_human_verdict",
+        "local_msvc_native_test_count": 50,
+        "focused_python_test_count": 25,
+        "full_python_test_count": 471,
+        "python_expected_skip_count": 315,
+        "schema_count": 295,
+        "human_verdict": "unset",
+        "real_factorio_execution": False,
+        "public_command": False,
+        "product_permit_issuance": False,
+        "setup_authority": False,
+        "credential_authority": False,
+        "network_authority": False,
+        "host_mutation_authority": False,
+        "authority_promotion": False,
+        "playability_promotion": False,
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+    }
+    if instance_isolated_candidate != expected_instance_isolated_candidate:
+        problems.append(
+            "Windows instance-isolated Play candidate truth must bind the exact "
+            "policy, stable Instance authority, closed evidence taxonomy, local "
+            "technical disposition, and no-authority boundary"
+        )
+    ulk_client_transport = status.get("ulk_client_transport_extraction", {})
+    expected_ulk_client_transport = {
+        "status": "provider_implemented_facman_integration_active",
+        "work_unit": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+        "universal_launcher_previous_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_launcher_revision": "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
+        "launcher_abi_version": "1.4",
+        "transport_contract": "ulk.client_transport.v1",
+        "transport_kinds": ["direct", "process", "daemon"],
+        "direct_adapter": "ulk_direct_transport_v1",
+        "generic_c_client_owner": "universal_launcher",
+        "facman_c_adapter": "runtime/client/fl_command_client_cabi_execute.c",
+        "facman_cpp_transport_adapters_retained": True,
+        "provider_strict_validation": "pass",
+        "provider_python_test_count": 6,
+        "provider_native_test_count": 3,
+        "facman_integration_validation": "pass",
+        "facman_native_test_count": 51,
+        "facman_python_test_count": 482,
+        "facman_python_expected_skip_count": 30,
+        "historical_candidate_provider_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "candidate_revalidation_required": True,
+        "real_factorio_execution": False,
+        "public_command": False,
+        "runtime_authority": False,
+        "authority_promotion": False,
+    }
+    if ulk_client_transport != expected_ulk_client_transport:
+        problems.append(
+            "ULK client transport extraction truth must bind the exact provider "
+            "revision and ABI, preserve FacMan adapters, require candidate "
+            "revalidation, and grant no runtime authority"
+        )
+    ulk_reference_model = status.get("ulk_reference_model_extraction", {})
+    expected_ulk_reference_model = {
+        "status": "provider_implemented_facman_integration_active",
+        "work_unit": "ULK-REFERENCE-MODEL-EXTRACTION-01",
+        "universal_launcher_previous_revision": "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
+        "universal_launcher_revision": "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+        "launcher_abi_version": "1.5",
+        "reference_contract": "ulk.reference_graph.v1",
+        "record_contracts": [
+            "ulk.product_reference.v1",
+            "ulk.install_reference.v2",
+            "ulk.instance_reference.v2",
+            "ulk.profile_reference.v2",
+            "ulk.artifact_set_reference.v1",
+            "ulk.launch_plan_reference.v2",
+        ],
+        "identity_mismatch_disposition": "invalid",
+        "revision_drift_disposition": "valid_but_stale",
+        "provider_strict_validation": "pass",
+        "provider_python_test_count": 7,
+        "provider_native_test_count": 4,
+        "facman_integration_validation": "pass",
+        "facman_native_test_count": 52,
+        "facman_python_test_count": 482,
+        "facman_python_expected_skip_count": 30,
+        "factorio_workspace_composition_owner": "factorio_binding",
+        "reference_persistence_implemented": False,
+        "candidate_revalidation_required": True,
+        "real_factorio_execution": False,
+        "public_command": False,
+        "runtime_authority": False,
+        "authority_promotion": False,
+    }
+    if ulk_reference_model != expected_ulk_reference_model:
+        problems.append(
+            "ULK reference-model extraction truth must bind the exact provider "
+            "revision and ABI, separate invalid identity from stale revisions, "
+            "retain Factorio composition, and grant no runtime authority"
+        )
+    module_decomposition = status.get("facman_application_module_decomposition", {})
+    expected_module_decomposition = {
+        "status": "accepted_local_clean_matrix",
+        "work_unit": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+        "module_contract": "ApplicationModule",
+        "registered_modules": [
+            "WorkspaceApplicationModule",
+            "SetupApplicationModule",
+            "InstallationApplicationModule",
+            "InstanceApplicationModule",
+            "ProfileApplicationModule",
+            "ContentApplicationModule",
+            "RecoveryApplicationModule",
+            "DiagnosticsApplicationModule",
+            "LaunchApplicationModule",
+        ],
+        "registered_module_count": 9,
+        "central_entrypoint_line_count": 210,
+        "central_direct_command_cases": 0,
+        "request_decoding_owner": "command_dispatch",
+        "global_admission_before_module_execution": True,
+        "module_lookup_owner": "factorio_application_composition_root",
+        "result_envelope_owner": "factorio_application_composition_root",
+        "boundary_exception_containment": True,
+        "clean_build_root_honored_by_package_proof": True,
+        "local_release_native_test_count": 52,
+        "local_python_test_count": 482,
+        "local_python_expected_skip_count": 30,
+        "required_windows_package_proof": "pass",
+        "strict_validation": "pass",
+        "real_factorio_execution": False,
+        "runtime_authority": False,
+        "authority_promotion": False,
+    }
+    if module_decomposition != expected_module_decomposition:
+        problems.append(
+            "application module decomposition truth must retain the nine-module "
+            "composition root, clean package proof, and no runtime authority"
+        )
+    integration_proof = status.get("facman_ulk_integration_proof", {})
+    expected_integration_proof = {
+        "status": "accepted_local_clean_reconstruction",
+        "work_unit": "FACMAN-ULK-INTEGRATION-PROOF-01",
+        "facman_proof_revision": "83980f140b365ab3206d5631db7c38db929b61fb",
+        "universal_launcher_revision": "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "detached_source_worktrees": True,
+        "source_worktrees_clean": True,
+        "final_build_root_initially_absent": True,
+        "final_matrix_seconds": 423.5,
+        "universal_launcher_native_test_count": 4,
+        "universal_launcher_strict_validation": "pass",
+        "universal_setup_native_test_count": 16,
+        "universal_setup_strict_validation": "pass",
+        "facman_native_test_count": 53,
+        "facman_python_test_count": 486,
+        "facman_python_expected_skip_count": 29,
+        "facman_aide_validation": "pass",
+        "facman_strict_validation": "pass",
+        "installed_sdk_proof": "pass",
+        "windows_cli_package_proof": "pass",
+        "package_files_verified": 478,
+        "package_archive_sha256": "c6551405ca0d0d2f100c34b1daea92368ae51fe78e61398499c7b027c8f9ca0d",
+        "package_provenance_sha256": "d5ffaeb8dd4063c350662405dd25b6d3f02809ae25bb287bdebeb0600c0f79a9",
+        "package_integrity": "sha256_consistent",
+        "package_authenticity": "not_proven_unsigned",
+        "branch_governance": "documented_asymmetric",
+        "universal_dev_branches_created": False,
+        "candidate_revalidation_required": True,
+        "real_factorio_execution": False,
+        "human_verdict": "not_performed",
+        "canonical_main_promotion": False,
+        "signing": False,
+        "publication": False,
+        "runtime_authority": False,
+        "authority_promotion": False,
+    }
+    if integration_proof != expected_integration_proof:
+        problems.append(
+            "three-repository integration truth must bind the exact clean "
+            "matrix and unsigned package without promoting authority"
+        )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {
         "status": "accepted_closed_reviewed_dev_integration",
@@ -1965,8 +2274,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU6 Launcher handoff must record a recognized monotonic proof state")
-    if m2_wu6.get("universal_launcher_main_revision") != provider_pins()["universal_launcher"]["revision"]:
-        problems.append("M2-WU6 must bind the exact current Universal Launcher provider pin")
+    if m2_wu6.get("universal_launcher_main_revision") != "7bd4425f0c35414f738159b45d8bec42edf70235":
+        problems.append("M2-WU6 must preserve its exact historical Universal Launcher proof identity")
     if m2_wu6.get("launcher_abi_version") != "1.3" or m2_wu6.get("facman_binding_abi_version") != "1.3":
         problems.append("M2-WU6 must bind the additive Launcher and FacMan ABI 1.3 integration")
     if m2_wu6.get("recovery_without_install_reference") is not True:
@@ -2354,6 +2663,9 @@ def summary(data: dict[str, Any]) -> str:
         f"Gate 4B hermetic Play candidate: "
         f"{data['hermetic_standalone_play_candidate']['technical_disposition']} "
         f"({data['hermetic_standalone_play_candidate']['dev_integration_revision']})",
+        f"Instance-isolated Play candidate: "
+        f"{data['windows_instance_isolated_play_candidate']['technical_disposition']} "
+        f"({data['windows_instance_isolated_play_candidate']['status']})",
         f"golden_journey: {data['product']['golden_journey']}",
         f"playability: {data['readiness']['playability']}",
         f"execution: {data['execution']['status']} ({data['execution']['reason']})",

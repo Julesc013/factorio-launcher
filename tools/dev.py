@@ -105,6 +105,8 @@ def run_python(modules: list[str], build_root: Path, configuration: str = "") ->
     if env.get("PYTHONPATH"):
         python_paths.append(env["PYTHONPATH"])
     env["PYTHONPATH"] = os.pathsep.join(python_paths)
+    env["FACMAN_NATIVE_BUILD_ROOT"] = str(build_root.resolve())
+    env["FACMAN_NATIVE_CONFIGURATION"] = configuration
     executable = native_executable(build_root, configuration)
     if executable:
         env["FACMAN_NATIVE_CLI"] = str(executable.resolve())
@@ -119,6 +121,8 @@ def test_command(args: argparse.Namespace) -> None:
         run_native(build_root, args.configuration, ["*"])
         env = os.environ.copy()
         env["PYTHONPATH"] = str(ROOT)
+        env["FACMAN_NATIVE_BUILD_ROOT"] = str(build_root.resolve())
+        env["FACMAN_NATIVE_CONFIGURATION"] = args.configuration
         executable = native_executable(build_root, args.configuration)
         if executable:
             env["FACMAN_NATIVE_CLI"] = str(executable.resolve())
@@ -196,6 +200,7 @@ def main() -> int:
     elif args.command == "package":
         package_command(args)
     else:
+        run([sys.executable, "tools/verify_dependency_revisions.py"])
         test_args = argparse.Namespace(mode="full", build_root=args.build_root, configuration=args.configuration)
         test_command(test_args)
         run([sys.executable, "tools/strict_check.py"])

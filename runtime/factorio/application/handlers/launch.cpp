@@ -75,6 +75,10 @@ ApplicationResult preview_launch(ApplicationContext& context, const BuildLaunchP
     launch::InstanceLaunchRef instance_ref {
         instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
         effective.value().launch_arguments};
+    instance_ref.product_id = "factorio";
+    instance_ref.install_id = install.install_id;
+    instance_ref.binding_revision =
+        instance.schema + ":" + instance.factorio_version + ":" + instance.profile;
     launch::InstallLaunchRef install_ref {
         install.root,
         install.executable,
@@ -84,6 +88,15 @@ ApplicationResult preview_launch(ApplicationContext& context, const BuildLaunchP
         install.strict_isolation_eligibility,
         install.external_state_domains,
     };
+    install_ref.install_id = install.install_id;
+    install_ref.product_id = "factorio";
+    install_ref.exact_product_version = install.version.empty() ? "unknown" : install.version;
+    install_ref.setup_state_ref = install.setup_state_ref;
+    install_ref.lifecycle_status = install.lifecycle_status.empty() ? "active" : install.lifecycle_status;
+    install_ref.last_verification_identity = install.last_verification_identity.empty()
+        ? "unobserved"
+        : install.last_verification_identity;
+    install_ref.state_revision = install.state_revision.empty() ? "unobserved" : install.state_revision;
     ApplicationResult result;
     result.output = launch::build_launch_plan(instance_ref, install_ref, command);
     return result;
@@ -102,6 +115,10 @@ ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunc
     launch::InstanceLaunchRef instance_ref {
         instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
         effective.value().launch_arguments};
+    instance_ref.product_id = "factorio";
+    instance_ref.install_id = install.install_id;
+    instance_ref.binding_revision =
+        instance.schema + ":" + instance.factorio_version + ":" + instance.profile;
     launch::InstallLaunchRef install_ref {
         install.root,
         install.executable,
@@ -111,6 +128,15 @@ ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunc
         install.strict_isolation_eligibility,
         install.external_state_domains,
     };
+    install_ref.install_id = install.install_id;
+    install_ref.product_id = "factorio";
+    install_ref.exact_product_version = install.version.empty() ? "unknown" : install.version;
+    install_ref.setup_state_ref = install.setup_state_ref;
+    install_ref.lifecycle_status = install.lifecycle_status.empty() ? "active" : install.lifecycle_status;
+    install_ref.last_verification_identity = install.last_verification_identity.empty()
+        ? "unobserved"
+        : install.last_verification_identity;
+    install_ref.state_revision = install.state_revision.empty() ? "unobserved" : install.state_revision;
     ApplicationResult result;
     result.output = launch::preflight_launch(instance_ref, install_ref, "launch_plan.preflight");
     return result;

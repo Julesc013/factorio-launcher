@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tools import workspace_config
+from tools import verify_dependency_revisions, workspace_config
 
 
 class WorkspaceConfigTests(unittest.TestCase):
@@ -33,6 +33,26 @@ class WorkspaceConfigTests(unittest.TestCase):
         presets = workspace_config.cmake_user_presets(repos)
         cache = presets["configurePresets"][0]["cacheVariables"]  # type: ignore[index]
         self.assertEqual(cache["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"], workspace_config.cmake_path(launcher))
+
+    def test_doctor_verifies_pins_without_aligning_repositories(self) -> None:
+        repos = {
+            "universal-setup": Path("X:/setup"),
+            "universal-launcher": Path("X:/launcher"),
+        }
+        with (
+            patch.object(workspace_config, "resolved_repos", return_value=repos),
+            patch.object(workspace_config, "missing_repos", return_value=[]),
+            patch.object(
+                verify_dependency_revisions, "verify", return_value=[]
+            ) as verify,
+        ):
+            self.assertEqual(workspace_config.main(["doctor"]), 0)
+        verify.assert_called_once_with(
+            repository_paths={
+                "universal_setup": repos["universal-setup"],
+                "universal_launcher": repos["universal-launcher"],
+            }
+        )
 
 
 if __name__ == "__main__":

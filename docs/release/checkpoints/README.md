@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `windows_instance_isolated_play_candidate` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `targeted_extraction_complete` and the active WorkUnit is `none (operator gate required)`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -227,6 +227,14 @@ ancestry back into `dev`; exact synchronized-`dev` workflows passed at
 `51977de`. The M2 closeout WorkUnit is closed. M3 is active only for read-only
 existing-portable inspection and plan generation, with every apply, deletion,
 mutation, Steam, execution, and external authority still excluded.
+
+The local
+[`FacMan and Universal Launcher integration proof`](facman-ulk-integration-proof-01.md)
+binds the targeted ownership, client, reference-model, and module-decomposition
+wave to a clean pinned three-repository reconstruction. The follow-on
+[`ignored Universal build-tree cleanup`](facman-ignored-build-tree-cleanup-01.md)
+records exact-root inventory and recoverable removal without changing source
+revisions or runtime authority.
 
 Earlier checkpoints remain revision-pinned historical evidence:
 

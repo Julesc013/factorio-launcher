@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iterator>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -271,6 +272,63 @@ int main()
     write_text(executable_path(install), "replacement-executable");
     if (factorio_instance::project_hermetic_candidate_plan(candidate_request)) return fail(19);
     write_text(executable_path(install), "fixture-not-executable");
+
+    const std::string isolated_policy_document = read_text(
+        fs::path(FACMAN_TEST_SOURCE_ROOT) / "contracts" / "generated-index" /
+        "windows_instance_isolated_play_policy.v1.canonical.json");
+    auto isolated_policy =
+        factorio_launch::FrozenHermeticPlayPolicy::
+            verify_instance_isolated_canonical_document(
+                isolated_policy_document);
+    if (!isolated_policy ||
+        isolated_policy.value().policy_digest !=
+            factorio_launch::kInstanceIsolatedCandidatePolicyDigest) {
+        return fail(190);
+    }
+    factorio_instance::InstanceIsolatedCandidateProjectionRequest
+        isolated_request = candidate_request;
+    isolated_request.operation_id = "instance-isolated-fixture";
+    isolated_request.policy = isolated_policy.value();
+    auto isolated_plan =
+        factorio_instance::project_instance_isolated_candidate_plan(
+            isolated_request);
+    auto isolated_context =
+        factorio_instance::reobserve_instance_isolated_candidate_context(
+            isolated_request);
+    if (!isolated_plan || !isolated_context ||
+        isolated_plan.value().schema !=
+            "factorio.instance_isolated_play_candidate_plan.v1" ||
+        isolated_plan.value().isolation_mode != "instance_isolated" ||
+        isolated_plan.value().evidence.size() != 35U ||
+        isolated_plan.value().writable_resource_ids.size() != 7U ||
+        isolated_plan.value().protected_resource_ids.size() != 12U ||
+        isolated_plan.value().permit_resources.size() != 23U ||
+        isolated_context.value().operation.isolation_mode !=
+            std::optional<std::string>("instance_isolated") ||
+        isolated_context.value().required_capabilities !=
+            std::vector<std::string>{
+                "launch.execute.instance_isolated", "process.execute"} ||
+        !isolated_plan.value().instance_root_authority ||
+        !isolated_plan.value().instance_root_authority->open() ||
+        !isolated_plan.value().instance_root_authority->revalidate().ok() ||
+        factorio_launch::hermetic_candidate_plan_json(
+            isolated_plan.value()).find(fixture.path.generic_string()) !=
+            std::string::npos) {
+        return fail(191);
+    }
+    const auto sibling_escape =
+        isolated_plan.value().instance_root_authority->validate_descendant(
+            workspace / "instances" / "sibling");
+    if (sibling_escape.ok()) return fail(192);
+    std::error_code replacement_error;
+    fs::rename(
+        workspace / "instances" / "main",
+        workspace / "instances" / "replacement",
+        replacement_error);
+    if (!replacement_error ||
+        !isolated_plan.value().instance_root_authority->revalidate().ok()) {
+        return fail(193);
+    }
 #endif
 
     FixtureEntropy process_entropy;

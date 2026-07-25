@@ -11,6 +11,7 @@ runtime/client
   -> Universal Launcher client/kernel contracts
 
 runtime/factorio/application
+  -> static domain-module registry
   -> runtime/factorio model modules
   -> runtime/workspace, transaction, archive, platform
   -> typed SetupGateway only for setup-authoritative operations
@@ -33,6 +34,9 @@ The enforced target aliases are documented in
 Universal Setup mutates installed state, Universal Launcher orchestrates
 product-neutral runnable state, FacMan interprets Factorio, and frontends only
 present client operations.
+
+The application composition and its admission order are specified in
+[`application-module-composition.md`](application-module-composition.md).
 
 Handlers never include or call Universal Setup directly. The gateway passes the
 actual package target metadata and install-plan version/archive inputs to the

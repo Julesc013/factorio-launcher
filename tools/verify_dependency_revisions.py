@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -17,13 +18,18 @@ if str(ROOT) not in sys.path:
 from tools.validators.release import _common
 
 TOOL = "verify-dependency-revisions"
+DEFAULT_LOCK = ROOT / "release" / "index" / "workspace_lock.v1.toml"
+ENV_BY_COMPONENT = {
+    "universal_launcher": "FLAUNCH_UNIVERSAL_LAUNCHER_ROOT",
+    "universal_setup": "FLAUNCH_UNIVERSAL_SETUP_ROOT",
+}
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Verify or align pinned dependency revisions.")
     parser.add_argument(
         "--lock",
-        default=str(ROOT / "release" / "index" / "workspace_lock.v1.toml"),
+        default=str(DEFAULT_LOCK),
         help="Path to a workspace lock file.",
     )
     parser.add_argument(
@@ -32,37 +38,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Align dependency paths to locked commits before verifying.",
     )
     args = parser.parse_args(argv)
-    lock_path = Path(args.lock)
-    if not lock_path.is_file():
-        print(f"{TOOL}: missing lock file {lock_path}")
-        return 1
-    try:
-        lock = _common.load_toml(lock_path)
-    except OSError as exc:
-        print(f"{TOOL}: {exc}")
-        return 1
-    problems = []
-    for component in components(lock):
-        if component["id"] in {"factorio_binding"}:
-            continue
-        path = resolve_repo_path(component)
-        if path is None:
-            problems.append(f"{lock_path}: missing repository path {component['path']}")
-            continue
-        if not path.exists():
-            problems.append(f"{lock_path}: missing repository path {component['path']}")
-            continue
-        if args.align:
-            if run_git(["checkout", component["pin"]], path) != 0:
-                problems.append(f"{lock_path}: failed to align {component['id']} to {component['pin']}")
-        if run_git(["rev-parse", "HEAD"], path) != 0:
-            problems.append(f"{lock_path}: not a git repo at {path}")
-            continue
-        head = git_output(["rev-parse", "HEAD"], path)
-        if head != component["pin"]:
-            problems.append(
-                f"{lock_path}: dependency {component['id']} at {path} has {head}, expected {component['pin']}"
-            )
+    problems = verify(Path(args.lock), align=args.align)
     if problems:
         for problem in problems:
             print(f"{TOOL}: {problem}")
@@ -71,10 +47,64 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def resolve_repo_path(component: dict[str, Any]) -> Path | None:
+def verify(
+    lock_path: Path = DEFAULT_LOCK,
+    *,
+    align: bool = False,
+    repository_paths: dict[str, Path] | None = None,
+) -> list[str]:
+    if not lock_path.is_file():
+        return [f"missing lock file {lock_path}"]
+    try:
+        lock = _common.load_toml(lock_path)
+    except OSError as exc:
+        return [str(exc)]
+    problems: list[str] = []
+    for component in components(lock):
+        if component["id"] in {"factorio_binding"}:
+            continue
+        path = resolve_repo_path(component, repository_paths)
+        if path is None:
+            problems.append(f"{lock_path}: missing repository path {component['path']}")
+            continue
+        if not path.exists():
+            problems.append(f"{lock_path}: missing repository path {component['path']}")
+            continue
+        if align:
+            if run_git(["checkout", component["pin"]], path) != 0:
+                problems.append(f"{lock_path}: failed to align {component['id']} to {component['pin']}")
+                continue
+        head = git_output(["rev-parse", "HEAD"], path)
+        if head == "unknown":
+            problems.append(f"{lock_path}: not a git repo at {path}")
+            continue
+        if head != component["pin"]:
+            problems.append(
+                f"{lock_path}: dependency {component['id']} at {path} has {head}, expected {component['pin']}"
+            )
+    return problems
+
+
+def resolve_repo_path(
+    component: dict[str, Any],
+    repository_paths: dict[str, Path] | None = None,
+) -> Path | None:
     explicit = component.get("path", "").strip()
     source = component.get("source", "").strip()
     candidates = []
+    component_id = str(component.get("id", ""))
+    if repository_paths and component_id in repository_paths:
+        candidates.append(repository_paths[component_id])
+    environment = ENV_BY_COMPONENT.get(component_id)
+    if environment and os.environ.get(environment):
+        candidates.append(Path(os.environ[environment]))
+    universal_root = os.environ.get("FLAUNCH_UNIVERSAL_ROOT")
+    if universal_root and source:
+        candidates.append(Path(universal_root) / source)
+    workspace_root = os.environ.get("FLAUNCH_WORKSPACE_ROOT")
+    if workspace_root and source:
+        candidates.append(Path(workspace_root) / "Universal" / source)
+        candidates.append(Path(workspace_root) / source)
     if explicit:
         candidate = Path(explicit)
         candidates.append(candidate if candidate.is_absolute() else ROOT / candidate)
@@ -88,7 +118,7 @@ def resolve_repo_path(component: dict[str, Any]) -> Path | None:
             ]
         )
     for candidate in candidates:
-        if (candidate / ".git").is_dir():
+        if (candidate / ".git").exists():
             return candidate.resolve()
     return None
 

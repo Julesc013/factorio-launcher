@@ -11,8 +11,8 @@ Rules:
 
 Current experimental compatibility identities:
 
-- FLB ABI: `1.2`, queried with `flb_abi_version_v1()`;
-- required Universal Launcher ABI: `1.1`, queried separately with
+- FLB ABI: `1.3`, queried with `flb_abi_version_v1()`;
+- required Universal Launcher ABI: `1.5`, queried separately with
   `flb_required_ulk_abi_v1()`;
 - a requested FLB version is compatible only when its major matches and its
   minor does not exceed the runtime minor;

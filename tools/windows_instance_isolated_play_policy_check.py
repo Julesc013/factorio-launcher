@@ -631,11 +631,12 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
     with (ROOT / "release/index/project_status.v2.toml").open("rb") as handle:
         status = tomllib.load(handle)
     product = status.get("product", {})
-    if (
-        product.get("truth_scope")
-        != "canonical_instance_isolated_policy_dev_synchronized_candidate_active"
-    ):
-        problems.append("project truth must record canonical policy synchronization and candidate activation")
+    truth_scope = product.get("truth_scope", "")
+    if not truth_scope.startswith("instance_isolated_candidate_technical_pass_"):
+        problems.append(
+            "project truth must record canonical policy synchronization and "
+            "preserve the candidate technical pass in later phases"
+        )
     if product.get("canonical_main_promotion") is not True:
         problems.append("project truth must explicitly record policy-only canonical main promotion")
     if "canonical_integration" in product:

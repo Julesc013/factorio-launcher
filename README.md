@@ -54,24 +54,24 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `windows_instance_isolated_play_candidate`. **Active WorkUnit:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`. **Next:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01`.
+**Phase:** `targeted_extraction_complete`. **Active WorkUnit:** `none (operator gate required)`. **Next:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 292 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 295 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `instance_isolated_candidate_not_yet_implemented_or_executed`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `instance_isolated_candidate_revalidation_required_after_targeted_extraction_no_play_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
 Gate 3 exact permit infrastructure is closed with provider-side revalidation and no product issuance.
 Gates 0-3 are canonically promoted and dev-synchronized without authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.
-The Windows instance-isolated policy is accepted on reviewed `dev` and awaits a separate no-authority canonical promotion before its candidate may start.
+The Windows instance-isolated policy is canonical and synchronized. Its exact candidate is technically complete without a real Factorio run, human verdict, public Play route, or authority promotion.
 The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 Contributor status command: `py -3 tools/project_state.py --summary`.
@@ -181,6 +181,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 [development getting-started guide](docs/development/getting-started.md).
 The bounded process, admission, and session-journal design is described in the
 [execution-foundation architecture](docs/architecture/execution_foundation.md).
+Cross-repository ownership and temporary launcher incubators are recorded in
+the [component-ownership architecture](docs/architecture/component_ownership.md)
+and its machine-readable manifest.
 
 ## AIDE Lite
 

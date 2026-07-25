@@ -8,18 +8,13 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: windows-instance-isolated-play-candidate
+  phase: targeted-extraction-complete
   primary_goal: >
-    Implement the exact Windows instance-isolated candidate against the
-    canonically frozen policy without broadening the claim, exposing public
-    Play, or recording the separate human verdict.
+    Preserve the completed targeted cross-repository refactor, clean pinned
+    source train, and Factorio InstanceSpec while runtime authority remains closed.
   next_task: >
-    Bind one Windows x64 Factorio 2.0.77 standalone non-Steam menu candidate
-    to the accepted InstanceSpec, InstanceBinding, and InstanceReadiness plus
-    the exact Instance closure, installation, plan, permit, providers,
-    protected roots, external-effect taxonomy, and observer evidence. Keep
-    menu as the default and only candidate intent, retain every no-authority
-    boundary, and keep the later human verdict separate.
+    Start a separately reviewed Windows instance-isolated Play revalidation
+    WorkUnit against the extracted Universal Launcher contracts.
   authoritative_command_slice:
     - installs.scan
     - installs.import

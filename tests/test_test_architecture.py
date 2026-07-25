@@ -44,6 +44,8 @@ class TestArchitectureTests(unittest.TestCase):
         source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
         self.assertIn('f"{configuration}/facman.exe"', source)
         self.assertIn("native_executable(build_root, args.configuration)", source)
+        self.assertIn('env["FACMAN_NATIVE_BUILD_ROOT"] = str(build_root.resolve())', source)
+        self.assertIn('env["FACMAN_NATIVE_CONFIGURATION"] = args.configuration', source)
 
     def test_raw_python_runner_prefers_canonical_native_smoke_binary(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

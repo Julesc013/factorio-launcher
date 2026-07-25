@@ -9,6 +9,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import component_ownership_check
 
 
 SPECIFIC_ENV = {
@@ -69,6 +73,9 @@ def main(argv: list[str] | None = None) -> int:
 
     problems: list[str] = []
     problems.extend(check_factorio_repo_boundaries())
+    problems.extend(
+        component_ownership_check.check(require_siblings=not args.product_only)
+    )
     if not args.product_only:
         problems.extend(check_sibling_repos())
         problems.extend(check_sibling_boundaries())
