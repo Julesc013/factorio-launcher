@@ -112,11 +112,17 @@ items:
     task: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/evidence
   - id: ULK-CLIENT-TRANSPORT-EXTRACTION-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Extract frontend-neutral client and transports into Universal Launcher
     task: .aide/queue/active/ULK-CLIENT-TRANSPORT-EXTRACTION-01/task.yaml
     evidence: .aide/queue/active/ULK-CLIENT-TRANSPORT-EXTRACTION-01/evidence
+  - id: ULK-REFERENCE-MODEL-EXTRACTION-01
+    status: active
+    lifecycle_state: active
+    title: Extract product-neutral launcher reference models
+    task: .aide/queue/active/ULK-REFERENCE-MODEL-EXTRACTION-01/task.yaml
+    evidence: .aide/queue/active/ULK-REFERENCE-MODEL-EXTRACTION-01/evidence
   - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
     status: planned
     lifecycle_state: planned

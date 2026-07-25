@@ -119,6 +119,7 @@ def collect() -> dict[str, Any]:
         "gate4c_verdict03_postrun_repair": status["gate4c_verdict03_postrun_repair"],
         "windows_instance_isolated_play_policy": status["windows_instance_isolated_play_policy"],
         "windows_instance_isolated_play_candidate": status["windows_instance_isolated_play_candidate"],
+        "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "gate4c_privilege_separation_repair": status["gate4c_privilege_separation_repair"],
         "host_environment_program": status["host_environment_program"],
         "multi_version_install_lifecycle": status["multi_version_install_lifecycle"],
@@ -847,6 +848,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "current_gate_status": "instance_isolated_verdict_deferred_ulk_client_extraction_active",
         },
+        "ulk_reference_model_extraction": {
+            "checkpoint": "ulk-reference-model-extraction",
+            "active": "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "last_closed": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+            "next": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+            "phase_status": "active",
+            "safety": "ulk_reference_model_extraction_no_runtime_authority",
+            "execution_reason": "instance_isolated_candidate_revalidation_required_ulk_reference_model_extraction_no_play_authority",
+            "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_ulk_reference_model_extraction_active",
+            "canonical_main_promotion": True,
+            "current_gate_status": "instance_isolated_verdict_deferred_ulk_reference_model_extraction_active",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1522,6 +1535,39 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "policy, stable Instance authority, closed evidence taxonomy, local "
             "technical disposition, and no-authority boundary"
         )
+    ulk_client_transport = status.get("ulk_client_transport_extraction", {})
+    expected_ulk_client_transport = {
+        "status": "provider_implemented_facman_integration_active",
+        "work_unit": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+        "universal_launcher_previous_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_launcher_revision": "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
+        "launcher_abi_version": "1.4",
+        "transport_contract": "ulk.client_transport.v1",
+        "transport_kinds": ["direct", "process", "daemon"],
+        "direct_adapter": "ulk_direct_transport_v1",
+        "generic_c_client_owner": "universal_launcher",
+        "facman_c_adapter": "runtime/client/fl_command_client_cabi_execute.c",
+        "facman_cpp_transport_adapters_retained": True,
+        "provider_strict_validation": "pass",
+        "provider_python_test_count": 6,
+        "provider_native_test_count": 3,
+        "facman_integration_validation": "pass",
+        "facman_native_test_count": 51,
+        "facman_python_test_count": 482,
+        "facman_python_expected_skip_count": 30,
+        "historical_candidate_provider_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "candidate_revalidation_required": True,
+        "real_factorio_execution": False,
+        "public_command": False,
+        "runtime_authority": False,
+        "authority_promotion": False,
+    }
+    if ulk_client_transport != expected_ulk_client_transport:
+        problems.append(
+            "ULK client transport extraction truth must bind the exact provider "
+            "revision and ABI, preserve FacMan adapters, require candidate "
+            "revalidation, and grant no runtime authority"
+        )
     privilege_repair = status.get("gate4c_privilege_separation_repair", {})
     expected_privilege_repair = {
         "status": "accepted_closed_reviewed_dev_integration",
@@ -2056,8 +2102,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU6 Launcher handoff must record a recognized monotonic proof state")
-    if m2_wu6.get("universal_launcher_main_revision") != provider_pins()["universal_launcher"]["revision"]:
-        problems.append("M2-WU6 must bind the exact current Universal Launcher provider pin")
+    if m2_wu6.get("universal_launcher_main_revision") != "7bd4425f0c35414f738159b45d8bec42edf70235":
+        problems.append("M2-WU6 must preserve its exact historical Universal Launcher proof identity")
     if m2_wu6.get("launcher_abi_version") != "1.3" or m2_wu6.get("facman_binding_abi_version") != "1.3":
         problems.append("M2-WU6 must bind the additive Launcher and FacMan ABI 1.3 integration")
     if m2_wu6.get("recovery_without_install_reference") is not True:

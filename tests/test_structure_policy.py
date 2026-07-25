@@ -38,7 +38,8 @@ class StructurePolicyTests(unittest.TestCase):
 
     def test_runtime_and_client_source_seams_exist(self) -> None:
         self.assertTrue((ROOT / "runtime" / "package" / "fl_runtime_locator.c").is_file())
-        self.assertTrue((ROOT / "runtime" / "client" / "fl_command_client.c").is_file())
+        self.assertTrue((ROOT / "runtime" / "client" / "fl_command_client_cabi_execute.c").is_file())
+        self.assertFalse((ROOT / "runtime" / "client" / "fl_command_client.c").exists())
         self.assertTrue((ROOT / "runtime" / "factorio" / "install_validation" / "README.md").is_file())
         self.assertTrue((ROOT / "runtime" / "factorio" / "modsets" / "README.md").is_file())
         self.assertFalse((ROOT / "runtime" / "factorio" / "c11").exists())

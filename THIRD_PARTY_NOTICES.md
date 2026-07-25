@@ -5,7 +5,7 @@ This repository does not bundle Factorio binaries or Wube assets.
 ## Universal Launcher
 
 - Source: https://github.com/Julesc013/universal-launcher
-- Pinned commit: `7bd4425f0c35414f738159b45d8bec42edf70235`
+- Pinned commit: `78c27da0de2cefc40ff0f9654ab46f777a1357ae`
 - License: MIT
 - License notice: `LICENSES/UniversalLauncher.txt`
 - Use: linked runtime library and installed public C headers for the experimental FacMan SDK

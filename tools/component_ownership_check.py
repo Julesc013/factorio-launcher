@@ -212,7 +212,7 @@ def main(argv: list[str] | None = None) -> int:
         description="Validate cross-repository component ownership."
     )
     parser.add_argument("--require-siblings", action="store_true")
-    args = parser.parse_args(argv)
+    args = parser.parse_args([] if argv is None else argv)
     problems = check(require_siblings=args.require_siblings)
     if problems:
         for problem in problems:
@@ -223,4 +223,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

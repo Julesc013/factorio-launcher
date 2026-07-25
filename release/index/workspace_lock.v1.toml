@@ -14,7 +14,7 @@ pin_kind = "historical_proof_baseline"
 [[component]]
 id = "universal_launcher"
 source = "universal-launcher"
-pin = "7bd4425f0c35414f738159b45d8bec42edf70235"
+pin = "78c27da0de2cefc40ff0f9654ab46f777a1357ae"
 path = "../universal-launcher"
 
 [[component]]

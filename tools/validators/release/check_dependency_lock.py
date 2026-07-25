@@ -138,7 +138,7 @@ def validate_universal_provider(
     prefix = f"{relative(path)} component {component_id}"
     expected = {
         "universal_launcher": {
-            "pin": "7bd4425f0c35414f738159b45d8bec42edf70235",
+            "pin": "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
             "license": "MIT",
             "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
         },

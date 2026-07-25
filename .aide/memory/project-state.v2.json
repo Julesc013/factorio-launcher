@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+  "active_work_unit": "ULK-REFERENCE-MODEL-EXTRACTION-01",
   "capabilities": [
     {
       "commands": [],
@@ -450,15 +450,15 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "ulk-client-transport-extraction",
+  "current_checkpoint": "ulk-reference-model-extraction",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "universal_launcher": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "universal_launcher": "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
-    "current_gate_status": "instance_isolated_verdict_deferred_ulk_client_extraction_active",
+    "current_gate_status": "instance_isolated_verdict_deferred_ulk_reference_model_extraction_active",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -466,7 +466,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "instance_isolated_candidate_technical_pass_ulk_client_extraction_no_play_authority",
+    "reason": "instance_isolated_candidate_revalidation_required_ulk_reference_model_extraction_no_play_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -1132,12 +1132,12 @@
     "Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.",
     "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
     "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
-    "The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; the post-checkpoint ownership audit is active.",
+    "The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; its proof binds the previous Universal Launcher revision and requires revalidation after the client transport extraction.",
     "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01",
+  "last_closed_work_unit": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2036,17 +2036,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+    "current_work_unit": "ULK-REFERENCE-MODEL-EXTRACTION-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "ULK-REFERENCE-MODEL-EXTRACTION-01",
-    "phase": "ulk_client_transport_extraction",
+    "next_work_unit": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
+    "phase": "ulk_reference_model_extraction",
     "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "instance_isolated_candidate_technical_pass_ulk_client_transport_extraction_active"
+    "truth_scope": "instance_isolated_candidate_technical_pass_historical_revalidation_required_ulk_reference_model_extraction_active"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -2057,7 +2057,7 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+      "revision": "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
       "source": "universal-launcher"
     },
     "universal_setup": {
@@ -2100,7 +2100,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "ulk_client_transport_extraction_no_runtime_authority",
+    "safety_authority": "ulk_reference_model_extraction_no_runtime_authority",
     "user_validation": "not_started",
     "user_workflow": "advanced_command_surface_only"
   },
@@ -2118,6 +2118,36 @@
     "Compile, runtime, package, publication, and support status are separate claims.",
     "Historical milestone evidence does not select the current product objective."
   ],
+  "ulk_client_transport_extraction": {
+    "authority_promotion": false,
+    "candidate_revalidation_required": true,
+    "direct_adapter": "ulk_direct_transport_v1",
+    "facman_c_adapter": "runtime/client/fl_command_client_cabi_execute.c",
+    "facman_cpp_transport_adapters_retained": true,
+    "facman_integration_validation": "pass",
+    "facman_native_test_count": 51,
+    "facman_python_expected_skip_count": 30,
+    "facman_python_test_count": 482,
+    "generic_c_client_owner": "universal_launcher",
+    "historical_candidate_provider_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "launcher_abi_version": "1.4",
+    "provider_native_test_count": 3,
+    "provider_python_test_count": 6,
+    "provider_strict_validation": "pass",
+    "public_command": false,
+    "real_factorio_execution": false,
+    "runtime_authority": false,
+    "status": "provider_implemented_facman_integration_active",
+    "transport_contract": "ulk.client_transport.v1",
+    "transport_kinds": [
+      "direct",
+      "process",
+      "daemon"
+    ],
+    "universal_launcher_previous_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+    "universal_launcher_revision": "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
+    "work_unit": "ULK-CLIENT-TRANSPORT-EXTRACTION-01"
+  },
   "universal_repository_licenses": {
     "clean_reconstruction": "passed",
     "decision_work_unit": "FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01",

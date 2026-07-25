@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "ulk-client-transport-extraction",
+            "ulk-reference-model-extraction",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+            "ULK-REFERENCE-MODEL-EXTRACTION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01",
+            "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "ULK-REFERENCE-MODEL-EXTRACTION-01",
+            "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "instance_isolated_candidate_technical_pass_ulk_client_transport_extraction_active",
+            "instance_isolated_candidate_technical_pass_historical_revalidation_required_ulk_reference_model_extraction_active",
             data["product"]["truth_scope"],
         )
         self.assertTrue(data["product"]["canonical_main_promotion"])
@@ -603,7 +603,20 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("29344174316", m2_wu6["facman_dev_ci_run"])
         self.assertEqual("29344174402", m2_wu6["facman_dev_codeql_run"])
         self.assertEqual("29344174517", m2_wu6["facman_dev_security_policy_run"])
-        self.assertEqual(data["provider_pins"]["universal_launcher"]["revision"], m2_wu6["universal_launcher_main_revision"])
+        self.assertEqual(
+            "7bd4425f0c35414f738159b45d8bec42edf70235",
+            m2_wu6["universal_launcher_main_revision"],
+        )
+        client_extraction = data["ulk_client_transport_extraction"]
+        self.assertEqual(
+            data["provider_pins"]["universal_launcher"]["revision"],
+            client_extraction["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            m2_wu6["universal_launcher_main_revision"],
+            client_extraction["historical_candidate_provider_revision"],
+        )
+        self.assertTrue(client_extraction["candidate_revalidation_required"])
         self.assertEqual("1.3", m2_wu6["launcher_abi_version"])
         self.assertEqual("1.3", m2_wu6["facman_binding_abi_version"])
         self.assertTrue(m2_wu6["recovery_without_install_reference"])
@@ -810,15 +823,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "ulk-client-transport-extraction",
+            "ulk-reference-model-extraction",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
+            "ULK-REFERENCE-MODEL-EXTRACTION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01",
+            "ULK-CLIENT-TRANSPORT-EXTRACTION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -848,7 +861,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "7bd4425f0c35414f738159b45d8bec42edf70235",
+            "78c27da0de2cefc40ff0f9654ab46f777a1357ae",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]

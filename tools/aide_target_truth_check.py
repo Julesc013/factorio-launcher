@@ -123,6 +123,7 @@ def validate_profile_text(text: str) -> list[str]:
         "cross-repo-ownership-audit",
         "local-dependency-pin-enforcement",
         "ulk-client-transport-extraction",
+        "ulk-reference-model-extraction",
         "gate4c-privilege-separation-repair",
     }
     if phase not in allowed_phases:
