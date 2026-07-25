@@ -93,19 +93,16 @@ class AideCompactionTests(unittest.TestCase):
     def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "windows-instance-isolated-play-policy",
+            "windows-instance-isolated-play-policy-closeout",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
@@ -141,7 +138,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "dev_integrated_postrun_repair_proven_instance_isolated_policy_active",
+            "dev_integrated_instance_isolated_policy_accepted_pending_canonical_promotion",
             data["product"]["truth_scope"],
         )
         self.assertFalse(data["product"]["canonical_main_promotion"])
@@ -305,6 +302,35 @@ class AideCompactionTests(unittest.TestCase):
             "894b203710b8e14055903c0d33a9d3517fb6aa94",
             gate4c_verdict["privilege_separation_repair_revision"],
         )
+        instance_policy = data["windows_instance_isolated_play_policy"]
+        self.assertEqual(
+            "accepted_reviewed_dev_integration_pending_canonical_promotion",
+            instance_policy["status"],
+        )
+        self.assertEqual(67, instance_policy["implementation_pull_request"])
+        self.assertEqual(
+            "c25491e5250f80d9b1f9813ddf37910315bcc96c",
+            instance_policy["reviewed_head_revision"],
+        )
+        self.assertEqual(
+            "28495de937f1184dacc745f41dcac675756ef931",
+            instance_policy["dev_integration_revision"],
+        )
+        self.assertEqual(
+            "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
+            instance_policy["policy_digest"],
+        )
+        self.assertTrue(instance_policy["exact_dev_clean_reproduction"])
+        self.assertEqual(50, instance_policy["native_test_count"])
+        self.assertEqual(466, instance_policy["python_test_count"])
+        self.assertEqual(315, instance_policy["python_expected_skips"])
+        self.assertEqual(
+            ["windows.bam.factorio_process_execution.v1"],
+            instance_policy["expected_external_disclosures"],
+        )
+        self.assertFalse(instance_policy["external_effects_are_permit_resources"])
+        self.assertFalse(instance_policy["canonical_main_promotion"])
+        self.assertFalse(instance_policy["authority_promotion"])
         privilege_repair = data["gate4c_privilege_separation_repair"]
         self.assertEqual(
             "accepted_closed_reviewed_dev_integration",
@@ -440,7 +466,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -768,15 +794,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "windows-instance-isolated-play-policy",
+            "windows-instance-isolated-play-policy-closeout",
             data["current_checkpoint"],
         )
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

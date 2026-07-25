@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01
 title: Freeze the Windows normal-host instance-isolated Play policy
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-24T16:08:52Z
 owner: unassigned
 objective: >
@@ -77,3 +77,8 @@ closeout_checklist:
   - pass strict, policy, schema, cross-platform, security, and clean-reproduction validation
   - keep public Play and every dangerous authority unavailable
 active_at: 2026-07-24T16:08:53Z
+verified_at: 2026-07-25T05:25:56Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-25T05:25:57Z
+closed_at: 2026-07-25T05:25:57Z

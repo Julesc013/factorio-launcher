@@ -58,5 +58,52 @@ No WPR session or Factorio process was started. No permit was issued. No
 runtime, public command, Setup, credential, network, Steam, signing,
 publication, or product authority was added.
 
-Hosted exact-head and clean-reproduction evidence remain required before the
-policy implementation can close.
+## Exact reviewed-head proof
+
+PR #67 reviewed implementation head
+`c25491e5250f80d9b1f9813ddf37910315bcc96c` passed both push and
+pull-request workflow sets:
+
+| Proof | Push run | Pull-request run | Result |
+| --- | --- | --- | --- |
+| CI | `30144796327` | `30144805820` | Pass |
+| Code security | `30144796337` | `30144805795` | Pass |
+| Schema check | `30144796328` | `30144805851` | Pass |
+| Security policy | `30144796329` | `30144805806` | Pass |
+
+PR #67 merged with exact-head matching into `dev` revision
+`28495de937f1184dacc745f41dcac675756ef931`. Its exact merged-state
+proof passed:
+
+| Proof | Run | Result |
+| --- | --- | --- |
+| CI | `30145199265` | Pass |
+| Code security | `30145199294` | Pass |
+| Schema check | `30145199268` | Pass |
+| Security policy | `30145199267` | Pass |
+
+## Clean pinned reconstruction
+
+One task-owned temporary workspace used fresh detached clones at:
+
+| Repository | Revision |
+| --- | --- |
+| FacMan | `28495de937f1184dacc745f41dcac675756ef931` |
+| Universal Launcher | `7bd4425f0c35414f738159b45d8bec42edf70235` |
+| Universal Setup | `3f8489275077347c2918f3bb03614ec6431362ff` |
+
+All three repositories configured, built, tested, and passed strict checks.
+FacMan additionally passed AIDE Lite and its complete Python suite. The
+repository-owned serial matrix completed in 455.2 seconds. The detached
+source checkouts remained clean and exact at their pins.
+
+The earlier exact implementation-head reproduction also passed the policy,
+schema, focused, strict, and AIDE checks at `c25491e`.
+
+## Closeout boundary
+
+The policy is accepted on reviewed `dev` and is ready for a separate
+truth-only closeout and later canonical policy-only promotion. No WPR session
+or Factorio process was started. No permit was issued. No runtime, public
+command, Setup, credential, network, Steam, signing, publication, or product
+authority was added.

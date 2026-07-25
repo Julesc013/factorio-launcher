@@ -76,8 +76,8 @@ items:
     task: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence
   - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Freeze the Windows normal-host instance-isolated Play policy
     task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01/evidence
@@ -99,3 +99,9 @@ items:
     title: Permit-backed managed installation reconciliation
     task: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence
+  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01
+    status: planned
+    lifecycle_state: planned
+    title: Implement exact Windows instance-isolated Play candidate
+    task: .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01/evidence

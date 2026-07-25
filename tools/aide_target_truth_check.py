@@ -118,6 +118,7 @@ def validate_profile_text(text: str) -> list[str]:
         "hermetic-standalone-play-verdict",
         "hermetic-standalone-play-observer-start-repair",
         "windows-instance-isolated-play-policy",
+        "windows-instance-isolated-play-policy-closeout",
         "gate4c-privilege-separation-repair",
     }
     if phase not in allowed_phases:

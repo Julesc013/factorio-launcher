@@ -1,0 +1,106 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01
+title: Implement exact Windows instance-isolated Play candidate
+status: planned
+lifecycle_state: planned
+planning_state: planned
+created_at: 2026-07-25T05:22:56Z
+owner: unassigned
+objective: >
+  Implement the exact canonical Windows x64 Factorio 2.0.77 standalone
+  non-Steam menu candidate for the frozen instance-isolated policy, including
+  exact Instance directory-object authority, split-privilege observation,
+  provider revalidation, external-effect classification, and a hash-closed
+  technical result without executing the human verdict or exposing public
+  Play authority.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/profile.yaml
+  - README.md
+  - .github/workflows/**
+  - runtime/core/permit/**
+  - runtime/core/CMakeLists.txt
+  - runtime/factorio/application/**
+  - runtime/factorio/instance/**
+  - runtime/factorio/launch/**
+  - runtime/factorio/CMakeLists.txt
+  - runtime/platform/**
+  - contracts/**
+  - apps/**
+  - content/factorio/strings/**
+  - docs/**
+  - release/index/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml
+  - contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml
+affected_native_targets:
+  - facman_hermetic_play_candidate_smoke
+  - facman_gate4c_verdict_harness
+  - facman_operation_permit_smoke
+  - facman_execution_foundation_smoke
+  - flb_factorio_instance_model_smoke
+  - flb_factorio_launch_permit_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_cli
+  - tests.test_contract_truth
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_preflight
+  - tests.test_hermetic_play_candidate
+  - tests.test_operation_permit_contract
+  - tests.test_windows_instance_isolated_play_policy
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/application_handler_check.py
+  - tools/capability_policy_check.py
+  - tools/hermetic_play_candidate_check.py
+  - tools/operation_permit_check.py
+  - tools/schema_validate.py
+  - tools/strict_check.py
+  - tools/windows_instance_isolated_play_policy_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - the canonical instance-isolated policy digest is immutable during candidate implementation
+  - the canonical Gate 4A hermetic policy bytes and digest remain immutable
+  - only Windows x64 Factorio 2.0.77 standalone non-Steam menu instance-isolated Play is in scope
+  - one exact stable no-follow Instance directory object defines recursive descendant authority
+  - string prefixes drive roots wildcards ancestor substitution reparse traversal and sibling escape are refused
+  - external OS and driver effects are observations and disclosures not permit resources
+  - Windows BAM is the only initially accepted external disclosure
+  - DirectInput remains suppressed rather than accepted
+  - NVIDIA writes remain blocking and installation-relative NVIDIA writes are Fail
+  - the observer and runtime own distinct artifact closures
+  - FacMan and Factorio remain medium integrity while only the observer broker is elevated
+  - provider revalidation and one-time permit consumption occur immediately before process creation
+  - every target and completion is resolved before Pass is possible
+  - loss overflow unresolved targets attribution gaps or incomplete packets produce Inconclusive
+  - the implementation candidate cannot record the separate human verdict
+  - public Play Setup credentials networking Steam signing publication and alternate intents remain unavailable
+depends_on:
+  - FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - exact frozen policy digests retained
+  - exact Instance directory-object authority implemented and adversarially tested
+  - split-privilege observer and medium-integrity Factorio boundary retained
+  - external-effect classification is complete and fail-closed
+  - all unresolved or gap cases produce Inconclusive
+  - no public route or human verdict is inferred
+  - affected and full validation pass
+  - project truth and claim ledger remain honest
+  - structured commit check passes

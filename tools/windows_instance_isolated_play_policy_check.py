@@ -633,9 +633,9 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
     product = status.get("product", {})
     if (
         product.get("truth_scope")
-        != "dev_integrated_postrun_repair_proven_instance_isolated_policy_active"
+        != "dev_integrated_instance_isolated_policy_accepted_pending_canonical_promotion"
     ):
-        problems.append("project truth understates merged Verdict 03 repair integration")
+        problems.append("project truth must record reviewed policy dev integration")
     if product.get("canonical_main_promotion") is not False:
         problems.append("project truth must explicitly record no canonical main promotion")
     if "canonical_integration" in product:
@@ -650,10 +650,37 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
 
     policy_truth = status.get("windows_instance_isolated_play_policy", {})
     expected_truth = {
-        "status": "frozen_criteria_review_pending",
+        "status": "accepted_reviewed_dev_integration_pending_canonical_promotion",
         "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
         "source_repair": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
         "source_verdict": "Inconclusive",
+        "implementation_pull_request": 67,
+        "reviewed_head_revision": "c25491e5250f80d9b1f9813ddf37910315bcc96c",
+        "dev_integration_revision": "28495de937f1184dacc745f41dcac675756ef931",
+        "universal_launcher_revision": "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+        "exact_push_ci_run": "30144796327",
+        "exact_push_code_security_run": "30144796337",
+        "exact_push_schema_check_run": "30144796328",
+        "exact_push_security_policy_run": "30144796329",
+        "exact_head_ci_run": "30144805820",
+        "exact_head_code_security_run": "30144805795",
+        "exact_head_schema_check_run": "30144805851",
+        "exact_head_security_policy_run": "30144805806",
+        "exact_dev_ci_run": "30145199265",
+        "exact_dev_code_security_run": "30145199294",
+        "exact_dev_schema_check_run": "30145199268",
+        "exact_dev_security_policy_run": "30145199267",
+        "local_full_matrix": True,
+        "exact_dev_clean_reproduction": True,
+        "clean_reproduction_seconds": 455.2,
+        "native_test_count": 50,
+        "python_test_count": 466,
+        "python_expected_skips": 315,
+        "schema_count": 292,
+        "command_count": 125,
+        "registered_route_count": 123,
+        "refusal_code_count": 242,
         "policy_path": (
             "contracts/policy/factorio/"
             "windows_instance_isolated_play_2_0_77_windows_x64.v1.toml"
@@ -689,8 +716,8 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
     }
     if policy_truth != expected_truth:
         problems.append(
-            "Windows instance-isolated policy truth must bind the frozen policy "
-            "candidate, resources, disclosure, and no-authority boundary"
+            "Windows instance-isolated policy truth must bind reviewed dev "
+            "integration, frozen resources, disclosure, and no-authority boundary"
         )
 
     if status.get("execution", {}).get("status") != "unavailable":

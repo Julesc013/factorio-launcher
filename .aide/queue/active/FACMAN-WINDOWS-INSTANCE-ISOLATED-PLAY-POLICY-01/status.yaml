@@ -1,10 +1,10 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-24T16:08:52Z
-result: PENDING
+result: PASS
 evidence_path: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01/evidence/
 active_at: 2026-07-24T16:08:53Z
 source_repair: FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01
@@ -14,3 +14,7 @@ factorio_execution_allowed: false
 frozen_hermetic_policy_mutation_allowed: false
 permit_issuance_allowed: false
 authority_promotion: false
+verified_at: 2026-07-25T05:25:56Z
+implementation_state: implemented
+reviewed_at: 2026-07-25T05:25:57Z
+closed_at: 2026-07-25T05:25:57Z
