@@ -36,7 +36,7 @@ roots:
     def test_profile_evidence_authorities_exist(self) -> None:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
-        self.assertIn("phase: windows-instance-isolated-play-candidate", text)
+        self.assertIn("phase: local-dependency-pin-enforcement", text)
         self.assertIn("InstanceSpec", text)
         self.assertIn("menu as the default", text)
         self.assertNotIn("portable WorldSpec", text)
@@ -60,15 +60,15 @@ native_direction:
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
         self.assertIn(
-            "phase: windows_instance_isolated_play_candidate (implementation_complete_pending_closeout)",
+            "phase: local_dependency_pin_enforcement (active)",
             text,
         )
         self.assertIn(
-            "active_work_unit: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            "active_work_unit: FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01",
             text,
         )
         self.assertIn(
-            "next_work_unit: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01",
+            "next_work_unit: ULK-CLIENT-TRANSPORT-EXTRACTION-01",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

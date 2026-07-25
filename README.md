@@ -54,7 +54,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `windows_instance_isolated_play_candidate`. **Active WorkUnit:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`. **Next:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-VERDICT-01`.
+**Phase:** `local_dependency_pin_enforcement`. **Active WorkUnit:** `FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01`. **Next:** `ULK-CLIENT-TRANSPORT-EXTRACTION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -64,7 +64,7 @@ M3 existing-portable adoption is authorised backlog after the playable alpha, no
 This reviewed and reproduced dev-integrated tree enumerates 125 commands, 295 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `instance_isolated_candidate_technically_complete_not_executed_or_human_reviewed`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `instance_isolated_candidate_technical_pass_dependency_pin_enforcement_no_play_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
@@ -181,6 +181,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 [development getting-started guide](docs/development/getting-started.md).
 The bounded process, admission, and session-journal design is described in the
 [execution-foundation architecture](docs/architecture/execution_foundation.md).
+Cross-repository ownership and temporary launcher incubators are recorded in
+the [component-ownership architecture](docs/architecture/component_ownership.md)
+and its machine-readable manifest.
 
 ## AIDE Lite
 

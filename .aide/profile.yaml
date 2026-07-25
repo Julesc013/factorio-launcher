@@ -8,16 +8,14 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: windows-instance-isolated-play-candidate
+  phase: local-dependency-pin-enforcement
   primary_goal: >
-    Close the technically complete exact Windows instance-isolated candidate
-    against the canonically frozen policy without broadening the claim,
-    exposing public Play, or recording the separate human verdict.
+    Reject local Universal Launcher or Universal Setup revisions that differ
+    from FacMan's workspace lock without changing dependency branches.
   next_task: >
-    Preserve the candidate's exact InstanceSpec, InstanceBinding, Instance
-    closure, installation, plan, permit, provider, protected-root,
-    external-effect, and observer bindings; finish local truth and validation
-    closeout; and keep the later real-product verdict separate.
+    Integrate read-only pin verification into workspace doctor, verify-all,
+    and package preflight; preserve InstanceSpec and menu as the default
+    without exposing Play; then begin the Universal Launcher client extraction.
   authoritative_command_slice:
     - installs.scan
     - installs.import

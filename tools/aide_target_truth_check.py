@@ -120,6 +120,8 @@ def validate_profile_text(text: str) -> list[str]:
         "windows-instance-isolated-play-policy",
         "windows-instance-isolated-play-policy-closeout",
         "windows-instance-isolated-play-candidate",
+        "cross-repo-ownership-audit",
+        "local-dependency-pin-enforcement",
         "gate4c-privilege-separation-repair",
     }
     if phase not in allowed_phases:
