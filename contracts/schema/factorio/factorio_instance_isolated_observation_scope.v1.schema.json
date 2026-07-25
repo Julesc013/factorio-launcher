@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.instance_isolated_observation_scope.v1.schema.json",
+  "title": "Windows instance-isolated Play observation scope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "observer_id",
+    "method",
+    "provider_revision_binding",
+    "captures",
+    "starts_before_process_creation",
+    "continues_through_quiescence",
+    "exact_target_resolution_required",
+    "successful_completion_required",
+    "gap_signals",
+    "gap_disposition",
+    "hash_closes_output",
+    "independent_of_process_provider",
+    "notes"
+  ],
+  "properties": {
+    "schema": {"const": "factorio.instance_isolated_observation_scope.v1"},
+    "observer_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "method": {"enum": ["attributed_etw_process_tree", "stable_protected_comparison"]},
+    "provider_revision_binding": {"const": "exact"},
+    "captures": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "filesystem",
+          "registry",
+          "process_identity",
+          "child_process_tree",
+          "file_completion",
+          "registry_completion",
+          "file_object_lifetime",
+          "kcb_lifetime",
+          "stable_identity",
+          "content_manifest",
+          "absence_presence"
+        ]
+      }
+    },
+    "starts_before_process_creation": {"const": true},
+    "continues_through_quiescence": {"const": true},
+    "exact_target_resolution_required": {"const": true},
+    "successful_completion_required": {"const": true},
+    "gap_signals": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "lost_events",
+          "buffer_overflow",
+          "unknown_process_identity",
+          "unresolved_target",
+          "missing_completion",
+          "object_reuse_ambiguity",
+          "attribution_gap",
+          "baseline_incomplete",
+          "postrun_incomplete",
+          "provider_failure"
+        ]
+      }
+    },
+    "gap_disposition": {"const": "Inconclusive"},
+    "hash_closes_output": {"const": true},
+    "independent_of_process_provider": {"const": true},
+    "notes": {"type": "string", "minLength": 1, "maxLength": 512}
+  }
+}

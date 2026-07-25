@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.external_effect_disclosure.v1.schema.json",
+  "title": "Exact disclosed external effect for Windows instance-isolated Play",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "effect_id",
+    "classification",
+    "domain",
+    "target_selector_kind",
+    "target_selector",
+    "value_selector",
+    "operation_kinds",
+    "provider_identity",
+    "process_identity_binding",
+    "persistence",
+    "facman_owned",
+    "portable_instance_state",
+    "permit_authorized",
+    "permit_effects",
+    "mismatch_disposition",
+    "user_disclosure",
+    "evidence_requirement"
+  ],
+  "properties": {
+    "schema": {"const": "factorio.external_effect_disclosure.v1"},
+    "effect_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "classification": {"const": "expected_external_disclosed"},
+    "domain": {"enum": ["filesystem", "registry"]},
+    "target_selector_kind": {"const": "exact_domain_template"},
+    "target_selector": {"type": "string", "minLength": 12, "maxLength": 512},
+    "value_selector": {"type": "string", "minLength": 1, "maxLength": 256},
+    "operation_kinds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"enum": ["RegSetValue", "RegSetInformation", "RegCreateKey", "FileIoCreate", "FileIoWrite"]}
+    },
+    "provider_identity": {"type": "string", "minLength": 3, "maxLength": 128},
+    "process_identity_binding": {"type": "string", "minLength": 8, "maxLength": 256},
+    "persistence": {"enum": ["machine_owned_observed_mutation"]},
+    "facman_owned": {"const": false},
+    "portable_instance_state": {"const": false},
+    "permit_authorized": {"const": false},
+    "permit_effects": {"type": "array", "maxItems": 0},
+    "mismatch_disposition": {"const": "Fail"},
+    "user_disclosure": {"type": "string", "minLength": 20, "maxLength": 512},
+    "evidence_requirement": {"type": "string", "minLength": 20, "maxLength": 512}
+  }
+}

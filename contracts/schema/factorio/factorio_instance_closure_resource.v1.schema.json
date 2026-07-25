@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "factorio.instance_closure_resource.v1.schema.json",
+  "title": "Exact writable resource within a Factorio instance-isolated Play operation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "resource_id",
+    "role",
+    "logical_selector",
+    "selector_kind",
+    "ownership",
+    "identity_requirements",
+    "descendant_policy",
+    "string_prefix_authority",
+    "reparse_policy",
+    "permitted_effects",
+    "artifact_owner",
+    "notes"
+  ],
+  "properties": {
+    "schema": {"const": "factorio.instance_closure_resource.v1"},
+    "resource_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "role": {
+      "enum": [
+        "instance_closure",
+        "operation_record",
+        "operation_temporary",
+        "observer_artifacts",
+        "runtime_artifacts",
+        "audit_record",
+        "process_logs"
+      ]
+    },
+    "logical_selector": {"type": "string", "minLength": 8, "maxLength": 192},
+    "selector_kind": {"enum": ["stable_directory_object", "exact_operation_object"]},
+    "ownership": {"enum": ["facman_instance", "facman_operation"]},
+    "identity_requirements": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "logical_resource_id",
+          "stable_root_object_identity",
+          "volume_identity",
+          "filesystem_identity",
+          "no_follow_reparse_status",
+          "owning_instance_record_digest",
+          "instance_binding_digest",
+          "operation_id",
+          "artifact_owner_identity"
+        ]
+      }
+    },
+    "descendant_policy": {
+      "enum": ["recursive_creation_and_mutation", "exact_object_and_descendants"]
+    },
+    "string_prefix_authority": {"const": false},
+    "reparse_policy": {
+      "const": "refuse_reparse_mount_ancestor_replacement_or_escape"
+    },
+    "permitted_effects": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["workspace_read", "workspace_write"]}
+    },
+    "artifact_owner": {
+      "enum": ["instance", "coordinator", "observer", "runtime", "audit", "process_provider"]
+    },
+    "notes": {"type": "string", "minLength": 1, "maxLength": 512}
+  }
+}

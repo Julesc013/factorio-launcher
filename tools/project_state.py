@@ -366,8 +366,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
         f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
-        f"- truth scope: `{data['product']['truth_scope']}`; canonical integration: "
-        f"`{str(data['product']['canonical_integration']).lower()}`; local counts promoted: "
+        f"- truth scope: `{data['product']['truth_scope']}`; canonical main promotion: "
+        f"`{str(data['product']['canonical_main_promotion']).lower()}`; local counts promoted: "
         f"`{str(data['product']['local_counts_promoted']).lower()}`;",
         f"- Gate 0 integration: `{data['gate0_product_convergence_integration']['status']}` at dev "
         f"`{data['gate0_product_convergence_integration']['dev_integration_revision']}`;",
@@ -780,8 +780,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
             "safety": "normal_host_instance_isolated_policy_active_no_play_authority",
             "execution_reason": "frozen_hermetic_claim_mismatch_requires_separate_normal_host_policy",
-            "truth_scope": "local_postrun_repair_proven_instance_isolated_policy_active",
-            "canonical_integration": False,
+            "truth_scope": "dev_integrated_postrun_repair_proven_instance_isolated_policy_active",
+            "canonical_main_promotion": False,
             "current_gate_status": "postrun_repair_passed_instance_isolated_policy_active",
         },
         "gate4c_privilege_separation_repair": {
@@ -821,7 +821,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "truth_scope": phase_contract.get(
             "truth_scope", "canonical_main_promoted_dev_synchronized"
         ),
-        "canonical_integration": phase_contract.get("canonical_integration", True),
+        "canonical_main_promotion": phase_contract.get(
+            "canonical_main_promotion",
+            phase_contract.get("canonical_integration", True),
+        ),
         "local_counts_promoted": True,
     }
     for key, expected in expected_product.items():
@@ -1258,7 +1261,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         )
     postrun_repair = status.get("gate4c_verdict03_postrun_repair", {})
     expected_postrun_repair = {
-        "status": "passed_exact_head_hosted",
+        "status": "accepted_reviewed_dev_integration",
         "work_unit": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
         "source_work_unit": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03",
         "source_verdict": "Inconclusive",
@@ -1293,15 +1296,30 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         )
     instance_isolated_policy = status.get("windows_instance_isolated_play_policy", {})
     expected_instance_isolated_policy = {
-        "status": "active",
+        "status": "frozen_criteria_review_pending",
         "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
         "source_repair": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01",
         "source_verdict": "Inconclusive",
+        "policy_path": "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml",
+        "policy_schema": "factorio.windows_instance_isolated_play_policy.v1",
+        "policy_id": "facman.windows-instance-isolated-play.2.0.77.x64.v1",
+        "policy_revision": "1",
+        "canonicalization_version": "facman.sorted-json.v1",
+        "policy_digest": "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
+        "claim_id": "factorio.windows_instance_isolated_process_tree.v1",
+        "user_label": "Instance-isolated — Windows",
         "candidate_class": "Windows x64 Factorio 2.0.77 standalone non-Steam menu",
         "isolation_mode": "instance_isolated",
-        "writable_boundary": "exact FacMan-owned instance closure",
+        "writable_boundary": "exact stable FacMan-owned instance directory object and descendants",
+        "writable_resource_count": 7,
+        "protected_resource_count": 12,
+        "external_disclosure_count": 1,
+        "expected_external_disclosures": [
+            "windows.bam.factorio_process_execution.v1"
+        ],
         "protected_software_roots_immutable": True,
         "os_driver_effects_observed_and_disclosed": True,
+        "external_effects_are_permit_resources": False,
         "whole_host_immutability_claimed": False,
         "enforced_sandbox_claimed": False,
         "frozen_hermetic_policy_mutation_allowed": False,
@@ -1309,6 +1327,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "factorio_execution_allowed": False,
         "public_command": False,
         "product_permit_issuance": False,
+        "canonical_main_promotion": False,
         "authority_promotion": False,
     }
     if instance_isolated_policy != expected_instance_isolated_policy:
