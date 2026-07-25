@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools import verify_dependency_revisions
 from tools.validators.release import _common
 
 TOOL = "release-workspace-lock-check"
@@ -70,25 +71,7 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
 
 
 def resolve_repo_path(component: dict[str, Any]) -> Path | None:
-    explicit_path = str(component.get("path", "")).strip()
-    source = str(component.get("source", "")).strip()
-    candidates = []
-    if explicit_path:
-        candidates.append((ROOT / explicit_path).resolve())
-    if source:
-        candidates.extend(
-            [
-                (ROOT.parent / source).resolve(),
-                (ROOT.parent / "Universal" / source).resolve(),
-                (ROOT.parent.parent / "Universal" / source).resolve(),
-            ]
-        )
-    if explicit_path:
-        candidates.append((ROOT.parent.parent / explicit_path.strip("/\\")).resolve())
-    for candidate in candidates:
-        if (candidate / ".git").is_dir():
-            return candidate
-    return None
+    return verify_dependency_revisions.resolve_repo_path(component)
 
 
 def repo_head_matches(repo_path: Path, expected: str) -> bool:

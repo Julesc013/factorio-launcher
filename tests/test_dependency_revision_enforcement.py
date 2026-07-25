@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from tools import dev, verify_dependency_revisions, workspace_config
 from tools.package import pipeline
+from tools.validators.release import check_workspace_lock
 
 
 class DependencyRevisionEnforcementTests(unittest.TestCase):
@@ -52,6 +53,29 @@ class DependencyRevisionEnforcementTests(unittest.TestCase):
                 ),
                 worktree.resolve(),
             )
+
+    def test_release_lock_validator_uses_configured_worktree(self) -> None:
+        component = {
+            "id": "universal_setup",
+            "pin": "a" * 40,
+            "path": "../universal-setup",
+            "source": "universal-setup",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            worktree = Path(tmp)
+            worktree.joinpath(".git").write_text(
+                "gitdir: C:/fixture/repository/.git/worktrees/proof\n",
+                encoding="utf-8",
+            )
+            with patch.dict(
+                "os.environ",
+                {"FLAUNCH_UNIVERSAL_SETUP_ROOT": str(worktree)},
+                clear=True,
+            ):
+                self.assertEqual(
+                    check_workspace_lock.resolve_repo_path(component),
+                    worktree.resolve(),
+                )
 
     def test_default_verification_reports_drift_without_checkout(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
