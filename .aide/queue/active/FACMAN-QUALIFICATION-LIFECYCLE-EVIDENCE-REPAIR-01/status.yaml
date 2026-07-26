@@ -5,12 +5,13 @@ lifecycle_state: active
 planning_state: active
 created_at: 2026-07-26T21:19:52Z
 active_at: 2026-07-26T21:19:52Z
-updated_at: 2026-07-26T21:32:26Z
-result: LOCAL_PASS_PENDING_CLEAN_PACKAGE_AND_HOSTED_REVIEW
+updated_at: 2026-07-26T21:36:22Z
+result: LOCAL_PASS_PENDING_HOSTED_REVIEW
 evidence_path: .aide/queue/active/FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01/evidence/
 implementation_state: implemented
+implementation_revision: f9b80e080569b7c67d09ef199912d4ce5945eca6
 local_validation_state: passed
-clean_package_validation_state: pending
+clean_package_validation_state: passed
 hosted_validation_state: pending
 authority_promotion: false
 factorio_execution: false

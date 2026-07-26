@@ -1,6 +1,6 @@
 # Validation
 
-Status: LOCAL PASS; CLEAN PACKAGE AND HOSTED REVIEW PENDING.
+Status: LOCAL PASS; HOSTED REVIEW PENDING.
 
 The first live remote-only qualification passed source closure and product
 authentication, then failed closed before qualification output with:
@@ -48,6 +48,9 @@ The same complete suite was rerun under the repository owner with only
 command-scoped safe-directory entries and passed. No check was skipped or
 weakened.
 
-The clean-checkout Windows package proof must run after the implementation
-commit regenerates the exact source revision. Hosted validation remains a
-separate merge prerequisite.
+The implementation was committed as
+`f9b80e080569b7c67d09ef199912d4ce5945eca6`. From that clean checkout, the
+required Windows package proof regenerated the exact source identity and
+passed all 14 required obligations with zero skips.
+
+Hosted validation remains a separate merge prerequisite.
