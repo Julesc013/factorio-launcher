@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -122,6 +123,44 @@ class ReproWorkspaceSmokeTests(unittest.TestCase):
             repro_workspace_smoke.facman_executable(build_root),
         )
         self.assertIn("-DFACMAN_BUILD_TUI=ON", command)
+
+    def test_validation_environment_disables_python_bytecode_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            repos = {
+                "factorio-launcher": make_repo(
+                    workspace / "factorio-launcher", "factorio-launcher"
+                ),
+                "universal-setup": make_repo(
+                    workspace / "universal-setup", "universal-setup"
+                ),
+                "universal-launcher": make_repo(
+                    workspace / "universal-launcher", "universal-launcher"
+                ),
+            }
+            build_dirs = {
+                name: workspace / "build" / name
+                for name in repro_workspace_smoke.REPO_NAMES
+            }
+
+            env = repro_workspace_smoke.validation_environment(repos, build_dirs)
+
+        self.assertEqual(env["PYTHONDONTWRITEBYTECODE"], "1")
+
+    def test_run_step_can_capture_evidence_without_printing_success_output(self) -> None:
+        records: list[dict[str, object]] = []
+        with tempfile.TemporaryDirectory() as tmp:
+            code = repro_workspace_smoke.run_step(
+                "fixture",
+                Path(tmp),
+                ["python", "-c", "print('captured')"],
+                os.environ.copy(),
+                records=records,
+            )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(records[0]["label"], "fixture")
+        self.assertIn("captured", str(records[0]["output"]))
 
 
 def make_repo(root: Path, name: str) -> Path:

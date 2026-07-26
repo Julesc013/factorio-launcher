@@ -1,9 +1,9 @@
 {
-  "branch_role_for_current_branch": "unknown",
+  "branch_role_for_current_branch": "task",
   "canonical_branch": "main",
   "confidence": "high",
-  "current_branch": "evidence/gate4c-hermetic-play-verdict-03",
-  "current_commit": "d04aa200da6d6fd558f363e54a4ee79b5e79e690",
+  "current_branch": "task/remote-source-closure-proof-01",
+  "current_commit": "24643466515bef20f6f6e296b77e6f7352df1803",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
@@ -11,22 +11,26 @@
   "local_branches": [
     "dev",
     "evidence/gate4c-hermetic-play-verdict",
-    "evidence/gate4c-hermetic-play-verdict-03",
     "evidence/r3.6-real-factorio-isolation-baseline",
     "facman/appkit-shell-01",
     "facman/winforms-shell-01",
     "main",
+    "task/cross-repo-ownership-audit-01",
+    "task/first-party-pin-remote-reachability-01",
     "task/m1-wu9-factorio-setup-gateway",
-    "task/package-smoke-01"
+    "task/package-smoke-01",
+    "task/remote-source-closure-proof-01",
+    "task/three-repository-completion-review-01",
+    "task/windows-instance-isolated-play-candidate-01"
   ],
   "non_mutating": true,
-  "recommended_next_action": "inspect branch policy and repo docs before editing",
+  "recommended_next_action": "continue bounded task work, validate locally, and plan future landing to dev",
   "remote_branches": [
     "origin/dev",
     "origin/evidence/gate4c-hermetic-play-verdict",
-    "origin/evidence/gate4c-hermetic-play-verdict-03",
     "origin/evidence/r3.6-real-factorio-isolation-baseline",
     "origin/main",
+    "origin/task/first-party-pin-remote-reachability-01",
     "origin/task/m1-wu0-public-integration-checkpoint",
     "origin/task/m1-wu0-r3.8-closeout-main-promotion",
     "origin/task/m1-wu9-factorio-setup-gateway-q27",
@@ -55,6 +59,7 @@
     "origin/task/r3.7-public-integration-proof-ci-fix",
     "origin/task/r3.8-steam-external-state-isolation-repair-01",
     "origin/task/real-factorio-isolation-smoke-01",
+    "origin/task/three-repository-completion-review-01",
     "origin/task/universal-mit-license-integration-q27"
   ],
   "remote_url_summary": "Julesc013/factorio-launcher",
@@ -67,8 +72,6 @@
       "facman-r2-local-alpha-proof-0"
     ]
   },
-  "warnings": [
-    "current_branch_role_unknown"
-  ],
+  "warnings": [],
   "worktree_dirty": false
 }

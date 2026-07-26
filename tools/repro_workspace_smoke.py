@@ -298,6 +298,7 @@ def facman_executable(build_root: Path) -> Path:
 
 def validation_environment(repos: dict[str, Path], build_dirs: dict[str, Path]) -> dict[str, str]:
     env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     env["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(repos["universal-setup"])
     env["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(repos["universal-launcher"])
     env["FACMAN_NATIVE_BUILD_ROOT"] = str(build_dirs["factorio-launcher"])
@@ -320,7 +321,12 @@ def factorio_configure_command(repos: dict[str, Path], build_dir: Path) -> list[
     ]
 
 
-def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str], build_root: Path) -> int:
+def run_validation_matrix(
+    repos: dict[str, Path],
+    python_cmd: Sequence[str],
+    build_root: Path,
+    records: list[dict[str, object]] | None = None,
+) -> int:
     build_dirs = {name: repo_build_dir(build_root, name) for name in REPO_NAMES}
     env = validation_environment(repos, build_dirs)
     print(f"repro-workspace-smoke: build-root={build_root}")
@@ -366,14 +372,21 @@ def run_validation_matrix(repos: dict[str, Path], python_cmd: Sequence[str], bui
         ("factorio-launcher unittest", repos["factorio-launcher"], [*python_cmd, "-m", "unittest", "discover", "-s", "tests", "-v"]),
     ]
     for label, cwd, command in steps:
-        code = run_step(label, cwd, command, env)
+        code = run_step(label, cwd, command, env, records=records)
         if code != 0:
             return code
     print("repro-workspace-smoke: build matrix ok")
     return 0
 
 
-def run_step(label: str, cwd: Path, command: Sequence[str], env: dict[str, str]) -> int:
+def run_step(
+    label: str,
+    cwd: Path,
+    command: Sequence[str],
+    env: dict[str, str],
+    *,
+    records: list[dict[str, object]] | None = None,
+) -> int:
     print(f"repro-workspace-smoke: run {label}")
     result = subprocess.run(
         command,
@@ -384,6 +397,15 @@ def run_step(label: str, cwd: Path, command: Sequence[str], env: dict[str, str])
         text=True,
         check=False,
     )
+    if records is not None:
+        records.append(
+            {
+                "label": label,
+                "command": list(command),
+                "exit_code": result.returncode,
+                "output": result.stdout,
+            }
+        )
     if result.returncode != 0:
         print(f"repro-workspace-smoke: FAIL {label} exit={result.returncode}", file=sys.stderr)
         if result.stdout:

@@ -1,0 +1,332 @@
+{
+  "authority_promotion": false,
+  "claim": "remote_source_closure_proven",
+  "clone_policy": {
+    "alternates": false,
+    "detached_exact_checkouts": true,
+    "empty_directories": true,
+    "git_clone_no_local": true,
+    "https_remotes_only": true,
+    "preexisting_objects": false
+  },
+  "factorio_execution": false,
+  "observed_at_utc": "2026-07-26T10:59:47Z",
+  "package": {
+    "archive_runtime_smoke": "pass",
+    "artifact": "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
+    "artifact_sha256": "2fd6b62e5f0b8bd1a5800652b22434d8a6a955733958e6b17cb7ab26391e4cfe",
+    "artifact_size": 2555951,
+    "installed_sdk_proof": true,
+    "package_file_count": 482,
+    "profile_id": "windows_portable_cli_x64",
+    "provenance": "facman-0.1.0-dev.contract-windows-cli-x64-portable.zip.provenance.v1.json",
+    "provenance_sha256": "63d37522f9cff50ccc4eaffdc9faa11633fb2f1673387eed5c37d734323dd3c3",
+    "provenance_verification": "pass",
+    "published": false,
+    "required_package_skips": 0,
+    "required_package_tests": 14,
+    "runtime_smoke": "pass",
+    "signed": false,
+    "source_revisions": {
+      "factorio_launcher": "1d94fcfc567b3ffe8d7d7dc3829cc7984147b3a7",
+      "universal_launcher": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+      "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
+    },
+    "toolchain": {
+      "compiler": "C++ via Visual Studio 18 2026",
+      "generator": "Visual Studio 18 2026",
+      "linker": "link.exe 14.51.36231",
+      "machine": "AMD64",
+      "operating_system": "Windows-10-10.0.19045-SP0",
+      "runner": "windows-2025"
+    }
+  },
+  "permit_issuance": false,
+  "publication": false,
+  "repositories": [
+    {
+      "alternates": false,
+      "canonical_ref_contains_pin": true,
+      "clean": true,
+      "detached": true,
+      "head": "1d94fcfc567b3ffe8d7d7dc3829cc7984147b3a7",
+      "id": "factorio-launcher",
+      "local_clone": false,
+      "pin": "1d94fcfc567b3ffe8d7d7dc3829cc7984147b3a7",
+      "remote": "https://github.com/Julesc013/factorio-launcher.git",
+      "required_ref": "refs/heads/task/remote-source-closure-proof-01",
+      "tree": "932f0d47a6fbf48d9e7734cba9110eec1faea6fb"
+    },
+    {
+      "alternates": false,
+      "canonical_ref_contains_pin": true,
+      "clean": true,
+      "detached": true,
+      "head": "3f8489275077347c2918f3bb03614ec6431362ff",
+      "id": "universal-setup",
+      "local_clone": false,
+      "pin": "3f8489275077347c2918f3bb03614ec6431362ff",
+      "remote": "https://github.com/Julesc013/universal-setup.git",
+      "required_ref": "refs/heads/main",
+      "tree": "8861d0d640af8dc24e774f5ff934ad67f8a5d5cd"
+    },
+    {
+      "alternates": false,
+      "canonical_ref_contains_pin": true,
+      "clean": true,
+      "detached": true,
+      "head": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+      "id": "universal-launcher",
+      "local_clone": false,
+      "pin": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+      "remote": "https://github.com/Julesc013/universal-launcher.git",
+      "required_ref": "refs/heads/main",
+      "tree": "d34cefedd286ce66789b84bef37f23592fb3e4c0"
+    }
+  ],
+  "schema": "facman.remote_source_closure.v1",
+  "status": "pass",
+  "tooling": {
+    "cmake": "cmake version 4.2.3",
+    "git": "git version 2.53.0.windows.1",
+    "host": "Windows-10-10.0.19045-SP0",
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]"
+  },
+  "validation": {
+    "aide_lite": "pass",
+    "steps": [
+      {
+        "command": [
+          "cmake",
+          "-S",
+          ".",
+          "-B",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\universal-launcher"
+        ],
+        "label": "universal-launcher cmake configure",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "cmake",
+          "--build",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\universal-launcher"
+        ],
+        "label": "universal-launcher cmake build",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "ctest",
+          "--test-dir",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\universal-launcher",
+          "-C",
+          "Debug",
+          "--output-on-failure"
+        ],
+        "label": "universal-launcher ctest",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "tools/strict_check.py"
+        ],
+        "label": "universal-launcher strict",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "cmake",
+          "-S",
+          ".",
+          "-B",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\universal-setup"
+        ],
+        "label": "universal-setup cmake configure",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "cmake",
+          "--build",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\universal-setup"
+        ],
+        "label": "universal-setup cmake build",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "ctest",
+          "--test-dir",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\universal-setup",
+          "-C",
+          "Debug",
+          "--output-on-failure"
+        ],
+        "label": "universal-setup ctest",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "tools/strict_check.py"
+        ],
+        "label": "universal-setup strict",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "cmake",
+          "-S",
+          ".",
+          "-B",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\factorio-launcher",
+          "-DFLAUNCH_UNIVERSAL_SETUP_ROOT=C:/Users/Jules/AppData/Local/Temp/facman-remote-source-closure-jip_sbfn/universal-setup",
+          "-DFLAUNCH_UNIVERSAL_LAUNCHER_ROOT=C:/Users/Jules/AppData/Local/Temp/facman-remote-source-closure-jip_sbfn/universal-launcher",
+          "-DFLAUNCH_BUILD_NATIVE_APPS=ON",
+          "-DFLAUNCH_BUILD_TESTS=ON",
+          "-DFACMAN_BUILD_TUI=ON"
+        ],
+        "label": "factorio-launcher cmake configure",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "cmake",
+          "--build",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\factorio-launcher"
+        ],
+        "label": "factorio-launcher cmake build",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "ctest",
+          "--test-dir",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\factorio-launcher",
+          "-C",
+          "Debug",
+          "--output-on-failure"
+        ],
+        "label": "factorio-launcher ctest",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          ".aide/scripts/aide_lite.py",
+          "test"
+        ],
+        "label": "factorio-launcher aide-lite",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "tools/strict_check.py"
+        ],
+        "label": "factorio-launcher strict",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-v"
+        ],
+        "label": "factorio-launcher unittest",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "tools/required_package_proof.py"
+        ],
+        "label": "factorio-launcher required Windows package proof",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "tools/package/pipeline.py",
+          "--profile",
+          "windows_portable_cli_x64",
+          "--out",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\_package\\packages",
+          "--build-root",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\factorio-launcher",
+          "--dist",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\_package\\dist"
+        ],
+        "label": "factorio-launcher package pipeline",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "tools/package_runtime_smoke.py",
+          "--root",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\_package\\packages\\windows_portable_cli_x64"
+        ],
+        "label": "factorio-launcher package runtime smoke",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "tools/provenance_build.py",
+          "--provenance",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\_package\\dist\\facman-0.1.0-dev.contract-windows-cli-x64-portable.zip.provenance.v1.json",
+          "--artifact",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\_package\\dist\\facman-0.1.0-dev.contract-windows-cli-x64-portable.zip",
+          "--package-root",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\_package\\packages\\windows_portable_cli_x64"
+        ],
+        "label": "factorio-launcher provenance verification",
+        "status": "pass"
+      },
+      {
+        "command": [
+          "C:\\Users\\Jules\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "-B",
+          "tools/package_runtime_smoke.py",
+          "--root",
+          "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build\\_package\\extracted"
+        ],
+        "label": "factorio-launcher archived package runtime smoke",
+        "status": "pass"
+      }
+    ],
+    "strict_repositories": [
+      "factorio-launcher",
+      "universal-launcher",
+      "universal-setup"
+    ],
+    "test_counts": {
+      "factorio-launcher_native": 53,
+      "factorio-launcher_python": 501,
+      "universal-launcher_native": 4,
+      "universal-setup_native": 16
+    }
+  },
+  "workspace": {
+    "build_root": "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn\\_build",
+    "clone_root": "C:\\Users\\Jules\\AppData\\Local\\Temp\\facman-remote-source-closure-jip_sbfn",
+    "paths_are_local_observations": true,
+    "source_worktrees_clean_after_validation": true
+  }
+}
