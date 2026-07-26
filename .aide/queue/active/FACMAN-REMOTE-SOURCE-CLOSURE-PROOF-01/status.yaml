@@ -1,8 +1,8 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01
-status: reviewed
-lifecycle_state: reviewed
-planning_state: reviewed
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-26T10:15:13Z
 result: PASS
 evidence_path: .aide/queue/active/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/evidence/
@@ -10,3 +10,4 @@ active_at: 2026-07-26T10:15:13Z
 verified_at: 2026-07-26T11:01:12Z
 implementation_state: implemented
 reviewed_at: 2026-07-26T11:01:13Z
+closed_at: 2026-07-26T11:15:48Z

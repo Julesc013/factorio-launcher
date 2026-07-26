@@ -3,7 +3,7 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_ref.v1.schema.json",
   "title": "Factorio Install Reference",
   "type": "object",
-  "required": ["install_id", "product_id", "source", "ownership", "executable", "app_dir", "distribution_origin", "platform_integration", "strict_isolation_eligibility", "external_state_domains", "verification"],
+  "required": ["install_id", "product_id", "source", "ownership", "executable", "app_dir", "distribution_origin", "platform_integration", "strict_isolation_eligibility", "external_state_domains", "lifecycle_status", "verification"],
   "properties": {
     "install_id": { "type": "string" },
     "provider_id": { "type": "string" },
@@ -30,7 +30,18 @@
       "items": { "enum": ["default_factorio_data", "steam_cloud"] }
     },
     "setup_state_ref": { "type": "string" },
-    "lifecycle_status": { "type": "string" },
+    "lifecycle_status": {
+      "enum": [
+        "active",
+        "verification_failed",
+        "recovery_required",
+        "retired",
+        "uninstalled",
+        "missing",
+        "unknown",
+        "unsupported"
+      ]
+    },
     "last_verification_identity": { "type": "string" },
     "state_revision": { "type": "string" },
     "executable": { "type": "string" },

@@ -2,11 +2,11 @@
   "blockers": [
     {
       "code": "real_play_gate_not_passed",
-      "detail": "Gate 2 is read-only and cannot start a process",
+      "detail": "The exact route remains pending fresh revalidation under FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
       "dimension": "play_authority",
-      "reason": "The exact menu-launch permit and real-product Play gate are not implemented",
+      "reason": "No reviewed real-Play route is available in this build for the selected installation, instance, launch intent and isolation mode.",
       "recoverable": true,
-      "safe_next_action": "await_operation_permit_gate"
+      "safe_next_action": "await_reviewed_play_route"
     }
   ],
   "canonicalization_version": "facman.sorted-json.v1",
@@ -186,7 +186,7 @@
       "id": "play_authority",
       "required": true,
       "state": "blocked",
-      "summary": "Real Factorio execution and OperationPermit issuance remain unavailable"
+      "summary": "No reviewed real-Play route is available in this build for the selected installation, instance, launch intent and isolation mode."
     }
   ],
   "execution_available": false,
@@ -261,8 +261,8 @@
   "safe_next_actions": [
     {
       "command": null,
-      "id": "await_operation_permit_gate",
-      "label": "Keep the instance ready for the OperationPermit gate",
+      "id": "await_reviewed_play_route",
+      "label": "Keep the instance ready while the exact Play route is revalidated",
       "requires_authority": false
     }
   ],

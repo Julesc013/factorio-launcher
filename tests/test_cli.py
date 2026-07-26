@@ -667,7 +667,7 @@ class CliTests(unittest.TestCase):
                 ["install_root", "default_factorio_data"],
             )
             self.assertFalse(plan["strict_execution_eligible"])
-            self.assertEqual(plan["strict_refusal_code"], "isolation_not_proven")
+            self.assertEqual(plan["strict_refusal_code"], "launcher_install_not_active")
             self.assertIn(str(instance_root / "config" / "config.ini"), plan["command_line"])
             launch_schema = json.loads(
                 (ROOT / "contracts/schema/factorio/factorio_launch_plan.v1.schema.json").read_text(
@@ -688,12 +688,17 @@ class CliTests(unittest.TestCase):
             preflight = json.loads(stdout)
             self.assertEqual(preflight["schema"], "factorio.launch_preflight.v1")
             self.assertEqual(preflight["command"], "launch_plan.preflight")
-            self.assertEqual(preflight["status"], "pass")
-            self.assertEqual(preflight["problems"], [])
+            self.assertEqual(preflight["status"], "refused")
+            self.assertIn(
+                "selected installation lifecycle is not active: unknown",
+                preflight["problems"],
+            )
             self.assertFalse(preflight["started"])
             self.assertEqual(preflight["execution_class"], "strict-isolated")
             self.assertFalse(preflight["strict_execution_eligible"])
-            self.assertEqual(preflight["strict_refusal_code"], "isolation_not_proven")
+            self.assertEqual(
+                preflight["strict_refusal_code"], "launcher_install_not_active"
+            )
             preflight_schema = json.loads(
                 (ROOT / "contracts/schema/factorio/factorio_launch_preflight.v1.schema.json").read_text(
                     encoding="utf-8"
@@ -771,7 +776,9 @@ class CliTests(unittest.TestCase):
             self.assertEqual(preview["distribution_origin"], "steam")
             self.assertEqual(preview["platform_integration"], "steam")
             self.assertEqual(preview["strict_isolation_eligibility"], "ineligible")
-            self.assertEqual(preview["strict_refusal_code"], "steam_external_state_not_isolated")
+            self.assertEqual(
+                preview["strict_refusal_code"], "launcher_install_not_active"
+            )
             self.assertIn("steam_cloud", preview["forbidden_write_domains"])
 
             code, stdout, stderr = invoke(
@@ -780,7 +787,9 @@ class CliTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr)
             preflight = json.loads(stdout)
             self.assertEqual(preflight["status"], "refused")
-            self.assertEqual(preflight["strict_refusal_code"], "steam_external_state_not_isolated")
+            self.assertEqual(
+                preflight["strict_refusal_code"], "launcher_install_not_active"
+            )
 
             code, stdout, _stderr = invoke(
                 ["--workspace", tmp, "run", "steam-fixture", "--execute", "--json"]

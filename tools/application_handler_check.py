@@ -98,7 +98,7 @@ def validate() -> list[str]:
         "std::array<const ApplicationModule*, 9> modules_",
         "module_for(request.command)",
         "module->requires_workspace(request.command)",
-        "module->accepts_denied_admission(admission)",
+        "denied_admission_disposition(",
         "module->execute(context_, request, admission, current_command_)",
     ):
         if anchor not in entrypoint:
@@ -127,6 +127,16 @@ def validate() -> list[str]:
             problems.append(f"typed handler owns frontend output or raw JSON parsing: {forbidden}")
     if "handlers::unavailable(" not in entrypoint:
         problems.append("global admission refusal route is missing")
+    module_contract = (APPLICATION / "command_admission.h").read_text(encoding="utf-8")
+    for anchor in (
+        "DeniedAdmissionDisposition",
+        "transform_to_product_refusal",
+        "inspect_only",
+    ):
+        if anchor not in module_contract:
+            problems.append(
+                f"command-specific denied-admission contract is missing: {anchor}"
+            )
     route_expectations = {
         "workspace_module.cpp": (
             "handlers::inspect_product(",

@@ -126,9 +126,9 @@ private:
                 "Dry-run requests never execute data writes");
         }
         const CommandAdmissionDecision admission = admit_command(context_.configuration(), request.command);
-        if (!admission.admitted && !module->accepts_denied_admission(admission)) {
+        if (!admission.admitted && denied_admission_disposition(
+                request.command, admission) == DeniedAdmissionDisposition::reject)
             return handlers::unavailable(context_, current_command_, admission.code, admission.reason);
-        }
         return module->execute(context_, request, admission, current_command_);
     }
     int write_response(const ApplicationResult& result, ulk_command_response_v1* response)

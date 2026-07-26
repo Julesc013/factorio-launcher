@@ -104,4 +104,22 @@ CommandAdmissionDecision admit_command(
     return {};
 }
 
+DeniedAdmissionDisposition denied_admission_disposition(
+    CommandId command,
+    const CommandAdmissionDecision& admission) noexcept
+{
+    if (command == CommandId::run_execute &&
+        admission.code == "isolation_not_proven") {
+        return DeniedAdmissionDisposition::transform_to_product_refusal;
+    }
+    const bool mod_portal_command =
+        command == CommandId::mods_search ||
+        command == CommandId::mods_install ||
+        command == CommandId::mods_update;
+    if (mod_portal_command && admission.code == "network_forbidden") {
+        return DeniedAdmissionDisposition::transform_to_product_refusal;
+    }
+    return DeniedAdmissionDisposition::reject;
+}
+
 } // namespace facman::factorio::application

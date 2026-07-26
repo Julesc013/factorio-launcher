@@ -2035,7 +2035,7 @@ facman::core::Result<CandidateArtifactRecord> persist_candidate_artifacts(
         staging / "output" / "stderr.log";
     std::string detail;
     const bool wrote_marker = facman::base::write_text_new_atomic(
-        marker, "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01\n", detail);
+        marker, "facman.candidate-artifacts.v1\n", detail);
     const bool wrote_output = wrote_marker && facman::base::write_text_new_atomic(
         standard_output, process.standard_output, detail);
     const bool wrote_error = wrote_output && facman::base::write_text_new_atomic(

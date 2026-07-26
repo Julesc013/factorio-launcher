@@ -40,5 +40,15 @@ int main()
     const CommandAdmissionDecision execution = admit_command(configuration, CommandId::run_execute);
     if (execution.admitted || execution.code != "isolation_not_proven") return 8;
     if (!admit_command(configuration, CommandId::run_preview).admitted) return 9;
+    if (denied_admission_disposition(CommandId::run_execute, execution) !=
+        DeniedAdmissionDisposition::transform_to_product_refusal) return 10;
+    if (denied_admission_disposition(CommandId::run_preview, execution) !=
+        DeniedAdmissionDisposition::reject) return 11;
+    const CommandAdmissionDecision network {
+        false, "network_forbidden", "network is not authorised"};
+    if (denied_admission_disposition(CommandId::mods_search, network) !=
+        DeniedAdmissionDisposition::transform_to_product_refusal) return 12;
+    if (denied_admission_disposition(CommandId::saves_list, network) !=
+        DeniedAdmissionDisposition::reject) return 13;
     return 0;
 }

@@ -67,7 +67,7 @@ discovery::InstallRef managed_facman_reference(
     install.lifecycle_status = "active";
     install.last_verification_identity = reference.verification_identity;
     install.state_revision = reference.state_revision;
-    install.verification_status = "structural";
+    install.verification_status = "pass";
     install.setup_mutation_allowed = false;
     return install;
 }

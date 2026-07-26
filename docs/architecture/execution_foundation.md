@@ -9,6 +9,10 @@ without granting real Factorio execution authority.
 application reads setup environment values and user preferences once when the
 FLB application context is created. Setup calls receive that snapshot; a
 command cannot change provider policy by mutating the environment mid-flight.
+The default/global Factorio roots derived from `APPDATA`, `LOCALAPPDATA`,
+`HOME`, and `USERPROFILE` are captured in the same snapshot. Authority-bearing
+launch preflight consumes only those immutable roots and never re-reads the
+process environment.
 Process, network, credential, signing, and publication authority cannot be
 enabled through environment variables.
 
@@ -25,6 +29,15 @@ framework.
 `run.execute`. The command truthfully declares workspace read/write and process
 execution because a successful future run will write its lock, journal, and
 post-run state. Its real-product availability remains fail-closed.
+
+Launch references are also fail-closed. Only the exact `active` lifecycle with
+a current `pass` verification status, nonempty verification identity, nonempty
+state revision, and a fresh Universal Launcher graph can remain eligible.
+Missing, unknown, unsupported, failed, recovery-required, retired, uninstalled,
+stale, or malformed evidence produces a typed refusal; no handler manufactures
+`active`, `unknown`, or `unobserved` evidence. Effective configuration is read
+through a stable no-follow handle and revalidated before its paths influence
+preflight.
 
 ## Process supervision
 
