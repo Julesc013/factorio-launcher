@@ -106,8 +106,8 @@ items:
     task: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence
   - id: FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01
-    status: active
-    lifecycle_state: active
+    status: reviewed
+    lifecycle_state: reviewed
     title: Prove remote-only three-repository source closure
     task: .aide/queue/active/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/task.yaml
     evidence: .aide/queue/active/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/evidence

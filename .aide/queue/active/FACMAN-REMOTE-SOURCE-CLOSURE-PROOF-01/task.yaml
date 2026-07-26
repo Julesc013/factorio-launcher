@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01
 title: Prove remote-only three-repository source closure
-status: active
-lifecycle_state: active
-planning_state: active
+status: reviewed
+lifecycle_state: reviewed
+planning_state: reviewed
 created_at: 2026-07-26T10:15:13Z
 owner: unassigned
 objective: >
@@ -85,3 +85,7 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-26T10:15:13Z
+verified_at: 2026-07-26T11:01:12Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-26T11:01:13Z
