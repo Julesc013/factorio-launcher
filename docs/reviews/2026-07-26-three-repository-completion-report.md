@@ -1,7 +1,9 @@
 ---
 status: reviewed-planning-snapshot
+programme_baseline: frozen-with-targeted-amendments
 work_unit: FACMAN-THREE-REPOSITORY-COMPLETION-REVIEW-01
 reviewed_on: 2026-07-26
+amended_on: 2026-07-26
 scope:
   - factorio-launcher
   - universal-launcher
@@ -77,10 +79,10 @@ publish ULK extraction
   -> stabilize the proven workflow subset as v1
 ```
 
-The immediate next action remains `ULK-EXTRACTION-PUBLICATION-01`. Starting
-another broad FacMan framework refactor before closing that source chain would
-increase local divergence and delay the only path that can make the current
-system reproducible.
+The two ULK publication WorkUnits are now complete. The immediate next action
+is `FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01`, followed by
+`FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01`. No broad FacMan framework refactor
+should begin before that public source chain is reconstructed.
 
 ---
 
@@ -419,12 +421,33 @@ This invalidates any claim that a new contributor or hosted runner can reproduce
 Required repair:
 
 ```text
-ULK-EXTRACTION-PUBLICATION-01
+ULK-CLIENT-TRANSPORT-PUBLICATION-01
+ULK-REFERENCE-MODEL-PUBLICATION-01
 FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01
-FACMAN-REMOTE-ONLY-THREE-REPO-RECONSTRUCTION-01
+FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01
 ```
 
 Do not squash or rewrite the published extraction commits unless FacMan’s pin is deliberately updated and the full three-repository proof is repeated.
+
+Use two dependency-verification levels:
+
+```text
+local/offline:
+    checkout exists
+    HEAD equals pin
+    source tree clean
+    lock structurally valid
+
+remote/source-closure:
+    declared remote and canonical ref are fetchable
+    pin object is remotely fetchable
+    pin is an ancestor of the required ref
+    empty-clone reconstruction succeeds
+```
+
+Ordinary local strict checks must remain usable offline. Remote reachability is
+an explicit promotion and hosted-proof obligation, and proves availability and
+reproducibility rather than publisher authenticity.
 
 ## 5.2 P0 — Missing lifecycle evidence fails open
 
@@ -851,6 +874,26 @@ windows-instance-isolated-factorio-2.0.77-menu-v1
 
 It must bind the policy digest, claim, platform, architecture, Factorio version, distribution, menu intent, isolation mode, provider revisions, and permit profile.
 
+The authority should be represented by one closed, data-described record:
+
+```toml
+id = "windows-instance-isolated-factorio-2.0.77-menu-v1"
+platform = "windows"
+architecture = "x64"
+factorio_version = "2.0.77"
+distribution = "standalone_non_steam"
+launch_intent = "menu"
+isolation_mode = "instance_isolated"
+policy_digest = "8d8189..."
+process_provider_revision = "..."
+observer_provider_revision = "..."
+permit_profile = "..."
+```
+
+Runtime execution is permitted only for a route record compiled or packaged as
+accepted authority. Later routes are separate independently qualified records,
+not Boolean widening of the first route.
+
 ### 7.3 Product UI
 
 Primary navigation:
@@ -889,6 +932,23 @@ last run
 recovery
 ```
 
+### 7.4 Product-convergence scorecard
+
+Validation-surface totals remain useful engineering evidence, but they are not
+product metrics. Track completion with:
+
+| Measure | Current target |
+| --- | --- |
+| Published first-party pins | 3/3 |
+| Required validation obligations skipped | 0 |
+| Accepted real-Play routes | 0, then 1 |
+| Golden journey completion | 0%, then 100% |
+| Player-visible blockers with safe next action | 100% |
+| Unknown mutation outcomes without recovery reference | 0 |
+| Silent foreign mutations | 0 |
+| Observed player journeys | 0, then defined alpha sample |
+| Signed primary package profiles | 0, later required for beta |
+
 ---
 
 ## 8. Optimal dependency-ordered plan
@@ -898,9 +958,10 @@ recovery
 ### WorkUnits
 
 ```text
-ULK-EXTRACTION-PUBLICATION-01
+ULK-CLIENT-TRANSPORT-PUBLICATION-01
+ULK-REFERENCE-MODEL-PUBLICATION-01
 FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01
-FACMAN-REMOTE-ONLY-THREE-REPO-RECONSTRUCTION-01
+FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01
 ```
 
 ### Actions
@@ -927,24 +988,53 @@ without relying on a local Git object database
 
 No new real-Play evidence becomes durable before this gate.
 
-## Wave 1 — Bounded correctness consolidation
+## Wave 1A — Authority-bearing launch truth
 
 ### WorkUnit
 
 ```text
-FACMAN-PRE-REVALIDATION-CORRECTNESS-CONSOLIDATION-01
+FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01
 ```
 
 ### Scope
 
 - fail-closed lifecycle decoding;
 - explicit evidence availability instead of magic strings;
+- immediate launch-reference validation;
 - command-specific denial disposition;
-- generated build/provider revision truth;
 - current capability/readiness wording;
 - UTF-8 machine path output;
 - process-lifetime environment snapshot;
+- stable no-follow launch observations;
 - generic candidate artifact ownership marker;
+
+### Constraints
+
+- no route authority;
+- no policy widening;
+- no real Factorio execution;
+- no new product feature.
+
+### Exit gate
+
+- every missing/unknown lifecycle negative test refuses or remains unbound;
+- no unknown lifecycle becomes active;
+- every selected launch reference is revalidated immediately before authority;
+- denial transformation is exact-command-specific;
+- relevant environment-derived policy inputs are immutable for the process.
+
+## Wave 1B — Build and development truth
+
+### WorkUnit
+
+```text
+FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01
+```
+
+### Scope
+
+- generated build/provider revision truth;
+- lock/check-out mismatch rejection;
 - configuration-aware fast-test selection;
 - external task-root default;
 - required-obligation skip classification;
@@ -956,12 +1046,9 @@ FACMAN-PRE-REVALIDATION-CORRECTNESS-CONSOLIDATION-01
 - no policy widening;
 - no real Factorio execution;
 - no new product feature;
-- no hidden change to canonical packet bytes unless explicitly versioned.
 
 ### Exit gate
 
-- every missing/unknown lifecycle negative test refuses or remains unbound;
-- no unknown lifecycle becomes active;
 - current runtime revision output matches the configured build;
 - `tools/dev.py test --fast` passes for TUI-on and TUI-off configurations;
 - required skips equal zero in promotion profiles;
@@ -1034,17 +1121,25 @@ launch/candidate/windows_instance_isolated_v1
 
 ### Exit gate
 
-- canonical plans, packets, evidence digests, policy digests, and negative controls remain byte-identical;
+- the frozen policy document, policy digest, canonicalization algorithm,
+  schema semantics, resource vocabulary, effect dispositions, and
+  Pass/Fail/Inconclusive law remain byte-identical;
+- fixed synthetic golden outputs remain byte-identical when supplied a fixed
+  build-identity fixture;
+- source revisions, build identities, provider revisions, candidate identities,
+  and real plan/packet digests change explicitly when their bound inputs change;
+- equivalent fixed inputs produce semantically equivalent plans, classifications,
+  resource sets, and negative-control results;
 - the generic artifact marker is versioned;
 - ordinary runtime packages contain no operator-harness target by default;
 - semantic changes require new policy/provider revisions.
 
-## Wave 4 — Reconstruct and freeze the exact revalidation candidate
+## Wave 4 — Qualify and freeze the exact revalidation candidate
 
 ### WorkUnit
 
 ```text
-FACMAN-REMOTE-ONLY-THREE-REPO-RECONSTRUCTION-01
+FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
 ```
 
 ### Prerequisites
@@ -1276,10 +1371,11 @@ FACMAN-TRUSTED-DISTRIBUTION-01
 ```text
 ULK publication
   -> remote source closure
-  -> correctness consolidation
+  -> fail-closed launch truth
+  -> build and development truth
   -> outcome semantics
   -> candidate/runtime separation
-  -> empty-clone reconstruction
+  -> candidate qualification
   -> exact revalidation
   -> route promotion
   -> player alpha
@@ -1293,6 +1389,10 @@ ULK publication
 These may proceed without widening runtime authority:
 
 - instance-first wireframes and usability prototypes;
+- readiness-state and Make Ready effect-review prototypes;
+- last-run and recovery presentation;
+- keyboard, accessibility, and usability scripts;
+- mappings from raw refusal codes to player language;
 - accessibility and localization foundations;
 - test-obligation classification;
 - compact current-state generation;
@@ -1303,6 +1403,10 @@ These may proceed without widening runtime authority:
 - support bundle and diagnostics UX.
 
 They must not delay the critical path.
+
+Until route promotion, UX discovery must not enable a real Play button,
+perform mutation, issue permits, select authority-bearing routes, or claim a
+successful first-play journey.
 
 ### 9.3 Work that should wait
 
@@ -1504,21 +1608,18 @@ Do not:
 
 In exact order:
 
-1. Obtain explicit operator approval for ULK branch publication and GitHub PR operations.
-2. Publish and review `78c27da…`.
-3. Publish and review `e78cc9f…`.
-4. Verify both commits from an empty remote clone and canonical `main`.
-5. Add remote policy to every first-party provider pin.
-6. Run remote-only three-repository reconstruction.
-7. Open `FACMAN-PRE-REVALIDATION-CORRECTNESS-CONSOLIDATION-01`.
-8. Repair lifecycle decoding first and add negative tests.
-9. Repair build truth, readiness text, fast-test selection, and compact current state.
-10. Land product-neutral operation outcome semantics in ULK and integrate every FacMan transport.
-11. Split evidence targets without changing bytes.
-12. Reconstruct and freeze the exact candidate.
-13. Run the human Windows instance-isolated revalidation.
-14. If and only if `Pass`, promote the exact route.
-15. Build and test the instance-first alpha.
+1. Record accepted ULK `main` after client/transport PR #5 and reference-model PR #6.
+2. Add remote policy and exact accepted revisions to every first-party provider pin.
+3. Run `FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01`.
+4. Run `FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01` from empty clones.
+5. Run `FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01` and its negative controls.
+6. Run `FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01`.
+7. Land `ULK-OPERATION-OUTCOME-CONTRACT-01` and synchronize every FacMan transport.
+8. Split product runtime from evidence and verdict targets with explicit identity changes.
+9. Run `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01`.
+10. Run the human Windows instance-isolated revalidation.
+11. If and only if `Pass`, add and promote the exact route record.
+12. Build and test the instance-first controlled alpha.
 
 ---
 
