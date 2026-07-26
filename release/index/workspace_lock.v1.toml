@@ -14,11 +14,17 @@ pin_kind = "historical_proof_baseline"
 [[component]]
 id = "universal_launcher"
 source = "universal-launcher"
-pin = "e78cc9f3a23f748130749ebe7241dbd1166f8b25"
+pin = "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d"
 path = "../universal-launcher"
+remote = "https://github.com/Julesc013/universal-launcher.git"
+required_ref = "refs/heads/main"
+reachability = "required_for_source_closure"
 
 [[component]]
 id = "universal_setup"
 source = "universal-setup"
 pin = "3f8489275077347c2918f3bb03614ec6431362ff"
 path = "../universal-setup"
+remote = "https://github.com/Julesc013/universal-setup.git"
+required_ref = "refs/heads/main"
+reachability = "required_for_source_closure"

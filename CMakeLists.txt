@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(facman VERSION 0.1.0 LANGUAGES C CXX)
 
 execute_process(
-  COMMAND git rev-parse --short=12 HEAD
+  COMMAND git rev-parse HEAD
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   OUTPUT_VARIABLE FACMAN_SOURCE_REVISION
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -62,6 +62,71 @@ endfunction()
 
 facman_select_repo_root(FLAUNCH_UNIVERSAL_SETUP_ROOT "universal-setup" "FLAUNCH_UNIVERSAL_SETUP_ROOT")
 facman_select_repo_root(FLAUNCH_UNIVERSAL_LAUNCHER_ROOT "universal-launcher" "FLAUNCH_UNIVERSAL_LAUNCHER_ROOT")
+
+function(facman_git_revision out_var repo_root label)
+  execute_process(
+    COMMAND git rev-parse HEAD
+    WORKING_DIRECTORY "${repo_root}"
+    OUTPUT_VARIABLE revision
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+    RESULT_VARIABLE result)
+  if(NOT result EQUAL 0 OR NOT revision MATCHES "^[0-9a-fA-F]+$")
+    message(FATAL_ERROR "Cannot resolve ${label} Git revision at ${repo_root}")
+  endif()
+  string(TOLOWER "${revision}" revision)
+  set(${out_var} "${revision}" PARENT_SCOPE)
+endfunction()
+
+function(facman_workspace_lock_pin out_var component_id)
+  file(STRINGS
+    "${CMAKE_CURRENT_SOURCE_DIR}/release/index/workspace_lock.v1.toml"
+    lock_lines)
+  set(active_component "")
+  set(locked_pin "")
+  foreach(line IN LISTS lock_lines)
+    if(line MATCHES "^id = \"([^\"]+)\"$")
+      set(active_component "${CMAKE_MATCH_1}")
+    elseif(
+      active_component STREQUAL component_id
+      AND line MATCHES "^pin = \"([0-9a-f]+)\"$")
+      set(locked_pin "${CMAKE_MATCH_1}")
+      break()
+    endif()
+  endforeach()
+  if(NOT locked_pin)
+    message(FATAL_ERROR "Workspace lock has no pin for ${component_id}")
+  endif()
+  set(${out_var} "${locked_pin}" PARENT_SCOPE)
+endfunction()
+
+facman_git_revision(
+  FACMAN_UNIVERSAL_LAUNCHER_REVISION
+  "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
+  "Universal Launcher")
+facman_git_revision(
+  FACMAN_UNIVERSAL_SETUP_REVISION
+  "${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
+  "Universal Setup")
+facman_workspace_lock_pin(FACMAN_LOCKED_UNIVERSAL_LAUNCHER_REVISION universal_launcher)
+facman_workspace_lock_pin(FACMAN_LOCKED_UNIVERSAL_SETUP_REVISION universal_setup)
+if(NOT FACMAN_UNIVERSAL_LAUNCHER_REVISION STREQUAL FACMAN_LOCKED_UNIVERSAL_LAUNCHER_REVISION)
+  message(FATAL_ERROR
+    "Universal Launcher checkout ${FACMAN_UNIVERSAL_LAUNCHER_REVISION} "
+    "does not match workspace lock ${FACMAN_LOCKED_UNIVERSAL_LAUNCHER_REVISION}")
+endif()
+if(NOT FACMAN_UNIVERSAL_SETUP_REVISION STREQUAL FACMAN_LOCKED_UNIVERSAL_SETUP_REVISION)
+  message(FATAL_ERROR
+    "Universal Setup checkout ${FACMAN_UNIVERSAL_SETUP_REVISION} "
+    "does not match workspace lock ${FACMAN_LOCKED_UNIVERSAL_SETUP_REVISION}")
+endif()
+
+set(FACMAN_GENERATED_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/include")
+file(MAKE_DIRECTORY "${FACMAN_GENERATED_INCLUDE_DIR}/facman")
+configure_file(
+  cmake/FacManBuildIdentity.hpp.in
+  "${FACMAN_GENERATED_INCLUDE_DIR}/facman/build_identity.hpp"
+  @ONLY)
 
 if(FACMAN_BUILD_TESTS)
   enable_testing()

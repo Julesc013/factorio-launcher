@@ -86,7 +86,12 @@ void prove_facman_consumption(
     facman::workspace::InstallRecord record;
     record.id = install_id.value();
     auto created = context.installs().create(record, discovery::install_ref_json(managed));
-    if (!created) throw std::runtime_error("FacMan managed install reference create failed");
+    if (!created) {
+        throw std::runtime_error(
+            "FacMan managed install reference create failed: " +
+            created.error().code + ": " + created.error().message +
+            " (" + created.error().detail + ")");
+    }
     auto loaded = context.installs().load(install_id.value());
     if (!loaded || loaded.value().ownership != "managed" ||
         loaded.value().setup_state_ref != reference.setup_state_ref ||

@@ -260,17 +260,19 @@ std::string effective_config(
     const workspace::InstanceRecord& instance,
     const workspace::InstallRecord& install)
 {
-    facman::factorio::launch::InstanceLaunchRef instance_ref {
-        instance.id.str(), instance.profile, instance.root, "gui", {}};
-    facman::factorio::launch::InstallLaunchRef install_ref {
-        install.root,
-        install.executable,
-        install.ownership,
-        install.distribution_origin,
-        install.platform_integration,
-        install.strict_isolation_eligibility,
-        install.external_state_domains,
-    };
+    facman::factorio::launch::InstanceLaunchRef instance_ref;
+    instance_ref.instance_id = instance.id.str();
+    instance_ref.profile_id = instance.profile;
+    instance_ref.local_data_root = instance.root;
+    instance_ref.launch_mode = "gui";
+    facman::factorio::launch::InstallLaunchRef install_ref;
+    install_ref.root = install.root;
+    install_ref.executable = install.executable;
+    install_ref.ownership = install.ownership;
+    install_ref.distribution_origin = install.distribution_origin;
+    install_ref.platform_integration = install.platform_integration;
+    install_ref.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    install_ref.external_state_domains = install.external_state_domains;
     return facman::factorio::launch::effective_config_ini(instance_ref, install_ref);
 }
 

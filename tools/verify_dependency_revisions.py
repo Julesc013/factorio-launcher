@@ -8,6 +8,7 @@ import argparse
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -37,8 +38,13 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Align dependency paths to locked commits before verifying.",
     )
+    parser.add_argument(
+        "--remote",
+        action="store_true",
+        help="Additionally prove each provider pin from its declared remote and canonical ref.",
+    )
     args = parser.parse_args(argv)
-    problems = verify(Path(args.lock), align=args.align)
+    problems = verify(Path(args.lock), align=args.align, remote=args.remote)
     if problems:
         for problem in problems:
             print(f"{TOOL}: {problem}")
@@ -51,6 +57,7 @@ def verify(
     lock_path: Path = DEFAULT_LOCK,
     *,
     align: bool = False,
+    remote: bool = False,
     repository_paths: dict[str, Path] | None = None,
 ) -> list[str]:
     if not lock_path.is_file():
@@ -82,7 +89,57 @@ def verify(
             problems.append(
                 f"{lock_path}: dependency {component['id']} at {path} has {head}, expected {component['pin']}"
             )
+            continue
+        worktree_status = git_output(
+            ["status", "--porcelain=v1", "--untracked-files=normal"],
+            path,
+        )
+        if worktree_status == "unknown":
+            problems.append(f"{lock_path}: cannot inspect worktree state at {path}")
+        elif worktree_status:
+            problems.append(f"{lock_path}: dependency {component['id']} worktree is not clean at {path}")
+        if remote:
+            problems.extend(remote_component_problems(lock_path, component))
     return problems
+
+
+def remote_component_problems(
+    lock_path: Path,
+    component: dict[str, str],
+) -> list[str]:
+    component_id = component["id"]
+    remote = component.get("remote", "")
+    required_ref = component.get("required_ref", "")
+    reachability = component.get("reachability", "")
+    prefix = f"{lock_path}: dependency {component_id}"
+    problems: list[str] = []
+    if not remote:
+        problems.append(f"{prefix} has no declared remote")
+    if not required_ref.startswith("refs/heads/"):
+        problems.append(f"{prefix} required_ref must be a canonical branch ref")
+    if reachability != "required_for_source_closure":
+        problems.append(f"{prefix} reachability must require source closure")
+    if problems:
+        return problems
+
+    with tempfile.TemporaryDirectory(prefix=f"facman-{component_id}-remote-") as tmp:
+        proof_repo = Path(tmp) / "proof.git"
+        proof_repo.mkdir()
+        if run_git(["init", "--bare"], proof_repo) != 0:
+            return [f"{prefix} could not initialize an empty proof repository"]
+        if run_git(["remote", "add", "origin", remote], proof_repo) != 0:
+            return [f"{prefix} could not configure declared remote {remote}"]
+        proof_ref = "refs/remotes/origin/source-closure"
+        refspec = f"{required_ref}:{proof_ref}"
+        if run_git(["fetch", "--no-tags", "origin", refspec], proof_repo) != 0:
+            return [f"{prefix} could not fetch canonical ref {required_ref} from {remote}"]
+        if (proof_repo / "objects" / "info" / "alternates").exists():
+            return [f"{prefix} remote proof unexpectedly uses a Git alternates store"]
+        if run_git(["cat-file", "-e", f"{component['pin']}^{{commit}}"], proof_repo) != 0:
+            return [f"{prefix} pin {component['pin']} is not fetchable from {required_ref}"]
+        if run_git(["merge-base", "--is-ancestor", component["pin"], proof_ref], proof_repo) != 0:
+            return [f"{prefix} pin {component['pin']} is not an ancestor of {required_ref}"]
+    return []
 
 
 def resolve_repo_path(
@@ -136,6 +193,9 @@ def components(lock: dict[str, Any]) -> list[dict[str, str]]:
             "pin": str(item.get("pin", "")).strip(),
             "path": str(item.get("path", "")).strip(),
             "source": str(item.get("source", "")).strip(),
+            "remote": str(item.get("remote", "")).strip(),
+            "required_ref": str(item.get("required_ref", "")).strip(),
+            "reachability": str(item.get("reachability", "")).strip(),
         }
         if component["id"] and component["pin"] and component["path"]:
             result.append(component)

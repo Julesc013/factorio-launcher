@@ -138,12 +138,18 @@ def validate_universal_provider(
     prefix = f"{relative(path)} component {component_id}"
     expected = {
         "universal_launcher": {
-            "pin": "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+            "pin": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+            "remote": "https://github.com/Julesc013/universal-launcher.git",
+            "required_ref": "refs/heads/main",
+            "reachability": "required_for_source_closure",
             "license": "MIT",
             "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
         },
         "universal_setup": {
             "pin": "3f8489275077347c2918f3bb03614ec6431362ff",
+            "remote": "https://github.com/Julesc013/universal-setup.git",
+            "required_ref": "refs/heads/main",
+            "reachability": "required_for_source_closure",
             "license": "MIT",
             "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
         },
