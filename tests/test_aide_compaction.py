@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "transport-outcome-semantics",
+            "play-candidate-runtime-separation",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "remote_source_closed_build_truth_accepted_transport_outcome_semantics_active_no_play_authority",
+            "transport_outcome_semantics_accepted_runtime_evidence_separation_active_no_play_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -152,6 +152,18 @@ class AideCompactionTests(unittest.TestCase):
             "workspace.recovery.inspect",
             data["transport_outcome_semantics"]["recovery_inspect_command"],
         )
+        separation = data["play_candidate_runtime_separation"]
+        self.assertEqual("facman::launch_planning", separation["launch_planning_target"])
+        self.assertEqual("facman::product_execution", separation["product_execution_target"])
+        self.assertEqual("facman::candidate_policy", separation["candidate_policy_target"])
+        self.assertFalse(separation["operator_targets_in_default_install"])
+        self.assertEqual("local_promotion_matrix_pass", separation["status"])
+        self.assertEqual(54, separation["local_native_test_count"])
+        self.assertEqual(517, separation["local_python_test_count"])
+        self.assertEqual(0, separation["local_required_or_unknown_skip_count"])
+        self.assertFalse(separation["product_profile_operator_targets_generated"])
+        self.assertFalse(separation["product_profile_operator_runtime_installed"])
+        self.assertFalse(separation["authority_promotion"])
         self.assertTrue(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
         self.assertTrue(data["product"]["local_counts_promoted"])
@@ -490,7 +502,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -875,15 +887,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "transport-outcome-semantics",
+            "play-candidate-runtime-separation",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -1018,6 +1030,10 @@ class AideCompactionTests(unittest.TestCase):
             self.assertEqual(
                 expected,
                 aide_compaction_check.archived_evidence_sha256(script),
+            )
+            self.assertEqual(
+                expected,
+                aide_lifecycle.hashes(Path(temporary))["evidence.ps1"],
             )
 
     def test_queue_index_rejects_partially_materialized_records(self) -> None:

@@ -36,8 +36,22 @@ that empty-body boundary, preserves legacy top-level outcome and refusal fields,
 and includes the exact ULK operation projection. It also makes the TUI product
 test honor the configured CLI path instead of selecting a stale local binary.
 
+The repaired exact head
+`b962b1340f55c4eb2dddbe126887b369df7d5422` passed both hosted macOS native/TUI
+lanes, both AppKit compile lanes, both Linux native lanes, both Windows native
+package lanes, both coverage lanes, all C/C++, C#, Python and CodeQL security
+checks, schema checks and security-policy checks. Pull request 77 merged into
+`dev` at `c47bdc3362f7dfbaccd6cee069318270c081272e`.
+
+Exact pull-request workflow runs:
+
+- CI: `30209419784`.
+- Code security: `30209419767`.
+- Schema check: `30209419787`.
+- Security policy: `30209419762`.
+
 The machine-readable Python result and complete runner logs are retained beside
-this file. Hosted FacMan validation is pending for the repaired exact head.
+this file. Hosted FacMan validation is complete for the exact repaired head.
 
 No Factorio process, permit issuance, WPR capture, route promotion, policy
 change, Setup mutation, network authority, credential authority, or product

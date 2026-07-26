@@ -199,7 +199,7 @@ def hashes(path: Path) -> dict[str, str]:
     result = {}
     for file in sorted(candidate for candidate in path.rglob("*") if candidate.is_file()):
         data = file.read_bytes()
-        if file.suffix.lower() in {".json", ".md", ".toml", ".txt", ".yaml", ".yml"}:
+        if file.suffix.lower() in {".json", ".md", ".ps1", ".toml", ".txt", ".yaml", ".yml"}:
             data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         result[file.relative_to(path).as_posix()] = hashlib.sha256(data).hexdigest()
     return result

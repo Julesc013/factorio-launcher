@@ -1,8 +1,7 @@
 # Remaining risks
 
-- Hosted FacMan Linux, Windows, macOS, coverage, and security validation remains
-  required for the exact committed head. In particular, AppKit is compile-only
-  locally and must be proved by the hosted macOS job.
+- AppKit is a hosted compile proof rather than a local runtime UI test. Both
+  hosted AppKit lanes passed for the accepted head.
 - The daemon transport remains deliberately unavailable. Its current behavior
   is a validated pre-effect refusal, not an implemented daemon protocol.
 - Machine transport v1 remains supported for compatibility but cannot express

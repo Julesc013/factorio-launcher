@@ -60,15 +60,15 @@ native_direction:
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
         self.assertIn(
-            "phase: transport_outcome_semantics (active)",
+            "phase: play_candidate_runtime_separation (active)",
             text,
         )
         self.assertIn(
-            "active_work_unit: FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+            "active_work_unit: FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
             text,
         )
         self.assertIn(
-            "next_work_unit: FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "next_work_unit: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)
