@@ -1,0 +1,11 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01
+status: verified
+lifecycle_state: verified
+planning_state: verified
+created_at: 2026-07-26T18:51:00Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01/evidence/
+active_at: 2026-07-26T18:51:00Z
+verified_at: 2026-07-26T18:52:35Z
+implementation_state: implemented

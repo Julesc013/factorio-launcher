@@ -1,0 +1,82 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01
+title: Generate exact candidate provider revision evidence
+status: verified
+lifecycle_state: verified
+planning_state: verified
+created_at: 2026-07-26T18:51:00Z
+owner: unassigned
+objective: >
+  Remove historical hard-coded Universal Launcher and Universal Setup source
+  revisions from candidate projection and bind both hermetic and
+  instance-isolated evidence to the exact generated three-repository build
+  identity.
+allowed_paths:
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - .aide/queue/active/FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01/**
+  - .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/**
+  - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/**
+  - .aide/queue/index.yaml
+  - README.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - runtime/factorio/CMakeLists.txt
+  - runtime/factorio/instance/flb_factorio_candidate_projection.cpp
+  - tests/native/CMakeLists.txt
+  - tests/native/facman_hermetic_play_candidate_smoke.cpp
+  - tests/native/flb_factorio_launch_permit_smoke.cpp
+  - tests/test_instance_isolated_play_candidate.py
+  - tools/instance_isolated_play_candidate_check.py
+  - tools/project_state.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/**
+  - apps/**
+  - runtime/factorio/launch/**
+architecture_invariants:
+  - generated build identity is the only source of current first-party revision evidence
+  - no historical source revision literal remains in candidate projection
+  - hermetic and instance-isolated plan schemas policies resources and verdict law remain unchanged
+  - malformed empty dirty or mismatched generated identities fail configuration or validation
+  - no public Play command permit route Factorio execution or authority promotion is added
+source_binding:
+  factorio_launcher:
+    revision: b10c90bbaaa530693b95b0ca834a5fe1aacfc868
+    required_ref: origin/dev
+  universal_launcher:
+    revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
+    required_ref: origin/main
+  universal_setup:
+    revision: 3f8489275077347c2918f3bb03614ec6431362ff
+    required_ref: origin/main
+affected_native_targets:
+  - facman_hermetic_play_candidate_smoke
+  - flb_factorio_launch_permit_smoke
+affected_python_tests:
+  - tests.test_instance_isolated_play_candidate
+affected_strict_validators:
+  - tools/instance_isolated_play_candidate_check.py
+  - tools/strict_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+depends_on:
+  - FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - historical revision literals removed from projection
+  - exact generated ULK and USK identities appear in both route plans
+  - focused native and Python tests pass
+  - strict and project-state validation pass
+  - frozen policies remain byte-identical
+  - no permit execution verdict route or authority is claimed
+  - structured commit check passes
+active_at: 2026-07-26T18:51:00Z
+verified_at: 2026-07-26T18:52:35Z
+implementation_state: implemented
+result: PASS

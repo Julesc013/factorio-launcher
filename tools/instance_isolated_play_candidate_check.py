@@ -232,15 +232,27 @@ def check() -> list[str]:
             problems.append(f"candidate source lacks enforcement anchor: {anchor}")
     for anchor in (
         "project_instance_isolated_candidate_plan",
+        '#include "facman/build_identity.hpp"',
         "open_no_follow(instance_root)",
         "instance_root_stable_object_identity",
         "exact_operation_resource_identities",
         "coordinator_integrity_medium",
         "observer_broker_integrity_high",
+        "facman::build_identity::universal_launcher_revision",
+        "facman::build_identity::universal_setup_revision",
         "reobserve_instance_isolated_candidate_context",
     ):
         if anchor not in texts["projection"]:
             problems.append(f"candidate projection lacks enforcement anchor: {anchor}")
+    for stale_revision in (
+        "7bd4425f0c35414f738159b45d8bec42edf70235",
+        "3f8489275077347c2918f3bb03614ec6431362ff",
+    ):
+        if stale_revision in texts["projection"]:
+            problems.append(
+                "candidate projection embeds a historical first-party "
+                f"revision literal: {stale_revision}"
+            )
 
     catalog = _load_json(
         ROOT / "contracts/generated-index/command_catalog.v2.json", problems
