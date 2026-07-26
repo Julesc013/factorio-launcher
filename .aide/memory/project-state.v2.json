@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+  "active_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -476,15 +476,15 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "play-candidate-runtime-separation",
+  "current_checkpoint": "windows-instance-isolated-play-revalidation",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
-    "factorio_launcher": "c47bdc3362f7dfbaccd6cee069318270c081272e",
+    "factorio_launcher": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
     "universal_launcher": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
-    "current_gate_status": "runtime_evidence_separation_in_progress",
+    "current_gate_status": "fresh_candidate_revalidation_requires_operator_pass_fail_inconclusive",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -492,7 +492,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "pre_revalidation_runtime_evidence_separation_active_no_play_authority",
+    "reason": "fresh_human_controlled_instance_isolated_play_revalidation_active_no_product_play_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -1229,12 +1229,12 @@
     "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
     "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
     "The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; its proof binds the previous Universal Launcher revision and requires revalidation after the client transport extraction.",
-    "The published operation-outcome contract is accepted across FacMan transports; product runtime and operator evidence targets are being separated before candidate qualification.",
+    "The published operation-outcome contract and product/evidence runtime separation are accepted; a fresh human-controlled instance-isolated Play revalidation is active without product Play authority.",
     "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+  "last_closed_work_unit": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2134,10 +2134,21 @@
     "candidate_identity_change": false,
     "candidate_policy_target": "facman::candidate_policy",
     "candidate_projection_target": "facman::candidate_projection",
+    "dev_integration_revision": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
     "evidence_classification_target": "facman_play_evidence_classification",
     "evidence_law_change": false,
+    "exact_pr_ci_run": "30211653394",
+    "exact_pr_code_security_run": "30211653350",
+    "exact_pr_security_policy_run": "30211653356",
+    "exact_push_ci_run": "30211651244",
+    "exact_push_code_security_run": "30211651245",
+    "exact_push_security_policy_run": "30211651246",
     "factorio_execution": false,
     "hermetic_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+    "hosted_repair_revision": "5ba2f31c32650a3f7034088f6034f3d25cd8d0af",
+    "hosted_validation": "pass_linux_windows_macos_coverage_code_security",
+    "implementation_pull_request": 78,
+    "implementation_revision": "98d6dde5f653dd32297073bd0198b0701b7a7b39",
     "instance_isolated_policy_digest": "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
     "launch_planning_target": "facman::launch_planning",
     "local_native_test_count": 54,
@@ -2145,6 +2156,9 @@
     "local_python_test_count": 517,
     "local_python_unsupported_skip_count": 2,
     "local_required_or_unknown_skip_count": 0,
+    "merged_dev_ci_run": "30212150312",
+    "merged_dev_code_security_run": "30212150359",
+    "merged_dev_security_policy_run": "30212150353",
     "observer_target": "facman::play_observer",
     "operator_targets_in_default_install": false,
     "operator_verdict_target": "facman_gate4c_verdict_harness",
@@ -2154,24 +2168,24 @@
     "product_profile_build": "pass",
     "product_profile_operator_runtime_installed": false,
     "product_profile_operator_targets_generated": false,
-    "status": "local_promotion_matrix_pass",
+    "status": "accepted_hosted_dev_integration",
     "work_unit": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01"
   },
   "product": {
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+    "current_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
-    "phase": "play_candidate_runtime_separation",
+    "next_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+    "phase": "windows_instance_isolated_play_revalidation",
     "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "transport_outcome_semantics_accepted_runtime_evidence_separation_active_no_play_authority"
+    "truth_scope": "runtime_evidence_separation_accepted_fresh_instance_isolated_play_revalidation_active_no_product_authority"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -2204,11 +2218,12 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 60,
+    "archived_task_count": 61,
     "counts": {
+      "active": 1,
       "blocked": 2,
       "planned": 1,
-      "verified": 2
+      "verified": 1
     },
     "records": [
       {
@@ -2218,10 +2233,10 @@
         "status": "blocked"
       },
       {
-        "id": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
-        "lifecycle_state": "verified",
+        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+        "lifecycle_state": "active",
         "queue": "active",
-        "status": "verified"
+        "status": "active"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
@@ -2265,7 +2280,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "transport_outcome_semantics_accepted_no_play_authority",
+    "safety_authority": "runtime_evidence_separation_accepted_fresh_human_play_revalidation_no_product_authority",
     "user_validation": "not_started",
     "user_workflow": "advanced_command_surface_only"
   },

@@ -1,14 +1,14 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "play-candidate-runtime-separation"
+current_checkpoint = "windows-instance-isolated-play-revalidation"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01"
-last_closed_work_unit = "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01"
-current_dev_revision = "c47bdc3362f7dfbaccd6cee069318270c081272e"
+active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01"
+last_closed_work_unit = "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01"
+current_dev_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -22,7 +22,7 @@ known_blockers = [
   "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
   "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
   "The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; its proof binds the previous Universal Launcher revision and requires revalidation after the client transport extraction.",
-  "The published operation-outcome contract is accepted across FacMan transports; product runtime and operator evidence targets are being separated before candidate qualification.",
+  "The published operation-outcome contract and product/evidence runtime separation are accepted; a fresh human-controlled instance-isolated Play revalidation is active without product Play authority.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -42,25 +42,25 @@ quarantined_capabilities = [
 ]
 
 [product]
-phase = "play_candidate_runtime_separation"
+phase = "windows_instance_isolated_play_revalidation"
 phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01"
-next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01"
+current_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01"
+next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "transport_outcome_semantics_accepted_runtime_evidence_separation_active_no_play_authority"
+truth_scope = "runtime_evidence_separation_accepted_fresh_instance_isolated_play_revalidation_active_no_product_authority"
 canonical_main_promotion = true
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "transport_outcome_semantics_accepted_no_play_authority"
+safety_authority = "runtime_evidence_separation_accepted_fresh_human_play_revalidation_no_product_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -1784,7 +1784,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "pre_revalidation_runtime_evidence_separation_active_no_play_authority"
+reason = "fresh_human_controlled_instance_isolated_play_revalidation_active_no_product_play_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1792,7 +1792,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "runtime_evidence_separation_in_progress"
+current_gate_status = "fresh_candidate_revalidation_requires_operator_pass_fail_inconclusive"
 
 [build_and_development_truth]
 status = "accepted_hosted_promotion_matrix_pass"
@@ -1863,8 +1863,22 @@ permit_issuance = false
 authority_promotion = false
 
 [play_candidate_runtime_separation]
-status = "local_promotion_matrix_pass"
+status = "accepted_hosted_dev_integration"
 work_unit = "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01"
+implementation_revision = "98d6dde5f653dd32297073bd0198b0701b7a7b39"
+hosted_repair_revision = "5ba2f31c32650a3f7034088f6034f3d25cd8d0af"
+implementation_pull_request = 78
+dev_integration_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
+exact_push_ci_run = "30211651244"
+exact_push_code_security_run = "30211651245"
+exact_push_security_policy_run = "30211651246"
+exact_pr_ci_run = "30211653394"
+exact_pr_code_security_run = "30211653350"
+exact_pr_security_policy_run = "30211653356"
+merged_dev_ci_run = "30212150312"
+merged_dev_code_security_run = "30212150359"
+merged_dev_security_policy_run = "30212150353"
+hosted_validation = "pass_linux_windows_macos_coverage_code_security"
 launch_planning_target = "facman::launch_planning"
 product_execution_target = "facman::product_execution"
 candidate_policy_target = "facman::candidate_policy"

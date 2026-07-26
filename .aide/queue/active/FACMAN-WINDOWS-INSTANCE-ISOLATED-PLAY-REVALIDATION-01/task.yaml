@@ -1,0 +1,99 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01
+title: Revalidate exact Windows instance-isolated Play candidate
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-26T17:31:26Z
+owner: unassigned
+objective: >
+  Build and qualify a fresh exact candidate, then collect entirely fresh operator-controlled real-Play evidence with a Pass, Fail, or Inconclusive verdict and no automatic authority promotion.
+allowed_paths:
+  - .aide/history/completion-baseline-2026-07-26/index.json
+  - .aide/history/completion-baseline-2026-07-26/FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01/**
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - .aide/queue/active/FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01/**
+  - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/**
+  - .aide/queue/index.yaml
+  - README.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tools/project_state.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/**
+  - docs/quality/evidence/gate4c/**
+  - docs/quality/evidence/h1/**
+  - docs/quality/evidence/windows-instance-isolated-play/**
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+  - facman_hermetic_play_candidate_smoke
+  - facman_isolation_lock_smoke
+  - facman_isolation_probe
+  - flb_factorio_launch_permit_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_gate4c_observer_self_test
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_preflight
+  - tests.test_instance_isolated_play_candidate
+  - tests.test_instance_isolation_probe
+  - tests.test_windows_instance_isolated_play_policy
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/hermetic_play_policy_check.py
+  - tools/windows_instance_isolated_play_policy_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - the exact candidate is rebuilt from published remote-reachable revisions
+  - all observer baseline permit packet and verdict evidence is fresh
+  - evidence from Verdict 01 02 or 03 is historical only and cannot be reused
+  - technical eligibility cannot be transformed into Pass
+  - only Pass Fail or Inconclusive is a valid operator verdict
+  - no route promotion occurs inside this WorkUnit
+  - no public Play command or general process authority is enabled
+  - no policy resource evidence-law or Setup authority change is allowed
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+revalidation_binding:
+  platform: windows
+  architecture: x64
+  factorio_version: 2.0.77
+  distribution: standalone_non_steam
+  launch_intent: menu
+  isolation_mode: instance_isolated
+  hermetic_policy_digest: 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2
+  instance_isolated_policy_digest: 8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432
+  facman_parent_revision: d03b42e8d6b22459fd9a9b8feff05523f942577a
+  universal_launcher_revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
+  universal_setup_revision: 3f8489275077347c2918f3bb03614ec6431362ff
+operator_boundary:
+  factorio_execution_requires_human_control: true
+  permit_requires_fresh_preflight: true
+  fresh_observer_required: true
+  prior_technical_packet_reuse_allowed: false
+  automatic_verdict_allowed: false
+  automatic_authority_promotion_allowed: false
+  current_product_execution_authority: false
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-26T17:31:27Z

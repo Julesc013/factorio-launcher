@@ -9,12 +9,12 @@ items:
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
-  - id: FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01
-    status: verified
-    lifecycle_state: verified
-    title: Separate product runtime from Play evidence machinery
-    task: .aide/queue/active/FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01/evidence
+  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01
+    status: active
+    lifecycle_state: active
+    title: Revalidate exact Windows instance-isolated Play candidate
+    task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked

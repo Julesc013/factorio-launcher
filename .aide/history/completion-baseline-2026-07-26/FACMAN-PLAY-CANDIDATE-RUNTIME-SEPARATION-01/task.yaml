@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01
 title: Separate product runtime from Play evidence machinery
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T16:17:26Z
 owner: unassigned
 objective: >
@@ -74,3 +74,6 @@ active_at: 2026-07-26T16:17:27Z
 verified_at: 2026-07-26T16:42:23Z
 implementation_state: implemented
 result: PASS
+reviewed_at: 2026-07-26T17:31:24Z
+closed_at: 2026-07-26T17:31:25Z
+archived_at: 2026-07-26T17:31:26Z
