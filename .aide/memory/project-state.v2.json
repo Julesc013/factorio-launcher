@@ -468,7 +468,7 @@
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 298
+    "schemas": 300
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -2222,8 +2222,8 @@
     "counts": {
       "active": 1,
       "blocked": 3,
-      "planned": 1,
-      "verified": 3
+      "planned": 2,
+      "verified": 4
     },
     "records": [
       {
@@ -2239,10 +2239,16 @@
         "status": "blocked"
       },
       {
-        "id": "FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01",
+        "id": "FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01",
         "lifecycle_state": "active",
         "queue": "active",
         "status": "active"
+      },
+      {
+        "id": "FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01",
+        "lifecycle_state": "verified",
+        "queue": "active",
+        "status": "verified"
       },
       {
         "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01",
@@ -2270,6 +2276,12 @@
       },
       {
         "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01
 title: Add an exact instance-isolated operator verdict harness
-status: active
-lifecycle_state: active
-planning_state: active
+status: verified
+lifecycle_state: verified
+planning_state: verified
 created_at: 2026-07-26T18:43:00Z
 owner: unassigned
 objective: >
@@ -97,3 +97,6 @@ closeout_checklist:
   - no Factorio permit verdict route or authority is claimed
   - structured commit check passes
 active_at: 2026-07-26T18:43:00Z
+verified_at: 2026-07-26T20:10:12Z
+implementation_state: evidence_verified
+result: PASS

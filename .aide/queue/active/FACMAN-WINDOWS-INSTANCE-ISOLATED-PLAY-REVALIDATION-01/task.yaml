@@ -90,13 +90,12 @@ operator_boundary:
   automatic_authority_promotion_allowed: false
   current_product_execution_authority: false
 depends_on:
-  - FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
-  - FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01
+  - FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
 blocker: >
-  The pre-harness repaired candidate is qualified, but the real-Play
-  coordinator remains bound to the historical hermetic route. The accepted
-  instance-isolated harness must then be rebuilt and requalified from fresh
-  remote clones before the human session.
+  The instance-isolated harness is accepted, but its exact merged candidate
+  has not yet been rebuilt and hash-closed by the post-harness remote-only
+  qualification. The separate human-controlled session cannot begin until
+  that immutable qualification binding exists.
 commit_template: .aide/git/commit-template.md
 closeout_checklist:
   - allowed path scope reconciled

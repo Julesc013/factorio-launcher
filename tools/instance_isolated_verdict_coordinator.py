@@ -167,6 +167,101 @@ def _copy_qualified_artifacts(
     return records, paths
 
 
+def _qualified_source_paths(
+    source_build: Path,
+    qualification: CandidateQualificationBinding,
+) -> dict[str, Path]:
+    paths: dict[str, Path] = {}
+    basenames: set[str] = set()
+    for logical_name, artifact in qualification.artifacts:
+        source = source_build / Path(artifact.relative_path)
+        name = Path(artifact.relative_path).name
+        audit = PREFLIGHT.audit_no_follow(source, require_file=True)
+        if (
+            name in basenames
+            or not audit["safe"]
+            or source.stat().st_size != artifact.size
+            or PREFLIGHT.sha256_file(source) != artifact.sha256
+        ):
+            raise CoordinatorError(
+                f"qualified candidate source changed: {logical_name}"
+            )
+        basenames.add(name)
+        paths[logical_name] = source
+    return paths
+
+
+def _exact_repository_inputs(
+    repository_root: Path,
+    launcher_repository: Path,
+    setup_repository: Path,
+    qualification: CandidateQualificationBinding,
+) -> None:
+    checks = (
+        (
+            "FacMan",
+            repository_root,
+            qualification.factorio_launcher,
+        ),
+        (
+            "Universal Launcher",
+            launcher_repository,
+            qualification.universal_launcher,
+        ),
+        (
+            "Universal Setup",
+            setup_repository,
+            qualification.universal_setup,
+        ),
+    )
+    for name, path, binding in checks:
+        identity = PREFLIGHT.git_identity(
+            path,
+            binding.revision,
+            required_ref=binding.required_ref,
+        )
+        if not identity.get("valid"):
+            raise CoordinatorError(
+                f"{name} checkout differs from qualification: {identity}"
+            )
+
+
+def _validate_staged_candidate(
+    *,
+    facman: Path,
+    workspace: Path,
+    factorio_executable: Path,
+    source_artifact: Path,
+    source_member: Path,
+    task_root: Path,
+    qualification: CandidateQualificationBinding,
+) -> None:
+    factorio = PREFLIGHT.factorio_evidence(
+        factorio_executable,
+        qualification,
+    )
+    source = PREFLIGHT.source_evidence(
+        source_artifact,
+        factorio_executable,
+        source_member_executable=source_member,
+        task_root=task_root,
+    )
+    instance = PREFLIGHT.instance_evidence(
+        facman,
+        workspace,
+        ROUTE.instance_id,
+        qualification,
+    )
+    if (
+        not factorio.get("valid")
+        or not source.get("valid")
+        or not instance.get("valid")
+    ):
+        raise CoordinatorError(
+            "prequalified candidate state differs from its immutable binding"
+        )
+
+
 def _extract_authenticated_executable(
     source_artifact: Path,
     destination: Path,
@@ -349,15 +444,54 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
     task_root = _absolute(args.task_root)
     if task_root.name != ROUTE.work_unit:
         raise CoordinatorError("stage root is not the exact revalidation root")
-    if any(
-        (task_root / name).exists()
-        for name in ("artifacts", "workspace", "source")
-    ):
-        raise CoordinatorError("revalidation candidate state already exists")
+    _safe_path(task_root, require_file=False)
+    if (task_root / "artifacts").exists():
+        raise CoordinatorError("revalidation artifacts already exist")
     qualification_source = _absolute(args.qualification_binding)
     qualification = _binding(qualification_source)
     source_build = _absolute(args.candidate_build)
     _safe_path(source_build, require_file=False)
+    source_paths = _qualified_source_paths(source_build, qualification)
+    repository_root = _absolute(args.repository_root)
+    launcher_repository = _absolute(args.launcher_repository)
+    setup_repository = _absolute(args.setup_repository)
+    _exact_repository_inputs(
+        repository_root,
+        launcher_repository,
+        setup_repository,
+        qualification,
+    )
+    source_artifact = _absolute(args.source_artifact)
+    factorio_executable = _absolute(args.factorio_executable)
+    source_member = (
+        task_root / "source" / "portable-package-inspection" / "factorio.exe"
+    )
+    workspace = task_root / "workspace"
+    prequalified = workspace.exists() or source_member.exists()
+    if prequalified and not (workspace.is_dir() and source_member.is_file()):
+        raise CoordinatorError(
+            "prequalified candidate state is partial or malformed"
+        )
+    if not prequalified:
+        _extract_authenticated_executable(
+            source_artifact, source_member, qualification
+        )
+        _safe_path(factorio_executable, require_file=True)
+        if (
+            PREFLIGHT.sha256_file(factorio_executable)
+            != qualification.factorio_sha256
+        ):
+            raise CoordinatorError("installed Factorio differs from qualification")
+        _stage_workspace(workspace, ROUTE.instance_id, factorio_executable)
+    _validate_staged_candidate(
+        facman=source_paths["facman"],
+        workspace=workspace,
+        factorio_executable=factorio_executable,
+        source_artifact=source_artifact,
+        source_member=source_member,
+        task_root=task_root,
+        qualification=qualification,
+    )
     artifact_root = task_root / "artifacts" / "qualified-build"
     artifacts, artifact_paths = _copy_qualified_artifacts(
         source_build, artifact_root, qualification
@@ -384,28 +518,12 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
     }
     manifest_path = artifact_root / "artifact-binding.v1.json"
     COMMON.write_new(manifest_path, manifest)
-    source_artifact = _absolute(args.source_artifact)
-    source_member = (
-        task_root / "source" / "portable-package-inspection" / "factorio.exe"
-    )
-    _extract_authenticated_executable(
-        source_artifact, source_member, qualification
-    )
-    factorio_executable = _absolute(args.factorio_executable)
-    _safe_path(factorio_executable, require_file=True)
-    if (
-        PREFLIGHT.sha256_file(factorio_executable)
-        != qualification.factorio_sha256
-    ):
-        raise CoordinatorError("installed Factorio differs from qualification")
-    workspace = task_root / "workspace"
-    _stage_workspace(workspace, ROUTE.instance_id, factorio_executable)
     config = {
         "schema": CONFIG_SCHEMA,
         "task_root": str(task_root),
-        "repository_root": COMMON.path_text(args.repository_root),
-        "launcher_repository": COMMON.path_text(args.launcher_repository),
-        "setup_repository": COMMON.path_text(args.setup_repository),
+        "repository_root": str(repository_root),
+        "launcher_repository": str(launcher_repository),
+        "setup_repository": str(setup_repository),
         "qualification_binding": str(binding_copy),
         "qualification_digest": qualification.qualification_digest,
         "artifact_manifest": str(manifest_path),

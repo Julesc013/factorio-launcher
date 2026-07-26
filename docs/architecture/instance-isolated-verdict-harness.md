@@ -35,6 +35,24 @@ InstanceSpec, InstanceBinding, and readiness digests
 qualification_digest
 ```
 
+`tools/instance_isolated_candidate_qualification.py` is the only supported
+producer. It accepts a successful `facman.remote_source_closure.v1` report and
+requires the live detached checkouts and build root to remain the exact clean
+objects recorded by that proof. It then:
+
+1. hashes the CLI, candidate smoke, verdict harness and CMake cache;
+2. authenticates the exact installed and packaged Wube Factorio 2.0.77
+   executable identities;
+3. creates the disposable Instance workspace once;
+4. invokes only non-executing inspect, describe, readiness and launch-preflight
+   commands;
+5. derives the path- and file-object-bound Instance identities;
+6. emits and reloads the closed qualification binding.
+
+Creating the workspace before deriving its identities removes a bootstrap
+cycle: no placeholder digest is accepted, and the workspace is not destroyed
+and recreated after its file identities are measured.
+
 The four candidate artifacts are the CLI, candidate smoke, verdict harness,
 and CMake cache. Every key is closed, revisions and digests use exact lowercase
 forms, artifact paths must be relative and traversal-free, and the entire
@@ -49,6 +67,8 @@ Preflight independently requires each checkout to:
 
 Staged files must match the qualified size and digest after a no-follow copy.
 The configured harness must itself be the qualified harness artifact.
+The coordinator accepts a producer-created workspace only when fresh
+non-executing projections exactly reproduce every qualified Instance digest.
 
 ## Execution boundary
 
