@@ -4,6 +4,11 @@ status: active
 lifecycle_state: active
 planning_state: active
 created_at: 2026-07-26T18:43:00Z
-result: PENDING
+result: LOCAL_PASS_PENDING_HOSTED_REVIEW
 evidence_path: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/evidence/
 active_at: 2026-07-26T18:43:00Z
+updated_at: 2026-07-26T19:48:48Z
+implementation_state: implemented
+local_validation_state: passed
+authority_promotion: false
+factorio_execution: false

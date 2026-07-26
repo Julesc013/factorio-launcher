@@ -60,7 +60,9 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
   add_custom_target(facman_play_evidence_classification SOURCES
     ${PROJECT_SOURCE_DIR}/tools/gate4c_verdict_evidence.py
     ${PROJECT_SOURCE_DIR}/tools/gate4c_verdict_preflight.py
-    ${PROJECT_SOURCE_DIR}/tools/gate4c_verdict_session.py)
+    ${PROJECT_SOURCE_DIR}/tools/gate4c_verdict_session.py
+    ${PROJECT_SOURCE_DIR}/tools/instance_isolated_verdict_coordinator.py
+    ${PROJECT_SOURCE_DIR}/tools/play_verdict_route.py)
 
   add_executable(facman_gate4c_verdict_harness
     gate4c_verdict_harness.cpp)
@@ -89,6 +91,12 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
   set_tests_properties(
     facman_gate4c_verdict_harness_privilege_protocol_smoke
     PROPERTIES LABELS "fast-unit;contract;security;platform")
+  add_test(
+    NAME facman_gate4c_verdict_harness_route_binding_smoke
+    COMMAND facman_gate4c_verdict_harness --self-test-route-binding)
+  set_tests_properties(
+    facman_gate4c_verdict_harness_route_binding_smoke
+    PROPERTIES LABELS "fast-unit;contract;security")
 endif()
 facman_native_test(flb_factorio_setup_recipe_smoke flb_factorio_setup_recipe_smoke.cpp "fast-unit;security;contract")
 target_compile_features(flb_factorio_setup_recipe_smoke PRIVATE cxx_std_17)

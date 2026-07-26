@@ -70,6 +70,32 @@ class Gate4CVerdictPreflightTests(unittest.TestCase):
             baseline, PREFLIGHT.host_state_digest(session, processes, "observer-b")
         )
 
+    def test_git_identity_requires_an_exact_clean_checkout(self) -> None:
+        revision = "1" * 40
+        clean_head = mock.Mock(returncode=0, stdout=revision + "\n", stderr="")
+        clean_status = mock.Mock(
+            returncode=0,
+            stdout="## HEAD (no branch)\n",
+            stderr="",
+        )
+        with mock.patch.object(
+            PREFLIGHT, "run", side_effect=[clean_head, clean_status]
+        ):
+            self.assertTrue(
+                PREFLIGHT.git_identity(Path("repo"), revision)["valid"]
+            )
+        dirty_status = mock.Mock(
+            returncode=0,
+            stdout="## HEAD (no branch)\n M changed.txt\n",
+            stderr="",
+        )
+        with mock.patch.object(
+            PREFLIGHT, "run", side_effect=[clean_head, dirty_status]
+        ):
+            identity = PREFLIGHT.git_identity(Path("repo"), revision)
+        self.assertFalse(identity["clean"])
+        self.assertFalse(identity["valid"])
+
     def test_artifact_manifest_detects_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

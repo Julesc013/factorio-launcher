@@ -28,6 +28,14 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
+from tools.play_verdict_route import (
+    CandidateQualificationBinding,
+    HERMETIC_VERDICT03,
+    PlayVerdictRoute,
+    RouteBindingError,
+    load_qualification_binding,
+    route_by_id,
+)
 
 WORK_UNIT = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
 POLICY_DIGEST = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
@@ -296,7 +304,13 @@ def run_json(args: list[str], *, cwd: Path | None = None) -> dict[str, Any]:
     return value
 
 
-def git_identity(path: Path, expected: str, *, required_ancestors: list[str] | None = None) -> dict[str, Any]:
+def git_identity(
+    path: Path,
+    expected: str,
+    *,
+    required_ancestors: list[str] | None = None,
+    required_ref: str | None = None,
+) -> dict[str, Any]:
     head = run(["git", "rev-parse", "HEAD"], cwd=path)
     status = run(["git", "status", "--short", "--branch"], cwd=path)
     if head.returncode != 0 or status.returncode != 0:
@@ -306,19 +320,39 @@ def git_identity(path: Path, expected: str, *, required_ancestors: list[str] | N
     for ancestor in required_ancestors or []:
         result = run(["git", "merge-base", "--is-ancestor", ancestor, revision], cwd=path)
         ancestors[ancestor] = result.returncode == 0
+    ref_reachable = None
+    if required_ref:
+        ref_result = run(
+            ["git", "merge-base", "--is-ancestor", revision, required_ref],
+            cwd=path,
+        )
+        ref_reachable = ref_result.returncode == 0
+    clean = len(status.stdout.splitlines()[1:]) == 0
     return {
         "path": str(path),
         "revision": revision,
         "expected_revision": expected,
         "exact": revision == expected,
         "required_ancestors": ancestors,
+        "required_ref": required_ref,
+        "required_ref_reachable": ref_reachable,
         "status": status.stdout.splitlines(),
-        "clean": len(status.stdout.splitlines()[1:]) == 0,
-        "valid": revision == expected and all(ancestors.values()),
+        "clean": clean,
+        "valid": (
+            revision == expected
+            and clean
+            and all(ancestors.values())
+            and (ref_reachable is not False)
+        ),
     }
 
 
-def verify_artifact_manifest(path: Path) -> dict[str, Any]:
+def verify_artifact_manifest(
+    path: Path,
+    *,
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    qualification: CandidateQualificationBinding | None = None,
+) -> dict[str, Any]:
     audit = audit_no_follow(path, require_file=True)
     if not audit["safe"]:
         return {"manifest": audit, "valid": False, "artifacts": []}
@@ -326,11 +360,35 @@ def verify_artifact_manifest(path: Path) -> dict[str, Any]:
     artifacts: list[dict[str, Any]] = []
     valid = (
         manifest.get("schema") == "facman.gate4c_artifact_binding.v1"
-        and manifest.get("work_unit") == WORK_UNIT
-        and manifest.get("source_candidate_revision") == CANDIDATE_REVISION
+        and manifest.get("work_unit") == route.work_unit
+        and manifest.get("source_candidate_revision")
+        == (
+            qualification.factorio_launcher.revision
+            if qualification
+            else CANDIDATE_REVISION
+        )
+        and (
+            qualification is None
+            or manifest.get("qualification_digest")
+            == qualification.qualification_digest
+        )
         and manifest.get("copy_verified") is True
     )
+    expected_qualified_artifacts = (
+        qualification.artifact_mapping() if qualification else None
+    )
+    observed_names: set[str] = set()
     for expected in manifest.get("artifacts", []):
+        logical_name = str(expected.get("logical_name", ""))
+        if qualification:
+            bound = expected_qualified_artifacts.get(logical_name)
+            valid = bool(
+                valid
+                and bound is not None
+                and expected.get("sha256") == bound.sha256
+                and expected.get("bytes") == bound.size
+            )
+            observed_names.add(logical_name)
         artifact_path = path.parent / str(expected.get("name", ""))
         artifact_audit = audit_no_follow(artifact_path, require_file=True)
         actual_hash = sha256_file(artifact_path) if artifact_audit["safe"] else None
@@ -347,6 +405,8 @@ def verify_artifact_manifest(path: Path) -> dict[str, Any]:
                 "path_audit": artifact_audit,
             }
         )
+    if qualification:
+        valid = valid and observed_names == set(expected_qualified_artifacts)
     return {
         "manifest": audit,
         "manifest_sha256": sha256_file(path),
@@ -592,6 +652,10 @@ def repository_tool_identity(repo_root: Path) -> dict[str, Any]:
     for relative in (
         "tools/gate4c_verdict_preflight.py",
         "tools/gate4c_observer_self_test.py",
+        "tools/gate4c_verdict_session.py",
+        "tools/gate4c_verdict_evidence.py",
+        "tools/play_verdict_route.py",
+        "tools/instance_isolated_verdict_coordinator.py",
         OBSERVER_PROFILE_RELATIVE_PATH,
     ):
         path = repo_root / relative
@@ -727,6 +791,8 @@ def observer_prerequisites(
     repo_root: Path,
     session: dict[str, Any],
     now: datetime | None = None,
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    qualification: CandidateQualificationBinding | None = None,
 ) -> dict[str, Any]:
     paths = observer_tool_paths()
     wpr = paths["wpr"]
@@ -797,11 +863,15 @@ def observer_prerequisites(
                 artifact_valid = artifact_valid and matches
             validation = {
                 "schema": loaded.get("schema") == OBSERVER_SELF_TEST_SCHEMA,
-                "work_unit": loaded.get("work_unit") == WORK_UNIT,
+                "work_unit": loaded.get("work_unit") == route.work_unit,
                 "provider": loaded.get("provider")
                 == observer_provider_identity(repo_root),
                 "candidate_revision": loaded.get("candidate_revision")
-                == CANDIDATE_REVISION,
+                == (
+                    qualification.factorio_launcher.revision
+                    if qualification
+                    else CANDIDATE_REVISION
+                ),
                 "elevated": loaded.get("elevated") is True,
                 "time": time_window(
                     loaded.get("generated_at"),
@@ -877,7 +947,10 @@ def observer_prerequisites(
     }
 
 
-def policy_identity(canonical_policy: Path) -> dict[str, Any]:
+def policy_identity(
+    canonical_policy: Path,
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+) -> dict[str, Any]:
     audit = audit_no_follow(canonical_policy, require_file=True)
     if not audit["safe"]:
         return {"path_audit": audit, "valid": False}
@@ -886,8 +959,8 @@ def policy_identity(canonical_policy: Path) -> dict[str, Any]:
     return {
         "path_audit": audit,
         "computed_digest": computed,
-        "expected_digest": POLICY_DIGEST,
-        "valid": computed == POLICY_DIGEST,
+        "expected_digest": route.policy_digest,
+        "valid": computed == route.policy_digest,
     }
 
 
@@ -1291,29 +1364,48 @@ def source_evidence(
     )
 
 
-def factorio_evidence(path: Path) -> dict[str, Any]:
+def factorio_evidence(
+    path: Path,
+    qualification: CandidateQualificationBinding | None = None,
+) -> dict[str, Any]:
     audit = audit_no_follow(path, require_file=True)
     if not audit["safe"]:
         return {"valid": False, "path_audit": audit}
     signature = authenticode(path)
     actual_hash = sha256_file(path)
+    expected_sha256 = (
+        qualification.factorio_sha256
+        if qualification
+        else EXPECTED_FACTORIO_SHA256
+    )
+    expected_signer = (
+        qualification.factorio_signer
+        if qualification
+        else EXPECTED_SIGNER
+    )
     valid = (
-        actual_hash == EXPECTED_FACTORIO_SHA256
+        actual_hash == expected_sha256
         and signature.get("valid") is True
+        and expected_signer in str(signature.get("signer_subject") or "")
         and exact_factorio_version(signature)
     )
     return {
         "path_audit": audit,
         "stable_identity_digest": stable_identity_digest(audit),
         "sha256": actual_hash,
-        "expected_sha256": EXPECTED_FACTORIO_SHA256,
+        "expected_sha256": expected_sha256,
         "signature": signature,
         "expected_version": EXPECTED_FACTORIO_VERSION,
         "valid": valid,
     }
 
 
-def instance_evidence(facman: Path, workspace: Path, instance_id: str) -> dict[str, Any]:
+def instance_evidence(
+    facman: Path,
+    workspace: Path,
+    instance_id: str,
+    qualification: CandidateQualificationBinding | None = None,
+) -> dict[str, Any]:
     prefix = [str(facman), "--workspace", str(workspace)]
     inspection = run_json(prefix + ["instances", "inspect", instance_id, "--json"])
     description = run_json(prefix + ["instances", "describe", instance_id, "--intent", "menu", "--json"])
@@ -1323,13 +1415,33 @@ def instance_evidence(facman: Path, workspace: Path, instance_id: str) -> dict[s
     blocker_codes = {str(item.get("code")) for item in readiness.get("blockers", [])}
     plan_args = launch.get("args", [])
     valid = (
-        inspection.get("instance_id") == EXPECTED_INSTANCE_ID
+        inspection.get("instance_id")
+        == (
+            qualification.instance_id
+            if qualification
+            else EXPECTED_INSTANCE_ID
+        )
         and inspection.get("factorio_version") == EXPECTED_FACTORIO_VERSION
         and inspection.get("modset_status") == "present"
         and inspection.get("save_count") == 0
-        and description.get("instance_spec", {}).get("spec_digest") == EXPECTED_SPEC_DIGEST
-        and description.get("instance_binding", {}).get("binding_digest") == EXPECTED_BINDING_DIGEST
-        and readiness.get("readiness_digest") == EXPECTED_READINESS_DIGEST
+        and description.get("instance_spec", {}).get("spec_digest")
+        == (
+            qualification.instance_spec_digest
+            if qualification
+            else EXPECTED_SPEC_DIGEST
+        )
+        and description.get("instance_binding", {}).get("binding_digest")
+        == (
+            qualification.instance_binding_digest
+            if qualification
+            else EXPECTED_BINDING_DIGEST
+        )
+        and readiness.get("readiness_digest")
+        == (
+            qualification.instance_readiness_digest
+            if qualification
+            else EXPECTED_READINESS_DIGEST
+        )
         and readiness.get("launch_intent") == "menu"
         and blocker_codes == expected_blockers
         and readiness.get("execution_started") is False
@@ -1439,11 +1551,20 @@ def add_blocker(blockers: list[dict[str, str]], code: str, detail: str) -> None:
     blockers.append({"code": code, "detail": detail})
 
 
-def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
+def build_preflight(
+    args: argparse.Namespace,
+    *,
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    qualification: CandidateQualificationBinding | None = None,
+) -> dict[str, Any]:
+    if route.route_id != HERMETIC_VERDICT03.route_id and qualification is None:
+        raise PreflightError(
+            "the selected Play route requires an immutable qualification binding"
+        )
     now = datetime.now(timezone.utc)
     task_root = Path(args.task_root)
     task_audit = audit_no_follow(task_root, require_file=False)
-    if not task_audit["safe"] or task_root.name != WORK_UNIT:
+    if not task_audit["safe"] or task_root.name != route.work_unit:
         raise PreflightError(f"task root is not the exact Gate 4C root: {task_audit}")
 
     facman_repo = Path(args.repo_root)
@@ -1454,29 +1575,69 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
     factorio = Path(args.factorio_exe)
 
     policy = policy_identity(
-        facman_repo / "contracts/generated-index/hermetic_standalone_play_policy.v1.canonical.json"
+        facman_repo / "contracts/generated-index" / route.policy_filename,
+        route,
     )
-    artifacts = verify_artifact_manifest(Path(args.artifact_manifest))
-    repositories = {
-        "facman": git_identity(
-            facman_repo,
-            FINAL_EVIDENCE_DEV,
-            required_ancestors=[CANDIDATE_REVISION, CANDIDATE_MERGE, CANDIDATE_CLOSEOUT_MERGE, FINAL_EVIDENCE_DEV],
-        ),
-        "universal_launcher": git_identity(launcher_repo, UNIVERSAL_LAUNCHER_REVISION),
-        "universal_setup": git_identity(setup_repo, UNIVERSAL_SETUP_REVISION),
-    }
-    # Gate 4C evidence/tool commits may descend from the exact final dev pin.
-    repositories["facman"]["valid"] = all(repositories["facman"].get("required_ancestors", {}).values())
+    artifacts = verify_artifact_manifest(
+        Path(args.artifact_manifest),
+        route=route,
+        qualification=qualification,
+    )
+    if qualification:
+        repositories = {
+            "facman": git_identity(
+                facman_repo,
+                qualification.factorio_launcher.revision,
+                required_ref=qualification.factorio_launcher.required_ref,
+            ),
+            "universal_launcher": git_identity(
+                launcher_repo,
+                qualification.universal_launcher.revision,
+                required_ref=qualification.universal_launcher.required_ref,
+            ),
+            "universal_setup": git_identity(
+                setup_repo,
+                qualification.universal_setup.revision,
+                required_ref=qualification.universal_setup.required_ref,
+            ),
+        }
+    else:
+        repositories = {
+            "facman": git_identity(
+                facman_repo,
+                FINAL_EVIDENCE_DEV,
+                required_ancestors=[
+                    CANDIDATE_REVISION,
+                    CANDIDATE_MERGE,
+                    CANDIDATE_CLOSEOUT_MERGE,
+                    FINAL_EVIDENCE_DEV,
+                ],
+            ),
+            "universal_launcher": git_identity(
+                launcher_repo, UNIVERSAL_LAUNCHER_REVISION
+            ),
+            "universal_setup": git_identity(
+                setup_repo, UNIVERSAL_SETUP_REVISION
+            ),
+        }
+        # Gate 4C evidence/tool commits may descend from the exact final dev pin.
+        repositories["facman"]["valid"] = all(
+            repositories["facman"].get("required_ancestors", {}).values()
+        )
 
     facman_hash = sha256_file(facman) if audit_no_follow(facman, require_file=True)["safe"] else None
+    expected_facman_sha256 = (
+        qualification.artifact_mapping()["facman"].sha256
+        if qualification
+        else EXPECTED_FACMAN_SHA256
+    )
     facman_artifact = {
         "path": str(facman),
         "sha256": facman_hash,
-        "expected_sha256": EXPECTED_FACMAN_SHA256,
-        "valid": facman_hash == EXPECTED_FACMAN_SHA256,
+        "expected_sha256": expected_facman_sha256,
+        "valid": facman_hash == expected_facman_sha256,
     }
-    executable = factorio_evidence(factorio)
+    executable = factorio_evidence(factorio, qualification)
     source = source_evidence(
         Path(args.source_artifact) if args.source_artifact else None,
         factorio,
@@ -1487,7 +1648,9 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
         ),
         task_root=task_root,
     )
-    instance = instance_evidence(facman, workspace, args.instance_id)
+    instance = instance_evidence(
+        facman, workspace, args.instance_id, qualification
+    )
     processes = process_inventory()
     session = host_session_identity()
     observer = observer_prerequisites(
@@ -1495,6 +1658,8 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
         repo_root=facman_repo,
         session=session,
         now=now,
+        route=route,
+        qualification=qualification,
     )
     observer_digest = (
         observer.get("self_test", {}).get("self_test_digest")
@@ -1557,10 +1722,10 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
         add_blocker(blockers, "quiet_host_attestation_missing", "A fresh operator attestation for restart, competing processes, synchronization activity, and sleep prevention is required.")
 
     core: dict[str, Any] = {
-        "schema": "factorio.hermetic_play_verdict_preflight.v1",
+        "schema": route.preflight_schema,
         "canonicalization_version": "facman.sorted-json.v1",
         "generated_at": now.isoformat().replace("+00:00", "Z"),
-        "work_unit": WORK_UNIT,
+        "work_unit": route.work_unit,
         "status": "ready" if not blockers else "blocked",
         "authority": {
             "permit_issued": False,
@@ -1600,6 +1765,11 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
             else "capture_protected_and_writable_baselines_before_any_permit"
         ),
     }
+    if qualification:
+        core["qualification_binding"] = {
+            "route_id": route.route_id,
+            "qualification_digest": qualification.qualification_digest,
+        }
     core["preflight_digest"] = digest_value(core)
     return core
 
@@ -1619,6 +1789,19 @@ def write_record(path: Path, record: dict[str, Any], task_root: Path) -> None:
 
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(description="Build the non-executing Gate 4C preflight packet.")
+    value.add_argument(
+        "--route",
+        default=HERMETIC_VERDICT03.route_id,
+        help="Closed Play verdict route identifier.",
+    )
+    value.add_argument(
+        "--qualification-binding",
+        type=Path,
+        help=(
+            "Immutable remote-only candidate qualification binding. "
+            "Required for the instance-isolated revalidation route."
+        ),
+    )
     value.add_argument("--task-root", required=True, type=Path)
     value.add_argument("--repo-root", required=True, type=Path)
     value.add_argument("--launcher-repo", required=True, type=Path)
@@ -1645,7 +1828,21 @@ def parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = parser().parse_args()
-    record = build_preflight(args)
+    route = route_by_id(args.route)
+    qualification = (
+        load_qualification_binding(args.qualification_binding, route)
+        if args.qualification_binding
+        else None
+    )
+    if route != HERMETIC_VERDICT03 and qualification is None:
+        raise PreflightError(
+            "the selected Play route requires an immutable qualification binding"
+        )
+    record = build_preflight(
+        args,
+        route=route,
+        qualification=qualification,
+    )
     write_record(args.out, record, args.task_root)
     print(
         f"gate4c-verdict-preflight: {record['status']} "
@@ -1657,6 +1854,12 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (OSError, ValueError, json.JSONDecodeError, PreflightError) as exc:
+    except (
+        OSError,
+        ValueError,
+        json.JSONDecodeError,
+        PreflightError,
+        RouteBindingError,
+    ) as exc:
         print(f"gate4c-verdict-preflight: {exc}", file=sys.stderr)
         raise SystemExit(2)
