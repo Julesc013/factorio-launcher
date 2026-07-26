@@ -28,12 +28,14 @@ allowed_paths:
   - tests/test_gate4c_verdict03_coordinator.py
   - tests/test_gate4c_verdict_evidence.py
   - tests/test_gate4c_verdict_preflight.py
+  - tests/test_gate4c_verdict_session.py
   - tests/test_instance_isolated_verdict_coordinator.py
   - tools/cmake_architecture_check.py
   - tools/gate4c_privilege_separation_check.py
   - tools/gate4c_verdict03_coordinator.py
   - tools/gate4c_verdict_evidence.py
   - tools/gate4c_verdict_preflight.py
+  - tools/gate4c_verdict_session.py
   - tools/instance_isolated_verdict_coordinator.py
   - tools/play_verdict_route.py
   - tools/project_state.py
@@ -58,7 +60,7 @@ architecture_invariants:
   - no Factorio process WPR capture permit issuance or human verdict occurs in this WorkUnit
 source_binding:
   factorio_launcher:
-    revision: b10c90bbaaa530693b95b0ca834a5fe1aacfc868
+    revision: 812e70b58f45121d1e80b734fdb528884df4f2da
     required_ref: origin/dev
   universal_launcher:
     revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d

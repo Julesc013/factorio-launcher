@@ -49,6 +49,8 @@ constexpr const char* kComparisonSchema =
     "factorio.gate4c_baseline_comparison.v1";
 constexpr const char* kWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03";
+constexpr const char* kInstanceIsolatedWorkUnit =
+    "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01";
 constexpr const char* kObserverStartRepairWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01";
 constexpr const char* kPrivilegeRepairWorkUnit =
@@ -67,6 +69,55 @@ constexpr const char* kPrivilegeProbeRequestSchema =
     "factorio.gate4c_privilege_probe_request.v1";
 constexpr const char* kObserverProviderRevision =
     "gate4c-etw-file-registry-process.v6";
+
+enum class VerdictRouteKind {
+    hermetic_verdict03,
+    instance_isolated_revalidation,
+};
+
+struct VerdictRouteBinding {
+    VerdictRouteKind kind = VerdictRouteKind::hermetic_verdict03;
+    const char* work_unit = kWorkUnit;
+    const char* policy_digest = launch::kHermeticCandidatePolicyDigest;
+    const char* policy_filename =
+        "hermetic_standalone_play_policy.v1.canonical.json";
+    const char* isolation_mode = "hermetic";
+    const char* operation_prefix = "gate4c-verdict03-";
+};
+
+VerdictRouteBinding route_for_work_unit(const std::string& work_unit)
+{
+    if (work_unit == kWorkUnit) {
+        return {};
+    }
+    if (work_unit == kInstanceIsolatedWorkUnit) {
+        return {
+            VerdictRouteKind::instance_isolated_revalidation,
+            kInstanceIsolatedWorkUnit,
+            launch::kInstanceIsolatedCandidatePolicyDigest,
+            "windows_instance_isolated_play_policy.v1.canonical.json",
+            launch::kInstanceIsolatedCandidateIsolation,
+            "gate4c-instance-isolated-",
+        };
+    }
+    throw std::runtime_error("session Play verdict route is unsupported");
+}
+
+std::vector<std::string> route_protected_resource_ids(
+    VerdictRouteKind route)
+{
+    return route == VerdictRouteKind::instance_isolated_revalidation
+        ? launch::instance_isolated_policy_protected_resource_ids()
+        : launch::hermetic_policy_protected_resource_ids();
+}
+
+std::vector<std::string> route_automated_controls(
+    VerdictRouteKind route)
+{
+    return route == VerdictRouteKind::instance_isolated_revalidation
+        ? launch::instance_isolated_candidate_automated_controls()
+        : launch::hermetic_candidate_automated_controls();
+}
 
 std::string digest(const std::string& value)
 {
@@ -256,6 +307,7 @@ facman::core::Error harness_error(
 }
 
 struct Session {
+    VerdictRouteBinding route;
     fs::path source_root;
     fs::path session_path;
     fs::path preflight_path;
@@ -479,10 +531,11 @@ Session load_session(
     if (std::set<std::string>(actual_keys.begin(), actual_keys.end()) != expected_keys) {
         throw std::runtime_error("session descriptor is not a closed object");
     }
-    if (string_member(value, "schema") != kSessionSchema ||
-        string_member(value, "work_unit") != kWorkUnit) {
+    if (string_member(value, "schema") != kSessionSchema) {
         throw std::runtime_error("session descriptor identity is unsupported");
     }
+    const VerdictRouteBinding route =
+        route_for_work_unit(string_member(value, "work_unit"));
     const std::string session_digest = string_member(value, "session_digest");
     if (digest(canonical_without(value, "session_digest")) != session_digest) {
         throw std::runtime_error("session descriptor digest is invalid");
@@ -497,6 +550,7 @@ Session load_session(
     }
 
     Session output;
+    output.route = route;
     output.source_root = FACMAN_TEST_SOURCE_ROOT;
     output.session_path = path;
     output.preflight_path = platform::path_from_utf8(
@@ -608,9 +662,9 @@ Session load_session(
         throw std::runtime_error("harness or ready-preflight artifact changed");
     }
     if (
-        output.task_root.filename() != kWorkUnit ||
+        output.task_root.filename() != output.route.work_unit ||
         !safe_identifier(output.instance_id) ||
-        output.operation_id.rfind("gate4c-", 0U) != 0U ||
+        output.operation_id.rfind(output.route.operation_prefix, 0U) != 0U ||
         !safe_identifier(output.operation_id) ||
         normalized_absolute(output.workspace) !=
             normalized_absolute(output.task_root / "workspace") ||
@@ -632,7 +686,7 @@ Session load_session(
         normalized_absolute(output.policy_path) !=
             normalized_absolute(output.source_root / "contracts" /
                 "generated-index" /
-                "hermetic_standalone_play_policy.v1.canonical.json")) {
+                output.route.policy_filename)) {
         throw std::runtime_error("session path scope is not exact");
     }
     return output;
@@ -687,7 +741,7 @@ std::string start_request_json(
     document.add_string("session_digest", session.session_digest);
     document.add_string("preflight_digest", session.preflight_digest);
     document.add_string(
-        "policy_digest", launch::kHermeticCandidatePolicyDigest);
+        "policy_digest", session.route.policy_digest);
     document.add_string("plan_digest", plan_digest);
     document.add_string(
         "observer_provider_revision", kObserverProviderRevision);
@@ -1554,7 +1608,7 @@ int run_observer_broker_session(
             string_member(start, "preflight_digest") !=
                 session.preflight_digest ||
             string_member(start, "policy_digest") !=
-                launch::kHermeticCandidatePolicyDigest ||
+                session.route.policy_digest ||
             string_member(start, "plan_digest") !=
                 reviewed_plan_digest(session) ||
             string_member(start, "observer_provider_revision") !=
@@ -1567,13 +1621,19 @@ int run_observer_broker_session(
             throw std::runtime_error(
                 "observer broker start request binding is invalid");
         }
+        const std::string policy_document =
+            stable_read(session.policy_path, 2U * 1024U * 1024U);
         auto policy =
-            launch::FrozenHermeticPlayPolicy::verify_canonical_document(
-                stable_read(
-                    session.policy_path, 2U * 1024U * 1024U));
+            session.route.kind ==
+                    VerdictRouteKind::instance_isolated_revalidation
+                ? launch::FrozenHermeticPlayPolicy::
+                      verify_instance_isolated_canonical_document(
+                          policy_document)
+                : launch::FrozenHermeticPlayPolicy::
+                      verify_canonical_document(policy_document);
         if (!policy || !policy.value().verified ||
             policy.value().policy_digest !=
-                launch::kHermeticCandidatePolicyDigest) {
+                session.route.policy_digest) {
             throw std::runtime_error(
                 "observer broker independently rejected the frozen policy");
         }
@@ -1751,6 +1811,14 @@ int run_observer_broker_session(
                 "--executable", platform::path_to_utf8(session.executable),
                 "--classification-roots",
                 platform::path_to_utf8(session.classification_roots),
+                "--principal-sid",
+                connection.coordinator_identity.user_sid,
+                "--principal-sid-digest",
+                digest(connection.coordinator_identity.user_sid),
+                "--principal-identity-digest",
+                digest(
+                    session.principal.provider_id + ":" +
+                    session.principal.principal_id),
             },
             std::chrono::minutes(10));
         if (!finished) {
@@ -2114,7 +2182,9 @@ int observer_start_probe(
         : 2;
 }
 
-launch::ProtectedComparisonResult load_comparison(const fs::path& path)
+launch::ProtectedComparisonResult load_comparison(
+    const fs::path& path,
+    VerdictRouteKind route)
 {
     auto parsed = json::parse(
         stable_read(path, 32U * 1024U * 1024U),
@@ -2148,7 +2218,7 @@ launch::ProtectedComparisonResult load_comparison(const fs::path& path)
         output.resources.push_back(std::move(value));
     }
     const std::vector<std::string> protected_ids =
-        launch::hermetic_policy_protected_resource_ids();
+        route_protected_resource_ids(route);
     const std::set<std::string> expected(
         protected_ids.begin(), protected_ids.end());
     if (identifiers != expected) {
@@ -2157,10 +2227,11 @@ launch::ProtectedComparisonResult load_comparison(const fs::path& path)
     return output;
 }
 
-std::vector<launch::CandidateAutomatedCaseResult> inherited_automated_proof()
+std::vector<launch::CandidateAutomatedCaseResult> inherited_automated_proof(
+    VerdictRouteKind route)
 {
     std::vector<launch::CandidateAutomatedCaseResult> output;
-    for (const std::string& value : launch::hermetic_candidate_automated_controls()) {
+    for (const std::string& value : route_automated_controls(route)) {
         output.push_back({value, true});
     }
     return output;
@@ -2250,6 +2321,73 @@ int privilege_protocol_self_test()
         return 4;
     }
     return 0;
+#endif
+}
+
+int route_binding_self_test()
+{
+#ifndef _WIN32
+    return 0;
+#else
+    try {
+        const VerdictRouteBinding legacy = route_for_work_unit(kWorkUnit);
+        const VerdictRouteBinding isolated =
+            route_for_work_unit(kInstanceIsolatedWorkUnit);
+        bool rejected_unknown = false;
+        try {
+            (void)route_for_work_unit("FACMAN-UNREVIEWED-PLAY");
+        } catch (const std::exception&) {
+            rejected_unknown = true;
+        }
+        if (
+            legacy.kind != VerdictRouteKind::hermetic_verdict03 ||
+            std::string(legacy.policy_digest) !=
+                launch::kHermeticCandidatePolicyDigest ||
+            isolated.kind !=
+                VerdictRouteKind::instance_isolated_revalidation ||
+            std::string(isolated.policy_digest) !=
+                launch::kInstanceIsolatedCandidatePolicyDigest ||
+            std::string(isolated.isolation_mode) !=
+                launch::kInstanceIsolatedCandidateIsolation ||
+            route_protected_resource_ids(isolated.kind).size() != 12U ||
+            route_automated_controls(isolated.kind).empty() ||
+            !rejected_unknown) {
+            std::cerr
+                << "Gate 4C closed route binding self-test failed.\n";
+            return 1;
+        }
+        Session session;
+        session.route = isolated;
+        session.operation_id =
+            "gate4c-instance-isolated-route-binding-self-test";
+        session.session_digest = std::string(64U, '1');
+        session.preflight_digest = std::string(64U, '2');
+        session.baseline_bundle_sha256 = std::string(64U, '3');
+        session.classification_roots_sha256 = std::string(64U, '4');
+        session.observer_tool_sha256 = std::string(64U, '5');
+        session.python_executable_sha256 = std::string(64U, '6');
+        const std::string core = start_request_json(
+            session, 1U, std::string(64U, '7'), std::string(64U, '8'),
+            1U, 2U, {});
+        const std::string request = start_request_json(
+            session, 1U, std::string(64U, '7'), std::string(64U, '8'),
+            1U, 2U, canonical_object_digest(core));
+        const json::Value parsed = parse_bounded_object(
+            request, kStartRequestKeys,
+            "route binding self-test request");
+        if (
+            string_member(parsed, "policy_digest") !=
+                launch::kInstanceIsolatedCandidatePolicyDigest) {
+            std::cerr
+                << "Gate 4C broker route policy binding self-test failed.\n";
+            return 2;
+        }
+        return 0;
+    } catch (const std::exception& exception) {
+        std::cerr << "Gate 4C route binding self-test failed: "
+                  << exception.what() << "\n";
+        return 3;
+    }
 #endif
 }
 
@@ -2348,7 +2486,7 @@ void wait_for_verdict03_plan_approval(
         "Verdict 03 plan approval");
     if (string_member(value, "schema") !=
             "factorio.gate4c_exact_plan_approval.v1" ||
-        string_member(value, "work_unit") != kWorkUnit ||
+        string_member(value, "work_unit") != session.route.work_unit ||
         string_member(value, "operation_id") != session.operation_id ||
         string_member(value, "plan_digest") != plan_digest ||
         string_member(value, "approved_by") != "codex:root" ||
@@ -2387,10 +2525,17 @@ int run(
             ". Start it from a normal non-elevated terminal.");
     }
     Session session = load_session(session_path, running_harness);
-    auto policy = launch::FrozenHermeticPlayPolicy::verify_canonical_document(
-        stable_read(session.policy_path, 2U * 1024U * 1024U));
+    const std::string policy_document =
+        stable_read(session.policy_path, 2U * 1024U * 1024U);
+    auto policy =
+        session.route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation
+            ? launch::FrozenHermeticPlayPolicy::
+                  verify_instance_isolated_canonical_document(policy_document)
+            : launch::FrozenHermeticPlayPolicy::
+                  verify_canonical_document(policy_document);
     if (!policy || !policy.value().verified ||
-        policy.value().policy_digest != launch::kHermeticCandidatePolicyDigest) {
+        policy.value().policy_digest != session.route.policy_digest) {
         throw std::runtime_error("frozen policy verification failed");
     }
     instance::HermeticCandidateProjectionRequest projection;
@@ -2413,7 +2558,11 @@ int run(
     projection.windows_system_root = session.windows_system_root;
     projection.policy = policy.value();
 
-    auto plan = instance::project_hermetic_candidate_plan(projection);
+    auto plan =
+        session.route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation
+            ? instance::project_instance_isolated_candidate_plan(projection)
+            : instance::project_hermetic_candidate_plan(projection);
     if (!plan) {
         throw std::runtime_error(
             plan.error().code + ": " + plan.error().message + " (" +
@@ -2480,7 +2629,7 @@ int run(
         << "  operation: instance.play\n"
         << "  instance: " << session.instance_id << "\n"
         << "  intent: menu\n"
-        << "  isolation: hermetic\n"
+        << "  isolation: " << session.route.isolation_mode << "\n"
         << "  Factorio: 2.0.77 standalone non-Steam\n"
         << "  plan digest: " << plan.value().plan_digest << "\n"
         << "  plan evidence: " << platform::path_to_utf8(session.plan_out) << "\n\n"
@@ -2539,7 +2688,11 @@ int run(
     launch::HermeticCandidateLaunchProvider provider;
     launch::PlatformProcessSupervisor supervisor;
     const auto current = [&]() {
-        return instance::reobserve_hermetic_candidate_context(projection);
+        return session.route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation
+            ? instance::reobserve_instance_isolated_candidate_context(
+                  projection)
+            : instance::reobserve_hermetic_candidate_context(projection);
     };
     auto execution = provider.consume_and_execute(
         envelope.value(), plan.value(), current, *authenticator.value(),
@@ -2578,8 +2731,9 @@ int run(
             compared.error().code + ": " + compared.error().message);
     }
     auto packet = launch::build_candidate_evidence_packet(
-        plan.value(), execution.value(), load_comparison(session.comparison_out),
-        inherited_automated_proof());
+        plan.value(), execution.value(),
+        load_comparison(session.comparison_out, session.route.kind),
+        inherited_automated_proof(session.route.kind));
     if (!packet) {
         throw std::runtime_error(
             packet.error().code + ": " + packet.error().message);
@@ -2828,6 +2982,9 @@ int main(int argc, char** argv)
         }
         if (argc == 2 && std::string(argv[1]) == "--self-test-privilege-protocol") {
             return privilege_protocol_self_test();
+        }
+        if (argc == 2 && std::string(argv[1]) == "--self-test-route-binding") {
+            return route_binding_self_test();
         }
         if (argc == 4 && std::string(argv[1]) == "--verify-packet") {
             return verify_packet(

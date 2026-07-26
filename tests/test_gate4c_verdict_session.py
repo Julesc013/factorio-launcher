@@ -13,6 +13,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from tools.play_verdict_route import INSTANCE_ISOLATED_REVALIDATION
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
@@ -32,6 +33,26 @@ ROOTS = {
     ],
     "protected_filesystem": [
         {"resource_id": "installation.selected", "path": r"D:\Games\Factorio\2.0"},
+    ],
+}
+
+INSTANCE_ROOTS = {
+    "schema": SESSION.CLASSIFICATION_SCHEMA,
+    "writable_filesystem": [
+        {
+            "resource_id": "instance.closure",
+            "path": r"E:\Gate4C\instance",
+        },
+        {
+            "resource_id": "operation.temporary",
+            "path": r"E:\Gate4C\temporary\op",
+        },
+    ],
+    "protected_filesystem": [
+        {
+            "resource_id": "installation.selected",
+            "path": r"D:\Games\Factorio\2.0",
+        },
     ],
 }
 
@@ -337,6 +358,106 @@ class Gate4CVerdictSessionTests(unittest.TestCase):
         )
         self.assertFalse(any(gaps.values()))
         self.assertEqual(len(effects), 1)
+
+    def test_instance_route_emits_closed_completion_evidence(self) -> None:
+        principal_sid = "S-1-5-21-1000"
+        principal_identity = SESSION.sha256_text(
+            "windows.local-principal.v1:windows:test"
+        )
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r'FileIoCreate,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x1,0xabc,0x05000060,0,0,E:\Gate4C\instance\saves\fresh.zip,,,',
+            r'FileIoOpEnd,3,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x1,0xabc,1,0x00000000,2,FileIoCreate,E:\Gate4C\instance\saves\fresh.zip',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=INSTANCE_ROOTS,
+            route=INSTANCE_ISOLATED_REVALIDATION,
+            principal_sid=principal_sid,
+            principal_sid_digest=SESSION.sha256_text(principal_sid),
+            principal_identity_digest=principal_identity,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertEqual(
+            effects[0]["logical_resource_id"], "operation.temporary"
+        )
+        self.assertEqual(
+            effects[0]["principal_identity_digest"], principal_identity
+        )
+        self.assertEqual(effects[1]["classification"], "instance_owned")
+        self.assertEqual(effects[1]["artifact_owner"], "instance")
+        self.assertTrue(effects[1]["completion_success"])
+        self.assertTrue(effects[1]["target_resolved"])
+        self.assertTrue(effects[1]["object_lifetime_resolved"])
+        self.assertTrue(effects[1]["attribution_resolved"])
+
+    def test_instance_route_missing_completion_is_inconclusive(self) -> None:
+        principal_sid = "S-1-5-21-1000"
+        principal_identity = SESSION.sha256_text(
+            "windows.local-principal.v1:windows:test"
+        )
+        text = dump(
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            r'FileIoWrite,2,"factorio.exe (100)",7,"factorio.exe (100)",7,0,0x1,0xabc,0,4,0,0,0,E:\Gate4C\instance\config\config.ini,0',
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=r"D:\Games\Factorio\2.0\bin\x64\factorio.exe",
+            roots=INSTANCE_ROOTS,
+            route=INSTANCE_ISOLATED_REVALIDATION,
+            principal_sid=principal_sid,
+            principal_sid_digest=SESSION.sha256_text(principal_sid),
+            principal_identity_digest=principal_identity,
+        )
+        self.assertTrue(gaps["missing_completion"])
+        self.assertFalse(effects[1]["completion_success"])
+
+    def test_instance_route_accepts_only_exact_bam_disclosure(self) -> None:
+        principal_sid = "S-1-5-21-1000"
+        principal_identity = SESSION.sha256_text(
+            "windows.local-principal.v1:windows:test"
+        )
+        executable = r"D:\Games\Factorio\2.0\bin\x64\factorio.exe"
+        text = dump(
+            r"VolumeMapping,0,\Device\HarddiskVolume9,D:",
+            'P-Start,1,"factorio.exe (100)",50,1,0,0,0,S-1,"factorio.exe",,',
+            (
+                "RegKcbCreate,2,0xffff,"
+                r"\REGISTRY\MACHINE\SYSTEM\CurrentControlSet\Services\bam"
+                rf"\State\UserSettings\{principal_sid}"
+            ),
+            (
+                'RegSetValue,3,0xffff,"factorio.exe (100)",7,0,1,'
+                r"\Device\HarddiskVolume9\Games\Factorio\2.0\bin\x64\factorio.exe"
+            ),
+        )
+        effects, gaps = SESSION.observation_effects(
+            text,
+            primary_pid=100,
+            primary_stable_identity="windows:100:12345",
+            executable=executable,
+            roots=INSTANCE_ROOTS,
+            route=INSTANCE_ISOLATED_REVALIDATION,
+            principal_sid=principal_sid,
+            principal_sid_digest=SESSION.sha256_text(principal_sid),
+            principal_identity_digest=principal_identity,
+        )
+        self.assertFalse(any(gaps.values()))
+        self.assertEqual(
+            effects[1]["classification"], "expected_external_disclosed"
+        )
+        self.assertEqual(
+            effects[1]["disclosure_effect_id"],
+            "windows.bam.factorio_process_execution.v1",
+        )
+        self.assertEqual(
+            effects[1]["principal_identity_digest"], principal_identity
+        )
 
     def test_unknown_file_name_resolves_from_temporal_file_object(self) -> None:
         text = dump(

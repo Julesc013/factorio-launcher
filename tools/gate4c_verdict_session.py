@@ -25,6 +25,11 @@ from datetime import datetime, timezone
 from pathlib import Path, PureWindowsPath
 from typing import Any, Iterable
 
+from tools.play_verdict_route import (
+    HERMETIC_VERDICT03,
+    PlayVerdictRoute,
+    route_for_work_unit,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -106,8 +111,13 @@ def observation_output_digest(observation: dict[str, Any]) -> str:
             item["logical_resource_id"],
         ),
     )
-    effect_values = [
-        {
+    instance_isolated = (
+        observation["schema"]
+        != HERMETIC_VERDICT03.observation_schema
+    )
+    effect_values = []
+    for item in effects:
+        value = {
             "sequence": item["sequence"],
             "domain": item["domain"],
             "process_identity_digest": item["process_identity_digest"],
@@ -115,8 +125,28 @@ def observation_output_digest(observation: dict[str, Any]) -> str:
             "logical_resource_id": item["logical_resource_id"],
             "classification": item["classification"],
         }
-        for item in effects
-    ]
+        if instance_isolated:
+            value.update(
+                {
+                    "operation_kind": item["operation_kind"],
+                    "disclosure_effect_id": item[
+                        "disclosure_effect_id"
+                    ],
+                    "artifact_owner": item["artifact_owner"],
+                    "principal_identity_digest": item[
+                        "principal_identity_digest"
+                    ],
+                    "completion_success": item["completion_success"],
+                    "target_resolved": item["target_resolved"],
+                    "object_lifetime_resolved": item[
+                        "object_lifetime_resolved"
+                    ],
+                    "attribution_resolved": item[
+                        "attribution_resolved"
+                    ],
+                }
+            )
+        effect_values.append(value)
     gap = observation["gaps"]
     gaps = {
         "lost_events": gap["lost_events"],
@@ -127,6 +157,18 @@ def observation_output_digest(observation: dict[str, Any]) -> str:
         "attribution_gap": gap["attribution_gap"],
         "provider_failure": gap["provider_failure"],
     }
+    if instance_isolated:
+        gaps.update(
+            {
+                "missing_completion": gap["missing_completion"],
+                "object_reuse_ambiguity": gap[
+                    "object_reuse_ambiguity"
+                ],
+                "baseline_incomplete": gap["baseline_incomplete"],
+                "postrun_incomplete": gap["postrun_incomplete"],
+                "packet_collision": gap["packet_collision"],
+            }
+        )
     core = {
         "schema": observation["schema"],
         "provider_id": observation["provider_id"],
@@ -161,7 +203,11 @@ def atomic_json(path: Path, value: dict[str, Any]) -> None:
 def exact_task_root(value: Path) -> Path:
     result = Path(os.path.abspath(value))
     audit = PREFLIGHT.audit_no_follow(result, require_file=False)
-    if not audit["safe"] or result.name != PREFLIGHT.WORK_UNIT:
+    try:
+        route_for_work_unit(result.name)
+    except RuntimeError as exc:
+        raise SessionError("task root is not a supported verdict root") from exc
+    if not audit["safe"]:
         raise SessionError("task root is not the exact Gate 4C root")
     return result
 
@@ -182,7 +228,7 @@ def exact_operation_root(task_root: Path, value: Path) -> Path:
         not audit["safe"]
         or not owner_audit["safe"]
         or owner.read_text(encoding="utf-8").splitlines()[:1]
-        != [PREFLIGHT.WORK_UNIT]
+        != [task_root.name]
     ):
         raise SessionError("operation root crosses an unsafe path boundary")
     return result
@@ -650,6 +696,7 @@ def load_roots(path: Path) -> dict[str, list[dict[str, str]]]:
 def classify_filesystem_target(
     target: str,
     roots: dict[str, list[dict[str, str]]],
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
 ) -> tuple[str, str]:
     normalized = normalized_windows_path(target)
     if normalized is None:
@@ -657,12 +704,90 @@ def classify_filesystem_target(
     for item in roots["writable_filesystem"]:
         root = normalized_windows_path(item["path"])
         if root is not None and path_is_within(normalized, root):
-            return item["resource_id"], "writable"
+            if route is HERMETIC_VERDICT03:
+                return item["resource_id"], "writable"
+            return (
+                item["resource_id"],
+                "instance_owned"
+                if item["resource_id"] == "instance.closure"
+                else "operation_owned",
+            )
     for item in roots["protected_filesystem"]:
         root = normalized_windows_path(item["path"])
         if root is not None and path_is_within(normalized, root):
-            return item["resource_id"], "protected"
-    return "effects.external_filesystem", "forbidden"
+            return (
+                item["resource_id"],
+                "protected"
+                if route is HERMETIC_VERDICT03
+                else "protected_software",
+            )
+    return (
+        "effects.external_filesystem",
+        "forbidden"
+        if route is HERMETIC_VERDICT03
+        else "unexpected_external",
+    )
+
+
+def artifact_owner(classification: str, resource_id: str) -> str:
+    if classification == "instance_owned":
+        return "instance"
+    if classification == "operation_owned":
+        return {
+            "operation.record": "coordinator",
+            "operation.temporary": "process_provider",
+            "operation.observer_artifacts": "observer",
+            "operation.candidate_artifacts": "runtime",
+            "operation.audit_record": "audit",
+            "operation.process_logs": "process_provider",
+        }.get(resource_id, "facman_operation")
+    if classification == "protected_software":
+        return "protected_software"
+    if classification in {
+        "expected_external_disclosed",
+        "unexpected_external",
+    }:
+        return "machine_external"
+    return "unknown"
+
+
+def classify_instance_registry_target(
+    target: str,
+    *,
+    operation_kind: str,
+    executable: str,
+    principal_sid: str,
+    mappings: list[tuple[str, str]],
+) -> tuple[str, str, str]:
+    normalized = target.replace("/", "\\").casefold()
+    marker = (
+        "\\registry\\machine\\system\\currentcontrolset\\services\\"
+        "bam\\state\\usersettings\\"
+        + principal_sid.casefold()
+        + "\\"
+    )
+    if operation_kind.casefold() == "regsetvalue" and normalized.startswith(
+        marker
+    ):
+        value_name = target[len(marker) :]
+        if value_name.casefold().startswith("device\\"):
+            value_name = "\\" + value_name
+        resolved = resolve_file_target(value_name, mappings)
+        if (
+            resolved is not None
+            and normalized_windows_path(resolved)
+            == normalized_windows_path(executable)
+        ):
+            return (
+                "windows.bam.factorio_process_execution.v1",
+                "expected_external_disclosed",
+                "windows.bam.factorio_process_execution.v1",
+            )
+    return (
+        "effects.external_registry",
+        "unexpected_external",
+        "",
+    )
 
 
 def registry_target(
@@ -943,6 +1068,10 @@ def observation_effects(
     executable: str,
     roots: dict[str, list[dict[str, str]]],
     provider_process_ids: Iterable[int] = (),
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    principal_sid: str = "",
+    principal_sid_digest: str = "",
+    principal_identity_digest: str = "",
 ) -> tuple[list[dict[str, Any]], dict[str, bool]]:
     headers, rows = xperf_headers_and_rows(dump_text)
     intervals, primary_start = attributed_process_intervals(
@@ -964,8 +1093,7 @@ def observation_effects(
     registry_kcbs: dict[str, str] = {}
     pending_registry_open: tuple[int, int, int, str] | None = None
     registry_operation_sequence = 0
-    effects: list[dict[str, Any]] = [
-        {
+    primary_effect: dict[str, Any] = {
             "sequence": 0,
             "domain": "process",
             "process_identity_digest": process_identity_digest(
@@ -975,11 +1103,40 @@ def observation_effects(
                 "process-image:" + str(PureWindowsPath(executable)).casefold()
             ),
             "logical_resource_id": "process.primary",
-            "classification": "writable",
-        }
-    ]
+            "classification": (
+                "writable"
+                if route is HERMETIC_VERDICT03
+                else "operation_owned"
+            ),
+    }
+    if route is not HERMETIC_VERDICT03:
+        if (
+            not principal_sid
+            or not lowercase_digest(principal_sid_digest)
+            or not lowercase_digest(principal_identity_digest)
+            or sha256_text(principal_sid) != principal_sid_digest
+        ):
+            raise SessionError(
+                "instance-isolated observer principal binding is invalid"
+            )
+        primary_effect.update(
+            {
+                "operation_kind": "ProcessStart",
+                "disclosure_effect_id": "",
+                "artifact_owner": "process_provider",
+                "logical_resource_id": "operation.temporary",
+                "principal_identity_digest": principal_identity_digest,
+                "completion_success": True,
+                "target_resolved": True,
+                "object_lifetime_resolved": True,
+                "attribution_resolved": primary_start,
+            }
+        )
+    effects: list[dict[str, Any]] = [primary_effect]
     unresolved_target = False
     attribution_gap = not primary_start
+    missing_completion = False
+    object_reuse_ambiguity = False
     sequence = 1
     for row in rows:
         event = row[0].casefold()
@@ -1048,6 +1205,8 @@ def observation_effects(
             if object_index is not None and len(row) > object_index:
                 file_objects.pop(row[object_index].strip().casefold(), None)
             continue
+        completion_success = True
+        completion_resolved = True
         if event == "fileiocreate":
             object_index = header_index(headers, row[0], "FileObject")
             name_index = header_index(headers, row[0], "FileName", last=True)
@@ -1086,13 +1245,30 @@ def observation_effects(
                 headers, row, create_outcomes, create_starts
             )
             if outcome is None:
-                attribution_gap = True
-                continue
-            status, information = outcome
-            if status != 0 or information in {1, 4, 5}:
-                continue
-            if information not in {0, 2, 3}:
-                attribution_gap = True
+                if route is HERMETIC_VERDICT03:
+                    attribution_gap = True
+                    continue
+                completion_success = False
+                completion_resolved = False
+                missing_completion = True
+            else:
+                status, information = outcome
+                if status != 0 or information in {1, 4, 5}:
+                    continue
+                if information not in {0, 2, 3}:
+                    if route is HERMETIC_VERDICT03:
+                        attribution_gap = True
+                        continue
+                    completion_success = False
+                    completion_resolved = False
+                    missing_completion = True
+        elif event in MUTATING_FILE_EVENTS and route is not HERMETIC_VERDICT03:
+            status = row_status(headers, row)
+            if status is None:
+                completion_success = False
+                completion_resolved = False
+                missing_completion = True
+            elif status != 0:
                 continue
         process_index = header_index(headers, row[0], "Process Name ( PID)")
         timestamp = event_timestamp(headers, row)
@@ -1139,9 +1315,16 @@ def observation_effects(
                 logical_resource, classification = "effects.external_filesystem", "unresolved"
                 target_text = raw_target or "unresolved"
             else:
-                logical_resource, classification = classify_filesystem_target(target, roots)
+                logical_resource, classification = classify_filesystem_target(
+                    target, roots, route
+                )
                 target_text = target
             domain = "filesystem"
+            disclosure_effect_id = ""
+            target_resolved = target is not None
+            object_lifetime_resolved = target_resolved
+            if not target_resolved:
+                object_reuse_ambiguity = True
         else:
             target = registry_target(headers, row, registry_kcbs)
             if target is None:
@@ -1171,13 +1354,33 @@ def observation_effects(
                 unresolved_target = True
                 target = "unresolved"
                 classification = "unresolved"
+                logical_resource = "effects.external_registry"
+                disclosure_effect_id = ""
+                target_resolved = False
+                object_lifetime_resolved = False
+                object_reuse_ambiguity = True
             else:
-                classification = "forbidden"
-            logical_resource = "effects.external_registry"
+                target_resolved = True
+                object_lifetime_resolved = True
+                if route is HERMETIC_VERDICT03:
+                    classification = "forbidden"
+                    logical_resource = "effects.external_registry"
+                    disclosure_effect_id = ""
+                else:
+                    (
+                        logical_resource,
+                        classification,
+                        disclosure_effect_id,
+                    ) = classify_instance_registry_target(
+                        target,
+                        operation_kind=row[0],
+                        executable=executable,
+                        principal_sid=principal_sid,
+                        mappings=mappings,
+                    )
             target_text = target
             domain = "registry"
-        effects.append(
-            {
+        effect: dict[str, Any] = {
                 "sequence": sequence,
                 "domain": domain,
                 "process_identity_digest": process_identity_digest(
@@ -1188,20 +1391,44 @@ def observation_effects(
                 ),
                 "logical_resource_id": logical_resource,
                 "classification": classification,
-            }
-        )
+        }
+        if route is not HERMETIC_VERDICT03:
+            effect.update(
+                {
+                    "operation_kind": row[0],
+                    "disclosure_effect_id": disclosure_effect_id,
+                    "artifact_owner": artifact_owner(
+                        classification, logical_resource
+                    ),
+                    "principal_identity_digest": principal_identity_digest,
+                    "completion_success": completion_success,
+                    "target_resolved": target_resolved,
+                    "object_lifetime_resolved": object_lifetime_resolved,
+                    "attribution_resolved": True,
+                }
+            )
+        effects.append(effect)
         sequence += 1
-    return effects, {
+    gap_result = {
         "unknown_process_identity": not primary_start,
         "unresolved_target": unresolved_target,
         "attribution_gap": attribution_gap,
     }
+    if route is not HERMETIC_VERDICT03:
+        gap_result.update(
+            {
+                "missing_completion": missing_completion,
+                "object_reuse_ambiguity": object_reuse_ambiguity,
+            }
+        )
+    return effects, gap_result
 
 
 def finish_capture(args: argparse.Namespace) -> dict[str, Any]:
     if os.name != "nt" or not PREFLIGHT.is_elevated():
         raise SessionError("finishing the Gate 4C capture requires an elevated Windows session")
     task_root = exact_task_root(args.task_root)
+    route = route_for_work_unit(task_root.name)
     operation_root = exact_operation_root(task_root, args.operation_root)
     expected_token = operation_root / "process" / "observation" / "capture-token.json"
     token_audit = PREFLIGHT.audit_no_follow(args.capture_token, require_file=True)
@@ -1308,6 +1535,10 @@ def finish_capture(args: argparse.Namespace) -> dict[str, Any]:
         executable=args.executable,
         roots=roots,
         provider_process_ids=provider_process_ids,
+        route=route,
+        principal_sid=args.principal_sid,
+        principal_sid_digest=args.principal_sid_digest,
+        principal_identity_digest=args.principal_identity_digest,
     )
     gaps = {
         "lost_events": lost_events not in (0,),
@@ -1318,11 +1549,25 @@ def finish_capture(args: argparse.Namespace) -> dict[str, Any]:
         "attribution_gap": inferred_gaps["attribution_gap"],
         "provider_failure": bool(errors),
     }
+    if route is not HERMETIC_VERDICT03:
+        gaps.update(
+            {
+                "missing_completion": inferred_gaps[
+                    "missing_completion"
+                ],
+                "object_reuse_ambiguity": inferred_gaps[
+                    "object_reuse_ambiguity"
+                ],
+                "baseline_incomplete": False,
+                "postrun_incomplete": False,
+                "packet_collision": False,
+            }
+        )
     capture_complete = not any(gaps.values())
     observation: dict[str, Any] = {
-        "schema": OBSERVATION_SCHEMA,
+        "schema": route.observation_schema,
         "provider_id": PREFLIGHT.OBSERVER_PROVIDER_ID,
-        "provider_revision": BOUND_PROVIDER_REVISION,
+        "provider_revision": route.observation_provider_revision,
         "plan_digest": args.plan_digest,
         "capture_session_digest": claimed,
         "raw_artifact_digest": PREFLIGHT.sha256_file(trace) if trace.is_file() else sha256_text("missing"),
@@ -1481,6 +1726,9 @@ def parser() -> argparse.ArgumentParser:
     finish.add_argument("--process-stable-identity", required=True)
     finish.add_argument("--executable", required=True)
     finish.add_argument("--classification-roots", type=Path, required=True)
+    finish.add_argument("--principal-sid", default="")
+    finish.add_argument("--principal-sid-digest", default="")
+    finish.add_argument("--principal-identity-digest", default="")
     finish.add_argument("--quiescence-seconds", type=int, default=2)
     abort = sub.add_parser("observer-abort")
     abort.add_argument("--task-root", type=Path, required=True)

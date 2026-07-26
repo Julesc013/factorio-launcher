@@ -1,7 +1,9 @@
 # Windows instance-isolated Play policy
 
-Status: frozen criteria under review; no candidate, execution, verdict, route,
-or authority.
+Status: frozen criteria with a technically qualified candidate; the
+operator-only verdict harness is implemented and requires a fresh remote-only
+post-harness qualification before any human revalidation. There is no accepted
+verdict, product route, or authority.
 
 ```text
 policy_id       facman.windows-instance-isolated-play.2.0.77.x64.v1
@@ -48,6 +50,9 @@ boundary that prevents—not merely observes—external effects.
 
 No alternate intent, Steam state, acquisition, preparation, Setup, signing,
 publication, or general process authority is included.
+
+The separate operator mechanics and qualification boundary are documented in
+[Instance-isolated verdict harness](instance-isolated-verdict-harness.md).
 
 ## Exact writable boundary
 

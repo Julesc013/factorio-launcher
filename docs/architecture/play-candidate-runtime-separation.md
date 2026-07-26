@@ -40,6 +40,11 @@ or verdict-orchestration targets.
 `flb_factorio_launch_static` is retained only as a compatibility aggregate for
 internal callers. New dependencies use an exact target.
 
+The operator-only instance-isolated path is described in
+[Instance-isolated verdict harness](instance-isolated-verdict-harness.md).
+It consumes a separately generated qualification binding; it does not infer
+candidate identity from whatever build happens to be present.
+
 ## Packaging law
 
 Operator evidence targets exist only when
