@@ -79,6 +79,53 @@ def qualification_value() -> dict[str, object]:
 
 
 class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
+    def test_workspace_stage_requires_exact_current_active_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            executable = root / "factorio" / "bin" / "x64" / "factorio.exe"
+            executable.parent.mkdir(parents=True)
+            executable.write_bytes(b"authenticated-factorio")
+            identity = {
+                "version": "2.0.77",
+                "sha256": PREFLIGHT.sha256_file(executable),
+                "signer": PREFLIGHT.EXPECTED_SIGNER,
+            }
+            workspace = root / "workspace"
+
+            COORDINATOR._stage_workspace(
+                workspace,
+                ROUTE.instance_id,
+                executable,
+                identity,
+            )
+
+            record = json.loads(
+                (
+                    workspace
+                    / "installs"
+                    / "refs"
+                    / "instance-isolated-factorio-2-0-77.json"
+                ).read_text(encoding="utf-8")
+            )
+            self.assertEqual(record["lifecycle_status"], "active")
+            self.assertEqual(record["verification"]["status"], "pass")
+            self.assertEqual(
+                record["verification"]["executable_sha256"],
+                identity["sha256"],
+            )
+            self.assertEqual(len(record["last_verification_identity"]), 64)
+            self.assertEqual(len(record["state_revision"]), 64)
+
+            refused_workspace = root / "refused-workspace"
+            with self.assertRaises(COORDINATOR.CoordinatorError):
+                COORDINATOR._stage_workspace(
+                    refused_workspace,
+                    ROUTE.instance_id,
+                    executable,
+                    {**identity, "sha256": "0" * 64},
+                )
+            self.assertFalse(refused_workspace.exists())
+
     def test_instance_preflight_cannot_bypass_qualification(self) -> None:
         with self.assertRaises(PREFLIGHT.PreflightError):
             PREFLIGHT.build_preflight(

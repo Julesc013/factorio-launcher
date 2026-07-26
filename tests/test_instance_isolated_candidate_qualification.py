@@ -330,7 +330,13 @@ class InstanceIsolatedCandidateQualificationTests(unittest.TestCase):
                 destination.parent.mkdir(parents=True)
                 destination.write_bytes(b"factorio")
 
-            def stage_workspace(workspace: Path, _instance: str, _exe: Path) -> None:
+            def stage_workspace(
+                workspace: Path,
+                _instance: str,
+                _exe: Path,
+                identity: dict[str, str],
+            ) -> None:
+                self.assertEqual(identity["sha256"], "a" * 64)
                 workspace.mkdir(parents=True)
 
             with (

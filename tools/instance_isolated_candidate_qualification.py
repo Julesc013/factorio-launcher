@@ -546,6 +546,7 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
         workspace,
         ROUTE.instance_id,
         factorio_executable,
+        factorio,
     )
     instance, projections = derive_instance_identity(
         artifact_paths["facman"],

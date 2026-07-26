@@ -1,6 +1,6 @@
 # Validation
 
-Status: LOCAL PASS; HOSTED REVIEW PENDING.
+Status: PASS.
 
 No Factorio process, WPR capture, permit, human verdict, route acceptance or
 authority promotion is allowed in this WorkUnit.
@@ -27,5 +27,15 @@ implementation was committed as
 source identity, rebuilt the graph, and the clean-checkout Windows package
 proof passed 14 of 14 required obligations with zero skips.
 
-The final documentation-only evidence commit and hosted exact-branch matrix
-remain review obligations.
+Pull request
+[`#83`](https://github.com/Julesc013/factorio-launcher/pull/83) bound
+the exact reviewed head
+`7592e99cab718cac38089b7c6d315594619658cf`. Every duplicated hosted
+appkit, C/C++, C#, Linux coverage/native, macOS archive/native CLI, policy,
+Python, Windows package and CodeQL check passed. The reviewed change was
+merged to `dev` as
+`426d13cc2f68782b40eae66f0fb0621a607b7998`.
+
+The remaining boundary is not producer implementation. It is the separate
+remote-only candidate qualification and then the human-controlled real-Play
+revalidation.
