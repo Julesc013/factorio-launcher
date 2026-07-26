@@ -128,7 +128,9 @@ add_library(flb_factorio_application_static STATIC
   application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
 target_sources(flb_factorio_application_static PRIVATE application/modules/instance_module.cpp)
 target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
-target_include_directories(flb_factorio_application_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application)
+target_include_directories(flb_factorio_application_static
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application
+  PRIVATE ${FACMAN_GENERATED_INCLUDE_DIR})
 target_compile_definitions(flb_factorio_application_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_factorio_application_static PUBLIC
   facman_base_static facman_workspace_static facman_preferences_static facman_factorio_model flaunch_runtime_static ulk_static)

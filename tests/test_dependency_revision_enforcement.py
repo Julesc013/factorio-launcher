@@ -102,6 +102,95 @@ class DependencyRevisionEnforcementTests(unittest.TestCase):
         self.assertTrue(all("expected" in problem for problem in problems))
         run_git.assert_not_called()
 
+    def test_default_verification_does_not_contact_remotes(self) -> None:
+        pin = "a" * 40
+        component = {
+            "id": "universal_launcher",
+            "pin": pin,
+            "path": "../universal-launcher",
+            "source": "universal-launcher",
+            "remote": "https://github.com/example/universal-launcher.git",
+            "required_ref": "refs/heads/main",
+            "reachability": "required_for_source_closure",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            root.joinpath(".git").mkdir()
+            with (
+                patch.object(
+                    verify_dependency_revisions._common,
+                    "load_toml",
+                    return_value={"component": [component]},
+                ),
+                patch.object(
+                    verify_dependency_revisions,
+                    "git_output",
+                    side_effect=[pin, ""],
+                ),
+                patch.object(
+                    verify_dependency_revisions,
+                    "remote_component_problems",
+                ) as remote_check,
+            ):
+                problems = verify_dependency_revisions.verify(
+                    repository_paths={"universal_launcher": root}
+                )
+        self.assertEqual(problems, [])
+        remote_check.assert_not_called()
+
+    def test_remote_verification_is_explicit(self) -> None:
+        pin = "a" * 40
+        component = {
+            "id": "universal_launcher",
+            "pin": pin,
+            "path": "../universal-launcher",
+            "source": "universal-launcher",
+            "remote": "https://github.com/example/universal-launcher.git",
+            "required_ref": "refs/heads/main",
+            "reachability": "required_for_source_closure",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            root.joinpath(".git").mkdir()
+            with (
+                patch.object(
+                    verify_dependency_revisions._common,
+                    "load_toml",
+                    return_value={"component": [component]},
+                ),
+                patch.object(
+                    verify_dependency_revisions,
+                    "git_output",
+                    side_effect=[pin, ""],
+                ),
+                patch.object(
+                    verify_dependency_revisions,
+                    "remote_component_problems",
+                    return_value=[],
+                ) as remote_check,
+            ):
+                problems = verify_dependency_revisions.verify(
+                    remote=True,
+                    repository_paths={"universal_launcher": root},
+                )
+        self.assertEqual(problems, [])
+        remote_check.assert_called_once()
+
+    def test_remote_verification_rejects_missing_policy(self) -> None:
+        problems = verify_dependency_revisions.remote_component_problems(
+            Path("workspace_lock.toml"),
+            {
+                "id": "universal_launcher",
+                "pin": "a" * 40,
+                "path": "../universal-launcher",
+                "source": "universal-launcher",
+                "remote": "",
+                "required_ref": "",
+                "reachability": "",
+            },
+        )
+        self.assertEqual(len(problems), 3)
+
     def test_workspace_doctor_refuses_a_pin_mismatch(self) -> None:
         repos = {
             "universal-setup": Path("X:/setup"),

@@ -1,0 +1,83 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01
+title: Prove first-party provider pin reachability
+status: reviewed
+lifecycle_state: reviewed
+planning_state: reviewed
+created_at: 2026-07-26T09:01:45Z
+owner: unassigned
+objective: >
+  Update accepted ULK pin truth, preserve offline validation, and prove declared remote and canonical-ref reachability without local object-store fallback.
+allowed_paths:
+  - release/index/workspace_lock.v1.toml
+  - release/index/dependency_lock.v1.toml
+  - release/index/sbom.components.v1.json
+  - THIRD_PARTY_NOTICES.md
+  - contracts/schema/release/workspace_lock.v1.schema.json
+  - tools/verify_dependency_revisions.py
+  - tools/validators/release/check_workspace_lock.py
+  - tools/validators/release/check_dependency_lock.py
+  - tools/compliance_check.py
+  - tests/test_dependency_revision_enforcement.py
+  - tests/test_setup_package_routing.py
+  - tests/test_aide_compaction.py
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - CMakeLists.txt
+  - cmake/FacManBuildIdentity.hpp.in
+  - runtime/factorio/CMakeLists.txt
+  - runtime/factorio/application/handlers/intelligence.cpp
+  - tests/test_status_onboarding_explain.py
+  - runtime/base/fl_path_safety.cpp
+  - tests/native/fl_path_safety_smoke.cpp
+  - tests/native/facman_process_probe.cpp
+  - tests/native/m1_three_repository_system_proof.cpp
+  - runtime/factorio/snapshots/flb_factorio_snapshots.cpp
+  - runtime/factorio/instance/flb_factorio_instance_lifecycle.cpp
+  - runtime/factorio/application/handlers/instances.cpp
+  - runtime/factorio/application/handlers/launch.cpp
+  - tests/native/flb_factorio_launch_permit_smoke.cpp
+  - tests/native/flb_factorio_instance_model_smoke.cpp
+  - tests/native/facman_hermetic_play_candidate_smoke.cpp
+  - .aide/queue/index.yaml
+  - .aide/queue/active/FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_client_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+affected_strict_validators:
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-26T09:01:51Z
+verified_at: 2026-07-26T09:35:14Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-26T09:36:32Z

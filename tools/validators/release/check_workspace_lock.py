@@ -20,6 +20,16 @@ TOOL = "release-workspace-lock-check"
 
 REQUIRED_COMPONENT_IDS = {"factorio_binding", "universal_launcher", "universal_setup"}
 HASH_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+UNIVERSAL_PROVIDER_SOURCE = {
+    "universal_launcher": {
+        "remote": "https://github.com/Julesc013/universal-launcher.git",
+        "required_ref": "refs/heads/main",
+    },
+    "universal_setup": {
+        "remote": "https://github.com/Julesc013/universal-setup.git",
+        "required_ref": "refs/heads/main",
+    },
+}
 
 
 def main() -> int:
@@ -52,6 +62,12 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
         problems.append(f"{prefix}: pin must be a 40-char hex SHA")
         return problems
     if component_id in {"universal_launcher", "universal_setup"}:
+        expected_source = UNIVERSAL_PROVIDER_SOURCE[component_id]
+        for field, expected in expected_source.items():
+            if component.get(field) != expected:
+                problems.append(f"{prefix}: {field} must equal {expected}")
+        if component.get("reachability") != "required_for_source_closure":
+            problems.append(f"{prefix}: reachability must require source closure")
         relative_path = str(component.get("path", ""))
         repo_path = resolve_repo_path(component)
         if repo_path is None:
@@ -67,6 +83,8 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
             problems.append(
                 f"{prefix}: workspace commit {repo_head(repo_path)} does not match pinned {pin} at {relative_path}"
             )
+        elif not repo_is_clean(repo_path):
+            problems.append(f"{prefix}: workspace at {relative_path} must be clean")
     return problems
 
 
@@ -90,6 +108,18 @@ def repo_head(repo_path: Path) -> str:
     if completed.returncode != 0:
         return "unknown"
     return completed.stdout.strip()
+
+
+def repo_is_clean(repo_path: Path) -> bool:
+    completed = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
+        cwd=repo_path,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    return completed.returncode == 0 and not completed.stdout.strip()
 
 
 def _component_map(value: Any) -> dict[str, dict[str, Any]]:

@@ -205,16 +205,19 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
                 imported.error().message);
         }
     }
-    launch::InstanceLaunchRef launch_instance {instance.id.str(), instance.profile, instance.root, "gui", {}};
-    launch::InstallLaunchRef launch_install {
-        install.root,
-        install.executable,
-        install.ownership,
-        install.distribution_origin,
-        install.platform_integration,
-        install.strict_isolation_eligibility,
-        install.external_state_domains,
-    };
+    launch::InstanceLaunchRef launch_instance;
+    launch_instance.instance_id = instance.id.str();
+    launch_instance.profile_id = instance.profile;
+    launch_instance.local_data_root = instance.root;
+    launch_instance.launch_mode = "gui";
+    launch::InstallLaunchRef launch_install;
+    launch_install.root = install.root;
+    launch_install.executable = install.executable;
+    launch_install.ownership = install.ownership;
+    launch_install.distribution_origin = install.distribution_origin;
+    launch_install.platform_integration = install.platform_integration;
+    launch_install.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    launch_install.external_state_domains = install.external_state_domains;
     std::string effective_config = launch::effective_config_ini(launch_instance, launch_install);
     if (!source_data_root.empty()) {
         auto merged = lifecycle::merge_imported_config_settings(

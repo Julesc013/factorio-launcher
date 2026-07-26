@@ -34,6 +34,20 @@ int main()
     fs::path root = unique_test_root();
     fs::create_directories(root);
 
+    const auto managed = facman::base::managed_file(
+        root,
+        "install_refs",
+        "fixture",
+        ".json");
+    if (!managed.ok()) return 1;
+    if (managed.path != (root / "install_refs" / "fixture.json")) return 2;
+    const auto escaped = facman::base::managed_file(
+        root,
+        "../outside",
+        "fixture",
+        ".json");
+    if (escaped.ok()) return 3;
+
     fs::path target = root / "race.txt";
     std::atomic<bool> start {false};
     std::atomic<int> successes {0};

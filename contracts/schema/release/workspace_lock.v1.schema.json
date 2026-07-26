@@ -19,8 +19,24 @@
           "id": { "type": "string" },
           "source": { "type": "string" },
           "pin": { "type": "string" },
-          "path": { "type": "string" }
+          "path": { "type": "string" },
+          "remote": { "type": "string", "format": "uri" },
+          "required_ref": { "type": "string", "pattern": "^refs/heads/[A-Za-z0-9._/-]+$" },
+          "reachability": { "const": "required_for_source_closure" }
         },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "id": { "enum": ["universal_launcher", "universal_setup"] }
+              },
+              "required": ["id"]
+            },
+            "then": {
+              "required": ["remote", "required_ref", "reachability"]
+            }
+          }
+        ],
         "additionalProperties": true
       }
     }

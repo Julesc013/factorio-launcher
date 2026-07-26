@@ -55,7 +55,10 @@ int main(int argc, char** argv)
         }
         if (mode == "crash") {
 #ifdef _WIN32
-            RaiseException(0xE000FACAUL, EXCEPTION_NONCONTINUABLE, 0, nullptr);
+            // Terminate with an exception-shaped status without invoking Windows
+            // Error Reporting, whose interactive crash handling can keep an
+            // unattended test process alive until the supervisor timeout.
+            TerminateProcess(GetCurrentProcess(), 0xE000FACAUL);
 #else
             // SIGKILL cannot be intercepted and converted into a normal exit
             // by ASan, so the supervisor observes a deterministic signal exit.
