@@ -103,7 +103,7 @@ int main()
         return 15;
     }
 
-    for (const std::string& lifecycle : {
+    for (const char* lifecycle : {
             "verification_failed",
             "recovery_required",
             "retired",
@@ -116,7 +116,7 @@ int main()
             instance, install, "launch_plan.preflight", protected_factorio_roots);
         if (preflight.ok ||
             preflight.strict_refusal_code != "launcher_install_not_active" ||
-            !has_problem(preflight, "lifecycle is not active: " + lifecycle)) {
+            !has_problem(preflight, std::string("lifecycle is not active: ") + lifecycle)) {
             return 40;
         }
     }
