@@ -31,6 +31,7 @@ allowed_paths:
   - tests/test_aide_compaction.py
   - tests/test_aide_target_truth.py
   - tests/test_architecture_fitness.py
+  - tools/aide_compaction_check.py
   - tools/cmake_architecture_check.py
   - tools/project_state.py
 forbidden_paths:

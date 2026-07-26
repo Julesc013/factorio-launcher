@@ -45,6 +45,8 @@ history; this separation WorkUnit became the single active item.
 ## AIDE archive correctness
 
 - `.aide/scripts/aide_lifecycle.py`
+- `tools/aide_compaction_check.py`
 - `tests/test_aide_compaction.py`
 
-PowerShell evidence now uses the archive's declared LF-canonical digest law.
+PowerShell and log evidence now use the archive's declared LF-canonical digest
+law.

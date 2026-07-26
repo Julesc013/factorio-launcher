@@ -86,8 +86,19 @@ required or unknown obligation.
 
 ## Incidental repair
 
-Archiving the preceding WorkUnit exposed a platform line-ending defect in the
-AIDE history writer: `.ps1` evidence was omitted from its declared
-`text_lf_v1` hash canonicalization. The lifecycle writer now canonicalizes
-PowerShell evidence consistently with the validator, and a regression test
-proves CRLF/LF independence. The archived evidence file itself was not changed.
+Archiving the preceding WorkUnit exposed platform line-ending defects in AIDE
+history hashing: `.ps1` was omitted by the writer, while `.log` was omitted by
+both writer and validator despite Git treating the promotion logs as text. The
+lifecycle writer and validator now canonicalize both extensions under
+`text_lf_v1`, and regression coverage proves CRLF/LF independence. The archived
+evidence files themselves were not changed.
+
+The defect was reproduced by both exact-head CI events:
+
+- push CI run `30211116812`;
+- pull-request CI run `30211132683`.
+
+Linux and macOS each passed their native build/test stages before failing the
+same Python compaction assertion for the two archived promotion logs. The repair
+was then validated locally by the focused compaction suite and the complete
+strict validator before publication of the corrected revision.
