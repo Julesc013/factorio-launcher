@@ -632,7 +632,17 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
         status = tomllib.load(handle)
     product = status.get("product", {})
     truth_scope = product.get("truth_scope", "")
-    if not truth_scope.startswith("instance_isolated_candidate_technical_pass_"):
+    candidate_truth = status.get("windows_instance_isolated_play_candidate", {})
+    policy_truth = status.get("windows_instance_isolated_play_policy", {})
+    later_phase_preserves_truth = (
+        policy_truth.get("status") == "accepted_canonical_main_dev_synchronized"
+        and candidate_truth.get("technical_disposition")
+        == "eligible_for_human_verdict"
+    )
+    if (
+        not truth_scope.startswith("instance_isolated_candidate_technical_pass_")
+        and not later_phase_preserves_truth
+    ):
         problems.append(
             "project truth must record canonical policy synchronization and "
             "preserve the candidate technical pass in later phases"
@@ -649,7 +659,6 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
     if repair.get("status") != "accepted_reviewed_dev_integration":
         problems.append("post-run repair truth must record accepted reviewed dev integration")
 
-    policy_truth = status.get("windows_instance_isolated_play_policy", {})
     expected_truth = {
         "status": "accepted_canonical_main_dev_synchronized",
         "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",

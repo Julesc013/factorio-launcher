@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ CAPABILITY_PATH = ROOT / "contracts" / "policy" / "capabilities.v1.toml"
 JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v2.json"
 LEGACY_JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v1.json"
 MARKDOWN_PATH = ROOT / ".aide" / "memory" / "project-state.md"
+CURRENT_STATE_PATH = ROOT / "release" / "index" / "current_state.v1.toml"
 
 SURFACES = {
     ROOT / "README.md": "FACMAN-PROJECT-STATUS",
@@ -91,6 +93,48 @@ def capability_state() -> list[dict[str, Any]]:
     return sorted(policy.get("capability", []), key=lambda item: str(item.get("id", "")))
 
 
+def yaml_field(path: Path, name: str) -> str:
+    if not path.is_file():
+        return ""
+    match = re.search(
+        rf"(?m)^{re.escape(name)}:\s*(.*?)\s*$",
+        path.read_text(encoding="utf-8"),
+    )
+    return match.group(1).strip("\"'") if match else ""
+
+
+def queue_state() -> dict[str, Any]:
+    records: list[dict[str, str]] = []
+    for queue_name in ("active", "next"):
+        root = ROOT / ".aide" / "queue" / queue_name
+        for task_root in sorted(path for path in root.iterdir() if path.is_dir()):
+            status_path = task_root / "status.yaml"
+            records.append(
+                {
+                    "id": task_root.name,
+                    "queue": queue_name,
+                    "status": yaml_field(status_path, "status"),
+                    "lifecycle_state": yaml_field(status_path, "lifecycle_state"),
+                }
+            )
+    counts: dict[str, int] = {}
+    for record in records:
+        state = record["lifecycle_state"] or "unknown"
+        counts[state] = counts.get(state, 0) + 1
+    archived = sum(
+        1
+        for checkpoint in (ROOT / ".aide" / "history").iterdir()
+        if checkpoint.is_dir()
+        for task in checkpoint.iterdir()
+        if task.is_dir()
+    )
+    return {
+        "records": records,
+        "counts": counts,
+        "archived_task_count": archived,
+    }
+
+
 def collect() -> dict[str, Any]:
     status = load_toml(STATUS_PATH)
     pins = provider_pins()
@@ -155,10 +199,14 @@ def collect() -> dict[str, Any]:
         "next_authority_gate": status["next_authority_gate"],
         "safe_beta": status["safe_beta"],
         "execution": status["execution"],
+        "build_and_development_truth": status["build_and_development_truth"],
         "release": status["release"],
         "validation": status["validation"],
         "current_revisions": {
-            "factorio_launcher": status["h1_candidate_revision"],
+            "factorio_launcher": status.get(
+                "current_dev_revision",
+                status["h1_candidate_revision"],
+            ),
             "accepted_integration": status["accepted_integration_revision"],
             "universal_launcher": pins["universal_launcher"]["revision"],
             "universal_setup": pins["universal_setup"]["revision"],
@@ -175,6 +223,7 @@ def collect() -> dict[str, Any]:
         "quarantined_capabilities": status["quarantined_capabilities"],
         "known_blockers": status["known_blockers"],
         "claim_levels": claim_levels(),
+        "queue": queue_state(),
         "truth_boundaries": [
             "AIDE is development governance only and never a product dependency.",
             "Focused affected tests do not replace the full promotion matrix.",
@@ -183,6 +232,92 @@ def collect() -> dict[str, Any]:
             "Historical milestone evidence does not select the current product objective.",
         ],
     }
+
+
+def toml_string(value: Any) -> str:
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def toml_array(values: list[Any]) -> str:
+    return "[" + ", ".join(toml_string(value) for value in values) + "]"
+
+
+def toml_array_lines(name: str, values: list[Any]) -> list[str]:
+    rendered = [f"{name} = ["]
+    rendered.extend(f"  {toml_string(value)}," for value in values)
+    rendered.append("]")
+    return rendered
+
+
+def current_state_toml(data: dict[str, Any]) -> str:
+    revisions = data["current_revisions"]
+    capabilities: dict[str, list[str]] = {}
+    for capability in data["capabilities"]:
+        capabilities.setdefault(str(capability["status"]), []).append(str(capability["id"]))
+    queue = data["queue"]
+    build_truth = data["build_and_development_truth"]
+    mutable = [
+        record["id"]
+        for record in queue["records"]
+        if record["queue"] == "active"
+    ]
+    planned = [
+        record["id"]
+        for record in queue["records"]
+        if record["queue"] == "next"
+    ]
+    lines = [
+        'schema = "facman.current_state.v1"',
+        'generated_from = "release/index/project_status.v2.toml"',
+        f"product_version = {toml_string(data['product_version'])}",
+        f"phase = {toml_string(data['product']['phase'])}",
+        f"phase_status = {toml_string(data['product']['phase_status'])}",
+        f"checkpoint = {toml_string(data['current_checkpoint'])}",
+        f"active_work_unit = {toml_string(data['active_work_unit'] or '')}",
+        f"next_work_unit = {toml_string(data['product']['next_work_unit'])}",
+        f"last_closed_work_unit = {toml_string(data['last_closed_work_unit'] or '')}",
+        f"next_authority_gate = {toml_string(data['next_authority_gate'])}",
+        "",
+        "[revisions]",
+        f"accepted_factorio_launcher = {toml_string(revisions['factorio_launcher'])}",
+        f"universal_launcher = {toml_string(revisions['universal_launcher'])}",
+        f"universal_setup = {toml_string(revisions['universal_setup'])}",
+        'runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"',
+        "",
+        "[product]",
+        f"playability = {toml_string(data['readiness']['playability'])}",
+        f"user_workflow = {toml_string(data['readiness']['user_workflow'])}",
+        f"execution = {toml_string(data['execution']['status'])}",
+        f"execution_reason = {toml_string(data['execution']['reason'])}",
+        f"release = {toml_string(data['release']['status'])}",
+        f"release_authenticity = {toml_string(data['release']['authenticity'])}",
+        f"safe_beta = {str(bool(data['safe_beta'])).lower()}",
+        "",
+        "[capabilities]",
+        *toml_array_lines("available", sorted(capabilities.get("available", []))),
+        *toml_array_lines("conditional", sorted(capabilities.get("conditional", []))),
+        *toml_array_lines("unavailable", sorted(capabilities.get("unavailable", []))),
+        *toml_array_lines("backlog", sorted(capabilities.get("backlog", []))),
+        "",
+        "[scorecard]",
+        "published_first_party_pins = 3",
+        "accepted_real_play_routes = 0",
+        "required_obligation_skip_target = 0",
+        f"required_obligation_skips_observed = {int(build_truth['required_obligation_skips'])}",
+        'required_obligation_skip_observation = "pass_local_promotion_matrix"',
+        "silent_foreign_mutations = 0",
+        "observed_player_journeys = 0",
+        "",
+        "[queue]",
+        *toml_array_lines("mutable", mutable),
+        *toml_array_lines("planned", planned),
+        f"archived_task_count = {int(queue['archived_task_count'])}",
+        "",
+        "[blockers]",
+        *toml_array_lines("items", list(data["known_blockers"])),
+        "",
+    ]
+    return "\n".join(lines)
 
 
 def historical_markdown(data: dict[str, Any]) -> str:
@@ -911,6 +1046,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "current_gate_status": "instance_isolated_candidate_revalidation_next_operator_workunit",
         },
+        "build_and_development_truth": {
+            "checkpoint": "build-and-development-truth",
+            "active": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+            "last_closed": "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
+            "next": "ULK-OPERATION-OUTCOME-CONTRACT-01",
+            "phase_status": "active",
+            "safety": "remote_source_closed_launch_truth_fail_closed_no_play_authority",
+            "execution_reason": "pre_revalidation_build_and_operation_semantics_repairs_in_progress_no_play_authority",
+            "truth_scope": "remote_source_closed_launch_truth_fail_closed_build_and_development_truth_active_no_play_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "pre_revalidation_repairs_in_progress",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -974,6 +1122,35 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     if readiness != expected_readiness:
         problems.append("readiness dimensions must remain explicit and unpromoted")
+    build_truth = status.get("build_and_development_truth", {})
+    expected_build_truth = {
+        "status": "local_promotion_matrix_pass",
+        "work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+        "validated_parent_revision": "31264a99b428c2d34d9f21a39f0878b1eb75775a",
+        "runtime_identity": "exact_git_head_plus_workspace_pins_and_source_dirty",
+        "runtime_identity_read_only_probe": "pass",
+        "external_task_root": "pass_local_app_data_not_source_or_windows_temp",
+        "fast_native_tui_off_tests": 18,
+        "fast_native_tui_on_tests": 19,
+        "fast_python_tests": 31,
+        "full_native_tests": 53,
+        "full_python_tests": 514,
+        "required_obligation_skips": 0,
+        "unknown_obligation_skips": 0,
+        "optional_obligation_skips": 2,
+        "unsupported_obligation_skips": 2,
+        "strict_validation": "pass",
+        "aide_validation": "pass",
+        "hosted_validation": "pending_exact_head",
+        "factorio_execution": False,
+        "permit_issuance": False,
+        "authority_promotion": False,
+    }
+    if build_truth != expected_build_truth:
+        problems.append(
+            "build/development truth must bind the exact local promotion matrix "
+            "without runtime authority"
+        )
     foundation = status.get("execution_foundation", {})
     if foundation != {
         "status": "complete_fake_process_proof",
@@ -1783,7 +1960,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "live_privilege_probe_digest": "e74f276c6ee43d2c436b09bade4d265fd0165903f963ae09f7f0e8e61bad105b",
         "live_privilege_probe_file_sha256": "e8e614cf37feab54efb9f52133e35025984d38bdc35b376d55139bc734c5f841",
         "live_privilege_probe_response_digest": "8ded3340f2d6de60d83041e6a480129294e44d4e5c3f27cc76b2a26905fd4c2d",
-        "live_privilege_probe_evidence": ".aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence/live-privilege-probe.json",
+        "live_privilege_probe_evidence": ".aide/history/completion-baseline-2026-07-26/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence/live-privilege-probe.json",
         "live_privilege_probe_disposition": "pass_authenticated_medium_coordinator_high_broker_no_wpr_no_factorio",
         "live_probe_coordinator_integrity": "medium",
         "live_probe_broker_integrity": "high",
@@ -2616,12 +2793,18 @@ def validate() -> list[str]:
     data = collect()
     expected_json = json.dumps(data, indent=2, sort_keys=True) + "\n"
     expected_markdown = markdown(data)
+    expected_current_state = current_state_toml(data)
     if not JSON_PATH.is_file() or JSON_PATH.read_text(encoding="utf-8") != expected_json:
         problems.append("machine state is stale; run python tools/project_state.py --write")
     if LEGACY_JSON_PATH.exists():
         problems.append("legacy project-state.v1.json remains; project-state.v2.json is authoritative")
     if not MARKDOWN_PATH.is_file() or MARKDOWN_PATH.read_text(encoding="utf-8") != expected_markdown:
         problems.append("human state is stale; run python tools/project_state.py --write")
+    if (
+        not CURRENT_STATE_PATH.is_file()
+        or CURRENT_STATE_PATH.read_text(encoding="utf-8") != expected_current_state
+    ):
+        problems.append("compact current state is stale; run python tools/project_state.py --write")
     try:
         surfaces = rendered_surfaces(data)
     except ValueError as exc:
@@ -2685,6 +2868,7 @@ def main() -> int:
     if args.write:
         JSON_PATH.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         MARKDOWN_PATH.write_text(markdown(data), encoding="utf-8")
+        CURRENT_STATE_PATH.write_text(current_state_toml(data), encoding="utf-8")
         for path, rendered in rendered_surfaces(data).items():
             path.write_text(rendered, encoding="utf-8")
         print("project-state: wrote machine state and generated human surfaces")

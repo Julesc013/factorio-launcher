@@ -126,7 +126,7 @@ class DiagnosticExportSafetyTests(unittest.TestCase):
             try:
                 os.link(source, alias)
             except OSError as exc:
-                self.skipTest(f"hard links unavailable: {exc}")
+                self.skipTest(f"unsupported: hard links unavailable: {exc}")
             output = workspace / "hardlink.zip"
             code, refusal, _stdout, _stderr = run_json(
                 [

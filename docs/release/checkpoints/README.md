@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `targeted_extraction_complete` and the active WorkUnit is `none (operator gate required)`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `build_and_development_truth` and the active WorkUnit is `FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

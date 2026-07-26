@@ -28,7 +28,15 @@ REQUIRED_DOCS = (
 
 def archived_evidence_sha256(path: Path) -> str:
     data = path.read_bytes()
-    if path.suffix.lower() in {".json", ".md", ".toml", ".txt", ".yaml", ".yml"}:
+    if path.suffix.lower() in {
+        ".json",
+        ".md",
+        ".ps1",
+        ".toml",
+        ".txt",
+        ".yaml",
+        ".yml",
+    }:
         data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
     return hashlib.sha256(data).hexdigest()
 

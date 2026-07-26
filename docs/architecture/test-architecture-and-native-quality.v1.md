@@ -2,7 +2,10 @@
 
 `contracts/policy/test_impact.v1.json` is the machine-readable map from changed
 modules to native targets, Python tests, strict validators, and package lanes.
-`python tools/dev.py test --affected` uses that map. Fast and full validation
+`python tools/dev.py test --affected` uses that map. Fast selection is resolved
+from the configured CTest JSON graph, not from source declarations alone;
+required fast tests must exist, optional configured tests are included, and
+undeclared labelled tests are rejected. Fast and full validation
 remain explicit through `--fast` and `--full`; `verify-all` adds strict policy
 validation. Promotion still requires the full matrix even when affected tests
 are green.
@@ -11,6 +14,11 @@ CTest labels and matching Python category suites cover fast unit, contract,
 integration, filesystem, archive, transaction, package, platform, and fuzz
 work. The operator category intentionally exits without a pass: human
 acceptance is an operator verdict, not an automated test result.
+
+Python skips use the reviewed obligation vocabulary in
+`contracts/policy/test_obligations.v1.json`. Promotion has a zero budget for
+required or unclassified skips. Unsupported, optional, not-applicable, and
+historical-only exclusions remain visible as separate counts.
 
 The native policy applies curated warnings to first-party targets and CI turns
 warnings into errors. Linux CI runs changed-translation-unit clang-tidy, a

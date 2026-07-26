@@ -1,0 +1,253 @@
+{
+  "checkpoint": "completion-baseline-2026-07-26",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "c02155ac18e575df425a58dcd70e598815d6efa5a8979935a4d7bce584b373b5",
+        "evidence/remaining-risks.md": "3e3e9d0118345be1100212fd277b0537a19c41f7eadd015793e1a9d3ca6e2b7e",
+        "evidence/validation.md": "d13ef825d55ff334fc29a9847d4040eb6fcd11aa90d60c754185e8ae3343aa43",
+        "status.yaml": "31eecbc3713908bad0109c9e089e763641d3b9c72f2ef398ec66a3a97904d8dd",
+        "task.yaml": "0bf558dbc8c44bdc25250557bdb7f08cb23170dce4238709e80f43a2b0577566"
+      },
+      "task_id": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "c67f6fe513cee7e1b136bd6a32f465a889bdb05ca3b59b3cf27f8623c829c5a1",
+        "evidence/remaining-risks.md": "252bface4f44e0749440e60f92ffa272f62329aa81b8a2de350a392606f3b911",
+        "evidence/validation.md": "5a12baa22d9d808e8414abbd88de35a4d36de8a021578deca61c167c94baeff6",
+        "status.yaml": "8b3216b7305d5e5a6ccaa54c647e7abffae98f3f5a03a4771bb077da91c393c2",
+        "task.yaml": "0e3d98fc61fbfbdd9c05c80c0905ce34681b45e7f85ae2806cb47d210f4cd4ee"
+      },
+      "task_id": "FACMAN-CROSS-REPO-OWNERSHIP-AUDIT-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "c2c12220b4837683dcb8bef0d917e124fec7d13c59dcd8688257fec06ee5a63e",
+        "evidence/remaining-risks.md": "48da51c02672abda29b2869a4feada49bdd90ee61ef64e956dbc2ca37a1f5e58",
+        "evidence/validation.md": "e0474e6017c4f6c4ba02d8c6b271091f06f140a1bf7aaf5e2e9b371c80b9367c",
+        "status.yaml": "dba2780b887518aa02667aea31c2222232954791eb95c85dfeef7059cea5dbf3",
+        "task.yaml": "d34970a89a8cc885606ed21e6747984bf7d9d830e8650b1f8016361372067bbc"
+      },
+      "task_id": "FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01"
+    },
+    {
+      "files": {
+        "evidence/activation.md": "bb56cfe44c3c7f60dce33ad153d7982e19b423eb45a1f830e7a1ec32d3e88d70",
+        "evidence/live-privilege-probe-validation.md": "be07d9bd8ca7a327385b5afe43f41f8586a8afdb2da5cee2ff0c3a8fc6fc11fb",
+        "evidence/live-privilege-probe.json": "555b34df953971783886f05d83608304e3661cac03c9c08a70dfad8e650e4883",
+        "evidence/local-implementation-validation.md": "cf180d819d28345537b4c26e5041181d25d7982fd63b904341bf6ea68aada32a",
+        "evidence/reviewed-closeout.md": "ae63dcfc0a04a1e5493bdd754bcc4da1014095d224b44385c38bc3a0fd7cbfd3",
+        "evidence/split-privilege-design.md": "d96fb611852c3668fcf8bd156cc6264b6fe31b25389accb61946f6a7a3947406",
+        "status.yaml": "0e643529af9c097ccb52531501429ede141244bb2dc97223ccccc8edf9ff0bff",
+        "task.yaml": "490a33adc7c70a0317cbaaf9b2aeaf395f123b681cd201b89e7ac4c7fd59fcbe"
+      },
+      "task_id": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"
+    },
+    {
+      "files": {
+        "evidence/activation.md": "3a055de996e3cf9f86936079571b8d5607e42a2678c25f72b7ff9411ab9a10f5",
+        "evidence/diagnosis.md": "3a7eaf0b9f4e6e06fc31d612ac39e640084af13146a1e00c378d40df19a3dfd4",
+        "status.yaml": "ea65bed6045ec16182c4909a35f4b0940e1e31cc92f51a78bd05000ade6216b0",
+        "task.yaml": "9916e90ff330d22252cee3504b9b6fe8e4897e1a5bb3791eed7d308a9f49a9ec"
+      },
+      "task_id": "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "55a7fc1726a5edb35b4ea413b959e63e780886f44bed5b4c806c051e883ac0c5",
+        "evidence/implementation-local-validation.md": "00dacf0a04a25b4e1ffeda8552d1f66e05231b6f38d214a7db3d73ff33fbfd5a",
+        "evidence/remaining-risks.md": "611560f21f197f67d6fe913ece4bcef817668ad47316410fcc8acc3825c7926a",
+        "evidence/task-storage.md": "4d458c5d05cf37e99e271b2eb9abb492c723a05aa8fc3d5a5194e029afa11b34",
+        "evidence/validation.md": "e2cbd5bb4a9e5ac1e46249f5090ff9cb501bd4d1c04a44dd59f1c34ee79d67a4",
+        "status.yaml": "8fd38b9b613218ddd573a52f2f0d81e264dd761f7f5ae31f87dc212b4c198889",
+        "task.yaml": "22472d0547177c1829bdbba071d7a7696823cd05b7285281e4f80bc8c2c81728"
+      },
+      "task_id": "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01"
+    },
+    {
+      "files": {
+        "evidence/activation.md": "407df9df98d0098b7282dde925639528d7c6f87043845cdbf3b5a213727fd1e4",
+        "evidence/closeout.md": "670f8ec74a332528d317b2d7c188dd20a511ae5253ff30457fbea37a7b8b78cc",
+        "evidence/diagnostic-slice.md": "4f6f5a7c8662c55094953d39a7408e2973769678ed363c512b2759b07cdee318",
+        "evidence/observer-start-live-proof.md": "7c6d0820375b926cca3519c4d7cf1ba128960910d71441d2fc5eafcac5bb976a",
+        "evidence/root-cause.md": "78249d88ab0b5142d043f9ec7ceb7c3013ae09051f4b7cb0485712acd026a6f4",
+        "status.yaml": "a2f2b9a640806dcf893c0587abf2b9e48ea29b6cd1b49afb142bd791db423f12",
+        "task.yaml": "35f4e5568acf18cea3555c97ef67f61d7abc69138d25e11dc5c17dcc19203e44"
+      },
+      "task_id": "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "58c422c1bd741278b9e90dd74a9f66dc8dbc9b0bd29f28d20e1855a45d95da07",
+        "evidence/remaining-risks.md": "43712443264b08c0b3460a1895b0c656a68fb6367abef591f820917d5162991d",
+        "evidence/validation.md": "6a79cb213810f3c504a384ac08b8f9ceab00df09b90420cde89831f8723f01bf",
+        "status.yaml": "b0457d940e748c056e0319186b2807972a385084202e66643c1b8c76c7655aa1",
+        "task.yaml": "0ea246896c1af0a539d72509d95ac93aa537feeb15858a6e09d9c98670f8dbab"
+      },
+      "task_id": "FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01"
+    },
+    {
+      "files": {
+        "evidence/activation.md": "be4db1369315c36a89d87bef9a1e37e0b1f8dbb67a90366d982a58e54d586f8b",
+        "evidence/changed-files.md": "2f6a857b74fa381324b4a3dddcc572ed80b5766ad26f6bbb7df0ebae9b08560a",
+        "evidence/preflight.md": "924f9ad6ed17666fe57c10738e66d51c8f841fe00ecb24845579f7853a746292",
+        "evidence/remaining-risks.md": "320fdaf2cca6af7ac791a7f22123b358de67a215aef6cf69256e2e44dcb54e02",
+        "evidence/task-storage.md": "39027ae69f91e05f12e76cd46a6d1cd0b01086359d96c999c3e655db02fc04e1",
+        "evidence/validation.md": "831c84814e0a709716322aec581f2b7c528cca3bb49f47b9cd28a98e7cb3522c",
+        "evidence/verdict-attempts.md": "273f363107ba7b3e672a92cd511626e5eba3a5817fc0bba9c5d85f0d78eb7a89",
+        "status.yaml": "5977d46ecc9762e98949efafe695bd8eb2a2e8271095b31c6a5472d145d81cc8",
+        "task.yaml": "bdba12cfe1368490bdee4478cc83a41eff5ae090633d8d48529d773ce1aa22ef"
+      },
+      "task_id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-01"
+    },
+    {
+      "files": {
+        "evidence/activation.md": "c0e28db32ddfe31d6f810a01a96dfc096687f52b7b3f150fe9942d0830f8bec3",
+        "evidence/verdict-03-inconclusive.md": "1d6a3fda48c1b5b5dab188f0b9ccb1ffbaf9c213fd8369fa5bc64d69396af4e3",
+        "status.yaml": "0951ff12971dc71729dcfe9f385896b3cceb6428282061ead083c69c4cc2ab05",
+        "task.yaml": "1f03ba4d851fe8a551f025c6e1c7813a5578af88410eba39c59d74e6cff2693d"
+      },
+      "task_id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "eb20550b581337a02a492c26d2cc799bbb68fb609124389ee4748039ef319af0",
+        "evidence/remaining-risks.md": "7194304d392c41d7d3f7a35c4a84dcc135048d50d85fc8f1ced19de7a60da18e",
+        "evidence/validation.md": "72953248185cbfd789b0b69e437c27e47c2ce13aaa7d20c3aa4014737909ca13",
+        "status.yaml": "067c314b99f5a08c817feda9aaec5aed47dc9fd4a48bb3ddf4a97863e8675947",
+        "task.yaml": "9c9a02a7af15219e8c110cc1709bc9eb67bbd6841fc6adbe11be3998f0d60bd7"
+      },
+      "task_id": "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "782039168a2c646df72c6411f3370082b3065dbd7372175aa7fda65284865383",
+        "evidence/remaining-risks.md": "0b7756865a4b3ecc311ee4c38b2e61c41f3997880ea83fcfa4fde4eba86e3c0e",
+        "evidence/validation.md": "48d9b1cec5603266e532d7dc19935c1cf9b420af9b877491b7c6c5f99a0cd8cc",
+        "status.yaml": "e1fb824d57b7d31a723a098de060ffdc4bdbd679a149771ff11009ee5dccd652",
+        "task.yaml": "ee34ee97ba69922c325da40d810d61469071bfe5e57aab0ff0184d41e962c530"
+      },
+      "task_id": "FACMAN-INSTALLATION-MODEL-V2-READONLY-CLOSEOUT-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "ed429a1fd9aa74024cbf5748eac44993a471472eb6fd0b8948ca4afc546827cc",
+        "evidence/remaining-risks.md": "7e443feaf978eaf3df08bd694f44ea446926391bd05862ec4c78674a74c1d372",
+        "evidence/validation.md": "35deec2da3f792ff9c768fd389eb6f46b7be7dac970677bc57094a5b4850a919",
+        "status.yaml": "21221f28d45ae3c87d6b1d7e70ad985da4172951ab565b989e538155bbced06e",
+        "task.yaml": "6b7780da579f984f6e80a1c80d9fb78d16cc7962fa01e26dc057f8c4554fd09c"
+      },
+      "task_id": "FACMAN-INSTANCE-SPEC-AND-READINESS-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "af9eebca77a8254d368369310ef287ec435ff2c9ea2462ddc67a7932c91781a4",
+        "evidence/remaining-risks.md": "6b42e10d3586bb3f29de22cce546b7fcd4750a5fbb8079033f1763c4a540191f",
+        "evidence/validation.md": "0aa68cd977833a7b5f8e13c446fce0d155cccad29d2d4183d88c58e7d6b34302",
+        "status.yaml": "3da25b6656a55d8aefd070b7494b0a40e35ca91d30f6ed2d2574f2df55dd713f",
+        "task.yaml": "40a12f59be64cde3471a12902fe9e08e06a3ae01cf08d39734180452c11d3687"
+      },
+      "task_id": "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "15f64bcbb1b0961857fe9dc260c121f0530d8cc2369b48887875c79a8ecf373c",
+        "evidence/remaining-risks.md": "07d162f356b83869fc45f3e0664073d7f74297e0a0bc497135a47ab9ad3cedce",
+        "evidence/validation.md": "ea64e15dc2548ab27625a8ba6aa119207c8deda34a9e92cd58ca748126fa1f46",
+        "status.yaml": "b83d4bd675ec80c83e437fdb6e376d32c4de7214298528f3f6e0e4333727440e",
+        "task.yaml": "b6b8f41170c0b658d4a55cfa53697b7754d77d81e64666ac64afc14c72e46b7a"
+      },
+      "task_id": "FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "778fb1d227c2ba8a2d557171dcedde2c3decf5780ba79c86a7555d917bef75f0",
+        "evidence/install-factorio-2.0.77.ps1": "bebc40d04f6d8c5b9713c432e1ebfdadad33be18f4a6c5a4b447770c2ff18644",
+        "evidence/remaining-risks.md": "ffa8cf58a8346322e214e191fb973d23f3dec87e57c05b04508b37762b816135",
+        "evidence/validation.md": "31ed57923ead8ddfe8c79db4f4f87888b6deaa87881384681ee74b99abace853",
+        "status.yaml": "ace0733d6902cc04575737c96015a12e10b28db348305159b4aae93b0bbfe8ee",
+        "task.yaml": "cad1d54f980c7d67138965297ace6027614973d282c972efc5623e99ac1e6c56"
+      },
+      "task_id": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "08fa3e94f620144d908707e38b81fce80793a68757ff1cb190a3cf1ae423d3df",
+        "evidence/remaining-risks.md": "0737773d42076466ed6ac584f4e7664330c4871860e752e2ad95134ef31b1b97",
+        "evidence/validation.md": "db71d5c21913ba6bc94dd576e4fa7625f338a46c424278388351291dcc05935c",
+        "status.yaml": "99b40113086eabed53463212047ddfa0f3558123259ad4cdc6029f735e5bd484",
+        "task.yaml": "99feb0b54fb59a4580bde3dc63f760b49f5fe0a6d32a98c11de3ea828c9d135b"
+      },
+      "task_id": "FACMAN-OPERATION-PERMIT-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "4a32302df488c27e8e6747b3e424fd2a03e11c8445c6428984d7ec4f082f2479",
+        "evidence/remaining-risks.md": "95208fecbd3e7bd0035a6cff7fed7d6e6706858a616e6be1d2da9fc13352542e",
+        "evidence/validation.md": "1087542ca98d52bc1034453d92be46615c03d05648b50c9532366a48236c6331",
+        "status.yaml": "f0f06b65320c52e4c016a86e8c522108f071b8cc8e0c9347fcdc22e3670d7ab8",
+        "task.yaml": "eaf9eedcba69fc32581cc29eb2255cc5f005516c8b07d7a5ee8e1403179c0e43"
+      },
+      "task_id": "FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "c1e792e458df17fb1a02ea21f81fc56df1bc46b6d00f194aba24a9fbc3f39423",
+        "evidence/remaining-risks.md": "9a23c100456da62ecfe1ceef506ae605cbff33402936db0811d2940aadbc4370",
+        "evidence/validation.md": "cc3c76359084a7f5cfe11027f98e4544ee959c1ad4ee81a0aa7bc5d4b730c030",
+        "status.yaml": "6f18d128db515e741837be994b1cc0bfa20af42c844552bf699e98661d708a08",
+        "task.yaml": "a7eae48df17b110cce3eb956969d1f58c8e7e2a5d024148bff4505e6b683d2e4"
+      },
+      "task_id": "FACMAN-ULK-INTEGRATION-PROOF-01"
+    },
+    {
+      "files": {
+        "evidence/activation.md": "d5ec81a0b347fa1e4160ea0c068ef389f94021c03d619ae1c9baada5db218f6f",
+        "evidence/changed-files.md": "614037dbb019e04bee6771c81d73bfdfe5e73fc228d0fe5b1ed039edc832355e",
+        "evidence/remaining-risks.md": "bc6c092e7878a4e1ee6a39c67f41aebce093137fb8cdad79f340f85481d61cb4",
+        "evidence/validation.md": "c56f9cccbce9765dd58e0a45a24f128c7ac9c82dea121fd25d6c92925076dc3f",
+        "status.yaml": "7cf5d7c6aee1684b649b4bcf86104e19233fae919ebf87b75b14c56fa2a5bfdc",
+        "task.yaml": "a73e7a84ce44fa8c5a4b4e18114082556620f2a2c201c1db76a379695cd4b360"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01"
+    },
+    {
+      "files": {
+        "evidence/activation.md": "7e3ca101dae5f31dceb808820f737a1344bfb4ea91a5f0e6383f2906155bc6fa",
+        "evidence/changed-files.md": "a5e7541fa9ef9ca9bee08a7bb851f75549d0486785595ab497f6a090fcafae2f",
+        "evidence/policy-freeze.md": "42a514f4f28dfc390c680687b139d12904aba184c95ac3cc11abc0ddaca4d9b6",
+        "evidence/remaining-risks.md": "edb9d60fe622947238f1fb01cd2fbebf27b6c3aaa858fc98f50d5718528eb691",
+        "evidence/retained-evidence-inventory.md": "295e4d36b7acb75b4684487c4048d37d18df0491dbcd4da000fccb664df71ca1",
+        "evidence/temporary-root.md": "a71122837229f99aa221eae9b94d9c359c2bb1b9f1e6d7b0a800131faa2fe8c4",
+        "evidence/validation.md": "ece091ab53e29c648d55f5917d4584cf046961e6b62e2143f4a2f00862895a53",
+        "status.yaml": "099083e654fc923c267e9d29c565015f0b093219dc6a2dfaca0c5eed34a275b4",
+        "task.yaml": "0a3320ae0c709f85ba0872f884bf66c81617602b8b24b1c404e35e65e8231b19"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "943589395a3fa4c2a34c8c260ea25e8a65a035f0ee722a5e2fbb78c2c84ebad7",
+        "evidence/remaining-risks.md": "e674309c49ebc9c96ad9697a41dc8e09dc395d5d4e33de0284a29dcc8915e502",
+        "evidence/validation.md": "0419560155addef8aa2abfbdff1a1f36272256da1054630a04a7e2006cf12eeb",
+        "status.yaml": "520c404f3833915234bd096e7054116d4d275e29127e3647f53b417d0eb41c51",
+        "task.yaml": "37c03e3bdac36989a418f11427d396abfb72644f537cd60db644ff95050b7fa8"
+      },
+      "task_id": "ULK-CLIENT-TRANSPORT-EXTRACTION-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "f27105deec2893ce13d7ee6c4316d313af8a7cd340c45531e07ebf5535ec1598",
+        "evidence/remaining-risks.md": "f18b64834575526b5ead3385bb72ee60202e25afdb2d2eedec1ef82960bed4eb",
+        "evidence/validation.md": "6d813534cac396d940b866f57f7ce8da77ffce6f4a812818eba99b9bbaf55071",
+        "status.yaml": "304cb5adef55eb71b03ee52691c62be0e59ef26e723a646a1ee9fbc800086f55",
+        "task.yaml": "a91745dd6e47ffb07fc90ed9354b14a067e2c108b3f4bad831b50c99fd19cba1"
+      },
+      "task_id": "ULK-REFERENCE-MODEL-EXTRACTION-01"
+    }
+  ]
+}

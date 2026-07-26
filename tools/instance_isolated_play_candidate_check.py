@@ -12,6 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+from tools.aide_evidence import resolve_task_file
 
 POLICY = (
     ROOT
@@ -294,13 +295,11 @@ def check() -> list[str]:
                 f"candidate project truth promotes forbidden authority: {key}"
             )
 
-    activation = (
-        ROOT
-        / ".aide/queue/active/"
-        "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01/"
-        "evidence/activation.md"
+    activation = resolve_task_file(
+        "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+        "evidence/activation.md",
     )
-    if not activation.is_file():
+    if activation is None:
         problems.append("instance-isolated candidate activation evidence is missing")
     return problems
 

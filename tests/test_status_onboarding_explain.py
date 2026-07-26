@@ -37,8 +37,21 @@ class StatusOnboardingExplainTests(unittest.TestCase):
             with (Path(__file__).resolve().parents[1] / "release/index/workspace_lock.v1.toml").open("rb") as handle:
                 lock = tomllib.load(handle)
             pins = {item["id"]: item["pin"] for item in lock["component"]}
+            self.assertRegex(
+                status["observations"]["factorio_launcher_revision"],
+                r"^[0-9a-f]{40}$",
+            )
             self.assertEqual(status["observations"]["universal_launcher_revision"], pins["universal_launcher"])
             self.assertEqual(status["observations"]["universal_setup_revision"], pins["universal_setup"])
+            self.assertIsInstance(status["observations"]["source_dirty"], bool)
+            identity = status["observations"]["build_identity"]
+            self.assertIn(
+                f"facman={status['observations']['factorio_launcher_revision']}",
+                identity,
+            )
+            self.assertIn(f"universal_launcher={pins['universal_launcher']}", identity)
+            self.assertIn(f"universal_setup={pins['universal_setup']}", identity)
+            self.assertRegex(identity, r";source_dirty=(true|false)$")
             self.assertFalse(workspace.exists())
 
             paths = self.invoke_json(workspace, ["workspace", "paths"])

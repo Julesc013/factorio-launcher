@@ -37,7 +37,7 @@ def cli_executable() -> Path | None:
     return next((path for path in candidates if path.is_file()), None)
 
 
-@unittest.skipUnless(tui_executable(), "functional TUI build is not available")
+@unittest.skipUnless(tui_executable(), "optional: functional TUI build is not available")
 class TuiProductTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:

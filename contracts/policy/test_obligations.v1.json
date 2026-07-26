@@ -1,0 +1,20 @@
+{
+  "schema": "facman.test_obligations.v1",
+  "classes": [
+    "required_blocked",
+    "unsupported",
+    "optional",
+    "not_applicable",
+    "historical_only"
+  ],
+  "required_class": "required_blocked",
+  "unknown_skip_limit": 0,
+  "profiles": {
+    "local": {
+      "required_skip_limit": -1
+    },
+    "promotion": {
+      "required_skip_limit": 0
+    }
+  }
+}

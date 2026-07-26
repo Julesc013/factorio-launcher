@@ -1,0 +1,105 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01
+title: Make build and development truth explicit
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-26T12:42:41Z
+owner: unassigned
+objective: >
+  Generate exact runtime build identity, make fast tests configuration-aware, default local outputs to an external task root, classify test skips, generate compact current state, and archive closed queue records without promoting runtime authority.
+allowed_paths:
+  - .github/workflows/ci.yml
+  - CMakeLists.txt
+  - CONTRIBUTING.md
+  - README.md
+  - cmake/FacManBuildIdentity.hpp.in
+  - contracts/policy/test_impact.v1.json
+  - contracts/policy/test_obligations.v1.json
+  - docs/architecture/test-architecture-and-native-quality.v1.md
+  - docs/development/build-root-hygiene.md
+  - docs/development/getting-started.md
+  - docs/development/testing.md
+  - docs/platform/support_matrix.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - runtime/factorio/application/handlers/intelligence.cpp
+  - tests/README.md
+  - tests/package_runtime/test_built_package_artifacts.py
+  - tests/test_aide_compaction.py
+  - tests/test_aide_evidence.py
+  - tests/test_aide_target_truth.py
+  - tests/test_archive_core.py
+  - tests/test_cross_repo.py
+  - tests/test_dependency_revision_enforcement.py
+  - tests/test_diagnostic_export.py
+  - tests/test_diagnostic_redaction.py
+  - tests/test_end_to_end_user_journey.py
+  - tests/test_gate4c_verdict_preflight.py
+  - tests/test_instance_isolation_probe.py
+  - tests/test_package_macos_proof.py
+  - tests/test_r37_performance.py
+  - tests/test_save_transfer.py
+  - tests/test_test_architecture.py
+  - tests/test_test_obligations.py
+  - tests/test_tui_product.py
+  - tests/test_windows_discovery.py
+  - tools/dev.py
+  - tools/aide_evidence.py
+  - tools/ci_proof_check.py
+  - tools/gate4c_privilege_separation_check.py
+  - tools/hermetic_play_candidate_check.py
+  - tools/instance_isolated_play_candidate_check.py
+  - tools/windows_instance_isolated_play_policy_check.py
+  - tools/project_state.py
+  - tools/test_architecture_check.py
+  - tools/test_obligations.py
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - .aide/queue/index.yaml
+  - .aide/queue/active/FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01/**
+  - .aide/queue/active/FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01/**
+  - .aide/history/completion-baseline-2026-07-26/**
+  - .aide/queue/active/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/capabilities.v1.toml
+  - contracts/policy/hermetic_play_policy.v1.toml
+  - contracts/policy/windows_instance_isolated_play_policy.v1.toml
+  - release/index/workspace_lock.v1.toml
+affected_native_targets:
+  - "*"
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_status_onboarding_explain
+  - tests.test_test_architecture
+  - tests.test_test_obligations
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/project_state.py
+  - tools/test_architecture_check.py
+  - tools/strict_check.py
+affected_package_profiles:
+  - portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-26T12:42:42Z

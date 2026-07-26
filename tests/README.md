@@ -31,6 +31,14 @@ py -3 tools/dev.py test --full
 py -3 tools/dev.py verify-all
 ```
 
+The developer entry point writes to a stable external per-user task root by
+default. On Windows that root is beneath `%LOCALAPPDATA%\FacMan\Tasks`.
+`FACMAN_TASK_ROOT` and `--task-root` select a different retained root.
+The full runner also writes the selected obligation profile's machine-readable
+skip summary beneath the task root's `evidence/` directory.
+`test --full --obligation-profile promotion` and `verify-all` require zero
+required-obligation skips and reject unclassified skip reasons.
+
 Test categories and module impact routing are defined in
 `contracts/policy/test_impact.v1.json`. Operator acceptance is deliberately
 manual and cannot be passed by the developer tool.

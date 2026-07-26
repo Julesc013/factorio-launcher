@@ -90,10 +90,10 @@ class AideCompactionTests(unittest.TestCase):
         self.assertIn("superseded", superseded)
         self.assertIn("Instance product model", superseded)
 
-    def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
+    def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "targeted-extraction-complete",
+            "build-and-development-truth",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            None,
+            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "ULK-OPERATION-OUTCOME-CONTRACT-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "instance_isolated_candidate_technical_pass_targeted_extraction_program_complete_revalidation_pending",
+            "remote_source_closed_launch_truth_fail_closed_build_and_development_truth_active_no_play_authority",
             data["product"]["truth_scope"],
         )
         self.assertTrue(data["product"]["canonical_main_promotion"])
@@ -482,7 +482,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -867,15 +867,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "targeted-extraction-complete",
+            "build-and-development-truth",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            None,
+            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+            "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -998,6 +998,18 @@ class AideCompactionTests(unittest.TestCase):
             self.assertEqual(
                 hashlib.sha256(normalized).hexdigest(),
                 index["tasks"][0]["files"]["task.yaml"],
+            )
+
+    def test_archived_powershell_hash_is_line_ending_independent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            script = Path(temporary) / "evidence.ps1"
+            script.write_bytes(b"Write-Output 'one'\r\nWrite-Output 'two'\r\n")
+            expected = hashlib.sha256(
+                b"Write-Output 'one'\nWrite-Output 'two'\n"
+            ).hexdigest()
+            self.assertEqual(
+                expected,
+                aide_compaction_check.archived_evidence_sha256(script),
             )
 
     def test_queue_index_rejects_partially_materialized_records(self) -> None:
