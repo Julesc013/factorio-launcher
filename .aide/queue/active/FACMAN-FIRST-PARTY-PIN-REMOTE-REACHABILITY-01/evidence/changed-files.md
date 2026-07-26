@@ -44,12 +44,20 @@ and checked against the workspace lock. Configuration refuses a mismatch.
 - `tests/native/fl_path_safety_smoke.cpp`
 - `tests/native/facman_process_probe.cpp`
 - `tests/native/m1_three_repository_system_proof.cpp`
+- `runtime/factorio/snapshots/flb_factorio_snapshots.cpp`
+- `runtime/factorio/instance/flb_factorio_instance_lifecycle.cpp`
+- `runtime/factorio/application/handlers/instances.cpp`
+- `runtime/factorio/application/handlers/launch.cpp`
+- `tests/native/flb_factorio_launch_permit_smoke.cpp`
+- `tests/native/flb_factorio_instance_model_smoke.cpp`
 
 The managed-path check now derives a lexical descendant from the canonical
 workspace root without canonicalizing an absent leaf. The Windows crash probe
 uses a deterministic exception-shaped termination status so unattended tests
 cannot be captured indefinitely by Windows Error Reporting. The M1 failure
-message now retains the underlying repository error.
+message now retains the underlying repository error. Partial launch-reference
+aggregate initialization exposed by hosted warnings-as-errors builds is
+replaced with explicit field assignment without changing runtime values.
 
 ## WorkUnit records
 

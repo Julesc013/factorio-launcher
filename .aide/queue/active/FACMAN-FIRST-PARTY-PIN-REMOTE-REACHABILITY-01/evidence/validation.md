@@ -19,6 +19,9 @@ Result: PASS
 - Full Python suite: 488 PASS, 9 skipped.
 - Built-package runtime suite: 23 PASS, 2 skipped.
 - Native Debug CTest suite: 52 PASS.
+- Local GCC warnings-as-errors build compiled every repaired launch-reference
+  call site; the later unrelated MinGW-only discovery fixture warning remains
+  outside this hosted Linux/macOS failure.
 - `python -B tools/strict_check.py`: PASS.
 - `python .aide/scripts/aide_lite.py test`: PASS.
 - `git diff --check`: PASS.

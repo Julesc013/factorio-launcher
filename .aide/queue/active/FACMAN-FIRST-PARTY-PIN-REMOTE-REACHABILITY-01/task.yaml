@@ -32,6 +32,12 @@ allowed_paths:
   - tests/native/fl_path_safety_smoke.cpp
   - tests/native/facman_process_probe.cpp
   - tests/native/m1_three_repository_system_proof.cpp
+  - runtime/factorio/snapshots/flb_factorio_snapshots.cpp
+  - runtime/factorio/instance/flb_factorio_instance_lifecycle.cpp
+  - runtime/factorio/application/handlers/instances.cpp
+  - runtime/factorio/application/handlers/launch.cpp
+  - tests/native/flb_factorio_launch_permit_smoke.cpp
+  - tests/native/flb_factorio_instance_model_smoke.cpp
   - .aide/queue/index.yaml
   - .aide/queue/active/FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01/**
 forbidden_paths:

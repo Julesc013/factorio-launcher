@@ -72,22 +72,24 @@ ApplicationResult preview_launch(ApplicationContext& context, const BuildLaunchP
     if (!effective) return refused(
         safety_refusal(command, effective.error().code, "Effective profile is invalid", effective.error().message, true),
         effective.error().code, effective.error().message);
-    launch::InstanceLaunchRef instance_ref {
-        instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
-        effective.value().launch_arguments};
+    launch::InstanceLaunchRef instance_ref;
+    instance_ref.instance_id = instance.id.str();
+    instance_ref.profile_id = instance.profile;
+    instance_ref.local_data_root = instance.root;
+    instance_ref.launch_mode = effective.value().settings.launch_mode;
+    instance_ref.profile_arguments = effective.value().launch_arguments;
     instance_ref.product_id = "factorio";
     instance_ref.install_id = install.install_id;
     instance_ref.binding_revision =
         instance.schema + ":" + instance.factorio_version + ":" + instance.profile;
-    launch::InstallLaunchRef install_ref {
-        install.root,
-        install.executable,
-        install.ownership,
-        install.distribution_origin,
-        install.platform_integration,
-        install.strict_isolation_eligibility,
-        install.external_state_domains,
-    };
+    launch::InstallLaunchRef install_ref;
+    install_ref.root = install.root;
+    install_ref.executable = install.executable;
+    install_ref.ownership = install.ownership;
+    install_ref.distribution_origin = install.distribution_origin;
+    install_ref.platform_integration = install.platform_integration;
+    install_ref.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    install_ref.external_state_domains = install.external_state_domains;
     install_ref.install_id = install.install_id;
     install_ref.product_id = "factorio";
     install_ref.exact_product_version = install.version.empty() ? "unknown" : install.version;
@@ -112,22 +114,24 @@ ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunc
     if (!effective) return refused(
         safety_refusal("launch_plan.preflight", effective.error().code, "Effective profile is invalid", effective.error().message, true),
         effective.error().code, effective.error().message);
-    launch::InstanceLaunchRef instance_ref {
-        instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
-        effective.value().launch_arguments};
+    launch::InstanceLaunchRef instance_ref;
+    instance_ref.instance_id = instance.id.str();
+    instance_ref.profile_id = instance.profile;
+    instance_ref.local_data_root = instance.root;
+    instance_ref.launch_mode = effective.value().settings.launch_mode;
+    instance_ref.profile_arguments = effective.value().launch_arguments;
     instance_ref.product_id = "factorio";
     instance_ref.install_id = install.install_id;
     instance_ref.binding_revision =
         instance.schema + ":" + instance.factorio_version + ":" + instance.profile;
-    launch::InstallLaunchRef install_ref {
-        install.root,
-        install.executable,
-        install.ownership,
-        install.distribution_origin,
-        install.platform_integration,
-        install.strict_isolation_eligibility,
-        install.external_state_domains,
-    };
+    launch::InstallLaunchRef install_ref;
+    install_ref.root = install.root;
+    install_ref.executable = install.executable;
+    install_ref.ownership = install.ownership;
+    install_ref.distribution_origin = install.distribution_origin;
+    install_ref.platform_integration = install.platform_integration;
+    install_ref.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    install_ref.external_state_domains = install.external_state_domains;
     install_ref.install_id = install.install_id;
     install_ref.product_id = "factorio";
     install_ref.exact_product_version = install.version.empty() ? "unknown" : install.version;

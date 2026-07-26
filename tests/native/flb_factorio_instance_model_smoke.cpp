@@ -124,11 +124,18 @@ void make_workspace(const fs::path& workspace, const fs::path& install, bool inc
         "\"display_name\":\"Main\",\"install_ref\":\"fixture\","
         "\"factorio_version\":\"2.0.77\",\"profile\":\"gui\","
         "\"template\":\"vanilla\"}");
-    facman::factorio::launch::InstanceLaunchRef instance_ref {
-        "main", "gui", instance_root, "gui", {}};
-    facman::factorio::launch::InstallLaunchRef install_ref {
-        install, executable_path(install), "portable", "standalone",
-        "none", "eligible", {}};
+    facman::factorio::launch::InstanceLaunchRef instance_ref;
+    instance_ref.instance_id = "main";
+    instance_ref.profile_id = "gui";
+    instance_ref.local_data_root = instance_root;
+    instance_ref.launch_mode = "gui";
+    facman::factorio::launch::InstallLaunchRef install_ref;
+    install_ref.root = install;
+    install_ref.executable = executable_path(install);
+    install_ref.ownership = "portable";
+    install_ref.distribution_origin = "standalone";
+    install_ref.platform_integration = "none";
+    install_ref.strict_isolation_eligibility = "eligible";
     write_text(instance_root / "config" / "config.ini",
         facman::factorio::launch::effective_config_ini(instance_ref, install_ref));
 }
