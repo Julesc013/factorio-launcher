@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "play-candidate-runtime-separation",
+            "windows-instance-isolated-play-revalidation",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +141,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "transport_outcome_semantics_accepted_runtime_evidence_separation_active_no_play_authority",
+            "runtime_evidence_separation_accepted_fresh_instance_isolated_play_revalidation_active_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -157,7 +157,14 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("facman::product_execution", separation["product_execution_target"])
         self.assertEqual("facman::candidate_policy", separation["candidate_policy_target"])
         self.assertFalse(separation["operator_targets_in_default_install"])
-        self.assertEqual("local_promotion_matrix_pass", separation["status"])
+        self.assertEqual("accepted_hosted_dev_integration", separation["status"])
+        self.assertEqual(78, separation["implementation_pull_request"])
+        self.assertEqual(
+            "d03b42e8d6b22459fd9a9b8feff05523f942577a",
+            separation["dev_integration_revision"],
+        )
+        self.assertEqual("30212150312", separation["merged_dev_ci_run"])
+        self.assertEqual("30212150359", separation["merged_dev_code_security_run"])
         self.assertEqual(54, separation["local_native_test_count"])
         self.assertEqual(517, separation["local_python_test_count"])
         self.assertEqual(0, separation["local_required_or_unknown_skip_count"])
@@ -502,7 +509,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -887,15 +894,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "play-candidate-runtime-separation",
+            "windows-instance-isolated-play-revalidation",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

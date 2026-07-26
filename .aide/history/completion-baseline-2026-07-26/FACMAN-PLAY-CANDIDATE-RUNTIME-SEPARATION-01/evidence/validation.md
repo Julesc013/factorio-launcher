@@ -102,3 +102,33 @@ Linux and macOS each passed their native build/test stages before failing the
 same Python compaction assertion for the two archived promotion logs. The repair
 was then validated locally by the focused compaction suite and the complete
 strict validator before publication of the corrected revision.
+
+## Hosted acceptance
+
+Corrected exact head:
+`5ba2f31c32650a3f7034088f6034f3d25cd8d0af`
+
+Pull request: `#78`
+
+Exact corrected-head runs:
+
+- push CI `30211651244`: PASS;
+- push code security `30211651245`: PASS;
+- push security policy `30211651246`: PASS;
+- pull-request CI `30211653394`: PASS;
+- pull-request code security `30211653350`: PASS;
+- pull-request security policy `30211653356`: PASS.
+
+Merged `dev` revision:
+`d03b42e8d6b22459fd9a9b8feff05523f942577a`
+
+Exact merged-`dev` runs:
+
+- CI `30212150312`: PASS;
+- code security `30212150359`: PASS;
+- security policy `30212150353`: PASS.
+
+The accepted hosted matrix covers Linux native/sanitizer/fuzzer/CLI/TUI
+packages, Windows native/WinForms/reproducibility/static/TUI packages, macOS
+native/CLI/TUI packages, archive, coverage, AppKit compile, C/C++/C#/Python
+CodeQL, and strict policy validation.

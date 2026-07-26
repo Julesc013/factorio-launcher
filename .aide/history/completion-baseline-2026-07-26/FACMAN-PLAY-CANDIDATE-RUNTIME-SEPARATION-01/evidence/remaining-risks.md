@@ -1,7 +1,7 @@
 # Remaining risks
 
-The runtime/evidence separation is locally proven, but it is not accepted until
-the exact task revision passes hosted review and the supported platform matrix.
+The runtime/evidence separation is accepted on exact hosted task and merged
+`dev` revisions.
 
 This WorkUnit does not prove real Factorio execution. The next authority-bearing
 step remains a fresh human-controlled Windows instance-isolated Play
@@ -19,10 +19,11 @@ materials. They are non-executable and intentionally retained as contracts and
 project documentation; package-profile pruning may be considered separately if
 distribution size or disclosure policy requires it.
 
-WinForms package validation remains optional because the WinForms shell was not
-built in this local lane. Symlink/reparse negative controls remain unsupported
-on this host because unprivileged symlink creation is unavailable. Hosted
-Windows validation must remain authoritative for the supported matrix.
+WinForms package validation was optional in the local lane but passed in the
+accepted hosted Windows lane. Symlink/reparse negative controls remain
+unsupported on this local host because unprivileged symlink creation is
+unavailable; the accepted hosted matrix remains authoritative for supported
+platform claims.
 
 No policy, candidate identity, evidence law, permit issuance, public Play route,
 runtime authority, signing, or publication claim was changed.
