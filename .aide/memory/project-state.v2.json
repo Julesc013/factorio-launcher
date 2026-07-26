@@ -2258,10 +2258,10 @@
     "direct_transport": "implementation_active",
     "factorio_execution": false,
     "hosted_validation": "pending",
-    "local_msvc_release_native_tests": 53,
-    "local_python_tests": 515,
+    "local_msvc_release_native_tests": 54,
+    "local_python_tests": 517,
     "operation_contract": "ulk.operation_outcome.v1",
-    "optional_obligation_skips": 7,
+    "optional_obligation_skips": 2,
     "outcomes": [
       "cancelled_before_dispatch",
       "refused_before_effects",

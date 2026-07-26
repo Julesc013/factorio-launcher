@@ -8,17 +8,18 @@ based on FacMan `dev` parent
 `3f8489275077347c2918f3bb03614ec6431362ff`.
 
 - Published ULK native contract matrix: pass on Windows, Linux, and macOS.
-- FacMan MSVC Release native matrix: 53/53 passed.
-- Python promotion obligation matrix: 515/515 passed.
+- FacMan TUI-enabled MSVC Release native matrix: 54/54 passed.
+- Python promotion obligation matrix: 517/517 passed.
 - Required blocked skips: 0.
 - Unknown skips: 0.
-- Optional skips: 7.
+- Optional skips: 2.
 - Unsupported platform-feature skips: 2.
 - Machine transport v1 compatibility and v2 outcome round trips: pass.
 - Direct cancellation/completion race and process post-dispatch uncertainty:
   pass.
 - Generated WinForms compile smoke: pass.
 - Generated frontend transport truth: 3/3 passed.
+- Functional TUI product scenarios: 3/3 passed.
 - Schema validator: 298 schemas passed.
 - `python tools/project_state.py`: pass.
 - `python tools/strict_check.py`: pass.
@@ -27,8 +28,16 @@ based on FacMan `dev` parent
 - `python tools/aide_compaction_check.py`: pass.
 - `git diff --check`: pass with line-ending conversion notices only.
 
+The initial hosted PR head exposed two TUI structured-output errors on macOS:
+locally synthesized cancellation and daemon refusals carried valid operation
+results but had no provider payload or envelope for the structured renderer to
+print. The repair emits a builder-generated `facman.tui_response.v2` only for
+that empty-body boundary, preserves legacy top-level outcome and refusal fields,
+and includes the exact ULK operation projection. It also makes the TUI product
+test honor the configured CLI path instead of selecting a stale local binary.
+
 The machine-readable Python result and complete runner logs are retained beside
-this file. Hosted FacMan validation is pending for the exact committed head.
+this file. Hosted FacMan validation is pending for the repaired exact head.
 
 No Factorio process, permit issuance, WPR capture, route promotion, policy
 change, Setup mutation, network authority, credential authority, or product

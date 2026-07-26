@@ -13,7 +13,8 @@ The WorkUnit changes are confined to the declared allowlist.
 - WinForms and AppKit process clients send v2 requests, preserve response
   identity, and fail closed after dispatch.
 - The TUI renders operation identity, outcome, effect uncertainty, and recovery
-  instructions.
+  instructions, including a structured terminal projection when a locally
+  synthesized response has no provider payload.
 
 ## Contracts and architecture
 
@@ -40,6 +41,8 @@ The WorkUnit changes are confined to the declared allowlist.
   pre-dispatch cancellation, the direct completion race, post-dispatch process
   uncertainty, recovery instructions, and daemon refusal.
 - Python coverage includes v2 schema round trips, ULK projection drift,
-  dependency pins, generated state, and frontend boundary truth.
+  dependency pins, generated state, frontend boundary truth, and functional TUI
+  cancellation/daemon projections. The TUI test helper honors its configured
+  CLI path.
 - The active WorkUnit contains the promotion result, full runner logs,
   validation summary, changed-file summary, and remaining-risk statement.

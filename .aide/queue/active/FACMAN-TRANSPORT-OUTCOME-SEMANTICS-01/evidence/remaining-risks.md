@@ -12,8 +12,9 @@
 - No real-Play revalidation has occurred. Instance-isolated and hermetic
   execution remain unproven, product Play remains unavailable, and no route is
   promoted.
-- WinForms and TUI package presence is optional in this local package profile;
-  their absence accounts for seven classified optional skips.
+- The WinForms package shell and the opt-in bounded full-scale performance
+  corpus account for two classified optional skips. The functional TUI is built
+  and tested locally.
 - Two reparse-point tests are unsupported on the local machine because symlink
   creation is unavailable. They are classified rather than silently ignored.
 

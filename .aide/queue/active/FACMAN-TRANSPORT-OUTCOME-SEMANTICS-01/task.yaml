@@ -47,6 +47,7 @@ allowed_paths:
   - tests/test_cross_repo.py
   - tests/test_machine_transport.py
   - tests/test_setup_package_routing.py
+  - tests/test_tui_product.py
   - tools/client_cli_boundary_check.py
   - tools/compliance_check.py
   - tools/frontend_transport_truth_check.py

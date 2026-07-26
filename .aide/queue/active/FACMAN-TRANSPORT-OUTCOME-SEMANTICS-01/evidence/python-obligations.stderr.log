@@ -36,7 +36,8 @@ test_static_first_layout_contains_only_the_functional_cli (tests.package_runtime
 test_target_identity_is_runtime_enforced_even_after_rehash (tests.package_runtime.test_built_package_artifacts.WindowsPortableCliPackageProofTests.test_target_identity_is_runtime_enforced_even_after_rehash) ... ok
 test_unknown_profile_and_manifest_fields_are_refused_after_rehash (tests.package_runtime.test_built_package_artifacts.WindowsPortableCliPackageProofTests.test_unknown_profile_and_manifest_fields_are_refused_after_rehash) ... ok
 test_workspace_lock_revision_mismatch_is_refused_after_rehash (tests.package_runtime.test_built_package_artifacts.WindowsPortableCliPackageProofTests.test_workspace_lock_revision_mismatch_is_refused_after_rehash) ... ok
-setUpClass (tests.package_runtime.test_built_package_artifacts.WindowsPortableTuiPackageProofTests) ... skipped 'optional: functional TUI build is missing: D:\\Projects\\Factorio\\factorio-launcher\\build\\presets\\dev-windows\\Release\\facman-tui.exe'
+test_target_specific_archive_identity_is_not_portable_os_neutral (tests.package_runtime.test_built_package_artifacts.WindowsPortableTuiPackageProofTests.test_target_specific_archive_identity_is_not_portable_os_neutral) ... ok
+test_target_specific_package_contains_and_smokes_both_frontends (tests.package_runtime.test_built_package_artifacts.WindowsPortableTuiPackageProofTests.test_target_specific_package_contains_and_smokes_both_frontends) ... ok
 test_frontend_bundle_validator (tests.release.test_package_contains_cli_tui_gui.PackageFrontendContentsTests.test_frontend_bundle_validator) ... ok
 test_gui_lane_contains_only_functional_gui_and_cli (tests.release.test_package_contains_cli_tui_gui.PackageFrontendContentsTests.test_gui_lane_contains_only_functional_gui_and_cli) ... ok
 test_linux_portable_cli_is_static_first_and_target_specific (tests.release.test_portable_layout.PortableLayoutTests.test_linux_portable_cli_is_static_first_and_target_specific) ... ok
@@ -170,7 +171,7 @@ test_candidate_contract_exposes_provenance_and_evidence (tests.test_discovery_pr
 test_linux_provider_covers_bounded_native_layouts (tests.test_discovery_providers.DiscoveryProviderContractTests.test_linux_provider_covers_bounded_native_layouts) ... ok
 test_macos_provider_covers_app_and_steam_layouts (tests.test_discovery_providers.DiscoveryProviderContractTests.test_macos_provider_covers_app_and_steam_layouts) ... ok
 test_provider_modules_are_bounded_and_read_only (tests.test_discovery_providers.DiscoveryProviderContractTests.test_provider_modules_are_bounded_and_read_only) ... ok
-test_complete_non_execution_journey_across_live_transports (tests.test_end_to_end_user_journey.EndToEndUserJourneyTests.test_complete_non_execution_journey_across_live_transports) ... skipped 'optional: functional TUI build is not available'
+test_complete_non_execution_journey_across_live_transports (tests.test_end_to_end_user_journey.EndToEndUserJourneyTests.test_complete_non_execution_journey_across_live_transports) ... ok
 test_recipe_is_data_only_and_execution_neutral (tests.test_factorio_setup_recipe.FactorioSetupRecipeTests.test_recipe_is_data_only_and_execution_neutral) ... ok
 test_recipe_policy_and_generated_projection (tests.test_factorio_setup_recipe.FactorioSetupRecipeTests.test_recipe_policy_and_generated_projection) ... ok
 test_discover_executable_prefers_bounded_known_layout (tests.test_factorio_version_capability_corpus.FactorioVersionCapabilityCorpusTests.test_discover_executable_prefers_bounded_known_layout) ... ok
@@ -480,9 +481,9 @@ test_tui_executable_honors_requested_configuration (tests.test_test_architecture
 test_all_source_skip_reasons_use_the_reviewed_vocabulary (tests.test_test_obligations.TestObligationTests.test_all_source_skip_reasons_use_the_reviewed_vocabulary) ... ok
 test_classification_is_exact_and_unknown_fails_closed (tests.test_test_obligations.TestObligationTests.test_classification_is_exact_and_unknown_fails_closed) ... ok
 test_promotion_profile_requires_zero_required_skips (tests.test_test_obligations.TestObligationTests.test_promotion_profile_requires_zero_required_skips) ... ok
-test_catalog_and_empty_unicode_workspace (tests.test_tui_product.TuiProductTests.test_catalog_and_empty_unicode_workspace) ... skipped 'optional: functional TUI build is not available'
-test_generated_guided_forms_plain_mode_and_transport_refusal (tests.test_tui_product.TuiProductTests.test_generated_guided_forms_plain_mode_and_transport_refusal) ... skipped 'optional: functional TUI build is not available'
-test_redirected_default_unavailable_and_cancellation (tests.test_tui_product.TuiProductTests.test_redirected_default_unavailable_and_cancellation) ... skipped 'optional: functional TUI build is not available'
+test_catalog_and_empty_unicode_workspace (tests.test_tui_product.TuiProductTests.test_catalog_and_empty_unicode_workspace) ... ok
+test_generated_guided_forms_plain_mode_and_transport_refusal (tests.test_tui_product.TuiProductTests.test_generated_guided_forms_plain_mode_and_transport_refusal) ... ok
+test_redirected_default_unavailable_and_cancellation (tests.test_tui_product.TuiProductTests.test_redirected_default_unavailable_and_cancellation) ... ok
 test_ui_accessibility_check (tests.test_ui_accessibility.UiAccessibilityTests.test_ui_accessibility_check) ... ok
 test_inspect_import_instance_plan_dry_run_and_gated_execute (tests.test_vertical_slice.VerticalSliceTests.test_inspect_import_instance_plan_dry_run_and_gated_execute) ... ok
 test_malformed_vdf_falls_back_to_primary_steam_library (tests.test_windows_discovery.WindowsDiscoveryProviderTests.test_malformed_vdf_falls_back_to_primary_steam_library) ... ok
@@ -518,6 +519,6 @@ test_migration_inspect_and_plan_are_read_only_and_apply_fails_closed (tests.test
 test_new_workspace_gets_stable_random_uuid (tests.test_workspace_store.WorkspaceStoreTests.test_new_workspace_gets_stable_random_uuid) ... ok
 
 ----------------------------------------------------------------------
-Ran 515 tests in 187.780s
+Ran 517 tests in 194.879s
 
-OK (skipped=9)
+OK (skipped=4)

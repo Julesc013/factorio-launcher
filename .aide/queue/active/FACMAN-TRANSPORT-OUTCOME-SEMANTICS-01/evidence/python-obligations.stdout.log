@@ -154,7 +154,7 @@ workspace-contract-check: ok
   "skip_counts": {
     "historical_only": 0,
     "not_applicable": 0,
-    "optional": 7,
+    "optional": 2,
     "required_blocked": 0,
     "unknown": 0,
     "unsupported": 2
@@ -164,16 +164,6 @@ workspace-contract-check: ok
       "classification": "optional",
       "reason": "optional: WinForms shell has not been built",
       "test": "setUpClass (tests.package_runtime.test_built_package_artifacts.BuiltWindowsPackageArtifactTests)"
-    },
-    {
-      "classification": "optional",
-      "reason": "optional: functional TUI build is missing: D:\\Projects\\Factorio\\factorio-launcher\\build\\presets\\dev-windows\\Release\\facman-tui.exe",
-      "test": "setUpClass (tests.package_runtime.test_built_package_artifacts.WindowsPortableTuiPackageProofTests)"
-    },
-    {
-      "classification": "optional",
-      "reason": "optional: functional TUI build is not available",
-      "test": "tests.test_end_to_end_user_journey.EndToEndUserJourneyTests.test_complete_non_execution_journey_across_live_transports"
     },
     {
       "classification": "unsupported",
@@ -189,24 +179,9 @@ workspace-contract-check: ok
       "classification": "optional",
       "reason": "optional: set FACMAN_RUN_R37_FULL_PERFORMANCE=1 for the bounded full-scale corpus",
       "test": "tests.test_r37_performance.R37PerformanceTests.test_required_bounded_scale_corpus"
-    },
-    {
-      "classification": "optional",
-      "reason": "optional: functional TUI build is not available",
-      "test": "tests.test_tui_product.TuiProductTests.test_catalog_and_empty_unicode_workspace"
-    },
-    {
-      "classification": "optional",
-      "reason": "optional: functional TUI build is not available",
-      "test": "tests.test_tui_product.TuiProductTests.test_generated_guided_forms_plain_mode_and_transport_refusal"
-    },
-    {
-      "classification": "optional",
-      "reason": "optional: functional TUI build is not available",
-      "test": "tests.test_tui_product.TuiProductTests.test_redirected_default_unavailable_and_cancellation"
     }
   ],
-  "tests_run": 515,
+  "tests_run": 517,
   "unexpected_successes": 0,
   "unknown_skip_limit": 0
 }
