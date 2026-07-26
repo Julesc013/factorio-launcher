@@ -73,7 +73,7 @@ class MacosPackageProofContractTests(unittest.TestCase):
             'echo "TMPDIR=$TMPDIR" >> "$GITHUB_ENV"',
             "Prepare no-link temporary root",
             "ctest --test-dir build/macos-native --output-on-failure",
-            "python -m unittest discover -s tests -v",
+            "python tools/test_obligations.py --profile promotion",
             "python tools/macos_package_proof.py",
             "build/macos-package-proof/dist/*.tar.gz",
             "build/macos-package-proof/dist/*.provenance.v1.json",

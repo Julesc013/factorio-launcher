@@ -535,7 +535,7 @@ class Gate4CVerdictPreflightTests(unittest.TestCase):
             try:
                 link.symlink_to(source)
             except OSError:
-                self.skipTest("symlink creation is unavailable")
+                self.skipTest("unsupported: symlink creation is unavailable")
             result = PREFLIGHT.source_evidence(link, installed)
             self.assertFalse(result["valid"])
             self.assertIn("link_or_reparse", result["path_audit"]["reason"])
@@ -649,7 +649,7 @@ class Gate4CVerdictPreflightTests(unittest.TestCase):
             try:
                 link.symlink_to(target)
             except OSError:
-                self.skipTest("symlink creation is unavailable")
+                self.skipTest("unsupported: symlink creation is unavailable")
             result = PREFLIGHT.audit_no_follow(link, require_file=True)
             self.assertFalse(result["safe"])
             self.assertIn("link_or_reparse", result["reason"])

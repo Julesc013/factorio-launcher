@@ -137,11 +137,16 @@ ApplicationResult workspace_status(ApplicationContext& context)
     observations.add_string("package_integrity", package_ok ? "pass" : packaged ? "failed" : "not_packaged_checkout");
     observations.add_unsigned_integer("package_files_verified", files_verified);
     observations.add_string(
+        "factorio_launcher_revision",
+        facman::build_identity::factorio_launcher_revision);
+    observations.add_string(
         "universal_launcher_revision",
         facman::build_identity::universal_launcher_revision);
     observations.add_string(
         "universal_setup_revision",
         facman::build_identity::universal_setup_revision);
+    observations.add_bool("source_dirty", facman::build_identity::source_dirty);
+    observations.add_string("build_identity", facman::build_identity::identity);
     observations.add_unsigned_integer("install_count", installs.value().size());
     observations.add_unsigned_integer("instance_count", instances.value().size());
     observations.add_unsigned_integer("incomplete_transactions", incomplete);

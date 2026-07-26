@@ -1,0 +1,92 @@
+schema = "facman.current_state.v1"
+generated_from = "release/index/project_status.v2.toml"
+product_version = "0.1.0-dev"
+phase = "build_and_development_truth"
+phase_status = "active"
+checkpoint = "build-and-development-truth"
+active_work_unit = "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01"
+next_work_unit = "ULK-OPERATION-OUTCOME-CONTRACT-01"
+last_closed_work_unit = "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01"
+next_authority_gate = "real-play-isolation"
+
+[revisions]
+accepted_factorio_launcher = "31264a99b428c2d34d9f21a39f0878b1eb75775a"
+universal_launcher = "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d"
+universal_setup = "3f8489275077347c2918f3bb03614ec6431362ff"
+runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
+
+[product]
+playability = "not_yet_playable"
+user_workflow = "advanced_command_surface_only"
+execution = "unavailable"
+execution_reason = "pre_revalidation_build_and_operation_semantics_repairs_in_progress_no_play_authority"
+release = "unpublished"
+release_authenticity = "not_proven_unsigned"
+safe_beta = false
+
+[capabilities]
+available = [
+  "install.discover",
+  "install.model.inspect",
+  "install.reconciliation.plan",
+  "install.reference.register",
+  "launch.preflight",
+  "launch.preview",
+]
+conditional = [
+  "install.managed.plan",
+  "process.execute",
+]
+unavailable = [
+  "credential.factorio.read",
+  "install.existing.adoption.apply",
+  "install.managed.apply",
+  "launch.execute.hermetic",
+  "launch.execute.instance_isolated",
+  "network.mod_portal.read",
+  "network.mod_portal.write",
+  "release.publish",
+  "release.sign",
+]
+backlog = [
+  "install.existing.adoption.plan",
+  "install.existing.inspect",
+]
+
+[scorecard]
+published_first_party_pins = 3
+accepted_real_play_routes = 0
+required_obligation_skip_target = 0
+required_obligation_skips_observed = 0
+required_obligation_skip_observation = "pass_local_promotion_matrix"
+silent_foreign_mutations = 0
+observed_player_journeys = 0
+
+[queue]
+mutable = [
+  "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+  "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+  "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
+  "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01",
+]
+planned = [
+  "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
+]
+archived_task_count = 58
+
+[blockers]
+items = [
+  "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
+  "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
+  "Normal-host instance-isolated Play and enforced hermetic Play are independent, unproven real-product gates; Steam-aware Play remains a later route qualification.",
+  "Gate 4C verdict attempt 01 is Inconclusive; the observer-start defect is repaired and live-proven without Factorio.",
+  "Gate 4C verdict attempt 02 is blocked before baseline; its split-privilege repair remains accepted.",
+  "Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.",
+  "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
+  "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
+  "The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; its proof binds the previous Universal Launcher revision and requires revalidation after the client transport extraction.",
+  "Operation cancellation and timeout outcomes still need one durable cross-transport contract before candidate qualification.",
+  "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
+  "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
+  "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
+]

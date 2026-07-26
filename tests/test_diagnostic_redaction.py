@@ -197,7 +197,7 @@ class DiagnosticRedactionTests(unittest.TestCase):
         self.assertIn("stable_read_relative(", diagnostics)
         self.assertIn("write_to_new_owned_staging(", diagnostics)
 
-    @unittest.skipUnless(os.name == "nt", "Windows junction proof")
+    @unittest.skipUnless(os.name == "nt", "not_applicable: Windows junction proof")
     def test_bounded_collector_refuses_a_real_windows_junction(self) -> None:
         smoke = facman_executable().with_name("facman_diagnostic_traversal_smoke.exe")
         self.assertTrue(smoke.is_file(), smoke)

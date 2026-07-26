@@ -45,7 +45,7 @@ def scan_with_providers(workspace: Path, **environment: str) -> dict:
     return json.loads(stdout)
 
 
-@unittest.skipUnless(os.name == "nt", "real Windows discovery providers")
+@unittest.skipUnless(os.name == "nt", "not_applicable: real Windows discovery providers")
 class WindowsDiscoveryProviderTests(unittest.TestCase):
     def test_numeric_version_library_is_classified_without_parent_false_positive(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman versions ") as tmp:

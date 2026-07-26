@@ -35,7 +35,7 @@ def native_executable(name: str) -> Path:
     )
     if matches:
         return matches[0]
-    raise unittest.SkipTest(f"{name} has not been built")
+    raise unittest.SkipTest(f"required_blocked: {name} has not been built")
 
 
 def inspect(path: Path, *limits: str) -> tuple[int, str, str]:

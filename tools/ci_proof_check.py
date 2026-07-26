@@ -50,7 +50,7 @@ def validate() -> list[str]:
         "cmake -S . -B build/native-smoke",
         "cmake --build build/native-smoke --config Debug",
         "ctest --test-dir build/native-smoke -C Debug --output-on-failure",
-        "python -m unittest discover -s tests -v",
+        "python tools/test_obligations.py --profile promotion",
         "python tools/required_package_proof.py",
         "python tools/package_reproducibility_proof.py --build-root build/native-smoke",
         "--profile windows_portable_cli_x64",

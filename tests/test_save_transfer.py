@@ -201,7 +201,7 @@ class SaveTransferTests(unittest.TestCase):
             try:
                 os.link(external, linked)
             except OSError as error:
-                self.skipTest(f"hard links unavailable: {error}")
+                self.skipTest(f"unsupported: hard links unavailable: {error}")
             destination = workspace / "linked.backup.zip"
             code, stdout, _stderr = invoke(
                 [

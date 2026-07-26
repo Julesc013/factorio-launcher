@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-APPLICATION-MODULE-DECOMPOSITION-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-25T12:59:46Z
+result: PASS
+evidence_path: .aide/history/completion-baseline-2026-07-26/FACMAN-APPLICATION-MODULE-DECOMPOSITION-01/evidence/
+active_at: 2026-07-25T12:59:46Z
+verified_at: 2026-07-25T13:22:02Z
+implementation_state: implemented
+reviewed_at: 2026-07-25T13:22:18Z
+closed_at: 2026-07-25T13:22:19Z
+archived_at: 2026-07-26T12:52:46Z

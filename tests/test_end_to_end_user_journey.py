@@ -164,7 +164,7 @@ class EndToEndUserJourneyTests(unittest.TestCase):
 
             tui = tui_executable()
             if tui is None:
-                self.skipTest("functional TUI build is not available")
+                self.skipTest("optional: functional TUI build is not available")
             completed = subprocess.run(
                 [str(tui), "--workspace", str(target), "--command", "workspace.status", "--json"],
                 cwd=ROOT,

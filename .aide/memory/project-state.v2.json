@@ -1,5 +1,28 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+  "build_and_development_truth": {
+    "aide_validation": "pass",
+    "authority_promotion": false,
+    "external_task_root": "pass_local_app_data_not_source_or_windows_temp",
+    "factorio_execution": false,
+    "fast_native_tui_off_tests": 18,
+    "fast_native_tui_on_tests": 19,
+    "fast_python_tests": 31,
+    "full_native_tests": 53,
+    "full_python_tests": 514,
+    "hosted_validation": "pending_exact_head",
+    "optional_obligation_skips": 2,
+    "permit_issuance": false,
+    "required_obligation_skips": 0,
+    "runtime_identity": "exact_git_head_plus_workspace_pins_and_source_dirty",
+    "runtime_identity_read_only_probe": "pass",
+    "status": "local_promotion_matrix_pass",
+    "strict_validation": "pass",
+    "unknown_obligation_skips": 0,
+    "unsupported_obligation_skips": 2,
+    "validated_parent_revision": "31264a99b428c2d34d9f21a39f0878b1eb75775a",
+    "work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01"
+  },
   "capabilities": [
     {
       "commands": [],
@@ -450,15 +473,15 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "targeted-extraction-complete",
+  "current_checkpoint": "build-and-development-truth",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
-    "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
+    "factorio_launcher": "31264a99b428c2d34d9f21a39f0878b1eb75775a",
     "universal_launcher": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
-    "current_gate_status": "instance_isolated_candidate_revalidation_next_operator_workunit",
+    "current_gate_status": "pre_revalidation_repairs_in_progress",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -466,7 +489,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "instance_isolated_candidate_revalidation_required_after_targeted_extraction_no_play_authority",
+    "reason": "pre_revalidation_build_and_operation_semantics_repairs_in_progress_no_play_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -780,7 +803,7 @@
     "live_privilege_probe": true,
     "live_privilege_probe_digest": "e74f276c6ee43d2c436b09bade4d265fd0165903f963ae09f7f0e8e61bad105b",
     "live_privilege_probe_disposition": "pass_authenticated_medium_coordinator_high_broker_no_wpr_no_factorio",
-    "live_privilege_probe_evidence": ".aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence/live-privilege-probe.json",
+    "live_privilege_probe_evidence": ".aide/history/completion-baseline-2026-07-26/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence/live-privilege-probe.json",
     "live_privilege_probe_file_sha256": "e8e614cf37feab54efb9f52133e35025984d38bdc35b376d55139bc734c5f841",
     "live_privilege_probe_id": "gate4c-privilege-probe-live-02",
     "live_privilege_probe_response_digest": "8ded3340f2d6de60d83041e6a480129294e44d4e5c3f27cc76b2a26905fd4c2d",
@@ -1203,11 +1226,12 @@
     "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
     "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
     "The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; its proof binds the previous Universal Launcher revision and requires revalidation after the client transport extraction.",
+    "Operation cancellation and timeout outcomes still need one durable cross-transport contract before candidate qualification.",
     "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01",
+  "last_closed_work_unit": "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2106,17 +2130,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "",
+    "current_work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
-    "phase": "targeted_extraction_complete",
-    "phase_status": "checkpoint",
+    "next_work_unit": "ULK-OPERATION-OUTCOME-CONTRACT-01",
+    "phase": "build_and_development_truth",
+    "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "instance_isolated_candidate_technical_pass_targeted_extraction_program_complete_revalidation_pending"
+    "truth_scope": "remote_source_closed_launch_truth_fail_closed_build_and_development_truth_active_no_play_authority"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -2148,6 +2172,47 @@
     "release.sign",
     "release.publish"
   ],
+  "queue": {
+    "archived_task_count": 58,
+    "counts": {
+      "active": 1,
+      "blocked": 2,
+      "planned": 1,
+      "verified": 1
+    },
+    "records": [
+      {
+        "id": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
+      },
+      {
+        "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
+        "lifecycle_state": "blocked",
+        "queue": "active",
+        "status": "blocked"
+      },
+      {
+        "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
+        "lifecycle_state": "blocked",
+        "queue": "active",
+        "status": "blocked"
+      },
+      {
+        "id": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01",
+        "lifecycle_state": "verified",
+        "queue": "active",
+        "status": "verified"
+      },
+      {
+        "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      }
+    ]
+  },
   "r3_8_public_integration": {
     "authority_promotion": false,
     "canonical_main_revision": "53ffbd6e02f098e0eacda9392131592ba421b90a",
@@ -2170,7 +2235,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "targeted_refactoring_complete_no_runtime_authority",
+    "safety_authority": "remote_source_closed_launch_truth_fail_closed_no_play_authority",
     "user_validation": "not_started",
     "user_workflow": "advanced_command_surface_only"
   },

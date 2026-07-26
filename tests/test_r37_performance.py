@@ -54,7 +54,7 @@ def write_save(path: Path) -> None:
 
 @unittest.skipUnless(
     os.environ.get("FACMAN_RUN_R37_FULL_PERFORMANCE") == "1",
-    "set FACMAN_RUN_R37_FULL_PERFORMANCE=1 for the bounded full-scale corpus",
+    "optional: set FACMAN_RUN_R37_FULL_PERFORMANCE=1 for the bounded full-scale corpus",
 )
 class R37PerformanceTests(unittest.TestCase):
     def test_required_bounded_scale_corpus(self) -> None:

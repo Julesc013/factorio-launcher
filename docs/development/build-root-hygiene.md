@@ -7,6 +7,15 @@ task-owned out-of-tree root:
 E:\Temporary\FacMan\<task-id>\
 ```
 
+`py -3 tools/dev.py ...` enforces this by default. Without an explicit
+`FACMAN_TASK_ROOT` or `--task-root`, it derives a stable repository-specific
+external root. Windows uses `%LOCALAPPDATA%\FacMan\Tasks`, avoiding Visual
+Studio's warning and incremental-build restrictions for output beneath the
+temporary directory. Other platforms use the configured cache root or an
+operating-system temporary root. `--build-root`, `--out`, and `--dist` remain
+available, but an in-checkout path is refused unless the reviewed legacy-only
+`--allow-in-tree-output` switch is present.
+
 Keep source checkouts beneath `D:\Projects` free of generated `build/`, package,
 distribution, and proof output. A WorkUnit may use multiple children beneath
 its task root, for example:

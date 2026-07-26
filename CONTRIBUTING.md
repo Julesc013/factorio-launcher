@@ -18,9 +18,16 @@ py -3 tools/dev.py test --full
 py -3 tools/dev.py verify-all
 ```
 
+These commands default generated output to a stable per-user task root outside
+the source checkout. Set `FACMAN_TASK_ROOT` or pass `--task-root` to select a
+named WorkUnit root. In-tree output requires the explicit reviewed legacy
+escape hatch `--allow-in-tree-output`.
+
 Focused tests are iteration evidence, not promotion. Before a production claim
 or closeout, run the full matrix and record any platform proof that remains
-CI-owned or operator-owned. Automated checks never pass human acceptance.
+CI-owned or operator-owned. The full runner classifies every skip; promotion
+requires zero `required_blocked` skips and zero unclassified skips. Automated
+checks never pass human acceptance.
 
 Commits use the repository AIDE template and check:
 

@@ -12,6 +12,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+from tools.aide_evidence import resolve_task_file
+
 POLICY = ROOT / "contracts/policy/factorio/hermetic_standalone_play_2_0_77_windows_x64.v1.toml"
 CANONICAL = ROOT / "contracts/generated-index/hermetic_standalone_play_policy.v1.canonical.json"
 EXPECTED_DIGEST = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
@@ -163,8 +165,11 @@ def check() -> list[str]:
         if policy_truth.get(key) is not False:
             problems.append(f"candidate project truth promotes forbidden authority: {key}")
 
-    storage = ROOT / ".aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/evidence/task-storage.md"
-    if not storage.is_file():
+    storage = resolve_task_file(
+        "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01",
+        "evidence/task-storage.md",
+    )
+    if storage is None:
         problems.append("Gate 4B task-scoped storage record is missing")
     return problems
 

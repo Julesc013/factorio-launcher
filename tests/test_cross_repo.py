@@ -38,7 +38,10 @@ class CrossRepoTests(unittest.TestCase):
     def test_product_only_boundaries(self) -> None:
         self.assertEqual(cross_repo_check.main(["--product-only"]), 0)
 
-    @unittest.skipUnless(HAS_SIBLINGS, "sibling repositories are not checked out")
+    @unittest.skipUnless(
+        HAS_SIBLINGS,
+        "required_blocked: sibling repositories are not checked out",
+    )
     def test_sibling_boundaries(self) -> None:
         self.assertEqual(cross_repo_check.main([]), 0)
 

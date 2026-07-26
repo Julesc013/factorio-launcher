@@ -57,7 +57,9 @@ def isolation_probe_executable() -> Path:
     )
     if matches:
         return matches[0]
-    raise unittest.SkipTest("facman isolation probe has not been built")
+    raise unittest.SkipTest(
+        "required_blocked: facman isolation probe has not been built"
+    )
 
 
 class InstanceIsolationProbeTests(unittest.TestCase):

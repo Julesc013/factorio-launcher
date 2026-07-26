@@ -28,7 +28,9 @@ class BuiltPackageArtifactTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not BUILD_ROOT.exists():
-            raise unittest.SkipTest("native smoke build has not been created")
+            raise unittest.SkipTest(
+                "required_blocked: native smoke build has not been created"
+            )
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"
         cls.portable_cli = build_or_skip(cls, "portable_cli_x64")
@@ -157,7 +159,7 @@ class BuiltPackageOutputOwnershipTests(unittest.TestCase):
             self.assertEqual(valuable.read_text(encoding="utf-8"), "preserve\n")
 
 
-@unittest.skipUnless(os.name == "nt", "target-specific Windows package proof")
+@unittest.skipUnless(os.name == "nt", "not_applicable: target-specific Windows package proof")
 class WindowsPortableCliPackageProofTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -469,13 +471,15 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
         self.assertEqual(report["integrity"], "sha256_consistent")
 
 
-@unittest.skipUnless(os.name == "nt", "Windows TUI package proof")
+@unittest.skipUnless(os.name == "nt", "not_applicable: Windows TUI package proof")
 class WindowsPortableTuiPackageProofTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         tui = BUILD_ROOT / BUILD_CONFIGURATION / "facman-tui.exe"
         if not tui.is_file():
-            raise unittest.SkipTest(f"functional TUI build is missing: {tui}")
+            raise unittest.SkipTest(
+                f"optional: functional TUI build is missing: {tui}"
+            )
         cls._tmp = tempfile.TemporaryDirectory(prefix="facman-windows-tui-package-")
         cls.root = Path(cls._tmp.name)
         cls.package_root = package_build.build_profile(
@@ -513,14 +517,16 @@ class WindowsPortableTuiPackageProofTests(unittest.TestCase):
         self.assertEqual(package["target_os"], "windows")
 
 
-@unittest.skipIf(os.name != "nt", "WinForms package layout proof is Windows-only")
+@unittest.skipIf(os.name != "nt", "not_applicable: WinForms package layout proof is Windows-only")
 class BuiltWindowsPackageArtifactTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not BUILD_ROOT.exists():
-            raise unittest.SkipTest("native smoke build has not been created")
+            raise unittest.SkipTest(
+                "required_blocked: native smoke build has not been created"
+            )
         if not (ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Debug" / "FacMan.WinForms.exe").is_file():
-            raise unittest.SkipTest("WinForms shell has not been built")
+            raise unittest.SkipTest("optional: WinForms shell has not been built")
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"
         cls.package_root = build_or_skip(cls, "windows_legacy_winforms_x64")
@@ -561,7 +567,7 @@ def build_or_skip(test_case: unittest.TestCase, profile_id: str) -> Path:
             allow_dirty=True,
         )
     except ValueError as exc:
-        raise unittest.SkipTest(str(exc)) from exc
+        raise unittest.SkipTest(f"required_blocked: {exc}") from exc
 
 
 def run_package_verify(root: Path) -> subprocess.CompletedProcess[str]:
