@@ -461,6 +461,7 @@ launch::ProtectedComparisonResult instance_protected_unchanged()
 }
 #endif
 
+#ifdef _WIN32
 std::vector<launch::CandidateAutomatedCaseResult>
 instance_automated_passes()
 {
@@ -471,6 +472,7 @@ instance_automated_passes()
     }
     return result;
 }
+#endif
 
 int fail(int code) { return code; }
 
