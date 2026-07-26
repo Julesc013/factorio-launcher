@@ -279,12 +279,17 @@ std::string save_index_payload(
 std::string transport_response(
     const std::string& request_id,
     const std::string& command,
-    const facman::core::Result<facman::client::CommandResponse>& response)
+    const facman::core::Result<facman::client::CommandResponse>& response,
+    unsigned int protocol_version = 1,
+    const std::string& operation_id = {},
+    const std::string& attempt_id = {})
 {
     json::ObjectBuilder output;
-    output.add_string("schema", "facman.transport_response.v1");
+    output.add_string(
+        "schema",
+        protocol_version == 2 ? "facman.transport_response.v2" : "facman.transport_response.v1");
     output.add_string("request_id", request_id);
-    output.add_unsigned_integer("protocol_version", 1);
+    output.add_unsigned_integer("protocol_version", protocol_version);
     output.add_string("command", command);
     output.add_string(
         "outcome",
@@ -303,6 +308,18 @@ std::string transport_response(
     json::ArrayBuilder effects;
     output.add_array("diagnostics", diagnostics);
     output.add_array("effects", effects);
+    if (protocol_version == 2) {
+        facman::client::OperationResult operation;
+        if (response) {
+            operation = response.value().operation;
+        } else {
+            operation.operation_id = operation_id;
+            operation.attempt_id = attempt_id;
+            operation.outcome = facman::client::OperationOutcome::refused_before_effects;
+        }
+        auto operation_value = json::parse(facman::client::operation_result_json(operation));
+        if (operation_value) output.add_value("operation", operation_value.value());
+    }
     return output.serialize();
 }
 
@@ -310,13 +327,17 @@ int transport_refusal(
     const std::string& request_id,
     const std::string& command,
     const std::string& code,
-    const std::string& message)
+    const std::string& message,
+    unsigned int protocol_version = 1,
+    const std::string& operation_id = {},
+    const std::string& attempt_id = {})
 {
     facman::core::OutcomeKind kind = code == "transport_protocol_invalid" || code == "transport_request_invalid"
         ? facman::core::OutcomeKind::invalid_argument
         : facman::core::OutcomeKind::refused;
     auto failure = facman::core::Result<facman::client::CommandResponse>::failure({code, message, "$", kind});
-    std::cout << transport_response(request_id, command, failure) << '\n';
+    std::cout << transport_response(
+        request_id, command, failure, protocol_version, operation_id, attempt_id) << '\n';
     return 1;
 }
 
@@ -355,13 +376,32 @@ int command_rpc(const Options& options)
     const std::string request_id = json_string_field(request, "request_id");
     const std::string command = json_string_field(request, "command");
     const std::string schema = json_string_field(request, "schema");
+    const std::string operation_id = json_string_field(request, "operation_id");
+    const std::string attempt_id = json_string_field(request, "attempt_id");
     const auto* version = request.find("protocol_version");
     const auto* dry_run = request.find("dry_run");
     const auto* payload = request.find("payload");
-    if (schema != "facman.transport_request.v1" || request_id.empty() || command.empty() ||
-        version == nullptr || !version->unsigned_integer_value() || version->unsigned_integer_value().value() != 1 ||
+    const bool protocol_v1 =
+        schema == "facman.transport_request.v1" &&
+        version != nullptr &&
+        version->unsigned_integer_value() &&
+        version->unsigned_integer_value().value() == 1;
+    facman::client::OperationResult identity_probe;
+    identity_probe.operation_id = operation_id;
+    identity_probe.attempt_id = attempt_id;
+    const bool protocol_v2 =
+        schema == "facman.transport_request.v2" &&
+        version != nullptr &&
+        version->unsigned_integer_value() &&
+        version->unsigned_integer_value().value() == 2 &&
+        facman::client::operation_result_valid(identity_probe);
+    if ((!protocol_v1 && !protocol_v2) || request_id.empty() || command.empty() ||
         dry_run == nullptr || !dry_run->bool_value() || payload == nullptr || !payload->is_object()) {
-        return transport_refusal(request_id, command, "transport_protocol_invalid", "Transport request does not satisfy protocol v1");
+        return transport_refusal(
+            request_id,
+            command,
+            "transport_protocol_invalid",
+            "Transport request does not satisfy protocol v1 or v2");
     }
     const std::string requested_workspace = json_string_field(request, "workspace");
     if (requested_workspace.empty() && options.workspace_error) {
@@ -369,15 +409,37 @@ int command_rpc(const Options& options)
             request_id,
             command,
             options.workspace_error->code,
-            options.workspace_error->message);
+            options.workspace_error->message,
+            protocol_v2 ? 2U : 1U,
+            operation_id,
+            attempt_id);
     }
     const std::string workspace = requested_workspace.empty() ? options.workspace : requested_workspace;
     facman::client::FacManClient client(
         std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(workspace)));
-    auto response = client.execute({command, payload->serialize(), dry_run->bool_value().value()});
-    std::string output = transport_response(request_id, command, response);
+    facman::client::CommandRequest client_request {
+        command, payload->serialize(), dry_run->bool_value().value()};
+    if (protocol_v2) {
+        client_request.operation_id = operation_id;
+        client_request.attempt_id = attempt_id;
+    }
+    auto response = client.execute(client_request);
+    std::string output = transport_response(
+        request_id,
+        command,
+        response,
+        protocol_v2 ? 2U : 1U,
+        operation_id,
+        attempt_id);
     if (output.size() > kTransportOutputLimit) {
-        return transport_refusal(request_id, command, "transport_output_too_large", "Transport response exceeds the output budget");
+        return transport_refusal(
+            request_id,
+            command,
+            "transport_output_too_large",
+            "Transport response exceeds the output budget",
+            protocol_v2 ? 2U : 1U,
+            operation_id,
+            attempt_id);
     }
     std::cout << output << '\n';
     return response && response.value().ok() ? 0 : 1;

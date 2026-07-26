@@ -27,7 +27,9 @@ def tui_executable() -> Path | None:
 
 
 def cli_executable() -> Path | None:
+    configured = os.environ.get("FACMAN_CLI_EXE")
     candidates = [
+        Path(configured) if configured else Path("__missing__"),
         ROOT / "build/r37-ux/Release/facman.exe",
         ROOT / "build/Release/facman.exe",
         ROOT / "build/native-smoke/Debug/facman.exe",
@@ -115,7 +117,15 @@ class TuiProductTests(unittest.TestCase):
                 ["--workspace", str(workspace), "--command", "workspace.status", "--cancel", "--json"]
             )
             self.assertEqual(cancelled.returncode, 1)
-            self.assertEqual(json.loads(cancelled.stdout)["outcome"], "cancelled")
+            cancelled_payload = json.loads(cancelled.stdout)
+            self.assertEqual(cancelled_payload["outcome"], "cancelled")
+            self.assertEqual(
+                cancelled_payload["operation"]["outcome"],
+                "cancelled_before_dispatch",
+            )
+            self.assertFalse(
+                cancelled_payload["operation"]["effects_may_have_occurred"],
+            )
             self.assertFalse(workspace.exists())
 
     def test_generated_guided_forms_plain_mode_and_transport_refusal(self) -> None:
@@ -150,6 +160,11 @@ class TuiProductTests(unittest.TestCase):
             self.assertEqual(daemon.returncode, 1)
             refusal = json.loads(daemon.stdout)
             self.assertEqual(refusal["code"], "daemon_transport_unavailable")
+            self.assertEqual(
+                refusal["operation"]["outcome"],
+                "refused_before_effects",
+            )
+            self.assertFalse(refusal["operation"]["effects_may_have_occurred"])
 
             cli = cli_executable()
             if cli is not None:

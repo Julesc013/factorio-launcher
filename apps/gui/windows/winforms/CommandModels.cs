@@ -118,7 +118,14 @@ namespace FacMan.WinForms
             bool refused,
             string refusalCode,
             string refusalReason,
-            string outcome = null)
+            string outcome = null,
+            string operationId = null,
+            string attemptId = null,
+            string operationOutcome = null,
+            bool effectsMayHaveOccurred = false,
+            bool recoveryRequired = false,
+            string recoveryTransactionId = null,
+            string recoveryInspectCommand = null)
         {
             CommandId = commandId;
             BackendId = backendId;
@@ -129,6 +136,16 @@ namespace FacMan.WinForms
             RefusalCode = refusalCode ?? String.Empty;
             RefusalReason = refusalReason ?? String.Empty;
             Outcome = String.IsNullOrWhiteSpace(outcome) ? (refused ? "refused" : "ok") : outcome;
+            OperationId = String.IsNullOrWhiteSpace(operationId)
+                ? "op-" + Guid.NewGuid().ToString("N") : operationId;
+            AttemptId = String.IsNullOrWhiteSpace(attemptId)
+                ? "attempt-" + Guid.NewGuid().ToString("N") : attemptId;
+            OperationOutcome = String.IsNullOrWhiteSpace(operationOutcome)
+                ? (refused ? "refused_before_effects" : "completed") : operationOutcome;
+            EffectsMayHaveOccurred = effectsMayHaveOccurred;
+            RecoveryRequired = recoveryRequired;
+            RecoveryTransactionId = recoveryTransactionId ?? String.Empty;
+            RecoveryInspectCommand = recoveryInspectCommand ?? String.Empty;
             CompletedAt = DateTime.Now;
         }
 
@@ -141,6 +158,13 @@ namespace FacMan.WinForms
         public string RefusalCode { get; private set; }
         public string RefusalReason { get; private set; }
         public string Outcome { get; private set; }
+        public string OperationId { get; private set; }
+        public string AttemptId { get; private set; }
+        public string OperationOutcome { get; private set; }
+        public bool EffectsMayHaveOccurred { get; private set; }
+        public bool RecoveryRequired { get; private set; }
+        public string RecoveryTransactionId { get; private set; }
+        public string RecoveryInspectCommand { get; private set; }
         public DateTime CompletedAt { get; private set; }
 
         public bool Success
@@ -165,6 +189,62 @@ namespace FacMan.WinForms
                 refusalReason);
         }
 
+        public static CommandResult OutcomeUnknown(
+            string commandId,
+            string backendId,
+            string operationId,
+            string attemptId,
+            string errorCode,
+            string errorReason)
+        {
+            return new CommandResult(
+                commandId,
+                backendId,
+                1,
+                StructuredOperationJson(
+                    operationId,
+                    attemptId,
+                    "outcome_unknown",
+                    true,
+                    true,
+                    String.Empty,
+                    "workspace.recovery.inspect"),
+                String.Empty,
+                true,
+                errorCode,
+                errorReason,
+                "cancelled",
+                operationId,
+                attemptId,
+                "outcome_unknown",
+                true,
+                true,
+                String.Empty,
+                "workspace.recovery.inspect");
+        }
+
+        public CommandResult CancellationRequestedButCompleted()
+        {
+            if (OperationOutcome != "completed") return this;
+            return new CommandResult(
+                CommandId,
+                BackendId,
+                ExitCode,
+                Stdout,
+                Stderr,
+                Refused,
+                RefusalCode,
+                RefusalReason,
+                Outcome,
+                OperationId,
+                AttemptId,
+                "cancellation_requested_but_completed",
+                EffectsMayHaveOccurred,
+                false,
+                String.Empty,
+                String.Empty);
+        }
+
         public string ToDisplayText()
         {
             StringBuilder builder = new StringBuilder();
@@ -172,6 +252,15 @@ namespace FacMan.WinForms
             builder.AppendLine("Backend: " + BackendId);
             builder.AppendLine("Exit code: " + ExitCode.ToString());
             builder.AppendLine("Outcome: " + Outcome);
+            builder.AppendLine("Operation ID: " + OperationId);
+            builder.AppendLine("Attempt ID: " + AttemptId);
+            builder.AppendLine("Operation outcome: " + OperationOutcome);
+            builder.AppendLine("Effects may have occurred: " + EffectsMayHaveOccurred.ToString());
+            if (RecoveryRequired)
+            {
+                builder.AppendLine("Recovery: required");
+                builder.AppendLine("Inspect command: " + RecoveryInspectCommand);
+            }
             builder.AppendLine("Completed: " + CompletedAt.ToString("u"));
             if (Refused)
             {
@@ -206,6 +295,30 @@ namespace FacMan.WinForms
                 "  \"code\": \"" + JsonEscape(refusalCode) + "\",\r\n" +
                 "  \"reason\": \"" + JsonEscape(refusalReason) + "\",\r\n" +
                 "  \"recoverable\": true\r\n" +
+                "}";
+        }
+
+        private static string StructuredOperationJson(
+            string operationId,
+            string attemptId,
+            string operationOutcome,
+            bool effectsMayHaveOccurred,
+            bool recoveryRequired,
+            string transactionId,
+            string inspectCommand)
+        {
+            return "{\r\n" +
+                "  \"schema\": \"ulk.operation_outcome.v1\",\r\n" +
+                "  \"operation_id\": \"" + JsonEscape(operationId) + "\",\r\n" +
+                "  \"attempt_id\": \"" + JsonEscape(attemptId) + "\",\r\n" +
+                "  \"outcome\": \"" + JsonEscape(operationOutcome) + "\",\r\n" +
+                "  \"effects_may_have_occurred\": " +
+                    (effectsMayHaveOccurred ? "true" : "false") + ",\r\n" +
+                "  \"recovery\": {\r\n" +
+                "    \"required\": " + (recoveryRequired ? "true" : "false") + ",\r\n" +
+                "    \"transaction_id\": \"" + JsonEscape(transactionId) + "\",\r\n" +
+                "    \"inspect_command\": \"" + JsonEscape(inspectCommand) + "\"\r\n" +
+                "  }\r\n" +
                 "}";
         }
 

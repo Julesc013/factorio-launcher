@@ -10,6 +10,7 @@ import unittest
 from pathlib import Path
 
 from native_cli import facman_executable
+from tools import json_contract
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -49,6 +50,49 @@ class MachineTransportTests(unittest.TestCase):
             self.assertEqual(response["command"], "product.inspect")
             self.assertEqual(response["outcome"], "ok")
             self.assertEqual(response["payload"]["product_id"], "factorio")
+
+    def test_v2_round_trip_preserves_durable_operation_identity(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman rpc v2 ") as temporary:
+            request = {
+                "schema": "facman.transport_request.v2",
+                "protocol_version": 2,
+                "request_id": "attempt-machine-v2",
+                "operation_id": "op-machine-v2",
+                "attempt_id": "attempt-machine-v2",
+                "workspace": temporary,
+                "command": "product.inspect",
+                "dry_run": True,
+                "payload": {},
+            }
+            code, response, stderr = self.invoke(request)
+            self.assertEqual(code, 0)
+            self.assertEqual(stderr, "")
+            self.assertEqual(response["schema"], "facman.transport_response.v2")
+            self.assertEqual(response["protocol_version"], 2)
+            self.assertEqual(response["request_id"], request["request_id"])
+            self.assertEqual(
+                response["operation"],
+                {
+                    "schema": "ulk.operation_outcome.v1",
+                    "operation_id": request["operation_id"],
+                    "attempt_id": request["attempt_id"],
+                    "outcome": "completed",
+                    "effects_may_have_occurred": False,
+                    "recovery": {
+                        "required": False,
+                        "transaction_id": "",
+                        "inspect_command": "",
+                    },
+                },
+            )
+            schema = json_contract.load_schema(
+                ROOT
+                / "contracts"
+                / "schema"
+                / "transport"
+                / "transport_response.v2.schema.json"
+            )
+            self.assertEqual(json_contract.validate(response, schema), [])
 
     def test_invalid_protocol_returns_one_machine_envelope(self) -> None:
         code, response, stderr = self.invoke(

@@ -93,7 +93,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "build-and-development-truth",
+            "transport-outcome-semantics",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,15 +101,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
+            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "ULK-OPERATION-OUTCOME-CONTRACT-01",
+            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,8 +141,16 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "remote_source_closed_launch_truth_fail_closed_build_and_development_truth_active_no_play_authority",
+            "remote_source_closed_build_truth_accepted_transport_outcome_semantics_active_no_play_authority",
             data["product"]["truth_scope"],
+        )
+        self.assertEqual(
+            "ulk.operation_outcome.v1",
+            data["transport_outcome_semantics"]["operation_contract"],
+        )
+        self.assertEqual(
+            "workspace.recovery.inspect",
+            data["transport_outcome_semantics"]["recovery_inspect_command"],
         )
         self.assertTrue(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
@@ -482,7 +490,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
+            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -620,7 +628,7 @@ class AideCompactionTests(unittest.TestCase):
             reference_extraction["universal_launcher_revision"],
         )
         self.assertEqual(
-            "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         self.assertEqual(
@@ -867,15 +875,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "build-and-development-truth",
+            "transport-outcome-semantics",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+            "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
+            "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -905,7 +913,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]

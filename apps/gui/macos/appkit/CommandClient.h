@@ -60,6 +60,13 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
 @property(nonatomic, copy, readonly) NSString *refusalCode;
 @property(nonatomic, copy, readonly) NSString *refusalReason;
 @property(nonatomic, copy, readonly) NSString *outcome;
+@property(nonatomic, copy, readonly) NSString *operationId;
+@property(nonatomic, copy, readonly) NSString *attemptId;
+@property(nonatomic, copy, readonly) NSString *operationOutcome;
+@property(nonatomic, assign, readonly) BOOL effectsMayHaveOccurred;
+@property(nonatomic, assign, readonly) BOOL recoveryRequired;
+@property(nonatomic, copy, readonly) NSString *recoveryTransactionId;
+@property(nonatomic, copy, readonly) NSString *recoveryInspectCommand;
 
 - (instancetype)initWithCommandId:(NSString *)commandId
                         backendId:(NSString *)backendId
@@ -69,12 +76,28 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
                           refused:(BOOL)refused
                       refusalCode:(NSString *)refusalCode
                     refusalReason:(NSString *)refusalReason
-                          outcome:(NSString *)outcome;
+                          outcome:(NSString *)outcome
+                      operationId:(NSString *)operationId
+                        attemptId:(NSString *)attemptId
+                 operationOutcome:(NSString *)operationOutcome
+           effectsMayHaveOccurred:(BOOL)effectsMayHaveOccurred
+                 recoveryRequired:(BOOL)recoveryRequired
+            recoveryTransactionId:(NSString *)recoveryTransactionId
+           recoveryInspectCommand:(NSString *)recoveryInspectCommand;
 
 + (instancetype)refusalWithCommandId:(NSString *)commandId
                             backendId:(NSString *)backendId
                          refusalCode:(NSString *)refusalCode
                        refusalReason:(NSString *)refusalReason;
+
++ (instancetype)outcomeUnknownWithCommandId:(NSString *)commandId
+                                  backendId:(NSString *)backendId
+                                operationId:(NSString *)operationId
+                                  attemptId:(NSString *)attemptId
+                                  errorCode:(NSString *)errorCode
+                                errorReason:(NSString *)errorReason;
+
+- (instancetype)cancellationRequestedButCompleted;
 
 - (NSString *)displayText;
 

@@ -200,6 +200,7 @@ def collect() -> dict[str, Any]:
         "safe_beta": status["safe_beta"],
         "execution": status["execution"],
         "build_and_development_truth": status["build_and_development_truth"],
+        "transport_outcome_semantics": status["transport_outcome_semantics"],
         "release": status["release"],
         "validation": status["validation"],
         "current_revisions": {
@@ -256,6 +257,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
         capabilities.setdefault(str(capability["status"]), []).append(str(capability["id"]))
     queue = data["queue"]
     build_truth = data["build_and_development_truth"]
+    transport = data["transport_outcome_semantics"]
     mutable = [
         record["id"]
         for record in queue["records"]
@@ -292,6 +294,13 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"release = {toml_string(data['release']['status'])}",
         f"release_authenticity = {toml_string(data['release']['authenticity'])}",
         f"safe_beta = {str(bool(data['safe_beta'])).lower()}",
+        "",
+        "[transport]",
+        f"operation_contract = {toml_string(transport['operation_contract'])}",
+        f"request_contract = {toml_string(transport['request_contract'])}",
+        f"response_contract = {toml_string(transport['response_contract'])}",
+        f"recovery_inspect_command = {toml_string(transport['recovery_inspect_command'])}",
+        f"status = {toml_string(transport['status'])}",
         "",
         "[capabilities]",
         *toml_array_lines("available", sorted(capabilities.get("available", []))),
@@ -1059,6 +1068,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "current_gate_status": "pre_revalidation_repairs_in_progress",
         },
+        "transport_outcome_semantics": {
+            "checkpoint": "transport-outcome-semantics",
+            "active": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+            "last_closed": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+            "next": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "phase_status": "active",
+            "safety": "remote_source_closed_launch_truth_fail_closed_no_play_authority",
+            "execution_reason": "pre_revalidation_build_and_operation_semantics_repairs_in_progress_no_play_authority",
+            "truth_scope": "remote_source_closed_build_truth_accepted_transport_outcome_semantics_active_no_play_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "pre_revalidation_repairs_in_progress",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1124,9 +1146,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("readiness dimensions must remain explicit and unpromoted")
     build_truth = status.get("build_and_development_truth", {})
     expected_build_truth = {
-        "status": "local_promotion_matrix_pass",
+        "status": "accepted_hosted_promotion_matrix_pass",
         "work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
         "validated_parent_revision": "31264a99b428c2d34d9f21a39f0878b1eb75775a",
+        "implementation_revision": "95c73abaed291c4d19f35ee8bd1cb300061593b8",
+        "hosted_repair_revision": "10de464367919831e6c2cf4458e1157d405b035b",
+        "dev_integration_revision": "3c4fb175272f3d7b160ab87f32b632985ea65d39",
         "runtime_identity": "exact_git_head_plus_workspace_pins_and_source_dirty",
         "runtime_identity_read_only_probe": "pass",
         "external_task_root": "pass_local_app_data_not_source_or_windows_temp",
@@ -1141,7 +1166,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "unsupported_obligation_skips": 2,
         "strict_validation": "pass",
         "aide_validation": "pass",
-        "hosted_validation": "pending_exact_head",
+        "hosted_validation": "pass_linux_windows_macos_coverage_code_security",
         "factorio_execution": False,
         "permit_issuance": False,
         "authority_promotion": False,
@@ -1150,6 +1175,47 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append(
             "build/development truth must bind the exact local promotion matrix "
             "without runtime authority"
+        )
+    transport = status.get("transport_outcome_semantics", {})
+    expected_transport = {
+        "status": "local_promotion_matrix_pass_pending_hosted",
+        "work_unit": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+        "universal_launcher_provider_revision": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+        "universal_launcher_main_revision": "7f4312faf2f1ac2856a51393fef0ec49fc276a78",
+        "operation_contract": "ulk.operation_outcome.v1",
+        "request_contract": "facman.transport_request.v2",
+        "response_contract": "facman.transport_response.v2",
+        "outcomes": [
+            "cancelled_before_dispatch",
+            "refused_before_effects",
+            "completed",
+            "cancellation_requested_but_completed",
+            "recovery_required",
+            "outcome_unknown",
+        ],
+        "recovery_inspect_command": "workspace.recovery.inspect",
+        "direct_transport": "implementation_active",
+        "cli_process_transport": "implementation_active",
+        "winforms_process_transport": "implementation_active",
+        "appkit_process_transport": "implementation_active_compile_only",
+        "daemon_transport": "unavailable_with_pre_effect_refusal",
+        "local_msvc_release_native_tests": 54,
+        "local_python_tests": 517,
+        "required_obligation_skips": 0,
+        "unknown_obligation_skips": 0,
+        "optional_obligation_skips": 2,
+        "unsupported_obligation_skips": 2,
+        "strict_validation": "pass",
+        "aide_validation": "pass",
+        "hosted_validation": "pending",
+        "factorio_execution": False,
+        "permit_issuance": False,
+        "authority_promotion": False,
+    }
+    if transport != expected_transport:
+        problems.append(
+            "transport outcome semantics must bind the published ULK contract "
+            "without promoting runtime authority"
         )
     foundation = status.get("execution_foundation", {})
     if foundation != {

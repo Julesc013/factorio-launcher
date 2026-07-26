@@ -14,7 +14,7 @@ pin_kind = "historical_proof_baseline"
 [[component]]
 id = "universal_launcher"
 source = "universal-launcher"
-pin = "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d"
+pin = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
 path = "../universal-launcher"
 remote = "https://github.com/Julesc013/universal-launcher.git"
 required_ref = "refs/heads/main"

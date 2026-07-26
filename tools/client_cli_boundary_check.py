@@ -52,7 +52,15 @@ def validate() -> list[str]:
     for source_name, source, anchors in (
         ("model", model_source, ("client_response_invalid", "client_transport_missing")),
         ("direct", direct_source, ("fl_command_client_execute_cabi_v1(", "waiting_for_direct_transport")),
-        ("process", process_transport, ("cli_process_timeout", "facman.transport_request.v1")),
+        (
+            "process",
+            process_transport,
+            (
+                "cli_process_timeout",
+                "facman.transport_request.v2",
+                "OperationOutcome::outcome_unknown",
+            ),
+        ),
         ("daemon", daemon_source, ("daemon_transport_unavailable",)),
     ):
         for anchor in anchors:
@@ -63,6 +71,13 @@ def validate() -> list[str]:
             problems.append(f"CLI process transport is missing safety anchor: {anchor}")
     if "facman::platform::supervise_process(process)" not in process_transport:
         problems.append("CLI process transport does not consume the shared platform supervisor")
+    for anchor in (
+        "ulk_operation_result_validate_v1",
+        "cancellation_requested_but_completed",
+        "workspace.recovery.inspect",
+    ):
+        if anchor not in model_source:
+            problems.append(f"client operation model is missing anchor: {anchor}")
 
     if "facman::client::FacManClient" not in cli or "call(options," not in cli:
         problems.append("CLI does not dispatch through FacManClient")
