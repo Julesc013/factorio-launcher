@@ -22,6 +22,7 @@ Result: PASS
 - Local GCC warnings-as-errors build compiled every repaired launch-reference
   call site; the later unrelated MinGW-only discovery fixture warning remains
   outside this hosted Linux/macOS failure.
+- Local GCC warnings-as-errors candidate-smoke target: PASS.
 - `python -B tools/strict_check.py`: PASS.
 - `python .aide/scripts/aide_lite.py test`: PASS.
 - `git diff --check`: PASS.

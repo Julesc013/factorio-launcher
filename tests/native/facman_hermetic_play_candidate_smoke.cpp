@@ -211,6 +211,7 @@ const std::vector<std::string> kAutomatedControls = {
     "write_os_global_temporary_directory",
 };
 
+#ifdef _WIN32
 const std::vector<std::string> kInstanceEvidenceIds = {
     "authenticated_source_evidence",
     "coordinator_integrity_medium",
@@ -248,6 +249,7 @@ const std::vector<std::string> kInstanceEvidenceIds = {
     "writable_root_baseline_digest",
     "write_data_identity",
 };
+#endif
 
 permit::ResourceBinding resource(
     std::string kind,
@@ -342,6 +344,7 @@ launch::CandidatePlanInput plan_input(
     return input;
 }
 
+#ifdef _WIN32
 launch::CandidatePlanInput instance_plan_input(
     const launch::FrozenHermeticPlayPolicy& policy,
     const fs::path& workspace)
@@ -424,6 +427,7 @@ launch::CandidatePlanInput instance_plan_input(
     }
     return input;
 }
+#endif
 
 launch::ProtectedComparisonResult protected_unchanged()
 {
@@ -443,6 +447,7 @@ std::vector<launch::CandidateAutomatedCaseResult> automated_passes()
     return result;
 }
 
+#ifdef _WIN32
 launch::ProtectedComparisonResult instance_protected_unchanged()
 {
     launch::ProtectedComparisonResult result;
@@ -454,6 +459,7 @@ launch::ProtectedComparisonResult instance_protected_unchanged()
     }
     return result;
 }
+#endif
 
 std::vector<launch::CandidateAutomatedCaseResult>
 instance_automated_passes()
