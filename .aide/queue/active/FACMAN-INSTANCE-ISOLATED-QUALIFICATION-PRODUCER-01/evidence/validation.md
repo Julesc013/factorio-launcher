@@ -21,5 +21,11 @@ The fresh native build used MSVC `19.51.36248.0`, Windows SDK
 temporary directory.
 
 The required-package wrapper correctly refused to operate while the source
-checkout was dirty before commit. Its clean exact-head proof remains a hosted
-review obligation; that refusal was not bypassed.
+checkout was dirty before commit; that refusal was not bypassed. After the
+implementation was committed as
+`7a32f5316ac08b48c648499c0104c958f7344691`, CMake regenerated the exact
+source identity, rebuilt the graph, and the clean-checkout Windows package
+proof passed 14 of 14 required obligations with zero skips.
+
+The final documentation-only evidence commit and hosted exact-branch matrix
+remain review obligations.
