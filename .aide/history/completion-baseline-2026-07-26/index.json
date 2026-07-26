@@ -16,6 +16,16 @@
     },
     {
       "files": {
+        "evidence/changed-files.md": "0a82f5d98140b5f62088b05b400479e659dc21ef1a6ba3ed8082362cdb39811a",
+        "evidence/remaining-risks.md": "0969157a47c30da1085cc8d4137793b141f7cae08cf502869a2e7a47c03dd81d",
+        "evidence/validation.md": "4eacd43e4ef4049429fb6e1c03f433d7f15397a87540465b00b0671f81a589b5",
+        "status.yaml": "2855034f0d296fe834dd8f1bdc1ec9b4a90bc17e12179cff92e02fefd7118375",
+        "task.yaml": "fbe29c1cede66a0b184728f9684671346a1a7ccac54772dc0cfa19cfa2fc5401"
+      },
+      "task_id": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01"
+    },
+    {
+      "files": {
         "evidence/changed-files.md": "c67f6fe513cee7e1b136bd6a32f465a889bdb05ca3b59b3cf27f8623c829c5a1",
         "evidence/remaining-risks.md": "252bface4f44e0749440e60f92ffa272f62329aa81b8a2de350a392606f3b911",
         "evidence/validation.md": "5a12baa22d9d808e8414abbd88de35a4d36de8a021578deca61c167c94baeff6",

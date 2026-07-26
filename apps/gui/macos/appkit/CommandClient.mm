@@ -63,6 +63,13 @@ static NSString *FacManJsonEscape(NSString *value);
                       refusalCode:(NSString *)refusalCode
                     refusalReason:(NSString *)refusalReason
                           outcome:(NSString *)outcome
+                      operationId:(NSString *)operationId
+                        attemptId:(NSString *)attemptId
+                 operationOutcome:(NSString *)operationOutcome
+           effectsMayHaveOccurred:(BOOL)effectsMayHaveOccurred
+                 recoveryRequired:(BOOL)recoveryRequired
+            recoveryTransactionId:(NSString *)recoveryTransactionId
+           recoveryInspectCommand:(NSString *)recoveryInspectCommand
 {
     self = [super init];
     if (self) {
@@ -75,6 +82,13 @@ static NSString *FacManJsonEscape(NSString *value);
         _refusalCode = [refusalCode copy] ?: @"";
         _refusalReason = [refusalReason copy] ?: @"";
         _outcome = [outcome copy] ?: (refused ? @"refused" : @"ok");
+        _operationId = [operationId copy] ?: [NSString stringWithFormat:@"op-%@", [[NSUUID UUID] UUIDString]];
+        _attemptId = [attemptId copy] ?: [NSString stringWithFormat:@"attempt-%@", [[NSUUID UUID] UUIDString]];
+        _operationOutcome = [operationOutcome copy] ?: (refused ? @"refused_before_effects" : @"completed");
+        _effectsMayHaveOccurred = effectsMayHaveOccurred;
+        _recoveryRequired = recoveryRequired;
+        _recoveryTransactionId = [recoveryTransactionId copy] ?: @"";
+        _recoveryInspectCommand = [recoveryInspectCommand copy] ?: @"";
     }
     return self;
 }
@@ -98,7 +112,60 @@ static NSString *FacManJsonEscape(NSString *value);
                                                   refused:YES
                                               refusalCode:refusalCode
                                             refusalReason:refusalReason
-                                                  outcome:@"refused"];
+                                                  outcome:@"refused"
+                                              operationId:nil
+                                                attemptId:nil
+                                         operationOutcome:@"refused_before_effects"
+                                   effectsMayHaveOccurred:NO
+                                         recoveryRequired:NO
+                                    recoveryTransactionId:@""
+                                   recoveryInspectCommand:@""];
+}
+
++ (instancetype)outcomeUnknownWithCommandId:(NSString *)commandId
+                                  backendId:(NSString *)backendId
+                                operationId:(NSString *)operationId
+                                  attemptId:(NSString *)attemptId
+                                  errorCode:(NSString *)errorCode
+                                errorReason:(NSString *)errorReason
+{
+    return [[FacManCommandResult alloc] initWithCommandId:commandId
+                                                backendId:backendId
+                                                 exitCode:1
+                                               stdoutText:@""
+                                               stderrText:@""
+                                                  refused:YES
+                                              refusalCode:errorCode
+                                            refusalReason:errorReason
+                                                  outcome:@"cancelled"
+                                              operationId:operationId
+                                                attemptId:attemptId
+                                         operationOutcome:@"outcome_unknown"
+                                   effectsMayHaveOccurred:YES
+                                         recoveryRequired:YES
+                                    recoveryTransactionId:@""
+                                   recoveryInspectCommand:@"workspace.recovery.inspect"];
+}
+
+- (instancetype)cancellationRequestedButCompleted
+{
+    if (![self.operationOutcome isEqualToString:@"completed"]) return self;
+    return [[FacManCommandResult alloc] initWithCommandId:self.commandId
+                                                backendId:self.backendId
+                                                 exitCode:self.exitCode
+                                               stdoutText:self.stdoutText
+                                               stderrText:self.stderrText
+                                                  refused:self.refused
+                                              refusalCode:self.refusalCode
+                                            refusalReason:self.refusalReason
+                                                  outcome:self.outcome
+                                              operationId:self.operationId
+                                                attemptId:self.attemptId
+                                         operationOutcome:@"cancellation_requested_but_completed"
+                                   effectsMayHaveOccurred:self.effectsMayHaveOccurred
+                                         recoveryRequired:NO
+                                    recoveryTransactionId:@""
+                                   recoveryInspectCommand:@""];
 }
 
 - (NSString *)displayText
@@ -108,6 +175,13 @@ static NSString *FacManJsonEscape(NSString *value);
     [text appendFormat:@"Backend: %@\n", self.backendId];
     [text appendFormat:@"Exit code: %ld\n", (long)self.exitCode];
     [text appendFormat:@"Outcome: %@\n", self.outcome];
+    [text appendFormat:@"Operation ID: %@\n", self.operationId];
+    [text appendFormat:@"Attempt ID: %@\n", self.attemptId];
+    [text appendFormat:@"Operation outcome: %@\n", self.operationOutcome];
+    [text appendFormat:@"Effects may have occurred: %@\n", self.effectsMayHaveOccurred ? @"true" : @"false"];
+    if (self.recoveryRequired) {
+        [text appendFormat:@"Recovery: required\nInspect command: %@\n", self.recoveryInspectCommand];
+    }
     if (self.refused) {
         [text appendFormat:@"Refusal: %@\n", self.refusalCode];
         [text appendFormat:@"Reason: %@\n", self.refusalReason];

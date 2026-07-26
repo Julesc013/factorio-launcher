@@ -138,7 +138,7 @@ def validate_universal_provider(
     prefix = f"{relative(path)} component {component_id}"
     expected = {
         "universal_launcher": {
-            "pin": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+            "pin": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
             "remote": "https://github.com/Julesc013/universal-launcher.git",
             "required_ref": "refs/heads/main",
             "reachability": "required_for_source_closure",

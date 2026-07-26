@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/transport/transport_response.v2.schema.json",
+  "title": "FacMan durable-operation stdio transport response v2",
+  "type": "object",
+  "required": [
+    "schema",
+    "protocol_version",
+    "request_id",
+    "command",
+    "outcome",
+    "payload",
+    "error",
+    "diagnostics",
+    "effects",
+    "operation"
+  ],
+  "properties": {
+    "schema": { "const": "facman.transport_response.v2" },
+    "protocol_version": { "const": 2 },
+    "request_id": { "type": "string" },
+    "command": { "type": "string" },
+    "outcome": {
+      "enum": [
+        "ok",
+        "refused",
+        "invalid_argument",
+        "unavailable",
+        "not_found",
+        "conflict",
+        "cancelled",
+        "timeout",
+        "recovery_required",
+        "internal_error"
+      ]
+    },
+    "payload": { "type": ["object", "array", "string", "number", "boolean", "null"] },
+    "error": { "type": ["object", "null"] },
+    "diagnostics": { "type": "array" },
+    "effects": { "type": "array" },
+    "operation": {
+      "type": "object",
+      "required": [
+        "schema",
+        "operation_id",
+        "attempt_id",
+        "outcome",
+        "effects_may_have_occurred",
+        "recovery"
+      ],
+      "properties": {
+        "schema": { "const": "ulk.operation_outcome.v1" },
+        "operation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        },
+        "attempt_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        },
+        "outcome": {
+          "enum": [
+            "cancelled_before_dispatch",
+            "refused_before_effects",
+            "completed",
+            "cancellation_requested_but_completed",
+            "recovery_required",
+            "outcome_unknown"
+          ]
+        },
+        "effects_may_have_occurred": { "type": "boolean" },
+        "recovery": {
+          "type": "object",
+          "required": ["required", "transaction_id", "inspect_command"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "transaction_id": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^$|^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+            },
+            "inspect_command": { "type": "string", "maxLength": 128 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

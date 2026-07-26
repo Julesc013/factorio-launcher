@@ -8,6 +8,13 @@ when the running framework exposes it, drains stdout and stderr concurrently,
 supports cancellation and a 30-second timeout, terminates timed-out children,
 and decodes structured refusal or error objects. UI event handlers await command
 completion and do not synchronously block the Windows message loop.
+Both desktop transports use machine protocol v2, preserve durable operation and
+attempt identities, and render the shared Universal Launcher operation outcome.
+Post-dispatch cancellation or timeout is never reported as proof of no effect:
+it is `outcome_unknown` with recovery directed to
+`workspace.recovery.inspect`. If cancellation loses a race with a completed
+provider response, the completed response is preserved as
+`cancellation_requested_but_completed`.
 
 AppKit drains both pipes on independent utility queues, observes termination via
 the task termination handler, enforces a bounded timeout, and reports results on

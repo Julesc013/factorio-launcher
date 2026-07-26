@@ -1,0 +1,67 @@
+{
+  "errors": 0,
+  "expected_failures": 0,
+  "failures": 0,
+  "gate_passed": true,
+  "profile": "promotion",
+  "required_skip_limit": 0,
+  "schema": "facman.test_obligation_result.v1",
+  "skip_counts": {
+    "historical_only": 0,
+    "not_applicable": 0,
+    "optional": 7,
+    "required_blocked": 0,
+    "unknown": 0,
+    "unsupported": 2
+  },
+  "skips": [
+    {
+      "classification": "optional",
+      "reason": "optional: WinForms shell has not been built",
+      "test": "setUpClass (tests.package_runtime.test_built_package_artifacts.BuiltWindowsPackageArtifactTests)"
+    },
+    {
+      "classification": "optional",
+      "reason": "optional: functional TUI build is missing: D:\\Projects\\Factorio\\factorio-launcher\\build\\presets\\dev-windows\\Release\\facman-tui.exe",
+      "test": "setUpClass (tests.package_runtime.test_built_package_artifacts.WindowsPortableTuiPackageProofTests)"
+    },
+    {
+      "classification": "optional",
+      "reason": "optional: functional TUI build is not available",
+      "test": "tests.test_end_to_end_user_journey.EndToEndUserJourneyTests.test_complete_non_execution_journey_across_live_transports"
+    },
+    {
+      "classification": "unsupported",
+      "reason": "unsupported: symlink creation is unavailable",
+      "test": "tests.test_gate4c_verdict_preflight.Gate4CVerdictPreflightTests.test_no_follow_audit_refuses_symlink"
+    },
+    {
+      "classification": "unsupported",
+      "reason": "unsupported: symlink creation is unavailable",
+      "test": "tests.test_gate4c_verdict_preflight.Gate4CVerdictPreflightTests.test_source_reparse_path_is_refused"
+    },
+    {
+      "classification": "optional",
+      "reason": "optional: set FACMAN_RUN_R37_FULL_PERFORMANCE=1 for the bounded full-scale corpus",
+      "test": "tests.test_r37_performance.R37PerformanceTests.test_required_bounded_scale_corpus"
+    },
+    {
+      "classification": "optional",
+      "reason": "optional: functional TUI build is not available",
+      "test": "tests.test_tui_product.TuiProductTests.test_catalog_and_empty_unicode_workspace"
+    },
+    {
+      "classification": "optional",
+      "reason": "optional: functional TUI build is not available",
+      "test": "tests.test_tui_product.TuiProductTests.test_generated_guided_forms_plain_mode_and_transport_refusal"
+    },
+    {
+      "classification": "optional",
+      "reason": "optional: functional TUI build is not available",
+      "test": "tests.test_tui_product.TuiProductTests.test_redirected_default_unavailable_and_cancellation"
+    }
+  ],
+  "tests_run": 515,
+  "unexpected_successes": 0,
+  "unknown_skip_limit": 0
+}

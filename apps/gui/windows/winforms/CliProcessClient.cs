@@ -25,6 +25,24 @@ namespace FacMan.WinForms
             string configuredCliPath,
             CancellationToken cancellationToken)
         {
+            string operationId = "op-" + Guid.NewGuid().ToString("N");
+            string attemptId = "attempt-" + Guid.NewGuid().ToString("N");
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new CommandResult(
+                    command.Id,
+                    command.BackendId,
+                    1,
+                    String.Empty,
+                    String.Empty,
+                    true,
+                    "frontend_backend_cancelled",
+                    "The backend command was cancelled before dispatch.",
+                    "cancelled",
+                    operationId,
+                    attemptId,
+                    "cancelled_before_dispatch");
+            }
             string executable = ResolveExecutable(configuredCliPath);
             if (String.IsNullOrWhiteSpace(executable))
             {
@@ -44,9 +62,11 @@ namespace FacMan.WinForms
                     process.Start();
                     JavaScriptSerializer serializer = new JavaScriptSerializer();
                     Dictionary<string, object> request = new Dictionary<string, object>();
-                    request["schema"] = "facman.transport_request.v1";
-                    request["protocol_version"] = 1;
-                    request["request_id"] = Guid.NewGuid().ToString("D");
+                    request["schema"] = "facman.transport_request.v2";
+                    request["protocol_version"] = 2;
+                    request["request_id"] = attemptId;
+                    request["operation_id"] = operationId;
+                    request["attempt_id"] = attemptId;
                     request["workspace"] = String.IsNullOrWhiteSpace(workspace) ? String.Empty : workspace.Trim();
                     request["command"] = command.BackendId;
                     request["dry_run"] = command.DryRunDefault;
@@ -54,7 +74,7 @@ namespace FacMan.WinForms
                     byte[] requestBytes = new UTF8Encoding(false).GetBytes(serializer.Serialize(request));
                     Stream standardInput = process.StandardInput.BaseStream;
                     await standardInput.WriteAsync(
-                        requestBytes, 0, requestBytes.Length, cancellationToken).ConfigureAwait(false);
+                        requestBytes, 0, requestBytes.Length, CancellationToken.None).ConfigureAwait(false);
                     standardInput.Close();
                     Task<string> stdoutTask = ReadBoundedAsync(process.StandardOutput, MaximumStdoutCharacters);
                     Task<string> stderrTask = ReadBoundedAsync(process.StandardError, MaximumStderrCharacters);
@@ -63,7 +83,22 @@ namespace FacMan.WinForms
                     Task completed = await Task.WhenAny(exitTask, timeoutTask).ConfigureAwait(false);
                     if (completed != exitTask)
                     {
+                        if (process.HasExited)
+                        {
+                            await exitTask.ConfigureAwait(false);
+                            string completedStdout = await stdoutTask.ConfigureAwait(false);
+                            string completedStderr = await stderrTask.ConfigureAwait(false);
+                            return DecodeResult(
+                                command,
+                                process.ExitCode,
+                                completedStdout,
+                                completedStderr,
+                                operationId,
+                                attemptId)
+                                .CancellationRequestedButCompleted();
+                        }
                         Terminate(process);
+                        await exitTask.ConfigureAwait(false);
                         await Task.WhenAll(stdoutTask, stderrTask).ConfigureAwait(false);
                         string code = cancellationToken.IsCancellationRequested
                             ? "frontend_backend_cancelled"
@@ -71,11 +106,18 @@ namespace FacMan.WinForms
                         string reason = cancellationToken.IsCancellationRequested
                             ? "The backend command was cancelled."
                             : "The backend command did not finish within the WinForms command timeout.";
-                        return CommandResult.Refusal(command.Id, command.BackendId, code, reason);
+                        return CommandResult.OutcomeUnknown(
+                            command.Id,
+                            command.BackendId,
+                            operationId,
+                            attemptId,
+                            code,
+                            reason + " Its effects are unknown; inspect workspace recovery.");
                     }
                     string stdout = await stdoutTask.ConfigureAwait(false);
                     string stderr = await stderrTask.ConfigureAwait(false);
-                    return DecodeResult(command, process.ExitCode, stdout, stderr);
+                    return DecodeResult(
+                        command, process.ExitCode, stdout, stderr, operationId, attemptId);
                 }
             }
             catch (OperationCanceledException)
@@ -124,7 +166,12 @@ namespace FacMan.WinForms
         }
 
         private static CommandResult DecodeResult(
-            CommandDefinition command, int exitCode, string stdout, string stderr)
+            CommandDefinition command,
+            int exitCode,
+            string stdout,
+            string stderr,
+            string requestOperationId,
+            string requestAttemptId)
         {
             string trimmed = (stdout ?? String.Empty).Trim();
             if (!trimmed.StartsWith("{", StringComparison.Ordinal))
@@ -138,6 +185,8 @@ namespace FacMan.WinForms
                 Dictionary<string, object> envelope = serializer.DeserializeObject(trimmed) as Dictionary<string, object>;
                 Dictionary<string, object> refusal = Member(envelope, "refusal");
                 Dictionary<string, object> error = Member(envelope, "error");
+                Dictionary<string, object> operation = Member(envelope, "operation");
+                Dictionary<string, object> recovery = Member(operation, "recovery");
                 Dictionary<string, object> detail = refusal ?? error;
                 bool refused = exitCode != 0 || Text(envelope, "outcome") != "ok" || detail != null;
                 return new CommandResult(
@@ -149,7 +198,14 @@ namespace FacMan.WinForms
                     refused,
                     Text(detail, "code"),
                     Text(detail, detail == refusal ? "reason" : "message"),
-                    Text(envelope, "outcome"));
+                    Text(envelope, "outcome"),
+                    TextOr(operation, "operation_id", requestOperationId),
+                    TextOr(operation, "attempt_id", requestAttemptId),
+                    Text(operation, "outcome"),
+                    Boolean(operation, "effects_may_have_occurred"),
+                    Boolean(recovery, "required"),
+                    Text(recovery, "transaction_id"),
+                    Text(recovery, "inspect_command"));
             }
             catch (Exception ex)
             {
@@ -175,6 +231,20 @@ namespace FacMan.WinForms
             return value != null && value.TryGetValue(key, out member) && member != null
                 ? Convert.ToString(member)
                 : String.Empty;
+        }
+
+        private static string TextOr(
+            Dictionary<string, object> value, string key, string fallback)
+        {
+            string member = Text(value, key);
+            return String.IsNullOrWhiteSpace(member) ? fallback : member;
+        }
+
+        private static bool Boolean(Dictionary<string, object> value, string key)
+        {
+            object member;
+            return value != null && value.TryGetValue(key, out member) &&
+                member is bool && (bool)member;
         }
 
         private static void Terminate(Process process)

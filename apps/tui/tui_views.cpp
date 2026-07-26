@@ -78,6 +78,16 @@ int render_response(
         output << body << '\n';
     } else {
         output << command << "\nOutcome: " << value.outcome << '\n';
+        output << "Operation ID: " << value.operation.operation_id << '\n'
+               << "Attempt ID: " << value.operation.attempt_id << '\n'
+               << "Operation outcome: "
+               << facman::client::operation_outcome_name(value.operation.outcome) << '\n'
+               << "Effects may have occurred: "
+               << (value.operation.effects_may_have_occurred ? "true" : "false") << '\n';
+        if (value.operation.recovery.required) {
+            output << "Recovery: required\nInspect command: "
+                   << value.operation.recovery.inspect_command << '\n';
+        }
         if (!value.error_code.empty()) output << "Reason: [" << value.error_code << "] " << value.error_message << '\n';
         if (!body.empty()) output << "\n" << body << '\n';
     }

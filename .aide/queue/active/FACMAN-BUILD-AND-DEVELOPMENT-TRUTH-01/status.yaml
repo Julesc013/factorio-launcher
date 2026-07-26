@@ -1,9 +1,0 @@
-schema_version: aide.queue-status.v1
-task_id: FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01
-status: active
-lifecycle_state: active
-planning_state: active
-created_at: 2026-07-26T12:42:41Z
-result: LOCAL_PASS_HOSTED_PENDING
-evidence_path: .aide/queue/active/FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01/evidence/
-active_at: 2026-07-26T12:42:42Z

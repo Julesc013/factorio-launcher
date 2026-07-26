@@ -7,13 +7,12 @@
 
 namespace facman::client {
 
-facman::core::Result<CommandResponse> DaemonTransport::execute(const CommandRequest&)
+facman::core::Result<CommandResponse> DaemonTransport::execute(const CommandRequest& request)
 {
-    return detail::failure(
-        "daemon_transport_unavailable",
-        "Daemon transport is not implemented",
-        {},
-        facman::core::OutcomeKind::unavailable);
+    return detail::terminal_response(
+        request, 1, facman::core::OutcomeKind::unavailable, "unavailable",
+        "daemon_transport_unavailable", "Daemon transport is not implemented",
+        OperationOutcome::refused_before_effects);
 }
 
 } // namespace facman::client

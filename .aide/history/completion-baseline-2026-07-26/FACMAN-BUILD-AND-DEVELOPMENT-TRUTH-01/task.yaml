@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01
 title: Make build and development truth explicit
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T12:42:41Z
 owner: unassigned
 objective: >
@@ -103,3 +103,9 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-26T12:42:42Z
+verified_at: 2026-07-26T15:00:30Z
+implementation_state: implemented
+result: pass
+reviewed_at: 2026-07-26T15:00:31Z
+closed_at: 2026-07-26T15:00:32Z
+archived_at: 2026-07-26T15:00:33Z

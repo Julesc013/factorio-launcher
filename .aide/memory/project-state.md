@@ -6,15 +6,15 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Current product truth
 
-- phase: `build_and_development_truth` / `active`;
+- phase: `transport_outcome_semantics` / `active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `build-and-development-truth`;
-- active WorkUnit: `FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01`;
-- next WorkUnit: `ULK-OPERATION-OUTCOME-CONTRACT-01`;
+- checkpoint: `transport-outcome-semantics`;
+- active WorkUnit: `FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01`;
+- next WorkUnit: `FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `remote_source_closed_launch_truth_fail_closed_build_and_development_truth_active_no_play_authority`; canonical main promotion: `true`; local counts promoted: `true`;
+- truth scope: `remote_source_closed_build_truth_accepted_transport_outcome_semantics_active_no_play_authority`; canonical main promotion: `true`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -88,10 +88,10 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01`;
+- last closed WorkUnit: `FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
-- historical Steam-backed H1 candidate/result: `31264a99b428c2d34d9f21a39f0878b1eb75775a` / `Fail`;
-- Universal Launcher / Setup pins: `fbb0cc87a14e8e4b26d74088a791dc83ebd4337d` / `3f8489275077347c2918f3bb03614ec6431362ff`;
+- historical Steam-backed H1 candidate/result: `3c4fb175272f3d7b160ab87f32b632985ea65d39` / `Fail`;
+- Universal Launcher / Setup pins: `7fc25340623131ba86c08dca4fb8a43b18a4520d` / `3f8489275077347c2918f3bb03614ec6431362ff`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 
@@ -102,7 +102,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `296` / `242`;
+- schemas / refusal codes: `298` / `242`;
 - command catalog digest: `4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
@@ -131,7 +131,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.
 - Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.
 - The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; its proof binds the previous Universal Launcher revision and requires revalidation after the client transport extraction.
-- Operation cancellation and timeout outcomes still need one durable cross-transport contract before candidate qualification.
+- The published operation-outcome contract is being integrated across FacMan direct, process and desktop transports before candidate qualification.
 - The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.

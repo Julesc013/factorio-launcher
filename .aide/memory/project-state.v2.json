@@ -1,8 +1,9 @@
 {
-  "active_work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+  "active_work_unit": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
+    "dev_integration_revision": "3c4fb175272f3d7b160ab87f32b632985ea65d39",
     "external_task_root": "pass_local_app_data_not_source_or_windows_temp",
     "factorio_execution": false,
     "fast_native_tui_off_tests": 18,
@@ -10,13 +11,15 @@
     "fast_python_tests": 31,
     "full_native_tests": 53,
     "full_python_tests": 514,
-    "hosted_validation": "pending_exact_head",
+    "hosted_repair_revision": "10de464367919831e6c2cf4458e1157d405b035b",
+    "hosted_validation": "pass_linux_windows_macos_coverage_code_security",
+    "implementation_revision": "95c73abaed291c4d19f35ee8bd1cb300061593b8",
     "optional_obligation_skips": 2,
     "permit_issuance": false,
     "required_obligation_skips": 0,
     "runtime_identity": "exact_git_head_plus_workspace_pins_and_source_dirty",
     "runtime_identity_read_only_probe": "pass",
-    "status": "local_promotion_matrix_pass",
+    "status": "accepted_hosted_promotion_matrix_pass",
     "strict_validation": "pass",
     "unknown_obligation_skips": 0,
     "unsupported_obligation_skips": 2,
@@ -465,7 +468,7 @@
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 296
+    "schemas": 298
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -473,11 +476,11 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "build-and-development-truth",
+  "current_checkpoint": "transport-outcome-semantics",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
-    "factorio_launcher": "31264a99b428c2d34d9f21a39f0878b1eb75775a",
-    "universal_launcher": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+    "factorio_launcher": "3c4fb175272f3d7b160ab87f32b632985ea65d39",
+    "universal_launcher": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
@@ -1226,12 +1229,12 @@
     "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
     "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
     "The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; its proof binds the previous Universal Launcher revision and requires revalidation after the client transport extraction.",
-    "Operation cancellation and timeout outcomes still need one durable cross-transport contract before candidate qualification.",
+    "The published operation-outcome contract is being integrated across FacMan direct, process and desktop transports before candidate qualification.",
     "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
-  "last_closed_work_unit": "FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01",
+  "last_closed_work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2130,17 +2133,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
+    "current_work_unit": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "ULK-OPERATION-OUTCOME-CONTRACT-01",
-    "phase": "build_and_development_truth",
+    "next_work_unit": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+    "phase": "transport_outcome_semantics",
     "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "remote_source_closed_launch_truth_fail_closed_build_and_development_truth_active_no_play_authority"
+    "truth_scope": "remote_source_closed_build_truth_accepted_transport_outcome_semantics_active_no_play_authority"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -2151,7 +2154,7 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+      "revision": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
       "source": "universal-launcher"
     },
     "universal_setup": {
@@ -2173,7 +2176,7 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 58,
+    "archived_task_count": 59,
     "counts": {
       "active": 1,
       "blocked": 2,
@@ -2182,16 +2185,16 @@
     },
     "records": [
       {
-        "id": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01",
-        "lifecycle_state": "active",
-        "queue": "active",
-        "status": "active"
-      },
-      {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
@@ -2246,6 +2249,41 @@
   },
   "safe_beta": false,
   "schema": "facman.project_state.v2",
+  "transport_outcome_semantics": {
+    "aide_validation": "pass",
+    "appkit_process_transport": "implementation_active_compile_only",
+    "authority_promotion": false,
+    "cli_process_transport": "implementation_active",
+    "daemon_transport": "unavailable_with_pre_effect_refusal",
+    "direct_transport": "implementation_active",
+    "factorio_execution": false,
+    "hosted_validation": "pending",
+    "local_msvc_release_native_tests": 53,
+    "local_python_tests": 515,
+    "operation_contract": "ulk.operation_outcome.v1",
+    "optional_obligation_skips": 7,
+    "outcomes": [
+      "cancelled_before_dispatch",
+      "refused_before_effects",
+      "completed",
+      "cancellation_requested_but_completed",
+      "recovery_required",
+      "outcome_unknown"
+    ],
+    "permit_issuance": false,
+    "recovery_inspect_command": "workspace.recovery.inspect",
+    "request_contract": "facman.transport_request.v2",
+    "required_obligation_skips": 0,
+    "response_contract": "facman.transport_response.v2",
+    "status": "local_promotion_matrix_pass_pending_hosted",
+    "strict_validation": "pass",
+    "universal_launcher_main_revision": "7f4312faf2f1ac2856a51393fef0ec49fc276a78",
+    "universal_launcher_provider_revision": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+    "unknown_obligation_skips": 0,
+    "unsupported_obligation_skips": 2,
+    "winforms_process_transport": "implementation_active",
+    "work_unit": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01"
+  },
   "truth_boundaries": [
     "AIDE is development governance only and never a product dependency.",
     "Focused affected tests do not replace the full promotion matrix.",

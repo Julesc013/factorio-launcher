@@ -14,7 +14,9 @@ static FacManCommandResult *FacManDecodeResult(
     FacManCommandDefinition *command,
     NSInteger exitCode,
     NSString *stdoutText,
-    NSString *stderrText);
+    NSString *stderrText,
+    NSString *requestOperationId,
+    NSString *requestAttemptId);
 
 @interface FacManCliProcessClient ()
 @property(nonatomic, strong) NSTask *activeTask;
@@ -58,6 +60,8 @@ static FacManCommandResult *FacManDecodeResult(
 
     NSString *trimmedWorkspace = [workspace stringByTrimmingCharactersInSet:
         [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *operationId = [NSString stringWithFormat:@"op-%@", [[NSUUID UUID] UUIDString]];
+    NSString *attemptId = [NSString stringWithFormat:@"attempt-%@", [[NSUUID UUID] UUIDString]];
 
     @try {
         NSTask *task = [[NSTask alloc] init];
@@ -92,9 +96,11 @@ static FacManCommandResult *FacManDecodeResult(
         [task launch];
         @synchronized(self) { self.activeTask = task; }
         NSDictionary *request = @{
-            @"schema": @"facman.transport_request.v1",
-            @"protocol_version": @1,
-            @"request_id": [[NSUUID UUID] UUIDString],
+            @"schema": @"facman.transport_request.v2",
+            @"protocol_version": @2,
+            @"request_id": attemptId,
+            @"operation_id": operationId,
+            @"attempt_id": attemptId,
             @"workspace": trimmedWorkspace ?: @"",
             @"command": command.backendId,
             @"dry_run": @(command.dryRunDefault),
@@ -122,17 +128,32 @@ static FacManCommandResult *FacManDecodeResult(
                 if (self.activeTask == task) self.activeTask = nil;
             }
             if (cancelled) {
-                completion([FacManCommandResult refusalWithCommandId:command.commandId
-                                                           backendId:command.backendId
-                                                        refusalCode:@"frontend_backend_cancelled"
-                                                      refusalReason:@"The backend command was cancelled."]);
+                FacManCommandResult *decoded = FacManDecodeResult(
+                    command,
+                    [task terminationStatus],
+                    FacManPipeText(stdoutData),
+                    FacManPipeText(stderrData),
+                    operationId,
+                    attemptId);
+                if ([decoded.operationOutcome isEqualToString:@"completed"]) {
+                    completion([decoded cancellationRequestedButCompleted]);
+                } else {
+                    completion([FacManCommandResult outcomeUnknownWithCommandId:command.commandId
+                                                                      backendId:command.backendId
+                                                                    operationId:operationId
+                                                                      attemptId:attemptId
+                                                                      errorCode:@"frontend_backend_cancelled"
+                                                                    errorReason:@"The backend command was cancelled after dispatch; effects are unknown. Inspect workspace recovery."]);
+                }
                 return;
             }
             if (timedOut) {
-                completion([FacManCommandResult refusalWithCommandId:command.commandId
-                                                           backendId:command.backendId
-                                                        refusalCode:@"frontend_backend_timeout"
-                                                      refusalReason:@"The backend command exceeded the AppKit command timeout and was terminated."]);
+                completion([FacManCommandResult outcomeUnknownWithCommandId:command.commandId
+                                                                  backendId:command.backendId
+                                                                operationId:operationId
+                                                                  attemptId:attemptId
+                                                                  errorCode:@"frontend_backend_timeout"
+                                                                errorReason:@"The backend command exceeded the AppKit timeout after dispatch; effects are unknown. Inspect workspace recovery."]);
                 return;
             }
             if (stdoutExceeded || stderrExceeded) {
@@ -146,7 +167,9 @@ static FacManCommandResult *FacManDecodeResult(
                 command,
                 [task terminationStatus],
                 FacManPipeText(stdoutData),
-                FacManPipeText(stderrData)));
+                FacManPipeText(stderrData),
+                operationId,
+                attemptId));
         });
     } @catch (NSException *exception) {
         completion([FacManCommandResult refusalWithCommandId:command.commandId
@@ -205,12 +228,22 @@ static FacManCommandResult *FacManDecodeResult(
     FacManCommandDefinition *command,
     NSInteger exitCode,
     NSString *stdoutText,
-    NSString *stderrText)
+    NSString *stderrText,
+    NSString *requestOperationId,
+    NSString *requestAttemptId)
 {
     NSData *data = [stdoutText dataUsingEncoding:NSUTF8StringEncoding];
     NSDictionary *document = data == nil ? nil : [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
     NSDictionary *error = [[document objectForKey:@"error"] isKindOfClass:[NSDictionary class]]
         ? [document objectForKey:@"error"] : nil;
+    NSDictionary *operation = [[document objectForKey:@"operation"] isKindOfClass:[NSDictionary class]]
+        ? [document objectForKey:@"operation"] : nil;
+    NSDictionary *recovery = [[operation objectForKey:@"recovery"] isKindOfClass:[NSDictionary class]]
+        ? [operation objectForKey:@"recovery"] : nil;
+    NSString *operationId = FacManDictionaryText(operation, @"operation_id");
+    NSString *attemptId = FacManDictionaryText(operation, @"attempt_id");
+    if ([operationId length] == 0) operationId = requestOperationId;
+    if ([attemptId length] == 0) attemptId = requestAttemptId;
     BOOL refused = exitCode != 0 || ![[document objectForKey:@"outcome"] isEqual:@"ok"] || error != nil;
     return [[FacManCommandResult alloc] initWithCommandId:command.commandId
                                                 backendId:command.backendId
@@ -220,5 +253,12 @@ static FacManCommandResult *FacManDecodeResult(
                                                   refused:refused
                                                refusalCode:FacManDictionaryText(error, @"code")
                                              refusalReason:FacManDictionaryText(error, @"message")
-                                                   outcome:FacManDictionaryText(document, @"outcome")];
+                                                   outcome:FacManDictionaryText(document, @"outcome")
+                                               operationId:operationId
+                                                 attemptId:attemptId
+                                          operationOutcome:FacManDictionaryText(operation, @"outcome")
+                                    effectsMayHaveOccurred:[[operation objectForKey:@"effects_may_have_occurred"] boolValue]
+                                          recoveryRequired:[[recovery objectForKey:@"required"] boolValue]
+                                     recoveryTransactionId:FacManDictionaryText(recovery, @"transaction_id")
+                                    recoveryInspectCommand:FacManDictionaryText(recovery, @"inspect_command")];
 }

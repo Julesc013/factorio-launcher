@@ -3,18 +3,18 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
-  - id: FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01
-    status: active
-    lifecycle_state: active
-    title: Make build and development truth explicit
-    task: .aide/queue/active/FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01/evidence
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
     status: blocked
     lifecycle_state: blocked
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
+  - id: FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01
+    status: active
+    lifecycle_state: active
+    title: Make operation outcomes durable and transport-consistent
+    task: .aide/queue/active/FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked

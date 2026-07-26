@@ -54,14 +54,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `build_and_development_truth`. **Active WorkUnit:** `FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01`. **Next:** `ULK-OPERATION-OUTCOME-CONTRACT-01`.
+**Phase:** `transport_outcome_semantics`. **Active WorkUnit:** `FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01`. **Next:** `FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 296 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 298 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `pre_revalidation_build_and_operation_semantics_repairs_in_progress_no_play_authority`; no real-play gate has passed.
