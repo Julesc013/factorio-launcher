@@ -1,0 +1,41 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
+title: Qualify the exact accepted instance-isolated harness
+status: planned
+lifecycle_state: planned
+planning_state: planned
+created_at: 2026-07-26T20:12:43Z
+owner: unassigned
+objective: >
+  Reconstruct the exact post-producer three-repository source set from empty
+  no-local remote clones, run the complete promotion matrix, hash-close the
+  exact candidate and harness artifacts, and create the immutable
+  instance-isolated qualification binding without executing Factorio.
+allowed_paths:
+  - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/**
+  - .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/**
+  - .aide/queue/index.yaml
+  - docs/architecture/instance-isolated-verdict-harness.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/**
+  - runtime/**
+  - apps/**
+architecture_invariants:
+  - all three sources are empty no-local clones of declared HTTPS remotes
+  - exact detached pins remain clean and reachable from required canonical refs
+  - the complete build test package strict project-state and AIDE matrix passes
+  - exact candidate harness CLI cache Factorio and Instance identities are hash-closed
+  - no prior observer baseline permit packet verdict or human evidence is reused
+  - no Factorio process WPR permit verdict route or authority is produced
+depends_on:
+  - FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - remote-only source closure passed
+  - exact artifact binding produced
+  - immutable qualification binding produced and reloaded
+  - accepted policy digests remain exact
+  - no required obligation was skipped
+  - structured commit check passes

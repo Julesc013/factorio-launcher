@@ -16,11 +16,23 @@ items:
     task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/evidence
   - id: FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01
-    status: active
-    lifecycle_state: active
+    status: verified
+    lifecycle_state: verified
     title: Add an exact instance-isolated operator verdict harness
     task: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/task.yaml
     evidence: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/evidence
+  - id: FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01
+    status: active
+    lifecycle_state: active
+    title: Produce exact instance-isolated candidate qualification bindings
+    task: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/evidence
+  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
+    status: planned
+    lifecycle_state: planned
+    title: Qualify the exact accepted instance-isolated harness
+    task: .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/task.yaml
+    evidence: .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/evidence
   - id: FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01
     status: verified
     lifecycle_state: verified

@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from argparse import Namespace
 from pathlib import Path
+from unittest.mock import patch
 
 from tools import instance_isolated_verdict_coordinator as COORDINATOR
 from tools import gate4c_verdict_preflight as PREFLIGHT
@@ -210,6 +211,113 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             self.assertEqual(result["plan_digest"], "e" * 64)
             self.assertFalse(approval["permit_issued"])
             self.assertFalse(approval["process_started"])
+
+    def test_stage_reuses_only_an_exact_prequalified_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / ROUTE.work_unit
+            workspace = task_root / "workspace"
+            source_member = (
+                task_root
+                / "source"
+                / "portable-package-inspection"
+                / "factorio.exe"
+            )
+            workspace.mkdir(parents=True)
+            source_member.parent.mkdir(parents=True)
+            source_member.write_bytes(b"factorio")
+            candidate_build = root / "build"
+            candidate_build.mkdir()
+            facman = candidate_build / "facman.exe"
+            facman.write_bytes(b"facman")
+            factorio = root / "factorio.exe"
+            factorio.write_bytes(b"factorio")
+            source_artifact = root / "factorio.zip"
+            source_artifact.write_bytes(b"source")
+            repositories = [root / name for name in ("repo", "launcher", "setup")]
+            for repository in repositories:
+                repository.mkdir()
+            qualification_path = root / "qualification.json"
+            qualification_path.write_text(
+                json.dumps(qualification_value()),
+                encoding="utf-8",
+            )
+
+            def copy_artifacts(
+                _source: Path,
+                destination: Path,
+                _qualification: object,
+            ):
+                destination.mkdir(parents=True)
+                paths = {}
+                records = []
+                for logical_name, name in (
+                    ("facman", "facman.exe"),
+                    (
+                        "candidate_smoke",
+                        "facman_hermetic_play_candidate_smoke.exe",
+                    ),
+                    (
+                        "verdict_harness",
+                        "facman_gate4c_verdict_harness.exe",
+                    ),
+                    ("cmake_cache", "CMakeCache.txt"),
+                ):
+                    path = destination / name
+                    path.write_bytes(logical_name.encode("utf-8"))
+                    paths[logical_name] = path
+                    records.append(
+                        {
+                            "name": name,
+                            "bytes": path.stat().st_size,
+                            "sha256": PREFLIGHT.sha256_file(path),
+                            "logical_name": logical_name,
+                        }
+                    )
+                return records, paths
+
+            with (
+                patch.object(
+                    COORDINATOR,
+                    "_qualified_source_paths",
+                    return_value={"facman": facman},
+                ),
+                patch.object(COORDINATOR, "_exact_repository_inputs"),
+                patch.object(
+                    COORDINATOR,
+                    "_validate_staged_candidate",
+                ) as validate,
+                patch.object(
+                    COORDINATOR,
+                    "_copy_qualified_artifacts",
+                    side_effect=copy_artifacts,
+                ),
+                patch.object(
+                    COORDINATOR,
+                    "_extract_authenticated_executable",
+                ) as extract,
+                patch.object(COORDINATOR, "_stage_workspace") as create_workspace,
+            ):
+                result = COORDINATOR.stage(
+                    Namespace(
+                        task_root=task_root,
+                        candidate_build=candidate_build,
+                        qualification_binding=qualification_path,
+                        repository_root=repositories[0],
+                        launcher_repository=repositories[1],
+                        setup_repository=repositories[2],
+                        factorio_executable=factorio,
+                        source_artifact=source_artifact,
+                        first_operation_id=ROUTE.operation_prefix + "launch1",
+                        second_operation_id=ROUTE.operation_prefix + "launch2",
+                    )
+                )
+
+            validate.assert_called_once()
+            extract.assert_not_called()
+            create_workspace.assert_not_called()
+            self.assertEqual(result["workspace"], str(workspace))
+            self.assertTrue(Path(result["config"]).is_file())
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Validation
 
-Status: LOCAL PASS; HOSTED REVIEW PENDING.
+Status: PASS.
 
 This WorkUnit implements and synthetically validates evidence-only operator
 tooling. It does not issue a permit, start Factorio, capture WPR evidence,
@@ -25,3 +25,8 @@ permit issuance, human verdict, accepted route or authority promotion occurred.
 
 The supported raw Python suite was repeated after the full native graph was
 present and passed.
+
+GitHub PR 82 passed the complete duplicated push and pull-request validation
+matrix and merged the exact reviewed head
+`dc8e289079b862391520c1d031d8224827c0863d` into `dev` as
+`be9bf23f9480a4fdafe3a6ad91528d28081e0c54`.

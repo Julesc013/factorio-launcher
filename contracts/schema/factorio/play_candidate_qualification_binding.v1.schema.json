@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.play_candidate_qualification_binding.v1",
+  "title": "FacMan exact Play candidate qualification binding",
+  "type": "object",
+  "required": [
+    "schema",
+    "canonicalization_version",
+    "route_id",
+    "work_unit",
+    "source_binding",
+    "artifacts",
+    "factorio",
+    "instance",
+    "qualification_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "facman.play_candidate_qualification_binding.v1"
+    },
+    "canonicalization_version": {
+      "const": "facman.sorted-json.v1"
+    },
+    "route_id": {
+      "const": "windows-instance-isolated-revalidation"
+    },
+    "work_unit": {
+      "const": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01"
+    },
+    "source_binding": {
+      "type": "object",
+      "required": [
+        "factorio_launcher",
+        "universal_launcher",
+        "universal_setup"
+      ],
+      "properties": {
+        "factorio_launcher": { "$ref": "#/$defs/devSource" },
+        "universal_launcher": { "$ref": "#/$defs/mainSource" },
+        "universal_setup": { "$ref": "#/$defs/mainSource" }
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "object",
+      "required": [
+        "facman",
+        "candidate_smoke",
+        "verdict_harness",
+        "cmake_cache"
+      ],
+      "properties": {
+        "facman": { "$ref": "#/$defs/artifact" },
+        "candidate_smoke": { "$ref": "#/$defs/artifact" },
+        "verdict_harness": { "$ref": "#/$defs/artifact" },
+        "cmake_cache": { "$ref": "#/$defs/artifact" }
+      },
+      "additionalProperties": false
+    },
+    "factorio": {
+      "type": "object",
+      "required": ["version", "sha256", "signer"],
+      "properties": {
+        "version": { "const": "2.0.77" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "signer": { "const": "Wube Software Ltd" }
+      },
+      "additionalProperties": false
+    },
+    "instance": { "$ref": "#/$defs/instance" },
+    "qualification_digest": { "$ref": "#/$defs/sha256" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "devSource": {
+      "type": "object",
+      "required": ["revision", "required_ref"],
+      "properties": {
+        "revision": { "$ref": "#/$defs/gitSha" },
+        "required_ref": { "const": "origin/dev" }
+      },
+      "additionalProperties": false
+    },
+    "mainSource": {
+      "type": "object",
+      "required": ["revision", "required_ref"],
+      "properties": {
+        "revision": { "$ref": "#/$defs/gitSha" },
+        "required_ref": { "const": "origin/main" }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["relative_path", "size", "sha256"],
+      "properties": {
+        "relative_path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+        },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "instance": {
+      "type": "object",
+      "required": [
+        "instance_id",
+        "spec_digest",
+        "binding_digest",
+        "readiness_digest"
+      ],
+      "properties": {
+        "instance_id": {
+          "const": "instance-isolated-disposable-2-0-77"
+        },
+        "spec_digest": { "$ref": "#/$defs/sha256" },
+        "binding_digest": { "$ref": "#/$defs/sha256" },
+        "readiness_digest": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

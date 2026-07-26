@@ -9,5 +9,5 @@ evidence_path: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDA
 active_at: 2026-07-26T17:31:27Z
 blocked_at: 2026-07-26T18:09:20Z
 blocker: >
-  Awaiting an accepted instance_isolated-bound operator verdict coordinator
-  followed by fresh empty-clone qualification of that exact merged harness.
+  Awaiting the qualification producer and fresh empty-clone qualification of
+  the exact accepted instance-isolated harness.
