@@ -38,3 +38,7 @@ py -3 tools/repro_workspace_smoke.py --build
 The smoke keeps quick boundary checks separate from the heavier build matrix so
 single-repo contributors can validate product-only work while release or branch
 handoffs can prove the full sibling workspace.
+
+For a promotion-grade proof that does not borrow local Git objects, existing
+source directories, or checkout-local build artifacts, use the
+[remote source-closure procedure](../reference/remote-source-closure.md).

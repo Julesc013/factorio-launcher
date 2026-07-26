@@ -1,8 +1,8 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01
-status: reviewed
-lifecycle_state: reviewed
-planning_state: reviewed
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-26T09:01:45Z
 result: PASS
 evidence_path: .aide/queue/active/FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01/evidence/
@@ -10,3 +10,4 @@ active_at: 2026-07-26T09:01:51Z
 verified_at: 2026-07-26T09:35:14Z
 implementation_state: implemented
 reviewed_at: 2026-07-26T09:36:32Z
+closed_at: 2026-07-26T10:13:24Z

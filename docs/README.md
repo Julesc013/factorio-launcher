@@ -37,6 +37,7 @@ Architecture:
 - [Pre-Code Structure Review](architecture/pre_code_structure_review.md)
 - [Workspace Layout](reference/workspace-layout.md)
 - [Repro Workspace Smoke](reference/repro-workspace-smoke.md)
+- [Remote Source Closure](reference/remote-source-closure.md)
 
 Development:
 

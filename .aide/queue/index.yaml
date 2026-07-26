@@ -16,8 +16,8 @@ items:
     task: .aide/queue/active/FACMAN-CROSS-REPO-OWNERSHIP-AUDIT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-CROSS-REPO-OWNERSHIP-AUDIT-01/evidence
   - id: FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01
-    status: reviewed
-    lifecycle_state: reviewed
+    status: passed
+    lifecycle_state: closed
     title: Prove first-party provider pin reachability
     task: .aide/queue/active/FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01/evidence
@@ -105,6 +105,12 @@ items:
     title: Exact operation permit contract and revalidation
     task: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence
+  - id: FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01
+    status: active
+    lifecycle_state: active
+    title: Prove remote-only three-repository source closure
+    task: .aide/queue/active/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/evidence
   - id: FACMAN-ULK-INTEGRATION-PROOF-01
     status: passed
     lifecycle_state: closed

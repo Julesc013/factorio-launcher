@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01
 title: Prove first-party provider pin reachability
-status: reviewed
-lifecycle_state: reviewed
-planning_state: reviewed
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-07-26T09:01:45Z
 owner: unassigned
 objective: >
@@ -81,3 +81,4 @@ verified_at: 2026-07-26T09:35:14Z
 implementation_state: implemented
 result: PASS
 reviewed_at: 2026-07-26T09:36:32Z
+closed_at: 2026-07-26T10:13:24Z

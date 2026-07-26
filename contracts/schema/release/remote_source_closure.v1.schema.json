@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.remote_source_closure.v1",
+  "title": "FacMan remote-only three-repository source closure",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "observed_at_utc",
+    "claim",
+    "authority_promotion",
+    "factorio_execution",
+    "permit_issuance",
+    "publication",
+    "clone_policy",
+    "repositories",
+    "workspace",
+    "tooling",
+    "validation",
+    "package"
+  ],
+  "properties": {
+    "schema": { "const": "facman.remote_source_closure.v1" },
+    "status": { "const": "pass" },
+    "observed_at_utc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "claim": { "const": "remote_source_closure_proven" },
+    "authority_promotion": { "const": false },
+    "factorio_execution": { "const": false },
+    "permit_issuance": { "const": false },
+    "publication": { "const": false },
+    "clone_policy": {
+      "type": "object",
+      "required": [
+        "empty_directories",
+        "git_clone_no_local",
+        "https_remotes_only",
+        "preexisting_objects",
+        "alternates",
+        "detached_exact_checkouts"
+      ],
+      "properties": {
+        "empty_directories": { "const": true },
+        "git_clone_no_local": { "const": true },
+        "https_remotes_only": { "const": true },
+        "preexisting_objects": { "const": false },
+        "alternates": { "const": false },
+        "detached_exact_checkouts": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "repositories": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/repository" }
+    },
+    "workspace": {
+      "type": "object",
+      "required": [
+        "clone_root",
+        "build_root",
+        "paths_are_local_observations",
+        "source_worktrees_clean_after_validation"
+      ],
+      "properties": {
+        "clone_root": { "type": "string", "minLength": 1 },
+        "build_root": { "type": "string", "minLength": 1 },
+        "paths_are_local_observations": { "const": true },
+        "source_worktrees_clean_after_validation": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "tooling": {
+      "type": "object",
+      "required": ["git", "cmake", "python", "host"],
+      "properties": {
+        "git": { "type": "string", "minLength": 1 },
+        "cmake": { "type": "string", "minLength": 1 },
+        "python": { "type": "string", "minLength": 1 },
+        "host": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "validation": {
+      "type": "object",
+      "required": ["steps", "test_counts", "strict_repositories", "aide_lite"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "minItems": 18,
+          "items": { "$ref": "#/$defs/step" }
+        },
+        "test_counts": {
+          "type": "object",
+          "required": [
+            "factorio-launcher_native",
+            "factorio-launcher_python",
+            "universal-launcher_native",
+            "universal-setup_native"
+          ],
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "strict_repositories": {
+          "type": "array",
+          "const": [
+            "factorio-launcher",
+            "universal-launcher",
+            "universal-setup"
+          ]
+        },
+        "aide_lite": { "const": "pass" }
+      },
+      "additionalProperties": false
+    },
+    "package": { "$ref": "#/$defs/package" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "repository": {
+      "type": "object",
+      "required": [
+        "id",
+        "remote",
+        "required_ref",
+        "pin",
+        "head",
+        "tree",
+        "detached",
+        "clean",
+        "alternates",
+        "local_clone",
+        "canonical_ref_contains_pin"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "factorio-launcher",
+            "universal-launcher",
+            "universal-setup"
+          ]
+        },
+        "remote": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "required_ref": {
+          "type": "string",
+          "pattern": "^refs/heads/[A-Za-z0-9._/-]+$"
+        },
+        "pin": { "$ref": "#/$defs/gitSha" },
+        "head": { "$ref": "#/$defs/gitSha" },
+        "tree": { "$ref": "#/$defs/gitSha" },
+        "detached": { "const": true },
+        "clean": { "const": true },
+        "alternates": { "const": false },
+        "local_clone": { "const": false },
+        "canonical_ref_contains_pin": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "required": ["label", "status", "command"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "status": { "const": "pass" },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "package": {
+      "type": "object",
+      "required": [
+        "profile_id",
+        "package_file_count",
+        "artifact",
+        "artifact_size",
+        "artifact_sha256",
+        "provenance",
+        "provenance_sha256",
+        "runtime_smoke",
+        "archive_runtime_smoke",
+        "provenance_verification",
+        "installed_sdk_proof",
+        "required_package_tests",
+        "required_package_skips",
+        "source_revisions",
+        "toolchain",
+        "signed",
+        "published"
+      ],
+      "properties": {
+        "profile_id": { "type": "string", "minLength": 1 },
+        "package_file_count": { "type": "integer", "minimum": 1 },
+        "artifact": { "type": "string", "minLength": 1 },
+        "artifact_size": { "type": "integer", "minimum": 1 },
+        "artifact_sha256": { "$ref": "#/$defs/sha256" },
+        "provenance": { "type": "string", "minLength": 1 },
+        "provenance_sha256": { "$ref": "#/$defs/sha256" },
+        "runtime_smoke": { "const": "pass" },
+        "archive_runtime_smoke": { "const": "pass" },
+        "provenance_verification": { "const": "pass" },
+        "installed_sdk_proof": { "const": true },
+        "required_package_tests": { "type": "integer", "minimum": 1 },
+        "required_package_skips": { "const": 0 },
+        "source_revisions": {
+          "type": "object",
+          "required": [
+            "factorio_launcher",
+            "universal_launcher",
+            "universal_setup"
+          ],
+          "properties": {
+            "factorio_launcher": { "$ref": "#/$defs/gitSha" },
+            "universal_launcher": { "$ref": "#/$defs/gitSha" },
+            "universal_setup": { "$ref": "#/$defs/gitSha" }
+          },
+          "additionalProperties": false
+        },
+        "toolchain": { "type": "object", "minProperties": 1 },
+        "signed": { "const": false },
+        "published": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  }
+}

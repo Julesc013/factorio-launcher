@@ -1,0 +1,87 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01
+title: Prove remote-only three-repository source closure
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-26T10:15:13Z
+owner: unassigned
+objective: >
+  Clone exact FacMan, Universal Launcher, and Universal Setup revisions from declared canonical remotes into empty directories; reject local object fallback and dirty source; rebuild, test, package, and emit revision, tree, toolchain, artifact, provenance, and obligation evidence without executing Factorio.
+allowed_paths:
+  - tools/remote_source_closure.py
+  - tools/repro_workspace_smoke.py
+  - tests/test_remote_source_closure.py
+  - tests/test_repro_workspace_smoke.py
+  - contracts/schema/release/remote_source_closure.v1.schema.json
+  - docs/quality/evidence/source-closure/remote-source-closure.v1.json
+  - docs/reference/remote-source-closure.md
+  - docs/README.md
+  - docs/architecture/cross_repo_integration.md
+  - .github/workflows/ci.yml
+  - .aide/queue/index.yaml
+  - .aide/git/workflow-detection.json
+  - .aide/git/workflow-detection.md
+  - .aide/queue/active/FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01/status.yaml
+  - .aide/queue/active/FACMAN-FIRST-PARTY-PIN-REMOTE-REACHABILITY-01/task.yaml
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - README.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - docs/platform/support_matrix.md
+  - .aide/queue/next/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/**
+  - .aide/queue/active/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - *
+  - facman_abi_layout_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_ci_proof
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_refusal_contract
+  - tests.test_release_structure
+  - tests.test_schema_tools
+  - tests.test_structure_policy
+  - tests.test_test_architecture
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/capability_policy_check.py
+  - tools/ci_proof_check.py
+  - tools/cmake_architecture_check.py
+  - tools/command_contract_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_structure_check.py
+  - tools/schema_validate.py
+  - tools/test_architecture_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-26T10:15:13Z
