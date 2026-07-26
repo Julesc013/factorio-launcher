@@ -10,11 +10,17 @@ items:
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
   - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01
-    status: active
-    lifecycle_state: active
+    status: blocked
+    lifecycle_state: blocked
     title: Revalidate exact Windows instance-isolated Play candidate
     task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/evidence
+  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
+    status: verified
+    lifecycle_state: verified
+    title: Qualify exact repaired Windows instance-isolated candidate
+    task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked

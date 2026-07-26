@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01
 title: Revalidate exact Windows instance-isolated Play candidate
-status: active
-lifecycle_state: active
-planning_state: active
+status: blocked
+lifecycle_state: blocked
+planning_state: blocked
 created_at: 2026-07-26T17:31:26Z
 owner: unassigned
 objective: >
@@ -89,6 +89,12 @@ operator_boundary:
   automatic_verdict_allowed: false
   automatic_authority_promotion_allowed: false
   current_product_execution_authority: false
+depends_on:
+  - FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
+blocker: >
+  The exact repaired candidate has not yet been qualified from three fresh
+  remote clones, and the existing real-Play coordinator remains bound to the
+  historical hermetic route rather than instance_isolated.
 commit_template: .aide/git/commit-template.md
 closeout_checklist:
   - allowed path scope reconciled
@@ -97,3 +103,4 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-26T17:31:27Z
+blocked_at: 2026-07-26T18:09:20Z
