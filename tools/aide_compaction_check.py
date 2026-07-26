@@ -30,6 +30,7 @@ def archived_evidence_sha256(path: Path) -> str:
     data = path.read_bytes()
     if path.suffix.lower() in {
         ".json",
+        ".log",
         ".md",
         ".ps1",
         ".toml",

@@ -201,6 +201,7 @@ def collect() -> dict[str, Any]:
         "execution": status["execution"],
         "build_and_development_truth": status["build_and_development_truth"],
         "transport_outcome_semantics": status["transport_outcome_semantics"],
+        "play_candidate_runtime_separation": status["play_candidate_runtime_separation"],
         "release": status["release"],
         "validation": status["validation"],
         "current_revisions": {
@@ -258,6 +259,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
     queue = data["queue"]
     build_truth = data["build_and_development_truth"]
     transport = data["transport_outcome_semantics"]
+    separation = data["play_candidate_runtime_separation"]
     mutable = [
         record["id"]
         for record in queue["records"]
@@ -301,6 +303,17 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"response_contract = {toml_string(transport['response_contract'])}",
         f"recovery_inspect_command = {toml_string(transport['recovery_inspect_command'])}",
         f"status = {toml_string(transport['status'])}",
+        "",
+        "[runtime_separation]",
+        f"status = {toml_string(separation['status'])}",
+        f"launch_planning_target = {toml_string(separation['launch_planning_target'])}",
+        f"product_execution_target = {toml_string(separation['product_execution_target'])}",
+        f"candidate_policy_target = {toml_string(separation['candidate_policy_target'])}",
+        f"candidate_projection_target = {toml_string(separation['candidate_projection_target'])}",
+        f"observer_target = {toml_string(separation['observer_target'])}",
+        f"evidence_classification_target = {toml_string(separation['evidence_classification_target'])}",
+        f"operator_verdict_target = {toml_string(separation['operator_verdict_target'])}",
+        f"operator_targets_in_default_install = {str(bool(separation['operator_targets_in_default_install'])).lower()}",
         "",
         "[capabilities]",
         *toml_array_lines("available", sorted(capabilities.get("available", []))),
@@ -1081,6 +1094,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "current_gate_status": "pre_revalidation_repairs_in_progress",
         },
+        "play_candidate_runtime_separation": {
+            "checkpoint": "play-candidate-runtime-separation",
+            "active": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "last_closed": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "phase_status": "active",
+            "safety": "transport_outcome_semantics_accepted_no_play_authority",
+            "execution_reason": "pre_revalidation_runtime_evidence_separation_active_no_play_authority",
+            "truth_scope": "transport_outcome_semantics_accepted_runtime_evidence_separation_active_no_play_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "runtime_evidence_separation_in_progress",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1178,8 +1204,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         )
     transport = status.get("transport_outcome_semantics", {})
     expected_transport = {
-        "status": "local_promotion_matrix_pass_pending_hosted",
+        "status": "accepted_hosted_promotion_matrix_pass",
         "work_unit": "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01",
+        "implementation_revision": "b962b1340f55c4eb2dddbe126887b369df7d5422",
+        "pull_request": 77,
+        "dev_integration_revision": "c47bdc3362f7dfbaccd6cee069318270c081272e",
+        "hosted_ci_run": "30209419784",
+        "hosted_code_security_run": "30209419767",
+        "hosted_schema_check_run": "30209419787",
+        "hosted_security_policy_run": "30209419762",
         "universal_launcher_provider_revision": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
         "universal_launcher_main_revision": "7f4312faf2f1ac2856a51393fef0ec49fc276a78",
         "operation_contract": "ulk.operation_outcome.v1",
@@ -1194,11 +1227,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "outcome_unknown",
         ],
         "recovery_inspect_command": "workspace.recovery.inspect",
-        "direct_transport": "implementation_active",
-        "cli_process_transport": "implementation_active",
-        "winforms_process_transport": "implementation_active",
-        "appkit_process_transport": "implementation_active_compile_only",
-        "daemon_transport": "unavailable_with_pre_effect_refusal",
+        "direct_transport": "accepted_hosted",
+        "cli_process_transport": "accepted_hosted",
+        "winforms_process_transport": "accepted_hosted",
+        "appkit_process_transport": "accepted_hosted_compile",
+        "daemon_transport": "unavailable_with_validated_pre_effect_refusal",
         "local_msvc_release_native_tests": 54,
         "local_python_tests": 517,
         "required_obligation_skips": 0,
@@ -1207,7 +1240,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "unsupported_obligation_skips": 2,
         "strict_validation": "pass",
         "aide_validation": "pass",
-        "hosted_validation": "pending",
+        "hosted_validation": "pass_linux_windows_macos_coverage_code_security",
         "factorio_execution": False,
         "permit_issuance": False,
         "authority_promotion": False,
@@ -1216,6 +1249,39 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append(
             "transport outcome semantics must bind the published ULK contract "
             "without promoting runtime authority"
+        )
+    separation = status.get("play_candidate_runtime_separation", {})
+    if separation != {
+        "status": "local_promotion_matrix_pass",
+        "work_unit": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+        "launch_planning_target": "facman::launch_planning",
+        "product_execution_target": "facman::product_execution",
+        "candidate_policy_target": "facman::candidate_policy",
+        "candidate_projection_target": "facman::candidate_projection",
+        "observer_target": "facman::play_observer",
+        "evidence_classification_target": "facman_play_evidence_classification",
+        "operator_verdict_target": "facman_gate4c_verdict_harness",
+        "operator_targets_in_default_install": False,
+        "local_native_test_count": 54,
+        "local_python_test_count": 517,
+        "local_python_optional_skip_count": 2,
+        "local_python_unsupported_skip_count": 2,
+        "local_required_or_unknown_skip_count": 0,
+        "product_profile_build": "pass",
+        "product_profile_operator_targets_generated": False,
+        "product_profile_operator_runtime_installed": False,
+        "hermetic_policy_digest": "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2",
+        "instance_isolated_policy_digest": "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432",
+        "policy_identity_change": False,
+        "candidate_identity_change": False,
+        "evidence_law_change": False,
+        "factorio_execution": False,
+        "permit_issuance": False,
+        "authority_promotion": False,
+    }:
+        problems.append(
+            "Play candidate runtime separation must preserve exact target "
+            "ownership without policy, identity, evidence-law, or authority change"
         )
     foundation = status.get("execution_foundation", {})
     if foundation != {

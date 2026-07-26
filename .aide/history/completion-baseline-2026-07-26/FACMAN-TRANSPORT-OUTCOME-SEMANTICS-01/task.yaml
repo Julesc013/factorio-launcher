@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01
 title: Make operation outcomes durable and transport-consistent
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T15:00:13Z
 owner: unassigned
 objective: >
@@ -92,3 +92,9 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-07-26T15:00:14Z
+verified_at: 2026-07-26T16:17:03Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-26T16:17:04Z
+closed_at: 2026-07-26T16:17:04Z
+archived_at: 2026-07-26T16:17:05Z

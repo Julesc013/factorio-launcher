@@ -9,6 +9,7 @@ from tools import (
     aide_queue_state_check,
     apps_boundary_check,
     client_cli_boundary_check,
+    cmake_architecture_check,
     command_truth_check,
     critical_io_check,
     generated_catalog_check,
@@ -30,6 +31,7 @@ class ArchitectureFitnessTests(unittest.TestCase):
             version_truth_check.main,
             target_dependency_check.main,
             client_cli_boundary_check.main,
+            cmake_architecture_check.main,
             command_truth_check.main,
             aide_queue_state_check.main,
         ]
