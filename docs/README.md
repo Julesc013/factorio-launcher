@@ -96,5 +96,6 @@ Release:
 Planning:
 
 - [Roadmap](roadmap.md)
+- [Reviewed Planning Snapshots](reviews/README.md)
 - [Safety Proof Gates](quality/safety_proof_gates.md)
 - [Safety Claim Ledger](quality/safety_claim_ledger.md)
