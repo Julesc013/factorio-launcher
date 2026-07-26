@@ -60,6 +60,7 @@ def validate() -> list[str]:
         "macos-native-cli:",
         "runs-on: macos-15-intel",
         "CMAKE_OSX_DEPLOYMENT_TARGET=13.0",
+        "FACMAN_NATIVE_BUILD_ROOT: ${{ github.workspace }}/build/macos-native",
         'export TMPDIR="$RUNNER_TEMP/facman-native-tmp"',
         'echo "TMPDIR=$TMPDIR" >> "$GITHUB_ENV"',
         "Prepare no-link temporary root",

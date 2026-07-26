@@ -1,6 +1,6 @@
 # Remaining risks
 
-- The exact committed head still requires the complete hosted Linux, Windows,
+- The repaired exact head still requires the complete hosted Linux, Windows,
   macOS, security, schema, package, reproducibility, sanitizer, fuzz, and
   coverage matrix before merge.
 - The local runtime identity correctly reports `source_dirty=true` because it

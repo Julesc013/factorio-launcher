@@ -252,6 +252,7 @@ jobs:
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/macos-native/facman
       FACMAN_TUI_EXE: ${{ github.workspace }}/build/macos-native/facman-tui
+      FACMAN_NATIVE_BUILD_ROOT: ${{ github.workspace }}/build/macos-native
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6

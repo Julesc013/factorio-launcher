@@ -1000,6 +1000,18 @@ class AideCompactionTests(unittest.TestCase):
                 index["tasks"][0]["files"]["task.yaml"],
             )
 
+    def test_archived_powershell_hash_is_line_ending_independent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            script = Path(temporary) / "evidence.ps1"
+            script.write_bytes(b"Write-Output 'one'\r\nWrite-Output 'two'\r\n")
+            expected = hashlib.sha256(
+                b"Write-Output 'one'\nWrite-Output 'two'\n"
+            ).hexdigest()
+            self.assertEqual(
+                expected,
+                aide_compaction_check.archived_evidence_sha256(script),
+            )
+
     def test_queue_index_rejects_partially_materialized_records(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

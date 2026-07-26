@@ -23,6 +23,19 @@ Local validation is complete for the WorkUnit tree based on FacMan parent
 - `python -B .aide/scripts/aide_lite.py test`: pass.
 - `git diff --check`: pass, with line-ending conversion notices only.
 
-Hosted validation remains pending for the exact committed head. No Factorio
+Hosted validation on PR 76 exposed two portability defects in committed head
+`95c73abaed291c4d19f35ee8bd1cb300061593b8`:
+
+- archived `.ps1` evidence used a Windows-byte hash instead of the declared
+  canonical-LF hash;
+- the macOS job did not export its non-default native build root to the
+  promotion obligation runner.
+
+The repair canonicalizes PowerShell evidence line endings, updates the archived
+index, binds the macOS native root, and adds regression/static CI coverage.
+Focused AIDE compaction, CI proof, and obligation tests pass (14/14);
+`tools/strict_check.py` and the portable AIDE suite pass after the repair.
+
+Hosted validation remains pending for the repaired exact head. No Factorio
 process, WPR capture, permit issuance, route promotion, or product execution
 occurred.
