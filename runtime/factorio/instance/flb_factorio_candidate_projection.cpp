@@ -3,6 +3,7 @@
 
 #include "flb_factorio_candidate_projection.h"
 
+#include "facman/build_identity.hpp"
 #include "fl_file_io.h"
 #include "fl_json.h"
 #include "fl_path_safety.h"
@@ -420,8 +421,10 @@ project_hermetic_candidate_plan(
             request.principal.provider_id + ":" + request.principal.principal_id)},
         {"protected.baseline_digest", request.protected_baseline_digest},
         {"read_data.identity", read_data_identity.value()},
-        {"universal_launcher.revision", sha256_text("7bd4425f0c35414f738159b45d8bec42edf70235")},
-        {"universal_setup.revision", sha256_text("3f8489275077347c2918f3bb03614ec6431362ff")},
+        {"universal_launcher.revision", sha256_text(
+            facman::build_identity::universal_launcher_revision)},
+        {"universal_setup.revision", sha256_text(
+            facman::build_identity::universal_setup_revision)},
         {"writable.baseline_digest", request.writable_baseline_digest},
         {"write_data.identity", write_data_identity.value()},
     };
@@ -776,8 +779,10 @@ project_instance_isolated_candidate_plan(
         {"process_provider_revision", sha256_text(play::kInstanceIsolatedCandidateProviderRevision)},
         {"protected_root_baseline_digest", request.protected_baseline_digest},
         {"read_data_identity", read_data_identity.value()},
-        {"universal_launcher_exact_revision", sha256_text("7bd4425f0c35414f738159b45d8bec42edf70235")},
-        {"universal_setup_exact_revision", sha256_text("3f8489275077347c2918f3bb03614ec6431362ff")},
+        {"universal_launcher_exact_revision", sha256_text(
+            facman::build_identity::universal_launcher_revision)},
+        {"universal_setup_exact_revision", sha256_text(
+            facman::build_identity::universal_setup_revision)},
         {"writable_root_baseline_digest", request.writable_baseline_digest},
         {"write_data_identity", write_data_identity.value()},
     };

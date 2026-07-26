@@ -109,7 +109,8 @@ add_library(flb_factorio_candidate_projection_static STATIC
 target_compile_features(flb_factorio_candidate_projection_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_candidate_projection_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/instance
-  ${CMAKE_CURRENT_SOURCE_DIR}/launch)
+  ${CMAKE_CURRENT_SOURCE_DIR}/launch
+  PRIVATE ${FACMAN_GENERATED_INCLUDE_DIR})
 target_link_libraries(flb_factorio_candidate_projection_static PUBLIC
   facman_base_static facman_platform_static
   flb_factorio_candidate_policy_static

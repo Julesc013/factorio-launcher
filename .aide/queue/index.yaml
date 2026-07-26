@@ -15,6 +15,18 @@ items:
     title: Revalidate exact Windows instance-isolated Play candidate
     task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/evidence
+  - id: FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01
+    status: active
+    lifecycle_state: active
+    title: Add an exact instance-isolated operator verdict harness
+    task: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/evidence
+  - id: FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01
+    status: verified
+    lifecycle_state: verified
+    title: Generate exact candidate provider revision evidence
+    task: .aide/queue/active/FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01/evidence
   - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
     status: verified
     lifecycle_state: verified

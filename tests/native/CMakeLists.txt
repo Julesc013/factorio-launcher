@@ -36,6 +36,8 @@ target_compile_features(flb_factorio_launch_permit_smoke PRIVATE cxx_std_17)
 target_compile_definitions(flb_factorio_launch_permit_smoke PRIVATE
   FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/launch-permit-smoke")
+target_include_directories(flb_factorio_launch_permit_smoke PRIVATE
+  ${FACMAN_GENERATED_INCLUDE_DIR})
 target_link_libraries(flb_factorio_launch_permit_smoke PRIVATE
   flb_factorio_candidate_projection_static
   facman_permit_static)

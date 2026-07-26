@@ -2220,16 +2220,29 @@
   "queue": {
     "archived_task_count": 61,
     "counts": {
+      "active": 1,
       "blocked": 3,
       "planned": 1,
-      "verified": 2
+      "verified": 3
     },
     "records": [
+      {
+        "id": "FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01",
+        "lifecycle_state": "verified",
+        "queue": "active",
+        "status": "verified"
+      },
       {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01",
