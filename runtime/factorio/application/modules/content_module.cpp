@@ -66,12 +66,6 @@ bool ContentApplicationModule::handles(CommandId command) const noexcept
     }
 }
 
-bool ContentApplicationModule::accepts_denied_admission(
-    const CommandAdmissionDecision& admission) const noexcept
-{
-    return admission.code == "network_forbidden";
-}
-
 ApplicationResult ContentApplicationModule::execute(
     ApplicationContext& context,
     const ApplicationRequest& request,

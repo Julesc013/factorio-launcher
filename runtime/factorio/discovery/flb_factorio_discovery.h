@@ -33,7 +33,7 @@ struct InstallRef {
     std::vector<std::string> external_state_domains;
     std::vector<std::string> capabilities;
     std::string setup_state_ref;
-    std::string lifecycle_status;
+    std::string lifecycle_status = "unknown";
     std::string last_verification_identity;
     std::string state_revision;
     std::string verification_status;

@@ -87,6 +87,12 @@ items:
     title: Instance specification, binding, readiness, and view
     task: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/task.yaml
     evidence: .aide/queue/active/FACMAN-INSTANCE-SPEC-AND-READINESS-01/evidence
+  - id: FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01
+    status: reviewed
+    lifecycle_state: reviewed
+    title: Fail-closed launch truth
+    task: .aide/queue/active/FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-LAUNCH-TRUTH-FAIL-CLOSED-01/evidence
   - id: FACMAN-LOCAL-DEPENDENCY-PIN-ENFORCEMENT-01
     status: passed
     lifecycle_state: closed
@@ -106,8 +112,8 @@ items:
     task: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-OPERATION-PERMIT-01/evidence
   - id: FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01
-    status: reviewed
-    lifecycle_state: reviewed
+    status: passed
+    lifecycle_state: closed
     title: Prove remote-only three-repository source closure
     task: .aide/queue/active/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/task.yaml
     evidence: .aide/queue/active/FACMAN-REMOTE-SOURCE-CLOSURE-PROOF-01/evidence

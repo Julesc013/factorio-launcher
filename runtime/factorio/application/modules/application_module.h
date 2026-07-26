@@ -22,12 +22,6 @@ public:
         (void)command;
         return true;
     }
-    virtual bool accepts_denied_admission(
-        const CommandAdmissionDecision& admission) const noexcept
-    {
-        (void)admission;
-        return false;
-    }
     virtual ApplicationResult execute(
         ApplicationContext& context,
         const ApplicationRequest& request,

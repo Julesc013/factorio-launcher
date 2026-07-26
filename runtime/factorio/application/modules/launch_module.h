@@ -11,8 +11,6 @@ namespace facman::factorio::application {
 class LaunchApplicationModule final : public ApplicationModule {
 public:
     bool handles(CommandId command) const noexcept override;
-    bool accepts_denied_admission(
-        const CommandAdmissionDecision& admission) const noexcept override;
     ApplicationResult execute(
         ApplicationContext& context,
         const ApplicationRequest& request,

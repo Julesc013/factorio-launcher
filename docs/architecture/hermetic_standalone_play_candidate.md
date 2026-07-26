@@ -146,6 +146,10 @@ and committed without clobber to `operations/<operation-id>/lifecycle`.
 Standard output and standard error are separate files under the operation's
 `output` directory. Stable lifecycle reads reject links, size overflow,
 authority-field changes, open object shapes, and any packet self-hash mismatch.
+The staging ownership marker is the generic
+`facman.candidate-artifacts.v1`; it carries no historical WorkUnit identity.
+The lifecycle packet itself binds the exact candidate, policy, plan, provider,
+and evidence identities.
 
 ## Gate boundary
 

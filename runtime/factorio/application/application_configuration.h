@@ -9,6 +9,7 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace facman::factorio::application {
 
@@ -38,6 +39,10 @@ public:
     bool preferences_present() const noexcept { return preferences_present_; }
     const std::string& configuration_problem() const noexcept { return configuration_problem_; }
     std::chrono::milliseconds process_timeout() const noexcept { return process_timeout_; }
+    const std::vector<std::filesystem::path>& protected_factorio_roots() const noexcept
+    {
+        return protected_factorio_roots_;
+    }
 
     // Process and network authority are deliberately not configurable through
     // the environment. They can only be promoted by reviewed product gates.
@@ -52,7 +57,8 @@ private:
         facman::preferences::Preferences preferences,
         bool preferences_present,
         std::string configuration_problem,
-        std::chrono::milliseconds process_timeout);
+        std::chrono::milliseconds process_timeout,
+        std::vector<std::filesystem::path> protected_factorio_roots);
 
     const std::filesystem::path workspace_;
     const SetupConfiguration setup_;
@@ -60,6 +66,7 @@ private:
     const bool preferences_present_;
     const std::string configuration_problem_;
     const std::chrono::milliseconds process_timeout_;
+    const std::vector<std::filesystem::path> protected_factorio_roots_;
 };
 
 } // namespace facman::factorio::application

@@ -31,13 +31,19 @@ The registered modules are:
 ABI, move install-mutation authority out of Universal Setup, or make
 Factorio-specific handlers part of Universal Launcher.
 
-Denied admission normally stops at the composition root. The two deliberate
-exceptions are:
+Denied admission normally stops at the composition root. The central admission
+contract classifies the exact command and denial as `reject`,
+`transform_to_product_refusal`, or `inspect_only` before any module executes.
+A family-wide Boolean module exception is forbidden. The two deliberate
+transformations are:
 
-- launch commands, so the launch module can return the established
-  plan-bound execution refusal;
-- Mod Portal commands, so the content module can return the established
-  network-policy refusal.
+- `run.execute` with the exact process-admission denial, so the launch module
+  can return the established plan-bound execution refusal;
+- `mods.search`, `mods.install`, and `mods.update` with the exact network
+  denial, so the content module can return the established Mod Portal refusal.
+
+Preview, preflight, saves, snapshots, local mod inventory, and every unrelated
+command reject a denied admission at the composition root.
 
 The structural validator rejects direct `CommandId` cases in
 `flb_factorio_application.cpp`, unregistered modules, and missing

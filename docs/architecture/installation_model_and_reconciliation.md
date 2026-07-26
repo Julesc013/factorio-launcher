@@ -167,7 +167,12 @@ manager to share the model without pretending they support the same actions.
 This is an additive transition:
 
 1. Continue reading `factorio.install_ref.v1` and older optional-field records.
-2. Project absent evidence conservatively rather than inventing facts.
+2. Project absent evidence as explicit `missing` or `unknown`; never invent an
+   active lifecycle, product version, verification identity, or state revision.
+   The closed lifecycle vocabulary is `active`, `verification_failed`,
+   `recovery_required`, `retired`, `uninstalled`, `missing`, `unknown`, and
+   `unsupported`. Only exact `active` plus current passing evidence can enter a
+   launch reference graph.
 3. Write no v2 persisted installation record until migration inspect/plan,
    backup, apply, journal, and recovery contracts exist.
 4. Keep existing command spellings and machine-readable v1 responses stable.

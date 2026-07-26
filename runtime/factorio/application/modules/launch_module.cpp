@@ -16,12 +16,6 @@ bool LaunchApplicationModule::handles(CommandId command) const noexcept
         command == CommandId::run_execute;
 }
 
-bool LaunchApplicationModule::accepts_denied_admission(
-    const CommandAdmissionDecision&) const noexcept
-{
-    return true;
-}
-
 ApplicationResult LaunchApplicationModule::execute(
     ApplicationContext& context,
     const ApplicationRequest& request,

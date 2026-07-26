@@ -40,9 +40,10 @@ struct InstallLaunchRef {
     std::string product_id;
     std::string exact_product_version;
     std::string setup_state_ref;
-    std::string lifecycle_status;
+    std::string lifecycle_status = "missing";
     std::string last_verification_identity;
     std::string state_revision;
+    std::string verification_status = "missing";
 };
 
 struct EffectiveFactorioConfig {
@@ -144,7 +145,8 @@ std::string build_launch_plan_json(
 LaunchPreflightResult preflight_launch(
     const InstanceLaunchRef& instance,
     const InstallLaunchRef& install,
-    const std::string& command = "launch_plan.preflight"
+    const std::string& command,
+    const std::vector<std::filesystem::path>& protected_factorio_roots
 );
 
 std::string launch_preflight_json(const LaunchPreflightResult& preflight);

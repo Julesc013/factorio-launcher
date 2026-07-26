@@ -150,7 +150,14 @@ class InstanceIsolationProbeTests(unittest.TestCase):
             workspace, install_root, instance_root = self.make_workspace(root)
             preview = self.preview(workspace)
             preflight = self.preflight(workspace)
-            self.assertEqual(preflight["status"], "pass")
+            self.assertEqual(preflight["status"], "refused")
+            self.assertEqual(
+                preflight["strict_refusal_code"], "launcher_install_not_active"
+            )
+            self.assertIn(
+                "selected installation lifecycle is not active: unknown",
+                preflight["problems"],
+            )
             self.assertEqual(preview["effective_config"], preflight["effective_config"])
 
             config_text = (instance_root / "config" / "config.ini").read_text(encoding="utf-8")
