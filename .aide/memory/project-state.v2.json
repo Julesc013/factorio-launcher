@@ -454,7 +454,7 @@
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "factorio_launcher": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "universal_launcher": "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+    "universal_launcher": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
@@ -2127,7 +2127,7 @@
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
-      "revision": "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+      "revision": "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
       "source": "universal-launcher"
     },
     "universal_setup": {

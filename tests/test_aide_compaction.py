@@ -616,8 +616,12 @@ class AideCompactionTests(unittest.TestCase):
             client_extraction["universal_launcher_revision"],
         )
         self.assertEqual(
-            data["provider_pins"]["universal_launcher"]["revision"],
+            "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
             reference_extraction["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
+            data["provider_pins"]["universal_launcher"]["revision"],
         )
         self.assertEqual(
             m2_wu6["universal_launcher_main_revision"],
@@ -641,7 +645,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("pass", module_decomposition["required_windows_package_proof"])
         self.assertFalse(module_decomposition["runtime_authority"])
         self.assertEqual(
-            data["provider_pins"]["universal_launcher"]["revision"],
+            "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
             integration_proof["universal_launcher_revision"],
         )
         self.assertEqual(
@@ -901,7 +905,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+            "fbb0cc87a14e8e4b26d74088a791dc83ebd4337d",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]

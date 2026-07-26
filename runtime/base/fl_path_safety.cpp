@@ -143,8 +143,9 @@ ManagedPathResult managed_path(
         canonical_root = absolute_root;
         error.clear();
     }
-    fs::path canonical_candidate = fs::weakly_canonical(candidate, error);
-    if (error || !path_is_below(canonical_root, canonical_candidate)) {
+    const fs::path relative_candidate = candidate.lexically_relative(absolute_root);
+    fs::path canonical_candidate = (canonical_root / relative_candidate).lexically_normal();
+    if (!path_is_below(canonical_root, canonical_candidate)) {
         result.code = "unsafe_managed_path";
         result.detail = "managed path does not remain below the canonical workspace root";
         return result;

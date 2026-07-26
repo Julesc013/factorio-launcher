@@ -1,0 +1,18 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
+#ifndef FACMAN_BUILD_IDENTITY_HPP
+#define FACMAN_BUILD_IDENTITY_HPP
+
+namespace facman::build_identity {
+
+inline constexpr const char* factorio_launcher_revision =
+    "@FACMAN_SOURCE_REVISION@";
+inline constexpr const char* universal_launcher_revision =
+    "@FACMAN_UNIVERSAL_LAUNCHER_REVISION@";
+inline constexpr const char* universal_setup_revision =
+    "@FACMAN_UNIVERSAL_SETUP_REVISION@";
+
+}
+
+#endif

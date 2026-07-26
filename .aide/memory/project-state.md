@@ -91,7 +91,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - last closed WorkUnit: `FACMAN-IGNORED-BUILD-TREE-CLEANUP-01`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
-- Universal Launcher / Setup pins: `e78cc9f3a23f748130749ebe7241dbd1166f8b25` / `3f8489275077347c2918f3bb03614ec6431362ff`;
+- Universal Launcher / Setup pins: `fbb0cc87a14e8e4b26d74088a791dc83ebd4337d` / `3f8489275077347c2918f3bb03614ec6431362ff`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 
