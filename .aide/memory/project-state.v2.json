@@ -2220,10 +2220,9 @@
   "queue": {
     "archived_task_count": 61,
     "counts": {
-      "active": 1,
-      "blocked": 2,
+      "blocked": 3,
       "planned": 1,
-      "verified": 1
+      "verified": 2
     },
     "records": [
       {
@@ -2233,10 +2232,16 @@
         "status": "blocked"
       },
       {
-        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
-        "lifecycle_state": "active",
+        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01",
+        "lifecycle_state": "verified",
         "queue": "active",
-        "status": "active"
+        "status": "verified"
+      },
+      {
+        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+        "lifecycle_state": "blocked",
+        "queue": "active",
+        "status": "blocked"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
