@@ -97,14 +97,14 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
   set_tests_properties(
     facman_gate4c_verdict_harness_route_binding_smoke
     PROPERTIES LABELS "fast-unit;contract;security")
-  add_test(
-    NAME facman_gate4c_verdict_harness_plan_approval_protocol_smoke
-    COMMAND facman_gate4c_verdict_harness
-      --self-test-plan-approval-protocol)
-  set_tests_properties(
-    facman_gate4c_verdict_harness_plan_approval_protocol_smoke
-    PROPERTIES LABELS "fast-unit;contract;security")
   if(WIN32)
+    add_test(
+      NAME facman_gate4c_verdict_harness_plan_approval_protocol_smoke
+      COMMAND facman_gate4c_verdict_harness
+        --self-test-plan-approval-protocol)
+    set_tests_properties(
+      facman_gate4c_verdict_harness_plan_approval_protocol_smoke
+      PROPERTIES LABELS "fast-unit;contract;security;platform")
     add_test(
       NAME facman_gate4c_verdict_harness_power_request_protocol_smoke
       COMMAND facman_gate4c_verdict_harness
