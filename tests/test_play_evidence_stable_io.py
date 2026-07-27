@@ -220,6 +220,8 @@ class PlayEvidenceStableIoTests(unittest.TestCase):
                     "Factorio_2.0.77/bin/x64/factorio.exe",
                 ],
             )
+            self.assertEqual(invoked.call_args.args[0][-1], "600000")
+            self.assertEqual(invoked.call_args.kwargs["timeout"], 630)
 
     def test_native_copy_and_resource_revalidation_are_exactly_scoped(
         self,

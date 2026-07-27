@@ -13,16 +13,25 @@ allowed_paths:
   - .aide/memory/**
   - .aide/queue/**
   - README.md
+  - THIRD_PARTY_NOTICES.md
   - docs/architecture/instance-isolated-verdict-harness.md
   - docs/release/checkpoints/README.md
   - docs/roadmap.md
   - release/index/current_state.v1.toml
+  - release/index/dependency_lock.v1.toml
   - release/index/project_status.v2.toml
+  - release/index/sbom.components.v1.json
+  - release/index/workspace_lock.v1.toml
   - tests/test_aide_compaction.py
   - tests/test_aide_target_truth.py
   - tests/test_play_evidence_stable_io.py
+  - tests/test_setup_package_routing.py
+  - tools/compliance_check.py
+  - tools/m2_wu10_operator_acceptance_check.py
+  - tools/m2_wu9_adversarial_check.py
   - tools/play_evidence_stable_io.py
   - tools/project_state.py
+  - tools/validators/release/check_dependency_lock.py
 forbidden_paths:
   - .git/**
   - .aide.local/**
@@ -60,13 +69,13 @@ depends_on:
   - FACMAN-PLAY-EVIDENCE-STABLE-IO-01
 source_binding:
   factorio_launcher:
-    revision: 02add47c0fa74f2299bb68f16532254d4d00ab7e
+    revision: 04c7fb0d54ef8f41948cb301d739bda4e980d1b3
     required_ref: origin/dev
   universal_launcher:
     revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
     required_ref: origin/main
   universal_setup:
-    revision: 3f8489275077347c2918f3bb03614ec6431362ff
+    revision: 3048128963dc718a7c38c1cfcdda9e813a23b0db
     required_ref: origin/main
 claim_ledger_rows:
   - docs/quality/safety_claim_ledger.md

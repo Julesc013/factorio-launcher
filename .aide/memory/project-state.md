@@ -91,7 +91,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - last closed WorkUnit: `FACMAN-PLAY-EVIDENCE-STABLE-IO-01`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
-- Universal Launcher / Setup pins: `7fc25340623131ba86c08dca4fb8a43b18a4520d` / `3f8489275077347c2918f3bb03614ec6431362ff`;
+- Universal Launcher / Setup pins: `7fc25340623131ba86c08dca4fb8a43b18a4520d` / `3048128963dc718a7c38c1cfcdda9e813a23b0db`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 

@@ -722,7 +722,7 @@ class AideCompactionTests(unittest.TestCase):
             integration_proof["universal_launcher_revision"],
         )
         self.assertEqual(
-            data["provider_pins"]["universal_setup"]["revision"],
+            "3f8489275077347c2918f3bb03614ec6431362ff",
             integration_proof["universal_setup_revision"],
         )
         self.assertTrue(integration_proof["detached_source_worktrees"])
@@ -1016,7 +1016,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "3f8489275077347c2918f3bb03614ec6431362ff",
+            "3048128963dc718a7c38c1cfcdda9e813a23b0db",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

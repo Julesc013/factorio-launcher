@@ -489,7 +489,7 @@
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
     "truth_closeout": "02add47c0fa74f2299bb68f16532254d4d00ab7e",
     "universal_launcher": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
-    "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
+    "universal_setup": "3048128963dc718a7c38c1cfcdda9e813a23b0db"
   },
   "execution": {
     "current_gate_status": "stable_evidence_io_accepted_fresh_candidate_qualification_active_before_revalidation",
@@ -2242,7 +2242,7 @@
       "reachability": "required_for_source_closure",
       "remote": "https://github.com/Julesc013/universal-setup.git",
       "required_ref": "refs/heads/main",
-      "revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+      "revision": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
       "source": "universal-setup"
     }
   },
@@ -2475,7 +2475,7 @@
   },
   "windows_instance_isolated_candidate_qualification_03": {
     "authority_promotion": false,
-    "candidate_source_revision": "02add47c0fa74f2299bb68f16532254d4d00ab7e",
+    "candidate_source_revision": "04c7fb0d54ef8f41948cb301d739bda4e980d1b3",
     "coordinator_prepare": false,
     "coordinator_stage": "pending",
     "factorio_execution": false,
@@ -2484,11 +2484,12 @@
     "observer_capture": false,
     "permit_issuance": false,
     "qualification_binding": "pending",
-    "remote_source_closure": "pending",
+    "remote_source_closure": "restart_required_after_provider_revision_change",
     "route_authority": false,
     "status": "active",
     "universal_launcher_revision": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
-    "universal_setup_revision": "3f8489275077347c2918f3bb03614ec6431362ff",
+    "universal_setup_provider_repair": "accepted_main_zip64_inspection",
+    "universal_setup_revision": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
     "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
   },
   "windows_instance_isolated_play_candidate": {
