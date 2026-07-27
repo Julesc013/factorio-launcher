@@ -26,6 +26,12 @@ from datetime import datetime, timezone
 from pathlib import Path, PureWindowsPath
 from typing import Any, Iterable
 
+from tools.play_evidence_resource_spec import baseline_specs
+from tools.play_evidence_stable_io import (
+    EvidenceIo,
+    StableIoError,
+    file_payload_sha256,
+)
 from tools.play_verdict_route import (
     HERMETIC_VERDICT03,
     PlayVerdictRoute,
@@ -35,11 +41,15 @@ from tools.play_verdict_route import (
 
 ROOT = Path(__file__).resolve().parents[1]
 SESSION_SCHEMA = "factorio.gate4c_verdict_session.v1"
+INSTANCE_SESSION_SCHEMA = "facman.play_evidence_session.v2"
 BASELINE_SCHEMA = "factorio.gate4c_baseline_bundle.v1"
+INSTANCE_BASELINE_SCHEMA = "facman.play_evidence_baseline.v2"
 COMPARISON_SCHEMA = "factorio.gate4c_baseline_comparison.v1"
+INSTANCE_COMPARISON_SCHEMA = "facman.play_evidence_comparison.v2"
 HUMAN_OBSERVATION_SCHEMA = "factorio.gate4c_human_observation.v1"
 VERDICT_SCHEMA = "factorio.gate4c_human_verdict.v1"
 CLASSIFICATION_SCHEMA = "factorio.gate4c_effect_classification.v1"
+INSTANCE_CLASSIFICATION_SCHEMA = "facman.play_evidence_classification.v2"
 WORK_UNIT = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
 POLICY_DIGEST = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
 WINDOWS_REPARSE_ATTRIBUTE = 0x400
@@ -148,8 +158,15 @@ def lowercase_digest(value: Any) -> bool:
     return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
 
-def atomic_json(path: Path, value: dict[str, Any]) -> None:
+def atomic_json(
+    path: Path,
+    value: dict[str, Any],
+    evidence_io: EvidenceIo | None = None,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    if evidence_io is not None:
+        evidence_io.write_new_json(path, value)
+        return
     temporary = path.with_name(path.name + ".tmp")
     temporary.write_bytes(
         json.dumps(value, indent=2, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -188,7 +205,12 @@ def prepare_new_output(
     return absolute
 
 
-def read_strict_json(path: Path) -> dict[str, Any]:
+def read_strict_json(
+    path: Path,
+    evidence_io: EvidenceIo | None = None,
+) -> dict[str, Any]:
+    if evidence_io is not None:
+        return evidence_io.read_json(path)["payload"]["document"]
     audit = PREFLIGHT.audit_no_follow(path, require_file=True)
     if not audit["safe"]:
         raise EvidenceError(f"unsafe evidence input: {path}")
@@ -379,15 +401,37 @@ def capture_path(path: Path) -> dict[str, Any]:
     return core
 
 
-def capture_filesystem_resource(resource_id: str, members: Iterable[Path]) -> dict[str, Any]:
+def capture_filesystem_resource(
+    resource_id: str,
+    members: Iterable[Path],
+    evidence_io: EvidenceIo | None = None,
+) -> dict[str, Any]:
     unique = {
         normalized_path(path): Path(os.path.abspath(path))
         for path in members
     }
-    manifests = [
-        capture_path(unique[key])
-        for key in sorted(unique)
-    ]
+    manifests = []
+    for key in sorted(unique):
+        if evidence_io is None:
+            manifests.append(capture_path(unique[key]))
+        else:
+            payload = evidence_io.capture_path(unique[key])["payload"]
+            manifests.append(
+                {
+                    "path": payload["path"],
+                    "present": payload["present"],
+                    "complete": payload["complete"],
+                    "root_identity": digest_value(
+                        payload["before_identity"]
+                    ),
+                    "entries": payload["entries"],
+                    "bytes_hashed": payload["bytes_hashed"],
+                    "gaps": [],
+                    "manifest_digest": payload["manifest_digest"],
+                    "native_identity": payload["before_identity"],
+                    "stability_passes": payload["stability_passes"],
+                }
+            )
     core = {
         "resource_id": resource_id,
         "kind": "filesystem",
@@ -729,11 +773,18 @@ def writable_specs(
     }
 
 
-def capture_resources(specs: dict[str, Any]) -> list[dict[str, Any]]:
+def capture_resources(
+    specs: dict[str, Any],
+    evidence_io: EvidenceIo | None = None,
+) -> list[dict[str, Any]]:
     resources: list[dict[str, Any]] = []
     for resource_id, paths in sorted(specs["filesystem"].items()):
         resources.append(
-            capture_filesystem_resource(resource_id, [Path(path) for path in paths])
+            capture_filesystem_resource(
+                resource_id,
+                [Path(path) for path in paths],
+                evidence_io,
+            )
         )
     for resource_id, keys in sorted(specs["registry"].items()):
         resources.append(
@@ -755,9 +806,14 @@ def capture_resources(specs: dict[str, Any]) -> list[dict[str, Any]]:
     return resources
 
 
-def capture_writable(specs: dict[str, list[str]]) -> list[dict[str, Any]]:
+def capture_writable(
+    specs: dict[str, list[str]],
+    evidence_io: EvidenceIo | None = None,
+) -> list[dict[str, Any]]:
     return [
-        capture_filesystem_resource(resource_id, [Path(path) for path in paths])
+        capture_filesystem_resource(
+            resource_id, [Path(path) for path in paths], evidence_io
+        )
         for resource_id, paths in sorted(specs.items())
     ]
 
@@ -775,11 +831,43 @@ def resource_set_digest(resources: list[dict[str, Any]]) -> str:
     )
 
 
+def validate_preflight_root_identities(
+    specification: dict[str, Any],
+    protected_resources: list[dict[str, Any]],
+    writable_resources: list[dict[str, Any]],
+) -> None:
+    observed = {
+        item["resource_id"]: item
+        for item in protected_resources + writable_resources
+    }
+    for expected_resource in (
+        specification["protected_resources"]
+        + specification["writable_resources"]
+    ):
+        if expected_resource["kind"] != "filesystem":
+            continue
+        actual = observed.get(expected_resource["resource_id"])
+        expected_members = {
+            normalized_path(member["path"]): member["root_identity"]
+            for member in expected_resource["members"]
+        }
+        actual_members = {
+            normalized_path(member["path"]): member.get("native_identity")
+            for member in actual.get("members", [])
+        } if isinstance(actual, dict) else {}
+        if actual_members != expected_members:
+            raise EvidenceError(
+                "resource root changed between preflight and baseline: "
+                + expected_resource["resource_id"]
+            )
+
+
 def validate_ready_preflight(
     path: Path,
     route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    evidence_io: EvidenceIo | None = None,
 ) -> dict[str, Any]:
-    value = read_strict_json(path)
+    value = read_strict_json(path, evidence_io)
     claimed = value.get("preflight_digest")
     core = dict(value)
     core.pop("preflight_digest", None)
@@ -821,6 +909,25 @@ def validate_ready_preflight(
         raise EvidenceError("ready preflight lease expired before baseline capture")
     if not value["host"]["process_inventory"].get("quiet"):
         raise EvidenceError("ready preflight host inventory is not quiet")
+    if route is not HERMETIC_VERDICT03:
+        specification = value.get("resource_specification")
+        if (
+            not isinstance(specification, dict)
+            or not lowercase_digest(
+                specification.get("resource_set_digest")
+            )
+            or digest_value(
+                {
+                    key: item
+                    for key, item in specification.items()
+                    if key != "resource_set_digest"
+                }
+            )
+            != specification["resource_set_digest"]
+        ):
+            raise EvidenceError(
+                "ready preflight resource specification is invalid"
+            )
     return value
 
 
@@ -828,13 +935,44 @@ def validate_session_record(
     path: Path,
     route: PlayVerdictRoute | None = None,
 ) -> dict[str, Any]:
-    value = read_strict_json(path)
-    bound_route = route or route_for_work_unit(str(value.get("work_unit", "")))
+    absolute_path = Path(os.path.abspath(path))
+    value = read_strict_json(absolute_path)
+    bound_route = route or route_for_work_unit(
+        str(value.get("work_unit", ""))
+    )
+    if bound_route is not HERMETIC_VERDICT03:
+        if (
+            absolute_path.parent.name != "sessions"
+            or absolute_path.parent.parent.name != "evidence"
+        ):
+            raise EvidenceError(
+                "instance-isolated verdict session path is not exact"
+            )
+        task_root = absolute_path.parent.parent.parent
+        probe_path = (
+            task_root
+            / "artifacts"
+            / "qualified-build"
+            / "facman_evidence_probe.exe"
+        )
+        value = read_strict_json(absolute_path, EvidenceIo(probe_path))
+        if (
+            value.get("evidence_probe") != str(probe_path)
+            or value.get("task_root") != str(task_root)
+        ):
+            raise EvidenceError(
+                "verdict session does not bind its path-derived evidence probe"
+            )
     claimed = value.get("session_digest")
     core = dict(value)
     core.pop("session_digest", None)
     if (
-        value.get("schema") != SESSION_SCHEMA
+        value.get("schema")
+        != (
+            SESSION_SCHEMA
+            if bound_route is HERMETIC_VERDICT03
+            else INSTANCE_SESSION_SCHEMA
+        )
         or value.get("work_unit") != bound_route.work_unit
         or not lowercase_digest(claimed)
         or digest_value(core) != claimed
@@ -1029,7 +1167,14 @@ def prepare_session(
 ) -> dict[str, Any]:
     if os.name != "nt":
         raise EvidenceError("Gate 4C baseline capture requires Windows")
-    preflight = validate_ready_preflight(args.preflight, route)
+    evidence_io = (
+        EvidenceIo(args.evidence_probe)
+        if route is not HERMETIC_VERDICT03
+        else None
+    )
+    preflight = validate_ready_preflight(
+        args.preflight, route, evidence_io
+    )
     task_root = Path(preflight["task_root"]["path"])
     if (
         task_root.name != route.work_unit
@@ -1091,18 +1236,34 @@ def prepare_session(
     observation_root = operation_root / "process" / "observation"
     observation_root.mkdir(parents=True, exist_ok=False)
     owner = operation_root / ".facman-gate4c-verdict-owner"
-    owner.write_text(
-        route.work_unit + "\n" + args.operation_id + "\n",
-        encoding="utf-8",
-    )
+    owner_content = (
+        route.work_unit + "\n" + args.operation_id + "\n"
+    ).encode("utf-8")
+    if evidence_io is None:
+        owner.write_bytes(owner_content)
+    else:
+        evidence_io.write_new_bytes(
+            owner, owner_content, maximum_bytes=64 * 1024
+        )
 
-    protected = protected_specs(preflight, workspace, route)
-    writable = writable_specs(
-        workspace, instance_root, args.operation_id, route
-    )
+    if route is HERMETIC_VERDICT03:
+        protected = protected_specs(preflight, workspace, route)
+        writable = writable_specs(
+            workspace, instance_root, args.operation_id, route
+        )
+        resource_set = None
+    else:
+        resource_set = preflight["resource_specification"]
+        protected, writable = baseline_specs(resource_set)
     baseline_started_at = utc_now()
-    protected_resources = capture_resources(protected)
-    writable_resources = capture_writable(writable)
+    protected_resources = capture_resources(protected, evidence_io)
+    writable_resources = capture_writable(writable, evidence_io)
+    if resource_set is not None:
+        validate_preflight_root_identities(
+            resource_set,
+            protected_resources,
+            writable_resources,
+        )
     if (
         {item["resource_id"] for item in protected_resources}
         != route.protected_ids
@@ -1111,7 +1272,11 @@ def prepare_session(
     if not all(item["complete"] for item in protected_resources + writable_resources):
         raise EvidenceError("baseline capture is incomplete")
     baseline = {
-        "schema": BASELINE_SCHEMA,
+        "schema": (
+            BASELINE_SCHEMA
+            if route is HERMETIC_VERDICT03
+            else INSTANCE_BASELINE_SCHEMA
+        ),
         "canonicalization_version": "facman.sorted-json.v1",
         "work_unit": route.work_unit,
         "operation_id": args.operation_id,
@@ -1124,11 +1289,28 @@ def prepare_session(
         "protected_baseline_digest": resource_set_digest(protected_resources),
         "writable_baseline_digest": resource_set_digest(writable_resources),
     }
+    if resource_set is not None:
+        baseline["resource_set_digest"] = resource_set[
+            "resource_set_digest"
+        ]
+        baseline["startup_environment_snapshot_digest"] = resource_set[
+            "startup_environment"
+        ]["snapshot_digest"]
+        baseline["evidence_probe"] = {
+            "path": str(evidence_io.probe),
+            "sha256": file_payload_sha256(
+                evidence_io.inspect_file(evidence_io.probe)
+            ),
+        }
     baseline["baseline_bundle_digest"] = digest_value(baseline)
-    atomic_json(baseline_out, baseline)
+    atomic_json(baseline_out, baseline, evidence_io)
 
     classification = {
-        "schema": CLASSIFICATION_SCHEMA,
+        "schema": (
+            CLASSIFICATION_SCHEMA
+            if route is HERMETIC_VERDICT03
+            else INSTANCE_CLASSIFICATION_SCHEMA
+        ),
         "writable_filesystem": [
             {"resource_id": resource_id, "path": path}
             for resource_id, paths in sorted(writable.items())
@@ -1140,7 +1322,7 @@ def prepare_session(
             for path in paths
         ],
     }
-    atomic_json(classification_out, classification)
+    atomic_json(classification_out, classification, evidence_io)
 
     factorio_executable = preflight["factorio_executable"]
     source = preflight["source_evidence"]
@@ -1159,13 +1341,23 @@ def prepare_session(
         principal_id = reviewer_principal["principal_digest"]
     repository_revision = preflight["repositories"]["facman"]["revision"]
     session = {
-        "schema": SESSION_SCHEMA,
+        "schema": (
+            SESSION_SCHEMA
+            if route is HERMETIC_VERDICT03
+            else INSTANCE_SESSION_SCHEMA
+        ),
         "canonicalization_version": "facman.sorted-json.v1",
         "work_unit": route.work_unit,
         "prepared_at": utc_now(),
         "preflight_path": str(Path(os.path.abspath(args.preflight))),
         "preflight_digest": preflight["preflight_digest"],
-        "preflight_file_sha256": PREFLIGHT.sha256_file(args.preflight),
+        "preflight_file_sha256": (
+            PREFLIGHT.sha256_file(args.preflight)
+            if evidence_io is None
+            else file_payload_sha256(
+                evidence_io.hash_file(args.preflight)
+            )
+        ),
         "task_root": str(task_root),
         "workspace": str(workspace),
         "instance_id": instance_id,
@@ -1198,7 +1390,13 @@ def prepare_session(
                 + preflight["preflight_digest"]
             ),
         },
-        "windows_system_root": os.environ.get("SystemRoot", r"C:\Windows"),
+        "windows_system_root": (
+            os.environ.get("SystemRoot", r"C:\Windows")
+            if resource_set is None
+            else resource_set["startup_environment"]["values"][
+                "SystemRoot"
+            ]
+        ),
         "policy_path": str(
             ROOT
             / "contracts"
@@ -1206,28 +1404,75 @@ def prepare_session(
             / route.policy_filename
         ),
         "python_executable": sys.executable,
-        "python_executable_sha256": PREFLIGHT.sha256_file(Path(sys.executable)),
+        "python_executable_sha256": (
+            PREFLIGHT.sha256_file(Path(sys.executable))
+            if evidence_io is None
+            else file_payload_sha256(
+                evidence_io.hash_file(Path(sys.executable))
+            )
+        ),
         "observer_tool": str(ROOT / "tools" / "gate4c_verdict_session.py"),
-        "observer_tool_sha256": PREFLIGHT.sha256_file(
-            ROOT / "tools" / "gate4c_verdict_session.py"
+        "observer_tool_sha256": (
+            PREFLIGHT.sha256_file(
+                ROOT / "tools" / "gate4c_verdict_session.py"
+            )
+            if evidence_io is None
+            else file_payload_sha256(
+                evidence_io.hash_file(
+                    ROOT / "tools" / "gate4c_verdict_session.py"
+                )
+            )
         ),
         "evidence_tool": str(Path(__file__).resolve()),
-        "evidence_tool_sha256": PREFLIGHT.sha256_file(Path(__file__).resolve()),
+        "evidence_tool_sha256": (
+            PREFLIGHT.sha256_file(Path(__file__).resolve())
+            if evidence_io is None
+            else file_payload_sha256(
+                evidence_io.hash_file(Path(__file__).resolve())
+            )
+        ),
         "harness_path": str(Path(os.path.abspath(args.harness))),
-        "harness_sha256": PREFLIGHT.sha256_file(args.harness),
+        "harness_sha256": (
+            PREFLIGHT.sha256_file(args.harness)
+            if evidence_io is None
+            else file_payload_sha256(
+                evidence_io.hash_file(args.harness)
+            )
+        ),
         "classification_roots": str(classification_out),
-        "classification_roots_sha256": PREFLIGHT.sha256_file(
-            classification_out
+        "classification_roots_sha256": (
+            PREFLIGHT.sha256_file(classification_out)
+            if evidence_io is None
+            else file_payload_sha256(
+                evidence_io.hash_file(classification_out)
+            )
         ),
         "baseline_bundle": str(baseline_out),
-        "baseline_bundle_sha256": PREFLIGHT.sha256_file(baseline_out),
+        "baseline_bundle_sha256": (
+            PREFLIGHT.sha256_file(baseline_out)
+            if evidence_io is None
+            else file_payload_sha256(
+                evidence_io.hash_file(baseline_out)
+            )
+        ),
         "protected_baseline_digest": baseline["protected_baseline_digest"],
         "writable_baseline_digest": baseline["writable_baseline_digest"],
         "comparison_out": str(operation_root / "baseline-comparison.json"),
         "plan_out": str(session_out.parent / (args.operation_id + "-plan.json")),
     }
+    if evidence_io is not None and resource_set is not None:
+        session["evidence_probe"] = str(evidence_io.probe)
+        session["evidence_probe_sha256"] = baseline[
+            "evidence_probe"
+        ]["sha256"]
+        session["resource_set_digest"] = resource_set[
+            "resource_set_digest"
+        ]
+        session["startup_environment_snapshot_digest"] = resource_set[
+            "startup_environment"
+        ]["snapshot_digest"]
     session["session_digest"] = digest_value(session)
-    atomic_json(session_out, session)
+    atomic_json(session_out, session, evidence_io)
     return session
 
 
@@ -1235,7 +1480,12 @@ def finish_comparison(
     args: argparse.Namespace,
     route: PlayVerdictRoute | None = None,
 ) -> dict[str, Any]:
-    baseline = read_strict_json(args.baseline)
+    evidence_io = (
+        EvidenceIo(args.evidence_probe)
+        if getattr(args, "evidence_probe", None)
+        else None
+    )
+    baseline = read_strict_json(args.baseline, evidence_io)
     bound_route = route or route_for_work_unit(
         str(baseline.get("work_unit", ""))
     )
@@ -1243,7 +1493,12 @@ def finish_comparison(
     core = dict(baseline)
     core.pop("baseline_bundle_digest", None)
     if (
-        baseline.get("schema") != BASELINE_SCHEMA
+        baseline.get("schema")
+        != (
+            BASELINE_SCHEMA
+            if bound_route is HERMETIC_VERDICT03
+            else INSTANCE_BASELINE_SCHEMA
+        )
         or baseline.get("work_unit") != bound_route.work_unit
         or not lowercase_digest(claimed)
         or digest_value(core) != claimed
@@ -1262,8 +1517,12 @@ def finish_comparison(
         or not (operation_root / ".facman-gate4c-verdict-owner").is_file()
     ):
         raise EvidenceError("comparison output is not the new bound operation record")
-    protected_after = capture_resources(baseline["specs"]["protected"])
-    writable_after = capture_writable(baseline["specs"]["writable"])
+    protected_after = capture_resources(
+        baseline["specs"]["protected"], evidence_io
+    )
+    writable_after = capture_writable(
+        baseline["specs"]["writable"], evidence_io
+    )
     protected_before = {
         item["resource_id"]: item for item in baseline["protected_resources"]
     }
@@ -1294,7 +1553,11 @@ def finish_comparison(
     protected_comparisons = compare(protected_before, protected_after)
     writable_comparisons = compare(writable_before, writable_after)
     output = {
-        "schema": COMPARISON_SCHEMA,
+        "schema": (
+            COMPARISON_SCHEMA
+            if bound_route is HERMETIC_VERDICT03
+            else INSTANCE_COMPARISON_SCHEMA
+        ),
         "canonicalization_version": "facman.sorted-json.v1",
         "work_unit": bound_route.work_unit,
         "operation_id": baseline["operation_id"],
@@ -1308,7 +1571,7 @@ def finish_comparison(
         "protected_changed": any(item["changed"] for item in protected_comparisons),
     }
     output["comparison_digest"] = digest_value(output)
-    atomic_json(args.out, output)
+    atomic_json(args.out, output, evidence_io)
     return output
 
 
@@ -1446,7 +1709,12 @@ def finalize_verdict(
         "product_route_available": False,
     }
     output["verdict_digest"] = digest_value(output)
-    atomic_json(verdict_out, output)
+    evidence_io = (
+        None
+        if bound_route is HERMETIC_VERDICT03
+        else EvidenceIo(Path(first_session["evidence_probe"]))
+    )
+    atomic_json(verdict_out, output, evidence_io)
     return output
 
 
@@ -1460,6 +1728,7 @@ def parser() -> argparse.ArgumentParser:
     prepare.add_argument("--task-root", type=Path, required=True)
     prepare.add_argument("--operation-id", required=True)
     prepare.add_argument("--harness", type=Path, required=True)
+    prepare.add_argument("--evidence-probe", type=Path)
     prepare.add_argument("--baseline-out", type=Path, required=True)
     prepare.add_argument("--classification-out", type=Path, required=True)
     prepare.add_argument("--session-out", type=Path, required=True)
@@ -1469,6 +1738,7 @@ def parser() -> argparse.ArgumentParser:
     finish = commands.add_parser("finish")
     finish.add_argument("--baseline", type=Path, required=True)
     finish.add_argument("--out", type=Path, required=True)
+    finish.add_argument("--evidence-probe", type=Path)
     finish.add_argument("--route", default=HERMETIC_VERDICT03.route_id)
     finalize = commands.add_parser("finalize")
     finalize.add_argument("--first-session", type=Path, required=True)

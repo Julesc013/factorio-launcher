@@ -1,0 +1,82 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-PLAY-EVIDENCE-STABLE-IO-01
+title: Stable Play evidence I/O
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-07-27T14:17:16Z
+owner: unassigned
+objective: >
+  Replace authority-bearing evidence path reads, archive extraction, directory manifests, and evidence writes with native handle-bound bounded I/O; bind baseline resources to one preflight snapshot; add provider-side root revalidation; do not execute Factorio or promote authority.
+allowed_paths:
+  - .aide/history/evidence-integrity-repair-2026-07-27/**
+  - .aide/memory/**
+  - .aide/queue/**
+  - README.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - contracts/schema/factorio/**
+  - contracts/schema/index.json
+  - runtime/archive/**
+  - tests/native/CMakeLists.txt
+  - tests/native/facman_evidence_probe.cpp
+  - tests/native/gate4c_verdict_harness.cpp
+  - tests/native/play_evidence/**
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tests/test_gate4c_verdict_evidence.py
+  - tests/test_gate4c_verdict_preflight.py
+  - tests/test_instance_isolated_candidate_qualification.py
+  - tests/test_instance_isolated_verdict_coordinator.py
+  - tests/test_play_evidence_stable_io.py
+  - tools/gate4c_verdict03_coordinator.py
+  - tools/gate4c_verdict_evidence.py
+  - tools/gate4c_verdict_preflight.py
+  - tools/instance_isolated_candidate_qualification.py
+  - tools/instance_isolated_verdict_coordinator.py
+  - tools/play_evidence_stable_io.py
+  - tools/play_evidence_resource_spec.py
+  - tools/play_verdict_route.py
+  - tools/project_state.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+affected_native_targets:
+  - facman_evidence_io_static
+  - facman_evidence_probe
+  - facman_gate4c_verdict_harness
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_preflight
+  - tests.test_instance_isolated_candidate_qualification
+  - tests.test_instance_isolated_verdict_coordinator
+  - tests.test_play_evidence_stable_io
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-27T14:17:16Z
+verified_pending_closeout_at: 2026-07-27T15:21:33Z
+implementation_state: implemented
+result: PASS

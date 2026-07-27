@@ -14,7 +14,9 @@ from types import MappingProxyType
 from typing import Any, Mapping
 
 
-QUALIFICATION_SCHEMA = "facman.play_candidate_qualification_binding.v1"
+QUALIFICATION_SCHEMA_V1 = "facman.play_candidate_qualification_binding.v1"
+QUALIFICATION_SCHEMA_V2 = "facman.play_candidate_qualification_binding.v2"
+QUALIFICATION_SCHEMA = QUALIFICATION_SCHEMA_V2
 CANONICALIZATION = "facman.sorted-json.v1"
 LOWERCASE_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 LOWERCASE_COMMIT = re.compile(r"^[0-9a-f]{40}$")
@@ -54,6 +56,10 @@ class PlayVerdictRoute:
     operation_prefix: str
     writable_paths: tuple[tuple[str, str], ...]
     protected_ids: frozenset[str]
+    qualification_schema: str = QUALIFICATION_SCHEMA_V1
+    required_artifacts: frozenset[str] = frozenset(
+        {"facman", "candidate_smoke", "verdict_harness", "cmake_cache"}
+    )
 
     def writable_mapping(self) -> Mapping[str, str]:
         return MappingProxyType(dict(self.writable_paths))
@@ -113,8 +119,8 @@ HERMETIC_VERDICT03 = PlayVerdictRoute(
 
 INSTANCE_ISOLATED_REVALIDATION = PlayVerdictRoute(
     route_id="windows-instance-isolated-revalidation",
-    work_unit="FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
-    preflight_schema="factorio.instance_isolated_play_verdict_preflight.v1",
+    work_unit="FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+    preflight_schema="factorio.instance_isolated_play_verdict_preflight.v2",
     policy_digest=(
         "8d8189a9e8fc9ff7e479f7dda1adf0ea"
         "516bed2878046468022b2da8355e2432"
@@ -169,6 +175,16 @@ INSTANCE_ISOLATED_REVALIDATION = PlayVerdictRoute(
             "facman.package",
             "factorio.source_artifacts",
             "registry.factorio_uninstall",
+        }
+    ),
+    qualification_schema=QUALIFICATION_SCHEMA_V2,
+    required_artifacts=frozenset(
+        {
+            "facman",
+            "candidate_smoke",
+            "verdict_harness",
+            "evidence_probe",
+            "cmake_cache",
         }
     ),
 )
@@ -273,6 +289,13 @@ def load_qualification_binding(
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise RouteBindingError(f"qualification binding is unreadable: {exc}") from exc
+    return parse_qualification_binding(value, route)
+
+
+def parse_qualification_binding(
+    value: Any,
+    route: PlayVerdictRoute,
+) -> CandidateQualificationBinding:
     root = _closed_object(
         value,
         {
@@ -292,7 +315,7 @@ def load_qualification_binding(
     core = dict(root)
     core.pop("qualification_digest")
     if (
-        root["schema"] != QUALIFICATION_SCHEMA
+        root["schema"] != route.qualification_schema
         or root["canonicalization_version"] != CANONICALIZATION
         or root["route_id"] != route.route_id
         or root["work_unit"] != route.work_unit
@@ -305,12 +328,10 @@ def load_qualification_binding(
         "qualification source binding",
     )
     artifacts_value = root["artifacts"]
-    if not isinstance(artifacts_value, dict) or set(artifacts_value) != {
-        "facman",
-        "candidate_smoke",
-        "verdict_harness",
-        "cmake_cache",
-    }:
+    if (
+        not isinstance(artifacts_value, dict)
+        or set(artifacts_value) != route.required_artifacts
+    ):
         raise RouteBindingError("qualification artifact binding is not exact")
     artifacts: list[tuple[str, ArtifactBinding]] = []
     for name, raw in sorted(artifacts_value.items()):

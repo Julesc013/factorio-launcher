@@ -17,6 +17,7 @@ from unittest import mock
 from tools.play_verdict_route import (
     INSTANCE_ISOLATED_REVALIDATION as INSTANCE_ROUTE,
 )
+from tools.play_evidence_resource_spec import baseline_specs
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
@@ -294,6 +295,63 @@ class Gate4CVerdictEvidenceTests(unittest.TestCase):
         self.assertEqual(
             EVIDENCE.resource_set_digest(resources),
             EVIDENCE.resource_set_digest(list(reversed(resources))),
+        )
+
+    def test_baseline_consumes_preflight_paths_without_environment_rediscovery(
+        self,
+    ) -> None:
+        specification = {
+            "protected_resources": [
+                {
+                    "resource_id": "factorio.appdata",
+                    "kind": "filesystem",
+                    "source": "startup_environment_snapshot",
+                    "members": [
+                        {
+                            "path": r"C:\Observed\AppData\Factorio",
+                            "root_identity": {"present": False},
+                        }
+                    ],
+                },
+                {
+                    "resource_id": "registry.factorio_uninstall",
+                    "kind": "registry",
+                    "source": "preflight_registry_discovery",
+                    "members": [
+                        {"hive": "HKCU", "subkey": r"Software\Uninstall"}
+                    ],
+                },
+            ],
+            "writable_resources": [
+                {
+                    "resource_id": "instance.closure",
+                    "kind": "filesystem",
+                    "source": "frozen_route_writable_mapping",
+                    "members": [
+                        {
+                            "path": r"D:\Task\workspace\instances\selected",
+                            "root_identity": {"present": True},
+                        }
+                    ],
+                }
+            ],
+        }
+        with mock.patch.dict(
+            os.environ,
+            {
+                "APPDATA": r"Z:\Substituted\AppData",
+                "LOCALAPPDATA": r"Z:\Substituted\Local",
+            },
+            clear=False,
+        ):
+            protected, writable = baseline_specs(specification)
+        self.assertEqual(
+            protected["filesystem"]["factorio.appdata"],
+            [r"C:\Observed\AppData\Factorio"],
+        )
+        self.assertEqual(
+            writable["instance.closure"],
+            [r"D:\Task\workspace\instances\selected"],
         )
 
     def test_new_output_is_exact_task_owned_and_append_only(self) -> None:

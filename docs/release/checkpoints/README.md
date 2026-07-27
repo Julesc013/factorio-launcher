@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `instance_isolated_verdict_protocol_integrity` and the active WorkUnit is `FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `play_evidence_stable_io` and the active WorkUnit is `FACMAN-PLAY-EVIDENCE-STABLE-IO-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
