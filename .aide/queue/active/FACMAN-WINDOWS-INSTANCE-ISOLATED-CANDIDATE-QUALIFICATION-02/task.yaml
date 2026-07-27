@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
 title: Qualify the exact accepted instance-isolated harness
-status: blocked
-lifecycle_state: blocked
-planning_state: blocked
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-07-26T20:12:43Z
 owner: unassigned
 objective: >
@@ -36,9 +36,10 @@ architecture_invariants:
   - no Factorio process WPR permit verdict route or authority is produced
 depends_on:
   - FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01
+  - FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01
 source_binding:
   factorio_launcher:
-    revision: 426d13cc2f68782b40eae66f0fb0621a607b7998
+    revision: d1a3c2029a4ae21c58eda34d7011938bf7bf04cb
     required_ref: origin/dev
   universal_launcher:
     revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
@@ -55,13 +56,14 @@ closeout_checklist:
   - no required obligation was skipped
   - structured commit check passes
 active_at: 2026-07-26T21:03:21Z
-updated_at: 2026-07-26T21:03:21Z
-blocked_at: 2026-07-26T21:19:52Z
-blocker: >
-  The first live producer run failed closed because the coordinator staged an
-  empty installation lifecycle and structural-only verification while the
-  repaired runtime correctly requires exact active current evidence.
-  FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01 must land and the exact
-  candidate must be rebuilt before qualification restarts.
-implementation_state: blocked
-result: PENDING
+updated_at: 2026-07-27T04:12:00Z
+reactivated_at: 2026-07-27T03:57:23Z
+implementation_state: evidence_complete
+local_validation_state: passed
+hosted_validation_state: pending
+remote_source_closure_sha256: 48d6444f620d3f1791104822436a6990093ee6377a73844630de568716180409
+qualification_digest: c73b3b41799246516fcc130fc631f64a80fcd956fd4cf5cb5eb3f92a39b12beb
+qualification_binding_sha256: 0bb183c2888c75bf93f6fdb850819323b0772e1ce75a3b5ea2886c2b308bfa31
+qualification_report_sha256: 631e043319534da8ddccab60ea7e88ea2be24416b15bce855fcf16d3b9ef2c10
+staging_state: passed_without_prepare
+result: LOCAL_PASS_PENDING_HOSTED_REVIEW

@@ -2221,9 +2221,9 @@
     "archived_task_count": 61,
     "counts": {
       "active": 1,
-      "blocked": 4,
+      "blocked": 3,
       "planned": 1,
-      "verified": 5
+      "verified": 6
     },
     "records": [
       {
@@ -2252,9 +2252,9 @@
       },
       {
         "id": "FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "verified",
         "queue": "active",
-        "status": "active"
+        "status": "verified"
       },
       {
         "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01",
@@ -2264,9 +2264,9 @@
       },
       {
         "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02",
-        "lifecycle_state": "blocked",
+        "lifecycle_state": "active",
         "queue": "active",
-        "status": "blocked"
+        "status": "active"
       },
       {
         "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
