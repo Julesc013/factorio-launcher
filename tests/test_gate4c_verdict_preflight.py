@@ -615,6 +615,114 @@ class Gate4CVerdictPreflightTests(unittest.TestCase):
             attestation.write_text(json.dumps(value), encoding="utf-8")
             self.assertFalse(PREFLIGHT.operator_attestation(attestation, **arguments)["valid"])
 
+    def test_instance_attestation_separates_machine_facts_operator_claims_and_power(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "instance-attestation.json"
+            principal_core = {
+                "schema": PREFLIGHT.WINDOWS_PRINCIPAL_SCHEMA,
+                "provider_id": "windows.local-token.v1",
+                "principal_sid_digest": "9" * 64,
+                "windows_session_id": 7,
+                "integrity": "medium",
+                "valid": True,
+            }
+            principal = {
+                **principal_core,
+                "principal_digest": PREFLIGHT.digest_value(principal_core),
+            }
+            processes = {
+                "available": True,
+                "processes": [],
+                "quiet": True,
+            }
+            restart_core = {
+                "schema": PREFLIGHT.PENDING_RESTART_SCHEMA,
+                "available": True,
+                "pending": False,
+                "sources": [],
+                "valid": True,
+            }
+            pending_restart = {
+                **restart_core,
+                "observation_digest": PREFLIGHT.digest_value(restart_core),
+            }
+            claims = {
+                name: True
+                for name in PREFLIGHT.INSTANCE_OPERATOR_CLAIMS
+            }
+            value = PREFLIGHT.build_instance_operator_attestation(
+                attested_at="2026-07-27T13:00:00Z",
+                reviewer_principal=principal,
+                machine_binding_id="machine",
+                boot_identity="boot",
+                observer_self_test_digest="observer",
+                host_state_digest_value="host",
+                processes=processes,
+                pending_restart=pending_restart,
+                operator_claims=claims,
+            )
+            path.write_text(json.dumps(value), encoding="utf-8")
+            arguments = {
+                "machine_binding_id": "machine",
+                "boot_identity": "boot",
+                "observer_self_test_digest": "observer",
+                "observer_generated_at": "2026-07-27T12:59:00Z",
+                "current_host_state_digest": "host",
+                "reviewer_principal": principal,
+                "processes": processes,
+                "pending_restart": pending_restart,
+                "now": datetime(
+                    2026, 7, 27, 13, 5, tzinfo=timezone.utc
+                ),
+            }
+            validated = PREFLIGHT.instance_operator_attestation(
+                path, **arguments
+            )
+            self.assertTrue(validated["valid"])
+            self.assertFalse(
+                validated["power_request"]["claimed_active"]
+            )
+            self.assertEqual(
+                set(validated["operator_attestations"]),
+                PREFLIGHT.INSTANCE_OPERATOR_CLAIMS,
+            )
+
+            false_claims = {**claims}
+            false_claims["backup_and_sync_activity_paused"] = False
+            value = PREFLIGHT.build_instance_operator_attestation(
+                attested_at="2026-07-27T13:00:00Z",
+                reviewer_principal=principal,
+                machine_binding_id="machine",
+                boot_identity="boot",
+                observer_self_test_digest="observer",
+                host_state_digest_value="host",
+                processes=processes,
+                pending_restart=pending_restart,
+                operator_claims=false_claims,
+            )
+            path.write_text(json.dumps(value), encoding="utf-8")
+            self.assertFalse(
+                PREFLIGHT.instance_operator_attestation(
+                    path, **arguments
+                )["valid"]
+            )
+
+            changed_principal = {
+                **principal,
+                "windows_session_id": 8,
+            }
+            changed_arguments = {
+                **arguments,
+                "reviewer_principal": changed_principal,
+            }
+            self.assertFalse(
+                PREFLIGHT.instance_operator_attestation(
+                    path, **changed_arguments
+                )["valid"]
+            )
+
     def test_attestation_rejects_stale_future_unscoped_and_changed_host(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "attestation.json"

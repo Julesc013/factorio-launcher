@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-PROJECT-STATE-DETERMINISM-01
 title: Make queue and generated project state deterministic
-status: verified_pending_closeout
-lifecycle_state: verified_pending_closeout
-planning_state: verified_pending_closeout
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-27T12:42:26Z
 owner: unassigned
 objective: >
@@ -73,3 +73,6 @@ active_at: 2026-07-27T12:42:27Z
 verified_pending_closeout_at: 2026-07-27T12:58:53Z
 implementation_state: implemented
 result: PASS
+reviewed_at: 2026-07-27T13:20:33Z
+closed_at: 2026-07-27T13:20:41Z
+archived_at: 2026-07-27T13:20:42Z

@@ -692,20 +692,182 @@ Session load_session(
     return output;
 }
 
-std::string reviewed_plan_digest(const Session& session)
+std::string verified_plan_digest(const std::string& text)
 {
     auto parsed = json::parse(
-        stable_read(session.plan_out, 8U * 1024U * 1024U),
+        text,
         {8U * 1024U * 1024U, 32U, 100000U, 1024U * 1024U});
     if (!parsed || !parsed.value().is_object()) {
         throw std::runtime_error("reviewed plan artifact is malformed");
     }
+    require_closed_keys(
+        parsed.value(),
+        {
+            "canonicalization_version",
+            "human_verdict_recorded",
+            "plan_core",
+            "plan_digest",
+            "plan_id",
+            "public_command_available",
+            "schema",
+        },
+        "reviewed plan artifact");
     const std::string plan_digest =
         string_member(parsed.value(), "plan_digest");
-    if (!lowercase_hex(plan_digest, 64U)) {
-        throw std::runtime_error("reviewed plan digest is malformed");
+    const json::Value& core = require_member(parsed.value(), "plan_core");
+    if (
+        !lowercase_hex(plan_digest, 64U) ||
+        !core.is_object() ||
+        string_member(parsed.value(), "canonicalization_version") !=
+            "facman.sorted-json.v1" ||
+        string_member(parsed.value(), "plan_id") !=
+            "play-plan-" + plan_digest.substr(0U, 32U) ||
+        bool_member(parsed.value(), "public_command_available") ||
+        bool_member(parsed.value(), "human_verdict_recorded") ||
+        digest(canonical_without(core, "")) != plan_digest) {
+        throw std::runtime_error(
+            "reviewed plan digest was not recomputed from its exact core");
     }
     return plan_digest;
+}
+
+std::string reviewed_plan_digest(const Session& session)
+{
+    return verified_plan_digest(
+        stable_read(session.plan_out, 8U * 1024U * 1024U));
+}
+
+std::string exact_plan_approval_phrase(const std::string& plan_digest)
+{
+    return "ISSUE EXACT MENU PERMIT " + plan_digest;
+}
+
+bool exact_plan_approval_matches(
+    const std::string& supplied,
+    const std::string& plan_digest)
+{
+    return supplied == exact_plan_approval_phrase(plan_digest);
+}
+
+int plan_approval_protocol_self_test()
+{
+    json::ObjectBuilder core;
+    core.add_string(
+        "schema", "factorio.instance_isolated_play_candidate_plan.v1");
+    core.add_string("operation", "instance.play");
+    core.add_string("instance_id", "synthetic-instance");
+    const std::string plan_digest =
+        canonical_object_digest(core.serialize());
+    json::ObjectBuilder plan;
+    plan.add_string(
+        "schema", "factorio.instance_isolated_play_candidate_plan.v1");
+    plan.add_string("canonicalization_version", "facman.sorted-json.v1");
+    plan.add_string(
+        "plan_id", "play-plan-" + plan_digest.substr(0U, 32U));
+    plan.add_string("plan_digest", plan_digest);
+    plan.add_object("plan_core", core);
+    plan.add_bool("public_command_available", false);
+    plan.add_bool("human_verdict_recorded", false);
+    if (
+        verified_plan_digest(plan.serialize()) != plan_digest ||
+        !exact_plan_approval_matches(
+            exact_plan_approval_phrase(plan_digest), plan_digest) ||
+        exact_plan_approval_matches(
+            "ISSUE EXACT MENU PERMIT " + std::string(64U, '0'),
+            plan_digest)) {
+        std::cerr << "exact plan approval protocol drifted\n";
+        return 1;
+    }
+    json::ObjectBuilder forged;
+    forged.add_string(
+        "schema", "factorio.instance_isolated_play_candidate_plan.v1");
+    forged.add_string(
+        "canonicalization_version", "facman.sorted-json.v1");
+    forged.add_string("plan_id", "play-plan-" + std::string(32U, '0'));
+    forged.add_string("plan_digest", std::string(64U, '0'));
+    forged.add_object("plan_core", core);
+    forged.add_bool("public_command_available", false);
+    forged.add_bool("human_verdict_recorded", false);
+    try {
+        (void)verified_plan_digest(forged.serialize());
+        std::cerr << "forged plan digest was accepted\n";
+        return 1;
+    } catch (const std::runtime_error&) {
+        return 0;
+    }
+}
+
+class ExecutionStateLease {
+public:
+    ExecutionStateLease()
+    {
+        active_ = SetThreadExecutionState(
+            ES_CONTINUOUS | ES_SYSTEM_REQUIRED) != 0;
+        if (!active_) {
+            throw std::runtime_error(
+                "Windows execution-state lease could not be acquired");
+        }
+    }
+
+    ExecutionStateLease(const ExecutionStateLease&) = delete;
+    ExecutionStateLease& operator=(const ExecutionStateLease&) = delete;
+
+    ~ExecutionStateLease()
+    {
+        if (active_) {
+            (void)SetThreadExecutionState(ES_CONTINUOUS);
+        }
+    }
+
+    void release()
+    {
+        if (
+            active_ &&
+            SetThreadExecutionState(ES_CONTINUOUS) == 0) {
+            throw std::runtime_error(
+                "Windows execution-state lease could not be released");
+        }
+        active_ = false;
+    }
+
+private:
+    bool active_ = false;
+};
+
+std::string power_request_record(
+    const Session& session,
+    const std::string& plan_digest,
+    const std::string& state)
+{
+    json::ObjectBuilder record;
+    record.add_string(
+        "schema", "factorio.instance_isolated_power_request_lease.v1");
+    record.add_string("work_unit", session.route.work_unit);
+    record.add_string("operation_id", session.operation_id);
+    record.add_string("plan_digest", plan_digest);
+    record.add_string(
+        "provider", "windows.set_thread_execution_state.v1");
+    record.add_string("state", state);
+    record.add_bool("grants_authority", false);
+    const std::string core = record.serialize();
+    auto parsed = json::parse(core);
+    if (!parsed) {
+        throw std::runtime_error(
+            "power-request evidence encoding failed");
+    }
+    json::ObjectBuilder closed;
+    for (const std::string& key : parsed.value().object_keys()) {
+        closed.add_value(key, require_member(parsed.value(), key.c_str()));
+    }
+    closed.add_string("evidence_digest", digest(core));
+    return closed.serialize() + "\n";
+}
+
+int power_request_protocol_self_test()
+{
+    ExecutionStateLease lease;
+    lease.release();
+    return 0;
 }
 
 std::string broker_resource_binding_digest(const Session& session)
@@ -2624,6 +2786,12 @@ int run(
             }
         };
     write_new(session.plan_out, launch::hermetic_candidate_plan_json(plan.value()) + "\n");
+    const std::string persisted_plan_digest =
+        reviewed_plan_digest(session);
+    if (persisted_plan_digest != plan.value().plan_digest) {
+        throw std::runtime_error(
+            "persisted plan differs from the in-memory reviewed candidate");
+    }
     std::cout
         << "\nGate 4C exact operation review\n"
         << "  operation: instance.play\n"
@@ -2636,7 +2804,9 @@ int run(
         << "This issues one 30-second, one-use permit and starts the exact reviewed\n"
         << "Factorio candidate. It does not record a human verdict.\n\n"
         << std::flush;
-    if (shared_connection != nullptr) {
+    if (
+        session.route.kind == VerdictRouteKind::hermetic_verdict03 &&
+        shared_connection != nullptr) {
         wait_for_verdict03_plan_approval(
             session, plan.value().plan_digest);
     } else {
@@ -2644,11 +2814,30 @@ int run(
                   << plan.value().plan_digest << "\n> " << std::flush;
         std::string approval;
         std::getline(std::cin, approval);
-        if (approval !=
-            "ISSUE EXACT MENU PERMIT " + plan.value().plan_digest) {
+        if (!exact_plan_approval_matches(
+                approval, plan.value().plan_digest)) {
             std::cout << "No permit issued; candidate was not started.\n";
             return 3;
         }
+    }
+    std::unique_ptr<ExecutionStateLease> power_request;
+    if (
+        session.route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        power_request = std::make_unique<ExecutionStateLease>();
+        std::error_code directory_error;
+        fs::create_directories(
+            session.operation_root / "observer-artifacts",
+            directory_error);
+        if (directory_error) {
+            throw std::runtime_error(
+                "power-request evidence directory could not be created");
+        }
+        write_new(
+            session.operation_root / "observer-artifacts" /
+                "power-request-acquired.json",
+            power_request_record(
+                session, plan.value().plan_digest, "acquired"));
     }
 
     std::unique_ptr<ObserverBrokerClient> observer_broker;
@@ -2715,6 +2904,14 @@ int run(
                 "Factorio medium-integrity evidence failed: " +
                 factorio_security_error);
         }
+    }
+    if (power_request) {
+        power_request->release();
+        write_new(
+            session.operation_root / "observer-artifacts" /
+                "power-request-released.json",
+            power_request_record(
+                session, plan.value().plan_digest, "released"));
     }
 
     auto compared = run_python(
@@ -2986,6 +3183,18 @@ int main(int argc, char** argv)
         if (argc == 2 && std::string(argv[1]) == "--self-test-route-binding") {
             return route_binding_self_test();
         }
+#ifdef _WIN32
+        if (
+            argc == 2 &&
+            std::string(argv[1]) == "--self-test-plan-approval-protocol") {
+            return plan_approval_protocol_self_test();
+        }
+        if (
+            argc == 2 &&
+            std::string(argv[1]) == "--self-test-power-request-protocol") {
+            return power_request_protocol_self_test();
+        }
+#endif
         if (argc == 4 && std::string(argv[1]) == "--verify-packet") {
             return verify_packet(
                 facman::platform::path_from_utf8(argv[2]), argv[3]);

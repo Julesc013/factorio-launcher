@@ -47,6 +47,7 @@ class PlayVerdictRoute:
     plan_schema: str
     packet_schema: str
     observation_schema: str
+    human_observation_schema: str
     observation_provider_revision: str
     isolation_mode: str
     instance_id: str
@@ -70,6 +71,7 @@ HERMETIC_VERDICT03 = PlayVerdictRoute(
     plan_schema="factorio.hermetic_play_candidate_plan.v1",
     packet_schema="factorio.play_candidate_evidence_packet.v1",
     observation_schema="factorio.play_candidate_observation.v1",
+    human_observation_schema="factorio.gate4c_human_observation.v1",
     observation_provider_revision="bound-observation-artifact.v1",
     isolation_mode="hermetic",
     instance_id="gate-4c-disposable-2-0-77",
@@ -124,6 +126,9 @@ INSTANCE_ISOLATED_REVALIDATION = PlayVerdictRoute(
     packet_schema="factorio.instance_isolated_play_candidate_packet.v1",
     observation_schema=(
         "factorio.instance_isolated_play_candidate_observation.v1"
+    ),
+    human_observation_schema=(
+        "factorio.instance_isolated_human_observation.v2"
     ),
     observation_provider_revision="gate4c-etw-file-registry-process.v6",
     isolation_mode="instance_isolated",
