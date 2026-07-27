@@ -41583,7 +41583,15 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     task_create_parser.add_argument("--objective", required=True)
     task_create_parser.add_argument("--path", action="append", required=True)
     task_create_parser.set_defaults(handler=command_task_create)
-    for lifecycle_command in ("start", "verify", "review", "close", "block"):
+    for lifecycle_command in (
+        "start",
+        "verify",
+        "review",
+        "close",
+        "block",
+        "await-operator",
+        "supersede",
+    ):
         lifecycle_parser = task_subparsers.add_parser(lifecycle_command)
         lifecycle_parser.add_argument("--task-id", required=True)
         if lifecycle_command == "verify":

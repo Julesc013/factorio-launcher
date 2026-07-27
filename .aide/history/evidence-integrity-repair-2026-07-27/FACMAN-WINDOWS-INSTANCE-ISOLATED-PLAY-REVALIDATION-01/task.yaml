@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01
 title: Revalidate exact Windows instance-isolated Play candidate
-status: blocked
-lifecycle_state: blocked
-planning_state: blocked
+status: superseded
+lifecycle_state: archived
+planning_state: superseded
 created_at: 2026-07-26T17:31:26Z
 owner: unassigned
 objective: >
@@ -100,6 +100,14 @@ blocker: >
   binding are accepted and staged. The next action is coordinator prepare and
   the fresh interactive observer/permit/Factorio/operator session, which must
   remain human-controlled and cannot be completed by automation.
+supersession_state: superseded_before_prepare
+superseded_by: FACMAN-PROJECT-STATE-DETERMINISM-01
+prepare_invoked: false
+permit_issued: false
+factorio_started: false
+observer_started: false
+baseline_captured: false
+human_verdict: unset
 commit_template: .aide/git/commit-template.md
 closeout_checklist:
   - allowed path scope reconciled
@@ -110,3 +118,5 @@ closeout_checklist:
 active_at: 2026-07-26T17:31:27Z
 blocked_at: 2026-07-26T18:09:20Z
 updated_at: 2026-07-27T04:31:50Z
+superseded_at: 2026-07-27T12:41:59Z
+archived_at: 2026-07-27T12:42:26Z

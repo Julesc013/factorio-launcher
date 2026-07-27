@@ -1,0 +1,11 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-PROJECT-STATE-DETERMINISM-01
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-07-27T12:42:26Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-PROJECT-STATE-DETERMINISM-01/evidence/
+active_at: 2026-07-27T12:42:27Z
+verified_pending_closeout_at: 2026-07-27T12:58:53Z
+implementation_state: implemented

@@ -7,10 +7,16 @@ import argparse
 import json
 import re
 import tomllib
+import sys
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import aide_queue_records
+
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 SUPPORT_PATH = ROOT / "release" / "index" / "support_matrix.v1.toml"
 CAPABILITY_PATH = ROOT / "contracts" / "policy" / "capabilities.v1.toml"
@@ -39,6 +45,9 @@ def provider_pins() -> dict[str, dict[str, str]]:
             "source": component["source"],
             "revision": component["pin"],
             "pin_kind": component.get("pin_kind", "provider_revision"),
+            "remote": component.get("remote", ""),
+            "required_ref": component.get("required_ref", ""),
+            "reachability": component.get("reachability", ""),
         }
         for component in lock["component"]
     }
@@ -93,37 +102,82 @@ def capability_state() -> list[dict[str, Any]]:
     return sorted(policy.get("capability", []), key=lambda item: str(item.get("id", "")))
 
 
-def yaml_field(path: Path, name: str) -> str:
-    if not path.is_file():
-        return ""
-    match = re.search(
-        rf"(?m)^{re.escape(name)}:\s*(.*?)\s*$",
-        path.read_text(encoding="utf-8"),
+def scorecard_state(
+    status: dict[str, Any],
+    pins: dict[str, dict[str, str]],
+    capabilities: list[dict[str, Any]],
+) -> dict[str, int]:
+    evidence = status["scorecard_evidence"]
+    published_dependencies = sum(
+        1
+        for component_id, component in pins.items()
+        if component_id != "factorio_binding"
+        and re.fullmatch(r"[0-9a-f]{40}", component["revision"])
+        and component.get("remote")
+        and component.get("required_ref")
+        and component.get("reachability") == "required_for_source_closure"
     )
-    return match.group(1).strip("\"'") if match else ""
+    published_facman = int(
+        bool(status["product"]["canonical_main_promotion"])
+        and re.fullmatch(
+            r"[0-9a-f]{40}",
+            str(status["validation"]["accepted_revision"]),
+        )
+        is not None
+    )
+    available_real_play_routes = {
+        str(capability["id"])
+        for capability in capabilities
+        if str(capability.get("id", "")).startswith("launch.execute.")
+        and capability.get("status") == "available"
+    }
+    accepted_route_ids = set(evidence["accepted_real_play_route_ids"])
+    if accepted_route_ids != available_real_play_routes:
+        raise ValueError(
+            "scorecard accepted route evidence disagrees with available "
+            "launch.execute capabilities"
+        )
+    return {
+        "published_first_party_pins": published_facman + published_dependencies,
+        "accepted_real_play_routes": len(accepted_route_ids),
+        "silent_foreign_mutations": len(
+            set(evidence["silent_foreign_mutation_ids"])
+        ),
+        "observed_player_journeys": len(
+            set(evidence["observed_player_journey_ids"])
+        ),
+    }
 
 
-def queue_state() -> dict[str, Any]:
-    records: list[dict[str, str]] = []
-    for queue_name in ("active", "next"):
-        root = ROOT / ".aide" / "queue" / queue_name
-        for task_root in sorted(path for path in root.iterdir() if path.is_dir()):
-            status_path = task_root / "status.yaml"
-            records.append(
-                {
-                    "id": task_root.name,
-                    "queue": queue_name,
-                    "status": yaml_field(status_path, "status"),
-                    "lifecycle_state": yaml_field(status_path, "lifecycle_state"),
-                }
-            )
+def queue_state(root: Path = ROOT) -> dict[str, Any]:
+    records = [
+        {
+            "id": record.id,
+            "queue": record.queue,
+            "status": record.status,
+            "lifecycle_state": record.lifecycle_state,
+        }
+        for record in aide_queue_records.read_queue_records(
+            root / ".aide" / "queue"
+        )
+    ]
     counts: dict[str, int] = {}
     for record in records:
         state = record["lifecycle_state"] or "unknown"
         counts[state] = counts.get(state, 0) + 1
+    current = [
+        record["id"]
+        for record in records
+        if record["lifecycle_state"] in {"active_automated", "awaiting_operator"}
+    ]
+    if len(current) > 1:
+        raise aide_queue_records.QueueRecordError(
+            "more than one WorkUnit is active_automated or awaiting_operator: "
+            + ", ".join(current)
+        )
     archived = sum(
         1
-        for checkpoint in (ROOT / ".aide" / "history").iterdir()
+        for checkpoint in (root / ".aide" / "history").iterdir()
         if checkpoint.is_dir()
         for task in checkpoint.iterdir()
         if task.is_dir()
@@ -131,6 +185,7 @@ def queue_state() -> dict[str, Any]:
     return {
         "records": records,
         "counts": counts,
+        "current": current[0] if current else None,
         "archived_task_count": archived,
     }
 
@@ -138,6 +193,7 @@ def queue_state() -> dict[str, Any]:
 def collect() -> dict[str, Any]:
     status = load_toml(STATUS_PATH)
     pins = provider_pins()
+    capabilities = capability_state()
     return {
         "schema": "facman.project_state.v2",
         "product_version": status["product_version"],
@@ -163,6 +219,9 @@ def collect() -> dict[str, Any]:
         "gate4c_verdict03_postrun_repair": status["gate4c_verdict03_postrun_repair"],
         "windows_instance_isolated_play_policy": status["windows_instance_isolated_play_policy"],
         "windows_instance_isolated_play_candidate": status["windows_instance_isolated_play_candidate"],
+        "windows_instance_isolated_play_revalidation_01": status[
+            "windows_instance_isolated_play_revalidation_01"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -209,13 +268,26 @@ def collect() -> dict[str, Any]:
                 "current_dev_revision",
                 status["h1_candidate_revision"],
             ),
+            "canonical_main": status["canonical_main_revision"],
+            "runtime_candidate": status["runtime_candidate_revision"],
+            "qualification_source": status["qualification_source_revision"],
+            "qualification_evidence": status[
+                "qualification_evidence_revision"
+            ],
+            "qualification_integration": status[
+                "qualification_integration_revision"
+            ],
+            "truth_closeout": status["truth_closeout_revision"],
+            "observed_branch_head": status["observed_branch_head"],
+            "h1_candidate": status["h1_candidate_revision"],
             "accepted_integration": status["accepted_integration_revision"],
             "universal_launcher": pins["universal_launcher"]["revision"],
             "universal_setup": pins["universal_setup"]["revision"],
         },
         "provider_pins": pins,
         "command_law": command_law(),
-        "capabilities": capability_state(),
+        "capabilities": capabilities,
+        "scorecard": scorecard_state(status, pins, capabilities),
         "machine_protocol": {
             "transport": "bounded newline-delimited JSON over stdio",
             "status": "implemented",
@@ -260,10 +332,31 @@ def current_state_toml(data: dict[str, Any]) -> str:
     build_truth = data["build_and_development_truth"]
     transport = data["transport_outcome_semantics"]
     separation = data["play_candidate_runtime_separation"]
-    mutable = [
+    active_automated = [
         record["id"]
         for record in queue["records"]
         if record["queue"] == "active"
+        and record["lifecycle_state"] in {"active_automated", "active"}
+    ]
+    awaiting_operator = [
+        record["id"]
+        for record in queue["records"]
+        if record["queue"] == "active"
+        and record["lifecycle_state"] == "awaiting_operator"
+    ]
+    blocked = [
+        record["id"]
+        for record in queue["records"]
+        if record["queue"] == "active"
+        and record["lifecycle_state"]
+        in {"blocked_defect", "blocked_external", "blocked"}
+    ]
+    verified_pending_closeout = [
+        record["id"]
+        for record in queue["records"]
+        if record["queue"] == "active"
+        and record["lifecycle_state"]
+        in {"verified_pending_closeout", "verified", "reviewed"}
     ]
     planned = [
         record["id"]
@@ -283,7 +376,14 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"next_authority_gate = {toml_string(data['next_authority_gate'])}",
         "",
         "[revisions]",
-        f"accepted_factorio_launcher = {toml_string(revisions['factorio_launcher'])}",
+        f"observed_dev = {toml_string(revisions['factorio_launcher'])}",
+        f"canonical_main = {toml_string(revisions['canonical_main'])}",
+        f"runtime_candidate = {toml_string(revisions['runtime_candidate'])}",
+        f"qualification_source = {toml_string(revisions['qualification_source'])}",
+        f"qualification_evidence = {toml_string(revisions['qualification_evidence'])}",
+        f"qualification_integration = {toml_string(revisions['qualification_integration'])}",
+        f"truth_closeout = {toml_string(revisions['truth_closeout'])}",
+        f"observed_branch_head = {toml_string(revisions['observed_branch_head'])}",
         f"universal_launcher = {toml_string(revisions['universal_launcher'])}",
         f"universal_setup = {toml_string(revisions['universal_setup'])}",
         'runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"',
@@ -322,16 +422,22 @@ def current_state_toml(data: dict[str, Any]) -> str:
         *toml_array_lines("backlog", sorted(capabilities.get("backlog", []))),
         "",
         "[scorecard]",
-        "published_first_party_pins = 3",
-        "accepted_real_play_routes = 0",
+        f"published_first_party_pins = {int(data['scorecard']['published_first_party_pins'])}",
+        f"accepted_real_play_routes = {int(data['scorecard']['accepted_real_play_routes'])}",
         "required_obligation_skip_target = 0",
         f"required_obligation_skips_observed = {int(build_truth['required_obligation_skips'])}",
         'required_obligation_skip_observation = "pass_local_promotion_matrix"',
-        "silent_foreign_mutations = 0",
-        "observed_player_journeys = 0",
+        f"silent_foreign_mutations = {int(data['scorecard']['silent_foreign_mutations'])}",
+        f"observed_player_journeys = {int(data['scorecard']['observed_player_journeys'])}",
         "",
         "[queue]",
-        *toml_array_lines("mutable", mutable),
+        *toml_array_lines("active_automated", active_automated),
+        *toml_array_lines("awaiting_operator", awaiting_operator),
+        *toml_array_lines("blocked", blocked),
+        *toml_array_lines(
+            "verified_pending_closeout",
+            verified_pending_closeout,
+        ),
         *toml_array_lines("planned", planned),
         f"archived_task_count = {int(queue['archived_task_count'])}",
         "",
@@ -384,7 +490,9 @@ def historical_markdown(data: dict[str, Any]) -> str:
         "## Historical proof context",
         "",
         f"- completed technical wave: `{data['completed_wave']['id']}`;",
-        f"- historical H1 candidate: `{revisions['factorio_launcher']}`;",
+        f"- observed dev at review start: `{revisions['observed_branch_head']}`;",
+        f"- runtime candidate: `{revisions['runtime_candidate']}`;",
+        f"- historical H1 candidate: `{revisions['h1_candidate']}`;",
         f"- accepted integration evidence: `{revisions['accepted_integration']}`;",
         f"- Universal Launcher pin: `{revisions['universal_launcher']}`;",
         f"- Universal Setup pin: `{revisions['universal_setup']}`;",
@@ -624,7 +732,7 @@ def markdown(data: dict[str, Any]) -> str:
         f"- completed technical wave: `{data['completed_wave']['id']}`;",
         f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- accepted FacMan integration: `{revisions['accepted_integration']}`;",
-        f"- historical Steam-backed H1 candidate/result: `{revisions['factorio_launcher']}` / "
+        f"- historical Steam-backed H1 candidate/result: `{revisions['h1_candidate']}` / "
         f"`{data['execution']['operator_verdict']}`;",
         f"- Universal Launcher / Setup pins: `{revisions['universal_launcher']}` / "
         f"`{revisions['universal_setup']}`;",
@@ -1119,6 +1227,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "fresh_candidate_revalidation_requires_operator_pass_fail_inconclusive",
+        },
+        "project_state_determinism": {
+            "checkpoint": "project-state-determinism",
+            "active": "FACMAN-PROJECT-STATE-DETERMINISM-01",
+            "last_closed": "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "next": "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
+            "phase_status": "active",
+            "safety": "revalidation_superseded_before_prepare_evidence_integrity_repairs_no_product_authority",
+            "execution_reason": "evidence_integrity_repairs_active_before_prepare_no_product_play_authority",
+            "truth_scope": "revalidation_01_superseded_before_prepare_project_state_determinism_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_01_superseded_before_prepare_integrity_repairs_active",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -2929,6 +3050,26 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("Universal repository license expression must be MIT")
     if licenses.get("publication_authority") is not False:
         problems.append("Universal repository licensing must not imply publication authority")
+    superseded_revalidation = status.get(
+        "windows_instance_isolated_play_revalidation_01",
+        {},
+    )
+    expected_supersession = {
+        "status": "superseded_before_prepare",
+        "coordinator_prepare": False,
+        "permit_issued": False,
+        "factorio_started": False,
+        "observer_started": False,
+        "baseline_captured": False,
+        "human_verdict": "unset",
+        "route_authority": False,
+        "authority_promotion": False,
+    }
+    for key, expected in expected_supersession.items():
+        if superseded_revalidation.get(key) != expected:
+            problems.append(
+                f"revalidation 01 supersession must preserve {key}={expected!r}"
+            )
     execution = status.get("execution", {})
     if execution.get("status") != "unavailable":
         problems.append("canonical status must keep execution unavailable")
@@ -3021,6 +3162,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Generate FacMan project truth from canonical data.")
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--write", action="store_true")
+    modes.add_argument("--validate", action="store_true")
     modes.add_argument("--summary", action="store_true")
     args = parser.parse_args()
     data = collect()

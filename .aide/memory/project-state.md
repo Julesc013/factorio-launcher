@@ -6,15 +6,15 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 ## Current product truth
 
-- phase: `windows_instance_isolated_play_revalidation` / `active`;
+- phase: `project_state_determinism` / `active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `windows-instance-isolated-play-revalidation`;
-- active WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01`;
-- next WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`;
+- checkpoint: `project-state-determinism`;
+- active WorkUnit: `FACMAN-PROJECT-STATE-DETERMINISM-01`;
+- next WorkUnit: `FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `runtime_evidence_separation_accepted_fresh_instance_isolated_play_revalidation_active_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;
+- truth scope: `revalidation_01_superseded_before_prepare_project_state_determinism_active_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -22,7 +22,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `fresh_human_controlled_instance_isolated_play_revalidation_active_no_product_play_authority`;
+- execution: `unavailable` / `evidence_integrity_repairs_active_before_prepare_no_product_play_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
@@ -30,7 +30,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
 - playability: `not_yet_playable`;
 - user workflow: `advanced_command_surface_only`;
-- safety authority: `runtime_evidence_separation_accepted_fresh_human_play_revalidation_no_product_authority`;
+- safety authority: `revalidation_superseded_before_prepare_evidence_integrity_repairs_no_product_authority`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -90,7 +90,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - completed technical wave: `m2`;
 - last closed WorkUnit: `FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
-- historical Steam-backed H1 candidate/result: `d03b42e8d6b22459fd9a9b8feff05523f942577a` / `Fail`;
+- historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `7fc25340623131ba86c08dca4fb8a43b18a4520d` / `3f8489275077347c2918f3bb03614ec6431362ff`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
@@ -130,8 +130,8 @@ work or promote execution, network, credential, signing, or publication authorit
 - Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.
 - The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.
 - Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.
-- The repaired Windows instance-isolated candidate is remotely reconstructible, hash-qualified and staged against the published Universal Launcher and Universal Setup pins; the fresh human verdict remains unperformed.
-- The published operation-outcome contract and product/evidence runtime separation are accepted; a fresh human-controlled instance-isolated Play revalidation is active without product Play authority.
+- The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.
+- No permit, Factorio process, observer, baseline, or human verdict was created by revalidation 01; deterministic project-state repair is active without product Play authority.
 - The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.

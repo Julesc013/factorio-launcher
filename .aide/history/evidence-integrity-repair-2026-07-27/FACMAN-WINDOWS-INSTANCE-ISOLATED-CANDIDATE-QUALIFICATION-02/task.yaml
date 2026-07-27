@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
 title: Qualify the exact accepted instance-isolated harness
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T20:12:43Z
 owner: unassigned
 objective: >
@@ -71,3 +71,6 @@ qualification_binding_sha256: 0bb183c2888c75bf93f6fdb850819323b0772e1ce75a3b5ea2
 qualification_report_sha256: 631e043319534da8ddccab60ea7e88ea2be24416b15bce855fcf16d3b9ef2c10
 staging_state: passed_without_prepare
 result: PASS
+reviewed_at: 2026-07-27T12:43:52Z
+closed_at: 2026-07-27T12:43:53Z
+archived_at: 2026-07-27T12:43:53Z

@@ -1,11 +1,11 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T18:43:00Z
 result: PASS
-evidence_path: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/evidence/
+evidence_path: .aide/history/evidence-integrity-repair-2026-07-27/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/evidence/
 active_at: 2026-07-26T18:43:00Z
 updated_at: 2026-07-26T20:10:12Z
 verified_at: 2026-07-26T20:10:12Z
@@ -15,3 +15,6 @@ hosted_validation_state: passed
 merged_revision: be9bf23f9480a4fdafe3a6ad91528d28081e0c54
 authority_promotion: false
 factorio_execution: false
+reviewed_at: 2026-07-27T12:43:48Z
+closed_at: 2026-07-27T12:43:48Z
+archived_at: 2026-07-27T12:43:49Z

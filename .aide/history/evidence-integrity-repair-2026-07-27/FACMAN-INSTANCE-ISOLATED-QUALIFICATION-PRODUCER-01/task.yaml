@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01
 title: Produce exact instance-isolated candidate qualification bindings
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T20:12:43Z
 owner: unassigned
 objective: >
@@ -89,3 +89,6 @@ verified_at: 2026-07-26T21:03:21Z
 merged_revision: 426d13cc2f68782b40eae66f0fb0621a607b7998
 implementation_state: verified
 result: PASS
+reviewed_at: 2026-07-27T12:43:46Z
+closed_at: 2026-07-27T12:43:47Z
+archived_at: 2026-07-27T12:43:47Z
