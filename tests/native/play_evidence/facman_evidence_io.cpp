@@ -1439,8 +1439,13 @@ facman::core::Result<void> resource_revalidation_self_test(
                 "self-test resource root could not be replaced",
                 platform::path_to_utf8(resource));
         }
-        fs::create_directory(resource, error);
-        if (error) {
+        ProbeRequest replacement;
+        replacement.operation = "write_new_durable";
+        replacement.destination = resource;
+        replacement.maximum_bytes = 4096U;
+        const auto replaced = execute_probe_request(
+            replacement, "replacement-object\n");
+        if (!replaced) {
             return resource_error(
                 "self-test replacement root could not be created",
                 platform::path_to_utf8(resource));

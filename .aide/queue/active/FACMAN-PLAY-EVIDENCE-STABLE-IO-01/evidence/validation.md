@@ -15,6 +15,13 @@ WorkUnit: `FACMAN-PLAY-EVIDENCE-STABLE-IO-01`
 - Project-state generation and validation: passed.
 - Portable AIDE Lite validation: passed.
 - `git diff --check`: passed.
+- Hosted Linux coverage exposed a nondeterministic native negative control:
+  deleting and recreating an empty directory on ext4 can immediately reuse the
+  same inode. The self-test now substitutes a durable regular-file object at
+  the protected root path, guaranteeing a distinct object kind while
+  exercising the same fail-closed provider revalidation boundary.
+- The repaired evidence-probe self-test passed in an isolated Ubuntu WSL
+  runtime and the full Windows native CTest matrix remained 57/57 passed.
 
 No permit was issued. No Factorio process, observer capture, baseline, human
 revalidation evidence, route promotion, policy change, Setup mutation, signing,
