@@ -46,6 +46,16 @@
     },
     {
       "files": {
+        "evidence/changed-files.md": "daa5bc8c0eb2101b183fd1d61af8df93dc49e29ab82d17d3e371a18fd2a30775",
+        "evidence/remaining-risks.md": "68fe625c5aeff20d856dd0e71b137adb0218d8730f41b9d91147fcc265b3c623",
+        "evidence/validation.md": "3ffb5f37b8d735832d543833c8cc3b47820e993fd1e33529cc656d31873f39b3",
+        "status.yaml": "a093d8722af576fd9624db5ac54b1736e3d7092989b0c6c859780b93e1fb4869",
+        "task.yaml": "7a743b82487d94394ee848a22f8d2060e99fef49add9410a2a2d7dddea622949"
+      },
+      "task_id": "FACMAN-PLAY-EVIDENCE-STABLE-IO-01"
+    },
+    {
+      "files": {
         "evidence/changed-files.md": "82d62af1854d394188e535f236a8eab180213b2e6da4b8a6c7f612abf8218db8",
         "evidence/remaining-risks.md": "cf8363a9a9599d6eac4b33a05d1865eda4ebb5af9c0ff92a87bb91493cc3df04",
         "evidence/validation.md": "57a4118fac07114250e043cccc6e18306b056691040d7d69b082052841ece0d4",

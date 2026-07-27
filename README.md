@@ -54,7 +54,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `play_evidence_stable_io`. **Active WorkUnit:** `FACMAN-PLAY-EVIDENCE-STABLE-IO-01`. **Next:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03`.
+**Phase:** `windows_instance_isolated_candidate_qualification_03`. **Active WorkUnit:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03`. **Next:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -64,7 +64,7 @@ M3 existing-portable adoption is authorised backlog after the playable alpha, no
 This reviewed and reproduced dev-integrated tree enumerates 125 commands, 302 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `stable_evidence_io_repair_active_before_fresh_qualification_no_product_play_authority`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `fresh_remote_only_candidate_qualification_active_before_revalidation_no_product_play_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
