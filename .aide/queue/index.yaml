@@ -28,14 +28,14 @@ items:
     task: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/task.yaml
     evidence: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/evidence
   - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
-    status: blocked
-    lifecycle_state: blocked
+    status: active
+    lifecycle_state: active
     title: Qualify the exact accepted instance-isolated harness
     task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/task.yaml
     evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/evidence
   - id: FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01
-    status: active
-    lifecycle_state: active
+    status: verified
+    lifecycle_state: verified
     title: Bind exact current installation evidence during qualification staging
     task: .aide/queue/active/FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01/task.yaml
     evidence: .aide/queue/active/FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01/evidence

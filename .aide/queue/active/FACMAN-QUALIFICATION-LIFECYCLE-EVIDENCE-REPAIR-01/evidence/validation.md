@@ -1,6 +1,6 @@
 # Validation
 
-Status: LOCAL PASS; HOSTED REVIEW PENDING.
+Status: PASS.
 
 The first live remote-only qualification passed source closure and product
 authentication, then failed closed before qualification output with:
@@ -75,5 +75,12 @@ The exact promotion obligation profile passed after the correction:
   project-state and cross-repository obligations passed;
 - both frozen policy digests remained exact.
 
-Hosted validation of the corrected exact head remains a separate merge
-prerequisite.
+PR 84 passed every required hosted check at corrected exact head
+`0a2eaa3867496185782234b1d76cf73aa0ab51af`: both Linux-native,
+macOS-native-CLI and Windows-native-package jobs, both application-kit,
+C/C++, C#, Linux-coverage, macOS-archive, Python and policy jobs, and CodeQL.
+The reviewed change merged to `dev` as
+`d1a3c2029a4ae21c58eda34d7011938bf7bf04cb`.
+
+The repair is verified. Candidate qualification remains a separate fresh
+remote-only proof and no product or execution authority is inferred.
