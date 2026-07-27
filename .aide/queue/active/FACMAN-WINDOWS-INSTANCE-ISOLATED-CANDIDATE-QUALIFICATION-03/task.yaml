@@ -24,12 +24,16 @@ allowed_paths:
   - release/index/workspace_lock.v1.toml
   - tests/test_aide_compaction.py
   - tests/test_aide_target_truth.py
+  - tests/test_instance_isolated_verdict_coordinator.py
   - tests/test_play_evidence_stable_io.py
   - tests/test_setup_package_routing.py
   - tools/compliance_check.py
+  - tools/gate4c_verdict_preflight.py
+  - tools/instance_isolated_verdict_coordinator.py
   - tools/m2_wu10_operator_acceptance_check.py
   - tools/m2_wu9_adversarial_check.py
   - tools/play_evidence_stable_io.py
+  - tools/play_staged_candidate.py
   - tools/project_state.py
   - tools/validators/release/check_dependency_lock.py
 forbidden_paths:
@@ -63,13 +67,14 @@ architecture_invariants:
   - Python validates the native probe result digest using the native serializer's exact closed-record byte form
   - no prior qualification observer baseline permit packet verdict or human evidence is reused
   - coordinator stage copies only exact qualified bytes into a fresh revalidation-02 root
+  - qualification binds the root-independent InstanceSpec while stage seals the final workspace's exact path-bound InstanceBinding and readiness digests
   - coordinator prepare is not invoked
   - no Factorio process observer permit verdict route or authority is produced
 depends_on:
   - FACMAN-PLAY-EVIDENCE-STABLE-IO-01
 source_binding:
   factorio_launcher:
-    revision: 04c7fb0d54ef8f41948cb301d739bda4e980d1b3
+    revision: 3d18be3ad1c2d874e7d3ce27fc99f7590d41962e
     required_ref: origin/dev
   universal_launcher:
     revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d

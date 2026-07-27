@@ -1,12 +1,13 @@
 # Remaining risks
 
-- FacMan must merge the new Universal Setup pin and bounded archive elapsed
-  budget before another qualification attempt.
-- Qualification-03 must restart from new empty remote-only clone, build, and
-  exact-basename task roots. Neither prior closure may be reused as final
-  qualification evidence.
-- The immutable v2 qualification binding has not been produced.
-- Revalidation-02 has not been staged.
+- The staged-candidate handoff repair is not yet hosted-accepted or merged.
+- Qualification-03 must restart again from new empty remote-only clone, build,
+  qualification, and revalidation roots after the source-changing repair.
+  No prior closure, qualification, or partial stage root may be reused.
+- The final immutable qualification and staged-candidate digests do not yet
+  exist for the repaired source.
+- Revalidation-02 has not completed staging.
 - Coordinator `prepare` remains intentionally uninvoked.
-- No Factorio execution, observer capture, permit issuance, human verdict, or
-  route authority exists.
+- No real Factorio process, observer capture, baseline, permit issuance, human
+  verdict, route promotion, signing, publication, or product Play route
+  exists.

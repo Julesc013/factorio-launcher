@@ -27,6 +27,7 @@ if str(ROOT) not in sys.path:
 from tools import gate4c_verdict03_coordinator as COMMON
 from tools import gate4c_verdict_evidence as EVIDENCE
 from tools import gate4c_verdict_preflight as PREFLIGHT
+from tools import play_staged_candidate as STAGED
 from tools.play_evidence_stable_io import (
     EvidenceIo,
     StableIoError,
@@ -42,7 +43,7 @@ from tools.play_verdict_route import (
 )
 
 
-CONFIG_SCHEMA = "factorio.instance_isolated_verdict_coordinator_config.v1"
+CONFIG_SCHEMA = "factorio.instance_isolated_verdict_coordinator_config.v2"
 PREPARED_SCHEMA = "factorio.instance_isolated_prepared_launch.v1"
 CONFIG_KEYS = {
     "schema",
@@ -52,6 +53,8 @@ CONFIG_KEYS = {
     "setup_repository",
     "qualification_binding",
     "qualification_digest",
+    "staged_candidate_binding",
+    "staged_candidate_digest",
     "artifact_manifest",
     "facman_artifact",
     "evidence_probe",
@@ -93,9 +96,30 @@ def _safe_path(path: Path, *, require_file: bool) -> None:
         raise CoordinatorError(f"unsafe configured path: {path}: {audit}")
 
 
+def _validate_operation_ids(first: object, second: object) -> None:
+    operations = [first, second]
+    if (
+        operations[0] == operations[1]
+        or any(
+            not isinstance(item, str)
+            or not item.startswith(ROUTE.operation_prefix)
+            or not item.replace("-", "").isalnum()
+            or item.lower() != item
+            for item in operations
+        )
+    ):
+        raise CoordinatorError(
+            "instance-isolated operation identities are not exact and unique"
+        )
+
+
 def validate_config(
     path: Path,
-) -> tuple[dict[str, Any], CandidateQualificationBinding]:
+) -> tuple[
+    dict[str, Any],
+    CandidateQualificationBinding,
+    dict[str, Any],
+]:
     absolute_path = _absolute(path)
     path_bound_task_root = absolute_path.parent.parent
     path_bound_probe = (
@@ -138,6 +162,35 @@ def validate_config(
     qualification = _binding(qualification_path, evidence_io)
     if value["qualification_digest"] != qualification.qualification_digest:
         raise CoordinatorError("qualification binding digest changed")
+    staged_candidate_path = _absolute(
+        Path(value["staged_candidate_binding"])
+    )
+    if (
+        staged_candidate_path
+        != path_bound_task_root
+        / "artifacts"
+        / "qualified-build"
+        / "staged-candidate-binding.v1.json"
+    ):
+        raise CoordinatorError(
+            "staged candidate binding path is not exact"
+        )
+    try:
+        staged_candidate = STAGED.parse_staged_candidate(
+            evidence_io.read_json(staged_candidate_path)[
+                "payload"
+            ]["document"],
+            task_root=task_root,
+            qualification=qualification,
+            route=ROUTE,
+        )
+    except STAGED.StagedCandidateError as exc:
+        raise CoordinatorError(str(exc)) from exc
+    if (
+        value["staged_candidate_digest"]
+        != staged_candidate["staged_candidate_digest"]
+    ):
+        raise CoordinatorError("staged candidate binding digest changed")
     probe_binding = qualification.artifact_mapping()["evidence_probe"]
     probe_result = evidence_io.inspect_file(evidence_io.probe)
     if (
@@ -147,23 +200,10 @@ def validate_config(
         raise CoordinatorError(
             "configured evidence probe differs from qualification"
         )
-    operations = [
+    _validate_operation_ids(
         value["first_operation_id"],
         value["second_operation_id"],
-    ]
-    if (
-        operations[0] == operations[1]
-        or any(
-            not isinstance(item, str)
-            or not item.startswith(ROUTE.operation_prefix)
-            or not item.replace("-", "").isalnum()
-            or item.lower() != item
-            for item in operations
-        )
-    ):
-        raise CoordinatorError(
-            "instance-isolated operation identities are not exact and unique"
-        )
+    )
     directory_keys = {
         "task_root",
         "repository_root",
@@ -174,6 +214,7 @@ def validate_config(
     ignored = {
         "schema",
         "qualification_digest",
+        "staged_candidate_digest",
         "instance_id",
         "reviewer_principal",
         "first_operation_id",
@@ -181,7 +222,7 @@ def validate_config(
     }
     for key in CONFIG_KEYS - ignored:
         _safe_path(Path(value[key]), require_file=key not in directory_keys)
-    return value, qualification
+    return value, qualification, staged_candidate
 
 
 def _copy_qualified_artifacts(
@@ -292,7 +333,7 @@ def _validate_staged_candidate(
     task_root: Path,
     qualification: CandidateQualificationBinding,
     evidence_io: EvidenceIo,
-) -> None:
+) -> dict[str, Any]:
     factorio = PREFLIGHT.factorio_evidence(
         factorio_executable,
         qualification,
@@ -310,6 +351,7 @@ def _validate_staged_candidate(
         workspace,
         ROUTE.instance_id,
         qualification,
+        allow_unbound_runtime_digests=True,
     )
     if (
         not factorio.get("valid")
@@ -319,6 +361,7 @@ def _validate_staged_candidate(
         raise CoordinatorError(
             "prequalified candidate state differs from its immutable binding"
         )
+    return instance
 
 
 def _extract_authenticated_executable(
@@ -566,6 +609,10 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
         )
     if (task_root / "artifacts").exists():
         raise CoordinatorError("revalidation artifacts already exist")
+    _validate_operation_ids(
+        args.first_operation_id,
+        args.second_operation_id,
+    )
     qualification_source = _absolute(args.qualification_binding)
     source_build = _absolute(args.candidate_build)
     _safe_path(source_build, require_file=False)
@@ -617,7 +664,7 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
                 "signer": qualification.factorio_signer,
             },
         )
-    _validate_staged_candidate(
+    staged_instance = _validate_staged_candidate(
         facman=source_paths["facman"],
         workspace=workspace,
         factorio_executable=factorio_executable,
@@ -664,6 +711,19 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
     }
     manifest_path = artifact_root / "artifact-binding.v1.json"
     staged_io.write_new_json(manifest_path, manifest)
+    try:
+        staged_candidate = STAGED.build_staged_candidate(
+            staged_instance,
+            workspace=workspace,
+            qualification=qualification,
+            route=ROUTE,
+        )
+    except STAGED.StagedCandidateError as exc:
+        raise CoordinatorError(str(exc)) from exc
+    staged_candidate_path = (
+        artifact_root / "staged-candidate-binding.v1.json"
+    )
+    staged_io.write_new_json(staged_candidate_path, staged_candidate)
     config = {
         "schema": CONFIG_SCHEMA,
         "task_root": str(task_root),
@@ -672,6 +732,10 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
         "setup_repository": str(setup_repository),
         "qualification_binding": str(binding_copy),
         "qualification_digest": qualification.qualification_digest,
+        "staged_candidate_binding": str(staged_candidate_path),
+        "staged_candidate_digest": staged_candidate[
+            "staged_candidate_digest"
+        ],
         "artifact_manifest": str(manifest_path),
         "facman_artifact": str(artifact_paths["facman"]),
         "evidence_probe": str(artifact_paths["evidence_probe"]),
@@ -690,6 +754,10 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
     return {
         "config": str(config_path),
         "qualification_digest": qualification.qualification_digest,
+        "staged_candidate_binding": str(staged_candidate_path),
+        "staged_candidate_digest": staged_candidate[
+            "staged_candidate_digest"
+        ],
         "manifest": str(manifest_path),
         "facman": str(artifact_paths["facman"]),
         "harness": str(artifact_paths["verdict_harness"]),
@@ -701,7 +769,7 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
 
 def prepare(args: argparse.Namespace) -> dict[str, Any]:
     config_path = _absolute(args.config)
-    config, qualification = validate_config(config_path)
+    config, qualification, staged_candidate = validate_config(config_path)
     task_root = Path(config["task_root"])
     evidence_io = EvidenceIo(Path(config["evidence_probe"]))
     operation_id = args.operation_id
@@ -784,6 +852,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         preflight_args,
         route=ROUTE,
         qualification=qualification,
+        staged_candidate=staged_candidate,
     )
     PREFLIGHT.write_record(
         preflight_path, preflight, task_root, evidence_io
@@ -895,7 +964,7 @@ def human(
     input_fn: Any = input,
     output_fn: Any = print,
 ) -> dict[str, Any]:
-    config, _ = validate_config(args.config)
+    config, _, _ = validate_config(args.config)
     session = EVIDENCE.validate_session_record(args.session, ROUTE)
     packet = EVIDENCE.validate_native_packet(session, args.packet, ROUTE)
     expected = (
