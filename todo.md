@@ -1,6 +1,6 @@
 ---
 document_id: FACMAN-PLATFORM-REFACTOR-TODO
-schema_version: "1.0"
+schema_version: "1.1"
 title: FacMan platform refactor, redesign, and cross-repository backlog
 status: active-planning
 created: 2026-07-28
@@ -16,6 +16,16 @@ integration_branch: dev
 active_safety_gate_observed: FACMAN-PLAY-EVIDENCE-STABLE-IO-01
 implementation_authority: none
 primary_decision: converge contracts, clients, operations, presentation, composition, and conformance without merging authorities or repositories
+source_reports_synthesized: 2
+classic_shell_archetype: old Minecraft launcher visual grammar, not its backend or security model
+classic_frontend_family:
+  - WinForms
+  - AppKit
+  - GTK 3
+modern_frontend_family:
+  - WinUI 3
+  - SwiftUI
+  - Qt 6
 ---
 
 # FacMan platform refactor, redesign, and cross-repository backlog
@@ -81,6 +91,43 @@ The platform must not unify:
 - all policy into a global “god object”;
 - desired, observed, authoritative, resolved, and presentation state.
 
+## Synthesis of the architecture and launcher-shell reports
+
+The launcher-shell report reinforces the architecture report rather than
+replacing it. The old Minecraft launcher contributes a useful **visual grammar**
+for a classic FacMan shell:
+
+- one resizable native window;
+- ordinary platform menus, tabs, lists, tables, forms, dialogs, and chrome;
+- a large central task area;
+- a persistent instance selector and prominent primary launch action;
+- concise status explaining what will happen;
+- equivalent information architecture rendered natively on each platform.
+
+It does not contribute the product architecture. FacMan must replace the old
+launcher’s shallow profile, privileged remote HTML, raw log panes, weak
+operation semantics, implicit launch behavior, and GUI/backend coupling with:
+
+- installations, portable instance intent, machine binding, profiles, modset
+  locks, saves, account references, launch intents, and computed readiness;
+- federated plans with exact authorities and effects;
+- durable operation, event, cancellation, recovery, and unknown-outcome models;
+- native cached/sanitized content rather than unrestricted remote pages;
+- an Activity center with structured events and Console as an advanced view;
+- a shared direct client with bounded process RPC only as fallback;
+- semantic presentation, accessibility, localization, and theming contracts;
+- distinct launcher, setup/maintenance, and constrained recovery shell shapes.
+
+The synthesized product verdict is:
+
+> Build a classic native, instance-centric FacMan launcher inspired by the old
+> Minecraft launcher, backed by Universal Launcher client, presentation,
+> operation, and recovery contracts. Prove it in WinForms, AppKit, and GTK
+> before independently designed WinUI, SwiftUI, and Qt modern shells advance.
+
+The visual archetype never overrides the authority, compatibility, extraction,
+or active proof-gate laws elsewhere in this document.
+
 ## Immediate hold point
 
 - [ ] **P0 / BLOCKED — Protect the active Play-evidence proof gate.**
@@ -135,6 +182,17 @@ The platform must not unify:
     composition and handlers through the same normalized contracts.
 15. Repositories remain separate unless a later evidence-backed decision proves
     that a new boundary reduces rather than increases coordination cost.
+16. Classic and modern shells share semantic records and operations, not widget
+    code or a pixel-identical skinning layer.
+17. The selected instance, not a shallow profile or news feed, is the center of
+    the FacMan product experience.
+18. News, themes, notifications, and other downloaded presentation content are
+    non-authoritative, bounded, validated, sanitized, cached, and unable to
+    delay startup or Play.
+19. A launcher shell, setup/maintenance shell, and recovery shell may reuse
+    components but must not be forced into the same navigation shape.
+20. No GUI may expose real mutation while its primary cancellation mechanism is
+    killing a one-shot CLI transport process.
 
 ## Current-state assessment
 
@@ -188,6 +246,14 @@ The platform must not unify:
 | ARCH-014 | P2 | Conformance is not yet systematic across protocols, providers, transports, and shells | “Parity” can mean different things per platform | Build TCKs and semantic fixtures, including a synthetic product |
 | ARCH-015 | P2 | Release composition is not a single runtime-inspectable manifest | Build, SBOM, About, and compatibility truth can drift | Generate from one product-composition manifest |
 | ARCH-016 | P3 | Optional service, dynamic providers, self-update, and remote control lack qualified need and authority models | Premature complexity and expanded attack surface | Keep deferred behind explicit evidence gates |
+| ARCH-017 | P1 | Classic GUI shells lack a frozen information architecture and instance-centric primary-action model | Platform shells can drift into unrelated generated forms | Define a universal classic shell contract and persistent Launch Deck |
+| ARCH-018 | P1 | Existing FacMan navigation targets are resource-rich but not organized into a bounded classic top strip | Too many equally weighted pages and weak task hierarchy | Use eight top-level FacMan pages with nested resource views and Advanced surfaces |
+| ARCH-019 | P1 | Home/news could repeat the privileged remote-web anti-pattern | Remote content could execute or track inside a privileged launcher | Use allowlisted bounded feeds, sanitization, native cached rendering, and external links |
+| ARCH-020 | P1 | Raw Console framing is too narrow for downloads, setup, sessions, operations, and recovery | Users lose causal and authority context | Build structured Activity with Console as an advanced subpage |
+| ARCH-021 | P1 | Launcher, setup, and recovery apps risk sharing one unsuitable navigation shell | Setup/recovery tasks become confusing or unsafe | Share presentation components but define three distinct shell shapes |
+| ARCH-022 | P2 | Arbitrary cross-platform skinning would weaken native behavior and accessibility | Broken focus, contrast, security notices, and recovery | Define semantic, capability-aware themes with a non-removable System Native fallback |
+| ARCH-023 | P2 | Legacy platform labels are broader than their proven native dependency closure | Compile-only or shell-only evidence may be mistaken for product support | Create architecture/sysroot-specific candidate lanes and require runtime closure proof |
+| ARCH-024 | P2 | Frontends can expand unevenly before semantic parity is proven | One platform becomes a second product architecture | Build component galleries and one complete WinForms/AppKit/GTK vertical slice first |
 
 ## Permanent repository ownership
 
@@ -280,13 +346,17 @@ separate repository lowers coordination cost.
 
 ```text
 Product shells
-  CLI | TUI | WinForms | AppKit | selected Linux baseline
-                    |
-       Universal Client + Presentation SDK
-                    |
-      direct | process fallback | optional local service
-                    |
-          Product Composition Host
+  Terminal: CLI | TUI
+  Classic:  WinForms | AppKit | GTK 3/X11
+  Modern:   WinUI | SwiftUI | Qt 6/Wayland (after classic proof)
+                         |
+      Universal Presentation Client + Product Pack
+                         |
+           Universal Client + Operation API
+                         |
+       direct | process fallback | optional local service
+                         |
+              Product Composition Host
              /                 \
       FacMan composition    Dominium composition
         Factorio providers    Dominium providers
@@ -313,8 +383,14 @@ Active Play-evidence gate closes
   -> Dominium read-only vertical slice
   -> setup adapter consolidation
   -> process and permit qualification/extraction
-  -> presentation contract and shell SDK
-  -> native GUI client bindings
+  -> UNIVERSAL-CLASSIC-SHELL-CONTRACT-01
+  -> typed presentation records, Launch Deck and theme manifest
+  -> native GUI client bindings before GUI mutation
+  -> component galleries on WinForms, AppKit and GTK
+  -> one complete three-platform instance/operation vertical slice
+  -> classic pages in dependency order
+  -> setup/maintenance and recovery shells
+  -> modern WinUI, SwiftUI and Qt shells after classic semantic proof
   -> setup-focused bootstrap compositions
   -> optional service/connectors/update mechanisms only after need is proven
 ```
@@ -323,6 +399,64 @@ Starting a later phase early is allowed only for isolated documents, schemas,
 fixtures, or spike code that cannot create authority or become a competing
 implementation. Every exception needs a recorded reason and disposal or
 promotion criteria.
+
+## Roadmap views
+
+### Product roadmap
+
+| Horizon | Product outcome | Principal work | Exit signal |
+| --- | --- | --- | --- |
+| Now | Preserve Play-evidence truth while capturing the target | Documentation, schemas, inventories, fixtures only | Active proof gate closes without mixed refactor work |
+| Platform foundation | One qualified composition and client/protocol family | Composition contract, client/schema extraction, generated protocol, reference persistence, Dominium read-only slice | Factorio and Dominium consume product-neutral kernels and fixtures |
+| Authority foundation | Safe setup/process/permit/operation behavior | Setup adapter, federated planning, process/session extraction, permit qualification, async operations | Exact plans and operations retain owners, effects, cancellation, and recovery |
+| Classic shell foundation | One shared semantic shell contract | Classic shell contract, typed presentation, Launch Deck, theme/accessibility, direct native bindings | WinForms/AppKit/GTK galleries render equivalent fixtures |
+| Classic playable slice | Immediate instance-centric launching experience | Instance list/detail, readiness, plan preview, safe fixture dispatch, Activity result | Complete three-platform vertical slice passes |
+| Classic product alpha | Useful daily FacMan shell | Instances, Activity/Recovery, Installations, Updates, Mods, Accounts | Player workflows are task-oriented and semantically conformant |
+| Classic product beta | Complete shell family and productization | Home/News, Settings/themes, setup/maintenance, standalone recovery, exact packages | Offline/accessibility/recovery/package/platform proof passes |
+| Modern expansion | Independent modern layouts on proven semantics | WinUI, SwiftUI, Qt/Wayland | No new backend or authority semantics appear in a modern shell |
+| Optional expansion | Only measured operational needs | Local service, connectors, dynamic providers, self-update, remote administration | Each independent need/trust gate passes |
+
+### Critical path
+
+```text
+proof gate
+  -> composition contract
+  -> client/protocol extraction
+  -> reference state + second product
+  -> setup/process/permit/operation model
+  -> classic shell + presentation contract
+  -> direct native clients
+  -> galleries
+  -> three-platform vertical slice
+  -> classic page expansion
+  -> setup/recovery shells
+  -> exact platform packages
+  -> modern shells
+```
+
+### Safe parallel lanes
+
+- Documentation, ADRs, ownership maps, terminology, and machine-readable
+  dependency laws.
+- Synthetic/Factorio/Dominium provider and presentation fixtures.
+- Component-gallery fixture design and accessibility test cases.
+- Platform dependency-closure inventories without release claims.
+- Theme token/schema design without arbitrary theme execution.
+- Safe Home/News feed contract and parser fixtures without enabling network
+  access in the product.
+- Package profile proposals, SBOM inputs, and reproducible toolchain manifests.
+
+### Work that must not be parallelized ahead of its gate
+
+- Real GUI mutation before direct client, operation ID, plan review, recovery,
+  and authority conformance.
+- One classic frontend expanding far beyond the shared vertical slice.
+- Modern shells before classic semantics are stable.
+- Persistent local service before a quantified restart/multi-client/background
+  requirement.
+- i386/i686/Windows-legacy release claims before full native closure proof.
+- Dynamic providers, self-update, or remote control before their trust,
+  signing, provenance, and recovery models.
 
 # Detailed execution backlog
 
@@ -723,47 +857,507 @@ diagnostics
   wrong-user, wrong-machine, and over-broad-effect tests.
 - [ ] Extract only after both product fixtures pass.
 
-## Phase 7 — Presentation model and shell SDK
+## Phase 7 — Classic shell contract, presentation model, and shell SDK
+
+### `UNIVERSAL-CLASSIC-SHELL-CONTRACT-01`
+
+- Priority: P1.
+- Type: document, schema, fixture, and component-contract work before shell
+  expansion.
+- Repositories: `universal-launcher`, `factorio-launcher`, and `dominium`
+  presentation fixtures.
+- Goal: freeze the classic shell’s semantic information architecture without
+  freezing toolkit widgets or pixel geometry.
+- Accepted archetype decisions:
+
+| Old launcher characteristic | Synthesized FacMan decision |
+| --- | --- |
+| Native window and controls | Retain |
+| Top-level tab strip | Retain with overflow, keyboard navigation, and a complete View menu |
+| Fixed profile selector | Replace with a persistent instance selector |
+| Large Play button | Retain as a stateful primary action plus explicit launch-intent menu |
+| Account status | Retain as logical account-reference and route availability |
+| Central remote webpage | Replace with bounded, sanitized, cached native Home/News content |
+| Profile editor | Replace with task-oriented Instance, Profile, Settings, and effective-value views |
+| Launcher log/game output | Replace with structured Activity; keep Console as Advanced |
+| One flat profile | Replace with installation, instance, profiles, modset lock, account references, saves, and launch intent |
+| GUI-specific business rules | Prohibit |
+| CLI process as permanent backend | Replace with direct client; retain bounded process RPC fallback |
+| Pixel-identical cross-platform skin | Reject; preserve semantic parity and native rendering |
+
+- [ ] Define the full launcher-shell information architecture.
+- [ ] Define setup/maintenance-shell information architecture.
+- [ ] Define constrained recovery-shell information architecture.
+- [ ] Define Launch Deck, navigation, page, action, operation/event, theme,
+  accessibility, product-pack, and frontend-capability contracts.
+- [ ] Define narrow-window, overflow, keyboard, focus, restoration, and
+  minimum-layout behavior.
+- [ ] Provide semantic FacMan, Dominium, empty, offline, blocked, running,
+  recovery-required, and unsupported fixtures.
+- [ ] Record which presentation capabilities are required, optional, or
+  unsupported per shell and platform lane.
+- [ ] Keep command metadata as the advanced automation surface rather than the
+  primary navigation generator.
+- Explicit non-goals:
+  - no GUI toolkit abstraction layer;
+  - no shared widget tree;
+  - no arbitrary skin scripting;
+  - no remote HTML execution;
+  - no GUI-side authority or compatibility calculation;
+  - no implementation of real mutation.
+- Exit:
+  - WinForms, AppKit, and GTK can render the same fixture semantics;
+  - shell shapes and product contributions are clearly separated;
+  - every primary action maps to a command/action contract and structured
+    refusal;
+  - the classic contract can be consumed later by independently designed modern
+    shells.
+
+### Classic FacMan window and navigation contract
+
+Target shell grammar:
+
+```text
+File | Edit | View | Instance | Tools | Help
+
+Home | Updates | Installations | Mods | Instances | Accounts | Activity | Settings
+
+                        current native task page
+
+Instance selector | readiness | environment | account | primary action | intent menu
+
+global status | offline/cache state | recovery state | active task count
+```
+
+- [ ] Use one resizable native window with ordinary platform chrome, menus,
+  controls, lists, tables, forms, details, dialogs, and focus behavior.
+- [ ] Treat eight top-level pages as the practical classic maximum.
+- [ ] Use short localized labels.
+- [ ] Provide horizontal scrolling or overflow at narrow widths.
+- [ ] Provide `Ctrl+Tab`/platform-equivalent page navigation.
+- [ ] Put every page in the View menu.
+- [ ] Permit configurable visibility for advanced pages without hiding required
+  recovery or security information.
+- [ ] Persist the last selected page, except first-run, blocking recovery, or
+  policy-directed startup.
+- [ ] Default to Instances after onboarding; Home/News never stands between the
+  player and Play.
+- [ ] Maintain a usable minimum layout at a qualified old-laptop resolution,
+  large text, and narrow aspect ratio.
+- [ ] Collapse the Launch Deck only to a compact summary during modal
+  plan-review or recovery work.
+- [ ] Keep global operation/recovery status visible even when the selected page
+  is not Activity.
+
+### `LAUNCH-DECK-CONTRACT-01`
+
+- Priority: P1.
+- Purpose: make the selected instance and its safe next action persistent on
+  every ordinary launcher page.
+- [ ] Define:
+
+```text
+LaunchDeckSnapshot
+  selected_instance
+  instance_display_name
+  installation_summary
+  exact_game_version
+  content_capabilities
+  modset_summary
+  account_summary
+  save_summary
+  readiness
+  isolation_mode
+  backup_status
+  last_run_status
+  active_session
+  primary_action
+  alternate_launch_intents
+  blockers
+  safe_next_actions
+```
+
+- [ ] Define state-to-action mapping:
+
+| Instance state | Primary action | Required behavior |
+| --- | --- | --- |
+| Ready | **Play** | Open Factorio to main menu using an exact reviewed launch plan |
+| Preparation available | **Make Ready** | Open a federated preparation plan; never apply silently |
+| Blocked | **Review Problems** | Show evidence-backed blockers, refusals, and alternatives |
+| Recovery required | **Recover** | Open the exact operation/transaction recovery view |
+| Running | **Show Game** | Focus or reveal the running instance through a typed platform capability |
+| Running with management | **Manage** | Open session controls; Stop remains separately explicit |
+| Unsupported | Disabled action | Show structured refusal and safe alternatives |
+
+- [ ] Expose explicit alternate launch intents:
+  Open Main Menu, Continue Last Save, Load Save, Start New Game, Map Editor,
+  Join Server, Start Server, Benchmark, and Developer Launch where supported.
+- [ ] Keep Open Main Menu as the default.
+- [ ] Never infer a changed launch target merely because a save was detected.
+- [ ] Bind selected intent through readiness, launch plan, operation permit,
+  process specification, session, and history.
+- [ ] Model zero, one, and multiple running instances.
+- [ ] Show stale readiness, active preparation, recovery, unavailable account,
+  foreign installation, missing content, and snapshot-needed states.
+- [ ] Define focus/show-game capability refusal when the OS/platform cannot
+  provide it.
+- [ ] Keep Stop, Kill, Delete, Repair, and other destructive actions out of the
+  primary Play button.
 
 ### `UNIVERSAL-PRESENTATION-CONTRACT-01`
 
-- Priority: P1/P2.
-- [ ] Replace opaque UI JSON with versioned schemas and typed bindings for:
-  - `ProductShellModel`;
-  - `NavigationModel`;
-  - `HomeView`;
-  - `ResourceCollectionView`;
-  - `ResourceDetailView`;
+- Priority: P1.
+- [ ] Replace opaque UI JSON with versioned schemas and typed bindings.
+- Naming reconciliation:
+  - `ProductShellModel` remains the conceptual aggregate;
+  - `ShellSnapshot` is the serializable current-state root;
+  - `*Descriptor` records stable metadata and action/form/navigation law;
+  - `*Snapshot` records current derived state;
+  - legacy `OperationView` maps to canonical `OperationSnapshot`;
+  - JSON remains a transport/compatibility encoding, not the internal widget
+    interface.
+- [ ] Define the versioned family:
+  - `ShellSnapshot`;
+  - `NavigationDescriptor`;
+  - `PageSnapshot`;
+  - `ResourceCollection`;
+  - `ResourceDetail`;
+  - `FormDescriptor`;
+  - `ActionDescriptor`;
+  - `LaunchDeckSnapshot`;
   - `InstanceView` / `EnvironmentView`;
   - `ReadinessView`;
   - `EffectiveConfigurationView`;
   - `PlanReviewView`;
-  - `OperationView`;
+  - `OperationSnapshot`;
+  - `SessionSnapshot`;
   - `RecoveryView`;
   - `DiagnosticView`;
-  - `FormView`;
-  - `PromptView`;
+  - `PromptDescriptor`;
+  - `NotificationDescriptor`;
   - `SettingsView`;
+  - `ThemeDescriptor`;
+  - `AccessibilityDescriptor`;
   - `EmptyStateView`;
-  - `NotificationView`;
   - `CommandExplorerView`.
 - [ ] Define `ActionDescriptor` fields:
   `action_id`, localization keys, command ID, resource binding, availability,
   refusal, risk, effects, confirmation policy, required capability, prominence,
-  keyboard role, and accessibility role.
+  keyboard role, accessibility role, safe default, and destructive separation.
 - [ ] Define `PlanReviewView` fields:
   owner, source, target, product/version, components, changes, risk, external
-  effects, privilege, verification, rollback/recovery, digest, expiry, and
-  confirmation.
-- [ ] Define `OperationView` fields:
-  operation/attempt IDs, owner, command, phase, status, progress, message,
-  diagnostics, committed effects, cancellation, recovery, follow-up actions,
-  and terminal outcome.
+  effects, privilege, capacity, download/source ownership, executor,
+  verification, rollback/recovery, restart, digest, expiry, and confirmation.
+- [ ] Define `OperationSnapshot` fields:
+  operation/attempt IDs, owner/provider, product/resource bindings, command,
+  phase, status, progress, message, diagnostics, committed effects,
+  cancellation, recovery, follow-up actions, and terminal outcome.
+- [ ] Define `SessionSnapshot` for process identity, instance, launch intent,
+  start/end, running state, logs, child containment, focus/manage/stop
+  capabilities, and exit interpretation.
 - [ ] Define stable identity, patch/update, pagination, empty, loading, stale,
-  partial, refused, error, and unknown-outcome semantics.
+  partial, offline, refused, error, and unknown-outcome semantics.
 - [ ] Generate C, C++, .NET, and Objective-C-compatible bindings.
 - [ ] Make accessibility metadata and localization keys contract requirements.
-- [ ] Keep toolkit layout and native interaction platform-owned.
+- [ ] Keep toolkit layout, platform menus, native controls, and interaction
+  details platform-owned.
+
+### `FACMAN-CLASSIC-PRESENTATION-PACK-01`
+
+- Priority: P1/P2.
+- Top-level pages:
+  1. Home
+  2. Updates
+  3. Installations
+  4. Mods
+  5. Instances
+  6. Accounts
+  7. Activity
+  8. Settings
+- Reconcile the earlier larger FacMan navigation inventory as nested views:
+  - Modpacks and locks live under Mods;
+  - Profiles, presets, saves, worlds, backups, and snapshots live under the
+    selected Instance and Activity where appropriate;
+  - Recovery Center lives under Activity and contextual banners;
+  - environment/host views live under Instances, Installations, Settings, or
+    Advanced according to ownership;
+  - the exhaustive command graph remains under Advanced.
+- [ ] Register page IDs, ordering, localization, icons, route capabilities,
+  default page, overflow priority, empty states, task actions, and help topics.
+- [ ] Keep page modules capability-specific and lazily loaded.
+- [ ] Never hardcode these Factorio/FacMan pages into the universal shell.
+
+#### Home / News
+
+- [ ] Show selected-instance summary and readiness/blocker banner.
+- [ ] Show recent instances and recent operations.
+- [ ] Show urgent FacMan notices and official Factorio announcements.
+- [ ] Remain useful offline from validated cache.
+- [ ] Make failure to load content non-blocking for startup, inspection, and
+  Play.
+- [ ] Implement safe content pipeline:
+
+```text
+network/source provider
+  -> allowlisted official endpoint
+  -> bounded fetch
+  -> schema/content validation
+  -> structured parsing or HTML sanitization
+  -> cache with provenance, expiry, and size budget
+  -> native text/image model
+  -> external browser for full links
+```
+
+- [ ] Prefer structured feeds and native rendering.
+- [ ] If a WebView fallback is retained, disable scripting where possible,
+  expose no native bridge, share no credentials/cookies, allowlist navigation,
+  disable downloads, bound content, and provide Open in Browser.
+- [ ] Treat news/cache updates as non-authoritative presentation content.
+
+#### Updates
+
+- [ ] Present one unified review surface without pretending one authority owns
+  every update class.
+- [ ] Cover FacMan application, ULK/USK components, Factorio installations,
+  DLC/content, mods, modpacks/locks, profiles/presets, compatibility metadata,
+  and news/cache metadata.
+- [ ] Preserve federated ownership:
+
+| Update class | Resolver/planner | Applying authority |
+| --- | --- | --- |
+| FacMan application | FacMan release provider | Bootstrap/USK maintenance composition |
+| Managed Factorio | Factorio source/recipe providers | Universal Setup |
+| Steam-owned Factorio | Steam/provider observation | Steam/external owner; FacMan read-only |
+| Mods | Factorio mod resolver | FacMan instance-content transaction |
+| Modpack lock | FacMan modset resolver | FacMan workspace transaction |
+| Profiles/presets | FacMan configuration service | FacMan workspace transaction |
+| Host repair | Typed host provider | USK only when explicitly authorized |
+
+- [ ] Make Review All Updates produce a federated plan of separately owned
+  subplans.
+- [ ] Show current/proposed versions, compatibility, source/download owner,
+  changed resources, disk use, required snapshots, rollback/recovery, accounts,
+  network, restart, privilege, and executor for every step.
+- [ ] Never let the page manufacture setup, network, credential, or process
+  authority.
+
+#### Installations
+
+- [ ] Name this page Installations in FacMan; reserve Library for a
+  multi-product universal/reference shell.
+- [ ] Provide a native table/list with name, version, platform/architecture,
+  location, source, ownership, deployment type, DLC/content, health, dependent
+  instances, and update state.
+- [ ] Provide detail for identity/version, entrypoints, provenance, mutation
+  authority, application closure, capabilities, data routing, verification,
+  dependents, safe actions, and operation history.
+- [ ] Define typed actions:
+  Discover, Import Reference, Install Side-by-Side, Clone to Managed, Adopt,
+  Verify, Repair, Move, Update, Downgrade, Detach, Archive Source, Uninstall,
+  Open Location, and Export Diagnostics.
+- [ ] Make Detach remove only the ULK reference.
+- [ ] Make Uninstall available only for USK-owned installed state through an
+  exact plan.
+- [ ] Keep foreign installations read-only by default.
+- [ ] Make Adopt a separately reviewed lifecycle with ownership proof.
+- [ ] Prefer Clone to Managed over mutating a foreign installation.
+- [ ] Avoid ambiguous Convert/Modify primary actions; resolve them into exact
+  typed operations.
+
+#### Mods
+
+- [ ] Provide nested Browse, Local Library, Downloads, Installed by Instance,
+  Modpacks, Modset Locks, Compatibility, and Cache/Cleanup views.
+- [ ] Browse/search Mod Portal through a Factorio-specific source provider.
+- [ ] Filter by Factorio version, DLC, category, and compatibility.
+- [ ] Download exact versions into a content-addressed cache.
+- [ ] Retain multiple artifact versions simultaneously.
+- [ ] Inspect ZIP metadata safely without uncontrolled extraction.
+- [ ] Detect duplicate, malformed, truncated, suspicious, path-traversing, or
+  identity-mismatched archives.
+- [ ] Resolve dependencies deterministically and explain unsatisfiable chains.
+- [ ] Create portable `ModsetSpec` and exact version/hash `ModsetLock`.
+- [ ] Compare locks and show compatibility effects.
+- [ ] Snapshot the specific instance before active-modset changes where policy
+  requires it.
+- [ ] Journal, roll back, or recover interrupted apply.
+- [ ] Delete only explicitly planned unreferenced cache content.
+- [ ] Never swap one global mods directory; every apply targets an exact
+  instance boundary.
+- [ ] Keep Factorio dependency syntax out of ULK; ULK sees generic artifact-set
+  identities and operation state.
+
+#### Instances
+
+- [ ] Make Instances the primary page after onboarding.
+- [ ] Use instance list plus selected-instance details with Overview, Content,
+  Profiles, Settings, Saves, Launch, History, and Advanced sections.
+- [ ] Overview: effective installation/version/content/modpack/account/save,
+  readiness, isolation, backup, and last run.
+- [ ] Content: DLC, mods, spec, lock, missing artifacts, conflicts, and
+  compatibility.
+- [ ] Profiles: launch, graphics, audio, interface, multiplayer, server,
+  new-game, and backup profiles as applicable.
+- [ ] Settings: provenance-aware Factorio settings and per-instance overrides.
+- [ ] Saves: saves/worlds/scenarios, import/export, compatibility, backup, and
+  restore.
+- [ ] Launch: intents, arguments, environment, isolation, plan, and preflight.
+- [ ] History: runs, snapshots, changes, plans, operations, and recovery.
+- [ ] Advanced: raw versioned records, command explorer, hashes, and diagnostics.
+- [ ] Keep startup, runtime-global, runtime-per-user, game configuration,
+  launcher-only, and one-run override settings distinct.
+- [ ] Never flatten all settings into one property grid.
+- [ ] Show effective-value provenance, compatibility, and authority limits.
+
+#### Accounts
+
+- [ ] Model Factorio account, Mod Portal account, platform account, player
+  identity profile, multiplayer credential, and RCON credential as distinct
+  domains.
+- [ ] Add/authenticate, reauthenticate, revoke, inspect availability, assign
+  reference, show consumers, and remove reference without deleting unrelated
+  platform credentials.
+- [ ] Select player identity independently of online credentials.
+- [ ] Explain offline/unavailable states.
+- [ ] Never imply FacMan can silently switch Steam identity or bypass platform
+  authentication.
+- [ ] Store only provider-scoped references in instance/workspace records.
+- [ ] Use reviewed platform credential providers such as Windows Credential
+  Manager, macOS Keychain, and Linux Secret Service/libsecret when available.
+- [ ] Define explicit session-only or separately encrypted fallback only after
+  a security review; never silently downgrade.
+- [ ] Redact secrets from diagnostics, events, logs, and exports.
+
+#### Activity, Console, diagnostics, and recovery
+
+- [ ] Make Activity the top-level supervisor page.
+- [ ] Provide Overview, Operations, Running Instances, Setup/Maintenance,
+  Downloads, Logs, Console, Diagnostics, and Recovery views.
+- [ ] Show all current work and attention states, including game sessions,
+  downloads, verification, snapshots, prompts, and recovery-required.
+- [ ] Define structured event fields:
+  time, operation ID, attempt ID, product, instance, owner/provider, phase,
+  severity, message, progress, effects, diagnostics, related resources, and
+  available actions.
+- [ ] Correlate events causally across command, plan, permit, setup transaction,
+  launcher transaction, content apply, and process session.
+- [ ] Console Advanced features:
+  process/operation tabs, aggregate timeline, search/filter/severity,
+  pause auto-scroll, copy/export, structured command palette, stdout/stderr
+  separation, Factorio log interpretation, setup journal interpretation, and
+  typed stdin only where explicitly supported.
+- [ ] Do not expose an arbitrary operating-system shell by default.
+- [ ] Define “intelligence” initially as deterministic correlation, recognized
+  diagnostics, causal links, explanations, safe next actions, and
+  rule-declared anomaly detection.
+- [ ] Do not require an AI model and never let advisory analysis issue
+  authority-bearing commands.
+- [ ] Drive terminal rendering from completed/refused/cancelled/
+  cancellation-requested-but-completed/recovery-required/outcome-unknown law.
+
+#### Settings
+
+- [ ] Separate global shell/launcher settings from selected-instance
+  configuration.
+- [ ] Provide General, Appearance, Workspaces/Storage, Updates,
+  Downloads/Network, Accounts/Credentials, Backups/Retention, Notifications,
+  Privacy/Diagnostics, Accessibility, Advanced, and About.
+- [ ] Allow preferences, providers, update policy, storage roots, backup
+  policy, narrower permissions, themes, and density.
+- [ ] Do not allow settings to grant setup/process/network/credential authority,
+  mark installations verified, mark instances ready, adopt foreign state,
+  suppress required plan review, or turn unknown outcome into success.
+- [ ] Show restart requirements and whether settings are user-local, machine,
+  workspace, profile, or instance scoped.
+
+### `UNIVERSAL-THEME-MANIFEST-01`
+
+- Priority: P2.
+- Goal: semantic, capability-aware theming without cross-platform widget
+  recreation.
+- [ ] Apply layers:
+
+```text
+operating-system appearance
+  < FacMan product defaults
+  < selected theme
+  < accessibility constraints
+  < platform adaptation
+```
+
+- [ ] Define semantic tokens:
+  `surface.window`, `surface.content`, `surface.raised`,
+  `surface.selection`, `text.primary`, `text.secondary`, `text.disabled`,
+  `text.link`, `accent.primary`, `accent.secondary`, `status.ready`,
+  `status.warning`, `status.blocked`, `status.error`, `status.running`,
+  `status.recovery`, `border.normal`, `border.focus`, `border.destructive`,
+  compact/normal/relaxed spacing, density, corner treatment, icon style,
+  texture policy, and motion policy.
+- [ ] Permit bounded accent colors, content backgrounds/textures, icons,
+  density, spacing ranges, installed/system typography roles, table emphasis,
+  contrast-preserving status colors, and capability-gated modern effects.
+- [ ] Prohibit changes to window-management behavior, native title controls,
+  focus visibility, accessibility roles, warning/destructive meaning, command
+  availability, confirmation, security notices, executable scripts, downloaded
+  fonts, unbounded animation, and unreachable layouts.
+- [ ] Define package:
+
+```text
+theme-package/
+  manifest.toml
+  tokens.json
+  icons/
+  images/
+  platform/
+    winforms.json
+    appkit.json
+    gtk3.json
+    winui.json
+    swiftui.json
+    qt6.json
+```
+
+- [ ] Require schema/theme ID/version, author/license, shell capabilities,
+  hashes, byte/dimension budgets, fallback theme, contrast declaration, and
+  optional bounded platform overrides.
+- [ ] Retain a non-removable System Native theme.
+- [ ] Add startup safe mode that ignores a broken user theme.
+- [ ] Use restrained Factorio branding in headers, icons, instance art, empty
+  states, bounded textures, and accents; never simulate another OS’s controls.
+
+### `SHELL-SHAPE-SEPARATION-01`
+
+- Priority: P1/P2.
+- [ ] Full launcher shell:
+  navigation pages, resource views, persistent Launch Deck, Activity, and
+  recovery entrypoints.
+- [ ] Setup/maintenance shell:
+
+```text
+Welcome
+  -> Source
+  -> Product and Version
+  -> Components
+  -> Destination
+  -> Compatibility and Capacity
+  -> Review Plan
+  -> Confirm
+  -> Apply
+  -> Verify
+  -> Complete or Recover
+```
+
+- [ ] Maintenance mode:
+  select installation, choose Verify/Repair/Move/Modify/Uninstall, review exact
+  plan, apply, and verify.
+- [ ] Constrained recovery shell:
+  interrupted operation, exact target/transaction, known effects, changed or
+  foreign material, inspect/resume/rollback actions, and diagnostic export.
+- [ ] Reuse source/target selectors, package/component summaries, effects
+  tables, plan review, confirmation, progress, diagnostics, and recovery views.
+- [ ] Do not reuse the eight-tab launcher navigation in setup or recovery.
+- [ ] Make recovery shell independently launchable when the main product cannot
+  start.
 
 ### `FRONTEND-TWO-PLANE-01`
 
@@ -787,71 +1381,89 @@ diagnostics
     diagnostics, development, provider inspection, compatibility aliases, and
     low-level administration;
   - [ ] expose it through CLI machine mode, TUI command explorer, GUI Advanced,
-    and diagnostics tooling.
+    and diagnostic tooling.
 - [ ] Adapt friendly CLI output to the view/action model.
 - [ ] Adapt TUI primary screens to tasks rather than a flat command list.
-- [ ] Adapt WinForms and AppKit primary navigation to task views while retaining
-  generated generic forms under Advanced.
+- [ ] Adapt WinForms, AppKit, and GTK primary navigation to task pages while
+  retaining generated generic forms under Advanced.
 - [ ] Prove semantic parity, not pixel identity.
 
 ### `PRODUCT-PRESENTATION-PACKS-01`
 
 - Priority: P2.
 - [ ] Define declarative pack fields for product identity, branding,
-  localization, navigation, task registrations, resource labels, icon roles,
-  action mappings, help, settings, empty states, and advanced categories.
+  localization, navigation/page registration, tasks, resource labels, icon
+  roles, actions, help, settings, empty states, status summaries, and advanced
+  categories.
 - [ ] Keep arbitrary executable UI logic out of v1 packs.
 - [ ] Allow complex trusted views through statically registered view providers
-  only after a demonstrated need.
-- [ ] FacMan navigation target:
-  Instances, Installations, Modpacks, Profiles and Presets, Saves and Worlds,
-  Accounts, Backups and Snapshots, Recovery Center, Environments, Advanced.
-- [ ] Dominium navigation candidate:
-  Play/Resume, Environments, Worlds, Content Packs, Profiles, Servers,
-  Projects/Workbench, Installations, Operations, Recovery, Advanced.
-- [ ] Keep exact product terms and information architecture product-owned.
+  only after demonstrated need.
+- [ ] Make the eight-page FacMan classic pack one product projection, not a
+  universal navigation requirement.
+- [ ] Let Dominium contribute its own Play/Resume, Environments, Worlds,
+  Content Packs, Profiles, Servers, Projects/Workbench, Installations,
+  Operations, Recovery, and Advanced structure according to its product tasks.
+- [ ] Keep exact product terminology, ordering, default route, and status
+  summaries product-owned.
 
 ### `FRONTEND-CONFORMANCE-01`
 
 - Priority: P2.
-- For CLI, TUI, WinForms, AppKit, and the selected Linux baseline:
+- For CLI, TUI, WinForms, AppKit, GTK, and later modern shells:
   - [ ] stable workflow coverage;
   - [ ] command explorer coverage;
   - [ ] structural and semantic argument errors;
-  - [ ] refusal and risk rendering;
+  - [ ] refusal, risk, effects, and owner rendering;
   - [ ] progress and event order;
   - [ ] cancellation and cancellation-requested-but-completed;
   - [ ] recovery-required and outcome-unknown;
-  - [ ] keyboard navigation and accessibility roles;
+  - [ ] Launch Deck primary-action mapping;
+  - [ ] keyboard navigation, focus, and accessibility roles;
   - [ ] long localization strings and right-to-left readiness assessment;
-  - [ ] narrow, resized, high-DPI, large-font, and empty-state layouts;
-  - [ ] offline and unavailable-capability behavior.
+  - [ ] narrow, resized, low-resolution, high-DPI, large-font, and empty layouts;
+  - [ ] offline, stale, loading, partial, and unavailable-capability behavior;
+  - [ ] broken-theme recovery and System Native fallback;
+  - [ ] safe Home/News content failure;
+  - [ ] multiple running instances and global activity status.
 
-## Phase 8 — Native client bindings and GUI transport removal
+## Phase 8 — Direct native clients, classic shell proof, and modern-shell gate
 
 ### `NATIVE-CLIENT-BINDINGS-01`
 
-- Priority: P2.
+- Priority: P1/P2.
+- Safety gate: complete before native GUIs expose real mutation, large
+  downloads, backups, process supervision, interrupted operations, or recovery.
 - [ ] Export a stable native client library with explicit memory/lifetime rules.
-- [ ] Generate .NET Framework-compatible P/Invoke bindings and safe wrappers.
+- [ ] Generate .NET Framework-compatible raw P/Invoke bindings and safe wrappers.
 - [ ] Generate an Objective-C/Objective-C++ facade suitable for AppKit and Swift
   C interoperability.
-- [ ] Provide C/C++ integration for GTK and Qt.
+- [ ] Provide direct C/C++ integration for GTK and Qt.
 - [ ] Preserve process RPC as compatibility, bootstrap, diagnostic, and test
   fallback.
-- [ ] Make direct transport the default for native GUIs once conformance passes.
+- [ ] Make direct transport the classic frontend default:
+
+| Frontend | Primary | Fallback |
+| --- | --- | --- |
+| WinForms | P/Invoke to architecture-matched native client | Bounded process RPC |
+| AppKit | Objective-C++ bridge to native C client | Bounded process RPC |
+| GTK 3 | Direct C/C++ native client | Bounded process RPC |
+| CLI | Direct native client | Optional accepted service |
+| TUI | Direct native client | Optional accepted service |
+
 - [ ] Remove requirements for users to browse for `facman.exe`.
-- [ ] Ensure operation cancellation is by operation ID, never only by killing
-  the frontend child process.
-- [ ] Package native dependencies, ABI metadata, schemas, and licenses together.
+- [ ] Ensure cancellation targets an operation ID, not only a transport process.
+- [ ] Package architecture-matched native dependencies, ABI metadata, schemas,
+  licenses, and composition identity.
 - Exit:
-  - WinForms and AppKit inspect products/instances, preview plans, run
-    diagnostics, and monitor operations without spawning the CLI;
-  - process fallback remains testable.
+  - WinForms, AppKit, and GTK inspect products/instances, preview plans, run
+    diagnostics, dispatch safe fixture operations, and observe them without
+    spawning the CLI;
+  - process fallback remains bounded and conformance-tested;
+  - no architecture-mismatched managed/native package is produced.
 
 ### `ASYNC-OPERATION-API-01`
 
-- Priority: P2.
+- Priority: P1/P2.
 - [ ] Retain synchronous execute for compatibility.
 - [ ] Add:
 
@@ -865,23 +1477,191 @@ inspect | cancel | resume | recover | rollback
 
 - [ ] Define event sequencing, replay cursor, deduplication, backpressure,
   disconnection, retention, and terminal-state laws.
-- [ ] Define prompt ownership and what happens when a frontend disconnects.
+- [ ] Define prompt ownership and frontend-disconnect behavior.
 - [ ] Make effects already performed visible.
 - [ ] Ensure timeout maps to inspection/recovery rather than assumed rollback.
-- [ ] Add race tests for cancel/complete, restart/reconnect, duplicate submit,
-  stale cursor, and multiple observers.
+- [ ] Add cancel/complete, restart/reconnect, duplicate submit, stale cursor,
+  prompt abandonment, process-fallback death, and multiple-observer race tests.
 
-### `LINUX-BASELINE-SHELL-DECISION-01`
+### `CLASSIC-COMPONENT-GALLERY-01`
 
-- Priority: P2 / EXPLORE.
-- [ ] Compare GTK and Qt against supported distributions, toolchain floor,
-  accessibility, localization, packaging, ABI stability, native fit, and
-  maintenance capacity.
-- [ ] Select one release-blocking Linux baseline.
-- [ ] Keep the other permitted but non-blocking until shared conformance makes
-  support inexpensive.
-- [ ] Record decision, rejected alternative, reconsideration trigger, package
-  proof, and CI/runtime proof.
+- Priority: P2.
+- [ ] Build a development-only component gallery for WinForms, AppKit, and GTK.
+- [ ] Render all:
+  - primary/secondary/destructive/disabled action states;
+  - Launch Deck readiness and session states;
+  - plan-review ownership/effects/capacity/restart states;
+  - operation phases and event timelines;
+  - recovery-required and outcome-unknown;
+  - empty, loading, stale, partial, error, and offline states;
+  - forms, validation, tables, details, prompts, notifications, and diagnostics;
+  - theme tokens and System Native fallback;
+  - long translations, large text, high contrast, and keyboard focus.
+- [ ] Capture semantic snapshots and platform screenshots without requiring
+  pixel equality.
+- [ ] Use the gallery to qualify toolkit capabilities before product page work.
+- [ ] Keep it development-only and unable to gain product authority.
+
+### `CLASSIC-THREE-PLATFORM-VERTICAL-SLICE-01`
+
+- Priority: P1/P2.
+- Implement equally in WinForms, AppKit, and GTK:
+
+```text
+open application
+  -> list instances
+  -> select instance
+  -> render InstanceView and Launch Deck
+  -> show readiness and blockers
+  -> build launch-plan preview
+  -> render Play or structured refusal
+  -> dispatch a safe fixture operation
+  -> observe progress in Activity
+  -> render completion, recovery-required, or outcome-unknown
+```
+
+- [ ] Use identical semantic fixtures and normalized client operations.
+- [ ] Prove keyboard-only operation and accessible state announcements.
+- [ ] Prove narrow/minimum layout and offline startup.
+- [ ] Prove direct transport primary and process fallback equivalence.
+- [ ] Do not implement live Factorio mutation or launch authority in this slice.
+- [ ] Prevent one platform from expanding substantially beyond the others until
+  this slice passes.
+
+### `CLASSIC-PAGE-EXPANSION-01`
+
+- Priority: P2.
+- Expand only after the vertical slice, in dependency order:
+
+```text
+1. Instances and Launch Deck
+2. Activity and Recovery
+3. Installations
+4. Updates
+5. Mods
+6. Accounts
+7. Home / News
+8. Settings and themes
+9. Setup and maintenance shell
+```
+
+- [ ] Require page-specific contract fixtures and conformance before the next
+  page family becomes release-blocking.
+- [ ] Implement visually distinctive Home/News late because it proves little of
+  the core architecture.
+- [ ] Keep real mutation disabled per page until direct client, operation,
+  authority, plan-review, recovery, and platform proof are complete.
+
+### `CLASSIC-SHELL-CROSSCUTTING-FEATURES-01`
+
+- Priority: P2.
+- [ ] First-run onboarding before normal shell.
+- [ ] Recovery Center under Activity plus contextual banners and standalone
+  recovery shell.
+- [ ] Backups/snapshots under Instances and Activity.
+- [ ] Downloads/cache under Mods, Updates, and Activity.
+- [ ] Global search and command palette.
+- [ ] Notifications with Activity history and accessibility announcements.
+- [ ] Explicit offline mode and cached-capability reporting.
+- [ ] Proxy/network policy under Settings.
+- [ ] Privacy and any telemetry controls under Settings; no hidden collection.
+- [ ] Support-bundle preview/export under Activity/Diagnostics.
+- [ ] Import/export/rebinding under Instances and Installations.
+- [ ] Multiple running-instance state in Launch Deck and Activity.
+- [ ] Source acquisition under Updates/Installations, separate from USK apply.
+- [ ] Privilege/restart requirements in plan review and Activity.
+- [ ] Workspace migration on startup with Settings/Recovery inspection.
+- [ ] Broken-theme startup recovery.
+- [ ] Low-resource mode with bounded feeds, lazy pages, reduced motion, and
+  release-profile budgets.
+
+### `CLASSIC-PLATFORM-RELEASE-LANES-01`
+
+- Priority: P2.
+- Status: candidate profiles; not release claims until official requirements,
+  toolchains, native dependency closure, packaging, and runtime fixtures are
+  revalidated under a network-enabled reviewed task.
+- General:
+  - [ ] Pin exact OS floor, architecture, toolkit/runtime, compiler/SDK/sysroot,
+    C/C++ runtime, package form, signing, dependency closure, and proof host.
+  - [ ] Distinguish shell compilation from complete FacMan+ULK+USK runtime proof.
+  - [ ] Never label an unsupported legacy OS as currently secure.
+
+#### Windows classic candidates
+
+```text
+facman-winforms-win7-x86
+facman-winforms-win7-x64
+```
+
+- [ ] Use architecture-specific managed packages; never `AnyCPU` when loading
+  native FacMan/ULK/USK libraries.
+- [ ] Qualify .NET Framework 4.8 and its bootstrap detection on Windows 7 SP1
+  without silent network installation.
+- [ ] Build the complete native closure for x86 and x64.
+- [ ] Use standard Windows chrome, high contrast, and qualified DPI behavior
+  with safe legacy fallback.
+- [ ] Require no WebView2 or WinUI dependency in the classic core.
+- [ ] Prove runtime behavior in Windows 7 VMs and newer supported Windows hosts.
+- [ ] Label Windows 7 support as legacy compatibility, not a security-support
+  promise.
+
+#### macOS classic candidates
+
+```text
+facman-appkit-i386
+  candidate target: macOS 10.9 through 10.14
+  candidate toolchain: frozen Xcode 9.4-or-earlier class
+
+facman-appkit-x86_64
+  candidate target: macOS 10.9 or later after API/dependency qualification
+```
+
+- [ ] Treat lowering the current 10.13 compile target as a full dependency and
+  runtime qualification, not a flag change.
+- [ ] Freeze reproducible legacy compiler/SDK environment for any i386 claim.
+- [ ] Audit every C++17 dependency and the complete FacMan/ULK/USK closure.
+- [ ] Keep AppKit/Objective-C in the shell and Objective-C++ at the bridge.
+- [ ] Guard post-10.9 APIs with qualified alternatives.
+- [ ] Prove separate signing, packaging, launch, direct client, and operation
+  fixtures.
+- [ ] Keep i386 candidate-only until the complete native closure passes; a
+  shell binary alone proves nothing about the backend.
+
+#### Linux classic candidates
+
+```text
+facman-gtk3-x11-i686
+facman-gtk3-x11-x86_64
+```
+
+- [ ] Adopt GTK 3/X11 as the intended classic Linux family and reserve Qt
+  6/Wayland for the later modern family.
+- [ ] Freeze reference distributions/sysroots, glibc, GLib, GTK 3 revision,
+  compiler, C++ runtime, icon/desktop integration, package form, X11,
+  sound/notification, and credential-provider behavior.
+- [ ] Build independent i686 and x86_64 sysroots and packages.
+- [ ] Prove complete runtime closure, not one Ubuntu build.
+- [ ] Document unsupported display backends and distribution ranges precisely.
+
+### `MODERN-SHELL-GATE-01`
+
+- Priority: P3 / BLOCKED.
+- Prerequisite: classic semantic contract, component galleries, three-platform
+  vertical slice, direct client, and frontend conformance accepted.
+- Intended families:
+  - WinUI 3 with an exactly pinned supported Windows/SDK floor;
+  - SwiftUI with an exactly pinned macOS/Xcode floor;
+  - Qt 6/Wayland with exactly pinned distributions, architectures, Qt version,
+    and QPA/runtime closure.
+- [ ] Revalidate current primary vendor requirements before every release
+  profile is accepted.
+- [ ] Avoid indefinite labels such as Windows 10+, macOS 11+, or Linux.
+- [ ] Permit sidebars, responsive cards, larger touch targets, animations, and
+  compact layouts.
+- [ ] Require the same command, action, operation, refusal, recovery,
+  accessibility, and product-pack semantics.
+- [ ] Do not copy the classic visual layout or share widget code.
 
 ## Phase 9 — Build, SDK packaging, bootstrap, and maintenance
 
@@ -1382,11 +2162,55 @@ Universal Launcher
 - Prefer direct transport plus durable authority state unless quantified needs
   justify service lifecycle and attack surface.
 
-## `EXP-LINUX-TOOLKIT-01`
+## `EXP-LINUX-RELEASE-CLOSURE-01`
 
-- Question: GTK or Qt for the first release-blocking Linux GUI?
-- Measure accessibility, distro/toolchain coverage, package size, native
-  integration, long-term ABI, developer capacity, and test automation.
+- Architecture direction is now split by shell family:
+  - GTK 3/X11 for classic i686/x86_64 candidates;
+  - Qt 6/Wayland for the later modern 64-bit line.
+- Remaining question: which exact distributions/sysroots, glibc/GLib/GTK/Qt
+  versions, compilers, C++ runtimes, desktop integrations, package formats, and
+  credential/notification providers can be proven and maintained?
+- Measure accessibility, package size, native integration, ABI/runtime closure,
+  developer capacity, test automation, and old-machine performance.
+- Record precise supported and unsupported matrices; never infer “Linux
+  support” from one CI image.
+
+## `EXP-LEGACY-PLATFORM-CLOSURE-01`
+
+- Question: can the complete FacMan + ULK + USK dependency closure genuinely
+  support Windows x86, macOS i386, and Linux i686 candidate lanes?
+- Audit C++17, runtime libraries, archive/crypto/network dependencies, binding
+  generation, packaging, signing, credential providers, and build hosts.
+- Distinguish:
+  - shell compile;
+  - shell launch;
+  - direct-client load;
+  - read-only workflow;
+  - fixture operation;
+  - product launch;
+  - setup mutation and recovery.
+- Publish no legacy compatibility claim before the required proof level passes.
+
+## `EXP-NEWS-CONTENT-SAFETY-01`
+
+- Question: which official FacMan/Factorio feed formats can be consumed without
+  embedding privileged active web content?
+- Prefer a versioned structured feed with bounded images and external-browser
+  links.
+- Compare native structured rendering, strict sanitization, and an isolated
+  scripting-disabled fallback only against offline cache, provenance,
+  accessibility, localization, privacy, and parser attack surface.
+- News remains optional and can never gate startup or Play.
+
+## `EXP-THEME-CAPABILITY-01`
+
+- Question: which semantic theme capabilities can every classic and modern
+  toolkit implement accessibly?
+- Define a mandatory portable core and optional capability flags.
+- Measure contrast, focus, large-text behavior, asset budgets, startup cost,
+  broken-package recovery, and platform-native adaptation.
+- Reject executable themes, remote fonts, security-notice suppression, and
+  layouts that make actions unreachable.
 
 ## `EXP-BINDING-GENERATION-01`
 
@@ -1458,6 +2282,15 @@ Apply   = deterministic local verification + target mutation
 | Overloaded terminology causes competing engines | High | Medium | Glossary, inventory, aliases, naming validation |
 | Too many GUI lanes dilute release proof | High | Medium | One release-blocking baseline per platform |
 | Dynamic extensions expand attack surface | Medium | Critical | Defer to Level 4 evidence gate |
+| Remote Home/News content executes in a privileged launcher | Medium without controls | Critical | Structured allowlisted feed, bounds, sanitization, native cache, external browser |
+| Broken or hostile theme hides focus, warnings, or actions | Medium | High | Semantic tokens, strict budgets, accessibility override, System Native safe mode |
+| Legacy shell compilation is mistaken for complete product support | High | High | Proof ladder for full native closure and exact compatibility labels |
+| WinForms `AnyCPU` loads the wrong native architecture | High if shipped | High | Separate x86/x64 packages and architecture-matched dependency manifests |
+| i386 backend cannot satisfy current C++ dependency floor | High until audited | High | Candidate-only lane, frozen toolchain, full closure proof |
+| Generic “Linux” package fails outside one build image | High | High | Pinned sysroots, independent i686/x86_64 proof, explicit supported matrix |
+| Classic shell contract becomes a cross-platform widget framework | Medium | High | Share descriptors/snapshots only; toolkit adapters own widgets and layout |
+| Eight top-level pages hide secondary resources | Medium | Medium | Nested product routes, overflow/View menu, global search, Advanced explorer |
+| GUI mutation begins while cancellation still kills RPC child | High if sequencing slips | Critical | Hard gate on direct client, operation IDs, recovery, and transport conformance |
 
 # Milestone acceptance dashboard
 
@@ -1493,11 +2326,19 @@ Apply   = deterministic local verification + target mutation
 
 ## M4 — Presentation and native-shell convergence
 
-- [ ] View/action contract and product presentation packs are versioned.
-- [ ] Friendly CLI, TUI, WinForms, AppKit, and selected Linux shell are
-  semantically conformant.
+- [ ] Classic launcher, setup/maintenance, and recovery shell contracts are
+  versioned and distinct.
+- [ ] Shell/page/action/Launch Deck/theme/accessibility records and product
+  presentation packs are versioned.
+- [ ] Component galleries pass on WinForms, AppKit, and GTK.
+- [ ] The complete instance/readiness/plan/fixture-operation/Activity vertical
+  slice passes on all three classic shells.
+- [ ] Friendly CLI, TUI, WinForms, AppKit, and GTK are semantically conformant.
 - [ ] Native GUIs no longer require the CLI executable for primary operations.
-- [ ] Accessibility/localization conformance passes.
+- [ ] Home/News failure, broken-theme recovery, minimum layout, keyboard,
+  accessibility, localization, and offline conformance pass.
+- [ ] No real GUI mutation depends on killing a process-RPC child for
+  cancellation.
 
 ## M5 — Reproducible product distribution
 
@@ -1505,6 +2346,9 @@ Apply   = deterministic local verification + target mutation
 - [ ] Source and package consumption modes are equivalent.
 - [ ] Product composition manifest drives build/package/About/SBOM truth.
 - [ ] FacMan and Dominium bootstrap compositions pass rollback/recovery proofs.
+- [ ] Every classic platform package states an exact architecture, runtime,
+  toolkit, toolchain/sysroot, dependency closure, and proven compatibility
+  range.
 
 ## M6 — Evidence-driven expansion
 
@@ -1558,13 +2402,30 @@ Apply   = deterministic local verification + target mutation
 11. [ ] Consolidate the generic setup client and typed setup handoff.
 12. [ ] Qualify and extract process/session foundations.
 13. [ ] Qualify and extract the operation-permit kernel.
-14. [ ] Define the presentation contract and product presentation packs.
-15. [ ] Move friendly CLI/TUI/native GUIs to the workflow plane.
-16. [ ] Add native client bindings and remove primary GUI-over-CLI dependence.
-17. [ ] Export namespaced ULK/USK SDK packages and prove source/package parity.
-18. [ ] Generate product composition manifests.
-19. [ ] Build setup-only product bootstrap compositions.
-20. [ ] Re-evaluate optional service, connectors, dynamic providers, and signed
+14. [ ] Freeze `UNIVERSAL-CLASSIC-SHELL-CONTRACT-01`, including distinct
+    launcher, setup/maintenance, and recovery shell shapes.
+15. [ ] Define typed presentation records, the persistent Launch Deck, the
+    eight-page FacMan classic pack, semantic theme manifest, and accessibility
+    contract.
+16. [ ] Add WinForms P/Invoke, AppKit Objective-C++, and GTK direct native
+    clients before exposing GUI mutation.
+17. [ ] Build WinForms, AppKit, and GTK component galleries.
+18. [ ] Complete the same instance/readiness/plan/safe-operation/Activity
+    vertical slice on all three classic shells.
+19. [ ] Expand classic pages in dependency order: Instances/Launch Deck,
+    Activity/Recovery, Installations, Updates, Mods, Accounts, Home/News,
+    Settings/themes, then setup/maintenance.
+20. [ ] Move friendly CLI/TUI/native GUIs to the workflow plane while retaining
+    the expert command explorer.
+21. [ ] Qualify exact Windows x86/x64, macOS i386/x86_64, and Linux
+    i686/x86_64 candidate dependency closures without overstating support.
+22. [ ] Export namespaced ULK/USK SDK packages and prove source/package parity.
+23. [ ] Generate product composition manifests.
+24. [ ] Build setup-only product bootstrap compositions and independent recovery
+    entrypoints.
+25. [ ] Begin WinUI, SwiftUI, and Qt modern shells only after classic semantic
+    conformance passes.
+26. [ ] Re-evaluate optional service, connectors, dynamic providers, and signed
     self-update from measured product needs.
 
 # Final target
@@ -1589,13 +2450,34 @@ Multiple product providers:
 Multiple native shells:
   CLI
   TUI
-  WinForms
-  AppKit
-  selected GTK or Qt baseline
-  optional modern shells after conformance is cheap
+
+  Classic family:
+    WinForms
+    AppKit
+    GTK 3 / X11
+
+  Modern family after the shared model is proven:
+    WinUI 3
+    SwiftUI
+    Qt 6 / Wayland
+
+One classic FacMan visual grammar:
+  native menus, tabs, controls and dialogs
+  large task-oriented content page
+  persistent selected-instance Launch Deck
+  prominent safe primary action
+  structured global Activity and recovery status
+
+Three reusable but distinct application shapes:
+  full launcher shell
+  setup and maintenance shell
+  constrained standalone recovery shell
 ```
 
 FacMan proves product-neutral orchestration with a complex external game.
 Dominium proves product-native installation, packaging, and lifecycle. Together
 they prove that the universal contracts are genuinely universal without
-creating a monolith.
+creating a monolith. The classic FacMan line should feel as immediate as the old
+Minecraft launcher while retaining the deeper installation, instance, content,
+readiness, operation, recovery, portability, and authority model that a serious
+product manager and launch supervisor requires.
