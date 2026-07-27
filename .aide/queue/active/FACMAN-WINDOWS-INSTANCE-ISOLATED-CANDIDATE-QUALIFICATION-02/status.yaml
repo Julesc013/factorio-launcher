@@ -1,0 +1,18 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
+status: blocked
+lifecycle_state: blocked
+planning_state: blocked
+created_at: 2026-07-26T20:12:43Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/evidence/
+active_at: 2026-07-26T21:03:21Z
+updated_at: 2026-07-26T21:03:21Z
+blocked_at: 2026-07-26T21:19:52Z
+blocker: >
+  Live qualification refused the staged installation because its lifecycle
+  and current verification evidence were empty. Awaiting the bounded
+  qualification lifecycle evidence repair and a fresh remote-only rebuild.
+implementation_state: blocked
+authority_promotion: false
+factorio_execution: false

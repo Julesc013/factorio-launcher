@@ -31,6 +31,7 @@ from tools.play_verdict_route import (
     INSTANCE_ISOLATED_REVALIDATION as ROUTE,
     CandidateQualificationBinding,
     RouteBindingError,
+    digest_value,
     load_qualification_binding,
 )
 
@@ -292,11 +293,112 @@ def _extract_authenticated_executable(
         )
 
 
+def _active_install_record(
+    factorio_executable: Path,
+    factorio_identity: dict[str, str],
+) -> dict[str, Any]:
+    """Create an active install record only from exact current file evidence."""
+
+    if set(factorio_identity) != {"version", "sha256", "signer"}:
+        raise CoordinatorError("Factorio installation identity is not closed")
+    executable = _absolute(factorio_executable)
+    audit = PREFLIGHT.audit_no_follow(executable, require_file=True)
+    stable_identity = PREFLIGHT.stable_identity_digest(audit)
+    actual_sha256 = (
+        PREFLIGHT.sha256_file(executable) if audit.get("safe") else ""
+    )
+    if (
+        not audit.get("safe")
+        or stable_identity is None
+        or factorio_identity["version"] != PREFLIGHT.EXPECTED_FACTORIO_VERSION
+        or factorio_identity["signer"] != PREFLIGHT.EXPECTED_SIGNER
+        or factorio_identity["sha256"] != actual_sha256
+    ):
+        raise CoordinatorError(
+            "Factorio installation identity is not exact and current"
+        )
+
+    installation_root = executable.parents[2]
+    install_id = "instance-isolated-factorio-2-0-77"
+    verification_core = {
+        "schema": "facman.instance_isolated_install_verification.v1",
+        "install_id": install_id,
+        "executable": str(executable),
+        "executable_size": int(audit["size"]),
+        "executable_sha256": actual_sha256,
+        "stable_file_identity": stable_identity,
+        "version": factorio_identity["version"],
+        "signer": factorio_identity["signer"],
+        "method": "no_follow_exact_authenticated_binary",
+        "status": "pass",
+    }
+    verification_identity = digest_value(verification_core)
+    record: dict[str, Any] = {
+        "schema": "factorio.install_ref.v1",
+        "install_id": install_id,
+        "candidate_id": install_id,
+        "provider_id": "direct.inspect",
+        "product_id": "factorio",
+        "display_name": "Factorio instance-isolated 2.0.77",
+        "root": str(installation_root),
+        "app_dir": str(installation_root),
+        "executable": str(executable),
+        "version": "2.0.77",
+        "ownership": "imported",
+        "source": "manual",
+        "source_ref": f"wube-signed-binary-sha256:{actual_sha256}",
+        "platform": "windows-x64",
+        "distribution_origin": "website_installer",
+        "platform_integration": "none_detected",
+        "installation_layout": "official_installer",
+        "data_routing": "system_shared",
+        "program_data_separation": "separated",
+        "uninstall_integration": "uninstaller_present",
+        "side_by_side_safety": (
+            "program_files_separate_but_registration_may_be_superseded"
+        ),
+        "local_data_domains": [],
+        "strict_isolation_eligibility": "candidate",
+        "external_state_domains": ["default_factorio_data"],
+        "capabilities": ["gui"],
+        "setup_state_ref": "",
+        "lifecycle_status": "active",
+        "last_verification_identity": verification_identity,
+        "executable_path_kind": "candidate",
+        "app_dir_kind": "install_root",
+        "diagnostic_code": "",
+        "evidence": [
+            "direct_inspection",
+            "no_follow_exact_authenticated_binary",
+        ],
+        "setup_mutation_allowed": False,
+        "verification": {
+            **verification_core,
+            "identity": verification_identity,
+            "problems": [],
+        },
+        "discovery": {"read_only": True, "source_family": "manual"},
+        "safe_actions": {"repair": False, "uninstall": False},
+    }
+    record["state_revision"] = digest_value(
+        {
+            "schema": "facman.instance_isolated_install_state.v1",
+            "installation": record,
+        }
+    )
+    return record
+
+
 def _stage_workspace(
     workspace: Path,
     instance_id: str,
     factorio_executable: Path,
+    factorio_identity: dict[str, str],
 ) -> None:
+    install_record = _active_install_record(
+        factorio_executable,
+        factorio_identity,
+    )
     instance_root = workspace / "instances" / instance_id
     for relative in (
         "accounts",
@@ -349,47 +451,7 @@ def _stage_workspace(
     install_id = "instance-isolated-factorio-2-0-77"
     COMMON.write_new(
         workspace / "installs" / "refs" / f"{install_id}.json",
-        {
-            "schema": "factorio.install_ref.v1",
-            "install_id": install_id,
-            "candidate_id": install_id,
-            "provider_id": "direct.inspect",
-            "product_id": "factorio",
-            "display_name": "Factorio instance-isolated 2.0.77",
-            "root": str(installation_root),
-            "app_dir": str(installation_root),
-            "executable": str(factorio_executable),
-            "version": "2.0.77",
-            "ownership": "imported",
-            "source": "manual",
-            "source_ref": "",
-            "platform": "windows-x64",
-            "distribution_origin": "website_installer",
-            "platform_integration": "none_detected",
-            "installation_layout": "official_installer",
-            "data_routing": "system_shared",
-            "program_data_separation": "separated",
-            "uninstall_integration": "uninstaller_present",
-            "side_by_side_safety": (
-                "program_files_separate_but_registration_may_be_superseded"
-            ),
-            "local_data_domains": [],
-            "strict_isolation_eligibility": "candidate",
-            "external_state_domains": ["default_factorio_data"],
-            "capabilities": ["gui"],
-            "setup_state_ref": "",
-            "lifecycle_status": "",
-            "last_verification_identity": "",
-            "state_revision": "",
-            "executable_path_kind": "candidate",
-            "app_dir_kind": "install_root",
-            "diagnostic_code": "",
-            "evidence": ["direct_inspection"],
-            "setup_mutation_allowed": False,
-            "verification": {"status": "structural", "problems": []},
-            "discovery": {"read_only": True, "source_family": "manual"},
-            "safe_actions": {"repair": False, "uninstall": False},
-        },
+        install_record,
         compact=True,
     )
     COMMON.write_new(
@@ -482,7 +544,16 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
             != qualification.factorio_sha256
         ):
             raise CoordinatorError("installed Factorio differs from qualification")
-        _stage_workspace(workspace, ROUTE.instance_id, factorio_executable)
+        _stage_workspace(
+            workspace,
+            ROUTE.instance_id,
+            factorio_executable,
+            {
+                "version": qualification.factorio_version,
+                "sha256": qualification.factorio_sha256,
+                "signer": qualification.factorio_signer,
+            },
+        )
     _validate_staged_candidate(
         facman=source_paths["facman"],
         workspace=workspace,

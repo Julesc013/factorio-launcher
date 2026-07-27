@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
 title: Qualify the exact accepted instance-isolated harness
-status: planned
-lifecycle_state: planned
-planning_state: planned
+status: blocked
+lifecycle_state: blocked
+planning_state: blocked
 created_at: 2026-07-26T20:12:43Z
 owner: unassigned
 objective: >
@@ -12,10 +12,15 @@ objective: >
   exact candidate and harness artifacts, and create the immutable
   instance-isolated qualification binding without executing Factorio.
 allowed_paths:
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
   - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/**
-  - .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/**
+  - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/**
   - .aide/queue/index.yaml
+  - README.md
   - docs/architecture/instance-isolated-verdict-harness.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
 forbidden_paths:
   - .git/**
   - .aide.local/**
@@ -31,6 +36,16 @@ architecture_invariants:
   - no Factorio process WPR permit verdict route or authority is produced
 depends_on:
   - FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01
+source_binding:
+  factorio_launcher:
+    revision: 426d13cc2f68782b40eae66f0fb0621a607b7998
+    required_ref: origin/dev
+  universal_launcher:
+    revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
+    required_ref: origin/main
+  universal_setup:
+    revision: 3f8489275077347c2918f3bb03614ec6431362ff
+    required_ref: origin/main
 commit_template: .aide/git/commit-template.md
 closeout_checklist:
   - remote-only source closure passed
@@ -39,3 +54,14 @@ closeout_checklist:
   - accepted policy digests remain exact
   - no required obligation was skipped
   - structured commit check passes
+active_at: 2026-07-26T21:03:21Z
+updated_at: 2026-07-26T21:03:21Z
+blocked_at: 2026-07-26T21:19:52Z
+blocker: >
+  The first live producer run failed closed because the coordinator staged an
+  empty installation lifecycle and structural-only verification while the
+  repaired runtime correctly requires exact active current evidence.
+  FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01 must land and the exact
+  candidate must be rebuilt before qualification restarts.
+implementation_state: blocked
+result: PENDING

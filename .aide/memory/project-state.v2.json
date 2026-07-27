@@ -2221,9 +2221,9 @@
     "archived_task_count": 61,
     "counts": {
       "active": 1,
-      "blocked": 3,
-      "planned": 2,
-      "verified": 4
+      "blocked": 4,
+      "planned": 1,
+      "verified": 5
     },
     "records": [
       {
@@ -2240,9 +2240,9 @@
       },
       {
         "id": "FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "verified",
         "queue": "active",
-        "status": "active"
+        "status": "verified"
       },
       {
         "id": "FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01",
@@ -2251,10 +2251,22 @@
         "status": "verified"
       },
       {
+        "id": "FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
+      },
+      {
         "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01",
         "lifecycle_state": "verified",
         "queue": "active",
         "status": "verified"
+      },
+      {
+        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02",
+        "lifecycle_state": "blocked",
+        "queue": "active",
+        "status": "blocked"
       },
       {
         "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
@@ -2276,12 +2288,6 @@
       },
       {
         "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"
