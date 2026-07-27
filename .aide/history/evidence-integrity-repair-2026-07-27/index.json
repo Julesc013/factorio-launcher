@@ -36,6 +36,16 @@
     },
     {
       "files": {
+        "evidence/changed-files.md": "37553103429761d346f19e2a0158743a8e506059c8e90e24fcc6965654cc3424",
+        "evidence/remaining-risks.md": "19bc36ae73cc8826f77636cf81ff31e274cbb5eb485a25d9cc897c13e5e4b9a4",
+        "evidence/validation.md": "ac53380b3143b79ee172dbe4a0717662fb64ad6d601b1dfd1985280a85a9fba1",
+        "status.yaml": "b8bd32ee7d9145706c86ac3faa38973dc006b1d3e672f60cb7896e617b4f56ac",
+        "task.yaml": "d17a4fdd343219bfd04e703e1a95e9ae021bb03f917b1ed46ba7aecd20f80f5c"
+      },
+      "task_id": "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01"
+    },
+    {
+      "files": {
         "evidence/changed-files.md": "82d62af1854d394188e535f236a8eab180213b2e6da4b8a6c7f612abf8218db8",
         "evidence/remaining-risks.md": "cf8363a9a9599d6eac4b33a05d1865eda4ebb5af9c0ff92a87bb91493cc3df04",
         "evidence/validation.md": "57a4118fac07114250e043cccc6e18306b056691040d7d69b082052841ece0d4",

@@ -49,6 +49,35 @@ target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
 target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
   flb_factorio_candidate_policy_static facman_permit_static facman_platform_static)
 if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
+  add_library(facman_evidence_io_static STATIC
+    play_evidence/facman_evidence_io.cpp)
+  target_compile_features(facman_evidence_io_static PUBLIC cxx_std_17)
+  target_include_directories(facman_evidence_io_static PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/play_evidence)
+  target_link_libraries(facman_evidence_io_static PUBLIC
+    facman_archive_static
+    facman_core_static
+    facman_platform_static
+    usk_archive_static)
+  facman_apply_policies(facman_evidence_io_static)
+  add_library(facman::evidence_io ALIAS facman_evidence_io_static)
+
+  add_executable(facman_evidence_probe
+    facman_evidence_probe.cpp)
+  target_compile_features(facman_evidence_probe PRIVATE cxx_std_17)
+  target_compile_definitions(facman_evidence_probe PRIVATE
+    FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}")
+  target_link_libraries(facman_evidence_probe PRIVATE
+    facman_evidence_io_static)
+  facman_apply_policies(facman_evidence_probe)
+  add_test(
+    NAME facman_evidence_probe_smoke
+    COMMAND facman_evidence_probe --self-test
+      ${CMAKE_CURRENT_BINARY_DIR}/evidence-probe-smoke)
+  set_tests_properties(
+    facman_evidence_probe_smoke
+    PROPERTIES LABELS "fast-unit;contract;filesystem;security")
+
   add_library(facman_play_observer_static STATIC
     gate4c_observer_broker_windows.cpp)
   target_compile_features(facman_play_observer_static PUBLIC cxx_std_17)
@@ -73,6 +102,7 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
   target_link_libraries(facman_gate4c_verdict_harness PRIVATE
     flb_factorio_candidate_projection_static
     flb_factorio_candidate_policy_static
+    facman_evidence_io_static
     facman_play_observer_static
     facman_permit_static facman_platform_static)
   add_dependencies(

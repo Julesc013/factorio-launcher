@@ -45,6 +45,10 @@ def artifact_values() -> dict[str, dict[str, object]]:
                     "verdict_harness",
                     "Debug/facman_gate4c_verdict_harness.exe",
                 ),
+                (
+                    "evidence_probe",
+                    "Debug/facman_evidence_probe.exe",
+                ),
                 ("cmake_cache", "CMakeCache.txt"),
             )
         )
@@ -306,9 +310,14 @@ class InstanceIsolatedCandidateQualificationTests(unittest.TestCase):
     def test_qualify_writes_nonexecuting_binding_and_report(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            task_root = root / ROUTE.work_unit
+            task_root = root / QUALIFICATION.QUALIFICATION_WORK_UNIT
             closure_path = root / "closure.json"
-            closure_path.write_text("{}", encoding="utf-8")
+            closure_path.write_text(
+                json.dumps(
+                    {"observed_at_utc": "2026-07-26T00:00:00Z"}
+                ),
+                encoding="utf-8",
+            )
             facman = root / "facman.exe"
             facman.write_bytes(b"facman")
             sources = {
@@ -326,7 +335,11 @@ class InstanceIsolatedCandidateQualificationTests(unittest.TestCase):
                 ),
             }
 
-            def extract(_source: Path, destination: Path) -> None:
+            def extract(
+                _source: Path,
+                destination: Path,
+                _evidence_io: object,
+            ) -> None:
                 destination.parent.mkdir(parents=True)
                 destination.write_bytes(b"factorio")
 
@@ -339,6 +352,37 @@ class InstanceIsolatedCandidateQualificationTests(unittest.TestCase):
                 self.assertEqual(identity["sha256"], "a" * 64)
                 workspace.mkdir(parents=True)
 
+            probe = root / "probe.exe"
+            probe.write_bytes(b"probe")
+
+            class FakeEvidenceIo:
+                def __init__(self, _path: Path):
+                    pass
+
+                def write_new_json(self, path: Path, value: dict):
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(json.dumps(value), encoding="utf-8")
+                    return {}
+
+                def read_json(self, path: Path):
+                    return {
+                        "payload": {
+                            "document": json.loads(
+                                path.read_text(encoding="utf-8")
+                            )
+                        }
+                    }
+
+                def hash_file(self, _path: Path):
+                    return {
+                        "payload": {
+                            "file": {
+                                "content_sha256": "f" * 64,
+                                "bytes_read": 1,
+                            }
+                        }
+                    }
+
             with (
                 patch.object(
                     QUALIFICATION,
@@ -348,7 +392,13 @@ class InstanceIsolatedCandidateQualificationTests(unittest.TestCase):
                 patch.object(
                     QUALIFICATION,
                     "resolve_artifacts",
-                    return_value=(artifact_values(), {"facman": facman}),
+                    return_value=(
+                        artifact_values(),
+                        {"facman": facman, "evidence_probe": probe},
+                    ),
+                ),
+                patch.object(
+                    QUALIFICATION, "EvidenceIo", FakeEvidenceIo
                 ),
                 patch.object(
                     QUALIFICATION,
