@@ -53,4 +53,27 @@ The implementation was committed as
 required Windows package proof regenerated the exact source identity and
 passed all 14 required obligations with zero skips.
 
-Hosted validation remains a separate merge prerequisite.
+PR 84 at exact head `ac56d30b90f8815054108d20291b17af2f34a34b`
+passed the application-kit, C/C++, C#, Linux coverage, macOS archive, policy,
+Python and CodeQL jobs. The duplicated Linux-native, macOS-native-CLI and
+Windows-native-package jobs failed only in the same three generated-state
+assertions.
+
+The hosted-only mismatch was traced to an empty untracked local directory at
+`.aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02`.
+Local state generation enumerated that directory as an unknown duplicate
+queue record, while a clean hosted checkout could not contain an untracked
+empty directory. The empty directory contained no files and was removed; the
+canonical machine and compact current-state surfaces were then regenerated.
+
+The exact promotion obligation profile passed after the correction:
+
+- 528 Python tests passed;
+- 9 skips were classified optional or platform-unsupported;
+- required blocked, unknown, failure and error counts were zero;
+- native, package, provenance, release, policy, security, AIDE, strict,
+  project-state and cross-repository obligations passed;
+- both frozen policy digests remained exact.
+
+Hosted validation of the corrected exact head remains a separate merge
+prerequisite.

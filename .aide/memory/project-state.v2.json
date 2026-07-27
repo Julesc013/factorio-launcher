@@ -2223,7 +2223,6 @@
       "active": 1,
       "blocked": 4,
       "planned": 1,
-      "unknown": 1,
       "verified": 5
     },
     "records": [
@@ -2292,12 +2291,6 @@
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"
-      },
-      {
-        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02",
-        "lifecycle_state": "",
-        "queue": "next",
-        "status": ""
       }
     ]
   },

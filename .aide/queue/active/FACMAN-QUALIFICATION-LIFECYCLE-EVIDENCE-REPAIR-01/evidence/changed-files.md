@@ -15,4 +15,6 @@
 - `tests/test_instance_isolated_candidate_qualification.py`
   - verifies the producer passes its exact product identity to staging.
 - AIDE queue, compact state, release state and evidence surfaces
-  - record the discovered fail-closed blocker and bounded repair.
+  - record the discovered fail-closed blocker and bounded repair;
+  - remove a stale duplicate queue record that was generated only from an
+    empty untracked local directory and could not exist in clean CI clones.
