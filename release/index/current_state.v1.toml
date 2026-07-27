@@ -19,7 +19,7 @@ qualification_integration = "6f9ddb4123f0f51e0641a493ed2372025dfb18dd"
 truth_closeout = "02add47c0fa74f2299bb68f16532254d4d00ab7e"
 observed_branch_head = "02add47c0fa74f2299bb68f16532254d4d00ab7e"
 universal_launcher = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
-universal_setup = "3f8489275077347c2918f3bb03614ec6431362ff"
+universal_setup = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 
 [product]

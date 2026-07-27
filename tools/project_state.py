@@ -2882,8 +2882,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU9 must record a recognized monotonic adversarial proof state")
-    if m2_wu9.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU9 must bind the exact current Universal Setup provider pin")
+    if (
+        m2_wu9.get("universal_setup_main_revision")
+        != "3f8489275077347c2918f3bb03614ec6431362ff"
+    ):
+        problems.append(
+            "M2-WU9 must retain its exact historical Universal Setup proof revision"
+        )
     if m2_wu9.get("universal_setup_task_tree") != m2_wu9.get("universal_setup_main_tree"):
         problems.append("M2-WU9 reviewed Setup task and main merge trees must be identical")
     if [m2_wu9.get("case_count"), m2_wu9.get("setup_owned_case_count"), m2_wu9.get("consumer_case_count")] != [16, 15, 1]:
@@ -2934,8 +2939,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU10 must record a recognized operator-acceptance state")
     if m2_wu10.get("acceptance_root") != r"D:\FacMan-Live-Acceptance\M2":
         problems.append("M2-WU10 must bind only the authorized acceptance root")
-    if m2_wu10.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU10 must bind the exact current Universal Setup provider pin")
+    if (
+        m2_wu10.get("universal_setup_main_revision")
+        != "3f8489275077347c2918f3bb03614ec6431362ff"
+    ):
+        problems.append(
+            "M2-WU10 must retain its exact historical Universal Setup proof revision"
+        )
     if m2_wu10.get("verdict_choices") != ["Pass", "Fail", "Inconclusive"]:
         problems.append("M2-WU10 must expose the complete human verdict set")
     if m2_wu10.get("record_schema") != "factorio.m2_operator_acceptance_record.v1":

@@ -8,7 +8,6 @@ import hashlib
 import json
 import os
 import sys
-import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,10 +97,6 @@ def validate_record(document: dict[str, object]) -> list[str]:
         "publication": False,
     }:
         problems.append("operator acceptance authority boundary changed")
-    lock = tomllib.loads((ROOT / "release/index/workspace_lock.v1.toml").read_text(encoding="utf-8"))
-    pins = {item["id"]: item["pin"] for item in lock.get("component", [])}
-    if pins.get("universal_setup") != EXPECTED_SETUP_REVISION:
-        problems.append("workspace lock no longer matches the reviewed Setup provider")
     return problems
 
 

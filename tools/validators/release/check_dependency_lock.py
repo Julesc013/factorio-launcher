@@ -146,7 +146,7 @@ def validate_universal_provider(
             "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
         },
         "universal_setup": {
-            "pin": "3f8489275077347c2918f3bb03614ec6431362ff",
+            "pin": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
             "remote": "https://github.com/Julesc013/universal-setup.git",
             "required_ref": "refs/heads/main",
             "reachability": "required_for_source_closure",

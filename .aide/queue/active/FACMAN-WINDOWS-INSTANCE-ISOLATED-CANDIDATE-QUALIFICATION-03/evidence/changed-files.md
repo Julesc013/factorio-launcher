@@ -1,23 +1,29 @@
 # Changed files
 
-## Qualification programme state
+## Universal Setup provider
 
-- Archived the accepted `FACMAN-PLAY-EVIDENCE-STABLE-IO-01` queue record.
-- Activated `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03`.
-- Regenerated canonical project-state surfaces for the active qualification.
+- Universal Setup PR #18 added strict bounded single-disk ZIP64 archive
+  inspection, 64-bit entry sizes and offsets, sentinel-required ZIP64 extra
+  parsing, malformed/multi-disk refusals, a finite ten-minute hard ceiling,
+  native tests, contract tests, and synchronized documentation.
 
-## Blocking interoperability repair
+## FacMan provider synchronization
 
-- `tools/play_evidence_stable_io.py`
-  - validates native probe result envelopes with the native serializer's exact
-    forward-slash escaping;
-  - keeps ordinary project document canonicalization unchanged.
-- `tests/test_play_evidence_stable_io.py`
-  - generates native-shaped closed result digests;
-  - covers URL and archive-member paths containing forward slashes.
+- Current workspace and release dependency locks plus the component SBOM now
+  pin Universal Setup `3048128963dc718a7c38c1cfcdda9e813a23b0db`.
+- Dependency-lock validators, compliance checks, and routing tests expect the
+  same exact pin.
+- Stable evidence archive operations default to the provider's finite
+  ten-minute ceiling, with a wrapper argument/timeout regression test.
+- Historical M2-WU9 and M2-WU10 validators retain their exact accepted Setup
+  revision without requiring the current workspace lock to remain frozen
+  forever.
+- Canonical qualification state records the superseded attempt and mandatory
+  remote-only restart.
 
 ## Scope exclusions
 
-- No product runtime, contract, policy, capability, provider pin, route
-  authority, permit, observer, Factorio process, signing, or publication
-  change.
+- Historical checkpoints, policy baselines, accepted policy digests, prior
+  evidence packets, provider histories, and verdict records are unchanged.
+- No product runtime, capability, route authority, permit, observer, Factorio
+  process, Setup mutation, signing, or publication change is included.
