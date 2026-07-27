@@ -1,0 +1,381 @@
+schema = "facman.plan.v1"
+document_id = "FACMAN-CANONICAL-PLAN"
+generated_by = "tools/generate_plan_views.py"
+last_reviewed = "2026-07-28"
+active_release = "FACMAN-C1"
+wip_limit = 3
+ready_limit = 10
+large_migration_limit = 1
+next_workunit_limit = 5
+archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
+operating_model = "docs/roadmap/planning-operating-model.md"
+north_star = "A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state."
+
+source_of_truth = [
+  "docs/product/charter.md and accepted invariants",
+  "accepted architecture decision records",
+  "product journeys and claim ledgers",
+  "release/index/plan.v1.toml",
+  "bounded epic and work-unit specifications",
+  "task queue and immutable evidence",
+  "generated todo.md and docs/roadmap/current.md views",
+  "planning archive",
+]
+
+[[release]]
+id = "FACMAN-C1"
+title = "Playable instance"
+status = "active"
+owner = "maintainer"
+objective = "Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance."
+platform_cut = "Exactly one reference platform lane; select it in DEC-C1-REFERENCE-LANE before implementation."
+frontend_cut = "CLI plus one reference GUI. Cross-frontend parity is a separate C1P milestone."
+journeys = ["J01-existing-install-to-play"]
+claim_seed = [
+  "FACMAN-CLAIM-001",
+  "FACMAN-CLAIM-002",
+  "FACMAN-CLAIM-003",
+  "FACMAN-CLAIM-004",
+  "FACMAN-CLAIM-005",
+  "FACMAN-CLAIM-010",
+]
+cut_line = [
+  "Discover and select one supported existing-install class without mutation.",
+  "Create one authority-safe isolated instance.",
+  "Show summary, readiness, and a specific explanation for blocked readiness.",
+  "Run launch preflight and an explicit Play action.",
+  "Reach the Factorio main menu without loading a save.",
+  "Supervise the process and record exit, operation history, and recovery state.",
+  "Expose the stable workflow through the CLI and one reference GUI.",
+]
+non_goals = [
+  "Managed Factorio installation, repair, move, or uninstall.",
+  "Factorio updates, FacMan self-update, and update-channel policy.",
+  "Mod Portal, public download workflows, accounts, or credential storage.",
+  "Automatic mutation of foreign-owned installations.",
+  "Arbitrary themes, a marketplace, news authority, or remote control.",
+  "Multiple release-grade GUIs, modern-shell completion, or classic-platform parity.",
+  "A stable public SDK or a universal contract claim.",
+]
+exit = [
+  "J01 passes its positive and paired failure journey on the selected reference lane.",
+  "Every release-blocking claim has identified, reproducible, non-stale evidence.",
+  "Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.",
+  "A clean checkout can reconstruct the tested release evidence without hidden machine state.",
+  "No C1 non-goal has entered the release dependency graph.",
+]
+
+[[gate]]
+id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
+title = "Finish the current Play-evidence qualification before architecture implementation"
+status = "active"
+owner = "operator"
+external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+source = ".aide/queue/index.yaml"
+observed = "2026-07-28"
+summary = "The other workstream owns the live qualification task. This plan may evolve as documentation but must not start implementation, mutate its queue state, or reinterpret its evidence."
+exit = "The active task reaches a reviewed terminal state and any follow-on gate is reflected here."
+
+[[epic]]
+id = "EPIC-PLAN-SYSTEM"
+release = "FACMAN-C1"
+title = "Canonical execution system"
+status = "complete"
+owner = "maintainer"
+repos = ["factorio-launcher"]
+outcome = "Replace planning prose as execution authority with a bounded, validated graph and generated views."
+exit = [
+  "The former monolithic todo is preserved as an archive.",
+  "The canonical plan validates and generated views are current.",
+  "Only the active release and next five work units are represented as executable work.",
+]
+
+[[epic]]
+id = "EPIC-C1-DEFINITION"
+release = "FACMAN-C1"
+title = "C1 release definition"
+status = "planned"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Make the playable-instance cut-line, journeys, exclusions, and user proof unambiguous."
+exit = [
+  "C1 has a ratified cut-line and one positive/negative journey pair.",
+  "Every included behavior maps to a claim or an explicit discovery task.",
+]
+
+[[epic]]
+id = "EPIC-RELEASE-TRUTH"
+release = "FACMAN-C1"
+title = "Claims and release truth"
+status = "planned"
+owner = "release-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+outcome = "Make product promises, evidence maturity, and invalidation machine-checkable."
+exit = [
+  "Release-blocking claims have maturity, owners, evidence, and invalidation edges.",
+  "No generated surface makes a stronger claim than the evidence supports.",
+]
+
+[[epic]]
+id = "EPIC-PLATFORM-QUALIFICATION"
+release = "FACMAN-C1"
+title = "Reference platform qualification"
+status = "planned"
+owner = "platform-maintainer"
+repos = ["factorio-launcher", "universal-launcher"]
+outcome = "Select one reference lane and separate product capability from frontend and platform qualification."
+exit = [
+  "The C1 reference lane has explicit promotion, support, and kill criteria.",
+  "Classic-shell design and legacy-platform qualification are tracked separately.",
+]
+
+[[epic]]
+id = "EPIC-CONTRACT-GOVERNANCE"
+release = "FACMAN-C1"
+title = "Contract maturity and cross-repository migration"
+status = "planned"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup", "dominium"]
+outcome = "Prevent experimental or single-consumer contracts from being presented as universally stable."
+exit = [
+  "Contract maturity and promotion evidence are explicit.",
+  "Migrations are independently mergeable, independently revertible, and compatibility-tested.",
+]
+
+[[workunit]]
+id = "PLAN-CANON-01"
+epic = "EPIC-PLAN-SYSTEM"
+title = "Establish the canonical plan and generated operational views"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "maintainer"
+repos = ["factorio-launcher"]
+depends_on = []
+decision_blockers = []
+outcome = "One canonical plan graph drives a compact todo and current-roadmap view while the detailed prior plan remains searchable but non-authoritative."
+acceptance = [
+  "release/index/plan.v1.toml is the only executable planning source introduced by this change.",
+  "tools/generate_plan_views.py rejects invalid graphs, stale views, dependency cycles, missing owners, unsupported completion, and WIP violations.",
+  "todo.md contains between 80 and 150 lines and clearly identifies itself as generated.",
+  "The current external gate and exactly the next five internal work units are visible.",
+  "The previous detailed plan is archived without losing its content.",
+]
+evidence = [
+  "release/index/plan.v1.toml",
+  "tools/generate_plan_views.py",
+  "tests/test_plan_views.py",
+  "todo.md",
+  "docs/roadmap/current.md",
+  "docs/roadmap/planning-operating-model.md",
+  "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md",
+]
+
+[[workunit]]
+id = "FACMAN-C1-CUTLINE-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Ratify the playable-instance cut-line"
+status = "ready"
+priority = "P0"
+size = "S"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["PLAN-CANON-01"]
+decision_blockers = []
+outcome = "Turn the proposed C1 inclusions, exclusions, reference-lane rule, and release exit into a reviewed release contract."
+acceptance = [
+  "Every included behavior is necessary for the first meaningful user outcome.",
+  "Every exclusion names the later capability level or revisit trigger.",
+  "C1, frontend parity C1P, and platform qualification are not conflated.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-JOURNEYS-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Specify the C1 positive and paired failure journeys"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "product-maintainer"
+repos = ["factorio-launcher", "universal-launcher"]
+depends_on = ["FACMAN-C1-CUTLINE-01"]
+decision_blockers = []
+outcome = "Define J01 from an existing install to Play and the stale-readiness refusal/rescan path with budgets, accessibility, evidence, and exclusions."
+acceptance = [
+  "The journey records persona, starting state, platform, connectivity, decision count, claims, failure path, budget, accessibility, evidence, and exclusions.",
+  "The negative path changes the installation after readiness and proves FacMan refuses stale authority.",
+]
+evidence = []
+
+[[workunit]]
+id = "CLAIM-LEDGER-01"
+epic = "EPIC-RELEASE-TRUTH"
+title = "Create the first product-claim ledger"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+depends_on = ["FACMAN-JOURNEYS-01"]
+decision_blockers = []
+outcome = "Record the first ten product claims with scope, owner, maturity, evidence, invalidation, and release impact."
+acceptance = [
+  "Every C1 journey assertion maps to a claim.",
+  "Claim maturity cannot advance without the required evidence class.",
+  "Generated release surfaces cannot imply unsupported claims.",
+]
+evidence = []
+
+[[workunit]]
+id = "PLATFORM-LANES-01"
+epic = "EPIC-PLATFORM-QUALIFICATION"
+title = "Define platform lanes and choose the C1 reference lane"
+status = "planned"
+priority = "P1"
+size = "M"
+owner = "platform-maintainer"
+repos = ["factorio-launcher", "universal-launcher"]
+depends_on = ["FACMAN-C1-CUTLINE-01"]
+decision_blockers = []
+outcome = "Classify supported, compatible, experimental, and rejected lanes with promotion and kill criteria; resolve the C1 reference lane."
+acceptance = [
+  "The chosen reference lane is evidence-backed and named in the C1 release.",
+  "Product capability and frontend parity remain orthogonal to platform qualification.",
+  "Legacy architecture work has bounded value, testability, and exit criteria.",
+]
+evidence = []
+
+[[workunit]]
+id = "CONTRACT-MATURITY-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Define contract maturity and migration gates"
+status = "planned"
+priority = "P1"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup", "dominium"]
+depends_on = ["CLAIM-LEDGER-01"]
+decision_blockers = []
+outcome = "Create the contract-maturity registry and the independently mergeable producer/consumer migration protocol."
+acceptance = [
+  "One real consumer can qualify an experimental contract without implying universal stability.",
+  "A second real consumer is required for second-consumer qualification.",
+  "No migration requires simultaneous merges across all three implementation repositories.",
+]
+evidence = []
+
+[[decision]]
+id = "DEC-C1-REFERENCE-LANE"
+title = "Select the C1 reference platform lane"
+status = "open"
+owner = "platform-maintainer"
+due_workunit = "PLATFORM-LANES-01"
+resolution_workunit = "PLATFORM-LANES-01"
+question = "Which platform, architecture, frontend, and packaging combination is the single C1 release reference?"
+default = "Use Windows x64 with the direct client and the smallest existing GUI surface unless qualification evidence rejects it."
+de_scope = "If no lane qualifies within the C1 budget, ship the CLI journey as an internal evidence release and defer the GUI claim."
+
+[[decision]]
+id = "DEC-C1-OPERATION-LIFETIME"
+title = "Choose the smallest truthful operation-lifetime model for C1"
+status = "open"
+owner = "architecture-maintainer"
+due_workunit = "C1-VERTICAL-SLICE-01"
+resolution_workunit = "OPERATION-DEATH-SPIKE-01"
+question = "Can direct-client operation ownership prove interrupted-operation outcomes, or is a separate durable owner required?"
+default = "Keep direct-client ownership and persist the minimum journal needed for inspect/recover."
+de_scope = "Do not introduce a daemon unless the death/restart spike proves direct ownership cannot satisfy the C1 claim."
+
+[[risk]]
+id = "RISK-PLAN-DRIFT"
+owner = "maintainer"
+severity = "high"
+summary = "Generated views or downstream documents can drift from the canonical plan."
+mitigation = "Run the generator in check mode and reject hand-edited generated files."
+
+[[risk]]
+id = "RISK-SCOPE-REENTRY"
+owner = "product-maintainer"
+severity = "high"
+summary = "Deferred marketplace, account, update, theming, or multi-GUI work can re-enter C1 through an indirect dependency."
+mitigation = "Validate the dependency graph against the C1 non-goals and require scope substitution for additions."
+
+[[risk]]
+id = "RISK-UNIVERSAL-CLAIM"
+owner = "architecture-maintainer"
+severity = "high"
+summary = "A fixture-qualified or single-consumer contract may be described as stable across FacMan, Universal Launcher, Universal Setup, and Dominium."
+mitigation = "Separate contract maturity from product capability and require explicit consumer-qualified evidence."
+
+[[later]]
+id = "DIRECT-CLIENT-SPIKE-01"
+summary = "Prove the smallest direct-client path from selected instance to Factorio main menu."
+rationale = "Needed after C1 definition; not part of plan-system bootstrapping."
+trigger = "C1 journey and reference lane are ratified."
+
+[[later]]
+id = "OPERATION-DEATH-SPIKE-01"
+summary = "Kill the owning process at critical points and prove truthful inspect/recover behavior."
+rationale = "Evidence decides whether direct ownership is sufficient or a durable owner is justified."
+trigger = "J01 failure states and operation claims are declared."
+
+[[later]]
+id = "INSTANCE-VIEW-MINIMUM-01"
+summary = "Design only the summary, readiness, Play, Activity, and recovery UI required by C1."
+rationale = "A minimal user surface prevents shell work from defining backend scope."
+trigger = "Reference frontend and stable workflow semantics are selected."
+
+[[later]]
+id = "C1-VERTICAL-SLICE-01"
+summary = "Implement the complete C1 positive and paired failure path."
+rationale = "Vertical proof follows definition, claims, platform selection, and contract boundaries."
+trigger = "All five next work units reach accepted completion."
+
+[[later]]
+id = "C1-USER-VALIDATION-01"
+summary = "Observe target users completing the C1 journey and record friction and false assumptions."
+rationale = "Technical evidence cannot establish user comprehension."
+trigger = "The C1 vertical slice passes clean reconstruction."
+
+[[later]]
+id = "C1-RELEASE-RECONSTRUCTION-01"
+summary = "Reproduce the C1 release and evidence from a clean checkout and controlled environment."
+rationale = "Release truth must not depend on untracked machine state."
+trigger = "C1 user validation is complete and release-blocking claims are evidence-ready."
+
+[[later]]
+id = "FACMAN-C1P"
+summary = "Qualify semantic parity across the selected classic frontend family."
+rationale = "Frontend parity is valuable but must not expand the C1 product cut-line."
+trigger = "C1 is release-proven on the reference frontend."
+
+[[later]]
+id = "FACMAN-C2"
+summary = "Add deterministic managed-content workflows: snapshots, local archives, locks, resolution, apply, verify, rollback, and offline reconstruction."
+rationale = "Managed content is the next coherent user capability after playable instances."
+trigger = "C1 is release-proven and C2 claims have owners."
+
+[[later]]
+id = "FACMAN-C3"
+summary = "Add permit-backed, side-by-side managed installation workflows through Universal Setup."
+rationale = "Installation authority should arrive only after instance and content safety are proven."
+trigger = "C2 is release-proven and Universal Setup contracts are consumer-qualified."
+
+[[later]]
+id = "FACMAN-C4"
+summary = "Qualify beta operations, accounts, network sources, updates, packaging, migrations, support export, and release candidates."
+rationale = "These features require operational maturity beyond the first local workflows."
+trigger = "C3 is release-proven and support/security ownership exists."
+
+[[later]]
+id = "FACMAN-C5"
+summary = "Establish stable workflows, signed distribution/update metadata, migration policy, support, security, EOL, accessibility, and clean removal."
+rationale = "Stable product claims require sustained operational evidence."
+trigger = "C4 user and release evidence meets stable-channel policy."
+
+[[later]]
+id = "INCUBATOR-DEFERRED-SURFACES"
+summary = "Modern GUIs, macOS i386, Linux i686, daemon, dynamic authority, remote control, cloud sync, marketplace, arbitrary themes, self-update, full accounts, broad Mod Portal integration, multi-product GUIs, full Dominium adoption, and a stable public SDK."
+rationale = "Each item adds an authority, platform, operational, or abstraction burden that is not required for C1."
+trigger = "A named user problem, owner, evidence plan, complexity budget, and kill criterion are approved."
