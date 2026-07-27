@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03
 title: Qualify the stable-I/O instance-isolated candidate
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-27T16:27:42Z
 owner: unassigned
 objective: >
@@ -74,7 +74,7 @@ depends_on:
   - FACMAN-PLAY-EVIDENCE-STABLE-IO-01
 source_binding:
   factorio_launcher:
-    revision: 3d18be3ad1c2d874e7d3ce27fc99f7590d41962e
+    revision: 2c393acf838dd432d37f8acce50d01f91bfd28ca
     required_ref: origin/dev
   universal_launcher:
     revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
@@ -95,3 +95,9 @@ closeout_checklist:
   - prepare and every execution-authority action remained unperformed
   - project truth and structured commit validation pass
 active_at: 2026-07-27T16:27:43Z
+verified_pending_closeout_at: 2026-07-27T21:34:43Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-27T21:34:43Z
+closed_at: 2026-07-27T21:34:44Z
+archived_at: 2026-07-27T21:34:44Z

@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `windows_instance_isolated_candidate_qualification_03` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `windows_instance_isolated_play_revalidation_02` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

@@ -96,6 +96,16 @@
     },
     {
       "files": {
+        "evidence/changed-files.md": "0baa1d725d4b4caf20efca6989bb6c920bf3d39a2468cb76a00233009f032197",
+        "evidence/remaining-risks.md": "f6363dba583bc08f7c892f782e8153db1e975c1efdfa2096965069fc416fc446",
+        "evidence/validation.md": "236212c49a70ab388de722ad92671d54cebc743be95250d0fd23de55f9aaaf2a",
+        "status.yaml": "b0c937c41820b5d135804b3b158e8df61946d8e2f8d313f24513c43611c0f07e",
+        "task.yaml": "747fbda0d2273b6fba8793c8a8c3c60544130fc2be541ab4a1ec8c2a62deba90"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+    },
+    {
+      "files": {
         "evidence/changed-files.md": "9172f57b82fa6d88e1597de647981d7f8edae5936ad9f0cb3c8b2b0104ec8edf",
         "evidence/remaining-risks.md": "eb9bbf26345e483ac66d4d0d1d36f0a8430c47fab08f03d2ee2603e22c9de9a5",
         "evidence/validation.md": "f83861dfc7dcb03a9b7c10c92068aadd183813dc40524bb279f9f614308d9ca2",
