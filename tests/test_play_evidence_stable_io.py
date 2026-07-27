@@ -28,7 +28,10 @@ def response(
         **({"payload": payload} if error is None else {"error": error}),
     }
     return json.dumps(
-        {**core, "record_digest": STABLE_IO.digest_value(core)},
+        {
+            **core,
+            "record_digest": STABLE_IO.native_result_digest_value(core),
+        },
         separators=(",", ":"),
         sort_keys=True,
     ).encode("utf-8")
@@ -283,6 +286,31 @@ class PlayEvidenceStableIoTests(unittest.TestCase):
             b'{"a":{"b":true},"z":[2,1]}'
         ).hexdigest()
         self.assertEqual(STABLE_IO.digest_value(value), expected)
+
+    def test_native_result_digest_matches_escaped_slash_serializer(self) -> None:
+        value = {
+            "operation": "read_bounded_json",
+            "payload": {
+                "path": "https://example.invalid/a/b",
+                "member": "Factorio/bin/x64/factorio.exe",
+            },
+            "schema": STABLE_IO.RESULT_SCHEMA,
+            "status": "ok",
+        }
+        native_bytes = (
+            b'{"operation":"read_bounded_json","payload":{"member":'
+            b'"Factorio\\/bin\\/x64\\/factorio.exe","path":'
+            b'"https:\\/\\/example.invalid\\/a\\/b"},"schema":'
+            b'"facman.play_evidence_io_result.v1","status":"ok"}'
+        )
+        self.assertEqual(
+            STABLE_IO.native_result_digest_value(value),
+            hashlib.sha256(native_bytes).hexdigest(),
+        )
+        self.assertNotEqual(
+            STABLE_IO.native_result_digest_value(value),
+            STABLE_IO.digest_value(value),
+        )
 
 
 if __name__ == "__main__":

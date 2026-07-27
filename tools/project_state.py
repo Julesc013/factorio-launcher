@@ -222,6 +222,10 @@ def collect() -> dict[str, Any]:
         "windows_instance_isolated_play_revalidation_01": status[
             "windows_instance_isolated_play_revalidation_01"
         ],
+        "play_evidence_stable_io": status["play_evidence_stable_io"],
+        "windows_instance_isolated_candidate_qualification_03": status[
+            "windows_instance_isolated_candidate_qualification_03"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -1266,6 +1270,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "revalidation_01_superseded_before_prepare_verdict_protocol_integrity_accepted_stable_evidence_io_active",
+        },
+        "windows_instance_isolated_candidate_qualification_03": {
+            "checkpoint": "windows-instance-isolated-candidate-qualification-03",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
+            "last_closed": "FACMAN-PLAY-EVIDENCE-STABLE-IO-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+            "phase_status": "active",
+            "safety": "stable_evidence_io_accepted_fresh_remote_only_candidate_qualification_active_no_product_authority",
+            "execution_reason": "fresh_remote_only_candidate_qualification_active_before_revalidation_no_product_play_authority",
+            "truth_scope": "stable_evidence_io_accepted_candidate_qualification_03_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "stable_evidence_io_accepted_fresh_candidate_qualification_active_before_revalidation",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",

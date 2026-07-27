@@ -9,12 +9,12 @@ items:
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
-  - id: FACMAN-PLAY-EVIDENCE-STABLE-IO-01
-    status: verified_pending_closeout
-    lifecycle_state: verified_pending_closeout
-    title: Stable Play evidence I/O
-    task: .aide/queue/active/FACMAN-PLAY-EVIDENCE-STABLE-IO-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-PLAY-EVIDENCE-STABLE-IO-01/evidence
+  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03
+    status: active
+    lifecycle_state: active
+    title: Qualify the stable-I/O instance-isolated candidate
+    task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03/task.yaml
+    evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked

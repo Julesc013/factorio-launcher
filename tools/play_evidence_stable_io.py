@@ -54,6 +54,19 @@ def digest_value(value: Any) -> str:
     return hashlib.sha256(canonical_bytes(value)).hexdigest()
 
 
+def native_result_digest_value(value: Any) -> str:
+    """Mirror the native JSON serializer for closed probe-result digests.
+
+    The C++ JSON serializer escapes forward slashes as ``\/``. JSON parsing
+    makes that escape semantically invisible, so Python's normal serializer
+    would otherwise hash different bytes for URL and POSIX-style path values.
+    This helper is intentionally limited to the native result envelope;
+    project document canonicalization continues to use ``digest_value``.
+    """
+
+    return hashlib.sha256(canonical_bytes(value).replace(b"/", b"\\/")).hexdigest()
+
+
 def _positive(value: int, context: str) -> str:
     if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
         raise StableIoError(f"{context} must be a positive integer")
@@ -161,7 +174,7 @@ class EvidenceIo:
             raise StableIoError("native evidence result is not a closed record")
         core = dict(value)
         claimed = core.pop("record_digest")
-        if digest_value(core) != claimed:
+        if native_result_digest_value(core) != claimed:
             raise StableIoError("native evidence result digest is invalid")
         if result.returncode != 0 or value["status"] != "ok":
             error = value.get("error")
