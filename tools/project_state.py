@@ -226,6 +226,9 @@ def collect() -> dict[str, Any]:
         "windows_instance_isolated_candidate_qualification_03": status[
             "windows_instance_isolated_candidate_qualification_03"
         ],
+        "windows_instance_isolated_play_revalidation_02": status[
+            "windows_instance_isolated_play_revalidation_02"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -1283,6 +1286,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "stable_evidence_io_accepted_fresh_candidate_qualification_active_before_revalidation",
+        },
+        "windows_instance_isolated_play_revalidation_02": {
+            "checkpoint": "windows-instance-isolated-play-revalidation-02",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
+            "next": "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+            "phase_status": "active",
+            "safety": "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority",
+            "execution_reason": "exact_candidate_staged_for_separately_authorized_operator_revalidation_no_product_play_authority",
+            "truth_scope": "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_02_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",

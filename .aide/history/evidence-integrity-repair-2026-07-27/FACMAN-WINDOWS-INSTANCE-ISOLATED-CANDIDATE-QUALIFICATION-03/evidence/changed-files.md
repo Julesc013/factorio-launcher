@@ -50,3 +50,20 @@
   evidence packets, provider histories, and verdict records are unchanged.
 - No product runtime, capability, route authority, permit, observer, Factorio
   process, Setup mutation, signing, or publication change is included.
+
+## Final evidence and state handoff
+
+- FacMan PR #92 published and merged the staged-candidate handoff repair after
+  the exact-head security-policy, code-security, and complete six-job hosted
+  CI matrix passed.
+- A fifth empty-clone reconstruction produced the final remote-source-closure
+  report for FacMan `2c393acf838dd432d37f8acce50d01f91bfd28ca`.
+- A new qualification root produced and reloaded the immutable v2
+  qualification binding.
+- A new revalidation-02 root ran coordinator `stage` only and produced:
+  - the exact qualified artifact copy;
+  - a closed staged-candidate binding for the final workspace;
+  - coordinator configuration v2;
+  - no prepared launch or evidence session.
+- Canonical project state and AIDE queue truth advance from candidate
+  qualification to revalidation-02 `staged_not_prepared`.

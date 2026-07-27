@@ -1,0 +1,83 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02
+title: Perform the fresh instance-isolated Play revalidation
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-27T21:34:58Z
+owner: unassigned
+objective: >
+  Preserve the exact stage-only revalidation-02 handoff, keep prepare and every authority-bearing action unperformed, and await a separately authorized operator revalidation.
+allowed_paths:
+  - .aide/memory/**
+  - .aide/queue/**
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tools/project_state.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_client_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - the exact staged candidate remains bound to the accepted qualification and final machine-local workspace
+  - prepare requires a separate explicit operator authorization and is not implied by staging
+  - baseline observer permit human evidence and verdict are fresh and may not be reused from any prior attempt
+  - a technical eligible state is not a Pass and only explicit human review may record Pass Fail or Inconclusive
+  - no verdict promotes a product route without a later independent exact-route capability WorkUnit
+  - no policy capability Setup mutation signing publication or general process authority changes
+depends_on:
+  - FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03
+source_binding:
+  factorio_launcher:
+    revision: 2c393acf838dd432d37f8acce50d01f91bfd28ca
+    required_ref: origin/dev
+  universal_launcher:
+    revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
+    required_ref: origin/main
+  universal_setup:
+    revision: 3048128963dc718a7c38c1cfcdda9e813a23b0db
+    required_ref: origin/main
+staged_handoff:
+  qualification_digest: 99aee276b2968e493f7830ee0cf949efbcd4b0d843e0e93abe8729f13454d210
+  staged_candidate_digest: f7ef4783dd153b1445ec3cd9882134fc0ccb14a19fe3494186b7fe95b721de9d
+  state: staged_not_prepared
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - separately authorized prepare operation completed from the exact staged config
+  - entirely fresh baseline observer permit and evidence records produced
+  - no prior verdict evidence reused
+  - human reviewer recorded exactly Pass Fail or Inconclusive
+  - no product route or broader authority inferred from the verdict
+  - project truth and structured commit validation pass
+active_at: 2026-07-27T21:34:59Z

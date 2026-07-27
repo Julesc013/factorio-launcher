@@ -198,3 +198,108 @@ The complete promotion profile also passes:
 - project-state validation: `pass`;
 - AIDE Lite validation: `pass`;
 - `git diff --check`: `pass`.
+
+## Hosted handoff acceptance
+
+FacMan PR #92 passed all required workflows at exact head
+`95724c75b35f2150960aa0d7f241416b2517030b`:
+
+- `security-policy`: `pass`;
+- `code-security`: `pass` for C#, Python, and C/C++;
+- `ci`: `pass` for Linux native, Linux coverage, Windows native/package,
+  macOS native/CLI, macOS archive core, and AppKit compile.
+
+The PR merged to `origin/dev` as
+`2c393acf838dd432d37f8acce50d01f91bfd28ca`.
+
+## Fourth closure transient diagnostic
+
+The first post-merge empty-clone attempt failed closed during Python test
+teardown because Windows temporarily denied deletion of the freshly executed
+packaged `facman.exe`. No report was emitted. An immediate isolated rerun of
+the exact package-runtime test file against that clone/build passed all 25
+applicable tests with one optional skip, classifying the event as a transient
+Windows executable-lock race. The partial root was not reused as proof.
+
+## Final fifth remote-only closure
+
+A fifth never-before-used clone and build root reconstructed:
+
+- FacMan:
+  `2c393acf838dd432d37f8acce50d01f91bfd28ca`;
+- Universal Launcher:
+  `7fc25340623131ba86c08dca4fb8a43b18a4520d`;
+- Universal Setup:
+  `3048128963dc718a7c38c1cfcdda9e813a23b0db`.
+
+The final closure passed:
+
+- report SHA-256:
+  `3ab446b6400f212710190e4cc4890877fdedc7f7335f8d14f121f582b8f0a73d`;
+- FacMan native tests: `58`;
+- FacMan Python tests: `555`;
+- Universal Launcher native tests: `5`;
+- Universal Setup native tests: `16`;
+- required Windows package tests: `14/14`;
+- package SHA-256:
+  `6e83350843417970b4e9834738f7ae4593de91d6d4ab4a5ff30d0a94fed84b6e`;
+- provenance SHA-256:
+  `ed9c5fc3e0e74b6e550447120421453a61d1c1a982b736a99900a7dfd4946005`;
+- source worktrees clean after validation: `true`;
+- Factorio execution, permit issuance, publication and authority promotion:
+  `false`.
+
+## Final qualification
+
+The new qualification root passed and emitted:
+
+- qualification digest:
+  `99aee276b2968e493f7830ee0cf949efbcd4b0d843e0e93abe8729f13454d210`;
+- binding SHA-256:
+  `c2313f2940da1072f7fc115fe90b13930e26e12e75bc1135c85783a128e830f0`;
+- report SHA-256:
+  `bb29004f443d5a2b92e3370bcf37b157575610ea0d265d55d2f4524d8eca429c`;
+- report digest:
+  `9e9477b60fcdcb61a3c8c556afc6429b74204fa0b7a9f41e7423fa8de1f03777`;
+- root-independent InstanceSpec digest:
+  `4cae0b49f6b3f85cf9defdfe7e0c57ff9d0ed855e9cc81a54e1cef05400bea79`;
+- qualification-root InstanceBinding digest:
+  `f46cdc6c71dce1051380cb9ea463f3c1faa2cd10c5e2a96aadd52abd55756cd0`;
+- qualification-root readiness digest:
+  `840bf2d7c976542ca32e46d2f19aab672bc3c9752414bd39718e9833e7aed092`;
+- Factorio executable SHA-256:
+  `d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b`;
+- authenticated source archive SHA-256:
+  `ad36e0591e336400e731d5b400038e37c8361fdc71c76c0f6db96ee31741b4c2`.
+
+The producer completed with empty stderr, all authority fields false, no
+Factorio process, and no permit, observer, baseline, human or verdict file.
+
+## Revalidation-02 staged only
+
+Coordinator `stage` completed in a fresh exact revalidation root and emitted:
+
+- staged-candidate digest:
+  `f7ef4783dd153b1445ec3cd9882134fc0ccb14a19fe3494186b7fe95b721de9d`;
+- staged-candidate file SHA-256:
+  `31397e9d35d33a0e11b60470dedb0939950c69a9a735501f9c77a638d30056e8`;
+- coordinator config SHA-256:
+  `5f67915198777d73dc479e05340f17aafba2b43004a1072332f6908daa5e961a`;
+- artifact manifest SHA-256:
+  `a936bc9f33f811d564c0dc8121591b0bf59bb682de741782fada6b9176a81ece`;
+- qualification copy SHA-256:
+  `c2313f2940da1072f7fc115fe90b13930e26e12e75bc1135c85783a128e830f0`;
+- final-root InstanceBinding digest:
+  `5b47371af7a87a220aceba7ac2718826aad2c087b9a6bfc9102cd943254701c3`;
+- final-root readiness digest:
+  `4fdd3cb2ca3ae262d1093a928294661981a93bb357b0e5b6596a7f270a583567`;
+- root-independent InstanceSpec digest:
+  `4cae0b49f6b3f85cf9defdfe7e0c57ff9d0ed855e9cc81a54e1cef05400bea79`.
+
+The sealed config reloaded independently through
+`validate_config`. Its exact workspace, qualification digest, staged digest,
+operation identifiers and five false authority fields all validated.
+
+`prepare` was not invoked. No preflight, prepared launch, baseline, observer,
+permit, human evidence, verdict, route promotion, Factorio process, policy
+change, Setup mutation, signing or publication exists.

@@ -1,21 +1,21 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "windows-instance-isolated-candidate-qualification-03"
+current_checkpoint = "windows-instance-isolated-play-revalidation-02"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
-last_closed_work_unit = "FACMAN-PLAY-EVIDENCE-STABLE-IO-01"
-current_dev_revision = "02add47c0fa74f2299bb68f16532254d4d00ab7e"
+active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+current_dev_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 canonical_main_revision = "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
-qualification_source_revision = "d1a3c2029a4ae21c58eda34d7011938bf7bf04cb"
+qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
-qualification_integration_revision = "6f9ddb4123f0f51e0641a493ed2372025dfb18dd"
-truth_closeout_revision = "02add47c0fa74f2299bb68f16532254d4d00ab7e"
-observed_branch_head = "02add47c0fa74f2299bb68f16532254d4d00ab7e"
+qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+truth_closeout_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+observed_branch_head = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -29,7 +29,7 @@ known_blockers = [
   "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
   "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
   "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
-  "Revalidation 01 produced no authority or evidence; integrity repairs are accepted and fresh remote-only candidate qualification 03 is active without product Play authority.",
+  "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted, and revalidation 02 is staged but not prepared.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -54,25 +54,25 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "windows_instance_isolated_candidate_qualification_03"
+phase = "windows_instance_isolated_play_revalidation_02"
 phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
-next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+current_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+next_work_unit = "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "stable_evidence_io_accepted_candidate_qualification_03_active_no_product_authority"
+truth_scope = "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority"
 canonical_main_promotion = true
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "stable_evidence_io_accepted_fresh_remote_only_candidate_qualification_active_no_product_authority"
+safety_authority = "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -1796,7 +1796,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "fresh_remote_only_candidate_qualification_active_before_revalidation_no_product_play_authority"
+reason = "exact_candidate_staged_for_separately_authorized_operator_revalidation_no_product_play_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1804,7 +1804,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "stable_evidence_io_accepted_fresh_candidate_qualification_active_before_revalidation"
+current_gate_status = "revalidation_02_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
@@ -1904,17 +1904,31 @@ permit_issuance = false
 authority_promotion = false
 
 [windows_instance_isolated_candidate_qualification_03]
-status = "active"
+status = "closed_archived_stage_handoff_complete"
 work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
 next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
-candidate_source_revision = "3d18be3ad1c2d874e7d3ce27fc99f7590d41962e"
+candidate_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 universal_launcher_revision = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
 universal_setup_revision = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
 universal_setup_provider_repair = "accepted_main_zip64_inspection"
-remote_source_closure = "pass_superseded_by_stage_handoff_repair"
-qualification_binding = "pass_superseded_by_stage_handoff_repair"
-coordinator_stage = "fail_closed_path_bound_identity_relocation"
-stage_handoff_repair = "pending_hosted_acceptance"
+handoff_repair_revision = "95724c75b35f2150960aa0d7f241416b2517030b"
+handoff_repair_pull_request = 92
+handoff_repair_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+hosted_validation = "pass_exact_head_security_policy_code_security_complete_six_job_ci"
+remote_source_closure = "pass_fifth_fresh_empty_remote_clones"
+remote_source_closure_report_sha256 = "3ab446b6400f212710190e4cc4890877fdedc7f7335f8d14f121f582b8f0a73d"
+facman_native_tests = 58
+facman_python_tests = 555
+universal_launcher_native_tests = 5
+universal_setup_native_tests = 16
+required_windows_package_tests = 14
+required_windows_package_skips = 0
+qualification_binding = "pass_fresh_and_reloaded"
+qualification_digest = "99aee276b2968e493f7830ee0cf949efbcd4b0d843e0e93abe8729f13454d210"
+qualification_binding_sha256 = "c2313f2940da1072f7fc115fe90b13930e26e12e75bc1135c85783a128e830f0"
+qualification_report_sha256 = "bb29004f443d5a2b92e3370bcf37b157575610ea0d265d55d2f4524d8eca429c"
+coordinator_stage = "pass_fresh_revalidation_02_staged_not_prepared"
+stage_handoff_repair = "accepted_hosted_and_fresh_stage_pass"
 coordinator_prepare = false
 factorio_execution = false
 observer_capture = false
@@ -1922,6 +1936,40 @@ permit_issuance = false
 human_verdict = "unset"
 route_authority = false
 authority_promotion = false
+
+[windows_instance_isolated_play_revalidation_02]
+status = "staged_not_prepared"
+work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+next_work_unit_after_pass = "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01"
+candidate_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+universal_launcher_revision = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_setup_revision = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+qualification_digest = "99aee276b2968e493f7830ee0cf949efbcd4b0d843e0e93abe8729f13454d210"
+qualification_binding_sha256 = "c2313f2940da1072f7fc115fe90b13930e26e12e75bc1135c85783a128e830f0"
+staged_candidate_digest = "f7ef4783dd153b1445ec3cd9882134fc0ccb14a19fe3494186b7fe95b721de9d"
+staged_candidate_sha256 = "31397e9d35d33a0e11b60470dedb0939950c69a9a735501f9c77a638d30056e8"
+coordinator_config_sha256 = "5f67915198777d73dc479e05340f17aafba2b43004a1072332f6908daa5e961a"
+artifact_manifest_sha256 = "a936bc9f33f811d564c0dc8121591b0bf59bb682de741782fada6b9176a81ece"
+instance_spec_digest = "4cae0b49f6b3f85cf9defdfe7e0c57ff9d0ed855e9cc81a54e1cef05400bea79"
+instance_binding_digest = "5b47371af7a87a220aceba7ac2718826aad2c087b9a6bfc9102cd943254701c3"
+readiness_digest = "4fdd3cb2ca3ae262d1093a928294661981a93bb357b0e5b6596a7f270a583567"
+configuration_schema = "factorio.instance_isolated_verdict_coordinator_config.v2"
+staged_candidate_schema = "factorio.instance_isolated_staged_candidate_binding.v1"
+coordinator_stage = true
+coordinator_prepare = false
+preflight_created = false
+prepared_launch_created = false
+baseline_captured = false
+observer_capture = false
+permit_issuance = false
+factorio_execution = false
+human_verdict = "unset"
+route_authority = false
+authority_promotion = false
+policy_change = false
+setup_mutation_authority = false
+signing = false
+publication = false
 
 [build_and_development_truth]
 status = "accepted_hosted_promotion_matrix_pass"
