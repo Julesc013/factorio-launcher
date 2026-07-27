@@ -21,6 +21,29 @@
 - Canonical qualification state records the superseded attempt and mandatory
   remote-only restart.
 
+## Qualification-to-revalidation handoff
+
+- `tools/play_staged_candidate.py`
+  - owns the closed final-workspace staged-candidate record;
+  - binds the immutable qualification, exact workspace, root-independent
+    Instance spec, path-bound Instance binding/readiness, complete projection
+    digests, and false authority fields.
+- `tools/instance_isolated_verdict_coordinator.py`
+  - validates operation identities before expensive work;
+  - accepts relocation only while deriving the final path-bound identities;
+  - writes and reloads the exact staged-candidate binding;
+  - requires `prepare` and human-record commands to consume the closed v2
+    coordinator configuration.
+- `tools/gate4c_verdict_preflight.py`
+  - reproduces the staged workspace identity instead of comparing it to a
+    different qualification root;
+  - includes the staged-candidate digest in preflight closure.
+- `tests/test_instance_isolated_verdict_coordinator.py`
+  - covers relocation, exact rebinding, binding tamper, operation identity,
+    closed configuration, and stage output.
+- `docs/architecture/instance-isolated-verdict-harness.md`
+  - documents the two-stage qualification/final-workspace identity chain.
+
 ## Scope exclusions
 
 - Historical checkpoints, policy baselines, accepted policy digests, prior

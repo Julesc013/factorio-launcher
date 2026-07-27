@@ -29,6 +29,7 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from types import MappingProxyType
 from typing import Any
 
+from tools import play_staged_candidate as STAGED
 from tools.play_evidence_resource_spec import (
     build_resource_specification,
     startup_environment_snapshot,
@@ -1953,7 +1954,14 @@ def instance_evidence(
     workspace: Path,
     instance_id: str,
     qualification: CandidateQualificationBinding | None = None,
+    *,
+    staged_instance: dict[str, Any] | None = None,
+    allow_unbound_runtime_digests: bool = False,
 ) -> dict[str, Any]:
+    if staged_instance is not None and allow_unbound_runtime_digests:
+        raise PreflightError(
+            "Instance evidence cannot be both staged-bound and unbound"
+        )
     prefix = [str(facman), "--workspace", str(workspace)]
     inspection = run_json(prefix + ["instances", "inspect", instance_id, "--json"])
     description = run_json(prefix + ["instances", "describe", instance_id, "--intent", "menu", "--json"])
@@ -1962,34 +1970,91 @@ def instance_evidence(
     expected_blockers = {"real_play_gate_not_passed"}
     blocker_codes = {str(item.get("code")) for item in readiness.get("blockers", [])}
     plan_args = launch.get("args", [])
-    valid = (
-        inspection.get("instance_id")
-        == (
-            qualification.instance_id
-            if qualification
-            else EXPECTED_INSTANCE_ID
+    expected_instance_id = (
+        qualification.instance_id
+        if qualification
+        else EXPECTED_INSTANCE_ID
+    )
+    expected_spec_digest = (
+        qualification.instance_spec_digest
+        if qualification
+        else EXPECTED_SPEC_DIGEST
+    )
+    if staged_instance is not None:
+        staged_identity_valid = (
+            set(staged_instance)
+            == {
+                "instance_id",
+                "spec_digest",
+                "binding_digest",
+                "readiness_digest",
+            }
+            and staged_instance.get("instance_id")
+            == expected_instance_id
+            and staged_instance.get("spec_digest")
+            == expected_spec_digest
+            and all(
+                isinstance(staged_instance.get(key), str)
+                and re.fullmatch(
+                    r"[0-9a-f]{64}", staged_instance[key]
+                )
+                is not None
+                for key in (
+                    "spec_digest",
+                    "binding_digest",
+                    "readiness_digest",
+                )
+            )
         )
-        and inspection.get("factorio_version") == EXPECTED_FACTORIO_VERSION
-        and inspection.get("modset_status") == "present"
-        and inspection.get("save_count") == 0
-        and description.get("instance_spec", {}).get("spec_digest")
-        == (
-            qualification.instance_spec_digest
-            if qualification
-            else EXPECTED_SPEC_DIGEST
+        expected_binding_digest = staged_instance.get(
+            "binding_digest"
         )
-        and description.get("instance_binding", {}).get("binding_digest")
-        == (
+        expected_readiness_digest = staged_instance.get(
+            "readiness_digest"
+        )
+    elif allow_unbound_runtime_digests:
+        staged_identity_valid = qualification is not None
+        expected_binding_digest = description.get(
+            "instance_binding", {}
+        ).get("binding_digest")
+        expected_readiness_digest = readiness.get("readiness_digest")
+        staged_identity_valid = bool(
+            staged_identity_valid
+            and isinstance(expected_binding_digest, str)
+            and re.fullmatch(
+                r"[0-9a-f]{64}", expected_binding_digest
+            )
+            is not None
+            and isinstance(expected_readiness_digest, str)
+            and re.fullmatch(
+                r"[0-9a-f]{64}", expected_readiness_digest
+            )
+            is not None
+        )
+    else:
+        staged_identity_valid = True
+        expected_binding_digest = (
             qualification.instance_binding_digest
             if qualification
             else EXPECTED_BINDING_DIGEST
         )
-        and readiness.get("readiness_digest")
-        == (
+        expected_readiness_digest = (
             qualification.instance_readiness_digest
             if qualification
             else EXPECTED_READINESS_DIGEST
         )
+    valid = (
+        staged_identity_valid
+        and inspection.get("instance_id") == expected_instance_id
+        and inspection.get("factorio_version") == EXPECTED_FACTORIO_VERSION
+        and inspection.get("modset_status") == "present"
+        and inspection.get("save_count") == 0
+        and description.get("instance_spec", {}).get("spec_digest")
+        == expected_spec_digest
+        and description.get("instance_binding", {}).get("binding_digest")
+        == expected_binding_digest
+        and readiness.get("readiness_digest")
+        == expected_readiness_digest
         and readiness.get("launch_intent") == "menu"
         and blocker_codes == expected_blockers
         and readiness.get("execution_started") is False
@@ -2312,10 +2377,19 @@ def build_preflight(
     *,
     route: PlayVerdictRoute = HERMETIC_VERDICT03,
     qualification: CandidateQualificationBinding | None = None,
+    staged_candidate: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if route.route_id != HERMETIC_VERDICT03.route_id and qualification is None:
         raise PreflightError(
             "the selected Play route requires an immutable qualification binding"
+        )
+    if (
+        route.route_id != HERMETIC_VERDICT03.route_id
+        and staged_candidate is None
+    ):
+        raise PreflightError(
+            "the selected Play route requires the exact final-workspace "
+            "staged candidate binding"
         )
     evidence_io = (
         EvidenceIo(Path(args.evidence_probe))
@@ -2343,6 +2417,17 @@ def build_preflight(
     setup_repo = Path(args.setup_repo)
     facman = Path(args.facman)
     workspace = Path(args.workspace)
+    if staged_candidate is not None:
+        assert qualification is not None
+        try:
+            staged_candidate = STAGED.parse_staged_candidate(
+                staged_candidate,
+                task_root=task_root,
+                qualification=qualification,
+                route=route,
+            )
+        except STAGED.StagedCandidateError as exc:
+            raise PreflightError(str(exc)) from exc
     factorio = Path(args.factorio_exe)
 
     policy = policy_identity(
@@ -2423,7 +2508,15 @@ def build_preflight(
         evidence_io=evidence_io,
     )
     instance = instance_evidence(
-        facman, workspace, args.instance_id, qualification
+        facman,
+        workspace,
+        args.instance_id,
+        qualification,
+        staged_instance=(
+            staged_candidate["instance"]
+            if staged_candidate is not None
+            else None
+        ),
     )
     processes = process_inventory()
     session = host_session_identity()
@@ -2646,6 +2739,10 @@ def build_preflight(
             "route_id": route.route_id,
             "qualification_digest": qualification.qualification_digest,
         }
+        if staged_candidate is not None:
+            core["qualification_binding"]["staged_candidate_digest"] = (
+                staged_candidate["staged_candidate_digest"]
+            )
     core["preflight_digest"] = digest_value(core)
     return core
 
@@ -2686,6 +2783,14 @@ def parser() -> argparse.ArgumentParser:
         help=(
             "Immutable remote-only candidate qualification binding. "
             "Required for the instance-isolated revalidation route."
+        ),
+    )
+    value.add_argument(
+        "--staged-candidate-binding",
+        type=Path,
+        help=(
+            "Closed final-workspace candidate binding emitted by the "
+            "instance-isolated coordinator stage"
         ),
     )
     value.add_argument("--task-root", required=True, type=Path)
@@ -2730,10 +2835,30 @@ def main() -> int:
         raise PreflightError(
             "the selected Play route requires a qualified native evidence probe"
         )
+    staged_candidate = None
+    if route != HERMETIC_VERDICT03:
+        if args.staged_candidate_binding is None:
+            raise PreflightError(
+                "the selected Play route requires the exact final-workspace "
+                "staged candidate binding"
+            )
+        assert qualification is not None
+        try:
+            staged_candidate = STAGED.parse_staged_candidate(
+                EvidenceIo(args.evidence_probe).read_json(
+                    args.staged_candidate_binding
+                )["payload"]["document"],
+                task_root=args.task_root,
+                qualification=qualification,
+                route=route,
+            )
+        except STAGED.StagedCandidateError as exc:
+            raise PreflightError(str(exc)) from exc
     record = build_preflight(
         args,
         route=route,
         qualification=qualification,
+        staged_candidate=staged_candidate,
     )
     write_record(
         args.out,

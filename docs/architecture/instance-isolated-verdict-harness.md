@@ -6,11 +6,15 @@ authority.
 
 The harness extends the historical Gate 4C evidence machinery without
 rewriting its frozen Verdict 03 meaning. Route choice is closed over two
-immutable bindings:
+immutable route bindings and the instance-isolated path uses two sequential
+candidate bindings:
 
 ```text
 gate4c-hermetic-verdict03
 windows-instance-isolated-revalidation
+
+remote-only qualification binding
+final-workspace staged-candidate binding
 ```
 
 An unknown route or WorkUnit refuses before baseline capture, permit issuance,
@@ -20,8 +24,9 @@ or process creation.
 
 The instance-isolated route never hard-codes the current candidate artifact
 hashes into source. It consumes one immutable
-`facman.play_candidate_qualification_binding.v1` record produced by a separate
-remote-only reconstruction:
+`facman.play_candidate_qualification_binding.v2` record produced by a separate
+remote-only reconstruction, then seals the separately materialized final
+workspace:
 
 ```text
 three published source revisions and required remote refs
@@ -30,9 +35,16 @@ four exact candidate artifacts, sizes, and SHA-256 digests
                         ↓
 authenticated Factorio 2.0.77 executable identity
                         ↓
-InstanceSpec, InstanceBinding, and readiness digests
+root-independent InstanceSpec plus the qualification workspace's observed
+InstanceBinding and readiness digests
                         ↓
 qualification_digest
+                        ↓
+fresh final revalidation workspace
+                        ↓
+final-workspace InstanceBinding and readiness digests
+                        ↓
+staged_candidate_digest
 ```
 
 `tools/instance_isolated_candidate_qualification.py` is the only supported
@@ -49,9 +61,28 @@ objects recorded by that proof. It then:
 5. derives the path- and file-object-bound Instance identities;
 6. emits and reloads the closed qualification binding.
 
-Creating the workspace before deriving its identities removes a bootstrap
-cycle: no placeholder digest is accepted, and the workspace is not destroyed
-and recreated after its file identities are measured.
+Creating the qualification workspace before deriving its identities removes a
+bootstrap cycle: no placeholder digest is accepted, and that workspace is not
+destroyed and recreated after its file identities are measured.
+
+`InstanceBinding` and readiness include exact absolute config and mod paths.
+They are therefore intentionally different when the qualified recipe is
+materialized under the separate revalidation WorkUnit. The coordinator must
+not pretend those location-bound values are portable. During `stage` it:
+
+1. requires the root-independent `InstanceSpec` to remain identical;
+2. requires the reconstructed workspace to pass fresh non-executing inspect,
+   describe, readiness and launch-preflight projections;
+3. records the final workspace's exact `InstanceBinding`, readiness and full
+   projection digests in a closed
+   `factorio.instance_isolated_staged_candidate_binding.v1` record;
+4. binds that record to the immutable qualification digest and exact final
+   workspace path;
+5. makes every later preflight reproduce the staged values exactly.
+
+Any change to the qualification, final workspace, staged binding, config,
+operation identity or projection fails closed before observer capture,
+baseline creation, permit issuance or process creation.
 
 The four candidate artifacts are the CLI, candidate smoke, verdict harness,
 and CMake cache. Every key is closed, revisions and digests use exact lowercase
@@ -67,8 +98,10 @@ Preflight independently requires each checkout to:
 
 Staged files must match the qualified size and digest after a no-follow copy.
 The configured harness must itself be the qualified harness artifact.
-The coordinator accepts a producer-created workspace only when fresh
-non-executing projections exactly reproduce every qualified Instance digest.
+The coordinator accepts a separately materialized revalidation workspace only
+when fresh non-executing projections reproduce the qualified root-independent
+spec and are then sealed as the exact final-workspace staged binding. It never
+equates path-bound identities from two different roots.
 
 ## Execution boundary
 
