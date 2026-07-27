@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-dev"
-phase = "project_state_determinism"
+phase = "instance_isolated_verdict_protocol_integrity"
 phase_status = "active"
-checkpoint = "project-state-determinism"
-active_work_unit = "FACMAN-PROJECT-STATE-DETERMINISM-01"
-next_work_unit = "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01"
-last_closed_work_unit = "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01"
+checkpoint = "instance-isolated-verdict-protocol-integrity"
+active_work_unit = "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01"
+next_work_unit = "FACMAN-PLAY-EVIDENCE-STABLE-IO-01"
+last_closed_work_unit = "FACMAN-PROJECT-STATE-DETERMINISM-01"
 next_authority_gate = "real-play-isolation"
 
 [revisions]
@@ -26,7 +26,7 @@ runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
 execution = "unavailable"
-execution_reason = "evidence_integrity_repairs_active_before_prepare_no_product_play_authority"
+execution_reason = "verdict_protocol_integrity_repair_active_before_prepare_no_product_play_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -97,12 +97,12 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
-  "FACMAN-PROJECT-STATE-DETERMINISM-01",
+  "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
 ]
 planned = [
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
 ]
-archived_task_count = 69
+archived_task_count = 70
 
 [blockers]
 items = [
@@ -115,7 +115,7 @@ items = [
   "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
   "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
   "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
-  "No permit, Factorio process, observer, baseline, or human verdict was created by revalidation 01; deterministic project-state repair is active without product Play authority.",
+  "No permit, Factorio process, observer, baseline, or human verdict was created by revalidation 01; deterministic project state is accepted and verdict-protocol integrity repair is active without product Play authority.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",

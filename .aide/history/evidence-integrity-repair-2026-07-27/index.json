@@ -36,6 +36,16 @@
     },
     {
       "files": {
+        "evidence/changed-files.md": "82d62af1854d394188e535f236a8eab180213b2e6da4b8a6c7f612abf8218db8",
+        "evidence/remaining-risks.md": "cf8363a9a9599d6eac4b33a05d1865eda4ebb5af9c0ff92a87bb91493cc3df04",
+        "evidence/validation.md": "57a4118fac07114250e043cccc6e18306b056691040d7d69b082052841ece0d4",
+        "status.yaml": "790c2d16e5ae7a034e63c00a588e9f857ece6e33924abb5d6a85bcc58cd69d84",
+        "task.yaml": "ae4eeaade9ed257482786bc0a550eab10c38537f1ccaad5372d1bb95db1f0008"
+      },
+      "task_id": "FACMAN-PROJECT-STATE-DETERMINISM-01"
+    },
+    {
+      "files": {
         "evidence/changed-files.md": "f522c656feafd9ba657a8e4e8652e2d4bb27823bff9d98daf523805489a777c9",
         "evidence/remaining-risks.md": "bab08392b8beadf446d3651285c8c6ec0b3774171f11a14ecddd24f626b945ba",
         "evidence/validation.md": "d782849d91a862298bb34a27256f2f674a79c96ac8badc85aa018d9c38e938cc",

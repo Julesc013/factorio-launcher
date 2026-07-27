@@ -137,7 +137,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "project-state-determinism",
+            "instance-isolated-verdict-protocol-integrity",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -145,15 +145,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-PROJECT-STATE-DETERMINISM-01",
+            "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "FACMAN-PROJECT-STATE-DETERMINISM-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
+            "FACMAN-PLAY-EVIDENCE-STABLE-IO-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -185,7 +185,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "revalidation_01_superseded_before_prepare_project_state_determinism_active_no_product_authority",
+            "revalidation_01_superseded_project_state_determinism_accepted_verdict_protocol_integrity_active_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -553,7 +553,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "FACMAN-PROJECT-STATE-DETERMINISM-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -938,15 +938,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "project-state-determinism",
+            "instance-isolated-verdict-protocol-integrity",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-PROJECT-STATE-DETERMINISM-01",
+            "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01",
+            "FACMAN-PROJECT-STATE-DETERMINISM-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

@@ -851,11 +851,96 @@ def validate_human_observation(
     packet_digest: str,
     expected_checks: set[str],
     route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    launch_sequence: int | None = None,
+    task_root: Path | None = None,
 ) -> dict[str, Any]:
     value = read_strict_json(path)
     claimed = value.get("attestation_digest")
     core = dict(value)
     core.pop("attestation_digest", None)
+    if route.human_observation_schema != HUMAN_OBSERVATION_SCHEMA:
+        exact_keys = {
+            "schema",
+            "canonicalization_version",
+            "work_unit",
+            "operation_id",
+            "launch_sequence",
+            "session_digest",
+            "packet_digest",
+            "reviewer_principal",
+            "observed_at",
+            "disposition",
+            "checks",
+            "check_notes",
+            "notes",
+            "attestation_digest",
+        }
+        checks = value.get("checks")
+        check_notes = value.get("check_notes")
+        if (
+            launch_sequence not in {1, 2}
+            or task_root is None
+            or Path(os.path.abspath(path))
+            != Path(os.path.abspath(
+                task_root
+                / "evidence"
+                / "human"
+                / f"{operation_id}-launch-{launch_sequence}.json"
+            ))
+            or set(value) != exact_keys
+            or value.get("schema") != route.human_observation_schema
+            or value.get("canonicalization_version")
+            != "facman.sorted-json.v1"
+            or value.get("work_unit") != route.work_unit
+            or value.get("operation_id") != operation_id
+            or value.get("launch_sequence") != launch_sequence
+            or value.get("session_digest") != session_digest
+            or value.get("packet_digest") != packet_digest
+            or value.get("disposition")
+            not in {"Pass", "Fail", "Inconclusive"}
+            or not PREFLIGHT.validate_windows_principal(
+                value.get("reviewer_principal")
+            )
+            or value["reviewer_principal"].get("integrity") != "medium"
+            or not isinstance(value.get("notes"), str)
+            or not isinstance(checks, dict)
+            or set(checks) != expected_checks
+            or not all(
+                item is None or isinstance(item, bool)
+                for item in checks.values()
+            )
+            or not isinstance(check_notes, dict)
+            or set(check_notes) != expected_checks
+            or not all(
+                isinstance(item, str) for item in check_notes.values()
+            )
+            or any(
+                checks[name] is not True and not check_notes[name].strip()
+                for name in expected_checks
+            )
+            or not lowercase_digest(claimed)
+            or digest_value(core) != claimed
+        ):
+            raise EvidenceError(
+                "instance-isolated human observation is malformed, "
+                "misbound, or stale"
+            )
+        parse_utc(value["observed_at"])
+        derived = (
+            "Fail"
+            if any(item is False for item in checks.values())
+            else (
+                "Inconclusive"
+                if any(item is None for item in checks.values())
+                else "Pass"
+            )
+        )
+        if value["disposition"] != derived:
+            raise EvidenceError(
+                "human disposition was not derived from exact checks"
+            )
+        return value
+
     exact_keys = {
         "schema",
         "canonicalization_version",
@@ -1059,7 +1144,19 @@ def prepare_session(
 
     factorio_executable = preflight["factorio_executable"]
     source = preflight["source_evidence"]
-    principal = preflight["operator_attestation"]["reviewer_id"]
+    if route.human_observation_schema == HUMAN_OBSERVATION_SCHEMA:
+        principal_provider = "windows.local-principal.v1"
+        principal_id = preflight["operator_attestation"]["reviewer_id"]
+    else:
+        reviewer_principal = preflight["operator_attestation"].get(
+            "reviewer_principal"
+        )
+        if not PREFLIGHT.validate_windows_principal(reviewer_principal):
+            raise EvidenceError(
+                "ready preflight has no exact Windows reviewer principal"
+            )
+        principal_provider = reviewer_principal["provider_id"]
+        principal_id = reviewer_principal["principal_digest"]
     repository_revision = preflight["repositories"]["facman"]["revision"]
     session = {
         "schema": SESSION_SCHEMA,
@@ -1091,8 +1188,8 @@ def prepare_session(
             "machine_binding_id"
         ],
         "principal": {
-            "provider_id": "windows.local-principal.v1",
-            "principal_id": principal,
+            "provider_id": principal_provider,
+            "principal_id": principal_id,
             "application_session_id": sha256_text(
                 preflight["host"]["session_identity"]["boot_identity"]
                 + ":"
@@ -1246,6 +1343,8 @@ def finalize_verdict(
         packet_digest=first_packet["packet_digest"],
         expected_checks=FIRST_LAUNCH_CHECKS,
         route=bound_route,
+        launch_sequence=1,
+        task_root=Path(first_session["task_root"]),
     )
     second_human = validate_human_observation(
         args.second_human,
@@ -1254,9 +1353,32 @@ def finalize_verdict(
         packet_digest=second_packet["packet_digest"],
         expected_checks=SECOND_LAUNCH_CHECKS,
         route=bound_route,
+        launch_sequence=2,
+        task_root=Path(second_session["task_root"]),
     )
-    if first_human["reviewer_id"] != second_human["reviewer_id"]:
-        raise EvidenceError("human reviewer identity changed between launches")
+    if bound_route.human_observation_schema == HUMAN_OBSERVATION_SCHEMA:
+        reviewer_key = "reviewer_id"
+        reviewer_value: Any = first_human[reviewer_key]
+    else:
+        reviewer_key = "reviewer_principal"
+        reviewer_value = first_human[reviewer_key]
+        for session, human_observation in (
+            (first_session, first_human),
+            (second_session, second_human),
+        ):
+            if (
+                session.get("principal", {}).get("provider_id")
+                != human_observation[reviewer_key]["provider_id"]
+                or session.get("principal", {}).get("principal_id")
+                != human_observation[reviewer_key]["principal_digest"]
+            ):
+                raise EvidenceError(
+                    "human reviewer principal differs from the prepared session"
+                )
+    if first_human[reviewer_key] != second_human[reviewer_key]:
+        raise EvidenceError(
+            "human reviewer identity changed between launches"
+        )
     if (
         first_packet.get("permit_id") == second_packet.get("permit_id")
         or first_packet.get("permit_claims_digest")
@@ -1293,7 +1415,7 @@ def finalize_verdict(
         "policy_digest": bound_route.policy_digest,
         "instance_id": first_session["instance_id"],
         "machine_binding_id": first_session["machine_binding_id"],
-        "reviewer_id": first_human["reviewer_id"],
+        reviewer_key: reviewer_value,
         "recorded_at": utc_now(),
         "launches": [
             {

@@ -54,6 +54,11 @@ EXPECTED_FACTORIO_SHA256 = "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee
 EXPECTED_FACMAN_SHA256 = "47ccf1f151eb65daea1ae4d8ff782f48df08bbedd92d9434e5ca6fd86536270a"
 EXPECTED_SIGNER = "Wube Software Ltd"
 ATTESTATION_SCHEMA = "factorio.gate4c_quiet_host_attestation.v2"
+INSTANCE_ATTESTATION_SCHEMA = (
+    "factorio.instance_isolated_quiet_host_attestation.v3"
+)
+WINDOWS_PRINCIPAL_SCHEMA = "factorio.windows_principal_identity.v1"
+PENDING_RESTART_SCHEMA = "factorio.windows_pending_restart_observation.v1"
 OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v5"
 OBSERVER_PROVIDER_ID = "factorio.play.process-tree-observer"
 OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v6"
@@ -733,6 +738,267 @@ def host_session_identity() -> dict[str, Any]:
         ),
         "valid": True,
     }
+
+
+def windows_principal_identity() -> dict[str, Any]:
+    """Observe the current token identity without trusting environment text."""
+
+    if os.name != "nt":
+        return {
+            "schema": WINDOWS_PRINCIPAL_SCHEMA,
+            "valid": False,
+            "reason": "windows_token_identity_unavailable",
+        }
+    from ctypes import wintypes
+
+    token_query = 0x0008
+    token_user = 1
+    token_integrity_level = 25
+
+    class SidAndAttributes(ctypes.Structure):
+        _fields_ = [
+            ("sid", ctypes.c_void_p),
+            ("attributes", wintypes.DWORD),
+        ]
+
+    class TokenUser(ctypes.Structure):
+        _fields_ = [("user", SidAndAttributes)]
+
+    class TokenMandatoryLabel(ctypes.Structure):
+        _fields_ = [("label", SidAndAttributes)]
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
+    kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel32.GetCurrentProcessId.restype = wintypes.DWORD
+    kernel32.ProcessIdToSessionId.argtypes = [
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+    ]
+    kernel32.ProcessIdToSessionId.restype = wintypes.BOOL
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+    kernel32.LocalFree.restype = ctypes.c_void_p
+    advapi32.OpenProcessToken.argtypes = [
+        wintypes.HANDLE,
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.HANDLE),
+    ]
+    advapi32.OpenProcessToken.restype = wintypes.BOOL
+    advapi32.GetTokenInformation.argtypes = [
+        wintypes.HANDLE,
+        wintypes.DWORD,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+    ]
+    advapi32.GetTokenInformation.restype = wintypes.BOOL
+    advapi32.ConvertSidToStringSidW.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(wintypes.LPWSTR),
+    ]
+    advapi32.ConvertSidToStringSidW.restype = wintypes.BOOL
+    token = wintypes.HANDLE()
+    if not advapi32.OpenProcessToken(
+        kernel32.GetCurrentProcess(), token_query, ctypes.byref(token)
+    ):
+        return {
+            "schema": WINDOWS_PRINCIPAL_SCHEMA,
+            "valid": False,
+            "reason": f"open_process_token_failed:{ctypes.get_last_error()}",
+        }
+
+    def token_information(info_class: int) -> ctypes.Array[Any]:
+        required = wintypes.DWORD()
+        advapi32.GetTokenInformation(
+            token, info_class, None, 0, ctypes.byref(required)
+        )
+        if required.value == 0:
+            raise OSError(
+                ctypes.get_last_error(), "token information size unavailable"
+            )
+        buffer = ctypes.create_string_buffer(required.value)
+        if not advapi32.GetTokenInformation(
+            token,
+            info_class,
+            buffer,
+            required,
+            ctypes.byref(required),
+        ):
+            raise OSError(
+                ctypes.get_last_error(), "token information unavailable"
+            )
+        return buffer
+
+    sid_text = wintypes.LPWSTR()
+    try:
+        user_buffer = token_information(token_user)
+        user = ctypes.cast(
+            user_buffer, ctypes.POINTER(TokenUser)
+        ).contents.user
+        if not advapi32.ConvertSidToStringSidW(
+            user.sid, ctypes.byref(sid_text)
+        ):
+            raise OSError(
+                ctypes.get_last_error(), "SID conversion unavailable"
+            )
+        sid = sid_text.value
+
+        integrity_buffer = token_information(token_integrity_level)
+        label = ctypes.cast(
+            integrity_buffer, ctypes.POINTER(TokenMandatoryLabel)
+        ).contents.label
+        advapi32.GetSidSubAuthorityCount.restype = ctypes.POINTER(
+            ctypes.c_ubyte
+        )
+        advapi32.GetSidSubAuthorityCount.argtypes = [ctypes.c_void_p]
+        advapi32.GetSidSubAuthority.restype = ctypes.POINTER(wintypes.DWORD)
+        advapi32.GetSidSubAuthority.argtypes = [
+            ctypes.c_void_p,
+            wintypes.DWORD,
+        ]
+        count = advapi32.GetSidSubAuthorityCount(label.sid)
+        if not count or count.contents.value == 0:
+            raise OSError("token integrity SID has no sub-authority")
+        rid = advapi32.GetSidSubAuthority(
+            label.sid, count.contents.value - 1
+        ).contents.value
+        if rid < 0x1000:
+            integrity = "untrusted"
+        elif rid < 0x2000:
+            integrity = "low"
+        elif rid < 0x3000:
+            integrity = "medium"
+        elif rid < 0x4000:
+            integrity = "high"
+        else:
+            integrity = "system"
+
+        session_id = wintypes.DWORD()
+        process_id = kernel32.GetCurrentProcessId()
+        if not kernel32.ProcessIdToSessionId(
+            process_id, ctypes.byref(session_id)
+        ):
+            raise OSError(
+                ctypes.get_last_error(), "Windows session ID unavailable"
+            )
+        core = {
+            "schema": WINDOWS_PRINCIPAL_SCHEMA,
+            "provider_id": "windows.local-token.v1",
+            "principal_sid_digest": hashlib.sha256(
+                sid.encode("utf-8")
+            ).hexdigest(),
+            "windows_session_id": int(session_id.value),
+            "integrity": integrity,
+            "valid": True,
+        }
+        return {
+            **core,
+            "principal_digest": digest_value(core),
+        }
+    except (AttributeError, OSError, ValueError) as exc:
+        return {
+            "schema": WINDOWS_PRINCIPAL_SCHEMA,
+            "valid": False,
+            "reason": f"windows_token_identity_failed:{exc}",
+        }
+    finally:
+        if sid_text:
+            kernel32.LocalFree(ctypes.cast(sid_text, ctypes.c_void_p))
+        kernel32.CloseHandle(token)
+
+
+def validate_windows_principal(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    exact = {
+        "schema",
+        "provider_id",
+        "principal_sid_digest",
+        "windows_session_id",
+        "integrity",
+        "principal_digest",
+        "valid",
+    }
+    core = dict(value)
+    claimed = core.pop("principal_digest", None)
+    return bool(
+        set(value) == exact
+        and value.get("schema") == WINDOWS_PRINCIPAL_SCHEMA
+        and value.get("provider_id") == "windows.local-token.v1"
+        and isinstance(value.get("principal_sid_digest"), str)
+        and re.fullmatch(r"[0-9a-f]{64}", value["principal_sid_digest"])
+        and isinstance(value.get("windows_session_id"), int)
+        and not isinstance(value.get("windows_session_id"), bool)
+        and value["windows_session_id"] >= 0
+        and value.get("integrity")
+        in {"untrusted", "low", "medium", "high", "system"}
+        and value.get("valid") is True
+        and isinstance(claimed, str)
+        and digest_value(core) == claimed
+    )
+
+
+def pending_restart_observation() -> dict[str, Any]:
+    shell = powershell()
+    if shell is None or os.name != "nt":
+        return {
+            "schema": PENDING_RESTART_SCHEMA,
+            "available": False,
+            "pending": None,
+            "sources": [],
+            "valid": False,
+        }
+    script = (
+        "$s=@();"
+        "if(Test-Path -LiteralPath "
+        "'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Component Based Servicing\\RebootPending')"
+        "{$s+='component_based_servicing'};"
+        "if(Test-Path -LiteralPath "
+        "'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\RebootRequired')"
+        "{$s+='windows_update'};"
+        "$r=(Get-ItemProperty -LiteralPath "
+        "'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager' "
+        "-Name PendingFileRenameOperations -ErrorAction SilentlyContinue)."
+        "PendingFileRenameOperations;"
+        "if($null-ne $r){$s+='pending_file_rename'};"
+        "[pscustomobject]@{sources=@($s)}|ConvertTo-Json -Compress"
+    )
+    result = run([shell, "-NoProfile", "-NonInteractive", "-Command", script])
+    if result.returncode != 0:
+        return {
+            "schema": PENDING_RESTART_SCHEMA,
+            "available": False,
+            "pending": None,
+            "sources": [],
+            "valid": False,
+            "error_digest": hashlib.sha256(
+                result.stderr.encode("utf-8")
+            ).hexdigest(),
+        }
+    try:
+        raw = json.loads(result.stdout)
+        sources = raw.get("sources", [])
+        if isinstance(sources, str):
+            sources = [sources]
+        sources = sorted(set(str(item) for item in sources))
+    except (AttributeError, json.JSONDecodeError, TypeError):
+        return {
+            "schema": PENDING_RESTART_SCHEMA,
+            "available": False,
+            "pending": None,
+            "sources": [],
+            "valid": False,
+        }
+    core = {
+        "schema": PENDING_RESTART_SCHEMA,
+        "available": True,
+        "pending": bool(sources),
+        "sources": sources,
+        "valid": True,
+    }
+    return {**core, "observation_digest": digest_value(core)}
 
 
 def is_elevated() -> bool:
@@ -1547,6 +1813,214 @@ def operator_attestation(
     }
 
 
+INSTANCE_OPERATOR_CLAIMS = frozenset(
+    {
+        "backup_and_sync_activity_paused",
+        "no_unrelated_file_copy_activity",
+        "operator_will_not_suspend_or_restart",
+    }
+)
+
+
+def build_instance_operator_attestation(
+    *,
+    attested_at: str,
+    reviewer_principal: dict[str, Any],
+    machine_binding_id: str,
+    boot_identity: str,
+    observer_self_test_digest: str,
+    host_state_digest_value: str,
+    processes: dict[str, Any],
+    pending_restart: dict[str, Any],
+    operator_claims: dict[str, bool],
+) -> dict[str, Any]:
+    if (
+        not validate_windows_principal(reviewer_principal)
+        or set(operator_claims) != INSTANCE_OPERATOR_CLAIMS
+        or not all(isinstance(item, bool) for item in operator_claims.values())
+    ):
+        raise PreflightError(
+            "instance-isolated operator attestation inputs are not closed"
+        )
+    record: dict[str, Any] = {
+        "schema": INSTANCE_ATTESTATION_SCHEMA,
+        "attested_at": attested_at,
+        "reviewer_principal": reviewer_principal,
+        "machine_observations": {
+            "machine_binding_id": machine_binding_id,
+            "boot_identity": boot_identity,
+            "observer_self_test_digest": observer_self_test_digest,
+            "host_state_digest": host_state_digest_value,
+            "process_inventory_digest": digest_value(processes),
+            "process_inventory_quiet": processes.get("quiet") is True,
+            "pending_restart_observation_digest": digest_value(
+                pending_restart
+            ),
+            "pending_restart_cleared": bool(
+                pending_restart.get("valid") is True
+                and pending_restart.get("pending") is False
+            ),
+        },
+        "operator_attestations": dict(sorted(operator_claims.items())),
+        "power_request": {
+            "provider": "windows.set_thread_execution_state.v1",
+            "required_before_permit": True,
+            "claimed_active": False,
+        },
+    }
+    record["attestation_digest"] = digest_value(record)
+    return record
+
+
+def instance_operator_attestation(
+    path: Path | None,
+    *,
+    machine_binding_id: str | None,
+    boot_identity: str | None,
+    observer_self_test_digest: str | None,
+    observer_generated_at: str | None,
+    current_host_state_digest: str,
+    reviewer_principal: dict[str, Any],
+    processes: dict[str, Any],
+    pending_restart: dict[str, Any],
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    if path is None:
+        return {
+            "status": "missing",
+            "valid": False,
+            "required_operator_attestations": sorted(
+                INSTANCE_OPERATOR_CLAIMS
+            ),
+        }
+    audit = audit_no_follow(path, require_file=True)
+    if not audit["safe"]:
+        return {"status": "invalid", "valid": False, "path_audit": audit}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"status": "invalid", "valid": False, "path_audit": audit}
+    exact = {
+        "schema",
+        "attested_at",
+        "reviewer_principal",
+        "machine_observations",
+        "operator_attestations",
+        "power_request",
+        "attestation_digest",
+    }
+    machine = (
+        value.get("machine_observations")
+        if isinstance(value, dict)
+        else None
+    )
+    claims = (
+        value.get("operator_attestations")
+        if isinstance(value, dict)
+        else None
+    )
+    power = value.get("power_request") if isinstance(value, dict) else None
+    principal = (
+        value.get("reviewer_principal")
+        if isinstance(value, dict)
+        else None
+    )
+    window = time_window(
+        value.get("attested_at") if isinstance(value, dict) else None,
+        now=now,
+        maximum_age_seconds=ATTESTATION_MAX_AGE_SECONDS,
+    )
+    attested_time = parse_utc(
+        value.get("attested_at") if isinstance(value, dict) else None
+    )
+    observer_time = parse_utc(observer_generated_at)
+    sequence_valid = bool(
+        attested_time is not None
+        and observer_time is not None
+        and observer_time <= attested_time
+    )
+    machine_exact = {
+        "machine_binding_id",
+        "boot_identity",
+        "observer_self_test_digest",
+        "host_state_digest",
+        "process_inventory_digest",
+        "process_inventory_quiet",
+        "pending_restart_observation_digest",
+        "pending_restart_cleared",
+    }
+    bindings_valid = bool(
+        isinstance(machine, dict)
+        and set(machine) == machine_exact
+        and machine.get("machine_binding_id") == machine_binding_id
+        and machine.get("boot_identity") == boot_identity
+        and machine.get("observer_self_test_digest")
+        == observer_self_test_digest
+        and machine.get("host_state_digest") == current_host_state_digest
+        and machine.get("process_inventory_digest")
+        == digest_value(processes)
+        and machine.get("process_inventory_quiet")
+        is (processes.get("quiet") is True)
+        and machine.get("pending_restart_observation_digest")
+        == digest_value(pending_restart)
+        and machine.get("pending_restart_cleared")
+        is bool(
+            pending_restart.get("valid") is True
+            and pending_restart.get("pending") is False
+        )
+    )
+    core = dict(value) if isinstance(value, dict) else {}
+    claimed = core.pop("attestation_digest", None)
+    valid = bool(
+        isinstance(value, dict)
+        and set(value) == exact
+        and value.get("schema") == INSTANCE_ATTESTATION_SCHEMA
+        and window["valid"]
+        and sequence_valid
+        and validate_windows_principal(principal)
+        and principal == reviewer_principal
+        and principal.get("integrity") == "medium"
+        and bindings_valid
+        and processes.get("quiet") is True
+        and pending_restart.get("valid") is True
+        and pending_restart.get("pending") is False
+        and isinstance(claims, dict)
+        and set(claims) == INSTANCE_OPERATOR_CLAIMS
+        and all(claims.get(key) is True for key in INSTANCE_OPERATOR_CLAIMS)
+        and power
+        == {
+            "provider": "windows.set_thread_execution_state.v1",
+            "required_before_permit": True,
+            "claimed_active": False,
+        }
+        and isinstance(claimed, str)
+        and re.fullmatch(r"[0-9a-f]{64}", claimed)
+        and digest_value(core) == claimed
+    )
+    return {
+        "status": "verified" if valid else "invalid",
+        "valid": valid,
+        "path_audit": audit,
+        "artifact_sha256": sha256_file(path),
+        "attestation_digest": claimed,
+        "attested_at": (
+            value.get("attested_at") if isinstance(value, dict) else None
+        ),
+        "reviewer_principal": principal,
+        "machine_observations": machine,
+        "operator_attestations": claims,
+        "power_request": power,
+        "time_window": window,
+        "bindings_valid": bindings_valid,
+        "after_observer_self_test": sequence_valid,
+        "maximum_age_seconds": ATTESTATION_MAX_AGE_SECONDS,
+        "baseline_must_begin_before": window.get("expires_at"),
+        "required_operator_attestations": sorted(
+            INSTANCE_OPERATOR_CLAIMS
+        ),
+    }
+
+
 def add_blocker(blockers: list[dict[str, str]], code: str, detail: str) -> None:
     blockers.append({"code": code, "detail": detail})
 
@@ -1653,6 +2127,16 @@ def build_preflight(
     )
     processes = process_inventory()
     session = host_session_identity()
+    principal = (
+        windows_principal_identity()
+        if route.route_id != HERMETIC_VERDICT03.route_id
+        else None
+    )
+    pending_restart = (
+        pending_restart_observation()
+        if route.route_id != HERMETIC_VERDICT03.route_id
+        else None
+    )
     observer = observer_prerequisites(
         Path(args.observer_self_test) if args.observer_self_test else None,
         repo_root=facman_repo,
@@ -1672,15 +2156,33 @@ def build_preflight(
         else None
     )
     current_host_state = host_state_digest(session, processes, observer_digest)
-    attestation = operator_attestation(
-        Path(args.operator_attestation) if args.operator_attestation else None,
-        machine_binding_id=session.get("machine_binding_id"),
-        boot_identity=session.get("boot_identity"),
-        observer_self_test_digest=observer_digest,
-        observer_generated_at=observer_generated_at,
-        current_host_state_digest=current_host_state,
-        now=now,
-    )
+    if route.route_id == HERMETIC_VERDICT03.route_id:
+        attestation = operator_attestation(
+            Path(args.operator_attestation)
+            if args.operator_attestation
+            else None,
+            machine_binding_id=session.get("machine_binding_id"),
+            boot_identity=session.get("boot_identity"),
+            observer_self_test_digest=observer_digest,
+            observer_generated_at=observer_generated_at,
+            current_host_state_digest=current_host_state,
+            now=now,
+        )
+    else:
+        attestation = instance_operator_attestation(
+            Path(args.operator_attestation)
+            if args.operator_attestation
+            else None,
+            machine_binding_id=session.get("machine_binding_id"),
+            boot_identity=session.get("boot_identity"),
+            observer_self_test_digest=observer_digest,
+            observer_generated_at=observer_generated_at,
+            current_host_state_digest=current_host_state,
+            reviewer_principal=principal or {},
+            processes=processes,
+            pending_restart=pending_restart or {},
+            now=now,
+        )
     deadlines = [
         parsed
         for parsed in (
@@ -1712,6 +2214,31 @@ def build_preflight(
         add_blocker(blockers, "host_not_quiet", f"Protected or competing processes are active: {', '.join(active)}")
     if not session.get("valid"):
         add_blocker(blockers, "host_session_identity_unavailable", "The opaque machine and current boot-session identities could not be established.")
+    if (
+        route.route_id != HERMETIC_VERDICT03.route_id
+        and (
+            not validate_windows_principal(principal)
+            or principal.get("integrity") != "medium"
+        )
+    ):
+        add_blocker(
+            blockers,
+            "reviewer_principal_unavailable",
+            "The exact medium-integrity Windows token principal and session could not be observed.",
+        )
+    if (
+        route.route_id != HERMETIC_VERDICT03.route_id
+        and (
+            not isinstance(pending_restart, dict)
+            or pending_restart.get("valid") is not True
+            or pending_restart.get("pending") is not False
+        )
+    ):
+        add_blocker(
+            blockers,
+            "pending_restart_or_unknown",
+            "Windows reports a pending restart or restart state could not be observed.",
+        )
     if not observer.get("tools_available"):
         add_blocker(blockers, "observer_tools_missing", "WPR, XPerf, and WPAExporter are required.")
     if observer.get("recording_active") is not False:
@@ -1748,6 +2275,14 @@ def build_preflight(
             "session_identity": session,
             "process_inventory": processes,
             "host_state_digest": current_host_state,
+            **(
+                {
+                    "reviewer_principal": principal,
+                    "pending_restart": pending_restart,
+                }
+                if route.route_id != HERMETIC_VERDICT03.route_id
+                else {}
+            ),
         },
         "observer": observer,
         "operator_attestation": attestation,

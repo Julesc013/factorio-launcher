@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
-import os
 import tempfile
 import unittest
 from argparse import Namespace
@@ -78,6 +79,23 @@ def qualification_value() -> dict[str, object]:
     return {**core, "qualification_digest": digest_value(core)}
 
 
+def principal_value(
+    *,
+    sid_digest: str = "9" * 64,
+    session_id: int = 7,
+    integrity: str = "medium",
+) -> dict[str, object]:
+    core: dict[str, object] = {
+        "schema": PREFLIGHT.WINDOWS_PRINCIPAL_SCHEMA,
+        "provider_id": "windows.local-token.v1",
+        "principal_sid_digest": sid_digest,
+        "windows_session_id": session_id,
+        "integrity": integrity,
+        "valid": True,
+    }
+    return {**core, "principal_digest": digest_value(core)}
+
+
 class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
     def test_workspace_stage_requires_exact_current_active_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -134,6 +152,32 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 qualification=None,
             )
 
+    def test_operator_attestations_are_explicit_exact_and_never_defaulted(
+        self,
+    ) -> None:
+        exact = [
+            f"{name}=true"
+            for name in sorted(PREFLIGHT.INSTANCE_OPERATOR_CLAIMS)
+        ]
+        parsed = COORDINATOR._named_booleans(
+            exact,
+            expected=PREFLIGHT.INSTANCE_OPERATOR_CLAIMS,
+            context="operator attestation",
+        )
+        self.assertTrue(all(parsed.values()))
+        with self.assertRaises(COORDINATOR.CoordinatorError):
+            COORDINATOR._named_booleans(
+                exact[:-1],
+                expected=PREFLIGHT.INSTANCE_OPERATOR_CLAIMS,
+                context="operator attestation",
+            )
+        with self.assertRaises(COORDINATOR.CoordinatorError):
+            COORDINATOR._named_booleans(
+                exact + [exact[0]],
+                expected=PREFLIGHT.INSTANCE_OPERATOR_CLAIMS,
+                context="operator attestation",
+            )
+
     def test_qualification_binding_is_closed_and_hash_bound(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "qualification.json"
@@ -156,7 +200,9 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             with self.assertRaises(RouteBindingError):
                 load_qualification_binding(path, ROUTE)
 
-    def test_configuration_and_plan_approval_are_non_executing(self) -> None:
+    def test_configuration_binds_observed_principal_and_has_no_python_approval(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             task_root = root / ROUTE.work_unit
@@ -212,52 +258,353 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 "source_member_executable": str(
                     files["source_member_executable"]
                 ),
-                "reviewer_id": f"windows:{os.environ.get('USERNAME', '')}",
+                "reviewer_principal": principal_value(),
                 "first_operation_id": first,
                 "second_operation_id": second,
             }
             config_path = operator / "instance-isolated-config.json"
             config_path.write_text(json.dumps(config), encoding="utf-8")
-            loaded, binding = COORDINATOR.validate_config(config_path)
+            with patch.object(
+                PREFLIGHT,
+                "windows_principal_identity",
+                return_value=principal_value(),
+            ):
+                loaded, binding = COORDINATOR.validate_config(config_path)
             self.assertEqual(loaded["instance_id"], ROUTE.instance_id)
             self.assertEqual(
                 binding.qualification_digest,
                 qualification["qualification_digest"],
             )
 
-            plan = {
-                "schema": ROUTE.plan_schema,
-                "canonicalization_version": "facman.sorted-json.v1",
-                "plan_core": {
-                    "operation": "instance.play",
-                    "instance_id": ROUTE.instance_id,
-                    "launch_intent": "menu",
-                    "isolation_mode": ROUTE.isolation_mode,
-                    "policy_digest": ROUTE.policy_digest,
-                },
-                "plan_digest": "e" * 64,
-                "public_command_available": False,
-                "human_verdict_recorded": False,
-            }
-            plan_path = task_root / "plan.json"
-            plan_path.write_text(json.dumps(plan), encoding="utf-8")
-            out = (
-                operator
-                / "approvals"
-                / f"{first}-plan-approval.json"
-            )
-            result = COORDINATOR.approve_plan(
-                Namespace(
-                    config=config_path,
-                    operation_id=first,
-                    plan=plan_path,
-                    out=out,
+            with (
+                contextlib.redirect_stderr(io.StringIO()),
+                self.assertRaises(SystemExit),
+            ):
+                COORDINATOR.parser().parse_args(["approve-plan"])
+
+            changed = principal_value(session_id=8)
+            with patch.object(
+                PREFLIGHT,
+                "windows_principal_identity",
+                return_value=changed,
+            ):
+                with self.assertRaises(COORDINATOR.CoordinatorError):
+                    COORDINATOR.validate_config(config_path)
+
+    def test_explicit_human_checks_derive_each_disposition_and_bind_output(
+        self,
+    ) -> None:
+        for expected_disposition, exceptional in (
+            ("Pass", {}),
+            ("Fail", {"normal_menu_observed": "false"}),
+            ("Inconclusive", {"normal_menu_observed": "unknown"}),
+        ):
+            with self.subTest(expected_disposition), tempfile.TemporaryDirectory() as temporary:
+                task_root = Path(temporary) / ROUTE.work_unit
+                task_root.mkdir()
+                operation = ROUTE.operation_prefix + "launch1"
+                config = {
+                    "task_root": str(task_root),
+                    "first_operation_id": operation,
+                    "second_operation_id": ROUTE.operation_prefix + "launch2",
+                    "reviewer_principal": principal_value(),
+                }
+                session = {
+                    "operation_id": operation,
+                    "session_digest": "1" * 64,
+                    "task_root": str(task_root),
+                }
+                packet = {"packet_digest": "2" * 64}
+                checks = {
+                    name: exceptional.get(name, "true")
+                    for name in COORDINATOR.EVIDENCE.FIRST_LAUNCH_CHECKS
+                }
+                notes = {
+                    name: (
+                        "direct observation"
+                        if checks[name] != "true"
+                        else ""
+                    )
+                    for name in checks
+                }
+                output = (
+                    task_root
+                    / "evidence"
+                    / "human"
+                    / f"{operation}-launch-1.json"
                 )
-            )
-            approval = json.loads(out.read_text(encoding="utf-8"))
-            self.assertEqual(result["plan_digest"], "e" * 64)
-            self.assertFalse(approval["permit_issued"])
-            self.assertFalse(approval["process_started"])
+                displayed: list[str] = []
+
+                def confirm(_: str) -> str:
+                    return displayed[-1].splitlines()[-1]
+
+                with (
+                    patch.object(
+                        COORDINATOR,
+                        "validate_config",
+                        return_value=(config, object()),
+                    ),
+                    patch.object(
+                        COORDINATOR.EVIDENCE,
+                        "validate_session_record",
+                        return_value=session,
+                    ),
+                    patch.object(
+                        COORDINATOR.EVIDENCE,
+                        "validate_native_packet",
+                        return_value=packet,
+                    ),
+                ):
+                    result = COORDINATOR.human(
+                        Namespace(
+                            config=Path("config.json"),
+                            launch=1,
+                            session=Path("session.json"),
+                            packet=Path("packet.json"),
+                            check=[
+                                f"{name}={value}"
+                                for name, value in sorted(checks.items())
+                            ],
+                            check_note=[
+                                f"{name}={value}"
+                                for name, value in sorted(notes.items())
+                            ],
+                            notes="synthetic protocol proof",
+                            out=output,
+                        ),
+                        input_fn=confirm,
+                        output_fn=displayed.append,
+                    )
+                record = json.loads(output.read_text(encoding="utf-8"))
+                self.assertEqual(result["disposition"], expected_disposition)
+                self.assertEqual(
+                    record["disposition"], expected_disposition
+                )
+                self.assertEqual(record["launch_sequence"], 1)
+                self.assertNotIn("grants_authority", record)
+
+    def test_human_observation_rejects_swapped_launch_and_wrong_output(
+        self,
+    ) -> None:
+        operation = ROUTE.operation_prefix + "launch2"
+        config = {
+            "task_root": str(Path("root") / ROUTE.work_unit),
+            "first_operation_id": ROUTE.operation_prefix + "launch1",
+            "second_operation_id": operation,
+            "reviewer_principal": principal_value(),
+        }
+        session = {
+            "operation_id": operation,
+            "session_digest": "1" * 64,
+        }
+        arguments = Namespace(
+            config=Path("config.json"),
+            launch=1,
+            session=Path("session.json"),
+            packet=Path("packet.json"),
+            check=[
+                f"{name}=true"
+                for name in sorted(
+                    COORDINATOR.EVIDENCE.FIRST_LAUNCH_CHECKS
+                )
+            ],
+            check_note=[
+                f"{name}=observed"
+                for name in sorted(
+                    COORDINATOR.EVIDENCE.FIRST_LAUNCH_CHECKS
+                )
+            ],
+            notes="",
+            out=Path("wrong.json"),
+        )
+        with (
+            patch.object(
+                COORDINATOR,
+                "validate_config",
+                return_value=(config, object()),
+            ),
+            patch.object(
+                COORDINATOR.EVIDENCE,
+                "validate_session_record",
+                return_value=session,
+            ),
+            patch.object(
+                COORDINATOR.EVIDENCE,
+                "validate_native_packet",
+                return_value={"packet_digest": "2" * 64},
+            ),
+            self.assertRaises(COORDINATOR.CoordinatorError),
+        ):
+            COORDINATOR.human(arguments, input_fn=lambda _: "")
+
+    def test_synthetic_two_launch_protocol_derives_pass_fail_and_inconclusive(
+        self,
+    ) -> None:
+        for expected_verdict, exceptional in (
+            ("Pass", {}),
+            ("Fail", {"normal_menu_observed": False}),
+            ("Inconclusive", {"normal_menu_observed": None}),
+        ):
+            with self.subTest(expected_verdict), tempfile.TemporaryDirectory() as temporary:
+                task_root = Path(temporary) / ROUTE.work_unit
+                task_root.mkdir()
+                principal = principal_value()
+                operation_ids = [
+                    ROUTE.operation_prefix + "synthetic-launch1",
+                    ROUTE.operation_prefix + "synthetic-launch2",
+                ]
+                sessions: list[dict[str, object]] = []
+                session_paths: list[Path] = []
+                packet_paths: list[Path] = []
+                packet_values: dict[Path, dict[str, object]] = {}
+                human_paths: list[Path] = []
+                for index, operation in enumerate(operation_ids):
+                    session_core: dict[str, object] = {
+                        "schema": COORDINATOR.EVIDENCE.SESSION_SCHEMA,
+                        "work_unit": ROUTE.work_unit,
+                        "instance_id": ROUTE.instance_id,
+                        "operation_id": operation,
+                        "machine_binding_id": "machine",
+                        "facman_source_revision_digest": "a" * 64,
+                        "facman_build_identity_digest": "b" * 64,
+                        "task_root": str(task_root),
+                        "principal": {
+                            "provider_id": principal["provider_id"],
+                            "principal_id": principal["principal_digest"],
+                            "application_session_id": (
+                                str(index + 1) * 64
+                            ),
+                        },
+                    }
+                    session = {
+                        **session_core,
+                        "session_digest": digest_value(session_core),
+                    }
+                    session_path = (
+                        task_root
+                        / "evidence"
+                        / "sessions"
+                        / f"{operation}-session.json"
+                    )
+                    session_path.parent.mkdir(parents=True, exist_ok=True)
+                    session_path.write_text(
+                        json.dumps(session), encoding="utf-8"
+                    )
+                    packet_path = (
+                        task_root
+                        / "workspace"
+                        / "operations"
+                        / operation
+                        / "synthetic-packet.json"
+                    )
+                    packet_path.parent.mkdir(parents=True, exist_ok=True)
+                    packet_path.write_text("{}", encoding="utf-8")
+                    packet = {
+                        "packet_digest": str(index + 3) * 64,
+                        "permit_id": f"synthetic-permit-{index + 1}",
+                        "permit_claims_digest": str(index + 5) * 64,
+                        "technical_disposition": (
+                            "eligible_for_human_verdict"
+                        ),
+                        "synthetic_process_observer": True,
+                    }
+                    checks_expected = (
+                        COORDINATOR.EVIDENCE.FIRST_LAUNCH_CHECKS
+                        if index == 0
+                        else COORDINATOR.EVIDENCE.SECOND_LAUNCH_CHECKS
+                    )
+                    checks = {
+                        name: (
+                            exceptional.get(name, True)
+                            if index == 0
+                            else True
+                        )
+                        for name in checks_expected
+                    }
+                    disposition = (
+                        "Fail"
+                        if any(value is False for value in checks.values())
+                        else (
+                            "Inconclusive"
+                            if any(
+                                value is None for value in checks.values()
+                            )
+                            else "Pass"
+                        )
+                    )
+                    human_core: dict[str, object] = {
+                        "schema": ROUTE.human_observation_schema,
+                        "canonicalization_version": (
+                            "facman.sorted-json.v1"
+                        ),
+                        "work_unit": ROUTE.work_unit,
+                        "operation_id": operation,
+                        "launch_sequence": index + 1,
+                        "session_digest": session["session_digest"],
+                        "packet_digest": packet["packet_digest"],
+                        "reviewer_principal": principal,
+                        "observed_at": "2026-07-27T00:00:00Z",
+                        "disposition": disposition,
+                        "checks": checks,
+                        "check_notes": {
+                            name: (
+                                "synthetic adverse observation"
+                                if value is not True
+                                else "synthetic direct observation"
+                            )
+                            for name, value in checks.items()
+                        },
+                        "notes": "Synthetic; no Factorio was executed.",
+                    }
+                    human = {
+                        **human_core,
+                        "attestation_digest": digest_value(human_core),
+                    }
+                    human_path = (
+                        task_root
+                        / "evidence"
+                        / "human"
+                        / f"{operation}-launch-{index + 1}.json"
+                    )
+                    human_path.parent.mkdir(parents=True, exist_ok=True)
+                    human_path.write_text(
+                        json.dumps(human), encoding="utf-8"
+                    )
+                    sessions.append(session)
+                    session_paths.append(session_path)
+                    packet_paths.append(packet_path)
+                    packet_values[packet_path] = packet
+                    human_paths.append(human_path)
+
+                def packet_for(
+                    _session: dict[str, object],
+                    path: Path,
+                    _route: object,
+                ) -> dict[str, object]:
+                    return packet_values[path]
+
+                verdict_path = (
+                    task_root / "evidence" / "verdict" / "synthetic.json"
+                )
+                with patch.object(
+                    COORDINATOR.EVIDENCE,
+                    "validate_native_packet",
+                    side_effect=packet_for,
+                ):
+                    result = COORDINATOR.finalize_auto(
+                        Namespace(
+                            first_session=session_paths[0],
+                            first_packet=packet_paths[0],
+                            first_human=human_paths[0],
+                            second_session=session_paths[1],
+                            second_packet=packet_paths[1],
+                            second_human=human_paths[1],
+                            out=verdict_path,
+                        )
+                    )
+                self.assertEqual(result["verdict"], expected_verdict)
+                self.assertFalse(result["grants_authority"])
+                self.assertFalse(result["product_route_available"])
 
     def test_stage_reuses_only_an_exact_prequalified_workspace(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -324,6 +671,11 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 return records, paths
 
             with (
+                patch.object(
+                    PREFLIGHT,
+                    "windows_principal_identity",
+                    return_value=principal_value(),
+                ),
                 patch.object(
                     COORDINATOR,
                     "_qualified_source_paths",

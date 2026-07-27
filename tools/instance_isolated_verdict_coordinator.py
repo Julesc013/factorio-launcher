@@ -4,8 +4,9 @@
 """Operator-only coordinator for exact instance-isolated Play revalidation.
 
 This module stages only remotely qualified candidate bytes and prepares fresh
-evidence sessions.  It cannot issue a permit, start Factorio, record an
-observation on behalf of a person, or promote product authority.
+evidence sessions.  It records only explicit, interactively confirmed human
+checks.  It cannot issue a permit, start Factorio, infer a human observation,
+or promote product authority.
 """
 
 from __future__ import annotations
@@ -38,7 +39,6 @@ from tools.play_verdict_route import (
 
 CONFIG_SCHEMA = "factorio.instance_isolated_verdict_coordinator_config.v1"
 PREPARED_SCHEMA = "factorio.instance_isolated_prepared_launch.v1"
-PLAN_APPROVAL_SCHEMA = "factorio.instance_isolated_exact_plan_approval.v1"
 CONFIG_KEYS = {
     "schema",
     "task_root",
@@ -54,7 +54,7 @@ CONFIG_KEYS = {
     "factorio_executable",
     "source_artifact",
     "source_member_executable",
-    "reviewer_id",
+    "reviewer_principal",
     "first_operation_id",
     "second_operation_id",
 }
@@ -95,11 +95,21 @@ def validate_config(
         or _absolute(path).parent != task_root / "operator"
         or _absolute(Path(value["workspace"])) != task_root / "workspace"
         or value["instance_id"] != ROUTE.instance_id
-        or value["reviewer_id"]
-        != f"windows:{os.environ.get('USERNAME', '')}"
     ):
         raise CoordinatorError(
             "instance-isolated coordinator configuration scope is not exact"
+        )
+    current_principal = PREFLIGHT.windows_principal_identity()
+    if (
+        not PREFLIGHT.validate_windows_principal(
+            value["reviewer_principal"]
+        )
+        or value["reviewer_principal"] != current_principal
+        or current_principal.get("integrity") != "medium"
+    ):
+        raise CoordinatorError(
+            "configured reviewer principal is not the current exact "
+            "medium-integrity Windows token"
         )
     qualification_path = _absolute(Path(value["qualification_binding"]))
     qualification = _binding(qualification_path)
@@ -133,7 +143,7 @@ def validate_config(
         "schema",
         "qualification_digest",
         "instance_id",
-        "reviewer_id",
+        "reviewer_principal",
         "first_operation_id",
         "second_operation_id",
     }
@@ -507,6 +517,14 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
     if task_root.name != ROUTE.work_unit:
         raise CoordinatorError("stage root is not the exact revalidation root")
     _safe_path(task_root, require_file=False)
+    reviewer_principal = PREFLIGHT.windows_principal_identity()
+    if (
+        not PREFLIGHT.validate_windows_principal(reviewer_principal)
+        or reviewer_principal.get("integrity") != "medium"
+    ):
+        raise CoordinatorError(
+            "stage requires an observed medium-integrity Windows principal"
+        )
     if (task_root / "artifacts").exists():
         raise CoordinatorError("revalidation artifacts already exist")
     qualification_source = _absolute(args.qualification_binding)
@@ -604,7 +622,7 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
         "factorio_executable": str(factorio_executable),
         "source_artifact": str(source_artifact),
         "source_member_executable": str(source_member),
-        "reviewer_id": f"windows:{os.environ.get('USERNAME', '')}",
+        "reviewer_principal": reviewer_principal,
         "first_operation_id": args.first_operation_id,
         "second_operation_id": args.second_operation_id,
     }
@@ -648,20 +666,33 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     host_state = PREFLIGHT.host_state_digest(
         session, processes, observer_digest
     )
-    attestation = {
-        "schema": PREFLIGHT.ATTESTATION_SCHEMA,
-        "attested_at": EVIDENCE.utc_now(),
-        "reviewer_id": config["reviewer_id"],
-        "machine_binding_id": session["machine_binding_id"],
-        "boot_identity": session["boot_identity"],
-        "observer_self_test_digest": observer_digest,
-        "host_state_digest": host_state,
-        "pending_restart_cleared": True,
-        "steam_closed": True,
-        "unrelated_factorio_facman_closed": True,
-        "install_backup_sync_activity_paused": True,
-        "sleep_and_restart_prevented_for_run": True,
-    }
+    current_principal = PREFLIGHT.windows_principal_identity()
+    if current_principal != config["reviewer_principal"]:
+        raise CoordinatorError(
+            "reviewer principal changed after candidate staging"
+        )
+    pending_restart = PREFLIGHT.pending_restart_observation()
+    operator_claims = _named_booleans(
+        args.operator_attestation,
+        expected=PREFLIGHT.INSTANCE_OPERATOR_CLAIMS,
+        context="operator attestation",
+    )
+    if not all(operator_claims.values()):
+        raise CoordinatorError(
+            "every explicit operator attestation must be true before "
+            "preflight preparation"
+        )
+    attestation = PREFLIGHT.build_instance_operator_attestation(
+        attested_at=EVIDENCE.utc_now(),
+        reviewer_principal=current_principal,
+        machine_binding_id=session["machine_binding_id"],
+        boot_identity=session["boot_identity"],
+        observer_self_test_digest=observer_digest,
+        host_state_digest_value=host_state,
+        processes=processes,
+        pending_restart=pending_restart,
+        operator_claims=operator_claims,
+    )
     attestation_path = (
         task_root / "operator" / "attestation" / f"{operation_id}.json"
     )
@@ -736,65 +767,66 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     return output
 
 
-def approve_plan(args: argparse.Namespace) -> dict[str, Any]:
-    config, _ = validate_config(args.config)
-    if args.operation_id not in {
-        config["first_operation_id"],
-        config["second_operation_id"],
-    }:
-        raise CoordinatorError("plan approval operation is not configured")
-    plan = COMMON.read_strict(args.plan)
-    core = plan.get("plan_core")
-    if (
-        plan.get("schema") != ROUTE.plan_schema
-        or plan.get("canonicalization_version") != "facman.sorted-json.v1"
-        or not isinstance(core, dict)
-        or core.get("operation") != "instance.play"
-        or core.get("instance_id") != ROUTE.instance_id
-        or core.get("launch_intent") != "menu"
-        or core.get("isolation_mode") != ROUTE.isolation_mode
-        or core.get("policy_digest") != ROUTE.policy_digest
-        or plan.get("public_command_available") is not False
-        or plan.get("human_verdict_recorded") is not False
-    ):
+def _split_named_values(
+    raw: list[str],
+    *,
+    expected: set[str] | frozenset[str],
+    context: str,
+    allow_empty: bool = False,
+) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for item in raw:
+        name, separator, value = item.partition("=")
+        if (
+            not separator
+            or name not in expected
+            or name in values
+            or (not allow_empty and not value)
+        ):
+            raise CoordinatorError(
+                f"{context} must provide each exact name once"
+            )
+        values[name] = value
+    if set(values) != set(expected):
+        missing = sorted(set(expected) - set(values))
         raise CoordinatorError(
-            "plan is outside the frozen instance-isolated candidate"
+            f"{context} is incomplete; missing: {', '.join(missing)}"
         )
-    plan_digest = plan.get("plan_digest")
-    if (
-        not isinstance(plan_digest, str)
-        or len(plan_digest) != 64
-        or any(character not in "0123456789abcdef" for character in plan_digest)
-    ):
-        raise CoordinatorError("plan digest is not lowercase SHA-256")
-    record = {
-        "schema": PLAN_APPROVAL_SCHEMA,
-        "work_unit": ROUTE.work_unit,
-        "operation_id": args.operation_id,
-        "plan_digest": plan_digest,
-        "approved_by": config["reviewer_id"],
-        "approved_at": EVIDENCE.utc_now(),
-        "permit_issued": False,
-        "process_started": False,
-    }
-    record["approval_digest"] = PREFLIGHT.digest_value(record)
-    expected = (
-        Path(config["task_root"])
-        / "operator"
-        / "approvals"
-        / f"{args.operation_id}-plan-approval.json"
+    return values
+
+
+def _named_booleans(
+    raw: list[str],
+    *,
+    expected: set[str] | frozenset[str],
+    context: str,
+) -> dict[str, bool]:
+    values = _split_named_values(
+        raw, expected=expected, context=context
     )
-    if _absolute(args.out) != _absolute(expected):
-        raise CoordinatorError("plan approval output path is not exact")
-    COMMON.write_new(args.out, record)
-    return {
-        "path": str(args.out),
-        "plan_digest": plan_digest,
-        "digest": record["approval_digest"],
-    }
+    if any(value not in {"true", "false"} for value in values.values()):
+        raise CoordinatorError(
+            f"{context} values must be exactly true or false"
+        )
+    return {name: value == "true" for name, value in values.items()}
 
 
-def human(args: argparse.Namespace) -> dict[str, Any]:
+def _derive_human_disposition(
+    checks: dict[str, bool | None],
+) -> str:
+    if any(value is False for value in checks.values()):
+        return "Fail"
+    if any(value is None for value in checks.values()):
+        return "Inconclusive"
+    return "Pass"
+
+
+def human(
+    args: argparse.Namespace,
+    *,
+    input_fn: Any = input,
+    output_fn: Any = print,
+) -> dict[str, Any]:
     config, _ = validate_config(args.config)
     session = EVIDENCE.validate_session_record(args.session, ROUTE)
     packet = EVIDENCE.validate_native_packet(session, args.packet, ROUTE)
@@ -803,36 +835,97 @@ def human(args: argparse.Namespace) -> dict[str, Any]:
         if args.launch == 1
         else EVIDENCE.SECOND_LAUNCH_CHECKS
     )
-    if args.disposition == "Inconclusive":
-        checks: dict[str, bool | None] = {
-            key: None for key in sorted(expected)
-        }
-    else:
-        checks = {
-            key: args.disposition == "Pass" for key in sorted(expected)
-        }
-    for key in args.false_check:
-        if key not in checks:
-            raise CoordinatorError(f"unknown human observation check: {key}")
-        checks[key] = False
+    expected_operation = (
+        config["first_operation_id"]
+        if args.launch == 1
+        else config["second_operation_id"]
+    )
+    if session["operation_id"] != expected_operation:
+        raise CoordinatorError(
+            "human observation launch sequence and operation do not match"
+        )
+    raw_checks = _split_named_values(
+        args.check,
+        expected=expected,
+        context="human observation checks",
+    )
+    if any(
+        value not in {"true", "false", "unknown"}
+        for value in raw_checks.values()
+    ):
+        raise CoordinatorError(
+            "human checks must be exactly true, false, or unknown"
+        )
+    checks: dict[str, bool | None] = {
+        name: (
+            True
+            if value == "true"
+            else False if value == "false" else None
+        )
+        for name, value in raw_checks.items()
+    }
+    raw_notes = _split_named_values(
+        args.check_note,
+        expected=expected,
+        context="human observation check notes",
+        allow_empty=True,
+    )
+    for name, value in checks.items():
+        if value is not True and not raw_notes[name].strip():
+            raise CoordinatorError(
+                f"human check {name} requires a false/unknown note"
+            )
+    disposition = _derive_human_disposition(checks)
     record = {
-        "schema": EVIDENCE.HUMAN_OBSERVATION_SCHEMA,
+        "schema": ROUTE.human_observation_schema,
         "canonicalization_version": "facman.sorted-json.v1",
         "work_unit": ROUTE.work_unit,
         "operation_id": session["operation_id"],
+        "launch_sequence": args.launch,
         "session_digest": session["session_digest"],
         "packet_digest": packet["packet_digest"],
-        "reviewer_id": config["reviewer_id"],
+        "reviewer_principal": config["reviewer_principal"],
         "observed_at": EVIDENCE.utc_now(),
-        "disposition": args.disposition,
-        "checks": checks,
+        "disposition": disposition,
+        "checks": dict(sorted(checks.items())),
+        "check_notes": dict(sorted(raw_notes.items())),
         "notes": args.notes,
     }
     record["attestation_digest"] = PREFLIGHT.digest_value(record)
-    COMMON.write_new(args.out, record)
+    expected_out = (
+        Path(config["task_root"])
+        / "evidence"
+        / "human"
+        / f"{session['operation_id']}-launch-{args.launch}.json"
+    )
+    if _absolute(args.out) != _absolute(expected_out):
+        raise CoordinatorError(
+            "human observation output path is not operation/launch exact"
+        )
+    output_fn(
+        f"Human observation for {session['operation_id']} launch "
+        f"{args.launch}:"
+    )
+    for name in sorted(checks):
+        state = (
+            "unknown" if checks[name] is None else str(checks[name]).lower()
+        )
+        output_fn(f"  {name}={state} note={raw_notes[name]}")
+    phrase = (
+        "RECORD HUMAN OBSERVATION "
+        f"{session['operation_id']} LAUNCH {args.launch} "
+        f"{record['attestation_digest']}"
+    )
+    output_fn(f"Type exactly:\n{phrase}")
+    if input_fn("> ") != phrase:
+        raise CoordinatorError(
+            "human observation confirmation did not match"
+        )
+    COMMON.write_new(expected_out, record)
     return {
-        "path": str(args.out),
+        "path": str(expected_out),
         "digest": record["attestation_digest"],
+        "disposition": disposition,
     }
 
 
@@ -849,8 +942,26 @@ def finalize_auto(args: argparse.Namespace) -> dict[str, Any]:
     second_packet = EVIDENCE.validate_native_packet(
         second_session, args.second_packet, ROUTE
     )
-    first_human = COMMON.read_strict(args.first_human)
-    second_human = COMMON.read_strict(args.second_human)
+    first_human = EVIDENCE.validate_human_observation(
+        args.first_human,
+        operation_id=first_session["operation_id"],
+        session_digest=first_session["session_digest"],
+        packet_digest=first_packet["packet_digest"],
+        expected_checks=EVIDENCE.FIRST_LAUNCH_CHECKS,
+        route=ROUTE,
+        launch_sequence=1,
+        task_root=Path(first_session["task_root"]),
+    )
+    second_human = EVIDENCE.validate_human_observation(
+        args.second_human,
+        operation_id=second_session["operation_id"],
+        session_digest=second_session["session_digest"],
+        packet_digest=second_packet["packet_digest"],
+        expected_checks=EVIDENCE.SECOND_LAUNCH_CHECKS,
+        route=ROUTE,
+        launch_sequence=2,
+        task_root=Path(second_session["task_root"]),
+    )
     technical = [
         first_packet.get("technical_disposition"),
         second_packet.get("technical_disposition"),
@@ -913,11 +1024,9 @@ def parser() -> argparse.ArgumentParser:
     )
     prepare_parser.add_argument("--operation-id", required=True)
     prepare_parser.add_argument("--harness", required=True, type=Path)
-    approval_parser = commands.add_parser("approve-plan")
-    approval_parser.add_argument("--config", required=True, type=Path)
-    approval_parser.add_argument("--operation-id", required=True)
-    approval_parser.add_argument("--plan", required=True, type=Path)
-    approval_parser.add_argument("--out", required=True, type=Path)
+    prepare_parser.add_argument(
+        "--operator-attestation", action="append", default=[]
+    )
     human_parser = commands.add_parser("human")
     human_parser.add_argument("--config", required=True, type=Path)
     human_parser.add_argument(
@@ -925,13 +1034,9 @@ def parser() -> argparse.ArgumentParser:
     )
     human_parser.add_argument("--session", required=True, type=Path)
     human_parser.add_argument("--packet", required=True, type=Path)
+    human_parser.add_argument("--check", action="append", default=[])
     human_parser.add_argument(
-        "--disposition",
-        required=True,
-        choices=("Pass", "Fail", "Inconclusive"),
-    )
-    human_parser.add_argument(
-        "--false-check", action="append", default=[]
+        "--check-note", action="append", default=[]
     )
     human_parser.add_argument("--notes", default="")
     human_parser.add_argument("--out", required=True, type=Path)
@@ -952,8 +1057,6 @@ def main() -> int:
         result = stage(args)
     elif args.command == "prepare":
         result = prepare(args)
-    elif args.command == "approve-plan":
-        result = approve_plan(args)
     elif args.command == "human":
         result = human(args)
     else:
