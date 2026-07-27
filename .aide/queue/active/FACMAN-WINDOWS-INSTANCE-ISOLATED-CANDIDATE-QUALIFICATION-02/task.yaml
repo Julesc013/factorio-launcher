@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
 title: Qualify the exact accepted instance-isolated harness
-status: active
-lifecycle_state: active
-planning_state: active
+status: verified
+lifecycle_state: verified
+planning_state: verified
 created_at: 2026-07-26T20:12:43Z
 owner: unassigned
 objective: >
@@ -56,14 +56,18 @@ closeout_checklist:
   - no required obligation was skipped
   - structured commit check passes
 active_at: 2026-07-26T21:03:21Z
-updated_at: 2026-07-27T04:12:00Z
+updated_at: 2026-07-27T04:31:50Z
+verified_at: 2026-07-27T04:31:50Z
 reactivated_at: 2026-07-27T03:57:23Z
-implementation_state: evidence_complete
+implementation_state: evidence_verified
 local_validation_state: passed
-hosted_validation_state: pending
+hosted_validation_state: passed
+evidence_revision: dbaba5976e13c8e9c6d02aba137f884e30ab152f
+merged_revision: 6f9ddb4123f0f51e0641a493ed2372025dfb18dd
+pull_request: 85
 remote_source_closure_sha256: 48d6444f620d3f1791104822436a6990093ee6377a73844630de568716180409
 qualification_digest: c73b3b41799246516fcc130fc631f64a80fcd956fd4cf5cb5eb3f92a39b12beb
 qualification_binding_sha256: 0bb183c2888c75bf93f6fdb850819323b0772e1ce75a3b5ea2886c2b308bfa31
 qualification_report_sha256: 631e043319534da8ddccab60ea7e88ea2be24416b15bce855fcf16d3b9ef2c10
 staging_state: passed_without_prepare
-result: LOCAL_PASS_PENDING_HOSTED_REVIEW
+result: PASS

@@ -1,11 +1,10 @@
 # Changed files
 
-Activation-only closeout:
+Qualification closeout:
 
 - canonical project status and generated contributor surfaces;
-- archived `FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01`;
-- activated `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01`;
-- phase/state validation tests.
+- verified `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02`;
+- exact qualification/source-closure binding on this blocked human WorkUnit.
 
 No runtime, candidate, observer, policy, permit, route, or evidence-classifier
-implementation changed during activation.
+implementation changed during qualification closeout.
