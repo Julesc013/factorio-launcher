@@ -130,7 +130,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.
 - The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.
 - Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.
-- The Windows instance-isolated candidate is technically complete without a real Factorio run or human verdict; its proof binds the previous Universal Launcher revision and requires revalidation after the client transport extraction.
+- The repaired Windows instance-isolated candidate is remotely reconstructible, hash-qualified and staged against the published Universal Launcher and Universal Setup pins; the fresh human verdict remains unperformed.
 - The published operation-outcome contract and product/evidence runtime separation are accepted; a fresh human-controlled instance-isolated Play revalidation is active without product Play authority.
 - The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.

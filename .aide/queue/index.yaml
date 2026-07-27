@@ -28,8 +28,8 @@ items:
     task: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/task.yaml
     evidence: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/evidence
   - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
-    status: active
-    lifecycle_state: active
+    status: verified
+    lifecycle_state: verified
     title: Qualify the exact accepted instance-isolated harness
     task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/task.yaml
     evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/evidence

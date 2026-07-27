@@ -1,7 +1,5 @@
 # Remaining risks
 
-- Hosted exact-branch validation is pending; local qualification evidence
-  cannot promote itself.
 - The staged root is only an exact technical handoff. `prepare`, observer
   capture, permit issuance, Factorio execution and the human verdict remain
   separate and unperformed.

@@ -1,12 +1,11 @@
 # Remaining risks
 
-The WorkUnit cannot proceed to the human session until the repaired candidate
-is qualified from three fresh remote clones and an evidence-only coordinator
-binds the exact instance-isolated policy, plan, packet and verdict law.
+The repaired candidate is qualified from three fresh remote clones and staged
+under the exact instance-isolated coordinator. These technical prerequisites
+do not constitute a human Play result.
 
-After those technical prerequisites, real Factorio execution and the
-Play-to-menu observation still require an explicit human-controlled evidence
-session.
+Coordinator `prepare`, real Factorio execution and Play-to-menu observation
+still require an explicit human-controlled evidence session.
 
 No prior observer baseline, permit, candidate packet, technical packet, or
 human observation may be reused as current evidence. A new candidate must be

@@ -1,6 +1,6 @@
 # Validation
 
-Status: LOCAL PASS; HOSTED REVIEW PENDING.
+Status: PASS.
 
 ## Fresh remote source closure
 
@@ -150,3 +150,14 @@ The coordinator `prepare` command was not invoked. No permit was issued, no
 Factorio process was started, no observer or baseline evidence was captured,
 no human observation or verdict was recorded, and no route or authority was
 promoted.
+
+## Hosted acceptance
+
+PR 85 passed the complete duplicated hosted matrix at exact evidence revision
+`dbaba5976e13c8e9c6d02aba137f884e30ab152f`, including Linux native,
+macOS native CLI, Windows native package, application-kit compilation, Linux
+coverage, C/C++, C#, Python, policy and CodeQL checks. It merged to `dev` as
+`6f9ddb4123f0f51e0641a493ed2372025dfb18dd`.
+
+This WorkUnit is verified. Its result qualifies only the exact candidate and
+handoff; it is not a human Play verdict or product authority.
