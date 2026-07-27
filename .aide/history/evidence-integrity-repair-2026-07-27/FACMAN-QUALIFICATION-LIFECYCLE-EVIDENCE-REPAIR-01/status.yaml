@@ -1,14 +1,14 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T21:19:52Z
 active_at: 2026-07-26T21:19:52Z
 updated_at: 2026-07-27T03:57:23Z
 verified_at: 2026-07-27T03:57:23Z
 result: PASS
-evidence_path: .aide/queue/active/FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01/evidence/
+evidence_path: .aide/history/evidence-integrity-repair-2026-07-27/FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01/evidence/
 implementation_state: implemented
 implementation_revision: f9b80e080569b7c67d09ef199912d4ce5945eca6
 evidence_revision: 0a2eaa3867496185782234b1d76cf73aa0ab51af
@@ -18,3 +18,6 @@ clean_package_validation_state: passed
 hosted_validation_state: passed
 authority_promotion: false
 factorio_execution: false
+reviewed_at: 2026-07-27T12:43:49Z
+closed_at: 2026-07-27T12:43:50Z
+archived_at: 2026-07-27T12:43:50Z

@@ -10,17 +10,89 @@ import hashlib
 import json
 import re
 import shutil
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-STATES = ("planned", "active", "implemented", "verified", "reviewed", "closed", "archived", "blocked")
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import aide_queue_records
+
+STATES = (
+    "planned",
+    "ready",
+    "active_automated",
+    "awaiting_operator",
+    "blocked_defect",
+    "blocked_external",
+    "verified_pending_closeout",
+    "superseded",
+    "active",
+    "implemented",
+    "verified",
+    "reviewed",
+    "closed",
+    "archived",
+    "blocked",
+)
 TRANSITIONS = {
     "start": ({"planned"}, "active"),
-    "verify": ({"active", "implemented"}, "verified"),
-    "review": ({"verified"}, "reviewed"),
+    "verify": (
+        {"active", "active_automated", "implemented"},
+        "verified_pending_closeout",
+    ),
+    "review": ({"verified", "verified_pending_closeout"}, "reviewed"),
     "close": ({"reviewed"}, "closed"),
-    "block": ({"planned", "active", "implemented", "verified", "reviewed"}, "blocked"),
+    "block": (
+        {
+            "planned",
+            "ready",
+            "active",
+            "active_automated",
+            "implemented",
+            "verified",
+            "verified_pending_closeout",
+            "reviewed",
+        },
+        "blocked",
+    ),
+    "await-operator": (
+        {
+            "planned",
+            "ready",
+            "active",
+            "active_automated",
+            "implemented",
+            "verified",
+            "verified_pending_closeout",
+            "reviewed",
+            "blocked",
+            "blocked_defect",
+            "blocked_external",
+        },
+        "awaiting_operator",
+    ),
+    "supersede": (
+        {
+            "planned",
+            "ready",
+            "active",
+            "active_automated",
+            "implemented",
+            "verified",
+            "verified_pending_closeout",
+            "reviewed",
+            "closed",
+            "blocked",
+            "blocked_defect",
+            "blocked_external",
+            "awaiting_operator",
+        },
+        "superseded",
+    ),
 }
 TASK_ID = re.compile(r"^[A-Z0-9][A-Z0-9._-]{2,127}$")
 
@@ -222,8 +294,8 @@ def rebuild_history_index(root: Path, checkpoint: str) -> None:
 
 def archive(root: Path, task_id: str, checkpoint: str) -> Path:
     path = locate_mutable(root, task_id)
-    if state_for(path) != "closed":
-        raise ValueError("only closed tasks may be archived")
+    if state_for(path) not in {"closed", "superseded"}:
+        raise ValueError("only closed or superseded tasks may be archived")
     for filename in ("task.yaml", "status.yaml"):
         target = path / filename
         text = target.read_text(encoding="utf-8")
@@ -260,43 +332,15 @@ def queue_record(path: Path, queue_root: Path) -> dict[str, str]:
 
 
 def mutable_queue_records(lane: Path) -> list[Path]:
-    records: list[Path] = []
-    for path in sorted(candidate for candidate in lane.iterdir() if candidate.is_dir()):
-        task_exists = (path / "task.yaml").is_file()
-        status_exists = (path / "status.yaml").is_file()
-        if not task_exists and not status_exists:
-            # Compaction may intentionally retain an evidence-only placeholder.
-            # It is not a mutable queue record and must not block unrelated work.
-            continue
-        if task_exists != status_exists:
-            raise ValueError(f"incomplete mutable queue record: {path.name}")
-        records.append(path)
-    return records
+    return aide_queue_records.mutable_record_paths(lane)
 
 
 def rebuild_queue_index(root: Path) -> None:
     queue = root / ".aide" / "queue"
     for lane in ("active", "next"):
         (queue / lane).mkdir(parents=True, exist_ok=True)
-    records = []
-    for lane in ("active", "next"):
-        records.extend(queue_record(path, queue) for path in mutable_queue_records(queue / lane))
-    lines = [
-        "schema_version: aide.queue-index.v1",
-        "profile: .aide/profile.yaml",
-        "canonical_source: .aide/queue/{active,next}",
-        "default_concurrency: 1",
-        "items:",
-    ]
-    if not records:
-        lines.append("  []")
-    for record in records:
-        lines.extend([
-            f"  - id: {record['id']}",
-            f"    status: {record['status']}",
-            f"    lifecycle_state: {record['lifecycle_state']}",
-            f"    title: {record['title']}",
-            f"    task: {record['task']}",
-            f"    evidence: {record['evidence']}",
-        ])
-    (queue / "index.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    records = aide_queue_records.read_queue_records(queue)
+    (queue / "index.yaml").write_text(
+        aide_queue_records.render_queue_index(queue, records),
+        encoding="utf-8",
+    )

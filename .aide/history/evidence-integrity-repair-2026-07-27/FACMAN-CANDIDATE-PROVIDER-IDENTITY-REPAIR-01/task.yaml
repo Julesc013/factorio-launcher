@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01
 title: Generate exact candidate provider revision evidence
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T18:51:00Z
 owner: unassigned
 objective: >
@@ -80,3 +80,6 @@ active_at: 2026-07-26T18:51:00Z
 verified_at: 2026-07-26T18:52:35Z
 implementation_state: implemented
 result: PASS
+reviewed_at: 2026-07-27T12:43:45Z
+closed_at: 2026-07-27T12:43:45Z
+archived_at: 2026-07-27T12:43:46Z

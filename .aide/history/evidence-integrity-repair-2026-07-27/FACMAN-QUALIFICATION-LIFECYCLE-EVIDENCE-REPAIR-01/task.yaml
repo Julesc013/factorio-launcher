@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01
 title: Bind exact current installation evidence during qualification staging
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T21:19:52Z
 active_at: 2026-07-26T21:19:52Z
 updated_at: 2026-07-27T03:57:23Z
@@ -79,3 +79,6 @@ evidence_revision: 0a2eaa3867496185782234b1d76cf73aa0ab51af
 merged_revision: d1a3c2029a4ae21c58eda34d7011938bf7bf04cb
 implementation_state: verified
 result: PASS
+reviewed_at: 2026-07-27T12:43:49Z
+closed_at: 2026-07-27T12:43:50Z
+archived_at: 2026-07-27T12:43:50Z

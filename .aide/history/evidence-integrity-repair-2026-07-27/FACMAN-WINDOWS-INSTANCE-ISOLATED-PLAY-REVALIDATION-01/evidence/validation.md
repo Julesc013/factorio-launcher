@@ -1,5 +1,20 @@
 # Validation
 
+## Supersession boundary
+
+This WorkUnit was `superseded_before_prepare`.
+
+- coordinator `prepare` invoked: `false`;
+- permit issued: `false`;
+- Factorio started: `false`;
+- observer started: `false`;
+- baseline captured: `false`;
+- human verdict: `unset`;
+- authority promotion: `false`.
+
+The staged qualification remains historical evidence for its exact source. It
+is not reusable as current qualification after the verdict-protocol repair.
+
 Status: TECHNICAL QUALIFICATION PASS; HUMAN SESSION NOT STARTED.
 
 The exact repaired candidate is now remotely reconstructible, qualified and

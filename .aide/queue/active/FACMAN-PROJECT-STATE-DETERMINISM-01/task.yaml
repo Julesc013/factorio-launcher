@@ -1,0 +1,75 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-PROJECT-STATE-DETERMINISM-01
+title: Make queue and generated project state deterministic
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-07-27T12:42:26Z
+owner: unassigned
+objective: >
+  Unify complete queue-record readers, ignore empty directories, reject partial or invalid records, archive verified tasks, distinguish operator waiting from defects, and derive scorecard counts without changing runtime or evidence authority.
+allowed_paths:
+  - .aide/scripts/aide_lifecycle.py
+  - .aide/scripts/aide_lite.py
+  - .aide/queue/**
+  - .aide/history/evidence-integrity-repair-2026-07-27/**
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - README.md
+  - docs/roadmap.md
+  - docs/platform/support_matrix.md
+  - docs/release/checkpoints/README.md
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tools/aide_queue_records.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_compaction_check.py
+  - tools/project_state.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+affected_native_targets:
+  - facman_client_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-27T12:42:27Z
+verified_pending_closeout_at: 2026-07-27T12:58:53Z
+implementation_state: implemented
+result: PASS

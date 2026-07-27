@@ -60,15 +60,15 @@ native_direction:
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
         self.assertIn(
-            "phase: windows_instance_isolated_play_revalidation (active)",
+            "phase: project_state_determinism (active)",
             text,
         )
         self.assertIn(
-            "active_work_unit: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "active_work_unit: FACMAN-PROJECT-STATE-DETERMINISM-01",
             text,
         )
         self.assertIn(
-            "next_work_unit: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+            "next_work_unit: FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

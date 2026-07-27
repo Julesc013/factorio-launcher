@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01
 title: M2 WU10 operator live-target verdict
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-14T19:46:52Z
 owner: unassigned
 objective: >
@@ -59,3 +59,6 @@ active_at: 2026-07-14T19:46:52Z
 verified_at: 2026-07-14T19:58:10Z
 implementation_state: implemented
 result: PASS
+reviewed_at: 2026-07-27T12:43:54Z
+closed_at: 2026-07-27T12:43:54Z
+archived_at: 2026-07-27T12:43:55Z

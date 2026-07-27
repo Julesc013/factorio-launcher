@@ -1,11 +1,11 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T20:12:43Z
 result: PASS
-evidence_path: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/evidence/
+evidence_path: .aide/history/evidence-integrity-repair-2026-07-27/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/evidence/
 active_at: 2026-07-26T20:12:43Z
 updated_at: 2026-07-26T20:38:39Z
 verified_at: 2026-07-26T21:03:21Z
@@ -15,3 +15,6 @@ local_validation_state: passed
 hosted_validation_state: passed
 authority_promotion: false
 factorio_execution: false
+reviewed_at: 2026-07-27T12:43:46Z
+closed_at: 2026-07-27T12:43:47Z
+archived_at: 2026-07-27T12:43:47Z

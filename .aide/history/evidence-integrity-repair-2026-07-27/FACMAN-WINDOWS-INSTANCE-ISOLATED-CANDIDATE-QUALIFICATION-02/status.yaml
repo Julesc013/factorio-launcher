@@ -1,11 +1,11 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
-status: verified
-lifecycle_state: verified
-planning_state: verified
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-07-26T20:12:43Z
 result: PASS
-evidence_path: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/evidence/
+evidence_path: .aide/history/evidence-integrity-repair-2026-07-27/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/evidence/
 active_at: 2026-07-26T21:03:21Z
 updated_at: 2026-07-27T04:31:50Z
 verified_at: 2026-07-27T04:31:50Z
@@ -23,3 +23,6 @@ qualification_report_sha256: 631e043319534da8ddccab60ea7e88ea2be24416b15bce855fc
 staging_state: passed_without_prepare
 authority_promotion: false
 factorio_execution: false
+reviewed_at: 2026-07-27T12:43:52Z
+closed_at: 2026-07-27T12:43:53Z
+archived_at: 2026-07-27T12:43:53Z

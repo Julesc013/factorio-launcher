@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+  "active_work_unit": "FACMAN-PROJECT-STATE-DETERMINISM-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -476,15 +476,23 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "windows-instance-isolated-play-revalidation",
+  "current_checkpoint": "project-state-determinism",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
-    "factorio_launcher": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
+    "canonical_main": "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5",
+    "factorio_launcher": "a9321ef281d28bd1d1af8894c0e67da3744c4e1d",
+    "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
+    "observed_branch_head": "a9321ef281d28bd1d1af8894c0e67da3744c4e1d",
+    "qualification_evidence": "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
+    "qualification_integration": "6f9ddb4123f0f51e0641a493ed2372025dfb18dd",
+    "qualification_source": "d1a3c2029a4ae21c58eda34d7011938bf7bf04cb",
+    "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
+    "truth_closeout": "a9321ef281d28bd1d1af8894c0e67da3744c4e1d",
     "universal_launcher": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
     "universal_setup": "3f8489275077347c2918f3bb03614ec6431362ff"
   },
   "execution": {
-    "current_gate_status": "fresh_candidate_revalidation_requires_operator_pass_fail_inconclusive",
+    "current_gate_status": "revalidation_01_superseded_before_prepare_integrity_repairs_active",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -492,7 +500,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "fresh_human_controlled_instance_isolated_play_revalidation_active_no_product_play_authority",
+    "reason": "evidence_integrity_repairs_active_before_prepare_no_product_play_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -1228,8 +1236,8 @@
     "Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.",
     "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
     "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
-    "The repaired Windows instance-isolated candidate is remotely reconstructible, hash-qualified and staged against the published Universal Launcher and Universal Setup pins; the fresh human verdict remains unperformed.",
-    "The published operation-outcome contract and product/evidence runtime separation are accepted; a fresh human-controlled instance-isolated Play revalidation is active without product Play authority.",
+    "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
+    "No permit, Factorio process, observer, baseline, or human verdict was created by revalidation 01; deterministic project-state repair is active without product Play authority.",
     "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
     "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
@@ -2175,32 +2183,41 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+    "current_work_unit": "FACMAN-PROJECT-STATE-DETERMINISM-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
-    "phase": "windows_instance_isolated_play_revalidation",
+    "next_work_unit": "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
+    "phase": "project_state_determinism",
     "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "runtime_evidence_separation_accepted_fresh_instance_isolated_play_revalidation_active_no_product_authority"
+    "truth_scope": "revalidation_01_superseded_before_prepare_project_state_determinism_active_no_product_authority"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
     "factorio_binding": {
       "pin_kind": "historical_proof_baseline",
+      "reachability": "",
+      "remote": "",
+      "required_ref": "",
       "revision": "2c2cce644b674d12227a194a77bce5a667fed721",
       "source": "factorio-launcher/runtime/factorio"
     },
     "universal_launcher": {
       "pin_kind": "provider_revision",
+      "reachability": "required_for_source_closure",
+      "remote": "https://github.com/Julesc013/universal-launcher.git",
+      "required_ref": "refs/heads/main",
       "revision": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
       "source": "universal-launcher"
     },
     "universal_setup": {
       "pin_kind": "provider_revision",
+      "reachability": "required_for_source_closure",
+      "remote": "https://github.com/Julesc013/universal-setup.git",
+      "required_ref": "refs/heads/main",
       "revision": "3f8489275077347c2918f3bb03614ec6431362ff",
       "source": "universal-setup"
     }
@@ -2218,19 +2235,14 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 61,
+    "archived_task_count": 69,
     "counts": {
-      "blocked": 3,
+      "blocked": 2,
       "planned": 1,
-      "verified": 7
+      "verified_pending_closeout": 1
     },
+    "current": null,
     "records": [
-      {
-        "id": "FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01",
-        "lifecycle_state": "verified",
-        "queue": "active",
-        "status": "verified"
-      },
       {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
         "lifecycle_state": "blocked",
@@ -2238,52 +2250,16 @@
         "status": "blocked"
       },
       {
-        "id": "FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01",
-        "lifecycle_state": "verified",
+        "id": "FACMAN-PROJECT-STATE-DETERMINISM-01",
+        "lifecycle_state": "verified_pending_closeout",
         "queue": "active",
-        "status": "verified"
-      },
-      {
-        "id": "FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01",
-        "lifecycle_state": "verified",
-        "queue": "active",
-        "status": "verified"
-      },
-      {
-        "id": "FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01",
-        "lifecycle_state": "verified",
-        "queue": "active",
-        "status": "verified"
-      },
-      {
-        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01",
-        "lifecycle_state": "verified",
-        "queue": "active",
-        "status": "verified"
-      },
-      {
-        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02",
-        "lifecycle_state": "verified",
-        "queue": "active",
-        "status": "verified"
-      },
-      {
-        "id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
-        "lifecycle_state": "blocked",
-        "queue": "active",
-        "status": "blocked"
+        "status": "verified_pending_closeout"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
-      },
-      {
-        "id": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01",
-        "lifecycle_state": "verified",
-        "queue": "active",
-        "status": "verified"
       },
       {
         "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
@@ -2315,7 +2291,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "runtime_evidence_separation_accepted_fresh_human_play_revalidation_no_product_authority",
+    "safety_authority": "revalidation_superseded_before_prepare_evidence_integrity_repairs_no_product_authority",
     "user_validation": "not_started",
     "user_workflow": "advanced_command_surface_only"
   },
@@ -2326,6 +2302,12 @@
   },
   "safe_beta": false,
   "schema": "facman.project_state.v2",
+  "scorecard": {
+    "accepted_real_play_routes": 0,
+    "observed_player_journeys": 0,
+    "published_first_party_pins": 3,
+    "silent_foreign_mutations": 0
+  },
   "transport_outcome_semantics": {
     "aide_validation": "pass",
     "appkit_process_transport": "accepted_hosted_compile",
@@ -2615,5 +2597,19 @@
     "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
     "writable_boundary": "exact stable FacMan-owned instance directory object and descendants",
     "writable_resource_count": 7
+  },
+  "windows_instance_isolated_play_revalidation_01": {
+    "authority_promotion": false,
+    "baseline_captured": false,
+    "coordinator_prepare": false,
+    "coordinator_stage": "passed_historical",
+    "factorio_started": false,
+    "human_verdict": "unset",
+    "observer_started": false,
+    "permit_issued": false,
+    "route_authority": false,
+    "status": "superseded_before_prepare",
+    "superseded_by": "FACMAN-PROJECT-STATE-DETERMINISM-01",
+    "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01"
   }
 }

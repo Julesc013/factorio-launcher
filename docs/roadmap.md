@@ -6,9 +6,9 @@ leaving setup mutation to Universal Setup.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The active phase is **windows_instance_isolated_play_revalidation** and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01`.
+The active phase is **project_state_determinism** and the active WorkUnit is `FACMAN-PROJECT-STATE-DETERMINISM-01`.
 
-1. Complete `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01`.
+1. Complete `FACMAN-PROJECT-STATE-DETERMINISM-01`.
 2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.
 3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.
 4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.

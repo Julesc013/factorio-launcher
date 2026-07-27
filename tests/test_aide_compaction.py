@@ -11,7 +11,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from tools import aide_compaction_check, project_state
+from tools import aide_compaction_check, aide_queue_records, project_state
 
 sys.path.insert(0, str(project_state.ROOT / ".aide" / "scripts"))
 import aide_lifecycle
@@ -31,6 +31,7 @@ class AideCompactionTests(unittest.TestCase):
             "hermetic_standalone_play_policy",
             "hermetic_standalone_play_candidate",
             "hermetic_standalone_play_verdict",
+            "windows_instance_isolated_play_revalidation_01",
             "m2_live_portable_setup",
             "m2_wu1_target_policy",
             "m2_wu2_public_lifecycle",
@@ -57,10 +58,53 @@ class AideCompactionTests(unittest.TestCase):
             "execution_modes", "capabilities",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
-            "machine_protocol", "execution", "release", "validation", "safe_beta",
+            "machine_protocol", "scorecard", "execution", "release", "validation", "safe_beta",
         ):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
+
+    def test_scorecard_and_revision_roles_are_derived_and_unambiguous(self) -> None:
+        data = project_state.collect()
+        self.assertEqual(
+            {
+                "published_first_party_pins": 3,
+                "accepted_real_play_routes": 0,
+                "silent_foreign_mutations": 0,
+                "observed_player_journeys": 0,
+            },
+            data["scorecard"],
+        )
+        revisions = data["current_revisions"]
+        self.assertEqual(
+            "d03b42e8d6b22459fd9a9b8feff05523f942577a",
+            revisions["runtime_candidate"],
+        )
+        self.assertEqual(
+            "d1a3c2029a4ae21c58eda34d7011938bf7bf04cb",
+            revisions["qualification_source"],
+        )
+        self.assertEqual(
+            "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
+            revisions["qualification_evidence"],
+        )
+        self.assertNotEqual(
+            revisions["observed_branch_head"],
+            revisions["runtime_candidate"],
+        )
+
+    def test_revalidation_01_is_superseded_before_any_authority_or_evidence(self) -> None:
+        record = project_state.collect()[
+            "windows_instance_isolated_play_revalidation_01"
+        ]
+        self.assertEqual("superseded_before_prepare", record["status"])
+        self.assertFalse(record["coordinator_prepare"])
+        self.assertFalse(record["permit_issued"])
+        self.assertFalse(record["factorio_started"])
+        self.assertFalse(record["observer_started"])
+        self.assertFalse(record["baseline_captured"])
+        self.assertEqual("unset", record["human_verdict"])
+        self.assertFalse(record["route_authority"])
+        self.assertFalse(record["authority_promotion"])
 
     def test_instance_product_model_is_menu_first_and_supersedes_world_aggregate(self) -> None:
         architecture = (
@@ -93,7 +137,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "windows-instance-isolated-play-revalidation",
+            "project-state-determinism",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -101,7 +145,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "FACMAN-PROJECT-STATE-DETERMINISM-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -109,7 +153,7 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+            "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -141,7 +185,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "runtime_evidence_separation_accepted_fresh_instance_isolated_play_revalidation_active_no_product_authority",
+            "revalidation_01_superseded_before_prepare_project_state_determinism_active_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -894,11 +938,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "windows-instance-isolated-play-revalidation",
+            "project-state-determinism",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+            "FACMAN-PROJECT-STATE-DETERMINISM-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -998,8 +1042,8 @@ class AideCompactionTests(unittest.TestCase):
             policy.mkdir(parents=True)
             source = project_state.ROOT / "contracts" / "policy" / "test_impact.v1.json"
             policy.joinpath("test_impact.v1.json").write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
-            compacted = root / ".aide" / "queue" / "next" / "COMPACTED-EVIDENCE-ONLY"
-            compacted.joinpath("evidence").mkdir(parents=True)
+            compacted = root / ".aide" / "queue" / "next" / "EMPTY-UNTRACKED-DIRECTORY"
+            compacted.mkdir(parents=True)
             path = aide_lifecycle.create(root, "TEST-LIFECYCLE-01", "Lifecycle proof", "Prove state transitions.", ["docs/"])
             self.assertEqual("planned", aide_lifecycle.state_for(path))
             self.assertEqual("active", aide_lifecycle.transition(root, "TEST-LIFECYCLE-01", "start"))
@@ -1008,7 +1052,11 @@ class AideCompactionTests(unittest.TestCase):
                 ".aide/queue/active/TEST-LIFECYCLE-01/evidence/",
                 active.joinpath("status.yaml").read_text(encoding="utf-8"),
             )
-            for action, expected in (("verify", "verified"), ("review", "reviewed"), ("close", "closed")):
+            for action, expected in (
+                ("verify", "verified_pending_closeout"),
+                ("review", "reviewed"),
+                ("close", "closed"),
+            ):
                 self.assertEqual(expected, aide_lifecycle.transition(root, "TEST-LIFECYCLE-01", action))
             archived = aide_lifecycle.archive(root, "TEST-LIFECYCLE-01", "test-checkpoint")
             self.assertTrue(archived.is_dir())
@@ -1044,6 +1092,47 @@ class AideCompactionTests(unittest.TestCase):
                     aide_lifecycle.hashes(Path(temporary))[name],
                 )
 
+    def test_operator_wait_and_supersession_are_explicit_lifecycle_states(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            policy = root / "contracts" / "policy"
+            policy.mkdir(parents=True)
+            source = project_state.ROOT / "contracts" / "policy" / "test_impact.v1.json"
+            policy.joinpath("test_impact.v1.json").write_text(
+                source.read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            aide_lifecycle.create(
+                root,
+                "TEST-OPERATOR-01",
+                "Operator wait",
+                "Prove the operator lifecycle.",
+                ["docs/"],
+            )
+            aide_lifecycle.transition(root, "TEST-OPERATOR-01", "start")
+            self.assertEqual(
+                "awaiting_operator",
+                aide_lifecycle.transition(
+                    root,
+                    "TEST-OPERATOR-01",
+                    "await-operator",
+                ),
+            )
+            self.assertEqual(
+                "superseded",
+                aide_lifecycle.transition(
+                    root,
+                    "TEST-OPERATOR-01",
+                    "supersede",
+                ),
+            )
+            archived = aide_lifecycle.archive(
+                root,
+                "TEST-OPERATOR-01",
+                "operator-checkpoint",
+            )
+            self.assertTrue(archived.is_dir())
+
     def test_queue_index_rejects_partially_materialized_records(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -1052,6 +1141,79 @@ class AideCompactionTests(unittest.TestCase):
             partial.joinpath("task.yaml").write_text("id: PARTIAL-RECORD\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "incomplete mutable queue record"):
                 aide_lifecycle.rebuild_queue_index(root)
+
+    def test_project_state_ignores_empty_queue_directories_byte_for_byte(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / ".aide" / "queue" / "active").mkdir(parents=True)
+            (root / ".aide" / "queue" / "next").mkdir(parents=True)
+            (root / ".aide" / "history").mkdir(parents=True)
+            before = json.dumps(
+                project_state.queue_state(root),
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            (root / ".aide" / "queue" / "active" / "PHANTOM").mkdir()
+            after = json.dumps(
+                project_state.queue_state(root),
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            self.assertEqual(before, after)
+
+    def test_project_state_rejects_partial_queue_records(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            partial = root / ".aide" / "queue" / "active" / "PARTIAL"
+            partial.mkdir(parents=True)
+            (root / ".aide" / "queue" / "next").mkdir(parents=True)
+            (root / ".aide" / "history").mkdir(parents=True)
+            partial.joinpath("status.yaml").write_text(
+                "task_id: PARTIAL\nlifecycle_state: active_automated\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "incomplete mutable queue record"):
+                project_state.queue_state(root)
+
+    def test_queue_reader_rejects_invalid_lifecycle_and_index_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            queue = root / ".aide" / "queue"
+            task = queue / "active" / "TEST-TASK"
+            task.mkdir(parents=True)
+            (queue / "next").mkdir(parents=True)
+            task.joinpath("task.yaml").write_text(
+                "id: TEST-TASK\ntitle: Test task\n",
+                encoding="utf-8",
+            )
+            task.joinpath("status.yaml").write_text(
+                "task_id: TEST-TASK\nstatus: active\n"
+                "lifecycle_state: invented\nplanning_state: active\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                aide_queue_records.QueueRecordError,
+                "invalid lifecycle state",
+            ):
+                aide_queue_records.read_queue_records(queue)
+            task.joinpath("status.yaml").write_text(
+                "task_id: TEST-TASK\nstatus: active_automated\n"
+                "lifecycle_state: active_automated\n"
+                "planning_state: active_automated\n",
+                encoding="utf-8",
+            )
+            task.joinpath("task.yaml").write_text(
+                "id: TEST-TASK\ntitle: Test task\n"
+                "status: active_automated\n"
+                "lifecycle_state: active_automated\n",
+                encoding="utf-8",
+            )
+            records = aide_queue_records.read_queue_records(queue)
+            queue.joinpath("index.yaml").write_text("stale\n", encoding="utf-8")
+            self.assertEqual(
+                ["queue index disagrees with complete mutable task records"],
+                aide_queue_records.validate_queue_index(queue, records),
+            )
 
 
 if __name__ == "__main__":

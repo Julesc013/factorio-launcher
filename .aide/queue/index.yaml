@@ -9,60 +9,18 @@ items:
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
-  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01
-    status: blocked
-    lifecycle_state: blocked
-    title: Revalidate exact Windows instance-isolated Play candidate
-    task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/evidence
-  - id: FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01
-    status: verified
-    lifecycle_state: verified
-    title: Add an exact instance-isolated operator verdict harness
-    task: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/evidence
-  - id: FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01
-    status: verified
-    lifecycle_state: verified
-    title: Produce exact instance-isolated candidate qualification bindings
-    task: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/evidence
-  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02
-    status: verified
-    lifecycle_state: verified
-    title: Qualify the exact accepted instance-isolated harness
-    task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/task.yaml
-    evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/evidence
-  - id: FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01
-    status: verified
-    lifecycle_state: verified
-    title: Bind exact current installation evidence during qualification staging
-    task: .aide/queue/active/FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01/evidence
-  - id: FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01
-    status: verified
-    lifecycle_state: verified
-    title: Generate exact candidate provider revision evidence
-    task: .aide/queue/active/FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01/evidence
-  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
-    status: verified
-    lifecycle_state: verified
-    title: Qualify exact repaired Windows instance-isolated candidate
-    task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01/evidence
+  - id: FACMAN-PROJECT-STATE-DETERMINISM-01
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
+    title: Make queue and generated project state deterministic
+    task: .aide/queue/active/FACMAN-PROJECT-STATE-DETERMINISM-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-PROJECT-STATE-DETERMINISM-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked
     title: M2 WU10 automated synthetic acceptance result
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/evidence
-  - id: M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01
-    status: verified
-    lifecycle_state: verified
-    title: M2 WU10 operator live-target verdict
-    task: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/task.yaml
-    evidence: .aide/queue/active/M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01/evidence
   - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
     status: planned
     lifecycle_state: planned
