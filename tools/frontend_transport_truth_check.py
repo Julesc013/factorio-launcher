@@ -28,12 +28,13 @@ def validate() -> list[str]:
             problems.append(f"misnamed JSON-RPC client remains: {retired.relative_to(ROOT)}")
 
     windows_transport = (winforms / "CliProcessClient.cs").read_text(encoding="utf-8")
+    windows_transport += (winforms / "CommandModels.cs").read_text(encoding="utf-8")
     windows_form = (winforms / "MainForm.cs").read_text(encoding="utf-8")
     for anchor in (
         "class CliProcessClient",
         "rpc --stdio",
         "RedirectStandardInput",
-        "facman.transport_request.v1",
+        "facman.transport_request.v2",
         "protocol_version",
         "request_id",
         "ReadBoundedAsync(",
@@ -43,6 +44,8 @@ def validate() -> list[str]:
         "CancellationToken",
         "frontend_backend_timeout",
         "frontend_backend_cancelled",
+        "outcome_unknown",
+        "workspace.recovery.inspect",
         "JavaScriptSerializer",
     ):
         if anchor not in windows_transport:
@@ -55,12 +58,13 @@ def validate() -> list[str]:
         problems.append("WinForms command execution can block the UI thread")
 
     appkit_transport = (appkit / "CliProcessClient.mm").read_text(encoding="utf-8")
+    appkit_transport += (appkit / "CommandClient.mm").read_text(encoding="utf-8")
     appkit_window = (appkit / "MainWindowController.m").read_text(encoding="utf-8")
     for anchor in (
         "FacManCliProcessClient",
         '@[ @"rpc", @"--stdio" ]',
         "setStandardInput:",
-        "facman.transport_request.v1",
+        "facman.transport_request.v2",
         "protocol_version",
         "request_id",
         "dispatch_group_async(",
@@ -72,6 +76,8 @@ def validate() -> list[str]:
         "frontend_backend_timeout",
         "frontend_backend_cancelled",
         "cancelCurrentCommand",
+        "outcomeUnknownWithCommandId:",
+        "workspace.recovery.inspect",
     ):
         if anchor not in appkit_transport:
             problems.append(f"AppKit CLI process transport missing: {anchor}")

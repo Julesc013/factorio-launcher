@@ -4,10 +4,12 @@
 #include "fl_path_safety.h"
 #include "flb_factorio_launch_plan.h"
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 namespace launch = facman::factorio::launch;
@@ -55,10 +57,22 @@ int main()
     instance.instance_id = "snowman";
     instance.profile_id = "gui";
     instance.local_data_root = instance_root;
+    instance.product_id = "factorio";
+    instance.install_id = "fixture";
+    instance.binding_revision = "binding-1";
     launch::InstallLaunchRef install;
     install.root = install_root;
     install.executable = install_root / "factorio-test";
     install.ownership = "foreign-owned";
+    install.install_id = "fixture";
+    install.product_id = "factorio";
+    install.exact_product_version = "2.0.77";
+    install.lifecycle_status = "active";
+    install.last_verification_identity = "verification-1";
+    install.state_revision = "install-state-1";
+    install.verification_status = "pass";
+    const std::vector<fs::path> protected_factorio_roots = {
+        root / "protected-user-data" / ".factorio"};
     fs::path config_file = instance_root / "config" / "config.ini";
     write_text(config_file, launch::effective_config_ini(instance, install));
 
@@ -70,16 +84,83 @@ int main()
         config.write_data != fs::absolute(instance_root).lexically_normal()) {
         return 10;
     }
-    launch::LaunchPreflightResult preflight = launch::preflight_launch(instance, install);
+    launch::LaunchPreflightResult preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
     if (!preflight.ok || !preflight.problems.empty()) {
         return 11;
+    }
+    instance.install_id = "other-install";
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
+    if (preflight.ok ||
+        !has_problem(preflight, "Universal Launcher reference graph is invalid")) {
+        return 14;
+    }
+    instance.install_id = "fixture";
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
+    if (!preflight.ok || !preflight.problems.empty()) {
+        return 15;
+    }
+
+    for (const char* lifecycle : {
+            "verification_failed",
+            "recovery_required",
+            "retired",
+            "uninstalled",
+            "missing",
+            "unknown",
+            "unsupported"}) {
+        install.lifecycle_status = lifecycle;
+        preflight = launch::preflight_launch(
+            instance, install, "launch_plan.preflight", protected_factorio_roots);
+        if (preflight.ok ||
+            preflight.strict_refusal_code != "launcher_install_not_active" ||
+            !has_problem(preflight, std::string("lifecycle is not active: ") + lifecycle)) {
+            return 40;
+        }
+    }
+    install.lifecycle_status = "invented_active_alias";
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
+    if (preflight.ok ||
+        preflight.strict_refusal_code != "launcher_reference_invalid" ||
+        !has_problem(preflight, "reference graph is invalid")) {
+        return 47;
+    }
+    install.lifecycle_status = "active";
+    install.verification_status = "structural";
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
+    if (preflight.ok ||
+        preflight.strict_refusal_code != "launcher_install_unverified" ||
+        !has_problem(preflight, "no current passing verification")) {
+        return 41;
+    }
+    install.verification_status = "pass";
+    install.last_verification_identity.clear();
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
+    if (preflight.ok ||
+        preflight.strict_refusal_code != "launcher_reference_missing" ||
+        !has_problem(preflight, "reference evidence is incomplete")) {
+        return 42;
+    }
+    install.last_verification_identity = "verification-1";
+    const launch::LaunchPlanResult active_plan =
+        launch::build_launch_plan(instance, install, "launch_plan.build");
+    if (active_plan.strict_refusal_code == "launcher_reference_missing" ||
+        active_plan.strict_refusal_code == "launcher_install_not_active" ||
+        active_plan.strict_refusal_code == "launcher_install_unverified") {
+        return 43;
     }
 
     write_text(
         config_file,
         "[path]\nread-data=" + fs::absolute(install_root / "data").string() +
         "\nwrite-data=" + fs::absolute(install_root).string() + "\n");
-    preflight = launch::preflight_launch(instance, install);
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
     if (preflight.ok ||
         !has_problem(preflight, "write-data does not match") ||
         !has_problem(preflight, "overlaps the product install root")) {
@@ -87,9 +168,42 @@ int main()
     }
 
     write_text(config_file, "[path]\nwrite-data=" + fs::absolute(instance_root).string() + "\n");
-    preflight = launch::preflight_launch(instance, install);
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
     if (preflight.ok || !has_problem(preflight, "missing read-data")) {
         return 13;
+    }
+    write_text(config_file, launch::effective_config_ini(instance, install));
+
+    fs::path config_alias = instance_root / "config" / "config-alias.ini";
+    std::error_code config_link_error;
+    fs::create_hard_link(config_file, config_alias, config_link_error);
+    if (config_link_error) {
+        return 44;
+    }
+    const launch::EffectiveFactorioConfig linked_config =
+        launch::parse_effective_config(config_file, instance_root / "mods");
+    if (linked_config.ok ||
+        std::find(
+            linked_config.problems.begin(),
+            linked_config.problems.end(),
+            "effective config has an unsafe hard-link identity") ==
+            linked_config.problems.end()) {
+        return 45;
+    }
+    fs::remove(config_alias);
+
+    fs::create_directories(protected_factorio_roots.front());
+    write_text(
+        config_file,
+        "[path]\nread-data=" + fs::absolute(install_root / "data").string() +
+        "\nwrite-data=" + fs::absolute(protected_factorio_roots.front()).string() +
+        "\n");
+    preflight = launch::preflight_launch(
+        instance, install, "launch_plan.preflight", protected_factorio_roots);
+    if (preflight.ok ||
+        !has_problem(preflight, "overlaps a default or global Factorio root")) {
+        return 46;
     }
     write_text(config_file, launch::effective_config_ini(instance, install));
 

@@ -19,7 +19,8 @@ bool LaunchApplicationModule::handles(CommandId command) const noexcept
 ApplicationResult LaunchApplicationModule::execute(
     ApplicationContext& context,
     const ApplicationRequest& request,
-    const CommandAdmissionDecision& admission) const
+    const CommandAdmissionDecision& admission,
+    const std::string&) const
 {
     switch (request.command) {
     case CommandId::launch_plan_build:

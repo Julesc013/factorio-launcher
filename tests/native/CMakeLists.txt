@@ -36,37 +36,114 @@ target_compile_features(flb_factorio_launch_permit_smoke PRIVATE cxx_std_17)
 target_compile_definitions(flb_factorio_launch_permit_smoke PRIVATE
   FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/launch-permit-smoke")
-target_link_libraries(flb_factorio_launch_permit_smoke PRIVATE flb_factorio_instance_static facman_permit_static)
+target_include_directories(flb_factorio_launch_permit_smoke PRIVATE
+  ${FACMAN_GENERATED_INCLUDE_DIR})
+target_link_libraries(flb_factorio_launch_permit_smoke PRIVATE
+  flb_factorio_candidate_projection_static
+  facman_permit_static)
 facman_native_test(facman_hermetic_play_candidate_smoke facman_hermetic_play_candidate_smoke.cpp "fast-unit;contract;security;filesystem;platform")
 target_compile_features(facman_hermetic_play_candidate_smoke PRIVATE cxx_std_17)
 target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
   FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/candidate-smoke")
 target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
-  flb_factorio_launch_static facman_permit_static facman_platform_static)
-add_executable(facman_gate4c_verdict_harness
-  gate4c_verdict_harness.cpp
-  gate4c_observer_broker_windows.cpp)
-target_compile_features(facman_gate4c_verdict_harness PRIVATE cxx_std_17)
-target_compile_definitions(facman_gate4c_verdict_harness PRIVATE
-  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
-  FACMAN_TEST_PYTHON_EXECUTABLE="${Python3_EXECUTABLE}")
-target_link_libraries(facman_gate4c_verdict_harness PRIVATE
-  flb_factorio_instance_static flb_factorio_launch_static
-  facman_permit_static facman_platform_static)
-facman_apply_policies(facman_gate4c_verdict_harness)
-add_test(
-  NAME facman_gate4c_verdict_harness_canonical_smoke
-  COMMAND facman_gate4c_verdict_harness --self-test-observation-digest)
-set_tests_properties(
-  facman_gate4c_verdict_harness_canonical_smoke
-  PROPERTIES LABELS "fast-unit;contract;security")
-add_test(
-  NAME facman_gate4c_verdict_harness_privilege_protocol_smoke
-  COMMAND facman_gate4c_verdict_harness --self-test-privilege-protocol)
-set_tests_properties(
-  facman_gate4c_verdict_harness_privilege_protocol_smoke
-  PROPERTIES LABELS "fast-unit;contract;security;platform")
+  flb_factorio_candidate_policy_static facman_permit_static facman_platform_static)
+if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
+  add_library(facman_evidence_io_static STATIC
+    play_evidence/facman_evidence_io.cpp)
+  target_compile_features(facman_evidence_io_static PUBLIC cxx_std_17)
+  target_include_directories(facman_evidence_io_static PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/play_evidence)
+  target_link_libraries(facman_evidence_io_static PUBLIC
+    facman_archive_static
+    facman_core_static
+    facman_platform_static
+    usk_archive_static)
+  facman_apply_policies(facman_evidence_io_static)
+  add_library(facman::evidence_io ALIAS facman_evidence_io_static)
+
+  add_executable(facman_evidence_probe
+    facman_evidence_probe.cpp)
+  target_compile_features(facman_evidence_probe PRIVATE cxx_std_17)
+  target_compile_definitions(facman_evidence_probe PRIVATE
+    FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}")
+  target_link_libraries(facman_evidence_probe PRIVATE
+    facman_evidence_io_static)
+  facman_apply_policies(facman_evidence_probe)
+  add_test(
+    NAME facman_evidence_probe_smoke
+    COMMAND facman_evidence_probe --self-test
+      ${CMAKE_CURRENT_BINARY_DIR}/evidence-probe-smoke)
+  set_tests_properties(
+    facman_evidence_probe_smoke
+    PROPERTIES LABELS "fast-unit;contract;filesystem;security")
+
+  add_library(facman_play_observer_static STATIC
+    gate4c_observer_broker_windows.cpp)
+  target_compile_features(facman_play_observer_static PUBLIC cxx_std_17)
+  target_include_directories(facman_play_observer_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(facman_play_observer_static PUBLIC facman_platform_static)
+  facman_apply_policies(facman_play_observer_static)
+  add_library(facman::play_observer ALIAS facman_play_observer_static)
+
+  add_custom_target(facman_play_evidence_classification SOURCES
+    ${PROJECT_SOURCE_DIR}/tools/gate4c_verdict_evidence.py
+    ${PROJECT_SOURCE_DIR}/tools/gate4c_verdict_preflight.py
+    ${PROJECT_SOURCE_DIR}/tools/gate4c_verdict_session.py
+    ${PROJECT_SOURCE_DIR}/tools/instance_isolated_verdict_coordinator.py
+    ${PROJECT_SOURCE_DIR}/tools/play_verdict_route.py)
+
+  add_executable(facman_gate4c_verdict_harness
+    gate4c_verdict_harness.cpp)
+  target_compile_features(facman_gate4c_verdict_harness PRIVATE cxx_std_17)
+  target_compile_definitions(facman_gate4c_verdict_harness PRIVATE
+    FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+    FACMAN_TEST_PYTHON_EXECUTABLE="${Python3_EXECUTABLE}")
+  target_link_libraries(facman_gate4c_verdict_harness PRIVATE
+    flb_factorio_candidate_projection_static
+    flb_factorio_candidate_policy_static
+    facman_evidence_io_static
+    facman_play_observer_static
+    facman_permit_static facman_platform_static)
+  add_dependencies(
+    facman_gate4c_verdict_harness
+    facman_play_evidence_classification)
+  facman_apply_policies(facman_gate4c_verdict_harness)
+  add_test(
+    NAME facman_gate4c_verdict_harness_canonical_smoke
+    COMMAND facman_gate4c_verdict_harness --self-test-observation-digest)
+  set_tests_properties(
+    facman_gate4c_verdict_harness_canonical_smoke
+    PROPERTIES LABELS "fast-unit;contract;security")
+  add_test(
+    NAME facman_gate4c_verdict_harness_privilege_protocol_smoke
+    COMMAND facman_gate4c_verdict_harness --self-test-privilege-protocol)
+  set_tests_properties(
+    facman_gate4c_verdict_harness_privilege_protocol_smoke
+    PROPERTIES LABELS "fast-unit;contract;security;platform")
+  add_test(
+    NAME facman_gate4c_verdict_harness_route_binding_smoke
+    COMMAND facman_gate4c_verdict_harness --self-test-route-binding)
+  set_tests_properties(
+    facman_gate4c_verdict_harness_route_binding_smoke
+    PROPERTIES LABELS "fast-unit;contract;security")
+  if(WIN32)
+    add_test(
+      NAME facman_gate4c_verdict_harness_plan_approval_protocol_smoke
+      COMMAND facman_gate4c_verdict_harness
+        --self-test-plan-approval-protocol)
+    set_tests_properties(
+      facman_gate4c_verdict_harness_plan_approval_protocol_smoke
+      PROPERTIES LABELS "fast-unit;contract;security;platform")
+    add_test(
+      NAME facman_gate4c_verdict_harness_power_request_protocol_smoke
+      COMMAND facman_gate4c_verdict_harness
+        --self-test-power-request-protocol)
+    set_tests_properties(
+      facman_gate4c_verdict_harness_power_request_protocol_smoke
+      PROPERTIES LABELS "fast-unit;contract;security;platform")
+  endif()
+endif()
 facman_native_test(flb_factorio_setup_recipe_smoke flb_factorio_setup_recipe_smoke.cpp "fast-unit;security;contract")
 target_compile_features(flb_factorio_setup_recipe_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_setup_recipe_smoke PRIVATE flb_factorio_install_validation_static)
@@ -93,7 +170,7 @@ facman_apply_policies(facman_process_probe)
 facman_native_test(facman_execution_foundation_smoke facman_execution_foundation_smoke.cpp "fast-unit;platform;integration;filesystem")
 target_compile_features(facman_execution_foundation_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_execution_foundation_smoke PRIVATE
-  flb_factorio_launch_static facman_base_static facman_platform_static)
+  flb_factorio_product_execution_static facman_base_static facman_platform_static)
 target_compile_definitions(facman_execution_foundation_smoke PRIVATE
   FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
 add_dependencies(facman_execution_foundation_smoke facman_process_probe)
@@ -174,7 +251,8 @@ target_compile_features(fl_path_safety_smoke PRIVATE cxx_std_17)
 target_link_libraries(fl_path_safety_smoke PRIVATE facman_base_static Threads::Threads)
 facman_native_test(facman_isolation_lock_smoke facman_isolation_lock_smoke.cpp "platform;integration")
 target_compile_features(facman_isolation_lock_smoke PRIVATE cxx_std_17)
-target_link_libraries(facman_isolation_lock_smoke PRIVATE flb_factorio_launch_static facman_base_static)
+target_link_libraries(facman_isolation_lock_smoke PRIVATE
+  flb_factorio_launch_planning_static facman_base_static)
 facman_native_test(facman_diagnostic_traversal_smoke facman_diagnostic_traversal_smoke.cpp "filesystem;integration")
 if(WIN32)
   target_sources(facman_diagnostic_traversal_smoke PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli/facman.manifest)
@@ -187,7 +265,8 @@ if(WIN32)
   target_sources(facman_isolation_probe PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli/facman.manifest)
 endif()
 target_compile_features(facman_isolation_probe PRIVATE cxx_std_17)
-target_link_libraries(facman_isolation_probe PRIVATE flb_factorio_launch_static facman_base_static Threads::Threads)
+target_link_libraries(facman_isolation_probe PRIVATE
+  flb_factorio_launch_planning_static facman_base_static Threads::Threads)
 facman_apply_policies(facman_isolation_probe)
 
 facman_native_test(facman_abi_layout_smoke facman_abi_layout_smoke.cpp "contract;platform")

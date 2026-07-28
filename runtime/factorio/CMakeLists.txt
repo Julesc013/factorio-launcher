@@ -1,15 +1,41 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-add_library(flb_factorio_launch_static STATIC
-  launch/flb_factorio_execution.cpp launch/flb_factorio_launch_plan.cpp
-  launch/flb_factorio_launch_permit.cpp
+add_library(flb_factorio_launch_planning_static STATIC
+  launch/flb_factorio_launch_plan.cpp
+  launch/flb_factorio_launch_permit.cpp)
+target_compile_features(flb_factorio_launch_planning_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_launch_planning_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
+target_link_libraries(flb_factorio_launch_planning_static PUBLIC
+  facman_base_static facman_core_static facman_permit_static facman_platform_static ulk_static)
+add_library(facman::launch_planning ALIAS flb_factorio_launch_planning_static)
+
+add_library(flb_factorio_product_execution_static STATIC
+  launch/flb_factorio_execution.cpp)
+target_compile_features(flb_factorio_product_execution_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_product_execution_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
+target_link_libraries(flb_factorio_product_execution_static PUBLIC
+  facman_base_static facman_core_static facman_platform_static
+  flb_factorio_launch_planning_static)
+add_library(facman::product_execution ALIAS flb_factorio_product_execution_static)
+
+add_library(flb_factorio_candidate_policy_static STATIC
   launch/flb_factorio_candidate_manifest.cpp
   launch/flb_factorio_hermetic_candidate.cpp)
-target_compile_features(flb_factorio_launch_static PUBLIC cxx_std_17)
-target_include_directories(flb_factorio_launch_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
-target_link_libraries(flb_factorio_launch_static PUBLIC
-  facman_base_static facman_core_static facman_permit_static facman_platform_static)
+target_compile_features(flb_factorio_candidate_policy_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_candidate_policy_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
+target_link_libraries(flb_factorio_candidate_policy_static PUBLIC
+  facman_base_static facman_core_static facman_permit_static facman_platform_static
+  flb_factorio_product_execution_static)
+add_library(facman::candidate_policy ALIAS flb_factorio_candidate_policy_static)
+
+# Compatibility-only aggregate. Product composition below selects exact launch
+# concerns and does not use this target.
+add_library(flb_factorio_launch_static INTERFACE)
+target_link_libraries(flb_factorio_launch_static INTERFACE
+  flb_factorio_launch_planning_static
+  flb_factorio_product_execution_static
+  flb_factorio_candidate_policy_static)
 
 add_library(flb_factorio_discovery_static STATIC
   discovery/discovery_service.cpp discovery/flb_factorio_discovery.cpp
@@ -61,12 +87,11 @@ target_compile_features(flb_factorio_saves_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_saves_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/saves ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
 target_link_libraries(flb_factorio_saves_static PUBLIC
   facman_archive_static facman_base_static facman_transaction_static facman_workspace_static
-  flb_factorio_launch_static flb_factorio_modsets_static)
+  flb_factorio_launch_planning_static flb_factorio_modsets_static)
 
 add_library(flb_factorio_instance_static
   instance/flb_factorio_instance_model.cpp
   instance/flb_factorio_permit_projection.cpp
-  instance/flb_factorio_candidate_projection.cpp
   instance/flb_factorio_instance_lifecycle.cpp
   instance/flb_factorio_local_data_import.cpp)
 target_compile_features(flb_factorio_instance_static PUBLIC cxx_std_17)
@@ -76,8 +101,21 @@ target_include_directories(flb_factorio_instance_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/profiles ${CMAKE_CURRENT_SOURCE_DIR}/snapshots)
 target_link_libraries(flb_factorio_instance_static PUBLIC
   facman_archive_static facman_base_static facman_platform_static facman_transaction_static facman_workspace_static
-  flb_factorio_install_model_static flb_factorio_launch_static flb_factorio_modsets_static
+  flb_factorio_install_model_static flb_factorio_launch_planning_static flb_factorio_modsets_static
   flb_factorio_profiles_static flb_factorio_snapshots_static)
+
+add_library(flb_factorio_candidate_projection_static STATIC
+  instance/flb_factorio_candidate_projection.cpp)
+target_compile_features(flb_factorio_candidate_projection_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_candidate_projection_static PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/instance
+  ${CMAKE_CURRENT_SOURCE_DIR}/launch
+  PRIVATE ${FACMAN_GENERATED_INCLUDE_DIR})
+target_link_libraries(flb_factorio_candidate_projection_static PUBLIC
+  facman_base_static facman_platform_static
+  flb_factorio_candidate_policy_static
+  flb_factorio_instance_static)
+add_library(facman::candidate_projection ALIAS flb_factorio_candidate_projection_static)
 
 add_library(flb_factorio_snapshots_static snapshots/flb_factorio_snapshots.cpp)
 target_compile_features(flb_factorio_snapshots_static PUBLIC cxx_std_17)
@@ -85,7 +123,7 @@ target_include_directories(flb_factorio_snapshots_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/snapshots ${CMAKE_CURRENT_SOURCE_DIR}/launch)
 target_link_libraries(flb_factorio_snapshots_static PUBLIC
   facman_archive_static facman_base_static facman_transaction_static facman_workspace_static
-  flb_factorio_launch_static)
+  flb_factorio_launch_planning_static)
 
 add_library(flb_factorio_profiles_static profiles/flb_factorio_profiles.cpp)
 target_compile_features(flb_factorio_profiles_static PUBLIC cxx_std_17)
@@ -103,7 +141,8 @@ target_link_libraries(flb_factorio_server_static PUBLIC
 
 add_library(facman_factorio_model INTERFACE)
 target_link_libraries(facman_factorio_model INTERFACE
-  flb_factorio_discovery_static flb_factorio_diagnostics_static flb_factorio_launch_static
+  flb_factorio_discovery_static flb_factorio_diagnostics_static
+  flb_factorio_launch_planning_static flb_factorio_product_execution_static
   flb_factorio_install_model_static flb_factorio_install_validation_static
   flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
   flb_factorio_snapshots_static)
@@ -120,12 +159,17 @@ add_library(flb_factorio_application_static STATIC
   application/handlers/launch.cpp application/handlers/mods.cpp application/handlers/modsets.cpp
   application/handlers/preferences.cpp application/handlers/product.cpp application/handlers/recovery.cpp application/handlers/saves.cpp
   application/handlers/snapshots.cpp
-  application/handlers/profiles.cpp application/modules/installation_module.cpp
-  application/modules/launch_module.cpp
+  application/handlers/profiles.cpp
+  application/modules/content_module.cpp application/modules/diagnostics_module.cpp
+  application/modules/installation_module.cpp application/modules/launch_module.cpp
+  application/modules/profile_module.cpp application/modules/recovery_module.cpp
+  application/modules/setup_module.cpp application/modules/workspace_module.cpp
   application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
 target_sources(flb_factorio_application_static PRIVATE application/modules/instance_module.cpp)
 target_compile_features(flb_factorio_application_static PUBLIC cxx_std_17)
-target_include_directories(flb_factorio_application_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application)
+target_include_directories(flb_factorio_application_static
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application
+  PRIVATE ${FACMAN_GENERATED_INCLUDE_DIR})
 target_compile_definitions(flb_factorio_application_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_factorio_application_static PUBLIC
   facman_base_static facman_workspace_static facman_preferences_static facman_factorio_model flaunch_runtime_static ulk_static)
@@ -168,7 +212,9 @@ set_target_properties(flb_factorio_shared PROPERTIES
 add_library(flb_factorio ALIAS flb_factorio_static)
 add_library(facman::binding ALIAS flb_factorio_static)
 foreach(target IN ITEMS
-    flb_factorio_launch_static flb_factorio_discovery_static flb_factorio_diagnostics_static
+    flb_factorio_launch_planning_static flb_factorio_product_execution_static
+    flb_factorio_candidate_policy_static flb_factorio_candidate_projection_static
+    flb_factorio_discovery_static flb_factorio_diagnostics_static
     flb_factorio_install_model_static flb_factorio_install_validation_static
     flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
     flb_factorio_snapshots_static

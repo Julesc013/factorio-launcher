@@ -1,0 +1,94 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01
+title: Produce exact instance-isolated candidate qualification bindings
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-26T20:12:43Z
+owner: unassigned
+objective: >
+  Add one deterministic non-executing producer that consumes a successful
+  remote-source-closure report, exact candidate artifacts and authenticated
+  Factorio 2.0.77 inputs, stages the disposable Instance exactly once, derives
+  its current identities and emits the immutable qualification binding already
+  required by the accepted operator harness.
+allowed_paths:
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - .aide/queue/active/FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01/**
+  - .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/**
+  - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/**
+  - .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02/**
+  - .aide/queue/index.yaml
+  - README.md
+  - contracts/schema/factorio/instance_isolated_candidate_qualification.v1.schema.json
+  - contracts/schema/factorio/play_candidate_qualification_binding.v1.schema.json
+  - docs/architecture/instance-isolated-verdict-harness.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - tests/test_instance_isolated_candidate_qualification.py
+  - tests/test_instance_isolated_verdict_coordinator.py
+  - tools/instance_isolated_candidate_qualification.py
+  - tools/instance_isolated_verdict_coordinator.py
+  - tools/project_state.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/**
+  - runtime/**
+  - apps/**
+  - release/manifests/**
+  - release/packages/**
+architecture_invariants:
+  - qualification consumes only a successful three-repository no-local remote closure
+  - all three actual checkouts equal the reported pins remain clean and are reachable from required canonical refs
+  - candidate artifact paths are relative traversal-free exact files under the reported build root
+  - Factorio executable and source member identities match and carry the exact valid Wube 2.0.77 signature
+  - the disposable workspace is created once before object-bound Instance digests are derived
+  - qualification never issues a permit starts Factorio captures WPR records a human verdict or promotes authority
+  - the accepted harness remains the only later execution boundary
+source_binding:
+  factorio_launcher:
+    revision: be9bf23f9480a4fdafe3a6ad91528d28081e0c54
+    required_ref: origin/dev
+  universal_launcher:
+    revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
+    required_ref: origin/main
+  universal_setup:
+    revision: 3f8489275077347c2918f3bb03614ec6431362ff
+    required_ref: origin/main
+affected_native_targets:
+  - facman
+  - facman_gate4c_verdict_harness
+  - facman_hermetic_play_candidate_smoke
+affected_python_tests:
+  - tests.test_instance_isolated_candidate_qualification
+  - tests.test_instance_isolated_verdict_coordinator
+affected_strict_validators:
+  - tools/schema_validate.py
+  - tools/strict_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+depends_on:
+  - FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - remote-source-closure report validation is fail-closed
+  - exact artifact and source identities are hash-closed
+  - Instance identities are derived after one-time staging
+  - coordinator accepts only the exact prequalified workspace
+  - synthetic negative tests cover malformed stale dirty and mismatched inputs
+  - full native Python strict project-state and package validation pass
+  - no Factorio permit verdict route or authority is claimed
+  - structured commit check passes
+active_at: 2026-07-26T20:12:43Z
+updated_at: 2026-07-26T20:38:39Z
+verified_at: 2026-07-26T21:03:21Z
+merged_revision: 426d13cc2f68782b40eae66f0fb0621a607b7998
+implementation_state: verified
+result: PASS
+reviewed_at: 2026-07-27T12:43:46Z
+closed_at: 2026-07-27T12:43:47Z
+archived_at: 2026-07-27T12:43:47Z

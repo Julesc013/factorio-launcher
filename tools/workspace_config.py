@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import cross_repo_check
+from tools import cross_repo_check, verify_dependency_revisions
 
 REPO_NAMES = ("universal-setup", "universal-launcher")
 
@@ -108,6 +108,18 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
+    if command == "doctor":
+        pin_problems = verify_dependency_revisions.verify(
+            repository_paths={
+                "universal_setup": repos["universal-setup"],
+                "universal_launcher": repos["universal-launcher"],
+            }
+        )
+        if pin_problems:
+            for problem in pin_problems:
+                print(f"workspace-config: {problem}", file=sys.stderr)
+            return 1
+        print("workspace-config: dependency revisions match workspace lock")
 
     print("workspace-config: ok")
     return 0

@@ -1,0 +1,105 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01
+title: Add an exact instance-isolated operator verdict harness
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-26T18:43:00Z
+owner: unassigned
+objective: >
+  Generalize the existing evidence-only Gate 4C tooling around an immutable
+  route binding and add a closed Windows instance-isolated operator path that
+  can prepare, execute and classify fresh evidence without adding any product
+  Play route or changing either frozen policy.
+allowed_paths:
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - .aide/queue/active/FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01/**
+  - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/**
+  - .aide/queue/index.yaml
+  - README.md
+  - docs/architecture/**
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - tests/native/CMakeLists.txt
+  - tests/native/gate4c_verdict_harness.cpp
+  - tests/test_gate4c_verdict03_coordinator.py
+  - tests/test_gate4c_verdict_evidence.py
+  - tests/test_gate4c_verdict_preflight.py
+  - tests/test_gate4c_verdict_session.py
+  - tests/test_instance_isolated_verdict_coordinator.py
+  - tools/cmake_architecture_check.py
+  - tools/gate4c_privilege_separation_check.py
+  - tools/gate4c_verdict03_coordinator.py
+  - tools/gate4c_verdict_evidence.py
+  - tools/gate4c_verdict_preflight.py
+  - tools/gate4c_verdict_session.py
+  - tools/instance_isolated_verdict_coordinator.py
+  - tools/play_verdict_route.py
+  - tools/project_state.py
+  - tools/strict_check.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/**
+  - runtime/**
+  - apps/**
+  - release/manifests/**
+  - release/packages/**
+architecture_invariants:
+  - the two frozen policy documents and their digests remain byte-identical
+  - route selection is closed immutable and fail-closed
+  - the historical hermetic Verdict 03 path remains compatible
+  - instance-isolated plans use only the reviewed instance-isolated policy projection resources controls and reobservation
+  - every candidate execution still requires one short-lived one-use exact permit
+  - observer baseline packet and human observation identities are fresh and route-bound
+  - operator evidence tooling remains excluded from default product packages
+  - no public Play command product capability route or authority is added
+  - no Factorio process WPR capture permit issuance or human verdict occurs in this WorkUnit
+source_binding:
+  factorio_launcher:
+    revision: 812e70b58f45121d1e80b734fdb528884df4f2da
+    required_ref: origin/dev
+  universal_launcher:
+    revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
+    required_ref: origin/main
+  universal_setup:
+    revision: 3f8489275077347c2918f3bb03614ec6431362ff
+    required_ref: origin/main
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+affected_python_tests:
+  - tests.test_gate4c_verdict03_coordinator
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_preflight
+  - tests.test_instance_isolated_verdict_coordinator
+affected_strict_validators:
+  - tools/cmake_architecture_check.py
+  - tools/gate4c_privilege_separation_check.py
+  - tools/strict_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+depends_on:
+  - FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
+  - FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - route binding is immutable closed and covered by negative tests
+  - historical hermetic evidence behavior remains accepted
+  - exact instance-isolated policy plan resources and controls are used
+  - native harness compiles and synthetic self-tests pass
+  - default product package remains free of operator verdict tooling
+  - strict and project-state validation pass
+  - no Factorio permit verdict route or authority is claimed
+  - structured commit check passes
+active_at: 2026-07-26T18:43:00Z
+verified_at: 2026-07-26T20:10:12Z
+implementation_state: evidence_verified
+result: PASS
+reviewed_at: 2026-07-27T12:43:48Z
+closed_at: 2026-07-27T12:43:48Z
+archived_at: 2026-07-27T12:43:49Z

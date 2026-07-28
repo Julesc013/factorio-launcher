@@ -34,16 +34,128 @@ class TestArchitectureTests(unittest.TestCase):
     def test_script_backed_native_tests_build_their_real_prerequisite(self) -> None:
         self.assertEqual("flb_factorio_shared", dev.NATIVE_BUILD_PREREQUISITES["facman_abi_symbol_smoke"])
 
-    def test_fast_runner_builds_only_declared_fast_native_targets(self) -> None:
+    def test_fast_runner_uses_required_and_configuration_optional_tests(self) -> None:
         impact = dev.load_impact()
-        self.assertGreater(len(impact["fast_native"]), 0)
-        self.assertNotIn("*", impact["fast_native"])
+        self.assertGreater(len(impact["fast_native_required"]), 0)
+        self.assertNotIn("*", impact["fast_native_required"])
+        self.assertIn("facman_tui_smoke", impact["fast_native_optional"])
+        self.assertNotIn("facman_tui_smoke", impact["fast_native_required"])
         self.assertNotIn("tests.test_schema_tools", impact["fast_python"])
+
+    def test_full_runner_persists_external_obligation_evidence(self) -> None:
+        source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
+        self.assertIn('task_root / "evidence"', source)
+        self.assertIn("python-obligations-{args.obligation_profile}.json", source)
+        self.assertIn('"--evidence"', source)
+
+    def test_configured_fast_selection_tracks_tui_on_and_off_graphs(self) -> None:
+        impact = {
+            "fast_native_required": ["core_smoke", "harness_smoke"],
+            "fast_native_optional": ["tui_smoke"],
+            "fast_native_target_overrides": {
+                "harness_smoke": "shared_harness",
+            },
+        }
+        graph = [
+            {
+                "name": "core_smoke",
+                "command": ["/build/core_smoke"],
+                "properties": [{"name": "LABELS", "value": ["fast-unit"]}],
+            },
+            {
+                "name": "harness_smoke",
+                "command": ["/build/shared_harness", "--self-test"],
+                "properties": [{"name": "LABELS", "value": ["fast-unit"]}],
+            },
+        ]
+        self.assertEqual(
+            ["core_smoke", "shared_harness"],
+            dev.configured_fast_targets(impact, graph),
+        )
+        graph.append(
+            {
+                "name": "tui_smoke",
+                "command": ["/build/tui_smoke"],
+                "properties": [{"name": "LABELS", "value": ["fast-unit"]}],
+            }
+        )
+        self.assertEqual(
+            ["core_smoke", "shared_harness", "tui_smoke"],
+            dev.configured_fast_targets(impact, graph),
+        )
+
+    def test_configured_fast_selection_rejects_policy_drift(self) -> None:
+        impact = {
+            "fast_native_required": ["required_smoke"],
+            "fast_native_optional": [],
+            "fast_native_target_overrides": {},
+        }
+        with self.assertRaisesRegex(ValueError, "missing required"):
+            dev.configured_fast_targets(impact, [])
+        graph = [
+            {
+                "name": "required_smoke",
+                "command": ["/build/required_smoke"],
+                "properties": [{"name": "LABELS", "value": ["fast-unit"]}],
+            },
+            {
+                "name": "unmapped_smoke",
+                "command": ["/build/unmapped_smoke"],
+                "properties": [{"name": "LABELS", "value": ["fast-unit"]}],
+            },
+        ]
+        with self.assertRaisesRegex(ValueError, "policy omits"):
+            dev.configured_fast_targets(impact, graph)
+
+    def test_default_task_root_is_external_and_overrideable(self) -> None:
+        with mock.patch.dict(os.environ, {"FACMAN_TASK_ROOT": ""}):
+            self.assertFalse(dev.default_task_root().resolve().is_relative_to(dev.ROOT.resolve()))
+        if os.name == "nt":
+            local_app_data = Path("C:/facman-test-local-app-data")
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "FACMAN_TASK_ROOT": "",
+                    "LOCALAPPDATA": str(local_app_data),
+                },
+            ):
+                self.assertTrue(
+                    dev.default_task_root().is_relative_to(
+                        local_app_data / "FacMan" / "Tasks"
+                    )
+                )
+        with tempfile.TemporaryDirectory() as temporary:
+            with mock.patch.dict(os.environ, {"FACMAN_TASK_ROOT": temporary}):
+                self.assertEqual(Path(temporary), dev.default_task_root())
+
+    def test_in_tree_output_requires_explicit_legacy_override(self) -> None:
+        with self.assertRaisesRegex(ValueError, "outside the source checkout"):
+            dev.validate_external_output(dev.ROOT / "build" / "test", allow_in_tree=False)
+        allowed = dev.validate_external_output(
+            dev.ROOT / "build" / "test",
+            allow_in_tree=True,
+        )
+        self.assertTrue(allowed.is_relative_to(dev.ROOT.resolve()))
 
     def test_native_executable_honors_requested_configuration(self) -> None:
         source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
         self.assertIn('f"{configuration}/facman.exe"', source)
         self.assertIn("native_executable(build_root, args.configuration)", source)
+        self.assertIn('env["FACMAN_NATIVE_BUILD_ROOT"] = str(build_root.resolve())', source)
+        self.assertIn('env["FACMAN_NATIVE_CONFIGURATION"] = args.configuration', source)
+
+    def test_tui_executable_honors_requested_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            build_root = Path(temporary)
+            executable = build_root / "Debug" / "facman-tui.exe"
+            executable.parent.mkdir(parents=True)
+            executable.write_bytes(b"tui")
+            self.assertEqual(
+                executable,
+                dev.native_tui_executable(build_root, "Debug"),
+            )
+        source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
+        self.assertIn('env["FACMAN_TUI_EXE"]', source)
 
     def test_raw_python_runner_prefers_canonical_native_smoke_binary(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -15,3 +15,10 @@ The CMake graph is intentionally split:
 
 Consumers that need only process transport can link `facman::transport_process`
 without inheriting the Factorio binding or application runtime.
+
+Every facade execution owns a cryptographically generated durable operation ID
+and a distinct attempt ID. Direct, process, desktop-process, and future daemon
+adapters use the additive `ulk.operation_outcome.v1` contract. Pre-dispatch
+cancellation/refusal proves no effects; post-dispatch uncertainty requires
+`workspace.recovery.inspect`; a completed response always wins over a late
+cancellation signal.

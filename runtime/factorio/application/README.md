@@ -1,8 +1,21 @@
 # Factorio Application Operations
 
 This module owns typed Factorio operations registered with Universal Launcher.
-The first slice covers install discovery/import/inspection, instance creation,
-and launch-plan preview.
+The C boundary decodes requests, applies global workspace, dry-run and
+capability admission, looks up one static domain module, and writes the
+frontend-neutral response envelope.
+
+The module registry delegates every product command to one of:
+
+- workspace and preferences;
+- setup;
+- installations;
+- instances and transfers;
+- profiles;
+- Factorio content, snapshots and servers;
+- recovery and migration;
+- diagnostics and development refusals;
+- launch planning and execution.
 
 The CLI may construct requests and render results. It must not reimplement the
 persistence or product semantics of commands migrated here.

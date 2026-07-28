@@ -1,0 +1,128 @@
+{
+  "checkpoint": "evidence-integrity-repair-2026-07-27",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "2cedce41899726e6d14ac4cbc82813c60370badf88ceeb1eaa00642503888894",
+        "evidence/remaining-risks.md": "c1b6bdb0181ba861c365f107f37b67941039c5a346167df4b76f89526a1624d8",
+        "evidence/validation.md": "5b46a5b2785b0556934dd8a948b9661eb5c245304f7d803396bcaa8b9e39ee81",
+        "status.yaml": "609946be9d2e4a16976ee9a3655822f8be4f8fc64511867a3fb1a7209c4f2554",
+        "task.yaml": "fce0753263197563e4cc4d92509d09efa4fcf8705cb9414831810d3ff13e9892"
+      },
+      "task_id": "FACMAN-CANDIDATE-PROVIDER-IDENTITY-REPAIR-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "336d78438ac60436ab9ce3b42224dcf8f815226b2fab84ed2d31b19ca922d2a4",
+        "evidence/remaining-risks.md": "67711fc6187e7c2f6298233e4b26c8ecae56653b1a1e242e72a9a5b5f93b3364",
+        "evidence/validation.md": "3126f79513f2d70d0ab89bf52b458e189aff1189747d097ea1dcfff271016b7d",
+        "status.yaml": "40f408ab0f634500cf17463b48e3a9930474b938e8b1e525c2b1fd7444132ff4",
+        "task.yaml": "3c467b9ae3523ebc4a5a8d10a022a2c39875096cfe332bc0053212313793e6d6"
+      },
+      "task_id": "FACMAN-INSTANCE-ISOLATED-QUALIFICATION-PRODUCER-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "96ebea377467a2fa8e2896c057ed0ef03c1cdd6d67c63831eadabe44f8b7398a",
+        "evidence/remaining-risks.md": "74307c1267d5243e2da302843d2c11e9e42cd5180c6cdfb9ec7eed1f1d96c240",
+        "evidence/validation.md": "ca7f48b24b140afc64d67dcc7b803deb3cd218f0bb9f08f198179ed5afb1bc2f",
+        "status.yaml": "a6a9260c7dba286319dfe20f2a60ec0db48f12864686b6724af9bf9a762ffcdd",
+        "task.yaml": "23ee368498d17907a7bf9fad051668adca7eeb7651bdd83634c9fd2b6d7df4cb"
+      },
+      "task_id": "FACMAN-INSTANCE-ISOLATED-VERDICT-HARNESS-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "37553103429761d346f19e2a0158743a8e506059c8e90e24fcc6965654cc3424",
+        "evidence/remaining-risks.md": "19bc36ae73cc8826f77636cf81ff31e274cbb5eb485a25d9cc897c13e5e4b9a4",
+        "evidence/validation.md": "ac53380b3143b79ee172dbe4a0717662fb64ad6d601b1dfd1985280a85a9fba1",
+        "status.yaml": "b8bd32ee7d9145706c86ac3faa38973dc006b1d3e672f60cb7896e617b4f56ac",
+        "task.yaml": "d17a4fdd343219bfd04e703e1a95e9ae021bb03f917b1ed46ba7aecd20f80f5c"
+      },
+      "task_id": "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "daa5bc8c0eb2101b183fd1d61af8df93dc49e29ab82d17d3e371a18fd2a30775",
+        "evidence/remaining-risks.md": "68fe625c5aeff20d856dd0e71b137adb0218d8730f41b9d91147fcc265b3c623",
+        "evidence/validation.md": "3ffb5f37b8d735832d543833c8cc3b47820e993fd1e33529cc656d31873f39b3",
+        "status.yaml": "a093d8722af576fd9624db5ac54b1736e3d7092989b0c6c859780b93e1fb4869",
+        "task.yaml": "7a743b82487d94394ee848a22f8d2060e99fef49add9410a2a2d7dddea622949"
+      },
+      "task_id": "FACMAN-PLAY-EVIDENCE-STABLE-IO-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "82d62af1854d394188e535f236a8eab180213b2e6da4b8a6c7f612abf8218db8",
+        "evidence/remaining-risks.md": "cf8363a9a9599d6eac4b33a05d1865eda4ebb5af9c0ff92a87bb91493cc3df04",
+        "evidence/validation.md": "57a4118fac07114250e043cccc6e18306b056691040d7d69b082052841ece0d4",
+        "status.yaml": "790c2d16e5ae7a034e63c00a588e9f857ece6e33924abb5d6a85bcc58cd69d84",
+        "task.yaml": "ae4eeaade9ed257482786bc0a550eab10c38537f1ccaad5372d1bb95db1f0008"
+      },
+      "task_id": "FACMAN-PROJECT-STATE-DETERMINISM-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "f522c656feafd9ba657a8e4e8652e2d4bb27823bff9d98daf523805489a777c9",
+        "evidence/remaining-risks.md": "bab08392b8beadf446d3651285c8c6ec0b3774171f11a14ecddd24f626b945ba",
+        "evidence/validation.md": "d782849d91a862298bb34a27256f2f674a79c96ac8badc85aa018d9c38e938cc",
+        "status.yaml": "3023e6d011ad370d62b84287468616e4189d17dc6ba7d90321201c247a32c8b4",
+        "task.yaml": "af4017bcb62e1403e6646009c31b411290ded8f2e0bde93904cb3b47b096f70b"
+      },
+      "task_id": "FACMAN-QUALIFICATION-LIFECYCLE-EVIDENCE-REPAIR-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "1eb02a7a3f8dd90dc0f796441ac6fe4b6a67329c919d530e6bf2b477df17e2dc",
+        "evidence/remaining-risks.md": "148e44240030d806900b1f40b3dc9b59eec20d6881f1e18c87744a9a0c369c04",
+        "evidence/validation.md": "ba0f7f98c6f340efe4829d5d7d42a4e202b65ff297cdbf27f86e17c5d1f5edc1",
+        "status.yaml": "b743ad77d2e1b0d041a101a7976aaf9a1eb2f3645c34ffaf9121fe4556ab6224",
+        "task.yaml": "757059f533071d720ca3f113770c1de781d6a54bd793c3dc694ff1bce45aad60"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "2c67e1a9018f9cad978df369713d7dd4f56e90ddef4b63a4b359a34456626f3b",
+        "evidence/remaining-risks.md": "74985acf1fe09e06302281db1cd7fb8ab82f353be58d1d624377153e9097aff9",
+        "evidence/validation.md": "3c203d6ee36dd0cf80dd50f9347439c48023f0380fec7a00e0d3fe7bfb78e027",
+        "status.yaml": "1793e8778b916da5a6f27e407a9cebf62cf03d44c99a2a03dee5d62f88e9c65a",
+        "task.yaml": "2755ed7d2c49cfccfa5c14f17976643caf22d89b4799f1cc9f8b6d6faeba7ed7"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "0baa1d725d4b4caf20efca6989bb6c920bf3d39a2468cb76a00233009f032197",
+        "evidence/remaining-risks.md": "f6363dba583bc08f7c892f782e8153db1e975c1efdfa2096965069fc416fc446",
+        "evidence/validation.md": "236212c49a70ab388de722ad92671d54cebc743be95250d0fd23de55f9aaaf2a",
+        "status.yaml": "b0c937c41820b5d135804b3b158e8df61946d8e2f8d313f24513c43611c0f07e",
+        "task.yaml": "747fbda0d2273b6fba8793c8a8c3c60544130fc2be541ab4a1ec8c2a62deba90"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "9172f57b82fa6d88e1597de647981d7f8edae5936ad9f0cb3c8b2b0104ec8edf",
+        "evidence/remaining-risks.md": "eb9bbf26345e483ac66d4d0d1d36f0a8430c47fab08f03d2ee2603e22c9de9a5",
+        "evidence/validation.md": "f83861dfc7dcb03a9b7c10c92068aadd183813dc40524bb279f9f614308d9ca2",
+        "status.yaml": "fea64a555764d632a6a3b1ae6725bac029ba40654a9a228bb8d996033e1e1dc9",
+        "task.yaml": "4c67e3be5b7770fa88103ed89cf798d5f21217b6c5adc245462e021f9795e875"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "56709ec8fb16cb487fb45a9d1d8a440bbd2f9d941e538629cc4de6ad6f586b5a",
+        "evidence/remaining-risks.md": "f451472876a45efdc556685ee595298ba854d67c9e495ee9e24d112f76a971b4",
+        "evidence/validation.md": "c21a813d5b8ebaa750896e61f9c0f56049d6cacf14ee7dc244b44fbd84490812",
+        "status.yaml": "a9930a6c01adde2a54755e13e1c0e3d217f58a247f27b793de5ee6771b8b1d5b",
+        "task.yaml": "1be5cd430c2d0c7ee65c5165bc3d994155644895a0b5cdcf307b59f598007c5b"
+      },
+      "task_id": "M2-WU10-OPERATOR-LIVE-TARGET-VERDICT-01"
+    }
+  ]
+}

@@ -31,13 +31,24 @@ struct HermeticCandidateProjectionRequest {
     launch::FrozenHermeticPlayPolicy policy;
 };
 
+using InstanceIsolatedCandidateProjectionRequest =
+    HermeticCandidateProjectionRequest;
+
 facman::core::Result<launch::HermeticCandidatePlan>
 project_hermetic_candidate_plan(
     const HermeticCandidateProjectionRequest& request);
 
+facman::core::Result<launch::HermeticCandidatePlan>
+project_instance_isolated_candidate_plan(
+    const InstanceIsolatedCandidateProjectionRequest& request);
+
 facman::core::Result<facman::core::permit::PermitValidationContext>
 reobserve_hermetic_candidate_context(
     const HermeticCandidateProjectionRequest& request);
+
+facman::core::Result<facman::core::permit::PermitValidationContext>
+reobserve_instance_isolated_candidate_context(
+    const InstanceIsolatedCandidateProjectionRequest& request);
 
 } // namespace facman::factorio::instance
 

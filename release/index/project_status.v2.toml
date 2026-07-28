@@ -1,13 +1,21 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "windows-instance-isolated-play-policy-closeout"
+current_checkpoint = "windows-instance-isolated-play-revalidation-02"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
-last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01"
+active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+current_dev_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+canonical_main_revision = "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5"
+runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
+qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
+qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+truth_closeout_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+observed_branch_head = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -20,7 +28,8 @@ known_blockers = [
   "Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.",
   "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
   "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
-  "The separate instance-isolated policy is accepted on dev and awaits canonical policy-only promotion.",
+  "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
+  "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted, and revalidation 02 is staged but not prepared.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -39,26 +48,31 @@ quarantined_capabilities = [
   "release.publish",
 ]
 
+[scorecard_evidence]
+accepted_real_play_route_ids = []
+silent_foreign_mutation_ids = []
+observed_player_journey_ids = []
+
 [product]
-phase = "windows_instance_isolated_play_policy_closeout"
-phase_status = "accepted_dev_pending_canonical_policy_promotion"
+phase = "windows_instance_isolated_play_revalidation_02"
+phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = ""
-next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01"
+current_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+next_work_unit = "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "dev_integrated_instance_isolated_policy_accepted_pending_canonical_promotion"
-canonical_main_promotion = false
+truth_scope = "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority"
+canonical_main_promotion = true
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "normal_host_instance_isolated_policy_accepted_no_play_authority"
+safety_authority = "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -467,7 +481,7 @@ product_permit_issuance = false
 authority_promotion = false
 
 [windows_instance_isolated_play_policy]
-status = "accepted_reviewed_dev_integration_pending_canonical_promotion"
+status = "accepted_canonical_main_dev_synchronized"
 work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01"
 source_repair = "FACMAN-GATE4C-VERDICT03-POSTRUN-REPAIR-01"
 source_verdict = "Inconclusive"
@@ -488,6 +502,49 @@ exact_dev_ci_run = "30145199265"
 exact_dev_code_security_run = "30145199294"
 exact_dev_schema_check_run = "30145199268"
 exact_dev_security_policy_run = "30145199267"
+closeout_pull_request = 68
+closeout_head_revision = "e535f279c539477c127915ae3fd56b451dae4291"
+closeout_dev_revision = "5267d17b8fc8095d31448044dded6d42eda75fda"
+closeout_push_ci_run = "30145909636"
+closeout_push_code_security_run = "30145909643"
+closeout_push_security_policy_run = "30145909646"
+closeout_head_ci_run = "30145919714"
+closeout_head_code_security_run = "30145919721"
+closeout_head_security_policy_run = "30145919719"
+closeout_schema_disposition = "unchanged_from_exact_implementation_schema_pass_30145199268"
+closeout_dev_ci_run = "30146288814"
+closeout_dev_code_security_run = "30146288802"
+closeout_dev_security_policy_run = "30146288806"
+promotion_pull_request = 69
+promotion_source_revision = "5267d17b8fc8095d31448044dded6d42eda75fda"
+canonical_main_revision = "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5"
+shared_tree_identity = "d7cbe1339423b1dcda2763231aa9e99d4a59476a"
+promotion_push_ci_run = "30146680925"
+promotion_push_code_security_run = "30146680930"
+promotion_push_security_policy_run = "30146680926"
+promotion_head_ci_run = "30146702107"
+promotion_head_code_security_run = "30146702121"
+promotion_head_schema_check_run = "30146702112"
+promotion_head_security_policy_run = "30146702129"
+exact_main_ci_run = "30147122318"
+exact_main_code_security_run = "30147122296"
+exact_main_schema_check_run = "30147122303"
+exact_main_security_policy_run = "30147122308"
+synchronization_pull_request = 70
+synchronization_head_revision = "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5"
+synchronization_push_ci_run = "30147488160"
+synchronization_push_code_security_run = "30147488155"
+synchronization_push_security_policy_run = "30147488152"
+synchronization_head_ci_run = "30147496286"
+synchronization_head_code_security_run = "30147496272"
+synchronization_head_security_policy_run = "30147496288"
+synchronization_schema_disposition = "identical_to_exact_main_schema_pass_30147122303"
+final_dev_revision = "c49a9b5cf1a660e63730cae02778af3e00894a87"
+final_dev_ci_run = "30147917473"
+final_dev_code_security_run = "30147917492"
+final_dev_security_policy_run = "30147917475"
+main_is_ancestor_of_dev = true
+trees_equal_at_synchronization = true
 local_full_matrix = true
 exact_dev_clean_reproduction = true
 clean_reproduction_seconds = 455.2
@@ -523,7 +580,203 @@ runtime_mutation_allowed = false
 factorio_execution_allowed = false
 public_command = false
 product_permit_issuance = false
+canonical_main_promotion = true
+authority_promotion = false
+
+[windows_instance_isolated_play_candidate]
+status = "implementation_complete_pending_reviewed_integration"
+work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01"
+policy_id = "facman.windows-instance-isolated-play.2.0.77.x64.v1"
+policy_digest = "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432"
+claim_id = "factorio.windows_instance_isolated_process_tree.v1"
+candidate_class = "Windows x64 Factorio 2.0.77 standalone non-Steam menu"
+isolation_mode = "instance_isolated"
+candidate_provider_revision = "windows-instance-isolated-play-candidate.v1"
+observer_provider_revision = "gate4c-etw-file-registry-process.v6"
+process_environment_revision = "factorio.menu-minimal.v2"
+root_authority = "stable_no_follow_instance_directory_object"
+writable_resource_count = 7
+protected_resource_count = 12
+required_evidence_binding_count = 35
+external_effect_class_count = 7
+expected_external_disclosures = ["windows.bam.factorio_process_execution.v1"]
+directinput_disabled = true
+provider_revalidation_immediately_before_process = true
+permit_consumption_immediately_before_process = true
+unresolved_or_gap_disposition = "Inconclusive"
+wrong_identity_or_protected_write_disposition = "Fail"
+technical_disposition = "eligible_for_human_verdict"
+local_msvc_native_test_count = 50
+focused_python_test_count = 25
+full_python_test_count = 471
+python_expected_skip_count = 315
+schema_count = 295
+human_verdict = "unset"
+real_factorio_execution = false
+public_command = false
+product_permit_issuance = false
+setup_authority = false
+credential_authority = false
+network_authority = false
+host_mutation_authority = false
+authority_promotion = false
+playability_promotion = false
 canonical_main_promotion = false
+signing = false
+publication = false
+
+[ulk_client_transport_extraction]
+status = "provider_implemented_facman_integration_active"
+work_unit = "ULK-CLIENT-TRANSPORT-EXTRACTION-01"
+universal_launcher_previous_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
+universal_launcher_revision = "78c27da0de2cefc40ff0f9654ab46f777a1357ae"
+launcher_abi_version = "1.4"
+transport_contract = "ulk.client_transport.v1"
+transport_kinds = ["direct", "process", "daemon"]
+direct_adapter = "ulk_direct_transport_v1"
+generic_c_client_owner = "universal_launcher"
+facman_c_adapter = "runtime/client/fl_command_client_cabi_execute.c"
+facman_cpp_transport_adapters_retained = true
+provider_strict_validation = "pass"
+provider_python_test_count = 6
+provider_native_test_count = 3
+facman_integration_validation = "pass"
+facman_native_test_count = 51
+facman_python_test_count = 482
+facman_python_expected_skip_count = 30
+historical_candidate_provider_revision = "7bd4425f0c35414f738159b45d8bec42edf70235"
+candidate_revalidation_required = true
+real_factorio_execution = false
+public_command = false
+runtime_authority = false
+authority_promotion = false
+
+[ulk_reference_model_extraction]
+status = "provider_implemented_facman_integration_active"
+work_unit = "ULK-REFERENCE-MODEL-EXTRACTION-01"
+universal_launcher_previous_revision = "78c27da0de2cefc40ff0f9654ab46f777a1357ae"
+universal_launcher_revision = "e78cc9f3a23f748130749ebe7241dbd1166f8b25"
+launcher_abi_version = "1.5"
+reference_contract = "ulk.reference_graph.v1"
+record_contracts = [
+  "ulk.product_reference.v1",
+  "ulk.install_reference.v2",
+  "ulk.instance_reference.v2",
+  "ulk.profile_reference.v2",
+  "ulk.artifact_set_reference.v1",
+  "ulk.launch_plan_reference.v2",
+]
+identity_mismatch_disposition = "invalid"
+revision_drift_disposition = "valid_but_stale"
+provider_strict_validation = "pass"
+provider_python_test_count = 7
+provider_native_test_count = 4
+facman_integration_validation = "pass"
+facman_native_test_count = 52
+facman_python_test_count = 482
+facman_python_expected_skip_count = 30
+factorio_workspace_composition_owner = "factorio_binding"
+reference_persistence_implemented = false
+candidate_revalidation_required = true
+real_factorio_execution = false
+public_command = false
+runtime_authority = false
+authority_promotion = false
+
+[facman_application_module_decomposition]
+status = "accepted_local_clean_matrix"
+work_unit = "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01"
+module_contract = "ApplicationModule"
+registered_modules = [
+  "WorkspaceApplicationModule",
+  "SetupApplicationModule",
+  "InstallationApplicationModule",
+  "InstanceApplicationModule",
+  "ProfileApplicationModule",
+  "ContentApplicationModule",
+  "RecoveryApplicationModule",
+  "DiagnosticsApplicationModule",
+  "LaunchApplicationModule",
+]
+registered_module_count = 9
+central_entrypoint_line_count = 210
+central_direct_command_cases = 0
+request_decoding_owner = "command_dispatch"
+global_admission_before_module_execution = true
+module_lookup_owner = "factorio_application_composition_root"
+result_envelope_owner = "factorio_application_composition_root"
+boundary_exception_containment = true
+clean_build_root_honored_by_package_proof = true
+local_release_native_test_count = 52
+local_python_test_count = 482
+local_python_expected_skip_count = 30
+required_windows_package_proof = "pass"
+strict_validation = "pass"
+real_factorio_execution = false
+runtime_authority = false
+authority_promotion = false
+
+[facman_ulk_integration_proof]
+status = "accepted_local_clean_reconstruction"
+work_unit = "FACMAN-ULK-INTEGRATION-PROOF-01"
+facman_proof_revision = "83980f140b365ab3206d5631db7c38db929b61fb"
+universal_launcher_revision = "e78cc9f3a23f748130749ebe7241dbd1166f8b25"
+universal_setup_revision = "3f8489275077347c2918f3bb03614ec6431362ff"
+detached_source_worktrees = true
+source_worktrees_clean = true
+final_build_root_initially_absent = true
+final_matrix_seconds = 423.5
+universal_launcher_native_test_count = 4
+universal_launcher_strict_validation = "pass"
+universal_setup_native_test_count = 16
+universal_setup_strict_validation = "pass"
+facman_native_test_count = 53
+facman_python_test_count = 486
+facman_python_expected_skip_count = 29
+facman_aide_validation = "pass"
+facman_strict_validation = "pass"
+installed_sdk_proof = "pass"
+windows_cli_package_proof = "pass"
+package_files_verified = 478
+package_archive_sha256 = "c6551405ca0d0d2f100c34b1daea92368ae51fe78e61398499c7b027c8f9ca0d"
+package_provenance_sha256 = "d5ffaeb8dd4063c350662405dd25b6d3f02809ae25bb287bdebeb0600c0f79a9"
+package_integrity = "sha256_consistent"
+package_authenticity = "not_proven_unsigned"
+branch_governance = "documented_asymmetric"
+universal_dev_branches_created = false
+candidate_revalidation_required = true
+real_factorio_execution = false
+human_verdict = "not_performed"
+canonical_main_promotion = false
+signing = false
+publication = false
+runtime_authority = false
+authority_promotion = false
+
+[ignored_build_tree_cleanup]
+status = "accepted_exact_roots_recycled"
+work_unit = "FACMAN-IGNORED-BUILD-TREE-CLEANUP-01"
+completed_on = "2026-07-25"
+universal_launcher_build_root = 'D:\Projects\Universal\universal-launcher\build'
+universal_launcher_source_revision = "e78cc9f3a23f748130749ebe7241dbd1166f8b25"
+universal_launcher_file_count = 2036
+universal_launcher_directory_count = 971
+universal_launcher_bytes = 54373312
+universal_launcher_ignored_by_repository = true
+universal_launcher_source_clean_after = true
+universal_setup_build_root = 'D:\Projects\Universal\universal-setup\build'
+universal_setup_source_revision = "3f8489275077347c2918f3bb03614ec6431362ff"
+universal_setup_file_count = 9183
+universal_setup_directory_count = 3246
+universal_setup_bytes = 3016733351
+universal_setup_ignored_by_repository = true
+universal_setup_source_clean_after = true
+build_roots_absent_after = true
+removal_method = "windows_recycle_bin"
+recovery = "recoverable_until_recycle_bin_is_emptied"
+future_build_root_policy = 'E:\Temporary\FacMan\<task-id>'
+source_files_removed = false
+runtime_authority = false
 authority_promotion = false
 
 [gate4c_privilege_separation_repair]
@@ -568,7 +821,7 @@ live_privilege_probe_id = "gate4c-privilege-probe-live-02"
 live_privilege_probe_digest = "e74f276c6ee43d2c436b09bade4d265fd0165903f963ae09f7f0e8e61bad105b"
 live_privilege_probe_file_sha256 = "e8e614cf37feab54efb9f52133e35025984d38bdc35b376d55139bc734c5f841"
 live_privilege_probe_response_digest = "8ded3340f2d6de60d83041e6a480129294e44d4e5c3f27cc76b2a26905fd4c2d"
-live_privilege_probe_evidence = ".aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence/live-privilege-probe.json"
+live_privilege_probe_evidence = ".aide/history/completion-baseline-2026-07-26/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01/evidence/live-privilege-probe.json"
 live_privilege_probe_disposition = "pass_authenticated_medium_coordinator_high_broker_no_wpr_no_factorio"
 live_probe_coordinator_integrity = "medium"
 live_probe_broker_integrity = "high"
@@ -779,7 +1032,7 @@ id = "instance_isolated"
 product_mode = "accepted"
 claim_status = "unproven"
 boundary = "The exact FacMan-owned instance closure is writable; protected software roots remain immutable; enumerated OS, driver, or platform state may change only after explicit disclosure."
-next_gate = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01"
+next_gate = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01"
 
 [[execution_mode]]
 id = "hermetic"
@@ -1543,7 +1796,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "instance_isolated_policy_accepted_real_play_unproven"
+reason = "exact_candidate_staged_for_separately_authorized_operator_revalidation_no_product_play_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1551,7 +1804,282 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "instance_isolated_policy_accepted_pending_canonical_promotion"
+current_gate_status = "revalidation_02_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive"
+
+[windows_instance_isolated_candidate_qualification]
+status = "accepted_hosted_exact_candidate"
+work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02"
+candidate_source_revision = "d1a3c2029a4ae21c58eda34d7011938bf7bf04cb"
+evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
+dev_integration_revision = "6f9ddb4123f0f51e0641a493ed2372025dfb18dd"
+pull_request = 85
+universal_launcher_revision = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_setup_revision = "3f8489275077347c2918f3bb03614ec6431362ff"
+remote_source_closure_sha256 = "48d6444f620d3f1791104822436a6990093ee6377a73844630de568716180409"
+qualification_digest = "c73b3b41799246516fcc130fc631f64a80fcd956fd4cf5cb5eb3f92a39b12beb"
+qualification_binding_sha256 = "0bb183c2888c75bf93f6fdb850819323b0772e1ce75a3b5ea2886c2b308bfa31"
+qualification_report_sha256 = "631e043319534da8ddccab60ea7e88ea2be24416b15bce855fcf16d3b9ef2c10"
+facman_native_test_count = 55
+facman_python_test_count = 530
+universal_launcher_native_test_count = 5
+universal_setup_native_test_count = 16
+required_package_test_count = 14
+required_package_skip_count = 0
+strict_validation = "pass"
+aide_validation = "pass"
+hosted_validation = "pass_linux_windows_macos_coverage_code_security"
+coordinator_stage = "pass"
+coordinator_prepare = false
+factorio_execution = false
+observer_capture = false
+permit_issuance = false
+human_verdict = "pending"
+route_authority = false
+authority_promotion = false
+
+[windows_instance_isolated_play_revalidation_01]
+status = "superseded_before_prepare"
+work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01"
+superseded_by = "FACMAN-PROJECT-STATE-DETERMINISM-01"
+coordinator_stage = "passed_historical"
+coordinator_prepare = false
+permit_issued = false
+factorio_started = false
+observer_started = false
+baseline_captured = false
+human_verdict = "unset"
+route_authority = false
+authority_promotion = false
+
+[project_state_determinism]
+status = "accepted_hosted_promotion_matrix_pass"
+work_unit = "FACMAN-PROJECT-STATE-DETERMINISM-01"
+implementation_revision = "b8a030a75e4060dbb630bf6e7f24e0417ba8ec6b"
+dev_integration_revision = "46c33bb3dd7f6ad4466bacf59df665c4362085c1"
+pull_request = 87
+empty_queue_directories_ignored = true
+partial_queue_records_rejected = true
+shared_queue_reader = true
+factorio_execution = false
+permit_issuance = false
+authority_promotion = false
+
+[verdict_protocol_integrity]
+status = "accepted_hosted_promotion_matrix_pass"
+work_unit = "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01"
+implementation_revision = "04700583cd8cb7f9954b287c50f2fc56a7eb9f0a"
+hosted_repair_revision = "9ca135cef6a1dcfd040d031492a38991e6ef3243"
+dev_integration_revision = "31ed0f3ea83b5469f765443d410af7581765947f"
+pull_request = 88
+human_disposition_derived_from_explicit_checks = true
+windows_principal_session_integrity_bound = true
+native_exact_plan_approval_only = true
+synthetic_pass_fail_inconclusive = true
+factorio_execution = false
+permit_issuance = false
+authority_promotion = false
+
+[play_evidence_stable_io]
+status = "accepted_hosted_promotion_matrix_pass"
+work_unit = "FACMAN-PLAY-EVIDENCE-STABLE-IO-01"
+next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+implementation_revision = "e16f5c885e0391fa17223c1f9569b3ad6cb63353"
+hosted_repair_revision = "56b1eceabf344108e4cff9e330bb6f25d1b6c4df"
+dev_integration_revision = "02add47c0fa74f2299bb68f16532254d4d00ab7e"
+pull_request = 89
+native_handle_bound_reads = "accepted_hosted"
+durable_exclusive_writes = "accepted_hosted"
+preflight_bound_resource_set = "accepted_hosted"
+provider_side_root_revalidation = "accepted_hosted"
+native_test_count = 57
+python_test_count = 550
+required_obligation_skips = 0
+unknown_obligation_skips = 0
+optional_obligation_skips = 7
+unsupported_obligation_skips = 2
+hosted_check_count = 22
+hosted_validation = "pass_linux_windows_macos_coverage_code_security"
+factorio_execution = false
+permit_issuance = false
+authority_promotion = false
+
+[windows_instance_isolated_candidate_qualification_03]
+status = "closed_archived_stage_handoff_complete"
+work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+candidate_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+universal_launcher_revision = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_setup_revision = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+universal_setup_provider_repair = "accepted_main_zip64_inspection"
+handoff_repair_revision = "95724c75b35f2150960aa0d7f241416b2517030b"
+handoff_repair_pull_request = 92
+handoff_repair_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+hosted_validation = "pass_exact_head_security_policy_code_security_complete_six_job_ci"
+remote_source_closure = "pass_fifth_fresh_empty_remote_clones"
+remote_source_closure_report_sha256 = "3ab446b6400f212710190e4cc4890877fdedc7f7335f8d14f121f582b8f0a73d"
+facman_native_tests = 58
+facman_python_tests = 555
+universal_launcher_native_tests = 5
+universal_setup_native_tests = 16
+required_windows_package_tests = 14
+required_windows_package_skips = 0
+qualification_binding = "pass_fresh_and_reloaded"
+qualification_digest = "99aee276b2968e493f7830ee0cf949efbcd4b0d843e0e93abe8729f13454d210"
+qualification_binding_sha256 = "c2313f2940da1072f7fc115fe90b13930e26e12e75bc1135c85783a128e830f0"
+qualification_report_sha256 = "bb29004f443d5a2b92e3370bcf37b157575610ea0d265d55d2f4524d8eca429c"
+coordinator_stage = "pass_fresh_revalidation_02_staged_not_prepared"
+stage_handoff_repair = "accepted_hosted_and_fresh_stage_pass"
+coordinator_prepare = false
+factorio_execution = false
+observer_capture = false
+permit_issuance = false
+human_verdict = "unset"
+route_authority = false
+authority_promotion = false
+
+[windows_instance_isolated_play_revalidation_02]
+status = "staged_not_prepared"
+work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+next_work_unit_after_pass = "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01"
+candidate_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+universal_launcher_revision = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_setup_revision = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+qualification_digest = "99aee276b2968e493f7830ee0cf949efbcd4b0d843e0e93abe8729f13454d210"
+qualification_binding_sha256 = "c2313f2940da1072f7fc115fe90b13930e26e12e75bc1135c85783a128e830f0"
+staged_candidate_digest = "f7ef4783dd153b1445ec3cd9882134fc0ccb14a19fe3494186b7fe95b721de9d"
+staged_candidate_sha256 = "31397e9d35d33a0e11b60470dedb0939950c69a9a735501f9c77a638d30056e8"
+coordinator_config_sha256 = "5f67915198777d73dc479e05340f17aafba2b43004a1072332f6908daa5e961a"
+artifact_manifest_sha256 = "a936bc9f33f811d564c0dc8121591b0bf59bb682de741782fada6b9176a81ece"
+instance_spec_digest = "4cae0b49f6b3f85cf9defdfe7e0c57ff9d0ed855e9cc81a54e1cef05400bea79"
+instance_binding_digest = "5b47371af7a87a220aceba7ac2718826aad2c087b9a6bfc9102cd943254701c3"
+readiness_digest = "4fdd3cb2ca3ae262d1093a928294661981a93bb357b0e5b6596a7f270a583567"
+configuration_schema = "factorio.instance_isolated_verdict_coordinator_config.v2"
+staged_candidate_schema = "factorio.instance_isolated_staged_candidate_binding.v1"
+coordinator_stage = true
+coordinator_prepare = false
+preflight_created = false
+prepared_launch_created = false
+baseline_captured = false
+observer_capture = false
+permit_issuance = false
+factorio_execution = false
+human_verdict = "unset"
+route_authority = false
+authority_promotion = false
+policy_change = false
+setup_mutation_authority = false
+signing = false
+publication = false
+
+[build_and_development_truth]
+status = "accepted_hosted_promotion_matrix_pass"
+work_unit = "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01"
+validated_parent_revision = "31264a99b428c2d34d9f21a39f0878b1eb75775a"
+implementation_revision = "95c73abaed291c4d19f35ee8bd1cb300061593b8"
+hosted_repair_revision = "10de464367919831e6c2cf4458e1157d405b035b"
+dev_integration_revision = "3c4fb175272f3d7b160ab87f32b632985ea65d39"
+runtime_identity = "exact_git_head_plus_workspace_pins_and_source_dirty"
+runtime_identity_read_only_probe = "pass"
+external_task_root = "pass_local_app_data_not_source_or_windows_temp"
+fast_native_tui_off_tests = 18
+fast_native_tui_on_tests = 19
+fast_python_tests = 31
+full_native_tests = 53
+full_python_tests = 514
+required_obligation_skips = 0
+unknown_obligation_skips = 0
+optional_obligation_skips = 2
+unsupported_obligation_skips = 2
+strict_validation = "pass"
+aide_validation = "pass"
+hosted_validation = "pass_linux_windows_macos_coverage_code_security"
+factorio_execution = false
+permit_issuance = false
+authority_promotion = false
+
+[transport_outcome_semantics]
+status = "accepted_hosted_promotion_matrix_pass"
+work_unit = "FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01"
+implementation_revision = "b962b1340f55c4eb2dddbe126887b369df7d5422"
+pull_request = 77
+dev_integration_revision = "c47bdc3362f7dfbaccd6cee069318270c081272e"
+hosted_ci_run = "30209419784"
+hosted_code_security_run = "30209419767"
+hosted_schema_check_run = "30209419787"
+hosted_security_policy_run = "30209419762"
+universal_launcher_provider_revision = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_launcher_main_revision = "7f4312faf2f1ac2856a51393fef0ec49fc276a78"
+operation_contract = "ulk.operation_outcome.v1"
+request_contract = "facman.transport_request.v2"
+response_contract = "facman.transport_response.v2"
+outcomes = [
+  "cancelled_before_dispatch",
+  "refused_before_effects",
+  "completed",
+  "cancellation_requested_but_completed",
+  "recovery_required",
+  "outcome_unknown",
+]
+recovery_inspect_command = "workspace.recovery.inspect"
+direct_transport = "accepted_hosted"
+cli_process_transport = "accepted_hosted"
+winforms_process_transport = "accepted_hosted"
+appkit_process_transport = "accepted_hosted_compile"
+daemon_transport = "unavailable_with_validated_pre_effect_refusal"
+local_msvc_release_native_tests = 54
+local_python_tests = 517
+required_obligation_skips = 0
+unknown_obligation_skips = 0
+optional_obligation_skips = 2
+unsupported_obligation_skips = 2
+strict_validation = "pass"
+aide_validation = "pass"
+hosted_validation = "pass_linux_windows_macos_coverage_code_security"
+factorio_execution = false
+permit_issuance = false
+authority_promotion = false
+
+[play_candidate_runtime_separation]
+status = "accepted_hosted_dev_integration"
+work_unit = "FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01"
+implementation_revision = "98d6dde5f653dd32297073bd0198b0701b7a7b39"
+hosted_repair_revision = "5ba2f31c32650a3f7034088f6034f3d25cd8d0af"
+implementation_pull_request = 78
+dev_integration_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
+exact_push_ci_run = "30211651244"
+exact_push_code_security_run = "30211651245"
+exact_push_security_policy_run = "30211651246"
+exact_pr_ci_run = "30211653394"
+exact_pr_code_security_run = "30211653350"
+exact_pr_security_policy_run = "30211653356"
+merged_dev_ci_run = "30212150312"
+merged_dev_code_security_run = "30212150359"
+merged_dev_security_policy_run = "30212150353"
+hosted_validation = "pass_linux_windows_macos_coverage_code_security"
+launch_planning_target = "facman::launch_planning"
+product_execution_target = "facman::product_execution"
+candidate_policy_target = "facman::candidate_policy"
+candidate_projection_target = "facman::candidate_projection"
+observer_target = "facman::play_observer"
+evidence_classification_target = "facman_play_evidence_classification"
+operator_verdict_target = "facman_gate4c_verdict_harness"
+operator_targets_in_default_install = false
+local_native_test_count = 54
+local_python_test_count = 517
+local_python_optional_skip_count = 2
+local_python_unsupported_skip_count = 2
+local_required_or_unknown_skip_count = 0
+product_profile_build = "pass"
+product_profile_operator_targets_generated = false
+product_profile_operator_runtime_installed = false
+hermetic_policy_digest = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
+instance_isolated_policy_digest = "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432"
+policy_identity_change = false
+candidate_identity_change = false
+evidence_law_change = false
+factorio_execution = false
+permit_issuance = false
+authority_promotion = false
 
 [release]
 status = "unpublished"

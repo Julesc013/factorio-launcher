@@ -1,0 +1,114 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01
+title: Qualify exact repaired Windows instance-isolated candidate
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-26T18:09:20Z
+owner: unassigned
+objective: >
+  Reconstruct the exact repaired three-repository source set from empty remote
+  clones, build and hash-close the Windows x64 instance-isolated candidate,
+  prove its candidate-specific negative controls, and prepare the separate
+  operator revalidation procedure without executing Factorio or promoting
+  authority.
+allowed_paths:
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-01/**
+  - .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/**
+  - .aide/queue/index.yaml
+  - README.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tools/project_state.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/**
+  - runtime/**
+  - apps/**
+  - tools/gate4c_verdict03_coordinator.py
+  - tools/gate4c_verdict_evidence.py
+  - tools/gate4c_verdict_preflight.py
+  - tools/gate4c_verdict_session.py
+  - tests/native/gate4c_verdict_harness.cpp
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+  - facman_hermetic_play_candidate_smoke
+  - facman_isolation_lock_smoke
+  - facman_isolation_probe
+  - facman_operation_permit_smoke
+  - flb_factorio_launch_permit_smoke
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_gate4c_observer_self_test
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_preflight
+  - tests.test_instance_isolated_play_candidate
+  - tests.test_instance_isolation_probe
+  - tests.test_windows_instance_isolated_play_policy
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/hermetic_play_policy_check.py
+  - tools/instance_isolated_play_candidate_check.py
+  - tools/strict_check.py
+  - tools/windows_instance_isolated_play_policy_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+architecture_invariants:
+  - all three inputs are empty no-local clones of declared remotes
+  - exact pins are fetched and checked out detached with clean worktrees
+  - each pin is reachable from its required canonical remote ref
+  - the frozen policy bytes digests resource vocabulary and verdict law remain unchanged
+  - candidate identity changes explicitly with the repaired source and provider revisions
+  - candidate evidence targets remain excluded from default product packages
+  - no prior candidate observer baseline permit packet or verdict evidence is reused
+  - no Factorio process WPR capture permit issuance or authority promotion occurs
+source_binding:
+  factorio_launcher:
+    revision: b874a40ccba747565c34b726bd6c0d94c9dc1be0
+    required_ref: origin/dev
+  universal_launcher:
+    revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
+    required_ref: origin/main
+  universal_setup:
+    revision: 3f8489275077347c2918f3bb03614ec6431362ff
+    required_ref: origin/main
+candidate_binding:
+  platform: windows
+  architecture: x64
+  factorio_version: 2.0.77
+  distribution: standalone_non_steam
+  launch_intent: menu
+  isolation_mode: instance_isolated
+  hermetic_policy_digest: 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2
+  instance_isolated_policy_digest: 8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432
+depends_on:
+  - FACMAN-PLAY-CANDIDATE-RUNTIME-SEPARATION-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - remote-only source closure recorded
+  - exact generated three-repository build identity recorded
+  - candidate and operator harness artifacts hash-closed
+  - focused candidate native and Python obligations passed
+  - strict policy schema state and AIDE validation passed
+  - operator revalidation prerequisite gap recorded honestly
+  - no Factorio permit verdict route or authority claimed
+  - structured commit check passed
+active_at: 2026-07-26T18:09:20Z
+verified_at: 2026-07-26T18:23:00Z
+implementation_state: evidence_verified
+result: PASS
+reviewed_at: 2026-07-27T12:43:51Z
+closed_at: 2026-07-27T12:43:51Z
+archived_at: 2026-07-27T12:43:52Z

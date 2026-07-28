@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_command_client_cabi.h"
+#include "ulk/ulk_client.h"
 
 #include <string.h>
 
@@ -166,6 +167,11 @@ int main(void)
     config.workspace_root = view_from_cstr("flb-smoke-workspace");
     if (flb_context_create_v1(&config, &context) != ULK_STATUS_OK || context == 0) {
         return 10;
+    }
+    ulk_string_view transport_name = ulk_transport_kind_name_v1(ULK_TRANSPORT_DIRECT);
+    if (transport_name.size != 6u ||
+        memcmp(transport_name.data, "direct", 6u) != 0) {
+        return 39;
     }
     if (flb_abi_version_v1() != FLB_ABI_VERSION ||
         flb_required_ulk_abi_v1() != ((ULK_API_VERSION_MAJOR << 16) | ULK_API_VERSION_MINOR) ||

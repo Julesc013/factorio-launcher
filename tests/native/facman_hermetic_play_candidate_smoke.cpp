@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -103,13 +104,34 @@ public:
         const facman::platform::ProcessResult& process) override
     {
         launch::CandidateObservationResult result;
+        result.schema = plan.observation_schema;
+        result.provider_id = plan.observation_provider_id;
+        result.provider_revision = plan.observation_provider_revision;
         result.plan_digest = plan.plan_digest;
         result.capture_session_digest = digest("capture-session");
         result.raw_artifact_digest = digest("raw-observation-artifact");
         result.active_before_process = active_ && plan.plan_digest == plan_digest_;
         result.capture_complete = result.active_before_process && !force_gap;
         result.gaps.lost_events = force_gap;
-        if (process.identity.restart_safe()) {
+        if (process.identity.restart_safe() &&
+            plan.isolation_mode ==
+                launch::kInstanceIsolatedCandidateIsolation) {
+            launch::CandidateObservedEffect instance_effect;
+            instance_effect.sequence = 1U;
+            instance_effect.domain = "filesystem";
+            instance_effect.process_identity_digest = digest(
+                "process-identity:" +
+                process.identity.stable_start_identity);
+            instance_effect.target_identity_digest =
+                digest("instance-file");
+            instance_effect.logical_resource_id = "instance.closure";
+            instance_effect.classification = "instance_owned";
+            instance_effect.operation_kind = "WriteFile";
+            instance_effect.artifact_owner = "instance";
+            instance_effect.principal_identity_digest =
+                digest("local.fixture:principal:fixture");
+            result.effects.push_back(std::move(instance_effect));
+        } else if (process.identity.restart_safe()) {
             result.effects.push_back({
                 1U, "filesystem", digest(process.identity.stable_start_identity),
                 digest("instance-log"), "instance.logs", "writable"});
@@ -188,6 +210,46 @@ const std::vector<std::string> kAutomatedControls = {
     "restart_provider_session", "select_sibling_instance", "stale_readiness",
     "write_os_global_temporary_directory",
 };
+
+#ifdef _WIN32
+const std::vector<std::string> kInstanceEvidenceIds = {
+    "authenticated_source_evidence",
+    "coordinator_integrity_medium",
+    "effective_config_identity_and_digest",
+    "exact_operation_resource_identities",
+    "executable_stable_identity_and_sha256",
+    "explicit_empty_mod_lock_identity",
+    "external_effect_disposition_identity",
+    "facman_exact_revision_and_build_identity",
+    "installation_evidence_digest",
+    "installation_root_stable_identity",
+    "instance_binding_digest",
+    "instance_logical_id",
+    "instance_readiness_digest",
+    "instance_root_filesystem_identity",
+    "instance_root_no_follow_reparse_state",
+    "instance_root_stable_object_identity",
+    "instance_root_volume_identity",
+    "instance_spec_digest",
+    "isolation_mode_instance_isolated",
+    "launch_intent_menu",
+    "launch_plan_id_and_digest",
+    "machine_binding_identity",
+    "mod_root_identity",
+    "observer_broker_integrity_high",
+    "observer_provider_revision",
+    "policy_revision_and_digest",
+    "principal_and_application_session_identity",
+    "process_integrity_medium",
+    "process_provider_revision",
+    "protected_root_baseline_digest",
+    "read_data_identity",
+    "universal_launcher_exact_revision",
+    "universal_setup_exact_revision",
+    "writable_root_baseline_digest",
+    "write_data_identity",
+};
+#endif
 
 permit::ResourceBinding resource(
     std::string kind,
@@ -282,6 +344,91 @@ launch::CandidatePlanInput plan_input(
     return input;
 }
 
+#ifdef _WIN32
+launch::CandidatePlanInput instance_plan_input(
+    const launch::FrozenHermeticPlayPolicy& policy,
+    const fs::path& workspace)
+{
+    const permit::ProviderIdentity launch_provider {
+        launch::kHermeticCandidateProviderId,
+        launch::kInstanceIsolatedCandidateProviderRevision};
+    const permit::ProviderIdentity observer_provider {
+        launch::kHermeticObservationProviderId,
+        launch::kInstanceIsolatedObservationProviderRevision};
+    const permit::ProviderIdentity instance_provider {
+        "factorio.instance-model", "factorio.instance-model.v1"};
+    const fs::path instance_root = workspace / "instances" / "main";
+    fs::create_directories(instance_root / "config");
+    fs::create_directories(instance_root / "mods");
+    fs::create_directories(instance_root / "state" / "userprofile");
+    write_text(instance_root / "config" / "config.ini", "[path]\n");
+
+    launch::CandidatePlanInput input;
+    input.policy = policy;
+    input.selector = {
+        "windows", "x86_64", "2.0.77", "standalone_non_steam",
+        "sha256_bound_to_authenticated_wube_source", "ntfs", "fixed_local",
+        "facman_owned", "explicit_empty_lock", "none", "none", "none"};
+    input.instance_id = "main";
+    input.machine_binding_id = "machine:fixture";
+    input.principal = {
+        "local.fixture", "principal:fixture", "application-session:fixture"};
+    for (const std::string& id : kInstanceEvidenceIds) {
+        input.evidence.push_back({id, digest("evidence:" + id)});
+    }
+    input.provider_revisions = {
+        instance_provider, launch_provider, observer_provider};
+    input.permit_resources = {
+        resource("factorio.instance-spec", "portable-intent", "instance:main:spec",
+            instance_provider, {"workspace_read"}),
+        resource("factorio.executable", "process-image", "install:fixture:executable",
+            launch_provider, {"process_execute", "workspace_read"}),
+        resource("factorio.observation", "effect-evidence", "operation:fixture:observer",
+            observer_provider, {"workspace_read", "workspace_write"}),
+        resource("factorio.operation-state", "operation-record", "operation:fixture:record",
+            launch_provider, {"workspace_read", "workspace_write"}),
+    };
+    for (const std::string& id :
+         launch::instance_isolated_policy_writable_resource_ids()) {
+        input.permit_resources.push_back(resource(
+            "factorio.writable-root", id, "writable:" + id,
+            id == "operation.observer_artifacts"
+                ? observer_provider
+                : launch_provider,
+            {"workspace_read", "workspace_write"}));
+    }
+    input.writable_resource_ids =
+        launch::instance_isolated_policy_writable_resource_ids();
+    input.protected_resource_ids =
+        launch::instance_isolated_policy_protected_resource_ids();
+    input.process.executable =
+        workspace / "installation" / "bin" / "x64" / "factorio.exe";
+    input.process.arguments = {
+        "--config",
+        (instance_root / "config" / "config.ini").string(),
+        "--mod-directory", (instance_root / "mods").string()};
+    input.process.working_directory =
+        workspace / "temporary" / "fixture" / "process";
+    input.process.environment = {
+        {"SDL_DIRECTINPUT_ENABLED", "0"},
+        {"SystemRoot", "C:/Windows"},
+        {"TEMP", input.process.working_directory.string()},
+        {"TMP", input.process.working_directory.string()},
+        {"USERPROFILE", (instance_root / "state" / "userprofile").string()},
+        {"WINDIR", "C:/Windows"},
+    };
+    input.process.inherit_environment = false;
+    input.process.timeout = std::chrono::minutes(30);
+    input.environment_revision = "factorio.menu-minimal.v2";
+    input.instance_root_authority =
+        std::make_shared<facman::platform::StableDirectoryObject>();
+    if (!input.instance_root_authority->open_no_follow(instance_root).ok()) {
+        input.instance_root_authority.reset();
+    }
+    return input;
+}
+#endif
+
 launch::ProtectedComparisonResult protected_unchanged()
 {
     launch::ProtectedComparisonResult result;
@@ -299,6 +446,33 @@ std::vector<launch::CandidateAutomatedCaseResult> automated_passes()
     for (const std::string& id : kAutomatedControls) result.push_back({id, true});
     return result;
 }
+
+#ifdef _WIN32
+launch::ProtectedComparisonResult instance_protected_unchanged()
+{
+    launch::ProtectedComparisonResult result;
+    result.complete = true;
+    for (const std::string& id :
+         launch::instance_isolated_policy_protected_resource_ids()) {
+        const std::string value = digest("protected:" + id);
+        result.resources.push_back({id, value, value, true, false});
+    }
+    return result;
+}
+#endif
+
+#ifdef _WIN32
+std::vector<launch::CandidateAutomatedCaseResult>
+instance_automated_passes()
+{
+    std::vector<launch::CandidateAutomatedCaseResult> result;
+    for (const std::string& id :
+         launch::instance_isolated_candidate_automated_controls()) {
+        result.push_back({id, true});
+    }
+    return result;
+}
+#endif
 
 int fail(int code) { return code; }
 
@@ -557,6 +731,141 @@ int main()
         missing_context_envelope.value(), first_plan.value(), {}, *authenticator.value(),
         missing_context_ledger, clock, observer, supervisor);
     if (missing_context || observer.active() || supervisor.calls != 2) return fail(192);
+
+#ifdef _WIN32
+    TemporaryTree isolated_fixture {
+        fs::path(FACMAN_TEST_TEMP_ROOT) / "instance-isolated-fixture"};
+    std::error_code isolated_cleanup_error;
+    fs::remove_all(isolated_fixture.path, isolated_cleanup_error);
+    const std::string isolated_policy_document = read_text(
+        source_root / "contracts" / "generated-index" /
+        "windows_instance_isolated_play_policy.v1.canonical.json");
+    auto isolated_policy =
+        launch::FrozenHermeticPlayPolicy::
+            verify_instance_isolated_canonical_document(
+                isolated_policy_document);
+    if (!isolated_policy) return fail(200);
+    auto isolated_plan = launch::build_instance_isolated_candidate_plan(
+        instance_plan_input(
+            isolated_policy.value(), isolated_fixture.path / "workspace"));
+    if (!isolated_plan ||
+        isolated_plan.value().evidence.size() != 35U ||
+        isolated_plan.value().isolation_mode != "instance_isolated" ||
+        isolated_plan.value().required_capabilities !=
+            std::vector<std::string>{
+                "launch.execute.instance_isolated", "process.execute"} ||
+        isolated_plan.value().automated_controls.size() != 21U ||
+        !isolated_plan.value().instance_root_authority ||
+        !isolated_plan.value().instance_root_authority->revalidate().ok()) {
+        return fail(201);
+    }
+    auto isolated_missing_evidence = instance_plan_input(
+        isolated_policy.value(), isolated_fixture.path / "workspace");
+    isolated_missing_evidence.evidence.pop_back();
+    if (launch::build_instance_isolated_candidate_plan(
+            std::move(isolated_missing_evidence))) {
+        return fail(202);
+    }
+    auto isolated_broad_resource = instance_plan_input(
+        isolated_policy.value(), isolated_fixture.path / "workspace");
+    isolated_broad_resource.writable_resource_ids.push_back(
+        "workspace.audit");
+    if (launch::build_instance_isolated_candidate_plan(
+            std::move(isolated_broad_resource))) {
+        return fail(203);
+    }
+
+    permit::PermitLedger isolated_ledger;
+    auto isolated_envelope = issuer.issue(
+        isolated_plan.value(), *authenticator.value(), entropy,
+        isolated_ledger, clock);
+    if (!isolated_envelope) return fail(204);
+    FakeObserver isolated_observer;
+    FakeSupervisor isolated_supervisor;
+    const auto isolated_current = [&]() {
+        return facman::core::Result<permit::PermitValidationContext>::success(
+            launch::candidate_permit_context(isolated_plan.value()));
+    };
+    auto isolated_execution = provider.consume_and_execute(
+        isolated_envelope.value(), isolated_plan.value(),
+        isolated_current, *authenticator.value(), isolated_ledger,
+        clock, isolated_observer, isolated_supervisor);
+    if (!isolated_execution ||
+        !isolated_execution.value().permit.consumed ||
+        isolated_supervisor.calls != 1) {
+        return fail(205);
+    }
+    launch::CandidateObservedEffect bam;
+    bam.sequence = 2U;
+    bam.domain = "registry";
+    bam.process_identity_digest = digest(
+        "process-identity:" +
+        isolated_execution.value().process.identity.stable_start_identity);
+    bam.target_identity_digest = digest("windows-bam-target");
+    bam.logical_resource_id =
+        "windows.bam.factorio_process_execution.v1";
+    bam.classification = "expected_external_disclosed";
+    bam.operation_kind = "RegSetValue";
+    bam.disclosure_effect_id =
+        "windows.bam.factorio_process_execution.v1";
+    bam.principal_identity_digest =
+        digest("local.fixture:principal:fixture");
+    isolated_execution.value().observation.effects.push_back(bam);
+    isolated_execution.value().observation.output_digest.clear();
+    auto isolated_packet = launch::build_candidate_evidence_packet(
+        isolated_plan.value(), isolated_execution.value(),
+        instance_protected_unchanged(),
+        instance_automated_passes());
+    if (!isolated_packet ||
+        isolated_packet.value().schema !=
+            "factorio.instance_isolated_play_candidate_packet.v1" ||
+        isolated_packet.value().technical_disposition !=
+            launch::CandidateTechnicalDisposition::
+                eligible_for_human_verdict ||
+        isolated_packet.value().human_verdict != "unset" ||
+        isolated_packet.value().grants_authority ||
+        isolated_packet.value().product_route_available) {
+        return fail(206);
+    }
+    auto wrong_bam_execution = isolated_execution.value();
+    wrong_bam_execution.observation.effects.back().
+        process_identity_digest = digest("wrong-process");
+    wrong_bam_execution.observation.output_digest.clear();
+    auto wrong_bam_packet = launch::build_candidate_evidence_packet(
+        isolated_plan.value(), wrong_bam_execution,
+        instance_protected_unchanged(),
+        instance_automated_passes());
+    if (!wrong_bam_packet ||
+        wrong_bam_packet.value().technical_disposition !=
+            launch::CandidateTechnicalDisposition::fail_evidence) {
+        return fail(207);
+    }
+    auto unresolved_execution = isolated_execution.value();
+    unresolved_execution.observation.effects.front().
+        target_resolved = false;
+    unresolved_execution.observation.gaps.unresolved_target = true;
+    unresolved_execution.observation.capture_complete = false;
+    unresolved_execution.observation.output_digest.clear();
+    auto unresolved_packet = launch::build_candidate_evidence_packet(
+        isolated_plan.value(), unresolved_execution,
+        instance_protected_unchanged(),
+        instance_automated_passes());
+    if (!unresolved_packet ||
+        unresolved_packet.value().technical_disposition !=
+            launch::CandidateTechnicalDisposition::inconclusive) {
+        return fail(208);
+    }
+    std::error_code replacement_error;
+    fs::rename(
+        isolated_fixture.path / "workspace" / "instances" / "main",
+        isolated_fixture.path / "workspace" / "instances" /
+            "replacement",
+        replacement_error);
+    if (!replacement_error ||
+        !isolated_plan.value().instance_root_authority->revalidate().ok()) {
+        return fail(209);
+    }
+#endif
 
     launch::PlatformPermitEntropySource platform_entropy;
     std::array<unsigned char, 32> random {};

@@ -1,0 +1,25 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01
+status: superseded
+lifecycle_state: archived
+planning_state: superseded
+created_at: 2026-07-26T17:31:26Z
+result: PENDING
+evidence_path: .aide/history/evidence-integrity-repair-2026-07-27/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01/evidence/
+active_at: 2026-07-26T17:31:27Z
+blocked_at: 2026-07-26T18:09:20Z
+updated_at: 2026-07-27T04:31:50Z
+blocker: >
+  The exact candidate is remotely reconstructed, qualified and staged without
+  prepare. The next action crosses the explicit human-controlled real-Play
+  boundary and requires fresh observer, permit and operator evidence.
+supersession_state: superseded_before_prepare
+superseded_by: FACMAN-PROJECT-STATE-DETERMINISM-01
+prepare_invoked: false
+permit_issued: false
+factorio_started: false
+observer_started: false
+baseline_captured: false
+human_verdict: unset
+superseded_at: 2026-07-27T12:41:59Z
+archived_at: 2026-07-27T12:42:26Z

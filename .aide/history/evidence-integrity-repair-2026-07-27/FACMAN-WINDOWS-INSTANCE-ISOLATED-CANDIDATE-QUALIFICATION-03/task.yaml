@@ -1,0 +1,103 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03
+title: Qualify the stable-I/O instance-isolated candidate
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-27T16:27:42Z
+owner: unassigned
+objective: >
+  Reconstruct the exact hosted-accepted three-repository source set from empty no-local remote clones, run the complete promotion matrix, produce and reload the immutable v2 qualification binding, and stage only its exact artifacts into revalidation-02 without preparing or executing Factorio.
+allowed_paths:
+  - .aide/history/evidence-integrity-repair-2026-07-27/**
+  - .aide/memory/**
+  - .aide/queue/**
+  - README.md
+  - THIRD_PARTY_NOTICES.md
+  - docs/architecture/instance-isolated-verdict-harness.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/dependency_lock.v1.toml
+  - release/index/project_status.v2.toml
+  - release/index/sbom.components.v1.json
+  - release/index/workspace_lock.v1.toml
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tests/test_instance_isolated_verdict_coordinator.py
+  - tests/test_play_evidence_stable_io.py
+  - tests/test_setup_package_routing.py
+  - tools/compliance_check.py
+  - tools/gate4c_verdict_preflight.py
+  - tools/instance_isolated_verdict_coordinator.py
+  - tools/m2_wu10_operator_acceptance_check.py
+  - tools/m2_wu9_adversarial_check.py
+  - tools/play_evidence_stable_io.py
+  - tools/play_staged_candidate.py
+  - tools/project_state.py
+  - tools/validators/release/check_dependency_lock.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/**
+  - runtime/**
+  - apps/**
+affected_native_targets:
+  - facman_evidence_probe
+  - facman_gate4c_verdict_harness
+  - facman_hermetic_play_candidate_smoke
+  - facman_cli
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_instance_isolated_candidate_qualification
+  - tests.test_instance_isolated_verdict_coordinator
+  - tests.test_play_evidence_stable_io
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+architecture_invariants:
+  - all three sources are empty no-local HTTPS clones at exact remotely reachable canonical revisions
+  - complete build test package strict project-state and AIDE validation passes
+  - qualification binds the exact native evidence probe and all candidate artifacts
+  - Python validates the native probe result digest using the native serializer's exact closed-record byte form
+  - no prior qualification observer baseline permit packet verdict or human evidence is reused
+  - coordinator stage copies only exact qualified bytes into a fresh revalidation-02 root
+  - qualification binds the root-independent InstanceSpec while stage seals the final workspace's exact path-bound InstanceBinding and readiness digests
+  - coordinator prepare is not invoked
+  - no Factorio process observer permit verdict route or authority is produced
+depends_on:
+  - FACMAN-PLAY-EVIDENCE-STABLE-IO-01
+source_binding:
+  factorio_launcher:
+    revision: 2c393acf838dd432d37f8acce50d01f91bfd28ca
+    required_ref: origin/dev
+  universal_launcher:
+    revision: 7fc25340623131ba86c08dca4fb8a43b18a4520d
+    required_ref: origin/main
+  universal_setup:
+    revision: 3048128963dc718a7c38c1cfcdda9e813a23b0db
+    required_ref: origin/main
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - remote-only source closure passed from three new empty clone roots
+  - exact stable-I/O candidate artifact binding produced and reloaded
+  - immutable v2 qualification binding produced and reloaded
+  - accepted policy digests remain exact
+  - no required obligation was skipped
+  - revalidation-02 staged exact artifacts only
+  - prepare and every execution-authority action remained unperformed
+  - project truth and structured commit validation pass
+active_at: 2026-07-27T16:27:43Z
+verified_pending_closeout_at: 2026-07-27T21:34:43Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-27T21:34:43Z
+closed_at: 2026-07-27T21:34:44Z
+archived_at: 2026-07-27T21:34:44Z

@@ -9,6 +9,7 @@
 #include "flb_factorio_candidate_projection.h"
 #include "flb_factorio_hermetic_candidate.h"
 #include "gate4c_observer_broker_windows.h"
+#include "play_evidence/facman_evidence_io.h"
 
 #include <algorithm>
 #include <array>
@@ -47,8 +48,14 @@ namespace gate4c = facman::gate4c;
 constexpr const char* kSessionSchema = "factorio.gate4c_verdict_session.v1";
 constexpr const char* kComparisonSchema =
     "factorio.gate4c_baseline_comparison.v1";
+constexpr const char* kInstanceSessionSchema =
+    "facman.play_evidence_session.v2";
+constexpr const char* kInstanceComparisonSchema =
+    "facman.play_evidence_comparison.v2";
 constexpr const char* kWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03";
+constexpr const char* kInstanceIsolatedWorkUnit =
+    "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02";
 constexpr const char* kObserverStartRepairWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01";
 constexpr const char* kPrivilegeRepairWorkUnit =
@@ -67,6 +74,55 @@ constexpr const char* kPrivilegeProbeRequestSchema =
     "factorio.gate4c_privilege_probe_request.v1";
 constexpr const char* kObserverProviderRevision =
     "gate4c-etw-file-registry-process.v6";
+
+enum class VerdictRouteKind {
+    hermetic_verdict03,
+    instance_isolated_revalidation,
+};
+
+struct VerdictRouteBinding {
+    VerdictRouteKind kind = VerdictRouteKind::hermetic_verdict03;
+    const char* work_unit = kWorkUnit;
+    const char* policy_digest = launch::kHermeticCandidatePolicyDigest;
+    const char* policy_filename =
+        "hermetic_standalone_play_policy.v1.canonical.json";
+    const char* isolation_mode = "hermetic";
+    const char* operation_prefix = "gate4c-verdict03-";
+};
+
+VerdictRouteBinding route_for_work_unit(const std::string& work_unit)
+{
+    if (work_unit == kWorkUnit) {
+        return {};
+    }
+    if (work_unit == kInstanceIsolatedWorkUnit) {
+        return {
+            VerdictRouteKind::instance_isolated_revalidation,
+            kInstanceIsolatedWorkUnit,
+            launch::kInstanceIsolatedCandidatePolicyDigest,
+            "windows_instance_isolated_play_policy.v1.canonical.json",
+            launch::kInstanceIsolatedCandidateIsolation,
+            "gate4c-instance-isolated-",
+        };
+    }
+    throw std::runtime_error("session Play verdict route is unsupported");
+}
+
+std::vector<std::string> route_protected_resource_ids(
+    VerdictRouteKind route)
+{
+    return route == VerdictRouteKind::instance_isolated_revalidation
+        ? launch::instance_isolated_policy_protected_resource_ids()
+        : launch::hermetic_policy_protected_resource_ids();
+}
+
+std::vector<std::string> route_automated_controls(
+    VerdictRouteKind route)
+{
+    return route == VerdictRouteKind::instance_isolated_revalidation
+        ? launch::instance_isolated_candidate_automated_controls()
+        : launch::hermetic_candidate_automated_controls();
+}
 
 std::string digest(const std::string& value)
 {
@@ -256,6 +312,7 @@ facman::core::Error harness_error(
 }
 
 struct Session {
+    VerdictRouteBinding route;
     fs::path source_root;
     fs::path session_path;
     fs::path preflight_path;
@@ -293,6 +350,10 @@ struct Session {
     std::string baseline_bundle_sha256;
     std::string protected_baseline_digest;
     std::string writable_baseline_digest;
+    fs::path evidence_probe;
+    std::string evidence_probe_sha256;
+    std::string resource_set_digest;
+    std::string startup_environment_snapshot_digest;
     fs::path comparison_out;
     fs::path plan_out;
     std::string session_digest;
@@ -431,7 +492,7 @@ Session load_session(
         throw std::runtime_error("session descriptor is not bounded strict JSON");
     }
     const json::Value& value = parsed.value();
-    const std::set<std::string> expected_keys{
+    std::set<std::string> expected_keys{
         "authenticated_source_artifact_digest",
         "baseline_bundle",
         "baseline_bundle_sha256",
@@ -475,12 +536,23 @@ Session load_session(
         "workspace",
         "writable_baseline_digest",
     };
+    const VerdictRouteBinding route =
+        route_for_work_unit(string_member(value, "work_unit"));
+    if (route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        expected_keys.insert("evidence_probe");
+        expected_keys.insert("evidence_probe_sha256");
+        expected_keys.insert("resource_set_digest");
+        expected_keys.insert("startup_environment_snapshot_digest");
+    }
     const std::vector<std::string> actual_keys = value.object_keys();
     if (std::set<std::string>(actual_keys.begin(), actual_keys.end()) != expected_keys) {
         throw std::runtime_error("session descriptor is not a closed object");
     }
-    if (string_member(value, "schema") != kSessionSchema ||
-        string_member(value, "work_unit") != kWorkUnit) {
+    if (string_member(value, "schema") !=
+        (route.kind == VerdictRouteKind::instance_isolated_revalidation
+            ? kInstanceSessionSchema
+            : kSessionSchema)) {
         throw std::runtime_error("session descriptor identity is unsupported");
     }
     const std::string session_digest = string_member(value, "session_digest");
@@ -497,6 +569,7 @@ Session load_session(
     }
 
     Session output;
+    output.route = route;
     output.source_root = FACMAN_TEST_SOURCE_ROOT;
     output.session_path = path;
     output.preflight_path = platform::path_from_utf8(
@@ -555,6 +628,18 @@ Session load_session(
         string_member(value, "protected_baseline_digest");
     output.writable_baseline_digest =
         string_member(value, "writable_baseline_digest");
+    if (route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        output.evidence_probe = platform::path_from_utf8(
+            string_member(value, "evidence_probe"));
+        output.evidence_probe_sha256 =
+            string_member(value, "evidence_probe_sha256");
+        output.resource_set_digest =
+            string_member(value, "resource_set_digest");
+        output.startup_environment_snapshot_digest =
+            string_member(
+                value, "startup_environment_snapshot_digest");
+    }
     output.comparison_out = platform::path_from_utf8(
         string_member(value, "comparison_out"));
     output.plan_out = platform::path_from_utf8(string_member(value, "plan_out"));
@@ -583,6 +668,16 @@ Session load_session(
                 "session path crosses a link or reparse boundary: " + detail);
         }
     }
+    if (route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        std::string detail;
+        if (facman::base::path_crosses_link_or_reparse_point(
+                output.evidence_probe, detail)) {
+            throw std::runtime_error(
+                "session evidence probe crosses a link or reparse boundary: " +
+                detail);
+        }
+    }
 
     std::error_code first_error;
     std::error_code second_error;
@@ -597,6 +692,12 @@ Session load_session(
             output.observer_tool_sha256 ||
         stable_sha256(output.evidence_tool, 4U * 1024U * 1024U) !=
             output.evidence_tool_sha256 ||
+        (route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation &&
+            stable_sha256(
+                output.evidence_probe,
+                128U * 1024U * 1024U) !=
+                output.evidence_probe_sha256) ||
         stable_sha256(output.python_executable, 128U * 1024U * 1024U) !=
             output.python_executable_sha256 ||
         stable_sha256(output.classification_roots, 16U * 1024U * 1024U) !=
@@ -608,9 +709,9 @@ Session load_session(
         throw std::runtime_error("harness or ready-preflight artifact changed");
     }
     if (
-        output.task_root.filename() != kWorkUnit ||
+        output.task_root.filename() != output.route.work_unit ||
         !safe_identifier(output.instance_id) ||
-        output.operation_id.rfind("gate4c-", 0U) != 0U ||
+        output.operation_id.rfind(output.route.operation_prefix, 0U) != 0U ||
         !safe_identifier(output.operation_id) ||
         normalized_absolute(output.workspace) !=
             normalized_absolute(output.task_root / "workspace") ||
@@ -623,6 +724,9 @@ Session load_session(
         !path_beneath(output.task_root, output.classification_roots) ||
         !path_beneath(output.task_root, output.baseline_bundle) ||
         !path_beneath(output.task_root, output.plan_out) ||
+        (route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation &&
+            !path_beneath(output.task_root, output.evidence_probe)) ||
         normalized_absolute(output.observer_tool) !=
             normalized_absolute(output.source_root / "tools" /
                 "gate4c_verdict_session.py") ||
@@ -632,26 +736,188 @@ Session load_session(
         normalized_absolute(output.policy_path) !=
             normalized_absolute(output.source_root / "contracts" /
                 "generated-index" /
-                "hermetic_standalone_play_policy.v1.canonical.json")) {
+                output.route.policy_filename)) {
         throw std::runtime_error("session path scope is not exact");
     }
     return output;
 }
 
-std::string reviewed_plan_digest(const Session& session)
+std::string verified_plan_digest(const std::string& text)
 {
     auto parsed = json::parse(
-        stable_read(session.plan_out, 8U * 1024U * 1024U),
+        text,
         {8U * 1024U * 1024U, 32U, 100000U, 1024U * 1024U});
     if (!parsed || !parsed.value().is_object()) {
         throw std::runtime_error("reviewed plan artifact is malformed");
     }
+    require_closed_keys(
+        parsed.value(),
+        {
+            "canonicalization_version",
+            "human_verdict_recorded",
+            "plan_core",
+            "plan_digest",
+            "plan_id",
+            "public_command_available",
+            "schema",
+        },
+        "reviewed plan artifact");
     const std::string plan_digest =
         string_member(parsed.value(), "plan_digest");
-    if (!lowercase_hex(plan_digest, 64U)) {
-        throw std::runtime_error("reviewed plan digest is malformed");
+    const json::Value& core = require_member(parsed.value(), "plan_core");
+    if (
+        !lowercase_hex(plan_digest, 64U) ||
+        !core.is_object() ||
+        string_member(parsed.value(), "canonicalization_version") !=
+            "facman.sorted-json.v1" ||
+        string_member(parsed.value(), "plan_id") !=
+            "play-plan-" + plan_digest.substr(0U, 32U) ||
+        bool_member(parsed.value(), "public_command_available") ||
+        bool_member(parsed.value(), "human_verdict_recorded") ||
+        digest(canonical_without(core, "")) != plan_digest) {
+        throw std::runtime_error(
+            "reviewed plan digest was not recomputed from its exact core");
     }
     return plan_digest;
+}
+
+std::string reviewed_plan_digest(const Session& session)
+{
+    return verified_plan_digest(
+        stable_read(session.plan_out, 8U * 1024U * 1024U));
+}
+
+std::string exact_plan_approval_phrase(const std::string& plan_digest)
+{
+    return "ISSUE EXACT MENU PERMIT " + plan_digest;
+}
+
+bool exact_plan_approval_matches(
+    const std::string& supplied,
+    const std::string& plan_digest)
+{
+    return supplied == exact_plan_approval_phrase(plan_digest);
+}
+
+int plan_approval_protocol_self_test()
+{
+    json::ObjectBuilder core;
+    core.add_string(
+        "schema", "factorio.instance_isolated_play_candidate_plan.v1");
+    core.add_string("operation", "instance.play");
+    core.add_string("instance_id", "synthetic-instance");
+    const std::string plan_digest =
+        canonical_object_digest(core.serialize());
+    json::ObjectBuilder plan;
+    plan.add_string(
+        "schema", "factorio.instance_isolated_play_candidate_plan.v1");
+    plan.add_string("canonicalization_version", "facman.sorted-json.v1");
+    plan.add_string(
+        "plan_id", "play-plan-" + plan_digest.substr(0U, 32U));
+    plan.add_string("plan_digest", plan_digest);
+    plan.add_object("plan_core", core);
+    plan.add_bool("public_command_available", false);
+    plan.add_bool("human_verdict_recorded", false);
+    if (
+        verified_plan_digest(plan.serialize()) != plan_digest ||
+        !exact_plan_approval_matches(
+            exact_plan_approval_phrase(plan_digest), plan_digest) ||
+        exact_plan_approval_matches(
+            "ISSUE EXACT MENU PERMIT " + std::string(64U, '0'),
+            plan_digest)) {
+        std::cerr << "exact plan approval protocol drifted\n";
+        return 1;
+    }
+    json::ObjectBuilder forged;
+    forged.add_string(
+        "schema", "factorio.instance_isolated_play_candidate_plan.v1");
+    forged.add_string(
+        "canonicalization_version", "facman.sorted-json.v1");
+    forged.add_string("plan_id", "play-plan-" + std::string(32U, '0'));
+    forged.add_string("plan_digest", std::string(64U, '0'));
+    forged.add_object("plan_core", core);
+    forged.add_bool("public_command_available", false);
+    forged.add_bool("human_verdict_recorded", false);
+    try {
+        (void)verified_plan_digest(forged.serialize());
+        std::cerr << "forged plan digest was accepted\n";
+        return 1;
+    } catch (const std::runtime_error&) {
+        return 0;
+    }
+}
+
+class ExecutionStateLease {
+public:
+    ExecutionStateLease()
+    {
+        active_ = SetThreadExecutionState(
+            ES_CONTINUOUS | ES_SYSTEM_REQUIRED) != 0;
+        if (!active_) {
+            throw std::runtime_error(
+                "Windows execution-state lease could not be acquired");
+        }
+    }
+
+    ExecutionStateLease(const ExecutionStateLease&) = delete;
+    ExecutionStateLease& operator=(const ExecutionStateLease&) = delete;
+
+    ~ExecutionStateLease()
+    {
+        if (active_) {
+            (void)SetThreadExecutionState(ES_CONTINUOUS);
+        }
+    }
+
+    void release()
+    {
+        if (
+            active_ &&
+            SetThreadExecutionState(ES_CONTINUOUS) == 0) {
+            throw std::runtime_error(
+                "Windows execution-state lease could not be released");
+        }
+        active_ = false;
+    }
+
+private:
+    bool active_ = false;
+};
+
+std::string power_request_record(
+    const Session& session,
+    const std::string& plan_digest,
+    const std::string& state)
+{
+    json::ObjectBuilder record;
+    record.add_string(
+        "schema", "factorio.instance_isolated_power_request_lease.v1");
+    record.add_string("work_unit", session.route.work_unit);
+    record.add_string("operation_id", session.operation_id);
+    record.add_string("plan_digest", plan_digest);
+    record.add_string(
+        "provider", "windows.set_thread_execution_state.v1");
+    record.add_string("state", state);
+    record.add_bool("grants_authority", false);
+    const std::string core = record.serialize();
+    auto parsed = json::parse(core);
+    if (!parsed) {
+        throw std::runtime_error(
+            "power-request evidence encoding failed");
+    }
+    json::ObjectBuilder closed;
+    for (const std::string& key : parsed.value().object_keys()) {
+        closed.add_value(key, require_member(parsed.value(), key.c_str()));
+    }
+    closed.add_string("evidence_digest", digest(core));
+    return closed.serialize() + "\n";
+}
+
+int power_request_protocol_self_test()
+{
+    ExecutionStateLease lease;
+    lease.release();
+    return 0;
 }
 
 std::string broker_resource_binding_digest(const Session& session)
@@ -687,7 +953,7 @@ std::string start_request_json(
     document.add_string("session_digest", session.session_digest);
     document.add_string("preflight_digest", session.preflight_digest);
     document.add_string(
-        "policy_digest", launch::kHermeticCandidatePolicyDigest);
+        "policy_digest", session.route.policy_digest);
     document.add_string("plan_digest", plan_digest);
     document.add_string(
         "observer_provider_revision", kObserverProviderRevision);
@@ -1554,7 +1820,7 @@ int run_observer_broker_session(
             string_member(start, "preflight_digest") !=
                 session.preflight_digest ||
             string_member(start, "policy_digest") !=
-                launch::kHermeticCandidatePolicyDigest ||
+                session.route.policy_digest ||
             string_member(start, "plan_digest") !=
                 reviewed_plan_digest(session) ||
             string_member(start, "observer_provider_revision") !=
@@ -1567,13 +1833,19 @@ int run_observer_broker_session(
             throw std::runtime_error(
                 "observer broker start request binding is invalid");
         }
+        const std::string policy_document =
+            stable_read(session.policy_path, 2U * 1024U * 1024U);
         auto policy =
-            launch::FrozenHermeticPlayPolicy::verify_canonical_document(
-                stable_read(
-                    session.policy_path, 2U * 1024U * 1024U));
+            session.route.kind ==
+                    VerdictRouteKind::instance_isolated_revalidation
+                ? launch::FrozenHermeticPlayPolicy::
+                      verify_instance_isolated_canonical_document(
+                          policy_document)
+                : launch::FrozenHermeticPlayPolicy::
+                      verify_canonical_document(policy_document);
         if (!policy || !policy.value().verified ||
             policy.value().policy_digest !=
-                launch::kHermeticCandidatePolicyDigest) {
+                session.route.policy_digest) {
             throw std::runtime_error(
                 "observer broker independently rejected the frozen policy");
         }
@@ -1751,6 +2023,14 @@ int run_observer_broker_session(
                 "--executable", platform::path_to_utf8(session.executable),
                 "--classification-roots",
                 platform::path_to_utf8(session.classification_roots),
+                "--principal-sid",
+                connection.coordinator_identity.user_sid,
+                "--principal-sid-digest",
+                digest(connection.coordinator_identity.user_sid),
+                "--principal-identity-digest",
+                digest(
+                    session.principal.provider_id + ":" +
+                    session.principal.principal_id),
             },
             std::chrono::minutes(10));
         if (!finished) {
@@ -2114,13 +2394,19 @@ int observer_start_probe(
         : 2;
 }
 
-launch::ProtectedComparisonResult load_comparison(const fs::path& path)
+launch::ProtectedComparisonResult load_comparison(
+    const fs::path& path,
+    VerdictRouteKind route)
 {
     auto parsed = json::parse(
         stable_read(path, 32U * 1024U * 1024U),
         {32U * 1024U * 1024U, 48U, 500000U, 4U * 1024U * 1024U});
     if (!parsed || !parsed.value().is_object() ||
-        string_member(parsed.value(), "schema") != kComparisonSchema) {
+        string_member(parsed.value(), "schema") !=
+            (route ==
+                    VerdictRouteKind::instance_isolated_revalidation
+                ? kInstanceComparisonSchema
+                : kComparisonSchema)) {
         throw std::runtime_error("protected comparison is malformed");
     }
     const json::Value& comparisons =
@@ -2148,7 +2434,7 @@ launch::ProtectedComparisonResult load_comparison(const fs::path& path)
         output.resources.push_back(std::move(value));
     }
     const std::vector<std::string> protected_ids =
-        launch::hermetic_policy_protected_resource_ids();
+        route_protected_resource_ids(route);
     const std::set<std::string> expected(
         protected_ids.begin(), protected_ids.end());
     if (identifiers != expected) {
@@ -2157,10 +2443,11 @@ launch::ProtectedComparisonResult load_comparison(const fs::path& path)
     return output;
 }
 
-std::vector<launch::CandidateAutomatedCaseResult> inherited_automated_proof()
+std::vector<launch::CandidateAutomatedCaseResult> inherited_automated_proof(
+    VerdictRouteKind route)
 {
     std::vector<launch::CandidateAutomatedCaseResult> output;
-    for (const std::string& value : launch::hermetic_candidate_automated_controls()) {
+    for (const std::string& value : route_automated_controls(route)) {
         output.push_back({value, true});
     }
     return output;
@@ -2250,6 +2537,73 @@ int privilege_protocol_self_test()
         return 4;
     }
     return 0;
+#endif
+}
+
+int route_binding_self_test()
+{
+#ifndef _WIN32
+    return 0;
+#else
+    try {
+        const VerdictRouteBinding legacy = route_for_work_unit(kWorkUnit);
+        const VerdictRouteBinding isolated =
+            route_for_work_unit(kInstanceIsolatedWorkUnit);
+        bool rejected_unknown = false;
+        try {
+            (void)route_for_work_unit("FACMAN-UNREVIEWED-PLAY");
+        } catch (const std::exception&) {
+            rejected_unknown = true;
+        }
+        if (
+            legacy.kind != VerdictRouteKind::hermetic_verdict03 ||
+            std::string(legacy.policy_digest) !=
+                launch::kHermeticCandidatePolicyDigest ||
+            isolated.kind !=
+                VerdictRouteKind::instance_isolated_revalidation ||
+            std::string(isolated.policy_digest) !=
+                launch::kInstanceIsolatedCandidatePolicyDigest ||
+            std::string(isolated.isolation_mode) !=
+                launch::kInstanceIsolatedCandidateIsolation ||
+            route_protected_resource_ids(isolated.kind).size() != 12U ||
+            route_automated_controls(isolated.kind).empty() ||
+            !rejected_unknown) {
+            std::cerr
+                << "Gate 4C closed route binding self-test failed.\n";
+            return 1;
+        }
+        Session session;
+        session.route = isolated;
+        session.operation_id =
+            "gate4c-instance-isolated-route-binding-self-test";
+        session.session_digest = std::string(64U, '1');
+        session.preflight_digest = std::string(64U, '2');
+        session.baseline_bundle_sha256 = std::string(64U, '3');
+        session.classification_roots_sha256 = std::string(64U, '4');
+        session.observer_tool_sha256 = std::string(64U, '5');
+        session.python_executable_sha256 = std::string(64U, '6');
+        const std::string core = start_request_json(
+            session, 1U, std::string(64U, '7'), std::string(64U, '8'),
+            1U, 2U, {});
+        const std::string request = start_request_json(
+            session, 1U, std::string(64U, '7'), std::string(64U, '8'),
+            1U, 2U, canonical_object_digest(core));
+        const json::Value parsed = parse_bounded_object(
+            request, kStartRequestKeys,
+            "route binding self-test request");
+        if (
+            string_member(parsed, "policy_digest") !=
+                launch::kInstanceIsolatedCandidatePolicyDigest) {
+            std::cerr
+                << "Gate 4C broker route policy binding self-test failed.\n";
+            return 2;
+        }
+        return 0;
+    } catch (const std::exception& exception) {
+        std::cerr << "Gate 4C route binding self-test failed: "
+                  << exception.what() << "\n";
+        return 3;
+    }
 #endif
 }
 
@@ -2348,7 +2702,7 @@ void wait_for_verdict03_plan_approval(
         "Verdict 03 plan approval");
     if (string_member(value, "schema") !=
             "factorio.gate4c_exact_plan_approval.v1" ||
-        string_member(value, "work_unit") != kWorkUnit ||
+        string_member(value, "work_unit") != session.route.work_unit ||
         string_member(value, "operation_id") != session.operation_id ||
         string_member(value, "plan_digest") != plan_digest ||
         string_member(value, "approved_by") != "codex:root" ||
@@ -2387,10 +2741,17 @@ int run(
             ". Start it from a normal non-elevated terminal.");
     }
     Session session = load_session(session_path, running_harness);
-    auto policy = launch::FrozenHermeticPlayPolicy::verify_canonical_document(
-        stable_read(session.policy_path, 2U * 1024U * 1024U));
+    const std::string policy_document =
+        stable_read(session.policy_path, 2U * 1024U * 1024U);
+    auto policy =
+        session.route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation
+            ? launch::FrozenHermeticPlayPolicy::
+                  verify_instance_isolated_canonical_document(policy_document)
+            : launch::FrozenHermeticPlayPolicy::
+                  verify_canonical_document(policy_document);
     if (!policy || !policy.value().verified ||
-        policy.value().policy_digest != launch::kHermeticCandidatePolicyDigest) {
+        policy.value().policy_digest != session.route.policy_digest) {
         throw std::runtime_error("frozen policy verification failed");
     }
     instance::HermeticCandidateProjectionRequest projection;
@@ -2413,7 +2774,11 @@ int run(
     projection.windows_system_root = session.windows_system_root;
     projection.policy = policy.value();
 
-    auto plan = instance::project_hermetic_candidate_plan(projection);
+    auto plan =
+        session.route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation
+            ? instance::project_instance_isolated_candidate_plan(projection)
+            : instance::project_hermetic_candidate_plan(projection);
     if (!plan) {
         throw std::runtime_error(
             plan.error().code + ": " + plan.error().message + " (" +
@@ -2475,19 +2840,27 @@ int run(
             }
         };
     write_new(session.plan_out, launch::hermetic_candidate_plan_json(plan.value()) + "\n");
+    const std::string persisted_plan_digest =
+        reviewed_plan_digest(session);
+    if (persisted_plan_digest != plan.value().plan_digest) {
+        throw std::runtime_error(
+            "persisted plan differs from the in-memory reviewed candidate");
+    }
     std::cout
         << "\nGate 4C exact operation review\n"
         << "  operation: instance.play\n"
         << "  instance: " << session.instance_id << "\n"
         << "  intent: menu\n"
-        << "  isolation: hermetic\n"
+        << "  isolation: " << session.route.isolation_mode << "\n"
         << "  Factorio: 2.0.77 standalone non-Steam\n"
         << "  plan digest: " << plan.value().plan_digest << "\n"
         << "  plan evidence: " << platform::path_to_utf8(session.plan_out) << "\n\n"
         << "This issues one 30-second, one-use permit and starts the exact reviewed\n"
         << "Factorio candidate. It does not record a human verdict.\n\n"
         << std::flush;
-    if (shared_connection != nullptr) {
+    if (
+        session.route.kind == VerdictRouteKind::hermetic_verdict03 &&
+        shared_connection != nullptr) {
         wait_for_verdict03_plan_approval(
             session, plan.value().plan_digest);
     } else {
@@ -2495,11 +2868,30 @@ int run(
                   << plan.value().plan_digest << "\n> " << std::flush;
         std::string approval;
         std::getline(std::cin, approval);
-        if (approval !=
-            "ISSUE EXACT MENU PERMIT " + plan.value().plan_digest) {
+        if (!exact_plan_approval_matches(
+                approval, plan.value().plan_digest)) {
             std::cout << "No permit issued; candidate was not started.\n";
             return 3;
         }
+    }
+    std::unique_ptr<ExecutionStateLease> power_request;
+    if (
+        session.route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        power_request = std::make_unique<ExecutionStateLease>();
+        std::error_code directory_error;
+        fs::create_directories(
+            session.operation_root / "observer-artifacts",
+            directory_error);
+        if (directory_error) {
+            throw std::runtime_error(
+                "power-request evidence directory could not be created");
+        }
+        write_new(
+            session.operation_root / "observer-artifacts" /
+                "power-request-acquired.json",
+            power_request_record(
+                session, plan.value().plan_digest, "acquired"));
     }
 
     std::unique_ptr<ObserverBrokerClient> observer_broker;
@@ -2539,7 +2931,25 @@ int run(
     launch::HermeticCandidateLaunchProvider provider;
     launch::PlatformProcessSupervisor supervisor;
     const auto current = [&]() {
-        return instance::reobserve_hermetic_candidate_context(projection);
+        if (session.route.kind ==
+            VerdictRouteKind::instance_isolated_revalidation) {
+            const auto resources =
+                facman::play_evidence::
+                    revalidate_resource_specification(
+                        session.preflight_path,
+                        session.preflight_digest,
+                        session.resource_set_digest);
+            if (!resources) {
+                return facman::core::Result<
+                    permit::PermitValidationContext>::failure(
+                        resources.error());
+            }
+        }
+        return session.route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation
+            ? instance::reobserve_instance_isolated_candidate_context(
+                  projection)
+            : instance::reobserve_hermetic_candidate_context(projection);
     };
     auto execution = provider.consume_and_execute(
         envelope.value(), plan.value(), current, *authenticator.value(),
@@ -2563,23 +2973,46 @@ int run(
                 factorio_security_error);
         }
     }
+    if (power_request) {
+        power_request->release();
+        write_new(
+            session.operation_root / "observer-artifacts" /
+                "power-request-released.json",
+            power_request_record(
+                session, plan.value().plan_digest, "released"));
+    }
 
+    std::vector<std::string> comparison_arguments{
+        platform::path_to_utf8(session.evidence_tool),
+        "finish",
+        "--baseline",
+        platform::path_to_utf8(session.baseline_bundle),
+        "--out",
+        platform::path_to_utf8(session.comparison_out),
+        "--route",
+        session.route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation
+            ? "windows-instance-isolated-revalidation"
+            : "gate4c-hermetic-verdict03",
+    };
+    if (session.route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        comparison_arguments.push_back("--evidence-probe");
+        comparison_arguments.push_back(
+            platform::path_to_utf8(session.evidence_probe));
+    }
     auto compared = run_python(
         session,
-        {
-            platform::path_to_utf8(session.evidence_tool),
-            "finish",
-            "--baseline", platform::path_to_utf8(session.baseline_bundle),
-            "--out", platform::path_to_utf8(session.comparison_out),
-        },
+        comparison_arguments,
         std::chrono::minutes(20));
     if (!compared) {
         throw std::runtime_error(
             compared.error().code + ": " + compared.error().message);
     }
     auto packet = launch::build_candidate_evidence_packet(
-        plan.value(), execution.value(), load_comparison(session.comparison_out),
-        inherited_automated_proof());
+        plan.value(), execution.value(),
+        load_comparison(session.comparison_out, session.route.kind),
+        inherited_automated_proof(session.route.kind));
     if (!packet) {
         throw std::runtime_error(
             packet.error().code + ": " + packet.error().message);
@@ -2829,6 +3262,21 @@ int main(int argc, char** argv)
         if (argc == 2 && std::string(argv[1]) == "--self-test-privilege-protocol") {
             return privilege_protocol_self_test();
         }
+        if (argc == 2 && std::string(argv[1]) == "--self-test-route-binding") {
+            return route_binding_self_test();
+        }
+#ifdef _WIN32
+        if (
+            argc == 2 &&
+            std::string(argv[1]) == "--self-test-plan-approval-protocol") {
+            return plan_approval_protocol_self_test();
+        }
+        if (
+            argc == 2 &&
+            std::string(argv[1]) == "--self-test-power-request-protocol") {
+            return power_request_protocol_self_test();
+        }
+#endif
         if (argc == 4 && std::string(argv[1]) == "--verify-packet") {
             return verify_packet(
                 facman::platform::path_from_utf8(argv[2]), argv[3]);

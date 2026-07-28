@@ -68,6 +68,93 @@ const std::set<std::string> kAutomatedNegativeControls = {
     "write_os_global_temporary_directory",
 };
 
+const std::set<std::string> kInstanceIsolatedRequiredEvidenceIds = {
+    "authenticated_source_evidence",
+    "coordinator_integrity_medium",
+    "effective_config_identity_and_digest",
+    "exact_operation_resource_identities",
+    "executable_stable_identity_and_sha256",
+    "external_effect_disposition_identity",
+    "facman_exact_revision_and_build_identity",
+    "installation_evidence_digest",
+    "installation_root_stable_identity",
+    "instance_binding_digest",
+    "instance_logical_id",
+    "instance_readiness_digest",
+    "instance_root_filesystem_identity",
+    "instance_root_no_follow_reparse_state",
+    "instance_root_stable_object_identity",
+    "instance_root_volume_identity",
+    "instance_spec_digest",
+    "isolation_mode_instance_isolated",
+    "launch_intent_menu",
+    "launch_plan_id_and_digest",
+    "machine_binding_identity",
+    "mod_root_identity",
+    "observer_broker_integrity_high",
+    "observer_provider_revision",
+    "policy_revision_and_digest",
+    "principal_and_application_session_identity",
+    "process_integrity_medium",
+    "process_provider_revision",
+    "protected_root_baseline_digest",
+    "read_data_identity",
+    "universal_launcher_exact_revision",
+    "universal_setup_exact_revision",
+    "writable_root_baseline_digest",
+    "write_data_identity",
+    "explicit_empty_mod_lock_identity",
+};
+
+const std::set<std::string> kInstanceIsolatedWritableResourceIds = {
+    "instance.closure",
+    "operation.audit_record",
+    "operation.candidate_artifacts",
+    "operation.observer_artifacts",
+    "operation.process_logs",
+    "operation.record",
+    "operation.temporary",
+};
+
+const std::set<std::string> kInstanceIsolatedProtectedResourceIds = {
+    "facman.package",
+    "factorio.appdata",
+    "factorio.default_user_data",
+    "factorio.localappdata",
+    "factorio.programdata",
+    "factorio.source_artifacts",
+    "installation.selected",
+    "installation.siblings",
+    "instances.other",
+    "registry.factorio_uninstall",
+    "steam.installation",
+    "steam.userdata",
+};
+
+const std::set<std::string> kInstanceIsolatedAutomatedControls = {
+    "bam_effect_with_wrong_executable_identity",
+    "directinput_effect_after_environment_v2_suppression",
+    "drive_root_driver_directory_creation",
+    "elevated_factorio",
+    "file_object_reuse",
+    "incomplete_packet",
+    "installation_umdlogs_creation",
+    "instance_ancestor_replacement",
+    "instance_reparse_escape",
+    "instance_sibling_escape",
+    "kcb_reuse",
+    "lost_events",
+    "missing_fileio_op_end",
+    "observer_runtime_packet_collision",
+    "replayed_permit",
+    "stale_permit",
+    "unexpected_hkcu_registry_write",
+    "unexpected_hklm_registry_write",
+    "unresolved_fileio_target",
+    "wrong_isolation_mode",
+    "wrong_launch_intent",
+};
+
 facman::core::Error candidate_error(
     std::string code,
     std::string message,
@@ -313,7 +400,9 @@ bool provider_present(
     });
 }
 
-std::string evidence_json(std::vector<CandidateEvidenceBinding> values)
+std::string evidence_json(
+    std::vector<CandidateEvidenceBinding> values,
+    const std::string& schema)
 {
     std::sort(values.begin(), values.end(), [](const auto& left, const auto& right) {
         return left.requirement_id < right.requirement_id;
@@ -326,7 +415,7 @@ std::string evidence_json(std::vector<CandidateEvidenceBinding> values)
         bindings.add_object(item);
     }
     json::ObjectBuilder output;
-    output.add_string("schema", "factorio.hermetic_play_candidate_evidence.v1");
+    output.add_string("schema", schema);
     output.add_string("canonicalization_version", "facman.sorted-json.v1");
     output.add_array("bindings", bindings);
     return output.serialize();
@@ -392,9 +481,9 @@ std::string plan_core_json(const HermeticCandidatePlan& plan)
     output.add_string("principal_provider", plan.principal.provider_id);
     output.add_string("principal_id", plan.principal.principal_id);
     output.add_string("application_session_id", plan.principal.application_session_id);
-    output.add_string("operation", kHermeticCandidateOperation);
-    output.add_string("launch_intent", kHermeticCandidateIntent);
-    output.add_string("isolation_mode", kHermeticCandidateIsolation);
+    output.add_string("operation", plan.operation_kind);
+    output.add_string("launch_intent", plan.launch_intent);
+    output.add_string("isolation_mode", plan.isolation_mode);
     output.add_string("evidence_digest", plan.evidence_digest);
     output.add_array("permit_resources", resource_values);
     output.add_array("provider_revisions", provider_values);
@@ -407,7 +496,8 @@ std::string plan_core_json(const HermeticCandidatePlan& plan)
 
 bool plan_integrity_valid(const HermeticCandidatePlan& plan)
 {
-    return plan.evidence_digest == sha256_text(evidence_json(plan.evidence)) &&
+    return plan.evidence_digest ==
+            sha256_text(evidence_json(plan.evidence, plan.evidence_schema)) &&
         plan.plan_digest == sha256_text(plan_core_json(plan)) &&
         plan.plan_id == "play-plan-" + plan.plan_digest.substr(0U, 32U);
 }
@@ -437,6 +527,9 @@ std::string observation_json(
     const CandidateObservationResult& observation,
     bool include_digest)
 {
+    const bool instance_isolated =
+        observation.schema ==
+        "factorio.instance_isolated_play_candidate_observation.v1";
     std::vector<CandidateObservedEffect> effects = observation.effects;
     std::sort(effects.begin(), effects.end(), [](const auto& left, const auto& right) {
         return std::tie(left.sequence, left.domain, left.logical_resource_id) <
@@ -451,6 +544,22 @@ std::string observation_json(
         item.add_string("target_identity_digest", value.target_identity_digest);
         item.add_string("logical_resource_id", value.logical_resource_id);
         item.add_string("classification", value.classification);
+        if (instance_isolated) {
+            item.add_string("operation_kind", value.operation_kind);
+            item.add_string(
+                "disclosure_effect_id", value.disclosure_effect_id);
+            item.add_string("artifact_owner", value.artifact_owner);
+            item.add_string(
+                "principal_identity_digest",
+                value.principal_identity_digest);
+            item.add_bool("completion_success", value.completion_success);
+            item.add_bool("target_resolved", value.target_resolved);
+            item.add_bool(
+                "object_lifetime_resolved",
+                value.object_lifetime_resolved);
+            item.add_bool(
+                "attribution_resolved", value.attribution_resolved);
+        }
         effect_values.add_object(item);
     }
     json::ObjectBuilder gaps;
@@ -461,8 +570,21 @@ std::string observation_json(
     gaps.add_bool("delayed_events", observation.gaps.delayed_events);
     gaps.add_bool("attribution_gap", observation.gaps.attribution_gap);
     gaps.add_bool("provider_failure", observation.gaps.provider_failure);
+    if (instance_isolated) {
+        gaps.add_bool(
+            "missing_completion", observation.gaps.missing_completion);
+        gaps.add_bool(
+            "object_reuse_ambiguity",
+            observation.gaps.object_reuse_ambiguity);
+        gaps.add_bool(
+            "baseline_incomplete", observation.gaps.baseline_incomplete);
+        gaps.add_bool(
+            "postrun_incomplete", observation.gaps.postrun_incomplete);
+        gaps.add_bool(
+            "packet_collision", observation.gaps.packet_collision);
+    }
     json::ObjectBuilder output;
-    output.add_string("schema", "factorio.play_candidate_observation.v1");
+    output.add_string("schema", observation.schema);
     output.add_string("provider_id", observation.provider_id);
     output.add_string("provider_revision", observation.provider_revision);
     output.add_string("plan_digest", observation.plan_digest);
@@ -568,6 +690,27 @@ std::vector<std::string> hermetic_candidate_automated_controls()
     return {kAutomatedNegativeControls.begin(), kAutomatedNegativeControls.end()};
 }
 
+std::vector<std::string> instance_isolated_policy_writable_resource_ids()
+{
+    return {
+        kInstanceIsolatedWritableResourceIds.begin(),
+        kInstanceIsolatedWritableResourceIds.end()};
+}
+
+std::vector<std::string> instance_isolated_policy_protected_resource_ids()
+{
+    return {
+        kInstanceIsolatedProtectedResourceIds.begin(),
+        kInstanceIsolatedProtectedResourceIds.end()};
+}
+
+std::vector<std::string> instance_isolated_candidate_automated_controls()
+{
+    return {
+        kInstanceIsolatedAutomatedControls.begin(),
+        kInstanceIsolatedAutomatedControls.end()};
+}
+
 facman::core::Result<FrozenHermeticPlayPolicy>
 FrozenHermeticPlayPolicy::verify_canonical_document(
     const std::string& canonical_policy_json)
@@ -619,6 +762,87 @@ FrozenHermeticPlayPolicy::verify_canonical_document(
     output.canonicalization_version = "facman.sorted-json.v1";
     output.verified = true;
     return facman::core::Result<FrozenHermeticPlayPolicy>::success(std::move(output));
+}
+
+facman::core::Result<FrozenHermeticPlayPolicy>
+FrozenHermeticPlayPolicy::verify_instance_isolated_canonical_document(
+    const std::string& canonical_policy_json)
+{
+    auto policy = json::parse(canonical_policy_json);
+    if (!policy || !policy.value().is_object()) {
+        return facman::core::Result<FrozenHermeticPlayPolicy>::failure(candidate_error(
+            "permit_wrong_policy",
+            "instance-isolated policy canonical document is not strict JSON",
+            "$candidate.policy"));
+    }
+    std::string canonical = canonical_policy_json;
+    while (!canonical.empty() &&
+           std::isspace(static_cast<unsigned char>(canonical.back())) != 0) {
+        canonical.pop_back();
+    }
+    if (sha256_text(canonical) != kInstanceIsolatedCandidatePolicyDigest) {
+        return facman::core::Result<FrozenHermeticPlayPolicy>::failure(candidate_error(
+            "permit_wrong_policy",
+            "instance-isolated policy canonical digest does not match canonical truth",
+            "$candidate.policy.digest"));
+    }
+    const json::Value* candidate = object_field(policy.value(), "candidate");
+    const json::Value* launch = object_field(policy.value(), "launch");
+    const json::Value* claim = object_field(policy.value(), "claim");
+    const json::Value* authority = object_field(policy.value(), "authority_boundary");
+    if (!string_field(
+            policy.value(), "schema",
+            "factorio.windows_instance_isolated_play_policy.v1") ||
+        !string_field(
+            policy.value(), "policy_id", kInstanceIsolatedCandidatePolicyId) ||
+        !string_field(
+            policy.value(), "policy_revision",
+            kInstanceIsolatedCandidatePolicyRevision) ||
+        !string_field(
+            policy.value(), "canonicalization_version",
+            "facman.sorted-json.v1") ||
+        candidate == nullptr || launch == nullptr || claim == nullptr ||
+        authority == nullptr ||
+        !string_field(*candidate, "platform", "windows") ||
+        !string_field(*candidate, "architecture", "x86_64") ||
+        !string_field(*candidate, "factorio_version", "2.0.77") ||
+        !string_field(*candidate, "distribution", "standalone_non_steam") ||
+        !string_field(
+            *candidate, "process_environment", "factorio.menu-minimal.v2") ||
+        !string_field(
+            *candidate, "observer_provider",
+            kInstanceIsolatedObservationProviderRevision) ||
+        !string_field(*launch, "operation_kind", kHermeticCandidateOperation) ||
+        !string_field(*launch, "intent", kHermeticCandidateIntent) ||
+        !string_field(
+            *launch, "isolation_mode",
+            kInstanceIsolatedCandidateIsolation) ||
+        !bool_field(*launch, "external_effects_authorized", false) ||
+        !bool_field(*launch, "network_allowed", false) ||
+        !bool_field(*launch, "credentials_allowed", false) ||
+        !bool_field(*launch, "setup_allowed", false) ||
+        !string_field(
+            *claim, "claim_id",
+            "factorio.windows_instance_isolated_process_tree.v1") ||
+        !bool_field(*claim, "whole_host_immutability_claimed", false) ||
+        !bool_field(*claim, "enforced_sandbox_claimed", false) ||
+        !bool_field(*claim, "external_effects_are_permit_resources", false) ||
+        !bool_field(*authority, "process_execution", false) ||
+        !bool_field(*authority, "permit_issuance_authority", false) ||
+        !bool_field(*authority, "product_apply_route", false)) {
+        return facman::core::Result<FrozenHermeticPlayPolicy>::failure(candidate_error(
+            "permit_wrong_policy",
+            "instance-isolated policy selectors or authority boundary changed",
+            "$candidate.policy"));
+    }
+    FrozenHermeticPlayPolicy output;
+    output.policy_id = kInstanceIsolatedCandidatePolicyId;
+    output.policy_revision = kInstanceIsolatedCandidatePolicyRevision;
+    output.policy_digest = kInstanceIsolatedCandidatePolicyDigest;
+    output.canonicalization_version = "facman.sorted-json.v1";
+    output.verified = true;
+    return facman::core::Result<FrozenHermeticPlayPolicy>::success(
+        std::move(output));
 }
 
 facman::core::Result<HermeticCandidatePlan> build_hermetic_candidate_plan(
@@ -706,13 +930,17 @@ facman::core::Result<HermeticCandidatePlan> build_hermetic_candidate_plan(
     output.machine_binding_id = std::move(input.machine_binding_id);
     output.principal = std::move(input.principal);
     output.evidence = std::move(input.evidence);
-    output.evidence_digest = sha256_text(evidence_json(output.evidence));
+    output.evidence_digest =
+        sha256_text(evidence_json(output.evidence, output.evidence_schema));
     output.permit_resources = std::move(input.permit_resources);
     output.provider_revisions = std::move(input.provider_revisions);
     output.writable_resource_ids = sorted_unique(std::move(input.writable_resource_ids));
     output.protected_resource_ids = sorted_unique(std::move(input.protected_resource_ids));
     output.process = std::move(input.process);
     output.environment_revision = std::move(input.environment_revision);
+    output.automated_controls = hermetic_candidate_automated_controls();
+    output.instance_root_authority =
+        std::move(input.instance_root_authority);
     output.plan_digest = sha256_text(plan_core_json(output));
     output.plan_id = "play-plan-" + output.plan_digest.substr(0U, 32U);
 
@@ -741,11 +969,181 @@ facman::core::Result<HermeticCandidatePlan> build_hermetic_candidate_plan(
     return facman::core::Result<HermeticCandidatePlan>::success(std::move(output));
 }
 
+facman::core::Result<HermeticCandidatePlan>
+build_instance_isolated_candidate_plan(CandidatePlanInput input)
+{
+    if (!input.policy.verified ||
+        input.policy.policy_id != kInstanceIsolatedCandidatePolicyId ||
+        input.policy.policy_revision !=
+            kInstanceIsolatedCandidatePolicyRevision ||
+        input.policy.policy_digest != kInstanceIsolatedCandidatePolicyDigest) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_wrong_policy",
+            "candidate requires the exact verified canonical instance-isolated policy",
+            "$candidate.policy"));
+    }
+    if (!exact_selector(input.selector)) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_wrong_operation",
+            "instance-isolated candidate selector is outside the frozen class",
+            "$candidate.selector"));
+    }
+    if (input.instance_id.empty() || input.machine_binding_id.empty() ||
+        input.principal.provider_id.empty() ||
+        input.principal.principal_id.empty() ||
+        input.principal.application_session_id.empty()) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_wrong_evidence",
+            "instance, machine, and principal identities are required",
+            "$candidate.identity"));
+    }
+    std::set<std::string> evidence_ids;
+    for (const auto& binding : input.evidence) {
+        if (!evidence_ids.insert(binding.requirement_id).second ||
+            !lowercase_digest(binding.identity_digest)) {
+            return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+                "permit_wrong_evidence",
+                "candidate evidence contains a duplicate or invalid digest",
+                "$candidate.evidence"));
+        }
+    }
+    if (evidence_ids != kInstanceIsolatedRequiredEvidenceIds) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_wrong_evidence",
+            "candidate does not bind the exact instance-isolated policy evidence requirements",
+            "$candidate.evidence"));
+    }
+    if (!exact_process_shape(input.process) ||
+        input.environment_revision != "factorio.menu-minimal.v2") {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_wrong_plan",
+            "candidate process request is not exact menu/minimal-environment shape",
+            "$candidate.process"));
+    }
+    if (!exact_set(
+            input.writable_resource_ids,
+            kInstanceIsolatedWritableResourceIds) ||
+        !exact_set(
+            input.protected_resource_ids,
+            kInstanceIsolatedProtectedResourceIds)) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_resource_set_not_closed",
+            "candidate writable or protected scope differs from frozen policy",
+            "$candidate.resources"));
+    }
+    if (!exact_resource_closure(
+            input.permit_resources,
+            kInstanceIsolatedWritableResourceIds)) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_resource_set_not_closed",
+            "candidate permit resources do not exactly bind instance, operation, and execution effects",
+            "$candidate.permit_resources"));
+    }
+    if (input.permit_resources.empty() ||
+        !provider_present(
+            input.provider_revisions,
+            kHermeticCandidateProviderId,
+            kInstanceIsolatedCandidateProviderRevision) ||
+        !provider_present(
+            input.provider_revisions,
+            kHermeticObservationProviderId,
+            kInstanceIsolatedObservationProviderRevision)) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_wrong_provider",
+            "instance-isolated candidate provider bindings are incomplete",
+            "$candidate.providers"));
+    }
+    if (!input.instance_root_authority ||
+        !input.instance_root_authority->open()) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_wrong_resource",
+            "candidate lacks a held no-follow Instance directory object",
+            "$candidate.instance_root"));
+    }
+    const auto stable = input.instance_root_authority->revalidate();
+    if (!stable.ok()) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(candidate_error(
+            "permit_resource_stale", stable.detail, "$candidate.instance_root"));
+    }
+
+    HermeticCandidatePlan output;
+    output.schema = "factorio.instance_isolated_play_candidate_plan.v1";
+    output.policy = std::move(input.policy);
+    output.selector = std::move(input.selector);
+    output.instance_id = std::move(input.instance_id);
+    output.machine_binding_id = std::move(input.machine_binding_id);
+    output.principal = std::move(input.principal);
+    output.evidence = std::move(input.evidence);
+    output.evidence_schema =
+        "factorio.instance_isolated_play_candidate_evidence.v1";
+    output.permit_resources = std::move(input.permit_resources);
+    output.provider_revisions = std::move(input.provider_revisions);
+    output.writable_resource_ids =
+        sorted_unique(std::move(input.writable_resource_ids));
+    output.protected_resource_ids =
+        sorted_unique(std::move(input.protected_resource_ids));
+    output.process = std::move(input.process);
+    output.environment_revision = std::move(input.environment_revision);
+    output.operation_kind = kHermeticCandidateOperation;
+    output.launch_intent = kHermeticCandidateIntent;
+    output.isolation_mode = kInstanceIsolatedCandidateIsolation;
+    output.provider_id = kHermeticCandidateProviderId;
+    output.provider_revision =
+        kInstanceIsolatedCandidateProviderRevision;
+    output.observation_schema =
+        "factorio.instance_isolated_play_candidate_observation.v1";
+    output.observation_provider_id = kHermeticObservationProviderId;
+    output.observation_provider_revision =
+        kInstanceIsolatedObservationProviderRevision;
+    output.packet_schema =
+        "factorio.instance_isolated_play_candidate_packet.v1";
+    output.required_capabilities = {
+        "launch.execute.instance_isolated", "process.execute"};
+    output.automated_controls =
+        instance_isolated_candidate_automated_controls();
+    output.instance_root_authority =
+        std::move(input.instance_root_authority);
+    output.evidence_digest =
+        sha256_text(evidence_json(output.evidence, output.evidence_schema));
+    output.plan_digest = sha256_text(plan_core_json(output));
+    output.plan_id = "play-plan-" + output.plan_digest.substr(0U, 32U);
+
+    permit::OperationPermitClaims validation;
+    validation.permit_id = "permit-00000000000000000000000000000000";
+    validation.issuer_session_id =
+        "session-00000000000000000000000000000000";
+    validation.operation = {
+        output.operation_kind, output.launch_intent, output.isolation_mode};
+    validation.plan = {output.plan_id, output.plan_digest};
+    validation.audience = {output.provider_id, output.provider_revision};
+    validation.resources = output.permit_resources;
+    validation.effects = {
+        "workspace_read", "workspace_write", "process_execute"};
+    validation.required_capabilities = output.required_capabilities;
+    validation.machine_binding_id = output.machine_binding_id;
+    validation.principal = output.principal;
+    validation.evidence_digest = output.evidence_digest;
+    validation.policy = {
+        output.policy.policy_revision, output.policy.policy_digest};
+    validation.provider_revisions = output.provider_revisions;
+    validation.issued_at_unix_seconds = 1U;
+    validation.not_before_unix_seconds = 1U;
+    validation.expires_at_unix_seconds = 2U;
+    validation.nonce = "nonce-00000000000000000000000000000000";
+    if (auto canonical = permit::canonical_claims_json(validation);
+        !canonical) {
+        return facman::core::Result<HermeticCandidatePlan>::failure(
+            canonical.error());
+    }
+    return facman::core::Result<HermeticCandidatePlan>::success(
+        std::move(output));
+}
+
 std::string hermetic_candidate_plan_json(const HermeticCandidatePlan& plan)
 {
     auto core = json::parse(plan_core_json(plan));
     json::ObjectBuilder output;
-    output.add_string("schema", "factorio.hermetic_play_candidate_plan.v1");
+    output.add_string("schema", plan.schema);
     output.add_string("canonicalization_version", "facman.sorted-json.v1");
     output.add_string("plan_id", plan.plan_id);
     output.add_string("plan_digest", plan.plan_digest);
@@ -759,17 +1157,18 @@ permit::PermitValidationContext candidate_permit_context(
     const HermeticCandidatePlan& plan)
 {
     permit::PermitValidationContext context;
-    context.operation = {kHermeticCandidateOperation,
-        std::string(kHermeticCandidateIntent), std::string(kHermeticCandidateIsolation)};
+    context.operation = {
+        plan.operation_kind, plan.launch_intent, plan.isolation_mode};
     context.plan = {plan.plan_id, plan.plan_digest};
-    context.consumer = {kHermeticCandidateProviderId, kHermeticCandidateProviderRevision};
+    context.consumer = {plan.provider_id, plan.provider_revision};
     context.resources = plan.permit_resources;
     context.effects = {"workspace_read", "workspace_write", "process_execute"};
-    context.required_capabilities = {"launch.execute.hermetic", "process.execute"};
+    context.required_capabilities = plan.required_capabilities;
     context.machine_binding_id = plan.machine_binding_id;
     context.principal = plan.principal;
     context.evidence_digest = plan.evidence_digest;
-    context.policy = {kHermeticCandidatePolicyRevision, kHermeticCandidatePolicyDigest};
+    context.policy = {
+        plan.policy.policy_revision, plan.policy.policy_digest};
     context.provider_revisions = plan.provider_revisions;
     return context;
 }
@@ -809,8 +1208,9 @@ facman::core::Result<permit::OperationPermitEnvelope> CandidatePermitIssuer::iss
     permit::PermitLedger& ledger,
     const permit::PermitClock& clock) const
 {
-    if (!plan.policy.verified || plan.policy.policy_digest != kHermeticCandidatePolicyDigest ||
+    if (!plan.policy.verified || !lowercase_digest(plan.policy.policy_digest) ||
         !exact_selector(plan.selector) || !plan_integrity_valid(plan) ||
+        plan.provider_id != kHermeticCandidateProviderId ||
         ttl_seconds_ == 0U || ttl_seconds_ > 30U) {
         return facman::core::Result<permit::OperationPermitEnvelope>::failure(candidate_error(
             "permit_wrong_policy", "candidate issuer rejected policy, selector, or TTL",
@@ -870,7 +1270,9 @@ facman::core::Result<permit::OperationPermitEnvelope> CandidatePermitIssuer::iss
 bool ObservationGapState::any() const noexcept
 {
     return lost_events || buffer_overflow || unknown_process_identity ||
-        unresolved_target || delayed_events || attribution_gap || provider_failure;
+        unresolved_target || delayed_events || attribution_gap ||
+        provider_failure || missing_completion || object_reuse_ambiguity ||
+        baseline_incomplete || postrun_incomplete || packet_collision;
 }
 
 std::string candidate_observation_artifact_json(
@@ -899,9 +1301,13 @@ facman::core::Result<CandidateObservationResult> decode_candidate_observation_ar
     };
     const std::vector<std::string> document_keys = document.value().object_keys();
     if (std::set<std::string>(document_keys.begin(), document_keys.end()) != expected_keys ||
-        !string_field(document.value(), "schema", "factorio.play_candidate_observation.v1") ||
-        !string_field(document.value(), "provider_id", kHermeticObservationProviderId) ||
-        !string_field(document.value(), "provider_revision", kHermeticObservationProviderRevision) ||
+        !string_field(document.value(), "schema", plan.observation_schema) ||
+        !string_field(
+            document.value(), "provider_id",
+            plan.observation_provider_id) ||
+        !string_field(
+            document.value(), "provider_revision",
+            plan.observation_provider_revision) ||
         !string_field(document.value(), "plan_digest", plan.plan_digest)) {
         return facman::core::Result<CandidateObservationResult>::failure(candidate_error(
             "permit_wrong_evidence", "observer artifact identity or shape is not exact",
@@ -924,6 +1330,9 @@ facman::core::Result<CandidateObservationResult> decode_candidate_observation_ar
         return true;
     };
     CandidateObservationResult output;
+    output.schema = plan.observation_schema;
+    output.provider_id = plan.observation_provider_id;
+    output.provider_revision = plan.observation_provider_revision;
     if (!read_string("plan_digest", output.plan_digest) ||
         !read_string("capture_session_digest", output.capture_session_digest) ||
         !read_string("raw_artifact_digest", output.raw_artifact_digest) ||
@@ -941,26 +1350,59 @@ facman::core::Result<CandidateObservationResult> decode_candidate_observation_ar
     const json::Value* effects = document.value().find("effects");
     const std::vector<std::string> gap_keys =
         gaps != nullptr && gaps->is_object() ? gaps->object_keys() : std::vector<std::string> {};
+    std::set<std::string> expected_gap_keys = {
+        "attribution_gap", "buffer_overflow", "delayed_events",
+        "lost_events", "provider_failure", "unknown_process_identity",
+        "unresolved_target"};
+    const bool instance_isolated =
+        plan.observation_schema ==
+        "factorio.instance_isolated_play_candidate_observation.v1";
+    if (instance_isolated) {
+        expected_gap_keys.insert("baseline_incomplete");
+        expected_gap_keys.insert("missing_completion");
+        expected_gap_keys.insert("object_reuse_ambiguity");
+        expected_gap_keys.insert("packet_collision");
+        expected_gap_keys.insert("postrun_incomplete");
+    }
     if (gaps == nullptr || !gaps->is_object() || effects == nullptr || !effects->is_array() ||
-        std::set<std::string>(gap_keys.begin(), gap_keys.end()) !=
-            std::set<std::string>{
-                "attribution_gap", "buffer_overflow", "delayed_events", "lost_events",
-                "provider_failure", "unknown_process_identity", "unresolved_target"} ||
+        std::set<std::string>(gap_keys.begin(), gap_keys.end()) != expected_gap_keys ||
         !read_bool(*gaps, "lost_events", output.gaps.lost_events) ||
         !read_bool(*gaps, "buffer_overflow", output.gaps.buffer_overflow) ||
         !read_bool(*gaps, "unknown_process_identity", output.gaps.unknown_process_identity) ||
         !read_bool(*gaps, "unresolved_target", output.gaps.unresolved_target) ||
         !read_bool(*gaps, "delayed_events", output.gaps.delayed_events) ||
         !read_bool(*gaps, "attribution_gap", output.gaps.attribution_gap) ||
-        !read_bool(*gaps, "provider_failure", output.gaps.provider_failure)) {
+        !read_bool(*gaps, "provider_failure", output.gaps.provider_failure) ||
+        (instance_isolated &&
+            (!read_bool(
+                 *gaps, "missing_completion",
+                 output.gaps.missing_completion) ||
+             !read_bool(
+                 *gaps, "object_reuse_ambiguity",
+                 output.gaps.object_reuse_ambiguity) ||
+             !read_bool(
+                 *gaps, "baseline_incomplete",
+                 output.gaps.baseline_incomplete) ||
+             !read_bool(
+                 *gaps, "postrun_incomplete",
+                 output.gaps.postrun_incomplete) ||
+             !read_bool(
+                 *gaps, "packet_collision",
+                 output.gaps.packet_collision)))) {
         return facman::core::Result<CandidateObservationResult>::failure(candidate_error(
             "permit_wrong_evidence", "observer gap state is not closed",
             "$candidate.observation.gaps"));
     }
     const std::set<std::string> domains = {"filesystem", "process", "provider", "registry"};
-    const std::set<std::string> classifications = {
+    std::set<std::string> classifications = {
         "external_unexpected", "external_unobserved", "forbidden", "protected",
         "unresolved", "writable"};
+    if (instance_isolated) {
+        classifications = {
+            "expected_external_disclosed", "instance_owned",
+            "observation_gap", "operation_owned", "protected_software",
+            "unexpected_external", "unresolved"};
+    }
     bool primary_process_bound = false;
     for (std::size_t index = 0; index < effects->size(); ++index) {
         const json::Value* value = effects->at(index);
@@ -968,11 +1410,24 @@ facman::core::Result<CandidateObservationResult> decode_candidate_observation_ar
             value != nullptr && value->is_object()
                 ? value->object_keys()
                 : std::vector<std::string> {};
+        std::set<std::string> expected_effect_keys = {
+            "classification", "domain", "logical_resource_id",
+            "process_identity_digest", "sequence",
+            "target_identity_digest"};
+        if (instance_isolated) {
+            expected_effect_keys.insert("artifact_owner");
+            expected_effect_keys.insert("attribution_resolved");
+            expected_effect_keys.insert("completion_success");
+            expected_effect_keys.insert("disclosure_effect_id");
+            expected_effect_keys.insert("object_lifetime_resolved");
+            expected_effect_keys.insert("operation_kind");
+            expected_effect_keys.insert("principal_identity_digest");
+            expected_effect_keys.insert("target_resolved");
+        }
         if (value == nullptr || !value->is_object() ||
-            std::set<std::string>(effect_keys.begin(), effect_keys.end()) !=
-                std::set<std::string>{
-                    "classification", "domain", "logical_resource_id",
-                    "process_identity_digest", "sequence", "target_identity_digest"}) {
+            std::set<std::string>(
+                effect_keys.begin(), effect_keys.end()) !=
+                expected_effect_keys) {
             return facman::core::Result<CandidateObservationResult>::failure(candidate_error(
                 "permit_wrong_evidence", "observer effect shape is not exact",
                 "$candidate.observation.effects"));
@@ -984,6 +1439,14 @@ facman::core::Result<CandidateObservationResult> decode_candidate_observation_ar
             auto decoded = member->string_value();
             if (!decoded) return false;
             target = decoded.take_value();
+            return true;
+        };
+        auto read_effect_bool = [&](const char* key, bool& target) {
+            const json::Value* member = value->find(key);
+            if (member == nullptr) return false;
+            auto decoded = member->bool_value();
+            if (!decoded) return false;
+            target = decoded.value();
             return true;
         };
         const json::Value* sequence = value->find("sequence");
@@ -1001,12 +1464,54 @@ facman::core::Result<CandidateObservationResult> decode_candidate_observation_ar
             classifications.find(effect.classification) == classifications.end() ||
             !lowercase_digest(effect.process_identity_digest) ||
             !lowercase_digest(effect.target_identity_digest) ||
-            effect.logical_resource_id.empty()) {
+            effect.logical_resource_id.empty() ||
+            (instance_isolated &&
+                (!read_effect_string(
+                     "operation_kind", effect.operation_kind) ||
+                 !read_effect_string(
+                     "disclosure_effect_id",
+                     effect.disclosure_effect_id) ||
+                 !read_effect_string(
+                     "artifact_owner", effect.artifact_owner) ||
+                 !read_effect_string(
+                     "principal_identity_digest",
+                     effect.principal_identity_digest) ||
+                 !lowercase_digest(
+                     effect.principal_identity_digest) ||
+                 !read_effect_bool(
+                     "completion_success",
+                     effect.completion_success) ||
+                 !read_effect_bool(
+                     "target_resolved", effect.target_resolved) ||
+                 !read_effect_bool(
+                     "object_lifetime_resolved",
+                     effect.object_lifetime_resolved) ||
+                 !read_effect_bool(
+                     "attribution_resolved",
+                     effect.attribution_resolved)))) {
             return facman::core::Result<CandidateObservationResult>::failure(candidate_error(
                 "permit_wrong_evidence", "observer effect value is invalid",
                 "$candidate.observation.effects"));
         }
         effect.sequence = sequence_value.value();
+        if (instance_isolated &&
+            (!effect.completion_success || !effect.target_resolved ||
+             !effect.object_lifetime_resolved ||
+             !effect.attribution_resolved)) {
+            if (!effect.completion_success) {
+                output.gaps.missing_completion = true;
+            }
+            if (!effect.target_resolved) {
+                output.gaps.unresolved_target = true;
+            }
+            if (!effect.object_lifetime_resolved) {
+                output.gaps.object_reuse_ambiguity = true;
+            }
+            if (!effect.attribution_resolved) {
+                output.gaps.attribution_gap = true;
+            }
+            output.capture_complete = false;
+        }
         if (effect.domain == "process" && effect.logical_resource_id == "process.primary" &&
             process.identity.restart_safe() &&
             effect.process_identity_digest == sha256_text(
@@ -1112,6 +1617,10 @@ CandidateObservationResult BoundArtifactCandidateEffectObserver::finish(
     const facman::platform::ProcessResult& process)
 {
     CandidateObservationResult unavailable;
+    unavailable.schema = plan.observation_schema;
+    unavailable.provider_id = plan.observation_provider_id;
+    unavailable.provider_revision =
+        plan.observation_provider_revision;
     unavailable.plan_digest = plan.plan_digest;
     unavailable.capture_session_digest = capture_session_digest_.empty()
         ? sha256_text("capture-session:unavailable")
@@ -1151,7 +1660,7 @@ HermeticCandidateLaunchProvider::consume_and_execute(
     ProcessSupervisor& supervisor) const
 {
     if (!reviewed_plan.policy.verified ||
-        reviewed_plan.policy.policy_digest != kHermeticCandidatePolicyDigest ||
+        !lowercase_digest(reviewed_plan.policy.policy_digest) ||
         !plan_integrity_valid(reviewed_plan)) {
         return facman::core::Result<CandidateExecutionRecord>::failure(candidate_error(
             "permit_wrong_policy", "launch provider rejected unverified candidate policy",
@@ -1183,17 +1692,46 @@ HermeticCandidateLaunchProvider::consume_and_execute(
         stop_observer_without_process();
         return facman::core::Result<CandidateExecutionRecord>::failure(current.error());
     }
-    if (current.value().operation.kind != kHermeticCandidateOperation ||
+    if (current.value().operation.kind != reviewed_plan.operation_kind ||
         !current.value().operation.launch_intent ||
-        *current.value().operation.launch_intent != kHermeticCandidateIntent ||
+        *current.value().operation.launch_intent != reviewed_plan.launch_intent ||
         !current.value().operation.isolation_mode ||
-        *current.value().operation.isolation_mode != kHermeticCandidateIsolation ||
-        current.value().consumer.provider_id != kHermeticCandidateProviderId ||
-        current.value().consumer.provider_revision != kHermeticCandidateProviderRevision) {
+        *current.value().operation.isolation_mode != reviewed_plan.isolation_mode ||
+        current.value().consumer.provider_id != reviewed_plan.provider_id ||
+        current.value().consumer.provider_revision !=
+            reviewed_plan.provider_revision) {
         stop_observer_without_process();
         return facman::core::Result<CandidateExecutionRecord>::failure(candidate_error(
             "permit_wrong_operation", "launch provider current operation is outside exact candidate",
             "$candidate.provider.operation"));
+    }
+    if (reviewed_plan.instance_root_authority) {
+        const auto root_stable =
+            reviewed_plan.instance_root_authority->revalidate();
+        if (!root_stable.ok()) {
+            stop_observer_without_process();
+            return facman::core::Result<CandidateExecutionRecord>::failure(
+                candidate_error(
+                    "permit_resource_stale", root_stable.detail,
+                    "$candidate.provider.instance_root"));
+        }
+        for (const auto& argument : reviewed_plan.process.arguments) {
+            if (argument == "--config" || argument == "--mod-directory") {
+                continue;
+            }
+            const auto candidate_path =
+                facman::platform::path_from_utf8(argument);
+            const auto descendant =
+                reviewed_plan.instance_root_authority->validate_descendant(
+                    candidate_path);
+            if (!descendant.ok()) {
+                stop_observer_without_process();
+                return facman::core::Result<CandidateExecutionRecord>::failure(
+                    candidate_error(
+                        "permit_resource_stale", descendant.detail,
+                        "$candidate.provider.instance_descendant"));
+            }
+        }
     }
 
     CandidateExecutionRecord output;
@@ -1293,7 +1831,10 @@ facman::core::Result<PlayCandidateEvidencePacket> build_candidate_evidence_packe
                 "$candidate.packet.automated_cases"));
         }
     }
-    if (case_ids != kAutomatedNegativeControls) {
+    const std::set<std::string> expected_controls(
+        plan.automated_controls.begin(), plan.automated_controls.end());
+    if (case_ids != expected_controls ||
+        expected_controls.size() != plan.automated_controls.size()) {
         return facman::core::Result<PlayCandidateEvidencePacket>::failure(candidate_error(
             "permit_wrong_evidence", "candidate packet does not bind the exact automated matrix",
             "$candidate.packet.automated_cases"));
@@ -1307,8 +1848,9 @@ facman::core::Result<PlayCandidateEvidencePacket> build_candidate_evidence_packe
             "$candidate.packet.protected_comparison"));
     }
     CandidateObservationResult observation = execution.observation;
-    if (observation.provider_id != kHermeticObservationProviderId ||
-        observation.provider_revision != kHermeticObservationProviderRevision ||
+    if (observation.schema != plan.observation_schema ||
+        observation.provider_id != plan.observation_provider_id ||
+        observation.provider_revision != plan.observation_provider_revision ||
         observation.plan_digest != plan.plan_digest ||
         !lowercase_digest(observation.capture_session_digest) ||
         !lowercase_digest(observation.raw_artifact_digest)) {
@@ -1326,6 +1868,7 @@ facman::core::Result<PlayCandidateEvidencePacket> build_candidate_evidence_packe
     }
 
     PlayCandidateEvidencePacket output;
+    output.schema = plan.packet_schema;
     output.policy_digest = plan.policy.policy_digest;
     output.plan_id = plan.plan_id;
     output.plan_digest = plan.plan_digest;
@@ -1360,16 +1903,82 @@ facman::core::Result<PlayCandidateEvidencePacket> build_candidate_evidence_packe
         [](const auto& value) {
             return value.classification == "forbidden" ||
                 value.classification == "protected" ||
-                value.classification == "external_unexpected";
+                value.classification == "external_unexpected" ||
+                value.classification == "protected_software" ||
+                value.classification == "unexpected_external";
         });
+    const bool unresolved_effect = std::any_of(
+        output.observation.effects.begin(), output.observation.effects.end(),
+        [](const auto& value) {
+            return value.classification == "unresolved" ||
+                value.classification == "observation_gap";
+        });
+    bool exact_instance_effects = true;
+    if (plan.isolation_mode == kInstanceIsolatedCandidateIsolation) {
+        const std::string expected_process_identity =
+            output.process_identity_digest;
+        const std::string expected_principal_identity = sha256_text(
+            plan.principal.provider_id + ":" +
+            plan.principal.principal_id);
+        const std::set<std::string> operation_resources(
+            plan.writable_resource_ids.begin(),
+            plan.writable_resource_ids.end());
+        for (const auto& effect : output.observation.effects) {
+            if (!effect.completion_success || !effect.target_resolved ||
+                !effect.object_lifetime_resolved ||
+                !effect.attribution_resolved) {
+                exact_instance_effects = false;
+                break;
+            }
+            if (effect.classification == "instance_owned") {
+                if (effect.domain != "filesystem" ||
+                    effect.logical_resource_id != "instance.closure" ||
+                    effect.artifact_owner != "instance" ||
+                    !effect.disclosure_effect_id.empty()) {
+                    exact_instance_effects = false;
+                    break;
+                }
+            } else if (effect.classification == "operation_owned") {
+                if (effect.domain != "filesystem" ||
+                    effect.logical_resource_id == "instance.closure" ||
+                    operation_resources.find(
+                        effect.logical_resource_id) ==
+                        operation_resources.end() ||
+                    effect.artifact_owner.empty() ||
+                    !effect.disclosure_effect_id.empty()) {
+                    exact_instance_effects = false;
+                    break;
+                }
+            } else if (
+                effect.classification ==
+                "expected_external_disclosed") {
+                if (effect.domain != "registry" ||
+                    effect.operation_kind != "RegSetValue" ||
+                    effect.disclosure_effect_id !=
+                        "windows.bam.factorio_process_execution.v1" ||
+                    effect.logical_resource_id !=
+                        "windows.bam.factorio_process_execution.v1" ||
+                    effect.process_identity_digest !=
+                        expected_process_identity ||
+                    effect.principal_identity_digest !=
+                        expected_principal_identity ||
+                    !effect.artifact_owner.empty()) {
+                    exact_instance_effects = false;
+                    break;
+                }
+            }
+        }
+    }
     if (!execution.permit.accepted || !execution.permit.consumed ||
         !execution.process_creation_requested) {
         output.technical_disposition = CandidateTechnicalDisposition::refused_before_process;
     } else if (output.observation.gaps.any() || !output.observation.capture_complete ||
         !output.observation.active_before_process || protected_incomplete ||
-        !execution.process.identity.restart_safe() || !automated_complete) {
+        !execution.process.identity.restart_safe() || !automated_complete ||
+        unresolved_effect) {
         output.technical_disposition = CandidateTechnicalDisposition::inconclusive;
-    } else if (protected_changed || forbidden_effect) {
+    } else if (protected_changed || forbidden_effect ||
+        !exact_instance_effects) {
         output.technical_disposition = CandidateTechnicalDisposition::fail_evidence;
     } else {
         output.technical_disposition =
@@ -1426,7 +2035,7 @@ facman::core::Result<CandidateArtifactRecord> persist_candidate_artifacts(
         staging / "output" / "stderr.log";
     std::string detail;
     const bool wrote_marker = facman::base::write_text_new_atomic(
-        marker, "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01\n", detail);
+        marker, "facman.candidate-artifacts.v1\n", detail);
     const bool wrote_output = wrote_marker && facman::base::write_text_new_atomic(
         standard_output, process.standard_output, detail);
     const bool wrote_error = wrote_output && facman::base::write_text_new_atomic(

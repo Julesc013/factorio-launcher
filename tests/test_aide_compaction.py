@@ -11,7 +11,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from tools import aide_compaction_check, project_state
+from tools import aide_compaction_check, aide_queue_records, project_state
 
 sys.path.insert(0, str(project_state.ROOT / ".aide" / "scripts"))
 import aide_lifecycle
@@ -31,6 +31,10 @@ class AideCompactionTests(unittest.TestCase):
             "hermetic_standalone_play_policy",
             "hermetic_standalone_play_candidate",
             "hermetic_standalone_play_verdict",
+            "play_evidence_stable_io",
+            "windows_instance_isolated_candidate_qualification_03",
+            "windows_instance_isolated_play_revalidation_02",
+            "windows_instance_isolated_play_revalidation_01",
             "m2_live_portable_setup",
             "m2_wu1_target_policy",
             "m2_wu2_public_lifecycle",
@@ -57,10 +61,53 @@ class AideCompactionTests(unittest.TestCase):
             "execution_modes", "capabilities",
             "quarantined_capabilities", "claim_levels", "provider_pins", "platforms",
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
-            "machine_protocol", "execution", "release", "validation", "safe_beta",
+            "machine_protocol", "scorecard", "execution", "release", "validation", "safe_beta",
         ):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
+
+    def test_scorecard_and_revision_roles_are_derived_and_unambiguous(self) -> None:
+        data = project_state.collect()
+        self.assertEqual(
+            {
+                "published_first_party_pins": 3,
+                "accepted_real_play_routes": 0,
+                "silent_foreign_mutations": 0,
+                "observed_player_journeys": 0,
+            },
+            data["scorecard"],
+        )
+        revisions = data["current_revisions"]
+        self.assertEqual(
+            "d03b42e8d6b22459fd9a9b8feff05523f942577a",
+            revisions["runtime_candidate"],
+        )
+        self.assertEqual(
+            "2c393acf838dd432d37f8acce50d01f91bfd28ca",
+            revisions["qualification_source"],
+        )
+        self.assertEqual(
+            "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
+            revisions["qualification_evidence"],
+        )
+        self.assertNotEqual(
+            revisions["observed_branch_head"],
+            revisions["runtime_candidate"],
+        )
+
+    def test_revalidation_01_is_superseded_before_any_authority_or_evidence(self) -> None:
+        record = project_state.collect()[
+            "windows_instance_isolated_play_revalidation_01"
+        ]
+        self.assertEqual("superseded_before_prepare", record["status"])
+        self.assertFalse(record["coordinator_prepare"])
+        self.assertFalse(record["permit_issued"])
+        self.assertFalse(record["factorio_started"])
+        self.assertFalse(record["observer_started"])
+        self.assertFalse(record["baseline_captured"])
+        self.assertEqual("unset", record["human_verdict"])
+        self.assertFalse(record["route_authority"])
+        self.assertFalse(record["authority_promotion"])
 
     def test_instance_product_model_is_menu_first_and_supersedes_world_aggregate(self) -> None:
         architecture = (
@@ -90,23 +137,26 @@ class AideCompactionTests(unittest.TestCase):
         self.assertIn("superseded", superseded)
         self.assertIn("Instance product model", superseded)
 
-    def test_completed_permit_foundation_preserves_historical_proof_and_future_gates(self) -> None:
+    def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "windows-instance-isolated-play-policy-closeout",
+            "windows-instance-isolated-play-revalidation-02",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
-        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+            data["active_work_unit"],
+        )
+        self.assertEqual(
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01",
+            "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -138,10 +188,37 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "dev_integrated_instance_isolated_policy_accepted_pending_canonical_promotion",
+            "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority",
             data["product"]["truth_scope"],
         )
-        self.assertFalse(data["product"]["canonical_main_promotion"])
+        self.assertEqual(
+            "ulk.operation_outcome.v1",
+            data["transport_outcome_semantics"]["operation_contract"],
+        )
+        self.assertEqual(
+            "workspace.recovery.inspect",
+            data["transport_outcome_semantics"]["recovery_inspect_command"],
+        )
+        separation = data["play_candidate_runtime_separation"]
+        self.assertEqual("facman::launch_planning", separation["launch_planning_target"])
+        self.assertEqual("facman::product_execution", separation["product_execution_target"])
+        self.assertEqual("facman::candidate_policy", separation["candidate_policy_target"])
+        self.assertFalse(separation["operator_targets_in_default_install"])
+        self.assertEqual("accepted_hosted_dev_integration", separation["status"])
+        self.assertEqual(78, separation["implementation_pull_request"])
+        self.assertEqual(
+            "d03b42e8d6b22459fd9a9b8feff05523f942577a",
+            separation["dev_integration_revision"],
+        )
+        self.assertEqual("30212150312", separation["merged_dev_ci_run"])
+        self.assertEqual("30212150359", separation["merged_dev_code_security_run"])
+        self.assertEqual(54, separation["local_native_test_count"])
+        self.assertEqual(517, separation["local_python_test_count"])
+        self.assertEqual(0, separation["local_required_or_unknown_skip_count"])
+        self.assertFalse(separation["product_profile_operator_targets_generated"])
+        self.assertFalse(separation["product_profile_operator_runtime_installed"])
+        self.assertFalse(separation["authority_promotion"])
+        self.assertTrue(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
         self.assertTrue(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
@@ -304,7 +381,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         instance_policy = data["windows_instance_isolated_play_policy"]
         self.assertEqual(
-            "accepted_reviewed_dev_integration_pending_canonical_promotion",
+            "accepted_canonical_main_dev_synchronized",
             instance_policy["status"],
         )
         self.assertEqual(67, instance_policy["implementation_pull_request"])
@@ -329,7 +406,20 @@ class AideCompactionTests(unittest.TestCase):
             instance_policy["expected_external_disclosures"],
         )
         self.assertFalse(instance_policy["external_effects_are_permit_resources"])
-        self.assertFalse(instance_policy["canonical_main_promotion"])
+        self.assertEqual(68, instance_policy["closeout_pull_request"])
+        self.assertEqual(69, instance_policy["promotion_pull_request"])
+        self.assertEqual(70, instance_policy["synchronization_pull_request"])
+        self.assertEqual(
+            "f9670ed6afedcbf9b5c297e8ead478cd3aeea4c5",
+            instance_policy["canonical_main_revision"],
+        )
+        self.assertEqual(
+            "c49a9b5cf1a660e63730cae02778af3e00894a87",
+            instance_policy["final_dev_revision"],
+        )
+        self.assertTrue(instance_policy["main_is_ancestor_of_dev"])
+        self.assertTrue(instance_policy["trees_equal_at_synchronization"])
+        self.assertTrue(instance_policy["canonical_main_promotion"])
         self.assertFalse(instance_policy["authority_promotion"])
         privilege_repair = data["gate4c_privilege_separation_repair"]
         self.assertEqual(
@@ -466,7 +556,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -587,7 +677,64 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("29344174316", m2_wu6["facman_dev_ci_run"])
         self.assertEqual("29344174402", m2_wu6["facman_dev_codeql_run"])
         self.assertEqual("29344174517", m2_wu6["facman_dev_security_policy_run"])
-        self.assertEqual(data["provider_pins"]["universal_launcher"]["revision"], m2_wu6["universal_launcher_main_revision"])
+        self.assertEqual(
+            "7bd4425f0c35414f738159b45d8bec42edf70235",
+            m2_wu6["universal_launcher_main_revision"],
+        )
+        client_extraction = data["ulk_client_transport_extraction"]
+        reference_extraction = data["ulk_reference_model_extraction"]
+        module_decomposition = data["facman_application_module_decomposition"]
+        integration_proof = data["facman_ulk_integration_proof"]
+        self.assertEqual(
+            reference_extraction["universal_launcher_previous_revision"],
+            client_extraction["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+            reference_extraction["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            data["provider_pins"]["universal_launcher"]["revision"],
+        )
+        self.assertEqual(
+            m2_wu6["universal_launcher_main_revision"],
+            client_extraction["historical_candidate_provider_revision"],
+        )
+        self.assertTrue(client_extraction["candidate_revalidation_required"])
+        self.assertEqual("1.5", reference_extraction["launcher_abi_version"])
+        self.assertEqual("invalid", reference_extraction["identity_mismatch_disposition"])
+        self.assertEqual(
+            "valid_but_stale",
+            reference_extraction["revision_drift_disposition"],
+        )
+        self.assertFalse(reference_extraction["reference_persistence_implemented"])
+        self.assertTrue(reference_extraction["candidate_revalidation_required"])
+        self.assertEqual(9, module_decomposition["registered_module_count"])
+        self.assertEqual(0, module_decomposition["central_direct_command_cases"])
+        self.assertTrue(module_decomposition["global_admission_before_module_execution"])
+        self.assertTrue(module_decomposition["clean_build_root_honored_by_package_proof"])
+        self.assertEqual(52, module_decomposition["local_release_native_test_count"])
+        self.assertEqual(482, module_decomposition["local_python_test_count"])
+        self.assertEqual("pass", module_decomposition["required_windows_package_proof"])
+        self.assertFalse(module_decomposition["runtime_authority"])
+        self.assertEqual(
+            "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
+            integration_proof["universal_launcher_revision"],
+        )
+        self.assertEqual(
+            "3f8489275077347c2918f3bb03614ec6431362ff",
+            integration_proof["universal_setup_revision"],
+        )
+        self.assertTrue(integration_proof["detached_source_worktrees"])
+        self.assertTrue(integration_proof["final_build_root_initially_absent"])
+        self.assertEqual(53, integration_proof["facman_native_test_count"])
+        self.assertEqual(486, integration_proof["facman_python_test_count"])
+        self.assertEqual("pass", integration_proof["windows_cli_package_proof"])
+        self.assertEqual("sha256_consistent", integration_proof["package_integrity"])
+        self.assertEqual("not_proven_unsigned", integration_proof["package_authenticity"])
+        self.assertFalse(integration_proof["canonical_main_promotion"])
+        self.assertFalse(integration_proof["runtime_authority"])
         self.assertEqual("1.3", m2_wu6["launcher_abi_version"])
         self.assertEqual("1.3", m2_wu6["facman_binding_abi_version"])
         self.assertTrue(m2_wu6["recovery_without_install_reference"])
@@ -794,12 +941,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "windows-instance-isolated-play-policy-closeout",
+            "windows-instance-isolated-play-revalidation-02",
             data["current_checkpoint"],
         )
-        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-POLICY-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+            data["active_work_unit"],
+        )
+        self.assertEqual(
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -829,7 +979,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "7bd4425f0c35414f738159b45d8bec42edf70235",
+            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]
@@ -867,7 +1017,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "3f8489275077347c2918f3bb03614ec6431362ff",
+            "3048128963dc718a7c38c1cfcdda9e813a23b0db",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])
@@ -895,8 +1045,8 @@ class AideCompactionTests(unittest.TestCase):
             policy.mkdir(parents=True)
             source = project_state.ROOT / "contracts" / "policy" / "test_impact.v1.json"
             policy.joinpath("test_impact.v1.json").write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
-            compacted = root / ".aide" / "queue" / "next" / "COMPACTED-EVIDENCE-ONLY"
-            compacted.joinpath("evidence").mkdir(parents=True)
+            compacted = root / ".aide" / "queue" / "next" / "EMPTY-UNTRACKED-DIRECTORY"
+            compacted.mkdir(parents=True)
             path = aide_lifecycle.create(root, "TEST-LIFECYCLE-01", "Lifecycle proof", "Prove state transitions.", ["docs/"])
             self.assertEqual("planned", aide_lifecycle.state_for(path))
             self.assertEqual("active", aide_lifecycle.transition(root, "TEST-LIFECYCLE-01", "start"))
@@ -905,7 +1055,11 @@ class AideCompactionTests(unittest.TestCase):
                 ".aide/queue/active/TEST-LIFECYCLE-01/evidence/",
                 active.joinpath("status.yaml").read_text(encoding="utf-8"),
             )
-            for action, expected in (("verify", "verified"), ("review", "reviewed"), ("close", "closed")):
+            for action, expected in (
+                ("verify", "verified_pending_closeout"),
+                ("review", "reviewed"),
+                ("close", "closed"),
+            ):
                 self.assertEqual(expected, aide_lifecycle.transition(root, "TEST-LIFECYCLE-01", action))
             archived = aide_lifecycle.archive(root, "TEST-LIFECYCLE-01", "test-checkpoint")
             self.assertTrue(archived.is_dir())
@@ -924,6 +1078,64 @@ class AideCompactionTests(unittest.TestCase):
                 index["tasks"][0]["files"]["task.yaml"],
             )
 
+    def test_archived_text_hash_is_line_ending_independent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            expected = hashlib.sha256(
+                b"Write-Output 'one'\nWrite-Output 'two'\n"
+            ).hexdigest()
+            for name in ("evidence.ps1", "validation.log"):
+                artifact = Path(temporary) / name
+                artifact.write_bytes(b"Write-Output 'one'\r\nWrite-Output 'two'\r\n")
+                self.assertEqual(
+                    expected,
+                    aide_compaction_check.archived_evidence_sha256(artifact),
+                )
+                self.assertEqual(
+                    expected,
+                    aide_lifecycle.hashes(Path(temporary))[name],
+                )
+
+    def test_operator_wait_and_supersession_are_explicit_lifecycle_states(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            policy = root / "contracts" / "policy"
+            policy.mkdir(parents=True)
+            source = project_state.ROOT / "contracts" / "policy" / "test_impact.v1.json"
+            policy.joinpath("test_impact.v1.json").write_text(
+                source.read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            aide_lifecycle.create(
+                root,
+                "TEST-OPERATOR-01",
+                "Operator wait",
+                "Prove the operator lifecycle.",
+                ["docs/"],
+            )
+            aide_lifecycle.transition(root, "TEST-OPERATOR-01", "start")
+            self.assertEqual(
+                "awaiting_operator",
+                aide_lifecycle.transition(
+                    root,
+                    "TEST-OPERATOR-01",
+                    "await-operator",
+                ),
+            )
+            self.assertEqual(
+                "superseded",
+                aide_lifecycle.transition(
+                    root,
+                    "TEST-OPERATOR-01",
+                    "supersede",
+                ),
+            )
+            archived = aide_lifecycle.archive(
+                root,
+                "TEST-OPERATOR-01",
+                "operator-checkpoint",
+            )
+            self.assertTrue(archived.is_dir())
+
     def test_queue_index_rejects_partially_materialized_records(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -932,6 +1144,79 @@ class AideCompactionTests(unittest.TestCase):
             partial.joinpath("task.yaml").write_text("id: PARTIAL-RECORD\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "incomplete mutable queue record"):
                 aide_lifecycle.rebuild_queue_index(root)
+
+    def test_project_state_ignores_empty_queue_directories_byte_for_byte(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / ".aide" / "queue" / "active").mkdir(parents=True)
+            (root / ".aide" / "queue" / "next").mkdir(parents=True)
+            (root / ".aide" / "history").mkdir(parents=True)
+            before = json.dumps(
+                project_state.queue_state(root),
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            (root / ".aide" / "queue" / "active" / "PHANTOM").mkdir()
+            after = json.dumps(
+                project_state.queue_state(root),
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            self.assertEqual(before, after)
+
+    def test_project_state_rejects_partial_queue_records(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            partial = root / ".aide" / "queue" / "active" / "PARTIAL"
+            partial.mkdir(parents=True)
+            (root / ".aide" / "queue" / "next").mkdir(parents=True)
+            (root / ".aide" / "history").mkdir(parents=True)
+            partial.joinpath("status.yaml").write_text(
+                "task_id: PARTIAL\nlifecycle_state: active_automated\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "incomplete mutable queue record"):
+                project_state.queue_state(root)
+
+    def test_queue_reader_rejects_invalid_lifecycle_and_index_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            queue = root / ".aide" / "queue"
+            task = queue / "active" / "TEST-TASK"
+            task.mkdir(parents=True)
+            (queue / "next").mkdir(parents=True)
+            task.joinpath("task.yaml").write_text(
+                "id: TEST-TASK\ntitle: Test task\n",
+                encoding="utf-8",
+            )
+            task.joinpath("status.yaml").write_text(
+                "task_id: TEST-TASK\nstatus: active\n"
+                "lifecycle_state: invented\nplanning_state: active\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                aide_queue_records.QueueRecordError,
+                "invalid lifecycle state",
+            ):
+                aide_queue_records.read_queue_records(queue)
+            task.joinpath("status.yaml").write_text(
+                "task_id: TEST-TASK\nstatus: active_automated\n"
+                "lifecycle_state: active_automated\n"
+                "planning_state: active_automated\n",
+                encoding="utf-8",
+            )
+            task.joinpath("task.yaml").write_text(
+                "id: TEST-TASK\ntitle: Test task\n"
+                "status: active_automated\n"
+                "lifecycle_state: active_automated\n",
+                encoding="utf-8",
+            )
+            records = aide_queue_records.read_queue_records(queue)
+            queue.joinpath("index.yaml").write_text("stale\n", encoding="utf-8")
+            self.assertEqual(
+                ["queue index disagrees with complete mutable task records"],
+                aide_queue_records.validate_queue_index(queue, records),
+            )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,71 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01
+title: Repair instance-isolated verdict protocol integrity
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-27T13:21:01Z
+owner: unassigned
+objective: >
+  Make human observations, Windows principal binding, quiet-host attestations, plan approval, and verdict derivation explicit, fail-closed, and synthetically provable without issuing a permit or executing Factorio.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/history/evidence-integrity-repair-2026-07-27/**
+  - .aide/memory/**
+  - README.md
+  - release/index/**
+  - docs/**
+  - tools/instance_isolated_verdict_coordinator.py
+  - tools/gate4c_verdict_evidence.py
+  - tools/gate4c_verdict_preflight.py
+  - tools/play_verdict_route.py
+  - tools/project_state.py
+  - tests/test_instance_isolated_verdict_coordinator.py
+  - tests/test_gate4c_verdict_evidence.py
+  - tests/test_aide_target_truth.py
+  - tests/test_aide_compaction.py
+  - tests/native/gate4c_verdict_harness.cpp
+  - tests/native/CMakeLists.txt
+  - CMakeLists.txt
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/generated-index/**
+  - runtime/**
+  - apps/**
+  - packaging/**
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+affected_python_tests:
+  - tests.test_instance_isolated_verdict_coordinator
+  - tests.test_gate4c_verdict_evidence
+  - tests.test_gate4c_verdict_preflight
+  - tests.test_play_verdict_route
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/cmake_architecture_check.py
+affected_package_profiles: []
+architecture_invariants:
+  - human observations are explicit per check and never generated from a requested verdict
+  - reviewer identity is observed from the Windows token and session, not environment text
+  - machine observations and operator attestations remain separate
+  - only the native interactive harness can confirm an exact plan for permit issuance
+  - verdicts are derived from closed technical and human evidence
+  - no permit issuance, Factorio execution, route promotion, or policy change occurs in this WorkUnit
+claim_ledger_rows:
+  - none
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-27T13:21:01Z
+verified_pending_closeout_at: 2026-07-27T13:51:31Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-27T14:17:02Z
+closed_at: 2026-07-27T14:17:08Z
+archived_at: 2026-07-27T14:17:08Z

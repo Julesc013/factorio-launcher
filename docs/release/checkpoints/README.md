@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `windows_instance_isolated_play_policy_closeout` and the active WorkUnit is `none (operator gate required)`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `windows_instance_isolated_play_revalidation_02` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -75,6 +75,14 @@ one BAM disclosure, immutable protected software roots, exact reviewed-head
 and merged-`dev` workflows, and clean pinned three-repository reproduction.
 It preserves the distinct hermetic claim and grants no Play or permit
 authority.
+
+The evidence-only
+[`Windows Instance-Isolated Play policy canonical integration`](windows-instance-isolated-play-policy-public-integration.md)
+binds PRs #68-#70, the exact closeout, policy-only canonical promotion,
+zero-diff ancestry synchronization, shared tree identity, and final
+synchronized-`dev` workflows. It activates only the separately scoped
+candidate WorkUnit; public Play, execution, permit issuance, and every
+excluded authority remain unavailable.
 
 The current product checkpoint is
 [`R3.7 Instance and Local-Content Lifecycle`](r3.7-instance-content-lifecycle.md),
@@ -219,6 +227,14 @@ ancestry back into `dev`; exact synchronized-`dev` workflows passed at
 `51977de`. The M2 closeout WorkUnit is closed. M3 is active only for read-only
 existing-portable inspection and plan generation, with every apply, deletion,
 mutation, Steam, execution, and external authority still excluded.
+
+The local
+[`FacMan and Universal Launcher integration proof`](facman-ulk-integration-proof-01.md)
+binds the targeted ownership, client, reference-model, and module-decomposition
+wave to a clean pinned three-repository reconstruction. The follow-on
+[`ignored Universal build-tree cleanup`](facman-ignored-build-tree-cleanup-01.md)
+records exact-root inventory and recoverable removal without changing source
+revisions or runtime authority.
 
 Earlier checkpoints remain revision-pinned historical evidence:
 

@@ -16,6 +16,33 @@
 
 namespace facman::client {
 
+enum class OperationOutcome {
+    cancelled_before_dispatch,
+    refused_before_effects,
+    completed,
+    cancellation_requested_but_completed,
+    recovery_required,
+    outcome_unknown,
+};
+
+struct OperationRecovery {
+    bool required = false;
+    std::string transaction_id;
+    std::string inspect_command;
+};
+
+struct OperationResult {
+    std::string operation_id;
+    std::string attempt_id;
+    OperationOutcome outcome = OperationOutcome::refused_before_effects;
+    bool effects_may_have_occurred = false;
+    OperationRecovery recovery;
+};
+
+const char* operation_outcome_name(OperationOutcome outcome) noexcept;
+bool operation_result_valid(const OperationResult& result) noexcept;
+std::string operation_result_json(const OperationResult& result);
+
 class CancellationToken {
 public:
     void request_cancellation() noexcept { cancelled_.store(true, std::memory_order_release); }
@@ -47,6 +74,8 @@ struct CommandRequest {
     std::string command;
     std::string json_payload = "{}";
     bool dry_run = true;
+    std::string operation_id;
+    std::string attempt_id;
     std::shared_ptr<CancellationToken> cancellation;
     std::shared_ptr<ProgressSink> progress;
     std::chrono::milliseconds timeout {std::chrono::minutes(5)};
@@ -60,6 +89,7 @@ struct CommandResponse {
     std::string payload;
     std::string error_code;
     std::string error_message;
+    OperationResult operation;
     std::shared_ptr<facman::core::json::Value> parsed_payload;
     bool ok() const noexcept { return status == 0; }
     std::string payload_string(const char* key) const;

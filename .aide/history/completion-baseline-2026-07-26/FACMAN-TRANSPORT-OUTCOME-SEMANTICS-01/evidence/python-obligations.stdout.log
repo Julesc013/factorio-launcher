@@ -1,0 +1,187 @@
+package-manifest-check: ok (11 release profiles)
+release-frontend-bundle-check: ok
+release-system-workspace-check: ok
+aide-target-truth-check: ok
+alpha-vertical-slice-check: ok (22 goldens)
+apps-boundary: ok (0 known exceptions)
+manual-json: ok (0 known exceptions)
+strong-id-check: ok
+critical-io: ok (0 known exceptions)
+generated-catalog: ok (0 known exceptions)
+version-truth: ok (0 known exceptions)
+target-dependency: ok (0 known exceptions)
+client-cli-boundary-check: ok
+registry-capacity: ok (0 known exceptions)
+availability-parity: ok (0 known exceptions)
+generic-operation: ok (0 known exceptions)
+setup-provider-boundary: ok (0 known exceptions)
+command-catalog-v2: ok (0 known exceptions)
+aide-queue-state: ok (0 known exceptions)
+capability-policy-check: ok
+command-contract-check: ok (125 commands)
+cross-repo-check: ok
+cross-repo-check: ok
+workspace-config: universal-setup=X:\setup ok
+workspace-config: universal-launcher=X:\launcher ok
+discovery-golden-check: ok
+factorio-setup-recipe: generated file is current
+factorio-setup-recipe: ok
+frontend-contract-check: ok
+frontend-parity-check: ok
+gui-surface-check: ok
+language-runtime-policy-check: ok
+m1-system-proof-check: ok
+m2-wu10-machine-acceptance-check: ok (frozen policy; no result recorded)
+m2-wu10-operator-acceptance-check: ok (record; human verdict pending)
+m2-wu9-adversarial-check: ok (16 cases; 3 Setup platforms; human verdict pending)
+operation-permit-check: ok
+operational-ux-check: ok
+package-check: ok (26 manifests)
+package-layout-check: ok (16 bundle manifests)
+package-manifest-check: ok (11 release profiles)
+package-skeleton-check: ok (11 skeletons)
+package-pipeline-check: ok
+r37-lifecycle-check: ok
+refusal-contract-check: ok (242 codes)
+refusal-golden-check: ok (126 refusals)
+release-structure-check: ok
+repro-workspace-smoke: run fixture
+repro-workspace-smoke: PASS fixture
+package-check: ok (26 manifests)
+schema-check: ok (298 schemas)
+security-check: ok
+aide-target-truth-check: ok
+aide-queue-state: ok (0 known exceptions)
+aide-compaction-check: ok
+apps-boundary: ok (0 known exceptions)
+manual-json: ok (0 known exceptions)
+m1-system-proof-check: ok
+m2-wu9-adversarial-check: ok (16 cases; 3 Setup platforms; human verdict pending)
+m2-wu10-machine-acceptance-check: ok (frozen policy; no result recorded)
+m2-wu10-operator-acceptance-check: ok (record; human verdict pending)
+critical-io: ok (0 known exceptions)
+generated-catalog: ok (0 known exceptions)
+version-truth: ok (0 known exceptions)
+target-dependency: ok (0 known exceptions)
+test-architecture-check: ok
+client-cli-boundary-check: ok
+cmake-architecture-check: ok
+archive-core-check: ok
+capability-policy-check: ok
+ci-proof-check: ok
+code-security-check: ok
+structure-check: ok
+strong-id-check: ok
+workspace-contract-check: ok
+workspace-resolver-check: ok
+workspace-store-check: ok
+schema-check: ok (298 schemas)
+security-check: ok
+source-format-check: ok
+ui-accessibility-check: ok
+package-check: ok (26 manifests)
+package-layout-check: ok (16 bundle manifests)
+package-manifest-check: ok (11 release profiles)
+package-pipeline-check: ok
+package-skeleton-check: ok (11 skeletons)
+provenance-check: ok
+gui-surface-check: ok
+gate4c-privilege-separation: ok (medium coordinator/game, high observer, closed IPC)
+hermetic-play-policy-check: ok (13 writable, 18 protected/disclosed, 31 evidence, 29 cases; digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2)
+windows-instance-isolated-play-policy-check: ok (7 writable, 12 protected, 1 disclosed external; digest 8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432)
+hermetic-play-candidate: ok
+instance-isolated-play-candidate: ok
+instance-lifecycle-check: ok
+instance-model-check: ok
+snapshot-lifecycle-check: ok
+profile-template-check: ok
+language-runtime-policy-check: ok
+local-lock-check: ok
+modset-route-check: ok
+mod-inventory-check: ok
+modset-solver-check: ok
+save-transfer-route-check: ok
+save-index-check: ok
+server-plan-check: ok
+setup-workflow-check: ok (4 plans, 5 guarded applies, 2 reads)
+operational-ux-check: ok
+operation-permit-check: ok
+r37-lifecycle-check: ok
+transaction-recovery-check: ok
+diagnostic-export-check: ok
+command-contract-check: ok (125 commands)
+compatibility-corpus-check: ok
+component-ownership-check: ok
+compliance-check: ok (577 SPDX source files)
+frontend-contract-check: ok
+frontend-parity-check: ok
+frontend-transport-truth-check: ok
+factorio-setup-recipe: generated file is current
+factorio-setup-recipe: ok
+alpha-vertical-slice-check: ok (22 goldens)
+application-handler-check: ok
+refusal-contract-check: ok (242 codes)
+refusal-golden-check: ok (126 refusals)
+discovery-golden-check: ok
+release-structure-check: ok
+release-artifact-name-check: ok
+package-manifest-check: ok (11 release profiles)
+release-package-manifest-check: ok
+release-dependency-lock-check: ok
+release-workspace-lock-check: ok
+release-profile-check: ok
+release-install-mode-check: ok
+release-system-workspace-check: ok
+release-frontend-bundle-check: ok
+release-contract-check: ok
+strict-check: ok
+structure-check: ok
+setup-workflow-check: ok (4 plans, 5 guarded applies, 2 reads)
+ui-accessibility-check: ok
+workspace-config: universal-setup=X:\setup ok
+workspace-config: universal-launcher=X:\launcher ok
+workspace-config: dependency revisions match workspace lock
+workspace-config: ok
+workspace-contract-check: ok
+{
+  "errors": 0,
+  "expected_failures": 0,
+  "failures": 0,
+  "gate_passed": true,
+  "profile": "promotion",
+  "required_skip_limit": 0,
+  "schema": "facman.test_obligation_result.v1",
+  "skip_counts": {
+    "historical_only": 0,
+    "not_applicable": 0,
+    "optional": 2,
+    "required_blocked": 0,
+    "unknown": 0,
+    "unsupported": 2
+  },
+  "skips": [
+    {
+      "classification": "optional",
+      "reason": "optional: WinForms shell has not been built",
+      "test": "setUpClass (tests.package_runtime.test_built_package_artifacts.BuiltWindowsPackageArtifactTests)"
+    },
+    {
+      "classification": "unsupported",
+      "reason": "unsupported: symlink creation is unavailable",
+      "test": "tests.test_gate4c_verdict_preflight.Gate4CVerdictPreflightTests.test_no_follow_audit_refuses_symlink"
+    },
+    {
+      "classification": "unsupported",
+      "reason": "unsupported: symlink creation is unavailable",
+      "test": "tests.test_gate4c_verdict_preflight.Gate4CVerdictPreflightTests.test_source_reparse_path_is_refused"
+    },
+    {
+      "classification": "optional",
+      "reason": "optional: set FACMAN_RUN_R37_FULL_PERFORMANCE=1 for the bounded full-scale corpus",
+      "test": "tests.test_r37_performance.R37PerformanceTests.test_required_bounded_scale_corpus"
+    }
+  ],
+  "tests_run": 517,
+  "unexpected_successes": 0,
+  "unknown_skip_limit": 0
+}

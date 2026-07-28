@@ -9,12 +9,17 @@ import sys
 import tomllib
 from pathlib import Path
 
+from aide_evidence import resolve_task_file
+
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_DIGEST = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
 LIVE_PROBE_DIGEST = "e74f276c6ee43d2c436b09bade4d265fd0165903f963ae09f7f0e8e61bad105b"
 LIVE_RESPONSE_DIGEST = "8ded3340f2d6de60d83041e6a480129294e44d4e5c3f27cc76b2a26905fd4c2d"
-LIVE_PROBE_PATH = (
+LIVE_PROBE_PATH = resolve_task_file(
+    "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
+    "evidence/live-privilege-probe.json",
+) or (
     ROOT
     / ".aide/queue/active/FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01"
     / "evidence/live-privilege-probe.json"

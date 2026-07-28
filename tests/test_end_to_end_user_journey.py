@@ -126,8 +126,14 @@ class EndToEndUserJourneyTests(unittest.TestCase):
 
             plan = self.invoke_json(source, ["launch", "plan", instance_id])
             self.assertEqual(plan["execution"], "not_started")
+            self.assertEqual(
+                plan["strict_refusal_code"], "launcher_install_not_active"
+            )
             preflight = self.invoke_json(source, ["launch", "plan", instance_id, "--preflight"])
-            self.assertEqual(preflight["status"], "pass")
+            self.assertEqual(preflight["status"], "refused")
+            self.assertEqual(
+                preflight["strict_refusal_code"], "launcher_install_not_active"
+            )
             self.assertFalse(preflight["started"])
 
             diagnostic_bundle = root / "outputs" / "diagnostics.zip"
@@ -158,7 +164,7 @@ class EndToEndUserJourneyTests(unittest.TestCase):
 
             tui = tui_executable()
             if tui is None:
-                self.skipTest("functional TUI build is not available")
+                self.skipTest("optional: functional TUI build is not available")
             completed = subprocess.run(
                 [str(tui), "--workspace", str(target), "--command", "workspace.status", "--json"],
                 cwd=ROOT,

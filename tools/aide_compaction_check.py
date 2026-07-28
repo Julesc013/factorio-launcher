@@ -10,6 +10,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import aide_queue_records
+
 REQUIRED_DOCS = (
     "CONTRIBUTING.md",
     "docs/development/getting-started.md",
@@ -28,7 +33,16 @@ REQUIRED_DOCS = (
 
 def archived_evidence_sha256(path: Path) -> str:
     data = path.read_bytes()
-    if path.suffix.lower() in {".json", ".md", ".toml", ".txt", ".yaml", ".yml"}:
+    if path.suffix.lower() in {
+        ".json",
+        ".log",
+        ".md",
+        ".ps1",
+        ".toml",
+        ".txt",
+        ".yaml",
+        ".yml",
+    }:
         data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
     return hashlib.sha256(data).hexdigest()
 
@@ -82,6 +96,12 @@ def validate() -> list[str]:
     legacy = [path.name for path in queue.iterdir() if path.is_dir() and path.name not in {"active", "next"}]
     if legacy:
         problems.append("closed task bulk remains in active queue root: " + ", ".join(sorted(legacy)))
+    try:
+        records = aide_queue_records.read_queue_records(queue)
+        problems.extend(aide_queue_records.validate_queue_index(queue, records))
+    except aide_queue_records.QueueRecordError as error:
+        problems.append(str(error))
+        records = []
     index = (queue / "index.yaml").read_text(encoding="utf-8")
     if "needs_review" in index:
         problems.append("completed queue projection still contains needs_review")
@@ -95,8 +115,19 @@ def validate() -> list[str]:
         if anchor not in compiler:
             problems.append(f"context compiler is missing compact-state anchor: {anchor}")
     script = (ROOT / ".aide" / "scripts" / "aide_lite.py").read_text(encoding="utf-8")
-    for command in ("create", "start", "verify", "review", "close", "archive"):
-        if f'add_parser("{command}")' not in script and f'lifecycle_command in ("start", "verify", "review", "close"' not in script:
+    for command in (
+        "create",
+        "start",
+        "verify",
+        "review",
+        "close",
+        "await-operator",
+        "supersede",
+        "archive",
+    ):
+        direct_parser = f'add_parser("{command}")' in script
+        transition_parser = f'        "{command}",' in script
+        if not direct_parser and not transition_parser:
             problems.append(f"AIDE lifecycle command is missing: {command}")
     for relative in REQUIRED_DOCS:
         if not (ROOT / relative).is_file():

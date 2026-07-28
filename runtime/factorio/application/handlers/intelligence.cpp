@@ -4,6 +4,7 @@
 #include "handlers/intelligence.h"
 
 #include "command_result.h"
+#include "facman/build_identity.hpp"
 #include "fl_file_io.h"
 #include "fl_json.h"
 #include "fl_runtime_verify.h"
@@ -20,9 +21,6 @@ namespace facman::factorio::application::handlers {
 namespace json = facman::core::json;
 
 namespace {
-constexpr const char* kUlkRevision = "7bd4425f0c35414f738159b45d8bec42edf70235";
-constexpr const char* kUskRevision = "3f8489275077347c2918f3bb03614ec6431362ff";
-
 const char* target_name() noexcept
 {
 #ifdef _WIN32
@@ -138,8 +136,17 @@ ApplicationResult workspace_status(ApplicationContext& context)
     observations.add_unsigned_integer("layout_version", workspace_record ? workspace_record.value().layout_version : 0U);
     observations.add_string("package_integrity", package_ok ? "pass" : packaged ? "failed" : "not_packaged_checkout");
     observations.add_unsigned_integer("package_files_verified", files_verified);
-    observations.add_string("universal_launcher_revision", kUlkRevision);
-    observations.add_string("universal_setup_revision", kUskRevision);
+    observations.add_string(
+        "factorio_launcher_revision",
+        facman::build_identity::factorio_launcher_revision);
+    observations.add_string(
+        "universal_launcher_revision",
+        facman::build_identity::universal_launcher_revision);
+    observations.add_string(
+        "universal_setup_revision",
+        facman::build_identity::universal_setup_revision);
+    observations.add_bool("source_dirty", facman::build_identity::source_dirty);
+    observations.add_string("build_identity", facman::build_identity::identity);
     observations.add_unsigned_integer("install_count", installs.value().size());
     observations.add_unsigned_integer("instance_count", instances.value().size());
     observations.add_unsigned_integer("incomplete_transactions", incomplete);

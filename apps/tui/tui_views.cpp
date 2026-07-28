@@ -26,6 +26,26 @@ void emit_transport_error(std::ostream& output, const facman::core::Error& failu
     output << refusal.serialize() << '\n';
 }
 
+std::string structured_response_body(const facman::client::CommandResponse& response)
+{
+    const std::string& body = response.payload.empty() ? response.envelope : response.payload;
+    if (body.empty()) {
+        const std::string operation = facman::client::operation_result_json(response.operation);
+        json::ObjectBuilder report;
+        report.add_string("schema", "facman.tui_response.v2");
+        report.add_string("outcome", response.outcome);
+        if (!response.error_code.empty()) {
+            report.add_string("code", response.error_code);
+            report.add_string("message", response.error_message);
+        }
+        auto parsed_operation = json::parse(operation);
+        if (parsed_operation) report.add_value("operation", parsed_operation.value());
+        return report.serialize();
+    }
+
+    return body;
+}
+
 }  // namespace
 
 void render_catalog(std::ostream& output, bool structured)
@@ -69,7 +89,9 @@ int render_response(
         return 1;
     }
     const auto& value = response.value();
-    const std::string& body = value.payload.empty() ? value.envelope : value.payload;
+    const std::string body = structured
+        ? structured_response_body(value)
+        : (value.payload.empty() ? value.envelope : value.payload);
     if (body.size() > kMaximumDisplayBytes) {
         error << "TUI output refused: response exceeds the 1 MiB display budget\n";
         return 1;
@@ -78,6 +100,16 @@ int render_response(
         output << body << '\n';
     } else {
         output << command << "\nOutcome: " << value.outcome << '\n';
+        output << "Operation ID: " << value.operation.operation_id << '\n'
+               << "Attempt ID: " << value.operation.attempt_id << '\n'
+               << "Operation outcome: "
+               << facman::client::operation_outcome_name(value.operation.outcome) << '\n'
+               << "Effects may have occurred: "
+               << (value.operation.effects_may_have_occurred ? "true" : "false") << '\n';
+        if (value.operation.recovery.required) {
+            output << "Recovery: required\nInspect command: "
+                   << value.operation.recovery.inspect_command << '\n';
+        }
         if (!value.error_code.empty()) output << "Reason: [" << value.error_code << "] " << value.error_message << '\n';
         if (!body.empty()) output << "\n" << body << '\n';
     }

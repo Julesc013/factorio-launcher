@@ -12,25 +12,42 @@
     "fuzz",
     "operator"
   ],
+  "obligation_profiles": [
+    "local",
+    "promotion"
+  ],
   "minimums": {
     "ctest": 16,
     "python_test_files": 55,
     "strict_validators": 44
   },
-  "fast_native": [
+  "fast_native_required": [
     "miniz_dependency_smoke",
     "fl_json_core_smoke",
+    "facman_operation_permit_smoke",
     "facman_application_types_smoke",
     "flb_factorio_discovery_smoke",
     "flb_factorio_install_model_smoke",
+    "flb_factorio_instance_model_smoke",
+    "flb_factorio_launch_permit_smoke",
+    "facman_hermetic_play_candidate_smoke",
+    "facman_gate4c_verdict_harness_canonical_smoke",
+    "facman_gate4c_verdict_harness_privilege_protocol_smoke",
     "flb_factorio_setup_recipe_smoke",
     "facman_workspace_resolver_smoke",
     "facman_client_smoke",
     "facman_execution_foundation_smoke",
-    "facman_tui_smoke",
+    "facman_process_pre_resume_smoke",
     "facman_snapshot_policy_smoke",
     "fl_path_safety_smoke"
   ],
+  "fast_native_optional": [
+    "facman_tui_smoke"
+  ],
+  "fast_native_target_overrides": {
+    "facman_gate4c_verdict_harness_canonical_smoke": "facman_gate4c_verdict_harness",
+    "facman_gate4c_verdict_harness_privilege_protocol_smoke": "facman_gate4c_verdict_harness"
+  },
   "fast_python": [
     "tests.test_capability_policy",
     "tests.test_json_contract_subset",

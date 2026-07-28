@@ -26,8 +26,28 @@ import zipfile
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from types import MappingProxyType
 from typing import Any
 
+from tools import play_staged_candidate as STAGED
+from tools.play_evidence_resource_spec import (
+    build_resource_specification,
+    startup_environment_snapshot,
+)
+from tools.play_evidence_stable_io import (
+    EvidenceIo,
+    StableIoError,
+    file_payload_sha256,
+    file_payload_size,
+)
+from tools.play_verdict_route import (
+    CandidateQualificationBinding,
+    HERMETIC_VERDICT03,
+    PlayVerdictRoute,
+    RouteBindingError,
+    load_qualification_binding,
+    route_by_id,
+)
 
 WORK_UNIT = "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03"
 POLICY_DIGEST = "6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2"
@@ -46,6 +66,11 @@ EXPECTED_FACTORIO_SHA256 = "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee
 EXPECTED_FACMAN_SHA256 = "47ccf1f151eb65daea1ae4d8ff782f48df08bbedd92d9434e5ca6fd86536270a"
 EXPECTED_SIGNER = "Wube Software Ltd"
 ATTESTATION_SCHEMA = "factorio.gate4c_quiet_host_attestation.v2"
+INSTANCE_ATTESTATION_SCHEMA = (
+    "factorio.instance_isolated_quiet_host_attestation.v3"
+)
+WINDOWS_PRINCIPAL_SCHEMA = "factorio.windows_principal_identity.v1"
+PENDING_RESTART_SCHEMA = "factorio.windows_pending_restart_observation.v1"
 OBSERVER_SELF_TEST_SCHEMA = "factorio.gate4c_observer_self_test.v5"
 OBSERVER_PROVIDER_ID = "factorio.play.process-tree-observer"
 OBSERVER_PROVIDER_REVISION = "gate4c-etw-file-registry-process.v6"
@@ -78,6 +103,21 @@ WINDOWS_PERFORMANCE_TOOLKIT_ROOT = Path(
 )
 PROVIDER_SCOPED_REVIEWER = re.compile(
     r"^[a-z][a-z0-9._-]{1,63}:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$"
+)
+STARTUP_ENVIRONMENT_NAMES = (
+    "APPDATA",
+    "LOCALAPPDATA",
+    "PROGRAMDATA",
+    "ProgramFiles",
+    "ProgramFiles(x86)",
+    "SystemRoot",
+    "USERPROFILE",
+)
+STARTUP_ENVIRONMENT = MappingProxyType(
+    {name: os.environ.get(name, "") for name in STARTUP_ENVIRONMENT_NAMES}
+)
+STARTUP_ENVIRONMENT_RECORD = startup_environment_snapshot(
+    STARTUP_ENVIRONMENT
 )
 
 
@@ -296,7 +336,13 @@ def run_json(args: list[str], *, cwd: Path | None = None) -> dict[str, Any]:
     return value
 
 
-def git_identity(path: Path, expected: str, *, required_ancestors: list[str] | None = None) -> dict[str, Any]:
+def git_identity(
+    path: Path,
+    expected: str,
+    *,
+    required_ancestors: list[str] | None = None,
+    required_ref: str | None = None,
+) -> dict[str, Any]:
     head = run(["git", "rev-parse", "HEAD"], cwd=path)
     status = run(["git", "status", "--short", "--branch"], cwd=path)
     if head.returncode != 0 or status.returncode != 0:
@@ -306,19 +352,39 @@ def git_identity(path: Path, expected: str, *, required_ancestors: list[str] | N
     for ancestor in required_ancestors or []:
         result = run(["git", "merge-base", "--is-ancestor", ancestor, revision], cwd=path)
         ancestors[ancestor] = result.returncode == 0
+    ref_reachable = None
+    if required_ref:
+        ref_result = run(
+            ["git", "merge-base", "--is-ancestor", revision, required_ref],
+            cwd=path,
+        )
+        ref_reachable = ref_result.returncode == 0
+    clean = len(status.stdout.splitlines()[1:]) == 0
     return {
         "path": str(path),
         "revision": revision,
         "expected_revision": expected,
         "exact": revision == expected,
         "required_ancestors": ancestors,
+        "required_ref": required_ref,
+        "required_ref_reachable": ref_reachable,
         "status": status.stdout.splitlines(),
-        "clean": len(status.stdout.splitlines()[1:]) == 0,
-        "valid": revision == expected and all(ancestors.values()),
+        "clean": clean,
+        "valid": (
+            revision == expected
+            and clean
+            and all(ancestors.values())
+            and (ref_reachable is not False)
+        ),
     }
 
 
-def verify_artifact_manifest(path: Path) -> dict[str, Any]:
+def verify_artifact_manifest(
+    path: Path,
+    *,
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    qualification: CandidateQualificationBinding | None = None,
+) -> dict[str, Any]:
     audit = audit_no_follow(path, require_file=True)
     if not audit["safe"]:
         return {"manifest": audit, "valid": False, "artifacts": []}
@@ -326,11 +392,35 @@ def verify_artifact_manifest(path: Path) -> dict[str, Any]:
     artifacts: list[dict[str, Any]] = []
     valid = (
         manifest.get("schema") == "facman.gate4c_artifact_binding.v1"
-        and manifest.get("work_unit") == WORK_UNIT
-        and manifest.get("source_candidate_revision") == CANDIDATE_REVISION
+        and manifest.get("work_unit") == route.work_unit
+        and manifest.get("source_candidate_revision")
+        == (
+            qualification.factorio_launcher.revision
+            if qualification
+            else CANDIDATE_REVISION
+        )
+        and (
+            qualification is None
+            or manifest.get("qualification_digest")
+            == qualification.qualification_digest
+        )
         and manifest.get("copy_verified") is True
     )
+    expected_qualified_artifacts = (
+        qualification.artifact_mapping() if qualification else None
+    )
+    observed_names: set[str] = set()
     for expected in manifest.get("artifacts", []):
+        logical_name = str(expected.get("logical_name", ""))
+        if qualification:
+            bound = expected_qualified_artifacts.get(logical_name)
+            valid = bool(
+                valid
+                and bound is not None
+                and expected.get("sha256") == bound.sha256
+                and expected.get("bytes") == bound.size
+            )
+            observed_names.add(logical_name)
         artifact_path = path.parent / str(expected.get("name", ""))
         artifact_audit = audit_no_follow(artifact_path, require_file=True)
         actual_hash = sha256_file(artifact_path) if artifact_audit["safe"] else None
@@ -347,6 +437,8 @@ def verify_artifact_manifest(path: Path) -> dict[str, Any]:
                 "path_audit": artifact_audit,
             }
         )
+    if qualification:
+        valid = valid and observed_names == set(expected_qualified_artifacts)
     return {
         "manifest": audit,
         "manifest_sha256": sha256_file(path),
@@ -592,6 +684,10 @@ def repository_tool_identity(repo_root: Path) -> dict[str, Any]:
     for relative in (
         "tools/gate4c_verdict_preflight.py",
         "tools/gate4c_observer_self_test.py",
+        "tools/gate4c_verdict_session.py",
+        "tools/gate4c_verdict_evidence.py",
+        "tools/play_verdict_route.py",
+        "tools/instance_isolated_verdict_coordinator.py",
         OBSERVER_PROFILE_RELATIVE_PATH,
     ):
         path = repo_root / relative
@@ -671,6 +767,267 @@ def host_session_identity() -> dict[str, Any]:
     }
 
 
+def windows_principal_identity() -> dict[str, Any]:
+    """Observe the current token identity without trusting environment text."""
+
+    if os.name != "nt":
+        return {
+            "schema": WINDOWS_PRINCIPAL_SCHEMA,
+            "valid": False,
+            "reason": "windows_token_identity_unavailable",
+        }
+    from ctypes import wintypes
+
+    token_query = 0x0008
+    token_user = 1
+    token_integrity_level = 25
+
+    class SidAndAttributes(ctypes.Structure):
+        _fields_ = [
+            ("sid", ctypes.c_void_p),
+            ("attributes", wintypes.DWORD),
+        ]
+
+    class TokenUser(ctypes.Structure):
+        _fields_ = [("user", SidAndAttributes)]
+
+    class TokenMandatoryLabel(ctypes.Structure):
+        _fields_ = [("label", SidAndAttributes)]
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
+    kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel32.GetCurrentProcessId.restype = wintypes.DWORD
+    kernel32.ProcessIdToSessionId.argtypes = [
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+    ]
+    kernel32.ProcessIdToSessionId.restype = wintypes.BOOL
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+    kernel32.LocalFree.restype = ctypes.c_void_p
+    advapi32.OpenProcessToken.argtypes = [
+        wintypes.HANDLE,
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.HANDLE),
+    ]
+    advapi32.OpenProcessToken.restype = wintypes.BOOL
+    advapi32.GetTokenInformation.argtypes = [
+        wintypes.HANDLE,
+        wintypes.DWORD,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+    ]
+    advapi32.GetTokenInformation.restype = wintypes.BOOL
+    advapi32.ConvertSidToStringSidW.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(wintypes.LPWSTR),
+    ]
+    advapi32.ConvertSidToStringSidW.restype = wintypes.BOOL
+    token = wintypes.HANDLE()
+    if not advapi32.OpenProcessToken(
+        kernel32.GetCurrentProcess(), token_query, ctypes.byref(token)
+    ):
+        return {
+            "schema": WINDOWS_PRINCIPAL_SCHEMA,
+            "valid": False,
+            "reason": f"open_process_token_failed:{ctypes.get_last_error()}",
+        }
+
+    def token_information(info_class: int) -> ctypes.Array[Any]:
+        required = wintypes.DWORD()
+        advapi32.GetTokenInformation(
+            token, info_class, None, 0, ctypes.byref(required)
+        )
+        if required.value == 0:
+            raise OSError(
+                ctypes.get_last_error(), "token information size unavailable"
+            )
+        buffer = ctypes.create_string_buffer(required.value)
+        if not advapi32.GetTokenInformation(
+            token,
+            info_class,
+            buffer,
+            required,
+            ctypes.byref(required),
+        ):
+            raise OSError(
+                ctypes.get_last_error(), "token information unavailable"
+            )
+        return buffer
+
+    sid_text = wintypes.LPWSTR()
+    try:
+        user_buffer = token_information(token_user)
+        user = ctypes.cast(
+            user_buffer, ctypes.POINTER(TokenUser)
+        ).contents.user
+        if not advapi32.ConvertSidToStringSidW(
+            user.sid, ctypes.byref(sid_text)
+        ):
+            raise OSError(
+                ctypes.get_last_error(), "SID conversion unavailable"
+            )
+        sid = sid_text.value
+
+        integrity_buffer = token_information(token_integrity_level)
+        label = ctypes.cast(
+            integrity_buffer, ctypes.POINTER(TokenMandatoryLabel)
+        ).contents.label
+        advapi32.GetSidSubAuthorityCount.restype = ctypes.POINTER(
+            ctypes.c_ubyte
+        )
+        advapi32.GetSidSubAuthorityCount.argtypes = [ctypes.c_void_p]
+        advapi32.GetSidSubAuthority.restype = ctypes.POINTER(wintypes.DWORD)
+        advapi32.GetSidSubAuthority.argtypes = [
+            ctypes.c_void_p,
+            wintypes.DWORD,
+        ]
+        count = advapi32.GetSidSubAuthorityCount(label.sid)
+        if not count or count.contents.value == 0:
+            raise OSError("token integrity SID has no sub-authority")
+        rid = advapi32.GetSidSubAuthority(
+            label.sid, count.contents.value - 1
+        ).contents.value
+        if rid < 0x1000:
+            integrity = "untrusted"
+        elif rid < 0x2000:
+            integrity = "low"
+        elif rid < 0x3000:
+            integrity = "medium"
+        elif rid < 0x4000:
+            integrity = "high"
+        else:
+            integrity = "system"
+
+        session_id = wintypes.DWORD()
+        process_id = kernel32.GetCurrentProcessId()
+        if not kernel32.ProcessIdToSessionId(
+            process_id, ctypes.byref(session_id)
+        ):
+            raise OSError(
+                ctypes.get_last_error(), "Windows session ID unavailable"
+            )
+        core = {
+            "schema": WINDOWS_PRINCIPAL_SCHEMA,
+            "provider_id": "windows.local-token.v1",
+            "principal_sid_digest": hashlib.sha256(
+                sid.encode("utf-8")
+            ).hexdigest(),
+            "windows_session_id": int(session_id.value),
+            "integrity": integrity,
+            "valid": True,
+        }
+        return {
+            **core,
+            "principal_digest": digest_value(core),
+        }
+    except (AttributeError, OSError, ValueError) as exc:
+        return {
+            "schema": WINDOWS_PRINCIPAL_SCHEMA,
+            "valid": False,
+            "reason": f"windows_token_identity_failed:{exc}",
+        }
+    finally:
+        if sid_text:
+            kernel32.LocalFree(ctypes.cast(sid_text, ctypes.c_void_p))
+        kernel32.CloseHandle(token)
+
+
+def validate_windows_principal(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    exact = {
+        "schema",
+        "provider_id",
+        "principal_sid_digest",
+        "windows_session_id",
+        "integrity",
+        "principal_digest",
+        "valid",
+    }
+    core = dict(value)
+    claimed = core.pop("principal_digest", None)
+    return bool(
+        set(value) == exact
+        and value.get("schema") == WINDOWS_PRINCIPAL_SCHEMA
+        and value.get("provider_id") == "windows.local-token.v1"
+        and isinstance(value.get("principal_sid_digest"), str)
+        and re.fullmatch(r"[0-9a-f]{64}", value["principal_sid_digest"])
+        and isinstance(value.get("windows_session_id"), int)
+        and not isinstance(value.get("windows_session_id"), bool)
+        and value["windows_session_id"] >= 0
+        and value.get("integrity")
+        in {"untrusted", "low", "medium", "high", "system"}
+        and value.get("valid") is True
+        and isinstance(claimed, str)
+        and digest_value(core) == claimed
+    )
+
+
+def pending_restart_observation() -> dict[str, Any]:
+    shell = powershell()
+    if shell is None or os.name != "nt":
+        return {
+            "schema": PENDING_RESTART_SCHEMA,
+            "available": False,
+            "pending": None,
+            "sources": [],
+            "valid": False,
+        }
+    script = (
+        "$s=@();"
+        "if(Test-Path -LiteralPath "
+        "'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Component Based Servicing\\RebootPending')"
+        "{$s+='component_based_servicing'};"
+        "if(Test-Path -LiteralPath "
+        "'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\RebootRequired')"
+        "{$s+='windows_update'};"
+        "$r=(Get-ItemProperty -LiteralPath "
+        "'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager' "
+        "-Name PendingFileRenameOperations -ErrorAction SilentlyContinue)."
+        "PendingFileRenameOperations;"
+        "if($null-ne $r){$s+='pending_file_rename'};"
+        "[pscustomobject]@{sources=@($s)}|ConvertTo-Json -Compress"
+    )
+    result = run([shell, "-NoProfile", "-NonInteractive", "-Command", script])
+    if result.returncode != 0:
+        return {
+            "schema": PENDING_RESTART_SCHEMA,
+            "available": False,
+            "pending": None,
+            "sources": [],
+            "valid": False,
+            "error_digest": hashlib.sha256(
+                result.stderr.encode("utf-8")
+            ).hexdigest(),
+        }
+    try:
+        raw = json.loads(result.stdout)
+        sources = raw.get("sources", [])
+        if isinstance(sources, str):
+            sources = [sources]
+        sources = sorted(set(str(item) for item in sources))
+    except (AttributeError, json.JSONDecodeError, TypeError):
+        return {
+            "schema": PENDING_RESTART_SCHEMA,
+            "available": False,
+            "pending": None,
+            "sources": [],
+            "valid": False,
+        }
+    core = {
+        "schema": PENDING_RESTART_SCHEMA,
+        "available": True,
+        "pending": bool(sources),
+        "sources": sources,
+        "valid": True,
+    }
+    return {**core, "observation_digest": digest_value(core)}
+
+
 def is_elevated() -> bool:
     if os.name != "nt":
         return os.geteuid() == 0 if hasattr(os, "geteuid") else False
@@ -727,6 +1084,8 @@ def observer_prerequisites(
     repo_root: Path,
     session: dict[str, Any],
     now: datetime | None = None,
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    qualification: CandidateQualificationBinding | None = None,
 ) -> dict[str, Any]:
     paths = observer_tool_paths()
     wpr = paths["wpr"]
@@ -797,11 +1156,15 @@ def observer_prerequisites(
                 artifact_valid = artifact_valid and matches
             validation = {
                 "schema": loaded.get("schema") == OBSERVER_SELF_TEST_SCHEMA,
-                "work_unit": loaded.get("work_unit") == WORK_UNIT,
+                "work_unit": loaded.get("work_unit") == route.work_unit,
                 "provider": loaded.get("provider")
                 == observer_provider_identity(repo_root),
                 "candidate_revision": loaded.get("candidate_revision")
-                == CANDIDATE_REVISION,
+                == (
+                    qualification.factorio_launcher.revision
+                    if qualification
+                    else CANDIDATE_REVISION
+                ),
                 "elevated": loaded.get("elevated") is True,
                 "time": time_window(
                     loaded.get("generated_at"),
@@ -877,7 +1240,10 @@ def observer_prerequisites(
     }
 
 
-def policy_identity(canonical_policy: Path) -> dict[str, Any]:
+def policy_identity(
+    canonical_policy: Path,
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+) -> dict[str, Any]:
     audit = audit_no_follow(canonical_policy, require_file=True)
     if not audit["safe"]:
         return {"path_audit": audit, "valid": False}
@@ -886,8 +1252,8 @@ def policy_identity(canonical_policy: Path) -> dict[str, Any]:
     return {
         "path_audit": audit,
         "computed_digest": computed,
-        "expected_digest": POLICY_DIGEST,
-        "valid": computed == POLICY_DIGEST,
+        "expected_digest": route.policy_digest,
+        "valid": computed == route.policy_digest,
     }
 
 
@@ -1246,12 +1612,242 @@ def source_package_evidence(
     return record
 
 
+def source_package_evidence_native(
+    path: Path,
+    *,
+    audit: dict[str, Any],
+    installed_executable: Path | None,
+    installed_audit: dict[str, Any],
+    source_member_executable: Path | None,
+    task_root: Path | None,
+    evidence_io: EvidenceIo,
+) -> dict[str, Any]:
+    """Authenticate package structure through USK and exact extracted bytes."""
+
+    package_result = evidence_io.inspect_zip(path)
+    inspection = package_result["payload"]["inspection"]
+    entries = inspection.get("entries", [])
+    source = inspection.get("source", {})
+    expected_member = (
+        f"Factorio_{EXPECTED_FACTORIO_VERSION}/bin/x64/factorio.exe"
+    )
+    expected_base = (
+        f"Factorio_{EXPECTED_FACTORIO_VERSION}/data/base/info.json"
+    )
+    expected_space_age = (
+        f"Factorio_{EXPECTED_FACTORIO_VERSION}/data/space-age/info.json"
+    )
+    names = [
+        item.get("normalized_path")
+        for item in entries
+        if isinstance(item, dict)
+    ]
+    expected_entries = [
+        item
+        for item in entries
+        if isinstance(item, dict)
+        and item.get("normalized_path") == expected_member
+        and item.get("entry_type") == "file"
+    ]
+    artifact_hash = str(source.get("sha256", ""))
+    artifact_size = int(source.get("size_bytes", 0))
+    source_file = evidence_io.inspect_file(path)["payload"]["file"]
+    source_file_hash = str(source_file.get("content_sha256", ""))
+    source_file_size = int(source_file.get("bytes_read", 0))
+    source_inspection_stable = bool(
+        source_file.get("identity_stable")
+        and source_file_hash == artifact_hash
+        and source_file_size == artifact_size
+    )
+    source_identity = digest_value(source_file["before_identity"])
+    installed_file = (
+        evidence_io.inspect_file(installed_executable)["payload"]["file"]
+        if installed_executable is not None and installed_audit.get("safe")
+        else None
+    )
+    installed_hash = (
+        str(installed_file["content_sha256"])
+        if installed_file is not None
+        else None
+    )
+    installed_identity = (
+        digest_value(installed_file["before_identity"])
+        if installed_file is not None
+        else None
+    )
+    exact_member_result = evidence_io.inspect_exact_member(
+        path, expected_member
+    )
+    exact_member = exact_member_result["payload"]["member"]
+    exact_member_inspection = exact_member_result["payload"][
+        "archive_inspection"
+    ]
+    exact_member_hash = str(exact_member.get("content_sha256", ""))
+    exact_member_size = int(exact_member.get("size", 0))
+    exact_member_source = exact_member_inspection.get("source", {})
+    exact_member_source_stable = bool(
+        exact_member_source.get("sha256") == artifact_hash
+        and exact_member_source.get("size_bytes") == artifact_size
+        and exact_member_inspection.get("entry_set_digest")
+        == inspection.get("entry_set_digest")
+    )
+    member_audit = (
+        audit_no_follow(source_member_executable, require_file=True)
+        if source_member_executable is not None
+        else {
+            "safe": False,
+            "reason": "source_package_member_inspection_required",
+        }
+    )
+    member_within_task = bool(
+        source_member_executable is not None
+        and task_root is not None
+        and path_is_within(source_member_executable, task_root)
+    )
+    member_file = (
+        evidence_io.inspect_file(source_member_executable)["payload"]["file"]
+        if source_member_executable is not None and member_audit.get("safe")
+        else None
+    )
+    inspection_copy_hash = (
+        str(member_file["content_sha256"]) if member_file is not None else None
+    )
+    inspection_copy_size = (
+        int(member_file["bytes_read"]) if member_file is not None else None
+    )
+    member_signature = (
+        authenticode(source_member_executable)
+        if source_member_executable is not None
+        and member_audit.get("safe")
+        and member_within_task
+        else {
+            "available": False,
+            "valid": False,
+            "reason": "source_package_member_inspection_required",
+        }
+    )
+    total_uncompressed = int(
+        inspection.get("totals", {}).get("uncompressed_bytes", 0)
+    )
+    package_structure = {
+        "entry_count": len(entries),
+        "total_uncompressed_bytes": total_uncompressed,
+        "expansion_ratio": total_uncompressed / max(artifact_size, 1),
+        "directory_digest": inspection.get("entry_set_digest"),
+        "expected_executable_member": expected_member,
+        "expected_executable_member_count": len(expected_entries),
+        "unsafe_entry_count": len(inspection.get("problems", [])),
+        "duplicate_entry_count": 0,
+        "encrypted_entry_count": 0,
+        "base_content_present": names.count(expected_base) == 1,
+        "space_age_content_present": names.count(expected_space_age) == 1,
+        "content_files_do_not_prove_entitlement": True,
+        "provider": "universal-setup.archive-inspection.v1",
+        "valid": bool(
+            inspection.get("status") == "pass"
+            and source_inspection_stable
+            and exact_member_source_stable
+            and len(expected_entries) == 1
+            and exact_member_size
+            == expected_entries[0].get("uncompressed_size")
+            and re.fullmatch(r"[0-9a-f]{64}", exact_member_hash) is not None
+            and names.count(expected_base) == 1
+            and 0 < len(entries) <= MAX_SOURCE_PACKAGE_ENTRIES
+            and artifact_size <= 8 * 1024 * 1024 * 1024
+            and total_uncompressed
+            <= MAX_SOURCE_PACKAGE_UNCOMPRESSED_BYTES
+            and total_uncompressed / max(artifact_size, 1)
+            <= MAX_SOURCE_PACKAGE_EXPANSION_RATIO
+        ),
+    }
+    member_matches_installed = bool(
+        exact_member_hash
+        and installed_hash
+        and exact_member_hash == installed_hash
+    )
+    inspection_copy_matches_archive = bool(
+        inspection_copy_hash
+        and inspection_copy_hash == exact_member_hash
+        and inspection_copy_size == exact_member_size
+    )
+    exact_version = exact_factorio_version(member_signature)
+    artifact_class_valid = bool(
+        package_structure["valid"]
+        and member_file is not None
+        and member_within_task
+        and member_matches_installed
+        and inspection_copy_matches_archive
+        and member_signature.get("valid") is True
+        and exact_version
+    )
+    package_distinct = bool(
+        source_identity
+        and installed_identity
+        and source_identity != installed_identity
+        and artifact_hash != installed_hash
+    )
+    record: dict[str, Any] = {
+        "status": "verified" if artifact_class_valid and package_distinct else "invalid",
+        "reason": "ok" if artifact_class_valid and package_distinct else "native_package_authentication_failed",
+        "evidence_origin": "operator_supplied",
+        "source_artifact_kind": (
+            "wube_windows_standalone_package"
+            if artifact_class_valid
+            else "unrecognized"
+        ),
+        "path_audit": audit,
+        "stable_identity_digest": source_identity,
+        "artifact_sha256": artifact_hash,
+        "inspection_stability": {
+            "post_path_audit": audit,
+            "post_sha256": source_file_hash,
+            "stable": source_inspection_stable,
+            "native_result_digest": package_result["record_digest"],
+        },
+        "package_structure": package_structure,
+        "source_member": {
+            "archive_path": expected_member,
+            "sha256": exact_member_hash,
+            "bytes": exact_member_size,
+            "native_result_digest": exact_member_result["record_digest"],
+            "inspection_copy": {
+                "path_audit": member_audit,
+                "within_gate4c_task_root": member_within_task,
+                "sha256": inspection_copy_hash,
+                "matches_archive_member": inspection_copy_matches_archive,
+                "post_path_audit": member_audit,
+                "post_sha256": inspection_copy_hash,
+                "stable": bool(
+                    member_file and member_file["identity_stable"]
+                ),
+            },
+            "signature": member_signature,
+        },
+        "installed_executable_comparison": {
+            "path_audit": installed_audit,
+            "stable_identity_digest": installed_identity,
+            "sha256": installed_hash,
+            "distinct_stable_identity_and_content": package_distinct,
+            "package_member_matches_installed_executable": (
+                member_matches_installed
+            ),
+        },
+        "artifact_class_valid": artifact_class_valid,
+        "exact_version": exact_version,
+        "expected_version": EXPECTED_FACTORIO_VERSION,
+        "valid": bool(artifact_class_valid and package_distinct),
+    }
+    record["authentication_evidence_digest"] = digest_value(record)
+    return record
+
+
 def source_evidence(
     path: Path | None,
     installed_executable: Path | None = None,
     *,
     source_member_executable: Path | None = None,
     task_root: Path | None = None,
+    evidence_io: EvidenceIo | None = None,
 ) -> dict[str, Any]:
     if path is None:
         return {
@@ -1268,6 +1864,16 @@ def source_evidence(
         else {"safe": False}
     )
     if path.suffix.casefold() == ".zip":
+        if evidence_io is not None:
+            return source_package_evidence_native(
+                path,
+                audit=audit,
+                installed_executable=installed_executable,
+                installed_audit=installed_audit,
+                source_member_executable=source_member_executable,
+                task_root=task_root,
+                evidence_io=evidence_io,
+            )
         return source_package_evidence(
             path,
             audit=audit,
@@ -1291,29 +1897,71 @@ def source_evidence(
     )
 
 
-def factorio_evidence(path: Path) -> dict[str, Any]:
+def factorio_evidence(
+    path: Path,
+    qualification: CandidateQualificationBinding | None = None,
+    evidence_io: EvidenceIo | None = None,
+) -> dict[str, Any]:
     audit = audit_no_follow(path, require_file=True)
     if not audit["safe"]:
         return {"valid": False, "path_audit": audit}
     signature = authenticode(path)
-    actual_hash = sha256_file(path)
+    native_file = (
+        evidence_io.inspect_file(path)
+        if evidence_io is not None
+        else None
+    )
+    actual_hash = (
+        file_payload_sha256(native_file)
+        if native_file is not None
+        else sha256_file(path)
+    )
+    expected_sha256 = (
+        qualification.factorio_sha256
+        if qualification
+        else EXPECTED_FACTORIO_SHA256
+    )
+    expected_signer = (
+        qualification.factorio_signer
+        if qualification
+        else EXPECTED_SIGNER
+    )
     valid = (
-        actual_hash == EXPECTED_FACTORIO_SHA256
+        actual_hash == expected_sha256
         and signature.get("valid") is True
+        and expected_signer in str(signature.get("signer_subject") or "")
         and exact_factorio_version(signature)
     )
     return {
         "path_audit": audit,
-        "stable_identity_digest": stable_identity_digest(audit),
+        "stable_identity_digest": (
+            digest_value(
+                native_file["payload"]["file"]["before_identity"]
+            )
+            if native_file is not None
+            else stable_identity_digest(audit)
+        ),
         "sha256": actual_hash,
-        "expected_sha256": EXPECTED_FACTORIO_SHA256,
+        "expected_sha256": expected_sha256,
         "signature": signature,
         "expected_version": EXPECTED_FACTORIO_VERSION,
         "valid": valid,
     }
 
 
-def instance_evidence(facman: Path, workspace: Path, instance_id: str) -> dict[str, Any]:
+def instance_evidence(
+    facman: Path,
+    workspace: Path,
+    instance_id: str,
+    qualification: CandidateQualificationBinding | None = None,
+    *,
+    staged_instance: dict[str, Any] | None = None,
+    allow_unbound_runtime_digests: bool = False,
+) -> dict[str, Any]:
+    if staged_instance is not None and allow_unbound_runtime_digests:
+        raise PreflightError(
+            "Instance evidence cannot be both staged-bound and unbound"
+        )
     prefix = [str(facman), "--workspace", str(workspace)]
     inspection = run_json(prefix + ["instances", "inspect", instance_id, "--json"])
     description = run_json(prefix + ["instances", "describe", instance_id, "--intent", "menu", "--json"])
@@ -1322,14 +1970,91 @@ def instance_evidence(facman: Path, workspace: Path, instance_id: str) -> dict[s
     expected_blockers = {"real_play_gate_not_passed"}
     blocker_codes = {str(item.get("code")) for item in readiness.get("blockers", [])}
     plan_args = launch.get("args", [])
+    expected_instance_id = (
+        qualification.instance_id
+        if qualification
+        else EXPECTED_INSTANCE_ID
+    )
+    expected_spec_digest = (
+        qualification.instance_spec_digest
+        if qualification
+        else EXPECTED_SPEC_DIGEST
+    )
+    if staged_instance is not None:
+        staged_identity_valid = (
+            set(staged_instance)
+            == {
+                "instance_id",
+                "spec_digest",
+                "binding_digest",
+                "readiness_digest",
+            }
+            and staged_instance.get("instance_id")
+            == expected_instance_id
+            and staged_instance.get("spec_digest")
+            == expected_spec_digest
+            and all(
+                isinstance(staged_instance.get(key), str)
+                and re.fullmatch(
+                    r"[0-9a-f]{64}", staged_instance[key]
+                )
+                is not None
+                for key in (
+                    "spec_digest",
+                    "binding_digest",
+                    "readiness_digest",
+                )
+            )
+        )
+        expected_binding_digest = staged_instance.get(
+            "binding_digest"
+        )
+        expected_readiness_digest = staged_instance.get(
+            "readiness_digest"
+        )
+    elif allow_unbound_runtime_digests:
+        staged_identity_valid = qualification is not None
+        expected_binding_digest = description.get(
+            "instance_binding", {}
+        ).get("binding_digest")
+        expected_readiness_digest = readiness.get("readiness_digest")
+        staged_identity_valid = bool(
+            staged_identity_valid
+            and isinstance(expected_binding_digest, str)
+            and re.fullmatch(
+                r"[0-9a-f]{64}", expected_binding_digest
+            )
+            is not None
+            and isinstance(expected_readiness_digest, str)
+            and re.fullmatch(
+                r"[0-9a-f]{64}", expected_readiness_digest
+            )
+            is not None
+        )
+    else:
+        staged_identity_valid = True
+        expected_binding_digest = (
+            qualification.instance_binding_digest
+            if qualification
+            else EXPECTED_BINDING_DIGEST
+        )
+        expected_readiness_digest = (
+            qualification.instance_readiness_digest
+            if qualification
+            else EXPECTED_READINESS_DIGEST
+        )
     valid = (
-        inspection.get("instance_id") == EXPECTED_INSTANCE_ID
+        staged_identity_valid
+        and inspection.get("instance_id") == expected_instance_id
         and inspection.get("factorio_version") == EXPECTED_FACTORIO_VERSION
         and inspection.get("modset_status") == "present"
         and inspection.get("save_count") == 0
-        and description.get("instance_spec", {}).get("spec_digest") == EXPECTED_SPEC_DIGEST
-        and description.get("instance_binding", {}).get("binding_digest") == EXPECTED_BINDING_DIGEST
-        and readiness.get("readiness_digest") == EXPECTED_READINESS_DIGEST
+        and description.get("instance_spec", {}).get("spec_digest")
+        == expected_spec_digest
+        and description.get("instance_binding", {}).get("binding_digest")
+        == expected_binding_digest
+        and readiness.get("readiness_digest")
+        == expected_readiness_digest
         and readiness.get("launch_intent") == "menu"
         and blocker_codes == expected_blockers
         and readiness.get("execution_started") is False
@@ -1435,15 +2160,256 @@ def operator_attestation(
     }
 
 
+INSTANCE_OPERATOR_CLAIMS = frozenset(
+    {
+        "backup_and_sync_activity_paused",
+        "no_unrelated_file_copy_activity",
+        "operator_will_not_suspend_or_restart",
+    }
+)
+
+
+def build_instance_operator_attestation(
+    *,
+    attested_at: str,
+    reviewer_principal: dict[str, Any],
+    machine_binding_id: str,
+    boot_identity: str,
+    observer_self_test_digest: str,
+    host_state_digest_value: str,
+    processes: dict[str, Any],
+    pending_restart: dict[str, Any],
+    operator_claims: dict[str, bool],
+) -> dict[str, Any]:
+    if (
+        not validate_windows_principal(reviewer_principal)
+        or set(operator_claims) != INSTANCE_OPERATOR_CLAIMS
+        or not all(isinstance(item, bool) for item in operator_claims.values())
+    ):
+        raise PreflightError(
+            "instance-isolated operator attestation inputs are not closed"
+        )
+    record: dict[str, Any] = {
+        "schema": INSTANCE_ATTESTATION_SCHEMA,
+        "attested_at": attested_at,
+        "reviewer_principal": reviewer_principal,
+        "machine_observations": {
+            "machine_binding_id": machine_binding_id,
+            "boot_identity": boot_identity,
+            "observer_self_test_digest": observer_self_test_digest,
+            "host_state_digest": host_state_digest_value,
+            "process_inventory_digest": digest_value(processes),
+            "process_inventory_quiet": processes.get("quiet") is True,
+            "pending_restart_observation_digest": digest_value(
+                pending_restart
+            ),
+            "pending_restart_cleared": bool(
+                pending_restart.get("valid") is True
+                and pending_restart.get("pending") is False
+            ),
+        },
+        "operator_attestations": dict(sorted(operator_claims.items())),
+        "power_request": {
+            "provider": "windows.set_thread_execution_state.v1",
+            "required_before_permit": True,
+            "claimed_active": False,
+        },
+    }
+    record["attestation_digest"] = digest_value(record)
+    return record
+
+
+def instance_operator_attestation(
+    path: Path | None,
+    *,
+    machine_binding_id: str | None,
+    boot_identity: str | None,
+    observer_self_test_digest: str | None,
+    observer_generated_at: str | None,
+    current_host_state_digest: str,
+    reviewer_principal: dict[str, Any],
+    processes: dict[str, Any],
+    pending_restart: dict[str, Any],
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    if path is None:
+        return {
+            "status": "missing",
+            "valid": False,
+            "required_operator_attestations": sorted(
+                INSTANCE_OPERATOR_CLAIMS
+            ),
+        }
+    audit = audit_no_follow(path, require_file=True)
+    if not audit["safe"]:
+        return {"status": "invalid", "valid": False, "path_audit": audit}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"status": "invalid", "valid": False, "path_audit": audit}
+    exact = {
+        "schema",
+        "attested_at",
+        "reviewer_principal",
+        "machine_observations",
+        "operator_attestations",
+        "power_request",
+        "attestation_digest",
+    }
+    machine = (
+        value.get("machine_observations")
+        if isinstance(value, dict)
+        else None
+    )
+    claims = (
+        value.get("operator_attestations")
+        if isinstance(value, dict)
+        else None
+    )
+    power = value.get("power_request") if isinstance(value, dict) else None
+    principal = (
+        value.get("reviewer_principal")
+        if isinstance(value, dict)
+        else None
+    )
+    window = time_window(
+        value.get("attested_at") if isinstance(value, dict) else None,
+        now=now,
+        maximum_age_seconds=ATTESTATION_MAX_AGE_SECONDS,
+    )
+    attested_time = parse_utc(
+        value.get("attested_at") if isinstance(value, dict) else None
+    )
+    observer_time = parse_utc(observer_generated_at)
+    sequence_valid = bool(
+        attested_time is not None
+        and observer_time is not None
+        and observer_time <= attested_time
+    )
+    machine_exact = {
+        "machine_binding_id",
+        "boot_identity",
+        "observer_self_test_digest",
+        "host_state_digest",
+        "process_inventory_digest",
+        "process_inventory_quiet",
+        "pending_restart_observation_digest",
+        "pending_restart_cleared",
+    }
+    bindings_valid = bool(
+        isinstance(machine, dict)
+        and set(machine) == machine_exact
+        and machine.get("machine_binding_id") == machine_binding_id
+        and machine.get("boot_identity") == boot_identity
+        and machine.get("observer_self_test_digest")
+        == observer_self_test_digest
+        and machine.get("host_state_digest") == current_host_state_digest
+        and machine.get("process_inventory_digest")
+        == digest_value(processes)
+        and machine.get("process_inventory_quiet")
+        is (processes.get("quiet") is True)
+        and machine.get("pending_restart_observation_digest")
+        == digest_value(pending_restart)
+        and machine.get("pending_restart_cleared")
+        is bool(
+            pending_restart.get("valid") is True
+            and pending_restart.get("pending") is False
+        )
+    )
+    core = dict(value) if isinstance(value, dict) else {}
+    claimed = core.pop("attestation_digest", None)
+    valid = bool(
+        isinstance(value, dict)
+        and set(value) == exact
+        and value.get("schema") == INSTANCE_ATTESTATION_SCHEMA
+        and window["valid"]
+        and sequence_valid
+        and validate_windows_principal(principal)
+        and principal == reviewer_principal
+        and principal.get("integrity") == "medium"
+        and bindings_valid
+        and processes.get("quiet") is True
+        and pending_restart.get("valid") is True
+        and pending_restart.get("pending") is False
+        and isinstance(claims, dict)
+        and set(claims) == INSTANCE_OPERATOR_CLAIMS
+        and all(claims.get(key) is True for key in INSTANCE_OPERATOR_CLAIMS)
+        and power
+        == {
+            "provider": "windows.set_thread_execution_state.v1",
+            "required_before_permit": True,
+            "claimed_active": False,
+        }
+        and isinstance(claimed, str)
+        and re.fullmatch(r"[0-9a-f]{64}", claimed)
+        and digest_value(core) == claimed
+    )
+    return {
+        "status": "verified" if valid else "invalid",
+        "valid": valid,
+        "path_audit": audit,
+        "artifact_sha256": sha256_file(path),
+        "attestation_digest": claimed,
+        "attested_at": (
+            value.get("attested_at") if isinstance(value, dict) else None
+        ),
+        "reviewer_principal": principal,
+        "machine_observations": machine,
+        "operator_attestations": claims,
+        "power_request": power,
+        "time_window": window,
+        "bindings_valid": bindings_valid,
+        "after_observer_self_test": sequence_valid,
+        "maximum_age_seconds": ATTESTATION_MAX_AGE_SECONDS,
+        "baseline_must_begin_before": window.get("expires_at"),
+        "required_operator_attestations": sorted(
+            INSTANCE_OPERATOR_CLAIMS
+        ),
+    }
+
+
 def add_blocker(blockers: list[dict[str, str]], code: str, detail: str) -> None:
     blockers.append({"code": code, "detail": detail})
 
 
-def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
+def build_preflight(
+    args: argparse.Namespace,
+    *,
+    route: PlayVerdictRoute = HERMETIC_VERDICT03,
+    qualification: CandidateQualificationBinding | None = None,
+    staged_candidate: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    if route.route_id != HERMETIC_VERDICT03.route_id and qualification is None:
+        raise PreflightError(
+            "the selected Play route requires an immutable qualification binding"
+        )
+    if (
+        route.route_id != HERMETIC_VERDICT03.route_id
+        and staged_candidate is None
+    ):
+        raise PreflightError(
+            "the selected Play route requires the exact final-workspace "
+            "staged candidate binding"
+        )
+    evidence_io = (
+        EvidenceIo(Path(args.evidence_probe))
+        if route.route_id != HERMETIC_VERDICT03.route_id
+        else None
+    )
+    if (
+        evidence_io is not None
+        and (
+            not isinstance(getattr(args, "operation_id", None), str)
+            or not args.operation_id.startswith(route.operation_prefix)
+        )
+    ):
+        raise PreflightError(
+            "instance-isolated preflight requires one exact operation ID"
+        )
     now = datetime.now(timezone.utc)
     task_root = Path(args.task_root)
     task_audit = audit_no_follow(task_root, require_file=False)
-    if not task_audit["safe"] or task_root.name != WORK_UNIT:
+    if not task_audit["safe"] or task_root.name != route.work_unit:
         raise PreflightError(f"task root is not the exact Gate 4C root: {task_audit}")
 
     facman_repo = Path(args.repo_root)
@@ -1451,32 +2417,85 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
     setup_repo = Path(args.setup_repo)
     facman = Path(args.facman)
     workspace = Path(args.workspace)
+    if staged_candidate is not None:
+        assert qualification is not None
+        try:
+            staged_candidate = STAGED.parse_staged_candidate(
+                staged_candidate,
+                task_root=task_root,
+                qualification=qualification,
+                route=route,
+            )
+        except STAGED.StagedCandidateError as exc:
+            raise PreflightError(str(exc)) from exc
     factorio = Path(args.factorio_exe)
 
     policy = policy_identity(
-        facman_repo / "contracts/generated-index/hermetic_standalone_play_policy.v1.canonical.json"
+        facman_repo / "contracts/generated-index" / route.policy_filename,
+        route,
     )
-    artifacts = verify_artifact_manifest(Path(args.artifact_manifest))
-    repositories = {
-        "facman": git_identity(
-            facman_repo,
-            FINAL_EVIDENCE_DEV,
-            required_ancestors=[CANDIDATE_REVISION, CANDIDATE_MERGE, CANDIDATE_CLOSEOUT_MERGE, FINAL_EVIDENCE_DEV],
-        ),
-        "universal_launcher": git_identity(launcher_repo, UNIVERSAL_LAUNCHER_REVISION),
-        "universal_setup": git_identity(setup_repo, UNIVERSAL_SETUP_REVISION),
-    }
-    # Gate 4C evidence/tool commits may descend from the exact final dev pin.
-    repositories["facman"]["valid"] = all(repositories["facman"].get("required_ancestors", {}).values())
+    artifacts = verify_artifact_manifest(
+        Path(args.artifact_manifest),
+        route=route,
+        qualification=qualification,
+    )
+    if qualification:
+        repositories = {
+            "facman": git_identity(
+                facman_repo,
+                qualification.factorio_launcher.revision,
+                required_ref=qualification.factorio_launcher.required_ref,
+            ),
+            "universal_launcher": git_identity(
+                launcher_repo,
+                qualification.universal_launcher.revision,
+                required_ref=qualification.universal_launcher.required_ref,
+            ),
+            "universal_setup": git_identity(
+                setup_repo,
+                qualification.universal_setup.revision,
+                required_ref=qualification.universal_setup.required_ref,
+            ),
+        }
+    else:
+        repositories = {
+            "facman": git_identity(
+                facman_repo,
+                FINAL_EVIDENCE_DEV,
+                required_ancestors=[
+                    CANDIDATE_REVISION,
+                    CANDIDATE_MERGE,
+                    CANDIDATE_CLOSEOUT_MERGE,
+                    FINAL_EVIDENCE_DEV,
+                ],
+            ),
+            "universal_launcher": git_identity(
+                launcher_repo, UNIVERSAL_LAUNCHER_REVISION
+            ),
+            "universal_setup": git_identity(
+                setup_repo, UNIVERSAL_SETUP_REVISION
+            ),
+        }
+        # Gate 4C evidence/tool commits may descend from the exact final dev pin.
+        repositories["facman"]["valid"] = all(
+            repositories["facman"].get("required_ancestors", {}).values()
+        )
 
     facman_hash = sha256_file(facman) if audit_no_follow(facman, require_file=True)["safe"] else None
+    expected_facman_sha256 = (
+        qualification.artifact_mapping()["facman"].sha256
+        if qualification
+        else EXPECTED_FACMAN_SHA256
+    )
     facman_artifact = {
         "path": str(facman),
         "sha256": facman_hash,
-        "expected_sha256": EXPECTED_FACMAN_SHA256,
-        "valid": facman_hash == EXPECTED_FACMAN_SHA256,
+        "expected_sha256": expected_facman_sha256,
+        "valid": facman_hash == expected_facman_sha256,
     }
-    executable = factorio_evidence(factorio)
+    executable = factorio_evidence(
+        factorio, qualification, evidence_io
+    )
     source = source_evidence(
         Path(args.source_artifact) if args.source_artifact else None,
         factorio,
@@ -1486,15 +2505,38 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
             else None
         ),
         task_root=task_root,
+        evidence_io=evidence_io,
     )
-    instance = instance_evidence(facman, workspace, args.instance_id)
+    instance = instance_evidence(
+        facman,
+        workspace,
+        args.instance_id,
+        qualification,
+        staged_instance=(
+            staged_candidate["instance"]
+            if staged_candidate is not None
+            else None
+        ),
+    )
     processes = process_inventory()
     session = host_session_identity()
+    principal = (
+        windows_principal_identity()
+        if route.route_id != HERMETIC_VERDICT03.route_id
+        else None
+    )
+    pending_restart = (
+        pending_restart_observation()
+        if route.route_id != HERMETIC_VERDICT03.route_id
+        else None
+    )
     observer = observer_prerequisites(
         Path(args.observer_self_test) if args.observer_self_test else None,
         repo_root=facman_repo,
         session=session,
         now=now,
+        route=route,
+        qualification=qualification,
     )
     observer_digest = (
         observer.get("self_test", {}).get("self_test_digest")
@@ -1507,15 +2549,33 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
         else None
     )
     current_host_state = host_state_digest(session, processes, observer_digest)
-    attestation = operator_attestation(
-        Path(args.operator_attestation) if args.operator_attestation else None,
-        machine_binding_id=session.get("machine_binding_id"),
-        boot_identity=session.get("boot_identity"),
-        observer_self_test_digest=observer_digest,
-        observer_generated_at=observer_generated_at,
-        current_host_state_digest=current_host_state,
-        now=now,
-    )
+    if route.route_id == HERMETIC_VERDICT03.route_id:
+        attestation = operator_attestation(
+            Path(args.operator_attestation)
+            if args.operator_attestation
+            else None,
+            machine_binding_id=session.get("machine_binding_id"),
+            boot_identity=session.get("boot_identity"),
+            observer_self_test_digest=observer_digest,
+            observer_generated_at=observer_generated_at,
+            current_host_state_digest=current_host_state,
+            now=now,
+        )
+    else:
+        attestation = instance_operator_attestation(
+            Path(args.operator_attestation)
+            if args.operator_attestation
+            else None,
+            machine_binding_id=session.get("machine_binding_id"),
+            boot_identity=session.get("boot_identity"),
+            observer_self_test_digest=observer_digest,
+            observer_generated_at=observer_generated_at,
+            current_host_state_digest=current_host_state,
+            reviewer_principal=principal or {},
+            processes=processes,
+            pending_restart=pending_restart or {},
+            now=now,
+        )
     deadlines = [
         parsed
         for parsed in (
@@ -1527,12 +2587,34 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
     baseline_deadline = (
         min(deadlines).isoformat().replace("+00:00", "Z") if deadlines else None
     )
+    evidence_probe: dict[str, Any] | None = None
+    if evidence_io is not None and qualification is not None:
+        probe_result = evidence_io.inspect_file(evidence_io.probe)
+        probe_binding = qualification.artifact_mapping()["evidence_probe"]
+        evidence_probe = {
+            "path": str(evidence_io.probe),
+            "sha256": file_payload_sha256(probe_result),
+            "size": file_payload_size(probe_result),
+            "qualified_sha256": probe_binding.sha256,
+            "qualified_size": probe_binding.size,
+            "native_result_digest": probe_result["record_digest"],
+            "valid": (
+                file_payload_sha256(probe_result) == probe_binding.sha256
+                and file_payload_size(probe_result) == probe_binding.size
+            ),
+        }
 
     blockers: list[dict[str, str]] = []
     if not policy["valid"]:
         add_blocker(blockers, "frozen_policy_mismatch", "The canonical Gate 4A policy digest does not match.")
     if not artifacts["valid"] or not facman_artifact["valid"]:
         add_blocker(blockers, "candidate_artifact_mismatch", "The copied reviewed Gate 4B artifact set is incomplete or changed.")
+    if evidence_probe is not None and not evidence_probe["valid"]:
+        add_blocker(
+            blockers,
+            "evidence_probe_mismatch",
+            "The native stable evidence-I/O provider differs from qualification.",
+        )
     for name, identity in repositories.items():
         if not identity.get("valid"):
             add_blocker(blockers, f"repository_pin_mismatch:{name}", f"{name} does not satisfy its exact Gate 4C pin.")
@@ -1547,6 +2629,31 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
         add_blocker(blockers, "host_not_quiet", f"Protected or competing processes are active: {', '.join(active)}")
     if not session.get("valid"):
         add_blocker(blockers, "host_session_identity_unavailable", "The opaque machine and current boot-session identities could not be established.")
+    if (
+        route.route_id != HERMETIC_VERDICT03.route_id
+        and (
+            not validate_windows_principal(principal)
+            or principal.get("integrity") != "medium"
+        )
+    ):
+        add_blocker(
+            blockers,
+            "reviewer_principal_unavailable",
+            "The exact medium-integrity Windows token principal and session could not be observed.",
+        )
+    if (
+        route.route_id != HERMETIC_VERDICT03.route_id
+        and (
+            not isinstance(pending_restart, dict)
+            or pending_restart.get("valid") is not True
+            or pending_restart.get("pending") is not False
+        )
+    ):
+        add_blocker(
+            blockers,
+            "pending_restart_or_unknown",
+            "Windows reports a pending restart or restart state could not be observed.",
+        )
     if not observer.get("tools_available"):
         add_blocker(blockers, "observer_tools_missing", "WPR, XPerf, and WPAExporter are required.")
     if observer.get("recording_active") is not False:
@@ -1556,11 +2663,27 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
     if not attestation.get("valid"):
         add_blocker(blockers, "quiet_host_attestation_missing", "A fresh operator attestation for restart, competing processes, synchronization activity, and sleep prevention is required.")
 
+    resource_specification = (
+        build_resource_specification(
+            preflight={
+                "instance": instance,
+                "source_evidence": source,
+                "facman_artifact": facman_artifact,
+            },
+            workspace=workspace,
+            operation_id=args.operation_id,
+            route=route,
+            evidence_io=evidence_io,
+            environment_snapshot=STARTUP_ENVIRONMENT_RECORD,
+        )
+        if evidence_io is not None
+        else None
+    )
     core: dict[str, Any] = {
-        "schema": "factorio.hermetic_play_verdict_preflight.v1",
+        "schema": route.preflight_schema,
         "canonicalization_version": "facman.sorted-json.v1",
         "generated_at": now.isoformat().replace("+00:00", "Z"),
-        "work_unit": WORK_UNIT,
+        "work_unit": route.work_unit,
         "status": "ready" if not blockers else "blocked",
         "authority": {
             "permit_issued": False,
@@ -1583,6 +2706,14 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
             "session_identity": session,
             "process_inventory": processes,
             "host_state_digest": current_host_state,
+            **(
+                {
+                    "reviewer_principal": principal,
+                    "pending_restart": pending_restart,
+                }
+                if route.route_id != HERMETIC_VERDICT03.route_id
+                else {}
+            ),
         },
         "observer": observer,
         "operator_attestation": attestation,
@@ -1600,11 +2731,28 @@ def build_preflight(args: argparse.Namespace) -> dict[str, Any]:
             else "capture_protected_and_writable_baselines_before_any_permit"
         ),
     }
+    if evidence_probe is not None and resource_specification is not None:
+        core["evidence_probe"] = evidence_probe
+        core["resource_specification"] = resource_specification
+    if qualification:
+        core["qualification_binding"] = {
+            "route_id": route.route_id,
+            "qualification_digest": qualification.qualification_digest,
+        }
+        if staged_candidate is not None:
+            core["qualification_binding"]["staged_candidate_digest"] = (
+                staged_candidate["staged_candidate_digest"]
+            )
     core["preflight_digest"] = digest_value(core)
     return core
 
 
-def write_record(path: Path, record: dict[str, Any], task_root: Path) -> None:
+def write_record(
+    path: Path,
+    record: dict[str, Any],
+    task_root: Path,
+    evidence_io: EvidenceIo | None = None,
+) -> None:
     absolute = Path(os.path.abspath(path))
     root = Path(os.path.abspath(task_root))
     try:
@@ -1612,6 +2760,11 @@ def write_record(path: Path, record: dict[str, Any], task_root: Path) -> None:
     except ValueError as exc:
         raise PreflightError("preflight output must remain under the exact Gate 4C root") from exc
     absolute.parent.mkdir(parents=True, exist_ok=True)
+    if evidence_io is not None:
+        if absolute.exists():
+            raise PreflightError("preflight output already exists")
+        evidence_io.write_new_json(absolute, record)
+        return
     temporary = absolute.with_name(absolute.name + ".tmp")
     temporary.write_bytes(json.dumps(record, indent=2, ensure_ascii=False, sort_keys=True).encode("utf-8") + b"\n")
     os.replace(temporary, absolute)
@@ -1619,12 +2772,35 @@ def write_record(path: Path, record: dict[str, Any], task_root: Path) -> None:
 
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(description="Build the non-executing Gate 4C preflight packet.")
+    value.add_argument(
+        "--route",
+        default=HERMETIC_VERDICT03.route_id,
+        help="Closed Play verdict route identifier.",
+    )
+    value.add_argument(
+        "--qualification-binding",
+        type=Path,
+        help=(
+            "Immutable remote-only candidate qualification binding. "
+            "Required for the instance-isolated revalidation route."
+        ),
+    )
+    value.add_argument(
+        "--staged-candidate-binding",
+        type=Path,
+        help=(
+            "Closed final-workspace candidate binding emitted by the "
+            "instance-isolated coordinator stage"
+        ),
+    )
     value.add_argument("--task-root", required=True, type=Path)
     value.add_argument("--repo-root", required=True, type=Path)
     value.add_argument("--launcher-repo", required=True, type=Path)
     value.add_argument("--setup-repo", required=True, type=Path)
     value.add_argument("--artifact-manifest", required=True, type=Path)
     value.add_argument("--facman", required=True, type=Path)
+    value.add_argument("--evidence-probe", type=Path)
+    value.add_argument("--operation-id")
     value.add_argument("--workspace", required=True, type=Path)
     value.add_argument("--instance-id", default=EXPECTED_INSTANCE_ID)
     value.add_argument("--factorio-exe", required=True, type=Path)
@@ -1645,8 +2821,51 @@ def parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = parser().parse_args()
-    record = build_preflight(args)
-    write_record(args.out, record, args.task_root)
+    route = route_by_id(args.route)
+    qualification = (
+        load_qualification_binding(args.qualification_binding, route)
+        if args.qualification_binding
+        else None
+    )
+    if route != HERMETIC_VERDICT03 and qualification is None:
+        raise PreflightError(
+            "the selected Play route requires an immutable qualification binding"
+        )
+    if route != HERMETIC_VERDICT03 and args.evidence_probe is None:
+        raise PreflightError(
+            "the selected Play route requires a qualified native evidence probe"
+        )
+    staged_candidate = None
+    if route != HERMETIC_VERDICT03:
+        if args.staged_candidate_binding is None:
+            raise PreflightError(
+                "the selected Play route requires the exact final-workspace "
+                "staged candidate binding"
+            )
+        assert qualification is not None
+        try:
+            staged_candidate = STAGED.parse_staged_candidate(
+                EvidenceIo(args.evidence_probe).read_json(
+                    args.staged_candidate_binding
+                )["payload"]["document"],
+                task_root=args.task_root,
+                qualification=qualification,
+                route=route,
+            )
+        except STAGED.StagedCandidateError as exc:
+            raise PreflightError(str(exc)) from exc
+    record = build_preflight(
+        args,
+        route=route,
+        qualification=qualification,
+        staged_candidate=staged_candidate,
+    )
+    write_record(
+        args.out,
+        record,
+        args.task_root,
+        EvidenceIo(args.evidence_probe) if args.evidence_probe else None,
+    )
     print(
         f"gate4c-verdict-preflight: {record['status']} "
         f"({len(record['blockers'])} blockers; {record['preflight_digest']})"
@@ -1657,6 +2876,13 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (OSError, ValueError, json.JSONDecodeError, PreflightError) as exc:
+    except (
+        OSError,
+        ValueError,
+        json.JSONDecodeError,
+        PreflightError,
+        StableIoError,
+        RouteBindingError,
+    ) as exc:
         print(f"gate4c-verdict-preflight: {exc}", file=sys.stderr)
         raise SystemExit(2)

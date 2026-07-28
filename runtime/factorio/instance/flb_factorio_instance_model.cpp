@@ -1003,11 +1003,14 @@ ReadinessComponent encode_readiness(
     findings.push_back({"instance_isolation_not_recorded", "isolation", "info",
         "Isolation must be selected and proven by the later Play gate"});
     add_dimension(dimensions, "play_authority", "blocked", true,
-        "Real Factorio execution and OperationPermit issuance remain unavailable", {"launch_preflight"});
+        "No reviewed real-Play route is available in this build for the selected installation, instance, launch intent and isolation mode.",
+        {"launch_preflight"});
     blockers.push_back({"real_play_gate_not_passed", "play_authority",
-        "The exact menu-launch permit and real-product Play gate are not implemented",
-        "Gate 2 is read-only and cannot start a process", true, "await_operation_permit_gate"});
-    actions.push_back({"await_operation_permit_gate", "Keep the instance ready for the OperationPermit gate", "", false});
+        "No reviewed real-Play route is available in this build for the selected installation, instance, launch intent and isolation mode.",
+        "The exact route remains pending fresh revalidation under FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01",
+        true, "await_reviewed_play_route"});
+    actions.push_back({"await_reviewed_play_route",
+        "Keep the instance ready while the exact Play route is revalidated", "", false});
 
     bool configuration_blocked = false;
     bool configuration_degraded = false;

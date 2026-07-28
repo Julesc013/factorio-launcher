@@ -22,6 +22,7 @@ Architecture:
 - [Coding Standards](architecture/coding_standards.md)
 - [Command Graph](architecture/command_graph.md)
 - [Module Graph](architecture/module_graph.md)
+- [Application Module Composition](architecture/application-module-composition.md)
 - [Data Flow](architecture/data_flow.md)
 - [Apps Model](architecture/apps_model.md)
 - [JSON RPC](architecture/json_rpc.md)
@@ -36,6 +37,14 @@ Architecture:
 - [Pre-Code Structure Review](architecture/pre_code_structure_review.md)
 - [Workspace Layout](reference/workspace-layout.md)
 - [Repro Workspace Smoke](reference/repro-workspace-smoke.md)
+- [Remote Source Closure](reference/remote-source-closure.md)
+
+Development:
+
+- [Getting Started](development/getting-started.md)
+- [Build Root Hygiene](development/build-root-hygiene.md)
+- [Testing](development/testing.md)
+- [Repository Branch Governance](development/repository-branch-governance.md)
 
 Product:
 
@@ -90,5 +99,6 @@ Release:
 Planning:
 
 - [Roadmap](roadmap.md)
+- [Reviewed Planning Snapshots](reviews/README.md)
 - [Safety Proof Gates](quality/safety_proof_gates.md)
 - [Safety Claim Ledger](quality/safety_claim_ledger.md)

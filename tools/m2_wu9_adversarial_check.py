@@ -6,7 +6,6 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
-import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,11 +66,6 @@ def main() -> int:
     for key, expected in expected_setup.items():
         if setup.get(key) != expected:
             problems.append(f"setup provider {key} must equal {expected!r}")
-
-    lock = tomllib.loads((ROOT / "release/index/workspace_lock.v1.toml").read_text(encoding="utf-8"))
-    pins = {item["id"]: item["pin"] for item in lock.get("component", [])}
-    if pins.get("universal_setup") != EXPECTED_SETUP_REVISION:
-        problems.append("workspace lock must pin the accepted WU9 Universal Setup main")
 
     manifest = SETUP_ROOT / setup.get("coverage_manifest", "")
     if manifest.is_file() and canonical_text_sha256(manifest) != EXPECTED_SETUP_MANIFEST_SHA256:

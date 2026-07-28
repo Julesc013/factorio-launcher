@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/transport/transport_request.v2.schema.json",
+  "title": "FacMan durable-operation stdio transport request v2",
+  "type": "object",
+  "required": [
+    "schema",
+    "protocol_version",
+    "request_id",
+    "operation_id",
+    "attempt_id",
+    "command",
+    "dry_run",
+    "payload"
+  ],
+  "properties": {
+    "schema": { "const": "facman.transport_request.v2" },
+    "protocol_version": { "const": 2 },
+    "request_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "attempt_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "workspace": { "type": "string", "maxLength": 32768 },
+    "command": { "type": "string", "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)+$" },
+    "dry_run": { "type": "boolean" },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false
+}

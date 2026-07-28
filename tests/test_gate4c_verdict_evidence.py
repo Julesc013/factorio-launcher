@@ -11,8 +11,13 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from argparse import Namespace
 from unittest import mock
 
+from tools.play_verdict_route import (
+    INSTANCE_ISOLATED_REVALIDATION as INSTANCE_ROUTE,
+)
+from tools.play_evidence_resource_spec import baseline_specs
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
@@ -292,6 +297,63 @@ class Gate4CVerdictEvidenceTests(unittest.TestCase):
             EVIDENCE.resource_set_digest(list(reversed(resources))),
         )
 
+    def test_baseline_consumes_preflight_paths_without_environment_rediscovery(
+        self,
+    ) -> None:
+        specification = {
+            "protected_resources": [
+                {
+                    "resource_id": "factorio.appdata",
+                    "kind": "filesystem",
+                    "source": "startup_environment_snapshot",
+                    "members": [
+                        {
+                            "path": r"C:\Observed\AppData\Factorio",
+                            "root_identity": {"present": False},
+                        }
+                    ],
+                },
+                {
+                    "resource_id": "registry.factorio_uninstall",
+                    "kind": "registry",
+                    "source": "preflight_registry_discovery",
+                    "members": [
+                        {"hive": "HKCU", "subkey": r"Software\Uninstall"}
+                    ],
+                },
+            ],
+            "writable_resources": [
+                {
+                    "resource_id": "instance.closure",
+                    "kind": "filesystem",
+                    "source": "frozen_route_writable_mapping",
+                    "members": [
+                        {
+                            "path": r"D:\Task\workspace\instances\selected",
+                            "root_identity": {"present": True},
+                        }
+                    ],
+                }
+            ],
+        }
+        with mock.patch.dict(
+            os.environ,
+            {
+                "APPDATA": r"Z:\Substituted\AppData",
+                "LOCALAPPDATA": r"Z:\Substituted\Local",
+            },
+            clear=False,
+        ):
+            protected, writable = baseline_specs(specification)
+        self.assertEqual(
+            protected["filesystem"]["factorio.appdata"],
+            [r"C:\Observed\AppData\Factorio"],
+        )
+        self.assertEqual(
+            writable["instance.closure"],
+            [r"D:\Task\workspace\instances\selected"],
+        )
+
     def test_new_output_is_exact_task_owned_and_append_only(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             task_root = Path(temporary) / EVIDENCE.WORK_UNIT
@@ -360,6 +422,230 @@ class Gate4CVerdictEvidenceTests(unittest.TestCase):
                     session_digest="1" * 64,
                     packet_digest="2" * 64,
                     expected_checks=EVIDENCE.FIRST_LAUNCH_CHECKS,
+                )
+
+    def test_instance_human_observation_is_operation_sequence_and_principal_bound(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root = Path(temporary) / INSTANCE_ROUTE.work_unit
+            operation = INSTANCE_ROUTE.operation_prefix + "launch1"
+            path = (
+                task_root
+                / "evidence"
+                / "human"
+                / f"{operation}-launch-1.json"
+            )
+            principal_core = {
+                "schema": EVIDENCE.PREFLIGHT.WINDOWS_PRINCIPAL_SCHEMA,
+                "provider_id": "windows.local-token.v1",
+                "principal_sid_digest": "9" * 64,
+                "windows_session_id": 7,
+                "integrity": "medium",
+                "valid": True,
+            }
+            principal = {
+                **principal_core,
+                "principal_digest": EVIDENCE.digest_value(principal_core),
+            }
+            core = {
+                "schema": INSTANCE_ROUTE.human_observation_schema,
+                "canonicalization_version": "facman.sorted-json.v1",
+                "work_unit": INSTANCE_ROUTE.work_unit,
+                "operation_id": operation,
+                "launch_sequence": 1,
+                "session_digest": "1" * 64,
+                "packet_digest": "2" * 64,
+                "reviewer_principal": principal,
+                "observed_at": "2026-07-27T00:00:00Z",
+                "disposition": "Pass",
+                "checks": {
+                    key: True for key in EVIDENCE.FIRST_LAUNCH_CHECKS
+                },
+                "check_notes": {
+                    key: "observed" for key in EVIDENCE.FIRST_LAUNCH_CHECKS
+                },
+                "notes": "Synthetic protocol proof.",
+            }
+            value = {
+                **core,
+                "attestation_digest": EVIDENCE.digest_value(core),
+            }
+            EVIDENCE.atomic_json(path, value)
+            validated = EVIDENCE.validate_human_observation(
+                path,
+                operation_id=operation,
+                session_digest="1" * 64,
+                packet_digest="2" * 64,
+                expected_checks=EVIDENCE.FIRST_LAUNCH_CHECKS,
+                route=INSTANCE_ROUTE,
+                launch_sequence=1,
+                task_root=task_root,
+            )
+            self.assertEqual(validated["disposition"], "Pass")
+
+            value["checks"]["normal_menu_observed"] = False
+            value["check_notes"]["normal_menu_observed"] = ""
+            unsigned = dict(value)
+            unsigned.pop("attestation_digest")
+            value["attestation_digest"] = EVIDENCE.digest_value(unsigned)
+            EVIDENCE.atomic_json(path, value)
+            with self.assertRaises(EVIDENCE.EvidenceError):
+                EVIDENCE.validate_human_observation(
+                    path,
+                    operation_id=operation,
+                    session_digest="1" * 64,
+                    packet_digest="2" * 64,
+                    expected_checks=EVIDENCE.FIRST_LAUNCH_CHECKS,
+                    route=INSTANCE_ROUTE,
+                    launch_sequence=1,
+                    task_root=task_root,
+                )
+
+            value["check_notes"]["normal_menu_observed"] = "menu absent"
+            value["disposition"] = "Fail"
+            value["reviewer_principal"] = {
+                **principal,
+                "windows_session_id": 8,
+            }
+            unsigned = dict(value)
+            unsigned.pop("attestation_digest")
+            value["attestation_digest"] = EVIDENCE.digest_value(unsigned)
+            EVIDENCE.atomic_json(path, value)
+            with self.assertRaises(EVIDENCE.EvidenceError):
+                EVIDENCE.validate_human_observation(
+                    path,
+                    operation_id=operation,
+                    session_digest="1" * 64,
+                    packet_digest="2" * 64,
+                    expected_checks=EVIDENCE.FIRST_LAUNCH_CHECKS,
+                    route=INSTANCE_ROUTE,
+                    launch_sequence=1,
+                    task_root=task_root,
+                )
+
+    def test_instance_finalizer_rejects_same_operation_and_changed_principal(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root = Path(temporary) / INSTANCE_ROUTE.work_unit
+            task_root.mkdir()
+            principal_core = {
+                "schema": EVIDENCE.PREFLIGHT.WINDOWS_PRINCIPAL_SCHEMA,
+                "provider_id": "windows.local-token.v1",
+                "principal_sid_digest": "9" * 64,
+                "windows_session_id": 7,
+                "integrity": "medium",
+                "valid": True,
+            }
+            principal = {
+                **principal_core,
+                "principal_digest": EVIDENCE.digest_value(principal_core),
+            }
+            session = {
+                "instance_id": INSTANCE_ROUTE.instance_id,
+                "operation_id": INSTANCE_ROUTE.operation_prefix + "same",
+                "machine_binding_id": "machine",
+                "facman_source_revision_digest": "1" * 64,
+                "facman_build_identity_digest": "2" * 64,
+                "task_root": str(task_root),
+                "session_digest": "a" * 64,
+                "principal": {
+                    "provider_id": principal["provider_id"],
+                    "principal_id": principal["principal_digest"],
+                },
+            }
+            arguments = Namespace(
+                first_session=Path("first-session.json"),
+                first_packet=Path("first-packet.json"),
+                first_human=Path("first-human.json"),
+                second_session=Path("second-session.json"),
+                second_packet=Path("second-packet.json"),
+                second_human=Path("second-human.json"),
+                verdict="Pass",
+                out=task_root / "evidence" / "verdict" / "verdict.json",
+            )
+            with (
+                mock.patch.object(
+                    EVIDENCE,
+                    "validate_session_record",
+                    side_effect=[session, dict(session)],
+                ),
+                self.assertRaises(EVIDENCE.EvidenceError),
+            ):
+                EVIDENCE.finalize_verdict(
+                    arguments, route=INSTANCE_ROUTE
+                )
+
+            second_session = {
+                **session,
+                "operation_id": INSTANCE_ROUTE.operation_prefix + "second",
+                "session_digest": "b" * 64,
+            }
+            second_principal_core = {
+                **principal_core,
+                "principal_sid_digest": "8" * 64,
+            }
+            second_principal = {
+                **second_principal_core,
+                "principal_digest": EVIDENCE.digest_value(
+                    second_principal_core
+                ),
+            }
+            second_session["principal"] = {
+                "provider_id": second_principal["provider_id"],
+                "principal_id": second_principal["principal_digest"],
+            }
+            packets = [
+                {
+                    "packet_digest": "3" * 64,
+                    "permit_id": "permit-one",
+                    "permit_claims_digest": "4" * 64,
+                    "technical_disposition": (
+                        "eligible_for_human_verdict"
+                    ),
+                },
+                {
+                    "packet_digest": "5" * 64,
+                    "permit_id": "permit-two",
+                    "permit_claims_digest": "6" * 64,
+                    "technical_disposition": (
+                        "eligible_for_human_verdict"
+                    ),
+                },
+            ]
+            humans = [
+                {
+                    "reviewer_principal": principal,
+                    "disposition": "Pass",
+                    "attestation_digest": "7" * 64,
+                },
+                {
+                    "reviewer_principal": second_principal,
+                    "disposition": "Pass",
+                    "attestation_digest": "8" * 64,
+                },
+            ]
+            with (
+                mock.patch.object(
+                    EVIDENCE,
+                    "validate_session_record",
+                    side_effect=[session, second_session],
+                ),
+                mock.patch.object(
+                    EVIDENCE,
+                    "validate_native_packet",
+                    side_effect=packets,
+                ),
+                mock.patch.object(
+                    EVIDENCE,
+                    "validate_human_observation",
+                    side_effect=humans,
+                ),
+                self.assertRaises(EVIDENCE.EvidenceError),
+            ):
+                EVIDENCE.finalize_verdict(
+                    arguments, route=INSTANCE_ROUTE
                 )
 
 

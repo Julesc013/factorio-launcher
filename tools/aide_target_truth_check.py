@@ -119,6 +119,15 @@ def validate_profile_text(text: str) -> list[str]:
         "hermetic-standalone-play-observer-start-repair",
         "windows-instance-isolated-play-policy",
         "windows-instance-isolated-play-policy-closeout",
+        "windows-instance-isolated-play-candidate",
+        "cross-repo-ownership-audit",
+        "local-dependency-pin-enforcement",
+        "ulk-client-transport-extraction",
+        "ulk-reference-model-extraction",
+        "facman-application-module-decomposition",
+        "facman-ulk-integration-proof",
+        "ignored-build-tree-cleanup",
+        "targeted-extraction-complete",
         "gate4c-privilege-separation-repair",
     }
     if phase not in allowed_phases:

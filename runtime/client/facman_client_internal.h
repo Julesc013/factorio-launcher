@@ -20,6 +20,18 @@ facman::core::Result<CommandResponse> failure(
     std::string path = {},
     facman::core::OutcomeKind kind = facman::core::OutcomeKind::internal_error);
 facman::core::Result<CommandResponse> decode_response(int status, std::string envelope);
+facman::core::Result<CommandResponse> terminal_response(
+    const CommandRequest& request,
+    int status,
+    facman::core::OutcomeKind command_outcome_kind,
+    std::string command_outcome,
+    std::string error_code,
+    std::string error_message,
+    OperationOutcome operation_outcome);
+facman::core::Result<CommandResponse> finalize_response(
+    const CommandRequest& request,
+    CommandResponse response,
+    bool cancellation_after_dispatch = false);
 
 } // namespace facman::client::detail
 

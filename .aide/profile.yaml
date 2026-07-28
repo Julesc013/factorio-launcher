@@ -8,17 +8,13 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: windows-instance-isolated-play-policy-closeout
+  phase: targeted-extraction-complete
   primary_goal: >
-    Preserve the reviewed Windows instance-isolated policy digest while the
-    no-authority checkpoint is promoted to canonical main and synchronized
-    back into dev.
+    Preserve the completed targeted cross-repository refactor, clean pinned
+    source train, and Factorio InstanceSpec while runtime authority remains closed.
   next_task: >
-    Promote the accepted policy-only dev checkpoint to main, synchronize main
-    ancestry back into dev without changing the accepted tree, and only then
-    activate the separately scoped implementation candidate bound to
-    InstanceSpec, InstanceBinding, and InstanceReadiness. Keep the later human
-    verdict separate and retain every no-authority boundary.
+    Start a separately reviewed Windows instance-isolated Play revalidation
+    WorkUnit against the extracted Universal Launcher contracts.
   authoritative_command_slice:
     - installs.scan
     - installs.import

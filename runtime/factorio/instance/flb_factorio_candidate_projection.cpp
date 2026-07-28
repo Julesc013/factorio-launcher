@@ -3,6 +3,7 @@
 
 #include "flb_factorio_candidate_projection.h"
 
+#include "facman/build_identity.hpp"
 #include "fl_file_io.h"
 #include "fl_json.h"
 #include "fl_path_safety.h"
@@ -420,8 +421,10 @@ project_hermetic_candidate_plan(
             request.principal.provider_id + ":" + request.principal.principal_id)},
         {"protected.baseline_digest", request.protected_baseline_digest},
         {"read_data.identity", read_data_identity.value()},
-        {"universal_launcher.revision", sha256_text("7bd4425f0c35414f738159b45d8bec42edf70235")},
-        {"universal_setup.revision", sha256_text("3f8489275077347c2918f3bb03614ec6431362ff")},
+        {"universal_launcher.revision", sha256_text(
+            facman::build_identity::universal_launcher_revision)},
+        {"universal_setup.revision", sha256_text(
+            facman::build_identity::universal_setup_revision)},
         {"writable.baseline_digest", request.writable_baseline_digest},
         {"write_data.identity", write_data_identity.value()},
     };
@@ -447,6 +450,368 @@ project_hermetic_candidate_plan(
 #endif
 }
 
+facman::core::Result<play::HermeticCandidatePlan>
+project_instance_isolated_candidate_plan(
+    const InstanceIsolatedCandidateProjectionRequest& request)
+{
+#ifndef _WIN32
+    (void)request;
+    return facman::core::Result<play::HermeticCandidatePlan>::failure(
+        projection_error(
+            "permit_wrong_operation",
+            "the frozen instance-isolated candidate is available only on Windows x64",
+            "$candidate.selector",
+            facman::core::OutcomeKind::unavailable));
+#else
+    const std::vector<std::string> required_input_digests = {
+        request.expected_executable_sha256,
+        request.authenticated_source_artifact_digest,
+        request.source_authentication_evidence_digest,
+        request.facman_source_revision_digest,
+        request.facman_build_identity_digest,
+        request.protected_baseline_digest,
+        request.writable_baseline_digest,
+    };
+    if (request.workspace.empty() || request.instance_id.empty() ||
+        request.operation_id.empty() ||
+        request.installation_root.empty() ||
+        request.executable.empty() ||
+        request.windows_system_root.empty() ||
+        !std::all_of(
+            required_input_digests.begin(),
+            required_input_digests.end(), lowercase_digest)) {
+        return facman::core::Result<play::HermeticCandidatePlan>::failure(
+            projection_error(
+                "permit_wrong_evidence",
+                "instance-isolated candidate projection input is incomplete",
+                "$candidate.projection"));
+    }
+    std::error_code workspace_error;
+    std::error_code install_error;
+    std::error_code executable_error;
+    const fs::path workspace =
+        fs::weakly_canonical(request.workspace, workspace_error);
+    const fs::path install =
+        fs::weakly_canonical(request.installation_root, install_error);
+    const fs::path executable =
+        fs::weakly_canonical(request.executable, executable_error);
+    if (workspace_error || install_error || executable_error ||
+        !path_is_beneath(install, executable)) {
+        return facman::core::Result<play::HermeticCandidatePlan>::failure(
+            projection_error(
+                "permit_wrong_resource",
+                "candidate executable or workspace identity is invalid",
+                "$candidate.executable"));
+    }
+
+    const fs::path instance_root =
+        workspace / "instances" / request.instance_id;
+    auto instance_authority =
+        std::make_shared<facman::platform::StableDirectoryObject>();
+    const auto root_opened =
+        instance_authority->open_no_follow(instance_root);
+    if (!root_opened.ok()) {
+        return facman::core::Result<play::HermeticCandidatePlan>::failure(
+            projection_error(
+                "permit_wrong_resource", root_opened.detail,
+                "$candidate.instance_root"));
+    }
+    auto installation_identity = exact_path_identity(install, false);
+    auto executable_identity = exact_path_identity(executable, true);
+    auto read_data_identity = exact_path_identity(install / "data", false);
+    auto write_data_identity =
+        exact_path_identity(instance_root, false);
+    auto mod_root_identity =
+        exact_path_identity(instance_root / "mods", false);
+    auto executable_sha256 = stable_file_sha256(executable);
+    auto base_capability =
+        stable_file_sha256(install / "data" / "base" / "info.json");
+    if (!installation_identity || !executable_identity ||
+        !read_data_identity || !write_data_identity ||
+        !mod_root_identity || !executable_sha256 ||
+        !base_capability) {
+        const facman::core::Error* error = nullptr;
+        if (!installation_identity) error = &installation_identity.error();
+        else if (!executable_identity) error = &executable_identity.error();
+        else if (!read_data_identity) error = &read_data_identity.error();
+        else if (!write_data_identity) error = &write_data_identity.error();
+        else if (!mod_root_identity) error = &mod_root_identity.error();
+        else if (!executable_sha256) error = &executable_sha256.error();
+        else error = &base_capability.error();
+        return facman::core::Result<play::HermeticCandidatePlan>::failure(
+            *error);
+    }
+    if (executable_sha256.value() !=
+        request.expected_executable_sha256) {
+        return facman::core::Result<play::HermeticCandidatePlan>::failure(
+            projection_error(
+                "permit_resource_stale",
+                "installed executable differs from authenticated source evidence",
+                "$candidate.executable.sha256"));
+    }
+
+    auto projected =
+        project_menu_permit_resources(workspace, request.instance_id);
+    if (!projected) {
+        return facman::core::Result<play::HermeticCandidatePlan>::failure(
+            projected.error());
+    }
+    const auto* spec =
+        find_resource(projected.value().resources, "factorio.instance-spec");
+    const auto* binding =
+        find_resource(projected.value().resources, "factorio.instance-binding");
+    const auto* readiness =
+        find_resource(projected.value().resources, "factorio.instance-readiness");
+    const auto* installation = find_resource(
+        projected.value().resources, "factorio.installation-evidence");
+    const auto* config =
+        find_resource(projected.value().resources, "factorio.effective-config");
+    const auto* modset =
+        find_resource(projected.value().resources, "factorio.modset-lock");
+    if (spec == nullptr || binding == nullptr || readiness == nullptr ||
+        installation == nullptr || config == nullptr || modset == nullptr) {
+        return facman::core::Result<play::HermeticCandidatePlan>::failure(
+            projection_error(
+                "permit_wrong_evidence",
+                "Gate 2 projection lacks a required candidate resource",
+                "$candidate.projection"));
+    }
+
+    const permit::ProviderIdentity candidate_provider {
+        play::kHermeticCandidateProviderId,
+        play::kInstanceIsolatedCandidateProviderRevision};
+    const permit::ProviderIdentity observer_provider {
+        play::kHermeticObservationProviderId,
+        play::kInstanceIsolatedObservationProviderRevision};
+    std::vector<permit::ProviderIdentity> providers;
+    for (const auto& value : projected.value().provider_revisions) {
+        if (value.provider_id !=
+            play::kHermeticCandidateProviderId) {
+            providers.push_back(value);
+        }
+    }
+    providers.push_back(candidate_provider);
+    providers.push_back(observer_provider);
+
+    std::vector<permit::ResourceBinding> resources =
+        projected.value().resources;
+    for (auto& value : resources) {
+        if (value.owning_provider.provider_id ==
+            play::kHermeticCandidateProviderId) {
+            value.owning_provider = candidate_provider;
+        }
+    }
+    resources.push_back(resource(
+        "factorio.executable", "process-image",
+        "instance:" + request.instance_id + ":executable",
+        sha256_text(
+            executable_identity.value() + ":" +
+            executable_sha256.value()),
+        candidate_provider, {"process_execute", "workspace_read"}));
+    resources.push_back(resource(
+        "factorio.installation-root", "application-root",
+        "instance:" + request.instance_id + ":read-data",
+        installation_identity.value(), candidate_provider,
+        {"workspace_read"}));
+    resources.push_back(resource(
+        "factorio.play-policy", "frozen-policy",
+        "policy:" + request.policy.policy_id,
+        request.policy.policy_digest, candidate_provider,
+        {"workspace_read"}));
+    resources.push_back(resource(
+        "factorio.observation", "effect-evidence",
+        "operation:" + request.operation_id + ":observer",
+        sha256_text(
+            play::kInstanceIsolatedObservationProviderRevision),
+        observer_provider, {"workspace_read", "workspace_write"}));
+    resources.push_back(resource(
+        "factorio.protected-baseline", "protected-state",
+        "operation:" + request.operation_id + ":protected",
+        request.protected_baseline_digest, observer_provider,
+        {"workspace_read"}));
+    resources.push_back(resource(
+        "factorio.writable-baseline", "writable-state",
+        "operation:" + request.operation_id + ":writable",
+        request.writable_baseline_digest, observer_provider,
+        {"workspace_read"}));
+    resources.push_back(resource(
+        "factorio.operation-state", "operation-record",
+        "operation:" + request.operation_id + ":record",
+        sha256_text("operation-record:" + request.operation_id),
+        candidate_provider, {"workspace_read", "workspace_write"}));
+
+    const fs::path operation_record =
+        workspace / "operations" / request.operation_id;
+    const fs::path operation_temporary =
+        workspace / "temporary" / request.operation_id;
+    const std::vector<std::tuple<
+        std::string, fs::path, std::string,
+        permit::ProviderIdentity>> writable_paths = {
+        {"instance.closure", instance_root, "instance", candidate_provider},
+        {"operation.record", operation_record, "coordinator", candidate_provider},
+        {"operation.temporary", operation_temporary, "process_provider", candidate_provider},
+        {"operation.observer_artifacts", operation_temporary / "observer-artifacts", "observer", observer_provider},
+        {"operation.candidate_artifacts", operation_temporary / "candidate-artifacts", "runtime", candidate_provider},
+        {"operation.audit_record", operation_record / "audit-record", "audit", candidate_provider},
+        {"operation.process_logs", operation_temporary / "process-logs", "process_provider", candidate_provider},
+    };
+    std::vector<std::pair<std::string, std::string>>
+        operation_resource_identities;
+    for (const auto& [resource_id, path, owner, provider] :
+         writable_paths) {
+        facman::core::Result<std::string> identity =
+            resource_id == "instance.closure"
+            ? facman::core::Result<std::string>::success(
+                  write_data_identity.value())
+            : optional_directory_identity(workspace, path);
+        if (!identity) {
+            return facman::core::Result<play::HermeticCandidatePlan>::failure(
+                identity.error());
+        }
+        resources.push_back(resource(
+            "factorio.writable-root", resource_id,
+            "operation:" + request.operation_id + ":" + resource_id,
+            sha256_text(
+                identity.value() + ":artifact-owner:" + owner),
+            provider, {"workspace_read", "workspace_write"}));
+        operation_resource_identities.emplace_back(
+            resource_id, identity.value());
+    }
+    std::sort(
+        operation_resource_identities.begin(),
+        operation_resource_identities.end());
+    json::ArrayBuilder operation_identities_json;
+    for (const auto& [id, identity] :
+         operation_resource_identities) {
+        json::ObjectBuilder item;
+        item.add_string("resource_id", id);
+        item.add_string("identity_digest", identity);
+        operation_identities_json.add_object(item);
+    }
+    json::ObjectBuilder operation_identities;
+    operation_identities.add_array(
+        "resources", operation_identities_json);
+    const std::string operation_resource_digest =
+        sha256_text(operation_identities.serialize());
+
+    facman::platform::ProcessRequest process;
+    process.executable = executable;
+    process.arguments = {
+        "--config",
+        facman::platform::path_to_utf8(
+            instance_root / "config" / "config.ini"),
+        "--mod-directory",
+        facman::platform::path_to_utf8(instance_root / "mods")};
+    const fs::path process_temporary =
+        operation_temporary / "process";
+    process.working_directory = process_temporary;
+    process.environment = {
+        {"SDL_DIRECTINPUT_ENABLED", "0"},
+        {"SystemRoot", facman::platform::path_to_utf8(request.windows_system_root)},
+        {"TEMP", facman::platform::path_to_utf8(process_temporary)},
+        {"TMP", facman::platform::path_to_utf8(process_temporary)},
+        {"USERPROFILE", facman::platform::path_to_utf8(instance_root / "state" / "userprofile")},
+        {"WINDIR", facman::platform::path_to_utf8(request.windows_system_root)},
+    };
+    process.inherit_environment = false;
+    process.timeout = std::chrono::minutes(30);
+
+    json::ArrayBuilder arguments;
+    for (const std::string& value : process.arguments) {
+        arguments.add_string(sha256_text(value));
+    }
+    json::ObjectBuilder launch_command;
+    launch_command.add_string(
+        "executable_identity", executable_identity.value());
+    launch_command.add_string(
+        "executable_sha256", executable_sha256.value());
+    launch_command.add_array("argument_digests", arguments);
+    launch_command.add_string(
+        "environment_revision", "factorio.menu-minimal.v2");
+    launch_command.add_string("intent", "menu");
+    launch_command.add_string(
+        "isolation", play::kInstanceIsolatedCandidateIsolation);
+    const std::string launch_command_digest =
+        sha256_text(launch_command.serialize());
+    const std::string launch_command_id =
+        "menu-launch-" +
+        launch_command_digest.substr(0U, 32U);
+    const auto& root_identity = instance_authority->identity();
+
+    std::vector<play::CandidateEvidenceBinding> evidence = {
+        {"authenticated_source_evidence", sha256_text(
+            request.authenticated_source_artifact_digest + ":" +
+            request.source_authentication_evidence_digest)},
+        {"coordinator_integrity_medium", sha256_text("medium")},
+        {"effective_config_identity_and_digest", config->current_identity_digest},
+        {"exact_operation_resource_identities", operation_resource_digest},
+        {"executable_stable_identity_and_sha256", sha256_text(
+            executable_identity.value() + ":" + executable_sha256.value())},
+        {"explicit_empty_mod_lock_identity", modset->current_identity_digest},
+        {"external_effect_disposition_identity", sha256_text(
+            request.policy.policy_digest + ":closed-effect-dispositions:v1")},
+        {"facman_exact_revision_and_build_identity", sha256_text(
+            request.facman_source_revision_digest + ":" +
+            request.facman_build_identity_digest)},
+        {"installation_evidence_digest", installation->current_identity_digest},
+        {"installation_root_stable_identity", installation_identity.value()},
+        {"instance_binding_digest", binding->current_identity_digest},
+        {"instance_logical_id", sha256_text(request.instance_id)},
+        {"instance_readiness_digest", readiness->current_identity_digest},
+        {"instance_root_filesystem_identity", sha256_text(root_identity.filesystem_name)},
+        {"instance_root_no_follow_reparse_state", sha256_text("no-follow:plain-directory")},
+        {"instance_root_stable_object_identity", write_data_identity.value()},
+        {"instance_root_volume_identity", sha256_text(std::to_string(root_identity.device))},
+        {"instance_spec_digest", spec->current_identity_digest},
+        {"isolation_mode_instance_isolated", sha256_text(play::kInstanceIsolatedCandidateIsolation)},
+        {"launch_intent_menu", sha256_text("menu")},
+        {"launch_plan_id_and_digest", sha256_text(launch_command_id + ":" + launch_command_digest)},
+        {"machine_binding_identity", sha256_text(request.machine_binding_id)},
+        {"mod_root_identity", mod_root_identity.value()},
+        {"observer_broker_integrity_high", sha256_text("high")},
+        {"observer_provider_revision", sha256_text(play::kInstanceIsolatedObservationProviderRevision)},
+        {"policy_revision_and_digest", sha256_text(
+            request.policy.policy_revision + ":" + request.policy.policy_digest)},
+        {"principal_and_application_session_identity", sha256_text(
+            request.principal.provider_id + ":" + request.principal.principal_id + ":" +
+            request.principal.application_session_id)},
+        {"process_integrity_medium", sha256_text("medium")},
+        {"process_provider_revision", sha256_text(play::kInstanceIsolatedCandidateProviderRevision)},
+        {"protected_root_baseline_digest", request.protected_baseline_digest},
+        {"read_data_identity", read_data_identity.value()},
+        {"universal_launcher_exact_revision", sha256_text(
+            facman::build_identity::universal_launcher_revision)},
+        {"universal_setup_exact_revision", sha256_text(
+            facman::build_identity::universal_setup_revision)},
+        {"writable_root_baseline_digest", request.writable_baseline_digest},
+        {"write_data_identity", write_data_identity.value()},
+    };
+
+    play::CandidatePlanInput plan;
+    plan.policy = request.policy;
+    plan.selector = {
+        "windows", "x86_64", "2.0.77",
+        "standalone_non_steam",
+        "sha256_bound_to_authenticated_wube_source",
+        "ntfs", "fixed_local", "facman_owned",
+        "explicit_empty_lock", "none", "none", "none"};
+    plan.instance_id = request.instance_id;
+    plan.machine_binding_id = request.machine_binding_id;
+    plan.principal = request.principal;
+    plan.evidence = std::move(evidence);
+    plan.permit_resources = std::move(resources);
+    plan.provider_revisions = std::move(providers);
+    plan.writable_resource_ids =
+        play::instance_isolated_policy_writable_resource_ids();
+    plan.protected_resource_ids =
+        play::instance_isolated_policy_protected_resource_ids();
+    plan.process = std::move(process);
+    plan.environment_revision = "factorio.menu-minimal.v2";
+    plan.instance_root_authority = std::move(instance_authority);
+    return play::build_instance_isolated_candidate_plan(std::move(plan));
+#endif
+}
+
 facman::core::Result<permit::PermitValidationContext>
 reobserve_hermetic_candidate_context(
     const HermeticCandidateProjectionRequest& request)
@@ -454,6 +819,19 @@ reobserve_hermetic_candidate_context(
     auto current = project_hermetic_candidate_plan(request);
     if (!current) {
         return facman::core::Result<permit::PermitValidationContext>::failure(current.error());
+    }
+    return facman::core::Result<permit::PermitValidationContext>::success(
+        play::candidate_permit_context(current.value()));
+}
+
+facman::core::Result<permit::PermitValidationContext>
+reobserve_instance_isolated_candidate_context(
+    const InstanceIsolatedCandidateProjectionRequest& request)
+{
+    auto current = project_instance_isolated_candidate_plan(request);
+    if (!current) {
+        return facman::core::Result<permit::PermitValidationContext>::failure(
+            current.error());
     }
     return facman::core::Result<permit::PermitValidationContext>::success(
         play::candidate_permit_context(current.value()));

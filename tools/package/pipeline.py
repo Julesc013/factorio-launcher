@@ -26,6 +26,7 @@ from tools import (
     package_hash_manifest,
     package_layout_check,
     provenance_build,
+    verify_dependency_revisions,
 )
 from tools.package import archive as package_archive
 from tools.package import components as package_components
@@ -113,6 +114,7 @@ def build_profile(
     clean: bool = True,
     allow_dirty: bool = False,
 ) -> Path:
+    require_pinned_dependency_revisions()
     assert_safe_output_root(out_root)
     owned_output.ensure_owned_output_root(out_root, "built-packages")
     package_provenance.require_clean(ROOT, allow_dirty)
@@ -144,6 +146,15 @@ def build_profile(
         artifact = write_archive(package_root, dist_root, bundle)
         provenance_build.write_artifact_provenance(package_root, artifact)
     return package_root
+
+
+def require_pinned_dependency_revisions() -> None:
+    problems = verify_dependency_revisions.verify(WORKSPACE_LOCK_PATH)
+    if problems:
+        raise ValueError(
+            "package preflight requires exact Universal dependency revisions: "
+            + "; ".join(problems)
+        )
 
 
 def stage_external_components(

@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 APPLICATION = ROOT / "runtime/factorio/application"
-MAX_COMPOSITION_LINES = 270
+MAX_COMPOSITION_LINES = 210
 
 
 def validate() -> list[str]:
@@ -57,10 +57,22 @@ def validate() -> list[str]:
         for suffix in (".h", ".cpp"):
             if not (handlers / f"{name}{suffix}").is_file():
                 problems.append(f"missing typed command-family handler: {name}{suffix}")
-    for module in ("installation_module", "instance_module", "launch_module"):
+    for module in (
+        "content_module",
+        "diagnostics_module",
+        "installation_module",
+        "instance_module",
+        "launch_module",
+        "profile_module",
+        "recovery_module",
+        "setup_module",
+        "workspace_module",
+    ):
         for suffix in (".h", ".cpp"):
             if not (modules / f"{module}{suffix}").is_file():
                 problems.append(f"missing application module seam: {module}{suffix}")
+    if not (modules / "application_module.h").is_file():
+        problems.append("missing common application module contract: application_module.h")
 
     entrypoint = (APPLICATION / "flb_factorio_application.cpp").read_text(encoding="utf-8")
     dispatch = (APPLICATION / "command_dispatch.cpp").read_text(encoding="utf-8")
@@ -80,35 +92,32 @@ def validate() -> list[str]:
     if "json::parse(" not in dispatch or "ApplicationRequest" not in dispatch:
         problems.append("command dispatch does not own bounded JSON-to-typed decoding")
     admission_route = "admit_command(context_.configuration(), request.command)"
-    setup_route = "if (handlers::is_setup_command(request.command))"
     if admission_route not in entrypoint:
         problems.append("application entrypoint does not apply global effect/capability admission")
-    elif setup_route not in entrypoint or entrypoint.index(admission_route) > entrypoint.index(setup_route):
-        problems.append("setup commands bypass global effect/capability admission")
-    if "launch_module_.handles(request.command)" not in entrypoint:
-        problems.append("application entrypoint does not route through the launch module seam")
-    if "installation_module_.handles(request.command)" not in entrypoint:
-        problems.append("application entrypoint does not route through the installation module seam")
-    if "instance_module_.handles(request.command)" not in entrypoint:
-        problems.append("application entrypoint does not route through the instance projection module seam")
-    for migrated in (
-        "case CommandId::launch_plan_build:",
-        "case CommandId::launch_plan_preflight:",
-        "case CommandId::run_preview:",
-        "case CommandId::run_execute:",
+    for anchor in (
+        "std::array<const ApplicationModule*, 9> modules_",
+        "module_for(request.command)",
+        "module->requires_workspace(request.command)",
+        "denied_admission_disposition(",
+        "module->execute(context_, request, admission, current_command_)",
     ):
-        if migrated in entrypoint:
-            problems.append(f"launch command leaked back into the fallback switch: {migrated}")
-    for migrated in (
-        "case CommandId::install_list:",
-        "case CommandId::install_scan:",
-        "case CommandId::install_import:",
-        "case CommandId::install_inspect:",
-        "case CommandId::installs_describe:",
-        "case CommandId::installs_reconcile_plan:",
+        if anchor not in entrypoint:
+            problems.append(f"application entrypoint is missing module-composition anchor: {anchor}")
+    if "switch (request.command)" in entrypoint or "case CommandId::" in entrypoint:
+        problems.append("application entrypoint directly enumerates product commands")
+    for module in (
+        "workspace_module_",
+        "setup_module_",
+        "installation_module_",
+        "instance_module_",
+        "profile_module_",
+        "content_module_",
+        "recovery_module_",
+        "diagnostics_module_",
+        "launch_module_",
     ):
-        if migrated in entrypoint:
-            problems.append(f"installation command leaked back into the fallback switch: {migrated}")
+        if f"&{module}" not in entrypoint:
+            problems.append(f"application module is not registered: {module}")
 
     combined_handlers = "\n".join(
         path.read_text(encoding="utf-8") for path in sorted(handlers.glob("*.cpp"))
@@ -116,17 +125,52 @@ def validate() -> list[str]:
     for forbidden in ("std::cout", "std::cerr", "printf(", "json::parse(", "PayloadReader"):
         if forbidden in combined_handlers:
             problems.append(f"typed handler owns frontend output or raw JSON parsing: {forbidden}")
+    if "handlers::unavailable(" not in entrypoint:
+        problems.append("global admission refusal route is missing")
+    module_contract = (APPLICATION / "command_admission.h").read_text(encoding="utf-8")
     for anchor in (
-        "handlers::inspect_product(",
-        "handlers::run_doctor(",
-        "handlers::workspace_status(",
-        "handlers::onboarding_plan(",
-        "handlers::list_instances(",
-        "handlers::dispatch_setup(",
-        "handlers::unavailable(",
+        "DeniedAdmissionDisposition",
+        "transform_to_product_refusal",
+        "inspect_only",
     ):
-        if anchor not in entrypoint:
-            problems.append(f"authoritative application route missing: {anchor}")
+        if anchor not in module_contract:
+            problems.append(
+                f"command-specific denied-admission contract is missing: {anchor}"
+            )
+    route_expectations = {
+        "workspace_module.cpp": (
+            "handlers::inspect_product(",
+            "handlers::run_doctor(",
+            "handlers::workspace_status(",
+            "handlers::onboarding_plan(",
+        ),
+        "setup_module.cpp": ("handlers::dispatch_setup(",),
+        "instance_module.cpp": (
+            "handlers::list_instances(",
+            "handlers::dispatch_instance_lifecycle(",
+        ),
+        "profile_module.cpp": ("handlers::dispatch_profiles(",),
+        "content_module.cpp": (
+            "handlers::dispatch_snapshots(",
+            "handlers::dispatch_mod_inventory(",
+            "handlers::dispatch_modset_solver(",
+            "handlers::dispatch_save_index(",
+            "handlers::dispatch_server_plan(",
+        ),
+        "recovery_module.cpp": (
+            "handlers::recovery_inspect(",
+            "handlers::migration(",
+        ),
+        "diagnostics_module.cpp": (
+            "handlers::export_diagnostics(",
+            "handlers::create_bug_report(",
+        ),
+    }
+    for filename, anchors in route_expectations.items():
+        module_text = (modules / filename).read_text(encoding="utf-8")
+        for anchor in anchors:
+            if anchor not in module_text:
+                problems.append(f"authoritative route missing from {filename}: {anchor}")
     installation_module = (modules / "installation_module.cpp").read_text(encoding="utf-8")
     for anchor in ("handlers::list_installs(", "handlers::describe_install(",
                    "handlers::plan_install_reconciliation("):

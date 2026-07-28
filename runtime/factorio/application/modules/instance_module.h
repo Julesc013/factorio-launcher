@@ -4,17 +4,18 @@
 #ifndef FACMAN_FACTORIO_APPLICATION_INSTANCE_MODULE_H
 #define FACMAN_FACTORIO_APPLICATION_INSTANCE_MODULE_H
 
-#include "application_context.h"
-#include "application_types.h"
+#include "modules/application_module.h"
 
 namespace facman::factorio::application {
 
-class InstanceApplicationModule {
+class InstanceApplicationModule final : public ApplicationModule {
 public:
-    bool handles(CommandId command) const noexcept;
+    bool handles(CommandId command) const noexcept override;
     ApplicationResult execute(
         ApplicationContext& context,
-        const ApplicationRequest& request) const;
+        const ApplicationRequest& request,
+        const CommandAdmissionDecision& admission,
+        const std::string& command_name) const override;
 };
 
 } // namespace facman::factorio::application

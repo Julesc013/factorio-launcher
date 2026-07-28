@@ -54,24 +54,24 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `windows_instance_isolated_play_policy_closeout`. **Active WorkUnit:** `none (operator gate required)`. **Next:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-CANDIDATE-01`.
+**Phase:** `windows_instance_isolated_play_revalidation_02`. **Active WorkUnit:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`. **Next:** `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 292 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 302 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `instance_isolated_policy_accepted_real_play_unproven`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `exact_candidate_staged_for_separately_authorized_operator_revalidation_no_product_play_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
 Gate 3 exact permit infrastructure is closed with provider-side revalidation and no product issuance.
 Gates 0-3 are canonically promoted and dev-synchronized without authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.
-The Windows instance-isolated policy is accepted on reviewed `dev` and awaits a separate no-authority canonical promotion before its candidate may start.
+The Windows instance-isolated policy is canonical and synchronized. Its exact candidate is technically complete without a real Factorio run, human verdict, public Play route, or authority promotion.
 The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 Contributor status command: `py -3 tools/project_state.py --summary`.
@@ -93,10 +93,11 @@ facman play space-age-main  # safely refused until a real-play gate passes
 
 When running directly from a checkout, use:
 
-```bash
-cmake -S . -B build/native-smoke
-cmake --build build/native-smoke
-.\build\native-smoke\Debug\facman.exe --version
+```powershell
+$buildRoot = Join-Path ([IO.Path]::GetTempPath()) 'FacMan\manual\native-smoke'
+cmake -S . -B $buildRoot
+cmake --build $buildRoot --config Debug
+& "$buildRoot\Debug\facman.exe" --version
 ```
 
 The packaged console command is `facman`. Python is used for repository
@@ -105,13 +106,12 @@ tooling, validators, and tests; it is not a FacMan product runtime.
 The functional terminal frontend is opt-in at build time and uses the same
 direct client and generated command law:
 
-```bash
-cmake -S . -B build/tui -DFACMAN_BUILD_TUI=ON
-cmake --build build/tui
-facman-tui --list
-facman-tui --command workspace.status --json
-facman-tui --command diagnostics.export \
-  --payload '{"instance_id":"space-age-main","output_path":"diagnostics.zip"}' --apply
+```powershell
+$tuiRoot = Join-Path ([IO.Path]::GetTempPath()) 'FacMan\manual\tui'
+cmake -S . -B $tuiRoot -DFACMAN_BUILD_TUI=ON
+cmake --build $tuiRoot --config Debug
+& "$tuiRoot\Debug\facman-tui.exe" --list
+& "$tuiRoot\Debug\facman-tui.exe" --command workspace.status --json
 ```
 
 Target-specific Windows, Linux, and macOS x64 TUI profiles are package-preview
@@ -181,6 +181,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 [development getting-started guide](docs/development/getting-started.md).
 The bounded process, admission, and session-journal design is described in the
 [execution-foundation architecture](docs/architecture/execution_foundation.md).
+Cross-repository ownership and temporary launcher incubators are recorded in
+the [component-ownership architecture](docs/architecture/component_ownership.md)
+and its machine-readable manifest.
 
 ## AIDE Lite
 
@@ -188,7 +191,8 @@ This repo includes AIDE Lite as development governance tooling only. It is not
 part of the launcher runtime and must not be bundled in production packages.
 See [docs/architecture/aide_lite_integration.md](docs/architecture/aide_lite_integration.md).
 Current machine-readable truth is `.aide/memory/project-state.v2.json`; the
-human summary is generated from it. Closed task evidence is hash-indexed under
+compact present-tense product view is `release/index/current_state.v1.toml`,
+and the human summary is generated from the same canonical inputs. Closed task evidence is hash-indexed under
 `.aide/history/` and excluded from ordinary context packets.
 
 Before large native implementation work, review

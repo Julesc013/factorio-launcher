@@ -1,0 +1,42 @@
+{
+  "errors": 0,
+  "expected_failures": 0,
+  "failures": 0,
+  "gate_passed": true,
+  "profile": "promotion",
+  "required_skip_limit": 0,
+  "schema": "facman.test_obligation_result.v1",
+  "skip_counts": {
+    "historical_only": 0,
+    "not_applicable": 0,
+    "optional": 2,
+    "required_blocked": 0,
+    "unknown": 0,
+    "unsupported": 2
+  },
+  "skips": [
+    {
+      "classification": "optional",
+      "reason": "optional: WinForms shell has not been built",
+      "test": "setUpClass (tests.package_runtime.test_built_package_artifacts.BuiltWindowsPackageArtifactTests)"
+    },
+    {
+      "classification": "unsupported",
+      "reason": "unsupported: symlink creation is unavailable",
+      "test": "tests.test_gate4c_verdict_preflight.Gate4CVerdictPreflightTests.test_no_follow_audit_refuses_symlink"
+    },
+    {
+      "classification": "unsupported",
+      "reason": "unsupported: symlink creation is unavailable",
+      "test": "tests.test_gate4c_verdict_preflight.Gate4CVerdictPreflightTests.test_source_reparse_path_is_refused"
+    },
+    {
+      "classification": "optional",
+      "reason": "optional: set FACMAN_RUN_R37_FULL_PERFORMANCE=1 for the bounded full-scale corpus",
+      "test": "tests.test_r37_performance.R37PerformanceTests.test_required_bounded_scale_corpus"
+    }
+  ],
+  "tests_run": 517,
+  "unexpected_successes": 0,
+  "unknown_skip_limit": 0
+}

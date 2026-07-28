@@ -106,6 +106,29 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
+class StableDirectoryObject {
+public:
+    StableDirectoryObject();
+    StableDirectoryObject(StableDirectoryObject&&) noexcept;
+    StableDirectoryObject& operator=(StableDirectoryObject&&) noexcept;
+    ~StableDirectoryObject();
+    StableDirectoryObject(const StableDirectoryObject&) = delete;
+    StableDirectoryObject& operator=(const StableDirectoryObject&) = delete;
+
+    IoStatus open_no_follow(const std::filesystem::path& path);
+    IoStatus revalidate() const;
+    IoStatus validate_descendant(
+        const std::filesystem::path& path,
+        bool allow_absent_leaf = false) const;
+    const PathIdentity& identity() const noexcept;
+    const std::filesystem::path& path() const noexcept;
+    bool open() const noexcept;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+
 class DurableOutputFile {
 public:
     DurableOutputFile();

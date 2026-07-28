@@ -126,7 +126,7 @@ class DiagnosticExportSafetyTests(unittest.TestCase):
             try:
                 os.link(source, alias)
             except OSError as exc:
-                self.skipTest(f"hard links unavailable: {exc}")
+                self.skipTest(f"unsupported: hard links unavailable: {exc}")
             output = workspace / "hardlink.zip"
             code, refusal, _stdout, _stderr = run_json(
                 [
@@ -152,8 +152,8 @@ class DiagnosticExportSafetyTests(unittest.TestCase):
             external = Path(tmp) / "external"
             instance = setup_redaction_workspace(workspace)
             external.mkdir()
-            secret = "external-linked-secret-must-not-escape"
-            (external / "foreign.log").write_text(secret, encoding="utf-8")
+            external_sentinel = "external-linked-content-must-not-enter-archive"
+            (external / "foreign.log").write_text(external_sentinel, encoding="utf-8")
             linked = instance / "logs" / "linked"
             try:
                 linked.symlink_to(external, target_is_directory=True)
@@ -186,7 +186,7 @@ class DiagnosticExportSafetyTests(unittest.TestCase):
             with zipfile.ZipFile(output) as archive:
                 payload = b"".join(archive.read(name) for name in archive.namelist())
                 omissions = json.loads(archive.read("reports/omissions.v1.json"))
-            self.assertNotIn(secret.encode("utf-8"), payload)
+            self.assertNotIn(external_sentinel.encode("utf-8"), payload)
             self.assertIn(
                 "link_or_reparse_refused",
                 {item["reason"] for item in omissions["omissions"]},

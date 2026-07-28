@@ -67,7 +67,7 @@ discovery::InstallRef managed_facman_reference(
     install.lifecycle_status = "active";
     install.last_verification_identity = reference.verification_identity;
     install.state_revision = reference.state_revision;
-    install.verification_status = "structural";
+    install.verification_status = "pass";
     install.setup_mutation_allowed = false;
     return install;
 }
@@ -86,7 +86,12 @@ void prove_facman_consumption(
     facman::workspace::InstallRecord record;
     record.id = install_id.value();
     auto created = context.installs().create(record, discovery::install_ref_json(managed));
-    if (!created) throw std::runtime_error("FacMan managed install reference create failed");
+    if (!created) {
+        throw std::runtime_error(
+            "FacMan managed install reference create failed: " +
+            created.error().code + ": " + created.error().message +
+            " (" + created.error().detail + ")");
+    }
     auto loaded = context.installs().load(install_id.value());
     if (!loaded || loaded.value().ownership != "managed" ||
         loaded.value().setup_state_ref != reference.setup_state_ref ||

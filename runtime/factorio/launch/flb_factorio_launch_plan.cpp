@@ -4,17 +4,17 @@
 #include "flb_factorio_launch_plan.h"
 
 #include "fl_json.h"
+#include "fl_file_io.h"
 #include "fl_local_operation_lock.h"
 #include "fl_path_safety.h"
+#include "ulk/ulk_reference_model.h"
 
 #include <algorithm>
 #include <chrono>
-#include <cstdlib>
 #include <cwctype>
-#include <fstream>
-#include <iterator>
 #include <map>
 #include <sstream>
+#include <utility>
 
 #if defined(_WIN32)
 #include <process.h>
@@ -116,6 +116,190 @@ struct IsolationAssessment {
     std::string strict_refusal_code;
 };
 
+ulk_string_view reference_view(const std::string& value)
+{
+    return {value.data(), static_cast<ulk_size>(value.size())};
+}
+
+ulk_install_ownership_v1 reference_ownership(const std::string& ownership)
+{
+    if (ownership == "managed") return ULK_INSTALL_OWNERSHIP_MANAGED;
+    if (ownership == "foreign" || ownership == "foreign_owned" ||
+        ownership == "foreign-owned") {
+        return ULK_INSTALL_OWNERSHIP_FOREIGN_OWNED;
+    }
+    return ULK_INSTALL_OWNERSHIP_IMPORTED;
+}
+
+bool recognized_lifecycle(const std::string& lifecycle)
+{
+    return lifecycle == "active" ||
+        lifecycle == "verification_failed" ||
+        lifecycle == "recovery_required" ||
+        lifecycle == "retired" ||
+        lifecycle == "uninstalled" ||
+        lifecycle == "missing" ||
+        lifecycle == "unknown" ||
+        lifecycle == "unsupported";
+}
+
+enum class ReferenceProjectionStatus {
+    not_bound,
+    lifecycle_not_active,
+    verification_not_current,
+    fresh,
+    stale,
+    invalid,
+};
+
+ReferenceProjectionStatus validate_reference_projection(
+    const InstanceLaunchRef& instance,
+    const InstallLaunchRef& install,
+    const std::string& command
+)
+{
+    if (!recognized_lifecycle(install.lifecycle_status)) {
+        return ReferenceProjectionStatus::invalid;
+    }
+    if (install.lifecycle_status != "active") {
+        return ReferenceProjectionStatus::lifecycle_not_active;
+    }
+    if (install.verification_status != "pass") {
+        return ReferenceProjectionStatus::verification_not_current;
+    }
+    if (
+        instance.product_id.empty() ||
+        instance.install_id.empty() ||
+        instance.binding_revision.empty() ||
+        install.product_id.empty() ||
+        install.install_id.empty() ||
+        install.exact_product_version.empty() ||
+        install.last_verification_identity.empty() ||
+        install.state_revision.empty()
+    ) {
+        return ReferenceProjectionStatus::not_bound;
+    }
+
+    const std::string entrypoint = path_string(install.executable);
+    const std::string capabilities = "[]";
+    const std::string binding_id = "flb.factorio";
+    const std::string plan_id = command + "." + instance.instance_id;
+    const std::string composition_digest =
+        instance.binding_revision + ":" + install.state_revision;
+    ulk_product_ref_v1 product {
+        sizeof(ulk_product_ref_v1),
+        reference_view(instance.product_id),
+        reference_view(binding_id),
+    };
+    ulk_install_reference_v2 install_reference {
+        sizeof(ulk_install_reference_v2),
+        reference_view(install.install_id),
+        reference_view(install.product_id),
+        reference_ownership(install.ownership),
+        reference_view(install.setup_state_ref),
+        reference_view(install.exact_product_version),
+        reference_view(entrypoint),
+        reference_view(capabilities),
+        ULK_INSTALL_LIFECYCLE_ACTIVE,
+        reference_view(install.last_verification_identity),
+        reference_view(install.state_revision),
+    };
+    ulk_instance_ref_v2 instance_reference {
+        sizeof(ulk_instance_ref_v2),
+        reference_view(instance.instance_id),
+        reference_view(instance.product_id),
+        reference_view(instance.install_id),
+        reference_view(instance.profile_id),
+        reference_view(instance.artifact_set_id),
+        reference_view(instance.binding_revision),
+    };
+    ulk_profile_ref_v2 profile_reference {
+        sizeof(ulk_profile_ref_v2),
+        reference_view(instance.profile_id),
+        reference_view(instance.product_id),
+        reference_view(instance.binding_revision),
+    };
+    ulk_artifact_set_ref_v1 artifact_reference {
+        sizeof(ulk_artifact_set_ref_v1),
+        reference_view(instance.product_id),
+        reference_view(instance.artifact_set_id),
+        reference_view(capabilities),
+    };
+    ulk_launch_plan_ref_v2 launch_plan {
+        sizeof(ulk_launch_plan_ref_v2),
+        reference_view(plan_id),
+        reference_view(instance.product_id),
+        reference_view(instance.instance_id),
+        reference_view(instance.install_id),
+        reference_view(instance.profile_id),
+        reference_view(instance.artifact_set_id),
+        reference_view(install.state_revision),
+        reference_view(instance.binding_revision),
+        reference_view(composition_digest),
+    };
+    ulk_reference_graph_v1 graph {
+        sizeof(ulk_reference_graph_v1),
+        &product,
+        &install_reference,
+        &instance_reference,
+        instance.profile_id.empty() ? nullptr : &profile_reference,
+        instance.artifact_set_id.empty() ? nullptr : &artifact_reference,
+        &launch_plan,
+    };
+    ulk_reference_validation_v1 validation {};
+    validation.struct_size = sizeof(validation);
+    if (
+        ulk_reference_graph_validate_v1(&graph, &validation) != ULK_STATUS_OK ||
+        !validation.valid
+    ) {
+        return ReferenceProjectionStatus::invalid;
+    }
+    return validation.launch_plan_status == ULK_LAUNCH_PLAN_STALE
+        ? ReferenceProjectionStatus::stale
+        : ReferenceProjectionStatus::fresh;
+}
+
+const char* reference_refusal_code(ReferenceProjectionStatus status)
+{
+    switch (status) {
+    case ReferenceProjectionStatus::not_bound:
+        return "launcher_reference_missing";
+    case ReferenceProjectionStatus::lifecycle_not_active:
+        return "launcher_install_not_active";
+    case ReferenceProjectionStatus::verification_not_current:
+        return "launcher_install_unverified";
+    case ReferenceProjectionStatus::stale:
+        return "launcher_reference_stale";
+    case ReferenceProjectionStatus::invalid:
+        return "launcher_reference_invalid";
+    case ReferenceProjectionStatus::fresh:
+        return "";
+    }
+    return "launcher_reference_invalid";
+}
+
+std::string reference_problem(
+    ReferenceProjectionStatus status,
+    const InstallLaunchRef& install)
+{
+    switch (status) {
+    case ReferenceProjectionStatus::not_bound:
+        return "Universal Launcher reference evidence is incomplete";
+    case ReferenceProjectionStatus::lifecycle_not_active:
+        return "selected installation lifecycle is not active: " +
+            install.lifecycle_status;
+    case ReferenceProjectionStatus::verification_not_current:
+        return "selected installation has no current passing verification";
+    case ReferenceProjectionStatus::stale:
+        return "Universal Launcher reference binding is stale";
+    case ReferenceProjectionStatus::invalid:
+        return "Universal Launcher reference graph is invalid";
+    case ReferenceProjectionStatus::fresh:
+        return "";
+    }
+    return "Universal Launcher reference graph is invalid";
+}
+
 IsolationAssessment assess_isolation(const InstallLaunchRef& install)
 {
     IsolationAssessment assessment;
@@ -203,7 +387,8 @@ void collect_lock_files(
 void append_sensitive_write_root_problems(
     LaunchPreflightResult& result,
     const fs::path& write_root,
-    const InstallLaunchRef& install
+    const InstallLaunchRef& install,
+    const std::vector<fs::path>& protected_factorio_roots
 )
 {
     fs::path normalized = normalized_absolute(write_root);
@@ -214,17 +399,8 @@ void append_sensitive_write_root_problems(
         result.problems.push_back("write-data overlaps the product install root");
     }
 
-    const char* variables[] = {"APPDATA", "LOCALAPPDATA", "HOME", "USERPROFILE"};
-    for (const char* variable : variables) {
-        const char* value = std::getenv(variable);
-        if (value == nullptr || *value == '\0') {
-            continue;
-        }
-        fs::path base(value);
-        fs::path sensitive = (std::string(variable) == "APPDATA" ||
-                              std::string(variable) == "LOCALAPPDATA")
-            ? base / "Factorio"
-            : base / ".factorio";
+    for (const fs::path& sensitive : protected_factorio_roots) {
+        if (sensitive.empty()) continue;
         if (path_within(sensitive, normalized) || path_within(normalized, sensitive)) {
             result.problems.push_back(
                 "write-data overlaps a default or global Factorio root: " +
@@ -274,16 +450,42 @@ bool process_is_alive(std::uint64_t process_id)
 #endif
 }
 
-std::string read_small_file(const fs::path& path, std::size_t limit)
+struct StableTextRead {
+    bool ok = false;
+    std::string text;
+    std::string problem;
+};
+
+StableTextRead read_small_file_stable(const fs::path& path, std::size_t limit)
 {
-    std::ifstream input(path, std::ios::binary);
-    if (!input) {
-        return "";
+    facman::platform::StableInputFile input;
+    const facman::platform::IoStatus opened = input.open_no_follow(path);
+    if (!opened.ok()) {
+        return {false, "", "effective config file is missing or cannot be opened safely: " +
+            opened.code + ": " + opened.detail};
     }
-    std::string value {
-        std::istreambuf_iterator<char>(input),
-        std::istreambuf_iterator<char>()};
-    return value.size() <= limit ? value : "";
+    if (input.size() > limit) {
+        return {false, "", "effective config exceeds 64 KiB"};
+    }
+    if (input.identity().link_count != 1U) {
+        return {false, "", "effective config has an unsafe hard-link identity"};
+    }
+    std::string value(static_cast<std::size_t>(input.size()), '\0');
+    std::size_t read = 0;
+    while (read < value.size()) {
+        const std::size_t count = input.read_at(
+            read, value.data() + read, value.size() - read);
+        if (count == 0U) {
+            return {false, "", "effective config stable read was incomplete"};
+        }
+        read += count;
+    }
+    const facman::platform::IoStatus revalidated = input.revalidate();
+    if (!revalidated.ok()) {
+        return {false, "", "effective config changed while being read: " +
+            revalidated.code + ": " + revalidated.detail};
+    }
+    return {true, std::move(value), ""};
 }
 
 struct RunLockMetadata {
@@ -357,15 +559,12 @@ EffectiveFactorioConfig parse_effective_config(
         result.problems.push_back("config path is unsafe: " + link_detail);
         return result;
     }
-    if (!fs::is_regular_file(result.config_file)) {
-        result.problems.push_back("effective config file is missing");
+    StableTextRead read = read_small_file_stable(result.config_file, 65536);
+    if (!read.ok) {
+        result.problems.push_back(std::move(read.problem));
         return result;
     }
-    std::string text = read_small_file(result.config_file, 65536);
-    if (text.empty() && fs::file_size(result.config_file) != 0) {
-        result.problems.push_back("effective config exceeds 64 KiB or cannot be read");
-        return result;
-    }
+    const std::string& text = read.text;
 
     std::istringstream input(text);
     std::string line;
@@ -493,6 +692,12 @@ LaunchPlanResult build_launch_plan(
     result.forbidden_write_domains = isolation.forbidden_write_domains;
     result.strict_execution_eligible = isolation.strict_execution_eligible;
     result.strict_refusal_code = isolation.strict_refusal_code;
+    const ReferenceProjectionStatus reference_status =
+        validate_reference_projection(instance, install, command);
+    if (reference_status != ReferenceProjectionStatus::fresh) {
+        result.strict_execution_eligible = false;
+        result.strict_refusal_code = reference_refusal_code(reference_status);
+    }
     return result;
 }
 
@@ -546,7 +751,8 @@ std::string build_launch_plan_json(
 LaunchPreflightResult preflight_launch(
     const InstanceLaunchRef& instance,
     const InstallLaunchRef& install,
-    const std::string& command
+    const std::string& command,
+    const std::vector<fs::path>& protected_factorio_roots
 )
 {
     LaunchPreflightResult result;
@@ -565,6 +771,13 @@ LaunchPreflightResult preflight_launch(
     result.forbidden_write_domains = isolation.forbidden_write_domains;
     result.strict_execution_eligible = isolation.strict_execution_eligible;
     result.strict_refusal_code = isolation.strict_refusal_code;
+    const ReferenceProjectionStatus reference_status =
+        validate_reference_projection(instance, install, command);
+    if (reference_status != ReferenceProjectionStatus::fresh) {
+        result.strict_execution_eligible = false;
+        result.strict_refusal_code = reference_refusal_code(reference_status);
+        result.problems.push_back(reference_problem(reference_status, install));
+    }
 
     add_problem_if_missing_directory(result, install.root, "install root does not exist");
     add_problem_if_missing_file(result, install.executable, "install executable does not exist");
@@ -598,7 +811,8 @@ LaunchPreflightResult preflight_launch(
         append_sensitive_write_root_problems(
             result,
             result.effective_config.write_data,
-            install);
+            install,
+            protected_factorio_roots);
     }
     if (fs::exists(instance.local_data_root / "config" / "config-path.cfg")) {
         result.problems.push_back(

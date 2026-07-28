@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-21T16:23:41Z
+result: ELIGIBLE_FOR_HUMAN_VERDICT
+evidence_path: .aide/history/completion-baseline-2026-07-26/FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01/evidence/
+active_at: 2026-07-21T17:52:42Z
+verified_at: 2026-07-22T10:19:18Z
+implementation_state: implemented
+reviewed_at: 2026-07-22T10:19:18Z
+closed_at: 2026-07-22T10:19:18Z
+archived_at: 2026-07-26T12:52:50Z

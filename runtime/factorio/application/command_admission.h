@@ -23,10 +23,19 @@ struct CommandAdmissionDecision {
     std::string reason;
 };
 
+enum class DeniedAdmissionDisposition {
+    reject,
+    transform_to_product_refusal,
+    inspect_only,
+};
+
 CommandAdmissionPolicy command_admission_policy(CommandId command);
 CommandAdmissionDecision admit_command(
     const ApplicationConfiguration& configuration,
     CommandId command);
+DeniedAdmissionDisposition denied_admission_disposition(
+    CommandId command,
+    const CommandAdmissionDecision& admission) noexcept;
 
 } // namespace facman::factorio::application
 

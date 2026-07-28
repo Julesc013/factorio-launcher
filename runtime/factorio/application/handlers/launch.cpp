@@ -60,6 +60,47 @@ ApplicationResult load_refs(
         "unknown_install", "Install reference is not registered");
     return {};
 }
+
+launch::InstanceLaunchRef project_instance_launch_ref(
+    const facman::workspace::InstanceRecord& instance,
+    const discovery::InstallRef& install,
+    const profiles::EffectiveProfile& effective)
+{
+    launch::InstanceLaunchRef output;
+    output.instance_id = instance.id.str();
+    output.profile_id = instance.profile;
+    output.local_data_root = instance.root;
+    output.launch_mode = effective.settings.launch_mode;
+    output.profile_arguments = effective.launch_arguments;
+    output.product_id = "factorio";
+    output.install_id = install.install_id;
+    output.binding_revision =
+        instance.schema + ":" + instance.factorio_version + ":" + instance.profile;
+    return output;
+}
+
+launch::InstallLaunchRef project_install_launch_ref(
+    const discovery::InstallRef& install)
+{
+    launch::InstallLaunchRef output;
+    output.root = install.root;
+    output.executable = install.executable;
+    output.ownership = install.ownership;
+    output.distribution_origin = install.distribution_origin;
+    output.platform_integration = install.platform_integration;
+    output.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    output.external_state_domains = install.external_state_domains;
+    output.install_id = install.install_id;
+    output.product_id = "factorio";
+    output.exact_product_version = install.version;
+    output.setup_state_ref = install.setup_state_ref;
+    output.lifecycle_status =
+        install.lifecycle_status.empty() ? "missing" : install.lifecycle_status;
+    output.last_verification_identity = install.last_verification_identity;
+    output.state_revision = install.state_revision;
+    output.verification_status = install.verification_status;
+    return output;
+}
 }
 
 ApplicationResult preview_launch(ApplicationContext& context, const BuildLaunchPlanRequest& request, const std::string& command)
@@ -72,18 +113,9 @@ ApplicationResult preview_launch(ApplicationContext& context, const BuildLaunchP
     if (!effective) return refused(
         safety_refusal(command, effective.error().code, "Effective profile is invalid", effective.error().message, true),
         effective.error().code, effective.error().message);
-    launch::InstanceLaunchRef instance_ref {
-        instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
-        effective.value().launch_arguments};
-    launch::InstallLaunchRef install_ref {
-        install.root,
-        install.executable,
-        install.ownership,
-        install.distribution_origin,
-        install.platform_integration,
-        install.strict_isolation_eligibility,
-        install.external_state_domains,
-    };
+    launch::InstanceLaunchRef instance_ref =
+        project_instance_launch_ref(instance, install, effective.value());
+    launch::InstallLaunchRef install_ref = project_install_launch_ref(install);
     ApplicationResult result;
     result.output = launch::build_launch_plan(instance_ref, install_ref, command);
     return result;
@@ -99,20 +131,15 @@ ApplicationResult preflight_launch(ApplicationContext& context, const BuildLaunc
     if (!effective) return refused(
         safety_refusal("launch_plan.preflight", effective.error().code, "Effective profile is invalid", effective.error().message, true),
         effective.error().code, effective.error().message);
-    launch::InstanceLaunchRef instance_ref {
-        instance.id.str(), instance.profile, instance.root, effective.value().settings.launch_mode,
-        effective.value().launch_arguments};
-    launch::InstallLaunchRef install_ref {
-        install.root,
-        install.executable,
-        install.ownership,
-        install.distribution_origin,
-        install.platform_integration,
-        install.strict_isolation_eligibility,
-        install.external_state_domains,
-    };
+    launch::InstanceLaunchRef instance_ref =
+        project_instance_launch_ref(instance, install, effective.value());
+    launch::InstallLaunchRef install_ref = project_install_launch_ref(install);
     ApplicationResult result;
-    result.output = launch::preflight_launch(instance_ref, install_ref, "launch_plan.preflight");
+    result.output = launch::preflight_launch(
+        instance_ref,
+        install_ref,
+        "launch_plan.preflight",
+        context.configuration().protected_factorio_roots());
     return result;
 }
 

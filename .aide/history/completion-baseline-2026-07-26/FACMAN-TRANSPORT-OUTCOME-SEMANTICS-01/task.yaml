@@ -1,0 +1,100 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01
+title: Make operation outcomes durable and transport-consistent
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-26T15:00:13Z
+owner: unassigned
+objective: >
+  Adopt the published Universal Launcher operation-outcome contract across direct, CLI process, WinForms, AppKit and future daemon boundaries without widening runtime authority.
+allowed_paths:
+  - .aide/history/completion-baseline-2026-07-26/index.json
+  - .aide/history/completion-baseline-2026-07-26/FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01/**
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - .aide/queue/active/FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01/**
+  - .aide/queue/active/FACMAN-TRANSPORT-OUTCOME-SEMANTICS-01/**
+  - .aide/queue/index.yaml
+  - THIRD_PARTY_NOTICES.md
+  - README.md
+  - apps/cli/command_dispatch.cpp
+  - apps/gui/macos/appkit/CliProcessClient.mm
+  - apps/gui/macos/appkit/CommandClient.h
+  - apps/gui/macos/appkit/CommandClient.mm
+  - apps/gui/windows/winforms/CliProcessClient.cs
+  - apps/gui/windows/winforms/CommandModels.cs
+  - apps/tui/tui_views.cpp
+  - contracts/schema/transport/transport_request.v2.schema.json
+  - contracts/schema/transport/transport_response.v2.schema.json
+  - contracts/abi/flb/README.md
+  - docs/architecture/frontend-transport-truth.v1.md
+  - docs/architecture/machine-transport.v1.md
+  - docs/platform/support_matrix.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - release/index/current_state.v1.toml
+  - release/index/dependency_lock.v1.toml
+  - release/index/project_status.v2.toml
+  - release/index/sbom.components.v1.json
+  - release/index/workspace_lock.v1.toml
+  - runtime/client/**
+  - tests/native/facman_client_smoke.cpp
+  - tests/native/facman_abi_layout_smoke.cpp
+  - tests/installed_consumer/main.c
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tests/test_cross_repo.py
+  - tests/test_machine_transport.py
+  - tests/test_setup_package_routing.py
+  - tests/test_tui_product.py
+  - tools/client_cli_boundary_check.py
+  - tools/compliance_check.py
+  - tools/frontend_transport_truth_check.py
+  - tools/abi_symbol_check.py
+  - tools/project_state.py
+  - tools/validators/release/check_dependency_lock.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - contracts/policy/capabilities.v1.toml
+  - contracts/policy/hermetic_play_policy.v1.toml
+  - contracts/policy/windows_instance_isolated_play_policy.v1.toml
+affected_native_targets:
+  - facman_client_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.test_cli
+  - tests.test_frontend_contract
+  - tests.test_frontend_parity
+  - tests.test_gui_surface
+affected_strict_validators:
+  - tools/client_cli_boundary_check.py
+  - tools/frontend_contract_check.py
+  - tools/frontend_parity_check.py
+  - tools/frontend_transport_truth_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-07-26T15:00:14Z
+verified_at: 2026-07-26T16:17:03Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-26T16:17:04Z
+closed_at: 2026-07-26T16:17:04Z
+archived_at: 2026-07-26T16:17:05Z

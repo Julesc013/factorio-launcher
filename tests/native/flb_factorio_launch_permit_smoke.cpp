@@ -3,6 +3,7 @@
 
 #include "fl_operation_permit.h"
 #include "fl_sha256.h"
+#include "facman/build_identity.hpp"
 #include "flb_factorio_candidate_projection.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_hermetic_candidate.h"
@@ -17,6 +18,7 @@
 #include <fstream>
 #include <iterator>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,6 +37,20 @@ std::string digest(const std::string& value)
 {
     return facman::base::sha256_hex_bytes(
         reinterpret_cast<const unsigned char*>(value.data()), value.size());
+}
+
+const std::string* evidence_digest(
+    const factorio_launch::HermeticCandidatePlan& plan,
+    const std::string& requirement_id)
+{
+    const auto found = std::find_if(
+        plan.evidence.begin(), plan.evidence.end(),
+        [&](const auto& value) {
+            return value.requirement_id == requirement_id;
+        });
+    return found == plan.evidence.end()
+        ? nullptr
+        : &found->identity_digest;
 }
 #endif
 
@@ -111,10 +127,18 @@ void make_fixture(const fs::path& workspace, const fs::path& install)
         "{\"schema\":\"factorio.instance.v1\",\"instance_id\":\"main\","
         "\"display_name\":\"Main\",\"install_ref\":\"fixture\","
         "\"factorio_version\":\"2.0.77\",\"profile\":\"gui\",\"template\":\"vanilla\"}");
-    facman::factorio::launch::InstanceLaunchRef instance_ref {
-        "main", "gui", instance_root, "gui", {}};
-    facman::factorio::launch::InstallLaunchRef install_ref {
-        install, executable_path(install), "portable", "standalone", "none", "eligible", {}};
+    facman::factorio::launch::InstanceLaunchRef instance_ref;
+    instance_ref.instance_id = "main";
+    instance_ref.profile_id = "gui";
+    instance_ref.local_data_root = instance_root;
+    instance_ref.launch_mode = "gui";
+    facman::factorio::launch::InstallLaunchRef install_ref;
+    install_ref.root = install;
+    install_ref.executable = executable_path(install);
+    install_ref.ownership = "portable";
+    install_ref.distribution_origin = "standalone";
+    install_ref.platform_integration = "none";
+    install_ref.strict_isolation_eligibility = "eligible";
     write_text(instance_root / "config" / "config.ini",
         facman::factorio::launch::effective_config_ini(instance_ref, install_ref));
 }
@@ -247,6 +271,18 @@ int main()
         candidate_plan.value().writable_resource_ids.size() != 8U ||
         factorio_launch::hermetic_candidate_plan_json(candidate_plan.value()).find(
             fixture.path.generic_string()) != std::string::npos) return fail(17);
+    const std::string* hermetic_launcher_revision = evidence_digest(
+        candidate_plan.value(), "universal_launcher.revision");
+    const std::string* hermetic_setup_revision = evidence_digest(
+        candidate_plan.value(), "universal_setup.revision");
+    if (hermetic_launcher_revision == nullptr ||
+        hermetic_setup_revision == nullptr ||
+        *hermetic_launcher_revision != digest(
+            facman::build_identity::universal_launcher_revision) ||
+        *hermetic_setup_revision != digest(
+            facman::build_identity::universal_setup_revision)) {
+        return fail(170);
+    }
     const auto temp_environment = std::find_if(
         candidate_plan.value().process.environment.begin(),
         candidate_plan.value().process.environment.end(),
@@ -271,6 +307,75 @@ int main()
     write_text(executable_path(install), "replacement-executable");
     if (factorio_instance::project_hermetic_candidate_plan(candidate_request)) return fail(19);
     write_text(executable_path(install), "fixture-not-executable");
+
+    const std::string isolated_policy_document = read_text(
+        fs::path(FACMAN_TEST_SOURCE_ROOT) / "contracts" / "generated-index" /
+        "windows_instance_isolated_play_policy.v1.canonical.json");
+    auto isolated_policy =
+        factorio_launch::FrozenHermeticPlayPolicy::
+            verify_instance_isolated_canonical_document(
+                isolated_policy_document);
+    if (!isolated_policy ||
+        isolated_policy.value().policy_digest !=
+            factorio_launch::kInstanceIsolatedCandidatePolicyDigest) {
+        return fail(190);
+    }
+    factorio_instance::InstanceIsolatedCandidateProjectionRequest
+        isolated_request = candidate_request;
+    isolated_request.operation_id = "instance-isolated-fixture";
+    isolated_request.policy = isolated_policy.value();
+    auto isolated_plan =
+        factorio_instance::project_instance_isolated_candidate_plan(
+            isolated_request);
+    auto isolated_context =
+        factorio_instance::reobserve_instance_isolated_candidate_context(
+            isolated_request);
+    if (!isolated_plan || !isolated_context ||
+        isolated_plan.value().schema !=
+            "factorio.instance_isolated_play_candidate_plan.v1" ||
+        isolated_plan.value().isolation_mode != "instance_isolated" ||
+        isolated_plan.value().evidence.size() != 35U ||
+        isolated_plan.value().writable_resource_ids.size() != 7U ||
+        isolated_plan.value().protected_resource_ids.size() != 12U ||
+        isolated_plan.value().permit_resources.size() != 23U ||
+        isolated_context.value().operation.isolation_mode !=
+            std::optional<std::string>("instance_isolated") ||
+        isolated_context.value().required_capabilities !=
+            std::vector<std::string>{
+                "launch.execute.instance_isolated", "process.execute"} ||
+        !isolated_plan.value().instance_root_authority ||
+        !isolated_plan.value().instance_root_authority->open() ||
+        !isolated_plan.value().instance_root_authority->revalidate().ok() ||
+        factorio_launch::hermetic_candidate_plan_json(
+            isolated_plan.value()).find(fixture.path.generic_string()) !=
+            std::string::npos) {
+        return fail(191);
+    }
+    const std::string* isolated_launcher_revision = evidence_digest(
+        isolated_plan.value(), "universal_launcher_exact_revision");
+    const std::string* isolated_setup_revision = evidence_digest(
+        isolated_plan.value(), "universal_setup_exact_revision");
+    if (isolated_launcher_revision == nullptr ||
+        isolated_setup_revision == nullptr ||
+        *isolated_launcher_revision != digest(
+            facman::build_identity::universal_launcher_revision) ||
+        *isolated_setup_revision != digest(
+            facman::build_identity::universal_setup_revision)) {
+        return fail(194);
+    }
+    const auto sibling_escape =
+        isolated_plan.value().instance_root_authority->validate_descendant(
+            workspace / "instances" / "sibling");
+    if (sibling_escape.ok()) return fail(192);
+    std::error_code replacement_error;
+    fs::rename(
+        workspace / "instances" / "main",
+        workspace / "instances" / "replacement",
+        replacement_error);
+    if (!replacement_error ||
+        !isolated_plan.value().instance_root_authority->revalidate().ok()) {
+        return fail(193);
+    }
 #endif
 
     FixtureEntropy process_entropy;

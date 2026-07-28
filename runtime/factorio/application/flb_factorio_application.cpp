@@ -6,26 +6,20 @@
 #include "command_dispatch.h"
 #include "command_admission.h"
 #include "command_result.h"
-#include "handlers/diagnostics.h"
-#include "handlers/doctor.h"
-#include "handlers/instances.h"
-#include "handlers/intelligence.h"
-#include "handlers/mods.h"
-#include "handlers/modsets.h"
-#include "handlers/product.h"
-#include "handlers/preferences.h"
-#include "handlers/profiles.h"
-#include "handlers/recovery.h"
-#include "handlers/saves.h"
-#include "handlers/setup.h"
-#include "handlers/snapshots.h"
 #include "handlers/unavailable.h"
-#include "handlers/utility.h"
+#include "modules/application_module.h"
+#include "modules/content_module.h"
+#include "modules/diagnostics_module.h"
 #include "modules/installation_module.h"
 #include "modules/instance_module.h"
 #include "modules/launch_module.h"
+#include "modules/profile_module.h"
+#include "modules/recovery_module.h"
+#include "modules/setup_module.h"
+#include "modules/workspace_module.h"
 #include "fl_json_boundary.h"
 #include "fl_file_io.h"
+#include <array>
 #include <filesystem>
 #include <mutex>
 #include <string>
@@ -60,7 +54,17 @@ public:
     explicit FactorioApplication(std::string workspace_root)
         : context_(workspace_root.empty()
               ? std::filesystem::path()
-              : facman::platform::path_from_utf8(workspace_root))
+              : facman::platform::path_from_utf8(workspace_root)),
+          modules_{
+              &workspace_module_,
+              &setup_module_,
+              &installation_module_,
+              &instance_module_,
+              &profile_module_,
+              &content_module_,
+              &recovery_module_,
+              &diagnostics_module_,
+              &launch_module_}
     {}
     int handle(const ulk_command_request_v1* request, ulk_command_response_v1* response)
     {
@@ -87,10 +91,24 @@ public:
         return write_response(execute(typed), response);
     }
 private:
+    const ApplicationModule* module_for(CommandId command) const noexcept
+    {
+        for (const ApplicationModule* module : modules_) {
+            if (module->handles(command)) return module;
+        }
+        return nullptr;
+    }
+
     ApplicationResult execute(const ApplicationRequest& request)
     {
-        if (request.command == CommandId::product_inspect) return handlers::inspect_product(context_, current_command_);
-        if (context_.workspace().empty()) {
+        const ApplicationModule* module = module_for(request.command);
+        if (module == nullptr) {
+            return refused(
+                safety_refusal("command.execute", "invalid_request", "Unsupported application command", "", false),
+                "invalid_request",
+                "Unsupported application command");
+        }
+        if (module->requires_workspace(request.command) && context_.workspace().empty()) {
             return refused(
                 safety_refusal("command.execute", "workspace_unavailable", "Workspace root is required", "", true),
                 "workspace_unavailable",
@@ -108,90 +126,10 @@ private:
                 "Dry-run requests never execute data writes");
         }
         const CommandAdmissionDecision admission = admit_command(context_.configuration(), request.command);
-        if (handlers::is_setup_command(request.command)) {
-            if (!admission.admitted) return handlers::unavailable(context_, current_command_, admission.code, admission.reason);
-            return handlers::dispatch_setup(context_, request);
-        }
-        if (launch_module_.handles(request.command)) {
-            return launch_module_.execute(context_, request, admission);
-        }
-        if (!admission.admitted && admission.code == "network_forbidden") {
-            return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
-        }
-        if (!admission.admitted) {
+        if (!admission.admitted && denied_admission_disposition(
+                request.command, admission) == DeniedAdmissionDisposition::reject)
             return handlers::unavailable(context_, current_command_, admission.code, admission.reason);
-        }
-        if (installation_module_.handles(request.command)) {
-            return installation_module_.execute(context_, request);
-        }
-        if (instance_module_.handles(request.command)) {
-            return instance_module_.execute(context_, request);
-        }
-        switch (request.command) {
-        case CommandId::workspace_status: return handlers::workspace_status(context_);
-        case CommandId::workspace_paths: return handlers::workspace_paths(context_);
-        case CommandId::preferences_inspect: return handlers::inspect_preferences(context_);
-        case CommandId::preferences_validate: return handlers::validate_preferences(context_, std::get<PreferencesRequest>(request.payload));
-        case CommandId::preferences_plan: return handlers::plan_preferences(context_, std::get<PreferencesRequest>(request.payload));
-        case CommandId::preferences_apply: return handlers::apply_preferences(context_, std::get<PreferencesRequest>(request.payload));
-        case CommandId::preferences_reset_plan: return handlers::plan_preferences_reset(context_);
-        case CommandId::preferences_reset_apply: return handlers::apply_preferences_reset(context_);
-        case CommandId::capabilities_inspect: return handlers::capabilities_inspect(context_);
-        case CommandId::onboarding_plan: return handlers::onboarding_plan(context_, std::get<OnboardingPlanRequest>(request.payload));
-        case CommandId::doctor_explain: return handlers::doctor_explain(context_);
-        case CommandId::launch_plan_explain: return handlers::launch_plan_explain(context_, std::get<ExplainInstanceRequest>(request.payload));
-        case CommandId::doctor_run: return handlers::run_doctor(context_, std::get<DoctorRequest>(request.payload));
-        case CommandId::instance_list: return handlers::list_instances(context_);
-        case CommandId::instance_create: return handlers::create_instance(context_, std::get<CreateInstanceRequest>(request.payload));
-        case CommandId::instances_inspect: case CommandId::instances_verify: case CommandId::instances_diff:
-        case CommandId::instances_clone: case CommandId::instances_rename: case CommandId::instances_archive:
-        case CommandId::instances_restore: return handlers::dispatch_instance_lifecycle(context_, request);
-        case CommandId::snapshots_create: case CommandId::snapshots_list: case CommandId::snapshots_inspect:
-        case CommandId::snapshots_verify: case CommandId::snapshots_diff: case CommandId::snapshots_restore:
-        case CommandId::snapshots_retention_plan: case CommandId::snapshots_retention_apply:
-            return handlers::dispatch_snapshots(context_, request);
-        case CommandId::templates_list: case CommandId::templates_inspect: case CommandId::templates_validate:
-        case CommandId::profiles_list: case CommandId::profiles_inspect: case CommandId::profiles_create:
-        case CommandId::profiles_clone: case CommandId::profiles_diff: case CommandId::profiles_plan: case CommandId::profiles_apply:
-        case CommandId::profiles_archive: return handlers::dispatch_profiles(context_, request);
-        case CommandId::mods_search: case CommandId::mods_install:
-        case CommandId::mods_update: return handlers::refuse_mod_portal(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::servers_list: return handlers::list_servers(context_);
-        case CommandId::servers_create: return handlers::create_server(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::servers_inspect: case CommandId::servers_validate: case CommandId::servers_plan: case CommandId::servers_diff: case CommandId::servers_export: return handlers::dispatch_server_plan(context_, request);
-        case CommandId::servers_start: case CommandId::servers_stop:
-        case CommandId::servers_rcon: return handlers::control_server(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::diagnostics_redact: return handlers::redact_diagnostics(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::dev_bug_report: return handlers::create_bug_report(context_);
-        case CommandId::dev_dump_data: case CommandId::dev_dump_icons:
-        case CommandId::dev_benchmark:
-        case CommandId::dev_instrument_mod: return handlers::refuse_dev_execution(context_, std::get<ServiceOperationRequest>(request.payload));
-        case CommandId::mods_import: return handlers::import_mod(context_, std::get<ImportModRequest>(request.payload));
-        case CommandId::mods_list: case CommandId::mods_inspect: case CommandId::mods_verify: case CommandId::mods_index: case CommandId::mods_explain: return handlers::dispatch_mod_inventory(context_, request);
-        case CommandId::modsets_lock: return handlers::lock_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
-        case CommandId::modsets_verify: return handlers::verify_modset(context_, std::get<ModsetInstanceRequest>(request.payload));
-        case CommandId::modsets_export: return handlers::export_modset(context_, std::get<ExportModsetRequest>(request.payload));
-        case CommandId::modsets_plan: case CommandId::modsets_diff: case CommandId::modsets_explain: case CommandId::modsets_apply: case CommandId::modsets_rollback: return handlers::dispatch_modset_solver(context_, request);
-        case CommandId::saves_list: return handlers::list_saves(context_, std::get<ListSavesRequest>(request.payload));
-        case CommandId::saves_backup: return handlers::backup_save(context_, std::get<BackupSaveRequest>(request.payload));
-        case CommandId::saves_clone: return handlers::clone_save(context_, std::get<CloneSaveRequest>(request.payload));
-        case CommandId::saves_index: case CommandId::saves_inspect: case CommandId::saves_verify: case CommandId::saves_associate:
-        case CommandId::saves_diff: case CommandId::saves_retention_plan: case CommandId::saves_retention_apply: return handlers::dispatch_save_index(context_, request);
-        case CommandId::instance_export: return handlers::export_instance(context_, std::get<ExportInstanceRequest>(request.payload));
-        case CommandId::instance_import: return handlers::import_instance(context_, std::get<ImportInstanceRequest>(request.payload));
-        case CommandId::recovery_inspect: return handlers::recovery_inspect(context_);
-        case CommandId::recovery_plan: return handlers::recovery_plan(context_, std::get<RecoveryRequest>(request.payload));
-        case CommandId::recovery_apply: return handlers::recovery_apply(context_, std::get<RecoveryRequest>(request.payload));
-        case CommandId::migration_inspect: return handlers::migration(context_, "workspace.migration.inspect");
-        case CommandId::migration_plan: return handlers::migration(context_, "workspace.migration.plan");
-        case CommandId::migration_apply: return handlers::migration(context_, "workspace.migration.apply");
-        case CommandId::diagnostics_export: return handlers::export_diagnostics(context_, std::get<ExportDiagnosticRequest>(request.payload));
-        default:
-            return refused(
-                safety_refusal("command.execute", "invalid_request", "Unsupported application command", "", false),
-                "invalid_request",
-                "Unsupported application command");
-        }
+        return module->execute(context_, request, admission, current_command_);
     }
     int write_response(const ApplicationResult& result, ulk_command_response_v1* response)
     {
@@ -209,9 +147,16 @@ private:
         return result.status;
     }
     ApplicationContext context_;
+    WorkspaceApplicationModule workspace_module_;
+    SetupApplicationModule setup_module_;
     InstallationApplicationModule installation_module_;
     InstanceApplicationModule instance_module_;
+    ProfileApplicationModule profile_module_;
+    ContentApplicationModule content_module_;
+    RecoveryApplicationModule recovery_module_;
+    DiagnosticsApplicationModule diagnostics_module_;
     LaunchApplicationModule launch_module_;
+    std::array<const ApplicationModule*, 9> modules_;
     std::string current_command_;
     std::string response_json_;
     std::string error_message_;

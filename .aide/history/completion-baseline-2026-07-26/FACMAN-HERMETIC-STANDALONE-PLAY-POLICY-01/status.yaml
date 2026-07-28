@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-21T11:45:31Z
+result: PASS
+evidence_path: .aide/history/completion-baseline-2026-07-26/FACMAN-HERMETIC-STANDALONE-PLAY-POLICY-01/evidence/
+active_at: 2026-07-21T11:45:32Z
+verified_at: 2026-07-21T16:23:29Z
+implementation_state: implemented
+reviewed_at: 2026-07-21T16:23:29Z
+closed_at: 2026-07-21T16:23:29Z
+archived_at: 2026-07-26T12:52:51Z

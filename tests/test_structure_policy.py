@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import unittest
 from pathlib import Path
 
@@ -38,7 +39,8 @@ class StructurePolicyTests(unittest.TestCase):
 
     def test_runtime_and_client_source_seams_exist(self) -> None:
         self.assertTrue((ROOT / "runtime" / "package" / "fl_runtime_locator.c").is_file())
-        self.assertTrue((ROOT / "runtime" / "client" / "fl_command_client.c").is_file())
+        self.assertTrue((ROOT / "runtime" / "client" / "fl_command_client_cabi_execute.c").is_file())
+        self.assertFalse((ROOT / "runtime" / "client" / "fl_command_client.c").exists())
         self.assertTrue((ROOT / "runtime" / "factorio" / "install_validation" / "README.md").is_file())
         self.assertTrue((ROOT / "runtime" / "factorio" / "modsets" / "README.md").is_file())
         self.assertFalse((ROOT / "runtime" / "factorio" / "c11").exists())
@@ -81,6 +83,58 @@ class StructurePolicyTests(unittest.TestCase):
             "contracts/policy/README.md",
         ]:
             self.assertTrue((ROOT / path).is_file(), path)
+
+    def test_launch_truth_inputs_are_fail_closed(self) -> None:
+        launch_source = (
+            ROOT
+            / "runtime"
+            / "factorio"
+            / "launch"
+            / "flb_factorio_launch_plan.cpp"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("std::getenv(", launch_source)
+        self.assertIn("StableInputFile", launch_source)
+        self.assertIn("launcher_reference_missing", launch_source)
+        self.assertIn("launcher_install_not_active", launch_source)
+        self.assertIn("launcher_install_unverified", launch_source)
+
+        schema = json.loads(
+            (
+                ROOT
+                / "contracts"
+                / "schema"
+                / "factorio"
+                / "factorio_install_ref.v1.schema.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertIn("lifecycle_status", schema["required"])
+        self.assertEqual(
+            {
+                "active",
+                "verification_failed",
+                "recovery_required",
+                "retired",
+                "uninstalled",
+                "missing",
+                "unknown",
+                "unsupported",
+            },
+            set(schema["properties"]["lifecycle_status"]["enum"]),
+        )
+
+    def test_candidate_storage_marker_is_workunit_neutral(self) -> None:
+        candidate_source = (
+            ROOT
+            / "runtime"
+            / "factorio"
+            / "launch"
+            / "flb_factorio_hermetic_candidate.cpp"
+        ).read_text(encoding="utf-8")
+        self.assertIn("facman.candidate-artifacts.v1", candidate_source)
+        self.assertNotIn(
+            'marker, "FACMAN-HERMETIC-STANDALONE-PLAY-CANDIDATE-01',
+            candidate_source,
+        )
 
     def test_release_profiles_are_target_specific(self) -> None:
         for name in [

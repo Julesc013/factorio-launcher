@@ -5,6 +5,7 @@
 #define FLB_FACTORIO_HERMETIC_CANDIDATE_H
 
 #include "fl_operation_permit.h"
+#include "fl_file_io.h"
 #include "fl_process_supervisor.h"
 #include "fl_result.h"
 #include "flb_factorio_execution.h"
@@ -13,7 +14,9 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace facman::factorio::launch {
@@ -33,10 +36,24 @@ inline constexpr const char* kHermeticObservationProviderId =
     "factorio.play.process-tree-observer";
 inline constexpr const char* kHermeticObservationProviderRevision =
     "bound-observation-artifact.v1";
+inline constexpr const char* kInstanceIsolatedCandidatePolicyId =
+    "facman.windows-instance-isolated-play.2.0.77.x64.v1";
+inline constexpr const char* kInstanceIsolatedCandidatePolicyRevision = "1";
+inline constexpr const char* kInstanceIsolatedCandidatePolicyDigest =
+    "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432";
+inline constexpr const char* kInstanceIsolatedCandidateIsolation =
+    "instance_isolated";
+inline constexpr const char* kInstanceIsolatedCandidateProviderRevision =
+    "windows-instance-isolated-play-candidate.v1";
+inline constexpr const char* kInstanceIsolatedObservationProviderRevision =
+    "gate4c-etw-file-registry-process.v6";
 
 std::vector<std::string> hermetic_policy_writable_resource_ids();
 std::vector<std::string> hermetic_policy_protected_resource_ids();
 std::vector<std::string> hermetic_candidate_automated_controls();
+std::vector<std::string> instance_isolated_policy_writable_resource_ids();
+std::vector<std::string> instance_isolated_policy_protected_resource_ids();
+std::vector<std::string> instance_isolated_candidate_automated_controls();
 
 struct FrozenHermeticPlayPolicy {
     std::string policy_id;
@@ -46,6 +63,9 @@ struct FrozenHermeticPlayPolicy {
     bool verified = false;
 
     static facman::core::Result<FrozenHermeticPlayPolicy> verify_canonical_document(
+        const std::string& canonical_policy_json);
+    static facman::core::Result<FrozenHermeticPlayPolicy>
+    verify_instance_isolated_canonical_document(
         const std::string& canonical_policy_json);
 };
 
@@ -82,6 +102,8 @@ struct CandidatePlanInput {
     std::vector<std::string> protected_resource_ids;
     facman::platform::ProcessRequest process;
     std::string environment_revision;
+    std::shared_ptr<facman::platform::StableDirectoryObject>
+        instance_root_authority;
 };
 
 struct HermeticCandidatePlan {
@@ -100,12 +122,33 @@ struct HermeticCandidatePlan {
     std::vector<std::string> protected_resource_ids;
     facman::platform::ProcessRequest process;
     std::string environment_revision;
+    std::string evidence_schema =
+        "factorio.hermetic_play_candidate_evidence.v1";
+    std::string operation_kind = kHermeticCandidateOperation;
+    std::string launch_intent = kHermeticCandidateIntent;
+    std::string isolation_mode = kHermeticCandidateIsolation;
+    std::string provider_id = kHermeticCandidateProviderId;
+    std::string provider_revision = kHermeticCandidateProviderRevision;
+    std::string observation_schema =
+        "factorio.play_candidate_observation.v1";
+    std::string observation_provider_id = kHermeticObservationProviderId;
+    std::string observation_provider_revision =
+        kHermeticObservationProviderRevision;
+    std::string packet_schema =
+        "factorio.play_candidate_evidence_packet.v1";
+    std::vector<std::string> required_capabilities {
+        "launch.execute.hermetic", "process.execute"};
+    std::vector<std::string> automated_controls;
+    std::shared_ptr<facman::platform::StableDirectoryObject>
+        instance_root_authority;
     std::string plan_id;
     std::string plan_digest;
 };
 
 facman::core::Result<HermeticCandidatePlan> build_hermetic_candidate_plan(
     CandidatePlanInput input);
+facman::core::Result<HermeticCandidatePlan>
+build_instance_isolated_candidate_plan(CandidatePlanInput input);
 
 std::string hermetic_candidate_plan_json(const HermeticCandidatePlan& plan);
 
@@ -144,20 +187,53 @@ struct ObservationGapState {
     bool delayed_events = false;
     bool attribution_gap = false;
     bool provider_failure = false;
+    bool missing_completion = false;
+    bool object_reuse_ambiguity = false;
+    bool baseline_incomplete = false;
+    bool postrun_incomplete = false;
+    bool packet_collision = false;
 
     bool any() const noexcept;
 };
 
 struct CandidateObservedEffect {
+    CandidateObservedEffect() = default;
+    CandidateObservedEffect(
+        std::uint64_t sequence_value,
+        std::string domain_value,
+        std::string process_identity_digest_value,
+        std::string target_identity_digest_value,
+        std::string logical_resource_id_value,
+        std::string classification_value)
+        : sequence(sequence_value),
+          domain(std::move(domain_value)),
+          process_identity_digest(
+              std::move(process_identity_digest_value)),
+          target_identity_digest(
+              std::move(target_identity_digest_value)),
+          logical_resource_id(std::move(logical_resource_id_value)),
+          classification(std::move(classification_value))
+    {
+    }
+
     std::uint64_t sequence = 0;
     std::string domain;
     std::string process_identity_digest;
     std::string target_identity_digest;
     std::string logical_resource_id;
     std::string classification;
+    std::string operation_kind;
+    std::string disclosure_effect_id;
+    std::string artifact_owner;
+    std::string principal_identity_digest;
+    bool completion_success = true;
+    bool target_resolved = true;
+    bool object_lifetime_resolved = true;
+    bool attribution_resolved = true;
 };
 
 struct CandidateObservationResult {
+    std::string schema = "factorio.play_candidate_observation.v1";
     std::string provider_id = kHermeticObservationProviderId;
     std::string provider_revision = kHermeticObservationProviderRevision;
     std::string plan_digest;
@@ -268,6 +344,9 @@ public:
 private:
     facman::core::permit::PermitValidator validator_;
 };
+
+using InstanceIsolatedCandidateLaunchProvider =
+    HermeticCandidateLaunchProvider;
 
 struct CandidateOutputRecord {
     std::size_t standard_output_bytes = 0;
