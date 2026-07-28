@@ -34,7 +34,7 @@ class SetupPackageRoutingTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("7fc25340623131ba86c08dca4fb8a43b18a4520d", lock)
-        self.assertIn("3f8489275077347c2918f3bb03614ec6431362ff", lock)
+        self.assertIn("3048128963dc718a7c38c1cfcdda9e813a23b0db", lock)
 
 
 if __name__ == "__main__":

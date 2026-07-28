@@ -12,8 +12,9 @@ from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch
 
-from tools import instance_isolated_verdict_coordinator as COORDINATOR
 from tools import gate4c_verdict_preflight as PREFLIGHT
+from tools import instance_isolated_verdict_coordinator as COORDINATOR
+from tools import play_staged_candidate as STAGED
 from tools.play_verdict_route import (
     INSTANCE_ISOLATED_REVALIDATION as ROUTE,
     QUALIFICATION_SCHEMA,
@@ -60,6 +61,10 @@ def qualification_value() -> dict[str, object]:
                         "verdict_harness",
                         "Debug/facman_gate4c_verdict_harness.exe",
                     ),
+                    (
+                        "evidence_probe",
+                        "Debug/facman_evidence_probe.exe",
+                    ),
                     ("cmake_cache", "CMakeCache.txt"),
                 )
             )
@@ -79,6 +84,74 @@ def qualification_value() -> dict[str, object]:
     return {**core, "qualification_digest": digest_value(core)}
 
 
+def instance_projection_value(
+    qualification: dict[str, object],
+    workspace: Path,
+    *,
+    binding_digest: str = "e" * 64,
+    readiness_digest: str = "f" * 64,
+) -> dict[str, object]:
+    instance = qualification["instance"]
+    assert isinstance(instance, dict)
+    return {
+        "inspection": {
+            "instance_id": ROUTE.instance_id,
+            "factorio_version": "2.0.77",
+            "modset_status": "present",
+            "save_count": 0,
+        },
+        "description": {
+            "instance_spec": {
+                "spec_digest": instance["spec_digest"],
+            },
+            "instance_binding": {
+                "binding_digest": binding_digest,
+            },
+        },
+        "readiness": {
+            "readiness_digest": readiness_digest,
+            "launch_intent": "menu",
+            "blockers": [{"code": "real_play_gate_not_passed"}],
+            "execution_started": False,
+            "permit_issued": False,
+        },
+        "launch_preflight": {
+            "status": "pass",
+            "started": False,
+            "executable": "D:/Games/Factorio/factorio.exe",
+            "args": [
+                "--config",
+                str(workspace / "config.ini"),
+                "--mod-directory",
+                str(workspace / "mods"),
+            ],
+        },
+    }
+
+
+def staged_projection_value(
+    qualification: dict[str, object],
+    workspace: Path,
+    *,
+    binding_digest: str = "e" * 64,
+    readiness_digest: str = "f" * 64,
+) -> dict[str, object]:
+    qualification_binding = COORDINATOR.parse_qualification_binding(
+        qualification, ROUTE
+    )
+    return STAGED.build_staged_candidate(
+        instance_projection_value(
+            qualification,
+            workspace,
+            binding_digest=binding_digest,
+            readiness_digest=readiness_digest,
+        ),
+        workspace=workspace,
+        qualification=qualification_binding,
+        route=ROUTE,
+    )
+
+
 def principal_value(
     *,
     sid_digest: str = "9" * 64,
@@ -94,6 +167,57 @@ def principal_value(
         "valid": True,
     }
     return {**core, "principal_digest": digest_value(core)}
+
+
+class FakeEvidenceIo:
+    def __init__(self, probe: Path):
+        self.probe = Path(probe)
+
+    def read_json(self, path: Path):
+        return {
+            "payload": {
+                "document": json.loads(Path(path).read_text(encoding="utf-8"))
+            }
+        }
+
+    def inspect_file(self, path: Path):
+        path = Path(path)
+        if path.name == "facman_evidence_probe.exe":
+            digest, size = "4" * 64, 4
+        else:
+            content = path.read_bytes()
+            digest = PREFLIGHT.hashlib.sha256(content).hexdigest()
+            size = len(content)
+        return {
+            "payload": {
+                "file": {
+                    "content_sha256": digest,
+                    "bytes_read": size,
+                }
+            }
+        }
+
+    def hash_file(self, path: Path):
+        return self.inspect_file(path)
+
+    def write_new_json(self, path: Path, value: dict):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(value), encoding="utf-8")
+        return {}
+
+    def copy_file(
+        self,
+        source: Path,
+        destination: Path,
+        *,
+        maximum_bytes: int,
+    ):
+        del maximum_bytes
+        destination = Path(destination)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(Path(source).read_bytes())
+        return {}
 
 
 class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
@@ -151,6 +275,55 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 route=ROUTE,
                 qualification=None,
             )
+        with self.assertRaisesRegex(
+            PREFLIGHT.PreflightError, "staged candidate binding"
+        ):
+            PREFLIGHT.build_preflight(
+                Namespace(),
+                route=ROUTE,
+                qualification=COORDINATOR.parse_qualification_binding(
+                    qualification_value(), ROUTE
+                ),
+            )
+
+    def test_relocated_instance_is_rebound_before_preflight(self) -> None:
+        qualification = qualification_value()
+        binding = COORDINATOR.parse_qualification_binding(
+            qualification, ROUTE
+        )
+        workspace = Path("D:/evidence/revalidation/workspace")
+        projections = instance_projection_value(
+            qualification, workspace
+        )
+
+        def observe(**kwargs: object) -> dict[str, object]:
+            with patch.object(
+                PREFLIGHT,
+                "run_json",
+                side_effect=[
+                    projections["inspection"],
+                    projections["description"],
+                    projections["readiness"],
+                    projections["launch_preflight"],
+                ],
+            ):
+                return PREFLIGHT.instance_evidence(
+                    Path("facman.exe"),
+                    workspace,
+                    ROUTE.instance_id,
+                    binding,
+                    **kwargs,
+                )
+
+        self.assertFalse(observe()["valid"])
+        unbound = observe(allow_unbound_runtime_digests=True)
+        self.assertTrue(unbound["valid"])
+        staged = staged_projection_value(qualification, workspace)
+        rebound = observe(staged_instance=staged["instance"])
+        self.assertTrue(rebound["valid"])
+        changed = dict(staged["instance"])
+        changed["binding_digest"] = "0" * 64
+        self.assertFalse(observe(staged_instance=changed)["valid"])
 
     def test_operator_attestations_are_explicit_exact_and_never_defaulted(
         self,
@@ -178,6 +351,22 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 context="operator attestation",
             )
 
+    def test_operation_ids_are_validated_before_staging(self) -> None:
+        first = ROUTE.operation_prefix + "3f913de2-d6d6-4ed0-89d8-f5a3330216d7"
+        second = ROUTE.operation_prefix + "d8320010-37e3-49b2-8c13-60165b04207c"
+        COORDINATOR._validate_operation_ids(first, second)
+        for invalid_first, invalid_second in (
+            ("3f913de2-d6d6-4ed0-89d8-f5a3330216d7", second),
+            (first, first),
+            (first.upper(), second),
+        ):
+            with self.subTest(
+                first=invalid_first, second=invalid_second
+            ), self.assertRaises(COORDINATOR.CoordinatorError):
+                COORDINATOR._validate_operation_ids(
+                    invalid_first, invalid_second
+                )
+
     def test_qualification_binding_is_closed_and_hash_bound(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "qualification.json"
@@ -191,6 +380,7 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                     "facman",
                     "candidate_smoke",
                     "verdict_harness",
+                    "evidence_probe",
                     "cmake_cache",
                 },
             )
@@ -211,19 +401,27 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             repository = root / "facman"
             launcher = root / "launcher"
             setup = root / "setup"
+            qualified_build = (
+                task_root / "artifacts" / "qualified-build"
+            )
             for directory in (
                 operator,
                 workspace,
                 repository,
                 launcher,
                 setup,
+                qualified_build,
             ):
                 directory.mkdir(parents=True)
             files = {
                 "qualification_binding": task_root
                 / "qualification-binding.json",
+                "staged_candidate_binding": qualified_build
+                / "staged-candidate-binding.v1.json",
                 "artifact_manifest": task_root / "manifest.json",
                 "facman_artifact": task_root / "facman.exe",
+                "evidence_probe": qualified_build
+                / "facman_evidence_probe.exe",
                 "factorio_executable": task_root / "factorio.exe",
                 "source_artifact": task_root / "source.zip",
                 "source_member_executable": task_root / "source-factorio.exe",
@@ -232,8 +430,17 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             files["qualification_binding"].write_text(
                 json.dumps(qualification), encoding="utf-8"
             )
+            staged_candidate = staged_projection_value(
+                qualification, workspace
+            )
+            files["staged_candidate_binding"].write_text(
+                json.dumps(staged_candidate), encoding="utf-8"
+            )
             for key, path in files.items():
-                if key != "qualification_binding":
+                if key not in {
+                    "qualification_binding",
+                    "staged_candidate_binding",
+                }:
                     path.write_bytes(key.encode("utf-8"))
             first = ROUTE.operation_prefix + "launch1"
             second = ROUTE.operation_prefix + "launch2"
@@ -249,8 +456,15 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 "qualification_digest": qualification[
                     "qualification_digest"
                 ],
+                "staged_candidate_binding": str(
+                    files["staged_candidate_binding"]
+                ),
+                "staged_candidate_digest": staged_candidate[
+                    "staged_candidate_digest"
+                ],
                 "artifact_manifest": str(files["artifact_manifest"]),
                 "facman_artifact": str(files["facman_artifact"]),
+                "evidence_probe": str(files["evidence_probe"]),
                 "workspace": str(workspace),
                 "instance_id": ROUTE.instance_id,
                 "factorio_executable": str(files["factorio_executable"]),
@@ -268,13 +482,63 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 PREFLIGHT,
                 "windows_principal_identity",
                 return_value=principal_value(),
+            ), patch.object(
+                COORDINATOR, "EvidenceIo", FakeEvidenceIo
             ):
-                loaded, binding = COORDINATOR.validate_config(config_path)
+                loaded, binding, staged = COORDINATOR.validate_config(
+                    config_path
+                )
             self.assertEqual(loaded["instance_id"], ROUTE.instance_id)
             self.assertEqual(
                 binding.qualification_digest,
                 qualification["qualification_digest"],
             )
+            self.assertEqual(
+                staged["staged_candidate_digest"],
+                staged_candidate["staged_candidate_digest"],
+            )
+
+            changed_staged = json.loads(
+                files["staged_candidate_binding"].read_text(
+                    encoding="utf-8"
+                )
+            )
+            changed_staged["instance"]["binding_digest"] = "0" * 64
+            files["staged_candidate_binding"].write_text(
+                json.dumps(changed_staged), encoding="utf-8"
+            )
+            with (
+                patch.object(
+                    PREFLIGHT,
+                    "windows_principal_identity",
+                    return_value=principal_value(),
+                ),
+                patch.object(
+                    COORDINATOR, "EvidenceIo", FakeEvidenceIo
+                ),
+                self.assertRaises(COORDINATOR.CoordinatorError),
+            ):
+                COORDINATOR.validate_config(config_path)
+            files["staged_candidate_binding"].write_text(
+                json.dumps(staged_candidate), encoding="utf-8"
+            )
+
+            config["evidence_probe"] = str(task_root / "attacker.exe")
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            with (
+                patch.object(
+                    PREFLIGHT,
+                    "windows_principal_identity",
+                    return_value=principal_value(),
+                ),
+                patch.object(
+                    COORDINATOR, "EvidenceIo", FakeEvidenceIo
+                ),
+                self.assertRaises(COORDINATOR.CoordinatorError),
+            ):
+                COORDINATOR.validate_config(config_path)
+            config["evidence_probe"] = str(files["evidence_probe"])
+            config_path.write_text(json.dumps(config), encoding="utf-8")
 
             with (
                 contextlib.redirect_stderr(io.StringIO()),
@@ -287,6 +551,8 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 PREFLIGHT,
                 "windows_principal_identity",
                 return_value=changed,
+            ), patch.object(
+                COORDINATOR, "EvidenceIo", FakeEvidenceIo
             ):
                 with self.assertRaises(COORDINATOR.CoordinatorError):
                     COORDINATOR.validate_config(config_path)
@@ -305,6 +571,7 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 operation = ROUTE.operation_prefix + "launch1"
                 config = {
                     "task_root": str(task_root),
+                    "evidence_probe": str(task_root / "probe.exe"),
                     "first_operation_id": operation,
                     "second_operation_id": ROUTE.operation_prefix + "launch2",
                     "reviewer_principal": principal_value(),
@@ -342,7 +609,7 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                     patch.object(
                         COORDINATOR,
                         "validate_config",
-                        return_value=(config, object()),
+                        return_value=(config, object(), object()),
                     ),
                     patch.object(
                         COORDINATOR.EVIDENCE,
@@ -353,6 +620,9 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                         COORDINATOR.EVIDENCE,
                         "validate_native_packet",
                         return_value=packet,
+                    ),
+                    patch.object(
+                        COORDINATOR, "EvidenceIo", FakeEvidenceIo
                     ),
                 ):
                     result = COORDINATOR.human(
@@ -421,7 +691,7 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             patch.object(
                 COORDINATOR,
                 "validate_config",
-                return_value=(config, object()),
+                return_value=(config, object(), object()),
             ),
             patch.object(
                 COORDINATOR.EVIDENCE,
@@ -449,6 +719,14 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 task_root = Path(temporary) / ROUTE.work_unit
                 task_root.mkdir()
                 principal = principal_value()
+                probe = (
+                    task_root
+                    / "artifacts"
+                    / "qualified-build"
+                    / "facman_evidence_probe.exe"
+                )
+                probe.parent.mkdir(parents=True)
+                probe.write_bytes(b"fake")
                 operation_ids = [
                     ROUTE.operation_prefix + "synthetic-launch1",
                     ROUTE.operation_prefix + "synthetic-launch2",
@@ -460,7 +738,9 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 human_paths: list[Path] = []
                 for index, operation in enumerate(operation_ids):
                     session_core: dict[str, object] = {
-                        "schema": COORDINATOR.EVIDENCE.SESSION_SCHEMA,
+                        "schema": (
+                            COORDINATOR.EVIDENCE.INSTANCE_SESSION_SCHEMA
+                        ),
                         "work_unit": ROUTE.work_unit,
                         "instance_id": ROUTE.instance_id,
                         "operation_id": operation,
@@ -475,6 +755,10 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                                 str(index + 1) * 64
                             ),
                         },
+                        "evidence_probe": str(probe),
+                        "evidence_probe_sha256": "4" * 64,
+                        "resource_set_digest": "7" * 64,
+                        "startup_environment_snapshot_digest": "8" * 64,
                     }
                     session = {
                         **session_core,
@@ -590,6 +874,10 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                     COORDINATOR.EVIDENCE,
                     "validate_native_packet",
                     side_effect=packet_for,
+                ), patch.object(
+                    COORDINATOR.EVIDENCE,
+                    "EvidenceIo",
+                    FakeEvidenceIo,
                 ):
                     result = COORDINATOR.finalize_auto(
                         Namespace(
@@ -632,15 +920,16 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             for repository in repositories:
                 repository.mkdir()
             qualification_path = root / "qualification.json"
+            qualification = qualification_value()
             qualification_path.write_text(
-                json.dumps(qualification_value()),
-                encoding="utf-8",
+                json.dumps(qualification), encoding="utf-8"
             )
 
             def copy_artifacts(
                 _source: Path,
                 destination: Path,
                 _qualification: object,
+                _evidence_io: object,
             ):
                 destination.mkdir(parents=True)
                 paths = {}
@@ -654,6 +943,10 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                     (
                         "verdict_harness",
                         "facman_gate4c_verdict_harness.exe",
+                    ),
+                    (
+                        "evidence_probe",
+                        "facman_evidence_probe.exe",
                     ),
                     ("cmake_cache", "CMakeCache.txt"),
                 ):
@@ -685,11 +978,17 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                 patch.object(
                     COORDINATOR,
                     "_validate_staged_candidate",
+                    return_value=instance_projection_value(
+                        qualification, workspace
+                    ),
                 ) as validate,
                 patch.object(
                     COORDINATOR,
                     "_copy_qualified_artifacts",
                     side_effect=copy_artifacts,
+                ),
+                patch.object(
+                    COORDINATOR, "EvidenceIo", FakeEvidenceIo
                 ),
                 patch.object(
                     COORDINATOR,
@@ -701,6 +1000,7 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
                     Namespace(
                         task_root=task_root,
                         candidate_build=candidate_build,
+                        configuration="Debug",
                         qualification_binding=qualification_path,
                         repository_root=repositories[0],
                         launcher_repository=repositories[1],
@@ -717,6 +1017,16 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             create_workspace.assert_not_called()
             self.assertEqual(result["workspace"], str(workspace))
             self.assertTrue(Path(result["config"]).is_file())
+            staged_path = Path(result["staged_candidate_binding"])
+            self.assertTrue(staged_path.is_file())
+            staged = json.loads(staged_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                staged["instance"]["binding_digest"], "e" * 64
+            )
+            self.assertEqual(
+                result["staged_candidate_digest"],
+                staged["staged_candidate_digest"],
+            )
 
 
 if __name__ == "__main__":

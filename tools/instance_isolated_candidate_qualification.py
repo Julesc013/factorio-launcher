@@ -30,16 +30,25 @@ from tools import gate4c_verdict03_coordinator as COMMON
 from tools import gate4c_verdict_preflight as PREFLIGHT
 from tools import instance_isolated_verdict_coordinator as COORDINATOR
 from tools import json_contract
+from tools.play_evidence_stable_io import (
+    EvidenceIo,
+    StableIoError,
+    file_payload_sha256,
+    file_payload_size,
+)
 from tools.play_verdict_route import (
     CANONICALIZATION,
     INSTANCE_ISOLATED_REVALIDATION as ROUTE,
     QUALIFICATION_SCHEMA,
     digest_value,
-    load_qualification_binding,
+    parse_qualification_binding,
 )
 
 
-REPORT_SCHEMA = "facman.instance_isolated_candidate_qualification.v1"
+REPORT_SCHEMA = "facman.instance_isolated_candidate_qualification.v2"
+QUALIFICATION_WORK_UNIT = (
+    "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+)
 SOURCE_CLOSURE_SCHEMA = "facman.remote_source_closure.v1"
 LOWERCASE_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 EXPECTED_REPOSITORIES = frozenset(
@@ -49,6 +58,7 @@ EXPECTED_ARTIFACTS = {
     "facman": "facman.exe",
     "candidate_smoke": "facman_hermetic_play_candidate_smoke.exe",
     "verdict_harness": "facman_gate4c_verdict_harness.exe",
+    "evidence_probe": "facman_evidence_probe.exe",
     "cmake_cache": "CMakeCache.txt",
 }
 
@@ -292,50 +302,37 @@ def resolve_artifacts(
         "verdict_harness": root
         / configuration
         / EXPECTED_ARTIFACTS["verdict_harness"],
+        "evidence_probe": root
+        / configuration
+        / EXPECTED_ARTIFACTS["evidence_probe"],
         "cmake_cache": root / EXPECTED_ARTIFACTS["cmake_cache"],
     }
+    evidence_io = EvidenceIo(paths["evidence_probe"])
     records: dict[str, dict[str, Any]] = {}
     for name, path in paths.items():
-        audit = PREFLIGHT.audit_no_follow(path, require_file=True)
-        if not audit.get("safe"):
-            raise QualificationError(f"candidate artifact {name} is unsafe: {audit}")
+        inspected = evidence_io.inspect_file(path)
         relative = path.relative_to(root).as_posix()
         records[name] = {
             "relative_path": relative,
-            "size": path.stat().st_size,
-            "sha256": PREFLIGHT.sha256_file(path),
+            "size": file_payload_size(inspected),
+            "sha256": file_payload_sha256(inspected),
         }
     return records, paths
 
 
-def _extract_source_member(source_artifact: Path, destination: Path) -> None:
-    """Use the coordinator's bounded exact member extraction before validation."""
+def _extract_source_member(
+    source_artifact: Path,
+    destination: Path,
+    evidence_io: EvidenceIo,
+) -> None:
+    """Use the native bounded exact-member extraction before validation."""
 
-    import zipfile
-
-    source_artifact = _absolute(source_artifact)
-    source_audit = PREFLIGHT.audit_no_follow(source_artifact, require_file=True)
-    if not source_audit.get("safe"):
-        raise QualificationError(f"Factorio source artifact is unsafe: {source_audit}")
     destination.parent.mkdir(parents=True, exist_ok=False)
-    with zipfile.ZipFile(source_artifact) as archive:
-        members = [
-            item
-            for item in archive.infolist()
-            if item.filename.replace("\\", "/")
-            == "Factorio_2.0.77/bin/x64/factorio.exe"
-            and not item.is_dir()
-        ]
-        if len(members) != 1:
-            raise QualificationError(
-                "Factorio source package does not contain one exact 2.0.77 executable"
-            )
-        with archive.open(members[0], "r") as source, destination.open("xb") as target:
-            while True:
-                block = source.read(1024 * 1024)
-                if not block:
-                    break
-                target.write(block)
+    evidence_io.extract_exact_member(
+        source_artifact,
+        "Factorio_2.0.77/bin/x64/factorio.exe",
+        destination,
+    )
 
 
 def factorio_identity(
@@ -343,6 +340,7 @@ def factorio_identity(
     source_artifact: Path,
     source_member: Path,
     task_root: Path,
+    evidence_io: EvidenceIo,
 ) -> tuple[dict[str, str], dict[str, Any]]:
     factorio_executable = _absolute(factorio_executable)
     source_artifact = _absolute(source_artifact)
@@ -354,13 +352,16 @@ def factorio_identity(
         factorio_executable,
         source_member_executable=source_member,
         task_root=task_root,
+        evidence_io=evidence_io,
     )
     if not source.get("valid"):
         raise QualificationError(
             f"Factorio source authentication did not pass: {source.get('reason')}"
         )
     signature = source.get("source_member", {}).get("signature", {})
-    sha256 = PREFLIGHT.sha256_file(factorio_executable)
+    sha256 = file_payload_sha256(
+        evidence_io.hash_file(factorio_executable)
+    )
     signer_subject = str(signature.get("signer_subject") or "")
     if (
         sha256 != source.get("source_member", {}).get("sha256")
@@ -495,8 +496,10 @@ def _validate_schema(
 def qualify(args: argparse.Namespace) -> dict[str, Any]:
     task_root = _absolute(args.task_root)
     candidate_build = _absolute(args.candidate_build)
-    if task_root.name != ROUTE.work_unit:
-        raise QualificationError("qualification root is not the exact revalidation root")
+    if task_root.name != QUALIFICATION_WORK_UNIT:
+        raise QualificationError(
+            "qualification root is not the exact qualification-03 root"
+        )
     parent_audit = PREFLIGHT.audit_no_follow(
         task_root.parent,
         require_file=False,
@@ -528,18 +531,27 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
         candidate_build,
         args.configuration,
     )
+    evidence_io = EvidenceIo(artifact_paths["evidence_probe"])
+    stable_closure = evidence_io.read_json(
+        _absolute(args.remote_source_closure)
+    )["payload"]["document"]
+    if stable_closure != closure:
+        raise QualificationError(
+            "remote source closure changed during qualification"
+        )
     factorio_executable = _absolute(args.factorio_executable)
     source_artifact = _absolute(args.source_artifact)
     task_root.mkdir(exist_ok=True)
     source_member = (
         task_root / "source" / "portable-package-inspection" / "factorio.exe"
     )
-    _extract_source_member(source_artifact, source_member)
+    _extract_source_member(source_artifact, source_member, evidence_io)
     factorio, source_evidence = factorio_identity(
         factorio_executable,
         source_artifact,
         source_member,
         task_root,
+        evidence_io,
     )
     workspace = task_root / "workspace"
     COORDINATOR._stage_workspace(  # pylint: disable=protected-access
@@ -560,14 +572,18 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
     )
     _validate_schema(
         value,
-        "play_candidate_qualification_binding.v1.schema.json",
+        "play_candidate_qualification_binding.v2.schema.json",
         "qualification binding",
     )
     qualification_path = (
-        task_root / "qualification" / "qualification-binding.v1.json"
+        task_root / "qualification" / "qualification-binding.v2.json"
     )
-    COMMON.write_new(qualification_path, value)
-    loaded = load_qualification_binding(qualification_path, ROUTE)
+    qualification_path.parent.mkdir(parents=True, exist_ok=True)
+    evidence_io.write_new_json(qualification_path, value)
+    loaded_result = evidence_io.read_json(qualification_path)
+    loaded = parse_qualification_binding(
+        loaded_result["payload"]["document"], ROUTE
+    )
     if loaded.qualification_digest != value["qualification_digest"]:
         raise QualificationError("qualification binding did not reload exactly")
 
@@ -577,21 +593,28 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
         "status": "pass",
         "route_id": ROUTE.route_id,
         "work_unit": ROUTE.work_unit,
+        "qualification_work_unit": QUALIFICATION_WORK_UNIT,
         "remote_source_closure": {
             "path": str(_absolute(args.remote_source_closure)),
-            "sha256": PREFLIGHT.sha256_file(_absolute(args.remote_source_closure)),
+            "sha256": file_payload_sha256(
+                evidence_io.hash_file(_absolute(args.remote_source_closure))
+            ),
             "observed_at_utc": closure.get("observed_at_utc"),
         },
         "qualification_binding": {
             "path": str(qualification_path),
-            "sha256": PREFLIGHT.sha256_file(qualification_path),
+            "sha256": file_payload_sha256(
+                evidence_io.hash_file(qualification_path)
+            ),
             "qualification_digest": loaded.qualification_digest,
         },
         "source_binding": value["source_binding"],
         "artifacts": artifacts,
         "factorio": {
             **factorio,
-            "source_artifact_sha256": PREFLIGHT.sha256_file(source_artifact),
+            "source_artifact_sha256": file_payload_sha256(
+                evidence_io.hash_file(source_artifact)
+            ),
             "authentication_evidence_digest": source_evidence.get(
                 "authentication_evidence_digest"
             ),
@@ -615,11 +638,11 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
     }
     _validate_schema(
         report,
-        "instance_isolated_candidate_qualification.v1.schema.json",
+        "instance_isolated_candidate_qualification.v2.schema.json",
         "qualification report",
     )
-    report_path = task_root / "qualification" / "qualification-report.v1.json"
-    COMMON.write_new(report_path, report)
+    report_path = task_root / "qualification" / "qualification-report.v2.json"
+    evidence_io.write_new_json(report_path, report)
     return {
         "status": "pass",
         "qualification_binding": str(qualification_path),
@@ -660,6 +683,7 @@ if __name__ == "__main__":
         QualificationError,
         COORDINATOR.CoordinatorError,
         PREFLIGHT.PreflightError,
+        StableIoError,
         OSError,
         ValueError,
     ) as exc:

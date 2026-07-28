@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-PLAY-EVIDENCE-STABLE-IO-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-27T14:17:16Z
+result: PASS
+evidence_path: .aide/history/evidence-integrity-repair-2026-07-27/FACMAN-PLAY-EVIDENCE-STABLE-IO-01/evidence/
+active_at: 2026-07-27T14:17:16Z
+verified_pending_closeout_at: 2026-07-27T15:21:33Z
+implementation_state: implemented
+reviewed_at: 2026-07-27T16:27:07Z
+closed_at: 2026-07-27T16:27:15Z
+archived_at: 2026-07-27T16:27:16Z

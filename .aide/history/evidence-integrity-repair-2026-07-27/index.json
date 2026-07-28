@@ -36,6 +36,26 @@
     },
     {
       "files": {
+        "evidence/changed-files.md": "37553103429761d346f19e2a0158743a8e506059c8e90e24fcc6965654cc3424",
+        "evidence/remaining-risks.md": "19bc36ae73cc8826f77636cf81ff31e274cbb5eb485a25d9cc897c13e5e4b9a4",
+        "evidence/validation.md": "ac53380b3143b79ee172dbe4a0717662fb64ad6d601b1dfd1985280a85a9fba1",
+        "status.yaml": "b8bd32ee7d9145706c86ac3faa38973dc006b1d3e672f60cb7896e617b4f56ac",
+        "task.yaml": "d17a4fdd343219bfd04e703e1a95e9ae021bb03f917b1ed46ba7aecd20f80f5c"
+      },
+      "task_id": "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "daa5bc8c0eb2101b183fd1d61af8df93dc49e29ab82d17d3e371a18fd2a30775",
+        "evidence/remaining-risks.md": "68fe625c5aeff20d856dd0e71b137adb0218d8730f41b9d91147fcc265b3c623",
+        "evidence/validation.md": "3ffb5f37b8d735832d543833c8cc3b47820e993fd1e33529cc656d31873f39b3",
+        "status.yaml": "a093d8722af576fd9624db5ac54b1736e3d7092989b0c6c859780b93e1fb4869",
+        "task.yaml": "7a743b82487d94394ee848a22f8d2060e99fef49add9410a2a2d7dddea622949"
+      },
+      "task_id": "FACMAN-PLAY-EVIDENCE-STABLE-IO-01"
+    },
+    {
+      "files": {
         "evidence/changed-files.md": "82d62af1854d394188e535f236a8eab180213b2e6da4b8a6c7f612abf8218db8",
         "evidence/remaining-risks.md": "cf8363a9a9599d6eac4b33a05d1865eda4ebb5af9c0ff92a87bb91493cc3df04",
         "evidence/validation.md": "57a4118fac07114250e043cccc6e18306b056691040d7d69b082052841ece0d4",
@@ -73,6 +93,16 @@
         "task.yaml": "2755ed7d2c49cfccfa5c14f17976643caf22d89b4799f1cc9f8b6d6faeba7ed7"
       },
       "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-02"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "0baa1d725d4b4caf20efca6989bb6c920bf3d39a2468cb76a00233009f032197",
+        "evidence/remaining-risks.md": "f6363dba583bc08f7c892f782e8153db1e975c1efdfa2096965069fc416fc446",
+        "evidence/validation.md": "236212c49a70ab388de722ad92671d54cebc743be95250d0fd23de55f9aaaf2a",
+        "status.yaml": "b0c937c41820b5d135804b3b158e8df61946d8e2f8d313f24513c43611c0f07e",
+        "task.yaml": "747fbda0d2273b6fba8793c8a8c3c60544130fc2be541ab4a1ec8c2a62deba90"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
     },
     {
       "files": {

@@ -9,6 +9,7 @@
 #include "flb_factorio_candidate_projection.h"
 #include "flb_factorio_hermetic_candidate.h"
 #include "gate4c_observer_broker_windows.h"
+#include "play_evidence/facman_evidence_io.h"
 
 #include <algorithm>
 #include <array>
@@ -47,10 +48,14 @@ namespace gate4c = facman::gate4c;
 constexpr const char* kSessionSchema = "factorio.gate4c_verdict_session.v1";
 constexpr const char* kComparisonSchema =
     "factorio.gate4c_baseline_comparison.v1";
+constexpr const char* kInstanceSessionSchema =
+    "facman.play_evidence_session.v2";
+constexpr const char* kInstanceComparisonSchema =
+    "facman.play_evidence_comparison.v2";
 constexpr const char* kWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03";
 constexpr const char* kInstanceIsolatedWorkUnit =
-    "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-01";
+    "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02";
 constexpr const char* kObserverStartRepairWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01";
 constexpr const char* kPrivilegeRepairWorkUnit =
@@ -345,6 +350,10 @@ struct Session {
     std::string baseline_bundle_sha256;
     std::string protected_baseline_digest;
     std::string writable_baseline_digest;
+    fs::path evidence_probe;
+    std::string evidence_probe_sha256;
+    std::string resource_set_digest;
+    std::string startup_environment_snapshot_digest;
     fs::path comparison_out;
     fs::path plan_out;
     std::string session_digest;
@@ -483,7 +492,7 @@ Session load_session(
         throw std::runtime_error("session descriptor is not bounded strict JSON");
     }
     const json::Value& value = parsed.value();
-    const std::set<std::string> expected_keys{
+    std::set<std::string> expected_keys{
         "authenticated_source_artifact_digest",
         "baseline_bundle",
         "baseline_bundle_sha256",
@@ -527,15 +536,25 @@ Session load_session(
         "workspace",
         "writable_baseline_digest",
     };
+    const VerdictRouteBinding route =
+        route_for_work_unit(string_member(value, "work_unit"));
+    if (route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        expected_keys.insert("evidence_probe");
+        expected_keys.insert("evidence_probe_sha256");
+        expected_keys.insert("resource_set_digest");
+        expected_keys.insert("startup_environment_snapshot_digest");
+    }
     const std::vector<std::string> actual_keys = value.object_keys();
     if (std::set<std::string>(actual_keys.begin(), actual_keys.end()) != expected_keys) {
         throw std::runtime_error("session descriptor is not a closed object");
     }
-    if (string_member(value, "schema") != kSessionSchema) {
+    if (string_member(value, "schema") !=
+        (route.kind == VerdictRouteKind::instance_isolated_revalidation
+            ? kInstanceSessionSchema
+            : kSessionSchema)) {
         throw std::runtime_error("session descriptor identity is unsupported");
     }
-    const VerdictRouteBinding route =
-        route_for_work_unit(string_member(value, "work_unit"));
     const std::string session_digest = string_member(value, "session_digest");
     if (digest(canonical_without(value, "session_digest")) != session_digest) {
         throw std::runtime_error("session descriptor digest is invalid");
@@ -609,6 +628,18 @@ Session load_session(
         string_member(value, "protected_baseline_digest");
     output.writable_baseline_digest =
         string_member(value, "writable_baseline_digest");
+    if (route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        output.evidence_probe = platform::path_from_utf8(
+            string_member(value, "evidence_probe"));
+        output.evidence_probe_sha256 =
+            string_member(value, "evidence_probe_sha256");
+        output.resource_set_digest =
+            string_member(value, "resource_set_digest");
+        output.startup_environment_snapshot_digest =
+            string_member(
+                value, "startup_environment_snapshot_digest");
+    }
     output.comparison_out = platform::path_from_utf8(
         string_member(value, "comparison_out"));
     output.plan_out = platform::path_from_utf8(string_member(value, "plan_out"));
@@ -637,6 +668,16 @@ Session load_session(
                 "session path crosses a link or reparse boundary: " + detail);
         }
     }
+    if (route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        std::string detail;
+        if (facman::base::path_crosses_link_or_reparse_point(
+                output.evidence_probe, detail)) {
+            throw std::runtime_error(
+                "session evidence probe crosses a link or reparse boundary: " +
+                detail);
+        }
+    }
 
     std::error_code first_error;
     std::error_code second_error;
@@ -651,6 +692,12 @@ Session load_session(
             output.observer_tool_sha256 ||
         stable_sha256(output.evidence_tool, 4U * 1024U * 1024U) !=
             output.evidence_tool_sha256 ||
+        (route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation &&
+            stable_sha256(
+                output.evidence_probe,
+                128U * 1024U * 1024U) !=
+                output.evidence_probe_sha256) ||
         stable_sha256(output.python_executable, 128U * 1024U * 1024U) !=
             output.python_executable_sha256 ||
         stable_sha256(output.classification_roots, 16U * 1024U * 1024U) !=
@@ -677,6 +724,9 @@ Session load_session(
         !path_beneath(output.task_root, output.classification_roots) ||
         !path_beneath(output.task_root, output.baseline_bundle) ||
         !path_beneath(output.task_root, output.plan_out) ||
+        (route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation &&
+            !path_beneath(output.task_root, output.evidence_probe)) ||
         normalized_absolute(output.observer_tool) !=
             normalized_absolute(output.source_root / "tools" /
                 "gate4c_verdict_session.py") ||
@@ -2352,7 +2402,11 @@ launch::ProtectedComparisonResult load_comparison(
         stable_read(path, 32U * 1024U * 1024U),
         {32U * 1024U * 1024U, 48U, 500000U, 4U * 1024U * 1024U});
     if (!parsed || !parsed.value().is_object() ||
-        string_member(parsed.value(), "schema") != kComparisonSchema) {
+        string_member(parsed.value(), "schema") !=
+            (route ==
+                    VerdictRouteKind::instance_isolated_revalidation
+                ? kInstanceComparisonSchema
+                : kComparisonSchema)) {
         throw std::runtime_error("protected comparison is malformed");
     }
     const json::Value& comparisons =
@@ -2877,6 +2931,20 @@ int run(
     launch::HermeticCandidateLaunchProvider provider;
     launch::PlatformProcessSupervisor supervisor;
     const auto current = [&]() {
+        if (session.route.kind ==
+            VerdictRouteKind::instance_isolated_revalidation) {
+            const auto resources =
+                facman::play_evidence::
+                    revalidate_resource_specification(
+                        session.preflight_path,
+                        session.preflight_digest,
+                        session.resource_set_digest);
+            if (!resources) {
+                return facman::core::Result<
+                    permit::PermitValidationContext>::failure(
+                        resources.error());
+            }
+        }
         return session.route.kind ==
                 VerdictRouteKind::instance_isolated_revalidation
             ? instance::reobserve_instance_isolated_candidate_context(
@@ -2914,14 +2982,28 @@ int run(
                 session, plan.value().plan_digest, "released"));
     }
 
+    std::vector<std::string> comparison_arguments{
+        platform::path_to_utf8(session.evidence_tool),
+        "finish",
+        "--baseline",
+        platform::path_to_utf8(session.baseline_bundle),
+        "--out",
+        platform::path_to_utf8(session.comparison_out),
+        "--route",
+        session.route.kind ==
+                VerdictRouteKind::instance_isolated_revalidation
+            ? "windows-instance-isolated-revalidation"
+            : "gate4c-hermetic-verdict03",
+    };
+    if (session.route.kind ==
+        VerdictRouteKind::instance_isolated_revalidation) {
+        comparison_arguments.push_back("--evidence-probe");
+        comparison_arguments.push_back(
+            platform::path_to_utf8(session.evidence_probe));
+    }
     auto compared = run_python(
         session,
-        {
-            platform::path_to_utf8(session.evidence_tool),
-            "finish",
-            "--baseline", platform::path_to_utf8(session.baseline_bundle),
-            "--out", platform::path_to_utf8(session.comparison_out),
-        },
+        comparison_arguments,
         std::chrono::minutes(20));
     if (!compared) {
         throw std::runtime_error(

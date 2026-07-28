@@ -26,8 +26,20 @@ import zipfile
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from types import MappingProxyType
 from typing import Any
 
+from tools import play_staged_candidate as STAGED
+from tools.play_evidence_resource_spec import (
+    build_resource_specification,
+    startup_environment_snapshot,
+)
+from tools.play_evidence_stable_io import (
+    EvidenceIo,
+    StableIoError,
+    file_payload_sha256,
+    file_payload_size,
+)
 from tools.play_verdict_route import (
     CandidateQualificationBinding,
     HERMETIC_VERDICT03,
@@ -91,6 +103,21 @@ WINDOWS_PERFORMANCE_TOOLKIT_ROOT = Path(
 )
 PROVIDER_SCOPED_REVIEWER = re.compile(
     r"^[a-z][a-z0-9._-]{1,63}:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$"
+)
+STARTUP_ENVIRONMENT_NAMES = (
+    "APPDATA",
+    "LOCALAPPDATA",
+    "PROGRAMDATA",
+    "ProgramFiles",
+    "ProgramFiles(x86)",
+    "SystemRoot",
+    "USERPROFILE",
+)
+STARTUP_ENVIRONMENT = MappingProxyType(
+    {name: os.environ.get(name, "") for name in STARTUP_ENVIRONMENT_NAMES}
+)
+STARTUP_ENVIRONMENT_RECORD = startup_environment_snapshot(
+    STARTUP_ENVIRONMENT
 )
 
 
@@ -1585,12 +1612,242 @@ def source_package_evidence(
     return record
 
 
+def source_package_evidence_native(
+    path: Path,
+    *,
+    audit: dict[str, Any],
+    installed_executable: Path | None,
+    installed_audit: dict[str, Any],
+    source_member_executable: Path | None,
+    task_root: Path | None,
+    evidence_io: EvidenceIo,
+) -> dict[str, Any]:
+    """Authenticate package structure through USK and exact extracted bytes."""
+
+    package_result = evidence_io.inspect_zip(path)
+    inspection = package_result["payload"]["inspection"]
+    entries = inspection.get("entries", [])
+    source = inspection.get("source", {})
+    expected_member = (
+        f"Factorio_{EXPECTED_FACTORIO_VERSION}/bin/x64/factorio.exe"
+    )
+    expected_base = (
+        f"Factorio_{EXPECTED_FACTORIO_VERSION}/data/base/info.json"
+    )
+    expected_space_age = (
+        f"Factorio_{EXPECTED_FACTORIO_VERSION}/data/space-age/info.json"
+    )
+    names = [
+        item.get("normalized_path")
+        for item in entries
+        if isinstance(item, dict)
+    ]
+    expected_entries = [
+        item
+        for item in entries
+        if isinstance(item, dict)
+        and item.get("normalized_path") == expected_member
+        and item.get("entry_type") == "file"
+    ]
+    artifact_hash = str(source.get("sha256", ""))
+    artifact_size = int(source.get("size_bytes", 0))
+    source_file = evidence_io.inspect_file(path)["payload"]["file"]
+    source_file_hash = str(source_file.get("content_sha256", ""))
+    source_file_size = int(source_file.get("bytes_read", 0))
+    source_inspection_stable = bool(
+        source_file.get("identity_stable")
+        and source_file_hash == artifact_hash
+        and source_file_size == artifact_size
+    )
+    source_identity = digest_value(source_file["before_identity"])
+    installed_file = (
+        evidence_io.inspect_file(installed_executable)["payload"]["file"]
+        if installed_executable is not None and installed_audit.get("safe")
+        else None
+    )
+    installed_hash = (
+        str(installed_file["content_sha256"])
+        if installed_file is not None
+        else None
+    )
+    installed_identity = (
+        digest_value(installed_file["before_identity"])
+        if installed_file is not None
+        else None
+    )
+    exact_member_result = evidence_io.inspect_exact_member(
+        path, expected_member
+    )
+    exact_member = exact_member_result["payload"]["member"]
+    exact_member_inspection = exact_member_result["payload"][
+        "archive_inspection"
+    ]
+    exact_member_hash = str(exact_member.get("content_sha256", ""))
+    exact_member_size = int(exact_member.get("size", 0))
+    exact_member_source = exact_member_inspection.get("source", {})
+    exact_member_source_stable = bool(
+        exact_member_source.get("sha256") == artifact_hash
+        and exact_member_source.get("size_bytes") == artifact_size
+        and exact_member_inspection.get("entry_set_digest")
+        == inspection.get("entry_set_digest")
+    )
+    member_audit = (
+        audit_no_follow(source_member_executable, require_file=True)
+        if source_member_executable is not None
+        else {
+            "safe": False,
+            "reason": "source_package_member_inspection_required",
+        }
+    )
+    member_within_task = bool(
+        source_member_executable is not None
+        and task_root is not None
+        and path_is_within(source_member_executable, task_root)
+    )
+    member_file = (
+        evidence_io.inspect_file(source_member_executable)["payload"]["file"]
+        if source_member_executable is not None and member_audit.get("safe")
+        else None
+    )
+    inspection_copy_hash = (
+        str(member_file["content_sha256"]) if member_file is not None else None
+    )
+    inspection_copy_size = (
+        int(member_file["bytes_read"]) if member_file is not None else None
+    )
+    member_signature = (
+        authenticode(source_member_executable)
+        if source_member_executable is not None
+        and member_audit.get("safe")
+        and member_within_task
+        else {
+            "available": False,
+            "valid": False,
+            "reason": "source_package_member_inspection_required",
+        }
+    )
+    total_uncompressed = int(
+        inspection.get("totals", {}).get("uncompressed_bytes", 0)
+    )
+    package_structure = {
+        "entry_count": len(entries),
+        "total_uncompressed_bytes": total_uncompressed,
+        "expansion_ratio": total_uncompressed / max(artifact_size, 1),
+        "directory_digest": inspection.get("entry_set_digest"),
+        "expected_executable_member": expected_member,
+        "expected_executable_member_count": len(expected_entries),
+        "unsafe_entry_count": len(inspection.get("problems", [])),
+        "duplicate_entry_count": 0,
+        "encrypted_entry_count": 0,
+        "base_content_present": names.count(expected_base) == 1,
+        "space_age_content_present": names.count(expected_space_age) == 1,
+        "content_files_do_not_prove_entitlement": True,
+        "provider": "universal-setup.archive-inspection.v1",
+        "valid": bool(
+            inspection.get("status") == "pass"
+            and source_inspection_stable
+            and exact_member_source_stable
+            and len(expected_entries) == 1
+            and exact_member_size
+            == expected_entries[0].get("uncompressed_size")
+            and re.fullmatch(r"[0-9a-f]{64}", exact_member_hash) is not None
+            and names.count(expected_base) == 1
+            and 0 < len(entries) <= MAX_SOURCE_PACKAGE_ENTRIES
+            and artifact_size <= 8 * 1024 * 1024 * 1024
+            and total_uncompressed
+            <= MAX_SOURCE_PACKAGE_UNCOMPRESSED_BYTES
+            and total_uncompressed / max(artifact_size, 1)
+            <= MAX_SOURCE_PACKAGE_EXPANSION_RATIO
+        ),
+    }
+    member_matches_installed = bool(
+        exact_member_hash
+        and installed_hash
+        and exact_member_hash == installed_hash
+    )
+    inspection_copy_matches_archive = bool(
+        inspection_copy_hash
+        and inspection_copy_hash == exact_member_hash
+        and inspection_copy_size == exact_member_size
+    )
+    exact_version = exact_factorio_version(member_signature)
+    artifact_class_valid = bool(
+        package_structure["valid"]
+        and member_file is not None
+        and member_within_task
+        and member_matches_installed
+        and inspection_copy_matches_archive
+        and member_signature.get("valid") is True
+        and exact_version
+    )
+    package_distinct = bool(
+        source_identity
+        and installed_identity
+        and source_identity != installed_identity
+        and artifact_hash != installed_hash
+    )
+    record: dict[str, Any] = {
+        "status": "verified" if artifact_class_valid and package_distinct else "invalid",
+        "reason": "ok" if artifact_class_valid and package_distinct else "native_package_authentication_failed",
+        "evidence_origin": "operator_supplied",
+        "source_artifact_kind": (
+            "wube_windows_standalone_package"
+            if artifact_class_valid
+            else "unrecognized"
+        ),
+        "path_audit": audit,
+        "stable_identity_digest": source_identity,
+        "artifact_sha256": artifact_hash,
+        "inspection_stability": {
+            "post_path_audit": audit,
+            "post_sha256": source_file_hash,
+            "stable": source_inspection_stable,
+            "native_result_digest": package_result["record_digest"],
+        },
+        "package_structure": package_structure,
+        "source_member": {
+            "archive_path": expected_member,
+            "sha256": exact_member_hash,
+            "bytes": exact_member_size,
+            "native_result_digest": exact_member_result["record_digest"],
+            "inspection_copy": {
+                "path_audit": member_audit,
+                "within_gate4c_task_root": member_within_task,
+                "sha256": inspection_copy_hash,
+                "matches_archive_member": inspection_copy_matches_archive,
+                "post_path_audit": member_audit,
+                "post_sha256": inspection_copy_hash,
+                "stable": bool(
+                    member_file and member_file["identity_stable"]
+                ),
+            },
+            "signature": member_signature,
+        },
+        "installed_executable_comparison": {
+            "path_audit": installed_audit,
+            "stable_identity_digest": installed_identity,
+            "sha256": installed_hash,
+            "distinct_stable_identity_and_content": package_distinct,
+            "package_member_matches_installed_executable": (
+                member_matches_installed
+            ),
+        },
+        "artifact_class_valid": artifact_class_valid,
+        "exact_version": exact_version,
+        "expected_version": EXPECTED_FACTORIO_VERSION,
+        "valid": bool(artifact_class_valid and package_distinct),
+    }
+    record["authentication_evidence_digest"] = digest_value(record)
+    return record
+
+
 def source_evidence(
     path: Path | None,
     installed_executable: Path | None = None,
     *,
     source_member_executable: Path | None = None,
     task_root: Path | None = None,
+    evidence_io: EvidenceIo | None = None,
 ) -> dict[str, Any]:
     if path is None:
         return {
@@ -1607,6 +1864,16 @@ def source_evidence(
         else {"safe": False}
     )
     if path.suffix.casefold() == ".zip":
+        if evidence_io is not None:
+            return source_package_evidence_native(
+                path,
+                audit=audit,
+                installed_executable=installed_executable,
+                installed_audit=installed_audit,
+                source_member_executable=source_member_executable,
+                task_root=task_root,
+                evidence_io=evidence_io,
+            )
         return source_package_evidence(
             path,
             audit=audit,
@@ -1633,12 +1900,22 @@ def source_evidence(
 def factorio_evidence(
     path: Path,
     qualification: CandidateQualificationBinding | None = None,
+    evidence_io: EvidenceIo | None = None,
 ) -> dict[str, Any]:
     audit = audit_no_follow(path, require_file=True)
     if not audit["safe"]:
         return {"valid": False, "path_audit": audit}
     signature = authenticode(path)
-    actual_hash = sha256_file(path)
+    native_file = (
+        evidence_io.inspect_file(path)
+        if evidence_io is not None
+        else None
+    )
+    actual_hash = (
+        file_payload_sha256(native_file)
+        if native_file is not None
+        else sha256_file(path)
+    )
     expected_sha256 = (
         qualification.factorio_sha256
         if qualification
@@ -1657,7 +1934,13 @@ def factorio_evidence(
     )
     return {
         "path_audit": audit,
-        "stable_identity_digest": stable_identity_digest(audit),
+        "stable_identity_digest": (
+            digest_value(
+                native_file["payload"]["file"]["before_identity"]
+            )
+            if native_file is not None
+            else stable_identity_digest(audit)
+        ),
         "sha256": actual_hash,
         "expected_sha256": expected_sha256,
         "signature": signature,
@@ -1671,7 +1954,14 @@ def instance_evidence(
     workspace: Path,
     instance_id: str,
     qualification: CandidateQualificationBinding | None = None,
+    *,
+    staged_instance: dict[str, Any] | None = None,
+    allow_unbound_runtime_digests: bool = False,
 ) -> dict[str, Any]:
+    if staged_instance is not None and allow_unbound_runtime_digests:
+        raise PreflightError(
+            "Instance evidence cannot be both staged-bound and unbound"
+        )
     prefix = [str(facman), "--workspace", str(workspace)]
     inspection = run_json(prefix + ["instances", "inspect", instance_id, "--json"])
     description = run_json(prefix + ["instances", "describe", instance_id, "--intent", "menu", "--json"])
@@ -1680,34 +1970,91 @@ def instance_evidence(
     expected_blockers = {"real_play_gate_not_passed"}
     blocker_codes = {str(item.get("code")) for item in readiness.get("blockers", [])}
     plan_args = launch.get("args", [])
-    valid = (
-        inspection.get("instance_id")
-        == (
-            qualification.instance_id
-            if qualification
-            else EXPECTED_INSTANCE_ID
+    expected_instance_id = (
+        qualification.instance_id
+        if qualification
+        else EXPECTED_INSTANCE_ID
+    )
+    expected_spec_digest = (
+        qualification.instance_spec_digest
+        if qualification
+        else EXPECTED_SPEC_DIGEST
+    )
+    if staged_instance is not None:
+        staged_identity_valid = (
+            set(staged_instance)
+            == {
+                "instance_id",
+                "spec_digest",
+                "binding_digest",
+                "readiness_digest",
+            }
+            and staged_instance.get("instance_id")
+            == expected_instance_id
+            and staged_instance.get("spec_digest")
+            == expected_spec_digest
+            and all(
+                isinstance(staged_instance.get(key), str)
+                and re.fullmatch(
+                    r"[0-9a-f]{64}", staged_instance[key]
+                )
+                is not None
+                for key in (
+                    "spec_digest",
+                    "binding_digest",
+                    "readiness_digest",
+                )
+            )
         )
-        and inspection.get("factorio_version") == EXPECTED_FACTORIO_VERSION
-        and inspection.get("modset_status") == "present"
-        and inspection.get("save_count") == 0
-        and description.get("instance_spec", {}).get("spec_digest")
-        == (
-            qualification.instance_spec_digest
-            if qualification
-            else EXPECTED_SPEC_DIGEST
+        expected_binding_digest = staged_instance.get(
+            "binding_digest"
         )
-        and description.get("instance_binding", {}).get("binding_digest")
-        == (
+        expected_readiness_digest = staged_instance.get(
+            "readiness_digest"
+        )
+    elif allow_unbound_runtime_digests:
+        staged_identity_valid = qualification is not None
+        expected_binding_digest = description.get(
+            "instance_binding", {}
+        ).get("binding_digest")
+        expected_readiness_digest = readiness.get("readiness_digest")
+        staged_identity_valid = bool(
+            staged_identity_valid
+            and isinstance(expected_binding_digest, str)
+            and re.fullmatch(
+                r"[0-9a-f]{64}", expected_binding_digest
+            )
+            is not None
+            and isinstance(expected_readiness_digest, str)
+            and re.fullmatch(
+                r"[0-9a-f]{64}", expected_readiness_digest
+            )
+            is not None
+        )
+    else:
+        staged_identity_valid = True
+        expected_binding_digest = (
             qualification.instance_binding_digest
             if qualification
             else EXPECTED_BINDING_DIGEST
         )
-        and readiness.get("readiness_digest")
-        == (
+        expected_readiness_digest = (
             qualification.instance_readiness_digest
             if qualification
             else EXPECTED_READINESS_DIGEST
         )
+    valid = (
+        staged_identity_valid
+        and inspection.get("instance_id") == expected_instance_id
+        and inspection.get("factorio_version") == EXPECTED_FACTORIO_VERSION
+        and inspection.get("modset_status") == "present"
+        and inspection.get("save_count") == 0
+        and description.get("instance_spec", {}).get("spec_digest")
+        == expected_spec_digest
+        and description.get("instance_binding", {}).get("binding_digest")
+        == expected_binding_digest
+        and readiness.get("readiness_digest")
+        == expected_readiness_digest
         and readiness.get("launch_intent") == "menu"
         and blocker_codes == expected_blockers
         and readiness.get("execution_started") is False
@@ -2030,10 +2377,34 @@ def build_preflight(
     *,
     route: PlayVerdictRoute = HERMETIC_VERDICT03,
     qualification: CandidateQualificationBinding | None = None,
+    staged_candidate: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if route.route_id != HERMETIC_VERDICT03.route_id and qualification is None:
         raise PreflightError(
             "the selected Play route requires an immutable qualification binding"
+        )
+    if (
+        route.route_id != HERMETIC_VERDICT03.route_id
+        and staged_candidate is None
+    ):
+        raise PreflightError(
+            "the selected Play route requires the exact final-workspace "
+            "staged candidate binding"
+        )
+    evidence_io = (
+        EvidenceIo(Path(args.evidence_probe))
+        if route.route_id != HERMETIC_VERDICT03.route_id
+        else None
+    )
+    if (
+        evidence_io is not None
+        and (
+            not isinstance(getattr(args, "operation_id", None), str)
+            or not args.operation_id.startswith(route.operation_prefix)
+        )
+    ):
+        raise PreflightError(
+            "instance-isolated preflight requires one exact operation ID"
         )
     now = datetime.now(timezone.utc)
     task_root = Path(args.task_root)
@@ -2046,6 +2417,17 @@ def build_preflight(
     setup_repo = Path(args.setup_repo)
     facman = Path(args.facman)
     workspace = Path(args.workspace)
+    if staged_candidate is not None:
+        assert qualification is not None
+        try:
+            staged_candidate = STAGED.parse_staged_candidate(
+                staged_candidate,
+                task_root=task_root,
+                qualification=qualification,
+                route=route,
+            )
+        except STAGED.StagedCandidateError as exc:
+            raise PreflightError(str(exc)) from exc
     factorio = Path(args.factorio_exe)
 
     policy = policy_identity(
@@ -2111,7 +2493,9 @@ def build_preflight(
         "expected_sha256": expected_facman_sha256,
         "valid": facman_hash == expected_facman_sha256,
     }
-    executable = factorio_evidence(factorio, qualification)
+    executable = factorio_evidence(
+        factorio, qualification, evidence_io
+    )
     source = source_evidence(
         Path(args.source_artifact) if args.source_artifact else None,
         factorio,
@@ -2121,9 +2505,18 @@ def build_preflight(
             else None
         ),
         task_root=task_root,
+        evidence_io=evidence_io,
     )
     instance = instance_evidence(
-        facman, workspace, args.instance_id, qualification
+        facman,
+        workspace,
+        args.instance_id,
+        qualification,
+        staged_instance=(
+            staged_candidate["instance"]
+            if staged_candidate is not None
+            else None
+        ),
     )
     processes = process_inventory()
     session = host_session_identity()
@@ -2194,12 +2587,34 @@ def build_preflight(
     baseline_deadline = (
         min(deadlines).isoformat().replace("+00:00", "Z") if deadlines else None
     )
+    evidence_probe: dict[str, Any] | None = None
+    if evidence_io is not None and qualification is not None:
+        probe_result = evidence_io.inspect_file(evidence_io.probe)
+        probe_binding = qualification.artifact_mapping()["evidence_probe"]
+        evidence_probe = {
+            "path": str(evidence_io.probe),
+            "sha256": file_payload_sha256(probe_result),
+            "size": file_payload_size(probe_result),
+            "qualified_sha256": probe_binding.sha256,
+            "qualified_size": probe_binding.size,
+            "native_result_digest": probe_result["record_digest"],
+            "valid": (
+                file_payload_sha256(probe_result) == probe_binding.sha256
+                and file_payload_size(probe_result) == probe_binding.size
+            ),
+        }
 
     blockers: list[dict[str, str]] = []
     if not policy["valid"]:
         add_blocker(blockers, "frozen_policy_mismatch", "The canonical Gate 4A policy digest does not match.")
     if not artifacts["valid"] or not facman_artifact["valid"]:
         add_blocker(blockers, "candidate_artifact_mismatch", "The copied reviewed Gate 4B artifact set is incomplete or changed.")
+    if evidence_probe is not None and not evidence_probe["valid"]:
+        add_blocker(
+            blockers,
+            "evidence_probe_mismatch",
+            "The native stable evidence-I/O provider differs from qualification.",
+        )
     for name, identity in repositories.items():
         if not identity.get("valid"):
             add_blocker(blockers, f"repository_pin_mismatch:{name}", f"{name} does not satisfy its exact Gate 4C pin.")
@@ -2248,6 +2663,22 @@ def build_preflight(
     if not attestation.get("valid"):
         add_blocker(blockers, "quiet_host_attestation_missing", "A fresh operator attestation for restart, competing processes, synchronization activity, and sleep prevention is required.")
 
+    resource_specification = (
+        build_resource_specification(
+            preflight={
+                "instance": instance,
+                "source_evidence": source,
+                "facman_artifact": facman_artifact,
+            },
+            workspace=workspace,
+            operation_id=args.operation_id,
+            route=route,
+            evidence_io=evidence_io,
+            environment_snapshot=STARTUP_ENVIRONMENT_RECORD,
+        )
+        if evidence_io is not None
+        else None
+    )
     core: dict[str, Any] = {
         "schema": route.preflight_schema,
         "canonicalization_version": "facman.sorted-json.v1",
@@ -2300,16 +2731,28 @@ def build_preflight(
             else "capture_protected_and_writable_baselines_before_any_permit"
         ),
     }
+    if evidence_probe is not None and resource_specification is not None:
+        core["evidence_probe"] = evidence_probe
+        core["resource_specification"] = resource_specification
     if qualification:
         core["qualification_binding"] = {
             "route_id": route.route_id,
             "qualification_digest": qualification.qualification_digest,
         }
+        if staged_candidate is not None:
+            core["qualification_binding"]["staged_candidate_digest"] = (
+                staged_candidate["staged_candidate_digest"]
+            )
     core["preflight_digest"] = digest_value(core)
     return core
 
 
-def write_record(path: Path, record: dict[str, Any], task_root: Path) -> None:
+def write_record(
+    path: Path,
+    record: dict[str, Any],
+    task_root: Path,
+    evidence_io: EvidenceIo | None = None,
+) -> None:
     absolute = Path(os.path.abspath(path))
     root = Path(os.path.abspath(task_root))
     try:
@@ -2317,6 +2760,11 @@ def write_record(path: Path, record: dict[str, Any], task_root: Path) -> None:
     except ValueError as exc:
         raise PreflightError("preflight output must remain under the exact Gate 4C root") from exc
     absolute.parent.mkdir(parents=True, exist_ok=True)
+    if evidence_io is not None:
+        if absolute.exists():
+            raise PreflightError("preflight output already exists")
+        evidence_io.write_new_json(absolute, record)
+        return
     temporary = absolute.with_name(absolute.name + ".tmp")
     temporary.write_bytes(json.dumps(record, indent=2, ensure_ascii=False, sort_keys=True).encode("utf-8") + b"\n")
     os.replace(temporary, absolute)
@@ -2337,12 +2785,22 @@ def parser() -> argparse.ArgumentParser:
             "Required for the instance-isolated revalidation route."
         ),
     )
+    value.add_argument(
+        "--staged-candidate-binding",
+        type=Path,
+        help=(
+            "Closed final-workspace candidate binding emitted by the "
+            "instance-isolated coordinator stage"
+        ),
+    )
     value.add_argument("--task-root", required=True, type=Path)
     value.add_argument("--repo-root", required=True, type=Path)
     value.add_argument("--launcher-repo", required=True, type=Path)
     value.add_argument("--setup-repo", required=True, type=Path)
     value.add_argument("--artifact-manifest", required=True, type=Path)
     value.add_argument("--facman", required=True, type=Path)
+    value.add_argument("--evidence-probe", type=Path)
+    value.add_argument("--operation-id")
     value.add_argument("--workspace", required=True, type=Path)
     value.add_argument("--instance-id", default=EXPECTED_INSTANCE_ID)
     value.add_argument("--factorio-exe", required=True, type=Path)
@@ -2373,12 +2831,41 @@ def main() -> int:
         raise PreflightError(
             "the selected Play route requires an immutable qualification binding"
         )
+    if route != HERMETIC_VERDICT03 and args.evidence_probe is None:
+        raise PreflightError(
+            "the selected Play route requires a qualified native evidence probe"
+        )
+    staged_candidate = None
+    if route != HERMETIC_VERDICT03:
+        if args.staged_candidate_binding is None:
+            raise PreflightError(
+                "the selected Play route requires the exact final-workspace "
+                "staged candidate binding"
+            )
+        assert qualification is not None
+        try:
+            staged_candidate = STAGED.parse_staged_candidate(
+                EvidenceIo(args.evidence_probe).read_json(
+                    args.staged_candidate_binding
+                )["payload"]["document"],
+                task_root=args.task_root,
+                qualification=qualification,
+                route=route,
+            )
+        except STAGED.StagedCandidateError as exc:
+            raise PreflightError(str(exc)) from exc
     record = build_preflight(
         args,
         route=route,
         qualification=qualification,
+        staged_candidate=staged_candidate,
     )
-    write_record(args.out, record, args.task_root)
+    write_record(
+        args.out,
+        record,
+        args.task_root,
+        EvidenceIo(args.evidence_probe) if args.evidence_probe else None,
+    )
     print(
         f"gate4c-verdict-preflight: {record['status']} "
         f"({len(record['blockers'])} blockers; {record['preflight_digest']})"
@@ -2394,6 +2881,7 @@ if __name__ == "__main__":
         ValueError,
         json.JSONDecodeError,
         PreflightError,
+        StableIoError,
         RouteBindingError,
     ) as exc:
         print(f"gate4c-verdict-preflight: {exc}", file=sys.stderr)

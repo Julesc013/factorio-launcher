@@ -222,6 +222,13 @@ def collect() -> dict[str, Any]:
         "windows_instance_isolated_play_revalidation_01": status[
             "windows_instance_isolated_play_revalidation_01"
         ],
+        "play_evidence_stable_io": status["play_evidence_stable_io"],
+        "windows_instance_isolated_candidate_qualification_03": status[
+            "windows_instance_isolated_candidate_qualification_03"
+        ],
+        "windows_instance_isolated_play_revalidation_02": status[
+            "windows_instance_isolated_play_revalidation_02"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -1253,6 +1260,45 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "revalidation_01_superseded_before_prepare_verdict_protocol_integrity_active",
+        },
+        "play_evidence_stable_io": {
+            "checkpoint": "play-evidence-stable-io",
+            "active": "FACMAN-PLAY-EVIDENCE-STABLE-IO-01",
+            "last_closed": "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
+            "phase_status": "active",
+            "safety": "project_state_determinism_and_verdict_protocol_integrity_accepted_stable_evidence_io_active_no_product_authority",
+            "execution_reason": "stable_evidence_io_repair_active_before_fresh_qualification_no_product_play_authority",
+            "truth_scope": "revalidation_01_superseded_project_state_determinism_and_verdict_protocol_integrity_accepted_stable_evidence_io_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_01_superseded_before_prepare_verdict_protocol_integrity_accepted_stable_evidence_io_active",
+        },
+        "windows_instance_isolated_candidate_qualification_03": {
+            "checkpoint": "windows-instance-isolated-candidate-qualification-03",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
+            "last_closed": "FACMAN-PLAY-EVIDENCE-STABLE-IO-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+            "phase_status": "active",
+            "safety": "stable_evidence_io_accepted_fresh_remote_only_candidate_qualification_active_no_product_authority",
+            "execution_reason": "fresh_remote_only_candidate_qualification_active_before_revalidation_no_product_play_authority",
+            "truth_scope": "stable_evidence_io_accepted_candidate_qualification_03_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "stable_evidence_io_accepted_fresh_candidate_qualification_active_before_revalidation",
+        },
+        "windows_instance_isolated_play_revalidation_02": {
+            "checkpoint": "windows-instance-isolated-play-revalidation-02",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
+            "next": "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+            "phase_status": "active",
+            "safety": "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority",
+            "execution_reason": "exact_candidate_staged_for_separately_authorized_operator_revalidation_no_product_play_authority",
+            "truth_scope": "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_02_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -2852,8 +2898,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "accepted_dev_integration_proof_pending_operator_verdict",
     }:
         problems.append("M2-WU9 must record a recognized monotonic adversarial proof state")
-    if m2_wu9.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU9 must bind the exact current Universal Setup provider pin")
+    if (
+        m2_wu9.get("universal_setup_main_revision")
+        != "3f8489275077347c2918f3bb03614ec6431362ff"
+    ):
+        problems.append(
+            "M2-WU9 must retain its exact historical Universal Setup proof revision"
+        )
     if m2_wu9.get("universal_setup_task_tree") != m2_wu9.get("universal_setup_main_tree"):
         problems.append("M2-WU9 reviewed Setup task and main merge trees must be identical")
     if [m2_wu9.get("case_count"), m2_wu9.get("setup_owned_case_count"), m2_wu9.get("consumer_case_count")] != [16, 15, 1]:
@@ -2904,8 +2955,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("M2-WU10 must record a recognized operator-acceptance state")
     if m2_wu10.get("acceptance_root") != r"D:\FacMan-Live-Acceptance\M2":
         problems.append("M2-WU10 must bind only the authorized acceptance root")
-    if m2_wu10.get("universal_setup_main_revision") != provider_pins()["universal_setup"]["revision"]:
-        problems.append("M2-WU10 must bind the exact current Universal Setup provider pin")
+    if (
+        m2_wu10.get("universal_setup_main_revision")
+        != "3f8489275077347c2918f3bb03614ec6431362ff"
+    ):
+        problems.append(
+            "M2-WU10 must retain its exact historical Universal Setup proof revision"
+        )
     if m2_wu10.get("verdict_choices") != ["Pass", "Fail", "Inconclusive"]:
         problems.append("M2-WU10 must expose the complete human verdict set")
     if m2_wu10.get("record_schema") != "factorio.m2_operator_acceptance_record.v1":

@@ -31,6 +31,9 @@ class AideCompactionTests(unittest.TestCase):
             "hermetic_standalone_play_policy",
             "hermetic_standalone_play_candidate",
             "hermetic_standalone_play_verdict",
+            "play_evidence_stable_io",
+            "windows_instance_isolated_candidate_qualification_03",
+            "windows_instance_isolated_play_revalidation_02",
             "windows_instance_isolated_play_revalidation_01",
             "m2_live_portable_setup",
             "m2_wu1_target_policy",
@@ -80,7 +83,7 @@ class AideCompactionTests(unittest.TestCase):
             revisions["runtime_candidate"],
         )
         self.assertEqual(
-            "d1a3c2029a4ae21c58eda34d7011938bf7bf04cb",
+            "2c393acf838dd432d37f8acce50d01f91bfd28ca",
             revisions["qualification_source"],
         )
         self.assertEqual(
@@ -137,7 +140,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "instance-isolated-verdict-protocol-integrity",
+            "windows-instance-isolated-play-revalidation-02",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -145,15 +148,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-PROJECT-STATE-DETERMINISM-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-PLAY-EVIDENCE-STABLE-IO-01",
+            "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -185,7 +188,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "revalidation_01_superseded_project_state_determinism_accepted_verdict_protocol_integrity_active_no_product_authority",
+            "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -553,7 +556,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-PROJECT-STATE-DETERMINISM-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -720,7 +723,7 @@ class AideCompactionTests(unittest.TestCase):
             integration_proof["universal_launcher_revision"],
         )
         self.assertEqual(
-            data["provider_pins"]["universal_setup"]["revision"],
+            "3f8489275077347c2918f3bb03614ec6431362ff",
             integration_proof["universal_setup_revision"],
         )
         self.assertTrue(integration_proof["detached_source_worktrees"])
@@ -938,15 +941,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "instance-isolated-verdict-protocol-integrity",
+            "windows-instance-isolated-play-revalidation-02",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-PROJECT-STATE-DETERMINISM-01",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -1014,7 +1017,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "3f8489275077347c2918f3bb03614ec6431362ff",
+            "3048128963dc718a7c38c1cfcdda9e813a23b0db",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

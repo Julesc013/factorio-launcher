@@ -3,12 +3,17 @@
 FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
+The extended cross-repository and native-shell backlog is preserved in the
+[`2026-07-28 platform-refactor review`](reviews/2026-07-28-platform-refactor-backlog.md).
+It is a reviewed planning snapshot, not canonical programme or authority truth;
+this roadmap and the release indexes take precedence.
+
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The active phase is **instance_isolated_verdict_protocol_integrity** and the active WorkUnit is `FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01`.
+The active phase is **windows_instance_isolated_play_revalidation_02** and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`.
 
-1. Complete `FACMAN-INSTANCE-ISOLATED-VERDICT-PROTOCOL-INTEGRITY-01`.
+1. Complete `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`.
 2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.
 3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.
 4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.
