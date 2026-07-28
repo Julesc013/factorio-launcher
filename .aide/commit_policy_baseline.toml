@@ -105,3 +105,133 @@ reason = "Published on the R3.6 task branch before the closeout range audit iden
 sha = "1c323eb"
 subject = "policy(commit): acknowledge published R3.6 message debt"
 reason = "Published before trailer parsing showed that separate Git message paragraphs are not a valid contiguous trailer block; preserve published history and correct the invocation in the following commit."
+
+[[commit]]
+sha = "c49a9b5"
+subject = "Merge PR #70: synchronize canonical Instance-Isolated policy ancestry"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "de46c38"
+subject = "Merge PR #71: record canonical Instance-Isolated integration"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "bf7dfd5"
+subject = "land: task/cross-repo-ownership-audit-01 into dev"
+reason = "Published by the earlier landing helper before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "f84e20e"
+subject = "Merge PR #73: prove remote provider pin closure"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "06f8d58"
+subject = "Merge remote-tracking branch 'origin/dev' into task/three-repository-completion-review-01"
+reason = "Published before structured synchronization messages were enforced; preserve the reviewed task history instead of rewriting it."
+
+[[commit]]
+sha = "2f6d194"
+subject = "docs(review): preserve amended completion programme (#72)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed documentation history instead of rewriting it."
+
+[[commit]]
+sha = "28eeb2c"
+subject = "Merge pull request #74 from Julesc013/task/remote-source-closure-proof-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "31264a9"
+subject = "fix(launch): make launch truth fail closed (#75)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed implementation history instead of rewriting it."
+
+[[commit]]
+sha = "3c4fb17"
+subject = "build(dev): make validation and source identity exact (#76)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed implementation history instead of rewriting it."
+
+[[commit]]
+sha = "c47bdc3"
+subject = "Merge pull request #77 from Julesc013/task/transport-outcome-semantics-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "d03b42e"
+subject = "Merge pull request #78 from Julesc013/task/play-candidate-runtime-separation-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "b874a40"
+subject = "Merge pull request #79 from Julesc013/task/play-candidate-runtime-separation-closeout-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "b10c90b"
+subject = "Merge pull request #80 from Julesc013/task/windows-instance-isolated-candidate-qualification-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "812e70b"
+subject = "Merge pull request #81 from Julesc013/task/candidate-provider-identity-repair-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "be9bf23"
+subject = "feat(play-evidence): merge instance-isolated verdict harness"
+reason = "Published as an integration commit without the current structured body and trailers; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "426d13c"
+subject = "feat(play-evidence): merge exact candidate qualification producer"
+reason = "Published as an integration commit without the current structured body and trailers; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "d1a3c20"
+subject = "Merge pull request #84 from task/windows-instance-isolated-candidate-qualification-02"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "6f9ddb4"
+subject = "Merge pull request #85 from task/windows-instance-isolated-candidate-qualification-02-rerun"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "a9321ef"
+subject = "Merge pull request #86 from task/windows-instance-isolated-candidate-qualification-02-closeout"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "46c33bb"
+subject = "Merge pull request #87 from task/project-state-determinism-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "31ed0f3"
+subject = "fix(evidence): close instance-isolated verdict protocol (#88)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed implementation history instead of rewriting it."
+
+[[commit]]
+sha = "02add47"
+subject = "Merge pull request #89 from Julesc013/task/play-evidence-stable-io-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "04c7fb0"
+subject = "Merge PR #90: fix native evidence result digest interoperability"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "3d18be3"
+subject = "Merge PR #91: fix qualification ZIP64 provider binding"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "2c393ac"
+subject = "Merge pull request #92 from Julesc013/task/qualification-stage-handoff-01"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "03a905a"
+subject = "Merge PR #93: Record revalidation 02 staged handoff"
+reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
