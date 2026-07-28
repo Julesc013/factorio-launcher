@@ -46,6 +46,10 @@ Owner: `maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `maintainer`; dependencies: none
   - Outcome: One canonical plan graph drives a compact todo and current-roadmap view while the detailed prior plan remains searchable but non-authoritative.
+- [x] **FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01** — Reconcile canonical plan and revision-role truth
+  - State: `complete`; priority/size: `P0/S`
+  - Owner: `maintainer`; dependencies: `PLAN-CANON-01`
+  - Outcome: Bind the canonical plan and generated project truth to the published main/dev topology while preserving every historical candidate, qualification, and authority identity.
 
 #### EPIC-C1-DEFINITION — C1 release definition (planned)
 

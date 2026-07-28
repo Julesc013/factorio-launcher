@@ -68,14 +68,17 @@ exit = [
 
 [[gate]]
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
-title = "Finish the current Play-evidence qualification before architecture implementation"
+title = "Preserve the staged revalidation-02 gate before C1 implementation"
 status = "active"
-owner = "operator"
-external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+owner = "unassigned"
+external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
 source = ".aide/queue/index.yaml"
 observed = "2026-07-29"
-summary = "The other workstream owns the live qualification task. This plan may evolve as documentation but must not start implementation, mutate its queue state, or reinterpret its evidence."
-exit = "The active task reaches a reviewed terminal state and any follow-on gate is reflected here."
+stage = "staged_not_prepared"
+operator_assignment_required = true
+authority_boundary = "No prepare, baseline, observer capture, permit, Factorio execution, human verdict, route promotion, Setup mutation, credential or network use, signing, or publication."
+summary = "Qualification-03 is closed. Revalidation-02 is active and remains staged but not prepared. Internal planning must not mutate its queue, reinterpret its evidence, or begin C1 implementation."
+exit = "A named operator receives separate exact-stage prepare authority, the fresh two-launch procedure records a reviewed verdict, and route availability remains subject to its own exact capability and promotion WorkUnit."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"
@@ -171,6 +174,35 @@ evidence = [
   "docs/roadmap/current.md",
   "docs/roadmap/planning-operating-model.md",
   "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md",
+]
+
+[[workunit]]
+id = "FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01"
+epic = "EPIC-PLAN-SYSTEM"
+title = "Reconcile canonical plan and revision-role truth"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["PLAN-CANON-01"]
+decision_blockers = []
+outcome = "Bind the canonical plan and generated project truth to the published main/dev topology while preserving every historical candidate, qualification, and authority identity."
+acceptance = [
+  "Canonical main, observed dev, promotion source, planning promotion, dev synchronization, runtime candidate, qualification source/evidence, and truth closeout are represented as distinct roles.",
+  "The plan observes revalidation-02 rather than closed qualification-03 and records its operator as unassigned.",
+  "Exact current main/dev ancestry, tree identity, hosted workflow evidence, and provider-pin reachability are recorded without overstating the dev schema-check surface.",
+  "Generated plan and project-state views are current and the staged candidate remains staged_not_prepared with every authority flag unpromoted.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-canonical-plan-and-truth-closeout-01.md",
+  "release/index/plan.v1.toml",
+  "release/index/project_status.v2.toml",
+  "release/index/current_state.v1.toml",
+  "tools/project_state.py",
+  "tests/test_current_truth_roles.py",
+  "todo.md",
+  "docs/roadmap/current.md",
 ]
 
 [[workunit]]

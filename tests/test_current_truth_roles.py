@@ -1,0 +1,99 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+from __future__ import annotations
+
+import tomllib
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
+CURRENT_STATE_PATH = ROOT / "release" / "index" / "current_state.v1.toml"
+PLAN_PATH = ROOT / "release" / "index" / "plan.v1.toml"
+
+MAIN = "133da925af13d475c959a336e0b0eec0427a0381"
+DEV = "f0b9bac022e428fb19db27a2e320941c9e193899"
+PROMOTION_SOURCE = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
+QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+REVALIDATION = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+
+
+def load_toml(path: Path) -> dict:
+    with path.open("rb") as handle:
+        return tomllib.load(handle)
+
+
+class CurrentTruthRoleTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.status = load_toml(STATUS_PATH)
+        self.current = load_toml(CURRENT_STATE_PATH)
+        self.plan = load_toml(PLAN_PATH)
+
+    def test_current_branch_roles_are_exact_and_distinct(self) -> None:
+        self.assertEqual(self.status["canonical_main_revision"], MAIN)
+        self.assertEqual(self.status["planning_promotion_revision"], MAIN)
+        self.assertEqual(self.status["current_dev_revision"], DEV)
+        self.assertEqual(self.status["dev_synchronization_revision"], DEV)
+        self.assertEqual(self.status["truth_closeout_revision"], DEV)
+        self.assertEqual(self.status["observed_branch_head"], DEV)
+        self.assertEqual(self.status["promotion_source_revision"], PROMOTION_SOURCE)
+        self.assertNotEqual(
+            self.status["current_dev_revision"],
+            self.status["qualification_source_revision"],
+        )
+
+    def test_generated_current_state_exposes_each_revision_role(self) -> None:
+        revisions = self.current["revisions"]
+        self.assertEqual(revisions["canonical_main"], MAIN)
+        self.assertEqual(revisions["planning_promotion"], MAIN)
+        self.assertEqual(revisions["observed_dev"], DEV)
+        self.assertEqual(revisions["dev_synchronization"], DEV)
+        self.assertEqual(revisions["truth_closeout"], DEV)
+        self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
+        self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
+
+    def test_plan_observes_revalidation_without_assigning_an_operator(self) -> None:
+        gate = next(item for item in self.plan["gate"] if item["status"] == "active")
+        self.assertEqual(gate["external_ref"], REVALIDATION)
+        self.assertEqual(gate["stage"], "staged_not_prepared")
+        self.assertEqual(gate["owner"], "unassigned")
+        self.assertTrue(gate["operator_assignment_required"])
+
+    def test_candidate_and_authority_bindings_remain_unpromoted(self) -> None:
+        qualification = self.status[
+            "windows_instance_isolated_candidate_qualification_03"
+        ]
+        self.assertEqual(qualification["candidate_source_revision"], QUALIFICATION_SOURCE)
+        self.assertEqual(
+            qualification["qualification_digest"],
+            "99aee276b2968e493f7830ee0cf949efbcd4b0d843e0e93abe8729f13454d210",
+        )
+        revalidation = self.status["windows_instance_isolated_play_revalidation_02"]
+        self.assertEqual(
+            revalidation["staged_candidate_digest"],
+            "f7ef4783dd153b1445ec3cd9882134fc0ccb14a19fe3494186b7fe95b721de9d",
+        )
+        closeout = self.status["canonical_plan_and_truth_closeout"]
+        self.assertEqual(closeout["external_gate"], REVALIDATION)
+        self.assertEqual(closeout["external_gate_stage"], "staged_not_prepared")
+        self.assertEqual(closeout["operator"], "unassigned")
+        self.assertEqual(closeout["human_verdict"], "unset")
+        for field in (
+            "prepare_authorized",
+            "factorio_execution",
+            "observer_capture",
+            "permit_issuance",
+            "route_promotion",
+            "setup_mutation",
+            "credential_authority",
+            "network_authority",
+            "signing",
+            "publication",
+        ):
+            self.assertFalse(closeout[field], field)
+
+
+if __name__ == "__main__":
+    unittest.main()

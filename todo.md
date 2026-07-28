@@ -61,12 +61,12 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 
 ### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — ACTIVE
 
-The other workstream owns the live qualification task. This plan may evolve as documentation but must not start implementation, mutate its queue state, or reinterpret its evidence.
+Qualification-03 is closed. Revalidation-02 is active and remains staged but not prepared. Internal planning must not mutate its queue, reinterpret its evidence, or begin C1 implementation.
 
-- Owner: `operator`
-- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03`
+- Owner: `unassigned`
+- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`
 - Source: `.aide/queue/index.yaml`
-- Exit: The active task reaches a reviewed terminal state and any follow-on gate is reflected here.
+- Exit: A named operator receives separate exact-stage prepare authority, the fresh two-launch procedure records a reviewed verdict, and route availability remains subject to its own exact capability and promotion WorkUnit.
 
 ## Active work units
 
@@ -128,6 +128,7 @@ Can direct-client operation ownership prove interrupted-operation outcomes, or i
 ## Completed planning evidence
 
 - [x] `PLAN-CANON-01` — Establish the canonical plan and generated operational views
+- [x] `FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01` — Reconcile canonical plan and revision-role truth
 
 ## Validation commands
 
