@@ -77,6 +77,12 @@ Factorio evidence and human review can promote either execution claim.
 - No bundled Factorio binaries.
 - No ownership bypass.
 - No official branding assets.
+- Portable interface semantics, native platform presentation, constrained OEM+
+  branding, and explicit capability adaptation.
+- No toolkit object or frontend-owned authority crosses the presentation
+  boundary.
+- System Native appearance and accessibility enforcement remain available
+  regardless of theme choice.
 - No undisclosed writes to external Factorio, Steam, or platform state.
 - No global mod folder swapping.
 - Dry-run launch plans before execution.

@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-C1
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-29
 ---
 
 # FacMan execution dashboard
@@ -17,6 +17,7 @@ last_reviewed: 2026-07-28
 
 - Canonical plan: `release/index/plan.v1.toml`
 - Operating model: `docs/roadmap/planning-operating-model.md`
+- Interface design system: `docs/product/interface_design_system.md`
 - Detailed archive: `docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md`
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 1/3 including external gates
@@ -32,7 +33,7 @@ A user can safely discover or create a Factorio installation, create an isolated
 Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance.
 
 - Platform cut: Exactly one reference platform lane; select it in DEC-C1-REFERENCE-LANE before implementation.
-- Frontend cut: CLI plus one reference GUI. Cross-frontend parity is a separate C1P milestone.
+- Frontend cut: CLI plus one reference GUI that shares semantic actions but uses the selected platform's native controls and conventions. Cross-frontend parity is a separate C1P milestone.
 - Release-blocking journey: `J01-existing-install-to-play`
 - Claim status: seed identifiers only; `CLAIM-LEDGER-01` must establish maturity and evidence.
 
@@ -44,7 +45,7 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 - [ ] Run launch preflight and an explicit Play action.
 - [ ] Reach the Factorio main menu without loading a save.
 - [ ] Supervise the process and record exit, operation history, and recovery state.
-- [ ] Expose the stable workflow through the CLI and one reference GUI.
+- [ ] Expose the stable workflow through the CLI and one hand-designed reference GUI with native control behavior, a System Native recovery appearance, and platform accessibility semantics.
 
 ### Explicit non-goals
 
@@ -52,7 +53,7 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 - Factorio updates, FacMan self-update, and update-channel policy.
 - Mod Portal, public download workflows, accounts, or credential storage.
 - Automatic mutation of foreign-owned installations.
-- Arbitrary themes, a marketplace, news authority, or remote control.
+- Executable or arbitrary-layout themes, a marketplace, news authority, or remote control.
 - Multiple release-grade GUIs, modern-shell completion, or classic-platform parity.
 - A stable public SDK or a universal contract claim.
 
@@ -119,7 +120,7 @@ Can direct-client operation ownership prove interrupted-operation outcomes, or i
 ## Release exit
 
 - [ ] J01 passes its positive and paired failure journey on the selected reference lane.
-- [ ] Every release-blocking claim has identified, reproducible, non-stale evidence.
+- [ ] Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, scaling, contrast, and accessible-name checks for the reference GUI.
 - [ ] Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.
 - [ ] A clean checkout can reconstruct the tested release evidence without hidden machine state.
 - [ ] No C1 non-goal has entered the release dependency graph.

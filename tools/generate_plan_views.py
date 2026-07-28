@@ -91,6 +91,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         "north_star",
         "archive",
         "operating_model",
+        "interface_design_system",
     ):
         if not plan.get(field):
             errors.append(f"top-level field is required: {field}")
@@ -100,7 +101,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         if not isinstance(value, int) or value < 1:
             errors.append(f"{field} must be a positive integer")
 
-    for field in ("archive", "operating_model"):
+    for field in ("archive", "operating_model", "interface_design_system"):
         value = plan.get(field)
         if isinstance(value, str):
             error = _path_error(root, value, field)
@@ -392,6 +393,7 @@ def render_dashboard(plan: dict[str, Any]) -> str:
         "",
         f"- Canonical plan: `release/index/plan.v1.toml`",
         f"- Operating model: `{plan['operating_model']}`",
+        f"- Interface design system: `{plan['interface_design_system']}`",
         f"- Detailed archive: `{plan['archive']}`",
         f"- Active release: `{release['id']}` — {release['title']}",
         f"- WIP: {len(active) + len([g for g in gates if g['status'] == 'active'])}/{plan['wip_limit']} including external gates",
@@ -624,6 +626,10 @@ def render_roadmap(plan: dict[str, Any]) -> str:
             "For planning doctrine, capability levels, journeys, claims, contract",
             "maturity, migration, evidence, WIP, and validation rules, see",
             "`docs/roadmap/planning-operating-model.md`.",
+            "",
+            "For native shell profiles, HIG mappings, OEM+ appearance, theming,",
+            "accessibility, performance, and frontend authority rules, see",
+            "`docs/product/interface_design_system.md`.",
             "",
         ]
     )

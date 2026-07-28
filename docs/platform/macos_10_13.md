@@ -17,3 +17,9 @@ lane for the 10.13 build.
 
 Avoid requiring SwiftUI, modern-only AppKit APIs, arm64-only binaries, or a
 new deployment target default for the legacy artifact.
+
+The AppKit adapter declares availability for symbols, dark appearance,
+vibrancy, toolbar/navigation features, and effects. Unsupported features fall
+back to standard controls, system fonts/colors, bundled template images, and
+ordinary tables/outlines without changing workflow semantics. See
+[`docs/product/interface_design_system.md`](../product/interface_design_system.md).
