@@ -24,3 +24,10 @@ Avoid:
 - .NET 6+
 - .NET 8+
 - MSIX-only packaging
+
+The compatibility appearance is System Native: standard WinForms controls,
+Windows visual styles, `SystemFonts`, `SystemColors`, visible focus, access
+keys, and tested font/DPI scaling. An owner-drawn dark shell is not required
+for OEM+ and cannot inherit the native accessibility claim without independent
+evidence. See
+[`docs/product/interface_design_system.md`](../product/interface_design_system.md).

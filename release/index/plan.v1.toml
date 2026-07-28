@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-07-28"
+last_reviewed = "2026-07-29"
 active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
@@ -9,6 +9,7 @@ large_migration_limit = 1
 next_workunit_limit = 5
 archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
 operating_model = "docs/roadmap/planning-operating-model.md"
+interface_design_system = "docs/product/interface_design_system.md"
 north_star = "A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state."
 
 source_of_truth = [
@@ -29,7 +30,7 @@ status = "active"
 owner = "maintainer"
 objective = "Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance."
 platform_cut = "Exactly one reference platform lane; select it in DEC-C1-REFERENCE-LANE before implementation."
-frontend_cut = "CLI plus one reference GUI. Cross-frontend parity is a separate C1P milestone."
+frontend_cut = "CLI plus one reference GUI that shares semantic actions but uses the selected platform's native controls and conventions. Cross-frontend parity is a separate C1P milestone."
 journeys = ["J01-existing-install-to-play"]
 claim_seed = [
   "FACMAN-CLAIM-001",
@@ -46,20 +47,20 @@ cut_line = [
   "Run launch preflight and an explicit Play action.",
   "Reach the Factorio main menu without loading a save.",
   "Supervise the process and record exit, operation history, and recovery state.",
-  "Expose the stable workflow through the CLI and one reference GUI.",
+  "Expose the stable workflow through the CLI and one hand-designed reference GUI with native control behavior, a System Native recovery appearance, and platform accessibility semantics.",
 ]
 non_goals = [
   "Managed Factorio installation, repair, move, or uninstall.",
   "Factorio updates, FacMan self-update, and update-channel policy.",
   "Mod Portal, public download workflows, accounts, or credential storage.",
   "Automatic mutation of foreign-owned installations.",
-  "Arbitrary themes, a marketplace, news authority, or remote control.",
+  "Executable or arbitrary-layout themes, a marketplace, news authority, or remote control.",
   "Multiple release-grade GUIs, modern-shell completion, or classic-platform parity.",
   "A stable public SDK or a universal contract claim.",
 ]
 exit = [
   "J01 passes its positive and paired failure journey on the selected reference lane.",
-  "Every release-blocking claim has identified, reproducible, non-stale evidence.",
+  "Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, scaling, contrast, and accessible-name checks for the reference GUI.",
   "Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.",
   "A clean checkout can reconstruct the tested release evidence without hidden machine state.",
   "No C1 non-goal has entered the release dependency graph.",
@@ -72,7 +73,7 @@ status = "active"
 owner = "operator"
 external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
 source = ".aide/queue/index.yaml"
-observed = "2026-07-28"
+observed = "2026-07-29"
 summary = "The other workstream owns the live qualification task. This plan may evolve as documentation but must not start implementation, mutate its queue state, or reinterpret its evidence."
 exit = "The active task reaches a reviewed terminal state and any follow-on gate is reflected here."
 
@@ -126,6 +127,7 @@ repos = ["factorio-launcher", "universal-launcher"]
 outcome = "Select one reference lane and separate product capability from frontend and platform qualification."
 exit = [
   "The C1 reference lane has explicit promotion, support, and kill criteria.",
+  "The reference GUI names its framework, governing HIG, platform convention profile, appearance mode, and capability fallbacks.",
   "Classic-shell design and legacy-platform qualification are tracked separately.",
 ]
 
@@ -187,6 +189,7 @@ acceptance = [
   "Every included behavior is necessary for the first meaningful user outcome.",
   "Every exclusion names the later capability level or revisit trigger.",
   "C1, frontend parity C1P, and platform qualification are not conflated.",
+  "The UI cut-line distinguishes portable semantics, native presentation, constrained OEM+ branding, accessibility, and optional custom themes.",
 ]
 evidence = []
 
@@ -242,6 +245,7 @@ outcome = "Classify supported, compatible, experimental, and rejected lanes with
 acceptance = [
   "The chosen reference lane is evidence-backed and named in the C1 release.",
   "Product capability and frontend parity remain orthogonal to platform qualification.",
+  "Framework capability and deployment-version fallbacks are explicit rather than inferred from framework names.",
   "Legacy architecture work has bounded value, testability, and exit criteria.",
 ]
 evidence = []
@@ -322,9 +326,9 @@ trigger = "J01 failure states and operation claims are declared."
 
 [[later]]
 id = "INSTANCE-VIEW-MINIMUM-01"
-summary = "Design only the summary, readiness, Play, Activity, and recovery UI required by C1."
-rationale = "A minimal user surface prevents shell work from defining backend scope."
-trigger = "Reference frontend and stable workflow semantics are selected."
+summary = "Freeze the minimal semantic UI core and hand-design only the instance list, summary, readiness, Launch Deck, Activity, and recovery views required by C1."
+rationale = "Sharing immutable view/action meaning while adapting native presentation prevents toolkit types or generic forms from defining backend or primary-product scope."
+trigger = "Reference frontend, HIG profile, appearance policy, and stable workflow semantics are selected."
 
 [[later]]
 id = "C1-VERTICAL-SLICE-01"
@@ -346,9 +350,27 @@ trigger = "C1 user validation is complete and release-blocking claims are eviden
 
 [[later]]
 id = "FACMAN-C1P"
-summary = "Qualify semantic parity across the selected classic frontend family."
-rationale = "Frontend parity is valuable but must not expand the C1 product cut-line."
-trigger = "C1 is release-proven on the reference frontend."
+summary = "Build native component galleries and qualify the same positive/failure journey across WinForms, AppKit, and GTK 3."
+rationale = "Classic frontend parity proves shared semantics, accessibility, System Native/OEM+ adaptation, and theme failure recovery without expanding the C1 product cut-line."
+trigger = "C1 is release-proven on the reference frontend and the semantic UI core is stable."
+
+[[later]]
+id = "THEME-V1-01"
+summary = "Define a data-only semantic theme package with bounded tokens, assets, capabilities, validation budgets, and System Native safe-mode recovery."
+rationale = "Themeability must customize product identity without replacing native control behavior or acquiring code, layout, network, filesystem, setup, process, or credential authority."
+trigger = "The classic three-platform component galleries and journey expose a stable cross-platform token set."
+
+[[later]]
+id = "PRESENTATION-CONTRIBUTIONS-01"
+summary = "Define declarative, capability-scoped presentation contributions that reference only registered data sources, schemas, localization keys, icons, and semantic actions."
+rationale = "Presentation extensibility is a separate trust class from themes, game mods, provider connectors, and first-party static modules."
+trigger = "A real post-C1 consumer requires a surface that cannot be expressed by first-party static composition."
+
+[[later]]
+id = "MODERN-PROJECTIONS-01"
+summary = "Project the stable semantic UI core through WinUI 3, SwiftUI for macOS, and Qt Quick Controls with Kirigami."
+rationale = "The modern line should be adaptive and material-aware while remaining native to Windows, macOS, and KDE; it must not become a reskinned classic shell."
+trigger = "C1P, theme v1, accessibility evidence, and shared action/operation semantics are stable."
 
 [[later]]
 id = "FACMAN-C2"
@@ -376,6 +398,6 @@ trigger = "C4 user and release evidence meets stable-channel policy."
 
 [[later]]
 id = "INCUBATOR-DEFERRED-SURFACES"
-summary = "Modern GUIs, macOS i386, Linux i686, daemon, dynamic authority, remote control, cloud sync, marketplace, arbitrary themes, self-update, full accounts, broad Mod Portal integration, multi-product GUIs, full Dominium adoption, and a stable public SDK."
+summary = "Deferred platform, service, remote, marketplace, executable-theme, account, Mod Portal, multi-product, Dominium, and public-SDK incubators."
 rationale = "Each item adds an authority, platform, operational, or abstraction burden that is not required for C1."
 trigger = "A named user problem, owner, evidence plan, complexity budget, and kill criterion are approved."

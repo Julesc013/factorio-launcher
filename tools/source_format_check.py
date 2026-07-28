@@ -34,6 +34,7 @@ MINIFIED_MIN_LINES = 4
 
 LONG_LINE_ALLOWLIST_PREFIXES = {
     ".aide/",
+    "docs/roadmap/archive/",
     "docs/reference/",
     "runtime/core/generated/",
 }

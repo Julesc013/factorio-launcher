@@ -40,6 +40,7 @@ ALLOWED_TOP_LEVEL = {
     "release",
     "runtime",
     "tests",
+    "todo.md",
     "tools",
 }
 

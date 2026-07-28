@@ -3,7 +3,7 @@ document_id: FACMAN-PLANNING-OPERATING-MODEL
 schema_version: "1.0"
 status: governing-draft
 created: 2026-07-28
-last_reviewed: 2026-07-28
+last_reviewed: 2026-07-29
 canonical_plan: release/index/plan.v1.toml
 generated_dashboard: todo.md
 generated_roadmap: docs/roadmap/current.md
@@ -381,6 +381,52 @@ authority model, update behavior, theming system, or security assumptions.
 Classic-shell design and legacy-platform qualification remain separate
 programs. Visual appeal cannot qualify an operating-system lane.
 
+## 8A. Native interface and OEM+ appearance
+
+Framework, design language, platform convention, and deployment capability are
+separate planning dimensions. AppKit and SwiftUI both follow the Apple HIG for
+macOS. WinForms follows Windows desktop conventions while WinUI 3 follows
+current Fluent guidance. GTK 3 uses GTK 3 behavior and selected general GNOME
+principles without pretending to be Libadwaita. Qt 6 supplies multiple stacks;
+the selected modern Linux projection is Qt Quick Controls with Kirigami and the
+KDE HIG.
+
+The interface architecture shares semantic page, action, result, refusal,
+operation, recovery, and theme-capability records. It never shares toolkit
+objects. Platform adapters own menu placement, Settings placement, button
+ordering, literal shortcuts, control metrics, native dialogs, focus behavior,
+and capability fallbacks.
+
+Appearance has three tiers:
+
+1. **System Native** — always available, compatibility/accessibility baseline,
+   and theme-failure recovery target.
+2. **OEM+** — supported bounded FacMan branding over native controls and
+   behavior.
+3. **Custom theme** — optional data-only semantic tokens and bounded assets,
+   with no strict native-appearance claim and no ability to override
+   accessibility or recovery.
+
+Themes never contain code, scripts, raw CSS/QML/XAML/QSS, commands, remote
+references, arbitrary layouts, or privileged capabilities. Themes, game mods,
+presentation contributions, provider connectors, and first-party static
+modules are separate trust classes.
+
+C1 keeps one hand-designed reference GUI. C1P later proves the same semantic
+positive/failure journey through WinForms, AppKit, and GTK 3. Theme v1 follows
+stable classic evidence. WinUI 3, SwiftUI, and Qt Quick/Kirigami remain modern
+projections after the shared view/action/operation model is stable.
+
+Accessibility is a release property, not a theme feature. Supported shells
+require keyboard, screen-reader, scaling, contrast, focus, status, motion, and
+platform accessibility evidence. Closing a shell or transport never implies
+that an authority-bearing operation was cancelled.
+
+The complete framework mappings, shell profiles, semantic records, appearance
+model, theme package, safe mode, trust classes, performance rules, recovery
+rules, evidence, and staged implementation program are governed by
+`docs/product/interface_design_system.md`.
+
 ## 9. Contract maturity
 
 Cross-repository contract maturity is:
@@ -729,6 +775,10 @@ The following candidates remain Later until that sequence completes:
 - `C1-VERTICAL-SLICE-01`
 - `C1-USER-VALIDATION-01`
 - `C1-RELEASE-RECONSTRUCTION-01`
+- `FACMAN-C1P`
+- `THEME-V1-01`
+- `PRESENTATION-CONTRIBUTIONS-01`
+- `MODERN-PROJECTIONS-01`
 
 ## 25. Governing rules
 
@@ -749,6 +799,12 @@ The following candidates remain Later until that sequence completes:
 14. Refactors must delete or collapse complexity, not merely relocate it.
 15. Clean reconstruction, not accumulated local state, is the final release
     proof.
+16. Interface semantics are portable; platform presentation and HIG
+    conventions remain native.
+17. System Native is always recoverable, and OEM+ branding never replaces
+    native control behavior.
+18. Themes are data-only and cannot acquire layout, command, network,
+    filesystem, setup, process, or credential authority.
 
 These rules are deliberately harder to satisfy than adding another task. That
 is the point: FacMan should optimize for truthful user outcomes and recoverable

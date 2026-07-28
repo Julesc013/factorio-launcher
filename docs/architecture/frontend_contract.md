@@ -73,6 +73,13 @@ AppKit keep stable adapter names, but those adapters contain no command list or
 per-command payload switch. Adding a registered contract therefore does not
 require a catalog edit in any of those frontends.
 
+Generated catalogs establish command exposure and Advanced-form parity. They do
+not define the primary Instances, readiness, Launch Deck, plan-review,
+Activity, or recovery experience. Those views are hand-designed per native
+shell and consume shared semantic snapshots and `ActionDescriptor` identities
+defined by
+[`docs/product/interface_design_system.md`](../product/interface_design_system.md).
+
 ## Optional Commands
 
 ```text
@@ -127,6 +134,7 @@ This means `windows.winforms` may declare required command IDs as
 IDs through the shared client and render the returned success, error, or
 refusal payload. It does not mean WinForms owns the backend behavior, stores
 credentials, launches Factorio directly, or replaces CLI/TUI/daemon parity.
+It also does not mean a generic form is the final primary product journey.
 
 ## AppKit Shell Milestone
 
@@ -141,6 +149,11 @@ The AppKit lane has the same ownership boundary as WinForms: no Factorio
 discovery logic, no setup mutation, no Mod Portal network behavior, no server or
 developer execution, no modset resolver, no save/export/import implementation,
 and no credentials in the frontend.
+
+Generated command parity and native task-view parity are different evidence
+classes. C1 selects one hand-designed reference GUI; C1P later proves semantic
+journey parity across WinForms, AppKit, and GTK 3 without requiring identical
+layout or command placement.
 
 ## Generated managed-setup workflow
 

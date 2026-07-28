@@ -41,6 +41,8 @@ Product:
 
 - [Product Vision](product/product_vision.md)
 - [Branding](product/branding.md)
+- [Interface Design System](product/interface_design_system.md)
+- [Customization Model](product/customization_model.md)
 - [Factorio Scope](product/factorio_scope.md)
 - [Legal Boundaries](product/legal_boundaries.md)
 - [Install Discovery](product/install_discovery.md)

@@ -7,7 +7,8 @@ execution.
 
 Examples:
 
-- theme
+- appearance mode: System Native, OEM+, or an accepted Custom theme
+- theme package
 - font size
 - density
 - default workspace
@@ -16,6 +17,12 @@ Examples:
 - preferred frontend
 
 These belong in workspace preferences, not in package manifests.
+
+System Native is always available and is the compatibility, accessibility, and
+recovery baseline. OEM+ may brand bounded product surfaces while retaining
+native controls and platform behavior. Custom themes are optional and may not
+override accessibility enforcement, focus, semantic status, warning,
+confirmation, or safe-mode behavior.
 
 ## C1 Declarative Product Content
 
@@ -57,8 +64,28 @@ arbitrary filesystem, permit-issuance, or credential-value authority.
 
 Dynamic in-process native plugins are not an accepted extension model.
 
-UI themes and strings currently live in:
+Themes are a separate data-only trust class. A theme may provide allowlisted
+semantic tokens, icons, artwork, licenses, bounded density preferences, and
+bounded platform token overrides. It may not contain executable code, scripts,
+QML, XAML, raw GTK CSS, unrestricted Qt style sheets, remote URLs, commands,
+dynamic libraries, arbitrary layouts, or unbounded vector features.
+
+Theme loading must validate manifests, hashes, paths, formats, dimensions,
+decoding cost, and total size in a staging representation. Failure falls back
+to System Native and must never create a startup crash loop. A startup bypass
+must disable all custom themes.
+
+Presentation contributions, provider connectors, game-content mods, and
+first-party static modules are not themes. Each has a separate trust and
+capability model described in `docs/product/interface_design_system.md`.
+
+Current theme and string resources live in:
 
 - `content/factorio/strings/en-US.toml`
 - `content/factorio/ui/themes/default.toml`
 - `content/factorio/ui/themes/high_contrast.toml`
+
+The existing `facman.ui.theme.v1` resources predate the full appearance model.
+They remain current implementation inputs until `THEME-V1-01` defines the
+bounded package, native-token mapping, migration, and safe-mode contract. Their
+existence does not make arbitrary application-wide styling a supported claim.

@@ -26,6 +26,14 @@ class PlanViewTests(unittest.TestCase):
         self.assertGreaterEqual(line_count, 80)
         self.assertLessEqual(line_count, 150)
 
+    def test_interface_design_system_is_a_validated_source(self) -> None:
+        path = generate_plan_views.ROOT / self.plan["interface_design_system"]
+        self.assertTrue(path.is_file(), path)
+        content = path.read_text(encoding="utf-8")
+        self.assertIn("Portable semantics, native presentation", content)
+        self.assertIn("System Native", content)
+        self.assertIn("OEM+", content)
+
     def test_dependency_cycle_is_rejected(self) -> None:
         invalid = copy.deepcopy(self.plan)
         invalid["workunit"][0]["depends_on"] = [invalid["workunit"][1]["id"]]
