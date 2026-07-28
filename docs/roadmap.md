@@ -3,6 +3,11 @@
 FacMan proves the universal launcher with real Factorio workflows while
 leaving setup mutation to Universal Setup.
 
+The extended cross-repository and native-shell backlog is preserved in the
+[`2026-07-28 platform-refactor review`](reviews/2026-07-28-platform-refactor-backlog.md).
+It is a reviewed planning snapshot, not canonical programme or authority truth;
+this roadmap and the release indexes take precedence.
+
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 

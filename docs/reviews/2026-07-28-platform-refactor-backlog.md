@@ -2,7 +2,7 @@
 document_id: FACMAN-PLATFORM-REFACTOR-TODO
 schema_version: "1.1"
 title: FacMan platform refactor, redesign, and cross-repository backlog
-status: active-planning
+status: reviewed-planning-snapshot
 created: 2026-07-28
 last_reviewed: 2026-07-28
 planning_horizon: multi-release
@@ -13,8 +13,19 @@ related_repositories:
   - dominium
 canonical_branch: main
 integration_branch: dev
-active_safety_gate_observed: FACMAN-PLAY-EVIDENCE-STABLE-IO-01
+active_safety_gate_observed: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02
+active_safety_state_observed: staged_not_prepared
 implementation_authority: none
+authority_promotion: false
+runtime_change: false
+factorio_execution: false
+canonical_truth:
+  - release/index/project_status.v2.toml
+  - release/index/component_ownership.v1.toml
+  - release/index/workspace_lock.v1.toml
+preserved_local_source_commits:
+  - 7929c873edeb2e99e627461c1e752c9a181fa86d
+  - e8da0037d349738d4ff11c5f652550eb09ac8218
 primary_decision: converge contracts, clients, operations, presentation, composition, and conformance without merging authorities or repositories
 source_reports_synthesized: 2
 classic_shell_archetype: old Minecraft launcher visual grammar, not its backend or security model
@@ -35,6 +46,12 @@ modern_frontend_family:
 > investigations, acceptance gates, migration constraints, and explicitly
 > deferred ideas. It is not an operation permit, release approval, branch
 > promotion approval, or authorization to bypass the active Play-evidence gate.
+
+> **Current programme note (2026-07-28):** stable evidence I/O and candidate
+> qualification 03 are accepted. Revalidation 02 is staged but not prepared.
+> This document is a non-authoritative backlog, not the current execution queue;
+> the canonical release indexes named above always win when programme state,
+> ownership, revisions, or authority differ.
 
 ## How to use this document
 
@@ -130,17 +147,26 @@ or active proof-gate laws elsewhere in this document.
 
 ## Immediate hold point
 
-- [ ] **P0 / BLOCKED — Protect the active Play-evidence proof gate.**
+- [x] **P0 / COMPLETE — Close stable evidence I/O and candidate
+  qualification 03.**
+  - Accepted source and qualification evidence are preserved in canonical
+    project state.
+- [ ] **P0 / ACTIVE — Protect the staged revalidation-02 boundary.**
   - Owner: `factorio-launcher`.
-  - Observed active work: `FACMAN-PLAY-EVIDENCE-STABLE-IO-01`.
+  - Observed active work:
+    `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`.
+  - Observed state: `staged_not_prepared`.
   - Do not mix universal extraction, root-layout migration, workspace rewrites,
     real setup-authority promotion, process-authority promotion, or GUI redesign
-    into the active determinism and verdict work.
-  - Documentation, contract proposals, fixtures, inventories, and report-only
-    validation may proceed when isolated from the active worktree.
-  - Exit evidence: the active proof gate is closed, current project-state truth
-    identifies the next task, and the architecture freeze permits the selected
-    bounded refactor.
+    into a separately authorized operator evidence session.
+  - Documentation, UX discovery, contract proposals, fixtures, inventories,
+    and report-only validation may proceed on isolated task branches.
+  - Any source-changing candidate refactor before the verdict invalidates the
+    staged candidate and requires fresh source closure, qualification, and
+    staging.
+  - Exit evidence: the operator records exactly `Pass`, `Fail`, or
+    `Inconclusive`; a Pass still grants no route authority without the separate
+    exact-route capability and promotion WorkUnits.
 
 ## Non-negotiable architecture laws
 
@@ -230,13 +256,13 @@ or active proof-gate laws elsewhere in this document.
 
 | ID | Priority | Gap | Consequence | Required direction |
 | --- | --- | --- | --- | --- |
-| ARCH-001 | P1 | Universal Launcher implementation is much smaller than its declared ownership | FacMan retains product-neutral runtime infrastructure | Extract clients, transports, persistence, process, permits, operations, and generic schemas incrementally |
+| ARCH-001 | P1 | ULK implementation trails its declared ownership | FacMan retains generic runtime code | Incrementally extract clients, transports, persistence, process, permits, operations, and schemas |
 | ARCH-002 | P1 | Universal Launcher and Universal Setup duplicate ABI/protocol primitives | Drift, duplicated fixes, inconsistent bindings | Generate prefixed compatibility surfaces from one logical protocol source |
 | ARCH-003 | P1 | Raw JSON validation and routing are too widely handwritten | Large dispatchers, duplicated validation, unsafe divergence | Generate structural codecs and fixtures from command descriptors |
 | ARCH-004 | P1 | Command metadata is treated as if it were a complete GUI model | Generic form-heavy UX instead of player tasks | Add a typed view/action presentation contract |
 | ARCH-005 | P1 | Native GUIs spawn the CLI for each request | Weak operation lifetime, cancellation, progress, and executable discovery | Provide stable native client bindings and direct transport; retain process fallback |
 | ARCH-006 | P1 | Dominium setup/launcher stubs could become duplicate authorities | A second incompatible platform architecture | Replace stub ownership with providers, presentation packs, and compositions |
-| ARCH-007 | P1 | Source integration is pinned but tightly coupled through sibling paths and `add_subdirectory` | Cache/target pollution and weak installed-SDK consumption | Support top-level/subproject modes and exported namespaced packages |
+| ARCH-007 | P1 | Source integration relies on sibling paths and `add_subdirectory` | Cache/target pollution and weak SDK use | Support top-level/subproject modes and exported namespaced packages |
 | ARCH-008 | P2 | “Setup” names several different resources and apps | Ambiguous APIs, UX, and ownership | Standardize installation/instance/profile/preset/setup-operation/setup-shell terms |
 | ARCH-009 | P1 | Per-call handwritten Setup gateway bypasses the canonical handoff shape | Weak correlation, cancellation, and recovery semantics | Use a long-lived generic setup client and typed handoff records |
 | ARCH-010 | P1 | Central application composition and dispatch remain too broad | Difficult ownership, testing, and extraction | Introduce explicit modules, ports, descriptors, and generated admission |
@@ -246,23 +272,23 @@ or active proof-gate laws elsewhere in this document.
 | ARCH-014 | P2 | Conformance is not yet systematic across protocols, providers, transports, and shells | “Parity” can mean different things per platform | Build TCKs and semantic fixtures, including a synthetic product |
 | ARCH-015 | P2 | Release composition is not a single runtime-inspectable manifest | Build, SBOM, About, and compatibility truth can drift | Generate from one product-composition manifest |
 | ARCH-016 | P3 | Optional service, dynamic providers, self-update, and remote control lack qualified need and authority models | Premature complexity and expanded attack surface | Keep deferred behind explicit evidence gates |
-| ARCH-017 | P1 | Classic GUI shells lack a frozen information architecture and instance-centric primary-action model | Platform shells can drift into unrelated generated forms | Define a universal classic shell contract and persistent Launch Deck |
-| ARCH-018 | P1 | Existing FacMan navigation targets are resource-rich but not organized into a bounded classic top strip | Too many equally weighted pages and weak task hierarchy | Use eight top-level FacMan pages with nested resource views and Advanced surfaces |
-| ARCH-019 | P1 | Home/news could repeat the privileged remote-web anti-pattern | Remote content could execute or track inside a privileged launcher | Use allowlisted bounded feeds, sanitization, native cached rendering, and external links |
+| ARCH-017 | P1 | Classic GUIs lack frozen, instance-centric information architecture | Platform shells may diverge | Define a universal classic shell contract and persistent Launch Deck |
+| ARCH-018 | P1 | FacMan navigation lacks a bounded classic top strip | Too many equal pages weaken task hierarchy | Use eight top-level pages with nested resources and Advanced views |
+| ARCH-019 | P1 | Home/news could repeat privileged remote-web mistakes | Content could execute or track | Use allowlisted bounded feeds, sanitization, native caching, and external links |
 | ARCH-020 | P1 | Raw Console framing is too narrow for downloads, setup, sessions, operations, and recovery | Users lose causal and authority context | Build structured Activity with Console as an advanced subpage |
 | ARCH-021 | P1 | Launcher, setup, and recovery apps risk sharing one unsuitable navigation shell | Setup/recovery tasks become confusing or unsafe | Share presentation components but define three distinct shell shapes |
-| ARCH-022 | P2 | Arbitrary cross-platform skinning would weaken native behavior and accessibility | Broken focus, contrast, security notices, and recovery | Define semantic, capability-aware themes with a non-removable System Native fallback |
-| ARCH-023 | P2 | Legacy platform labels are broader than their proven native dependency closure | Compile-only or shell-only evidence may be mistaken for product support | Create architecture/sysroot-specific candidate lanes and require runtime closure proof |
+| ARCH-022 | P2 | Arbitrary skinning weakens native behavior and accessibility | Focus, contrast, notices, or recovery may break | Use semantic themes with a mandatory System Native fallback |
+| ARCH-023 | P2 | Legacy labels exceed proven native dependency closure | Compile-only proof may look supported | Use architecture/sysroot-specific lanes and require runtime closure proof |
 | ARCH-024 | P2 | Frontends can expand unevenly before semantic parity is proven | One platform becomes a second product architecture | Build component galleries and one complete WinForms/AppKit/GTK vertical slice first |
 
 ## Permanent repository ownership
 
 | Repository | Permanent responsibility | Must not own |
 | --- | --- | --- |
-| `universal-setup` | Product-neutral installed-software lifecycle, exact setup plans, target ownership, mutation transactions, rollback, recovery, installed-state verification, and mutation audit | Launcher state, product compatibility, GUI behavior, process sessions, credentials, Factorio/Dominium rules |
-| `universal-launcher` | Product registry, installation references, instance/profile/artifact bases, launch plans, operations, launcher transactions, process supervision, client SDK, transports, and presentation SDK | Installed-state mutation implementation, product semantics, toolkit-specific shells |
-| `factorio-launcher` | Factorio binding, discovery interpretation, setup recipes, instances, mods/modpacks, saves/worlds, accounts, launch/session interpretation, FacMan presentation, product packaging, and branded apps | Generic setup or launcher authority; generic transport/process/persistence implementations after extraction |
-| `dominium` | Dominium engine/game semantics, package recipes, environments/profiles, content packs, client/server/workbench providers, presentation, packaging, and branded apps | Independent launcher/setup kernels once universal composition begins |
+| `universal-setup` | Installed-software lifecycle, exact plans, ownership, mutation, rollback, recovery, verification, and audit | Launcher state, product rules, GUI behavior, sessions, and credentials |
+| `universal-launcher` | Product registry, references, instance/profile/artifact bases, plans, operations, transactions, supervision, clients, transports, and presentation | Installed-state mutation, product semantics, and toolkit shells |
+| `factorio-launcher` | Factorio discovery, recipes, instances, mods, saves, accounts, launch interpretation, presentation, packaging, and apps | Generic Setup/Launcher authority and extracted generic infrastructure |
+| `dominium` | Dominium semantics, recipes, environments, content, providers, presentation, packaging, and apps | Independent launcher/setup kernels after universal composition |
 
 ## Cross-repository code movement ledger
 
@@ -271,18 +297,18 @@ or active proof-gate laws elsewhere in this document.
 | Current FacMan surface | Permanent destination | Keep in FacMan | Gate | Migration notes |
 | --- | --- | --- | --- | --- |
 | `runtime/client` | ULK client SDK | Factorio response adapters and FacMan-friendly facade | `ULK-CPP-CLIENT-ADAPTER-EXTRACTION-01` | Preserve behavior and public compatibility adapters while CLI/TUI switch to extracted client |
-| Direct/process/daemon transport implementations | ULK transport layer | FacMan composition bootstrap and product discovery | `ULK-CLIENT-SCHEMA-CONSOLIDATION-01` plus transport TCK | One normalized request/result/event model; no product IDs hardcoded in transport |
+| Direct/process/daemon transports | ULK transport layer | FacMan bootstrap and product discovery | `ULK-CLIENT-SCHEMA-CONSOLIDATION-01` plus transport TCK | One request/result/event model; no product IDs in transport |
 | `contracts/result` generic envelope | ULK contracts | Factorio result payload schemas | `ULK-CLIENT-SCHEMA-CONSOLIDATION-01` | Preserve legacy FacMan envelope reader during transition |
 | `contracts/schema/command` generic request/response | ULK contracts | Factorio command schemas | `ULK-CLIENT-SCHEMA-CONSOLIDATION-01` | Generate codecs and negative fixtures |
 | `contracts/schema/transport` | ULK contracts | Product-specific payload bindings | `ULK-CLIENT-SCHEMA-CONSOLIDATION-01` | Version negotiation and bounded payload/lifetime rules required |
-| Product-neutral portions of `runtime/workspace` | ULK reference persistence | Factorio workspace extensions, product schema, mod/save/account records | `ULK-REFERENCE-PERSISTENCE-EXTRACTION-01` | Read old format, project to new base, write current format, refuse future unknown versions |
+| Neutral workspace code | ULK reference persistence | Factorio extensions and content records | `ULK-REFERENCE-PERSISTENCE-EXTRACTION-01` | Read old, write current, reject unknown future versions |
 | Generic `runtime/preferences` storage | ULK preferences mechanism | FacMan preference keys and presentation defaults | `ULK-REFERENCE-PERSISTENCE-EXTRACTION-01` | Separate user-local shell preferences from launcher/workspace policy |
 | `runtime/transaction` launcher journals | ULK launcher transaction/recovery | Factorio-specific recovery guidance and projections | `ULK-REFERENCE-PERSISTENCE-EXTRACTION-01` | Never merge these with Universal Setup mutation transactions |
-| `runtime/platform` process/session foundations | ULK process/platform layer | Factorio launch-spec creation and exit/log interpretation | `ULK-EXECUTION-FOUNDATION-EXTRACTION-01` | Move process identity, containment, environment, working directory, timeout, tree kill, session journal, exit classification |
-| `runtime/core/permit` | ULK operation-permit kernel | Product policy contributions; never permit issuance | `ULK-PERMIT-KERNEL-QUALIFICATION-01` | Wait for Dominium or another real consumer; bind permits to exact plan/resources/revision/expiry |
-| Generic application composition patterns in `runtime/factorio/application` | ULK product composition host | All Factorio domain/application modules | second-consumer composition proof | Extract interfaces and host laws, not Factorio command implementations |
+| Process/session foundations | ULK process layer | Factorio launch/exit interpretation | `ULK-EXECUTION-FOUNDATION-EXTRACTION-01` | Move identity, containment, environment, timeout, journal, and exit classes |
+| `runtime/core/permit` | ULK permit kernel | Product policy contributions; never issuance | `ULK-PERMIT-KERNEL-QUALIFICATION-01` | Wait for a second consumer; bind exact plan, resources, revision, and expiry |
+| Generic `runtime/factorio/application` composition | ULK composition host | Factorio application modules | second-consumer proof | Extract interfaces and host laws, not Factorio commands |
 | Cancellation/progress/operation-result primitives | ULK client and operation model | FacMan UX text and product-specific progress interpretation | async operation contract gate | Maintain synchronous compatibility path |
-| Generic structural JSON codecs in `runtime/core/json` | Generated ULK/common boundary codecs | FLB/product JSON payload boundaries | protocol generation gate | Remove duplicated structural checks; retain semantic validation in product code |
+| Generic `runtime/core/json` structural codecs | Generated ULK/common codecs | FLB/product JSON boundaries | protocol generation gate | Remove duplicate structure checks; keep product semantic validation |
 
 ### Keep permanently in `factorio-launcher`
 
@@ -406,9 +432,9 @@ promotion criteria.
 
 | Horizon | Product outcome | Principal work | Exit signal |
 | --- | --- | --- | --- |
-| Now | Preserve Play-evidence truth while capturing the target | Documentation, schemas, inventories, fixtures only | Active proof gate closes without mixed refactor work |
-| Platform foundation | One qualified composition and client/protocol family | Composition contract, client/schema extraction, generated protocol, reference persistence, Dominium read-only slice | Factorio and Dominium consume product-neutral kernels and fixtures |
-| Authority foundation | Safe setup/process/permit/operation behavior | Setup adapter, federated planning, process/session extraction, permit qualification, async operations | Exact plans and operations retain owners, effects, cancellation, and recovery |
+| Now | Protect revalidation 02 at `staged_not_prepared` | Docs, UX discovery, schemas, inventories, fixtures, and source closure | Authorized verdict records Pass, Fail, or Inconclusive without mixed refactoring |
+| Platform foundation | One composition and client/protocol family | Composition, client/schema extraction, protocol generation, persistence, Dominium slice | Factorio and Dominium consume product-neutral kernels |
+| Authority foundation | Safe setup/process/permit/operation behavior | Setup adapter, federated plans, process/session extraction, permit qualification, async operations | Plans retain owners, effects, cancellation, and recovery |
 | Classic shell foundation | One shared semantic shell contract | Classic shell contract, typed presentation, Launch Deck, theme/accessibility, direct native bindings | WinForms/AppKit/GTK galleries render equivalent fixtures |
 | Classic playable slice | Immediate instance-centric launching experience | Instance list/detail, readiness, plan preview, safe fixture dispatch, Activity result | Complete three-platform vertical slice passes |
 | Classic product alpha | Useful daily FacMan shell | Instances, Activity/Recovery, Installations, Updates, Mods, Accounts | Player workflows are task-oriented and semantically conformant |
@@ -419,7 +445,10 @@ promotion criteria.
 ### Critical path
 
 ```text
-proof gate
+revalidation-02 operator session
+  -> Pass / Fail / Inconclusive
+  -> exact route capability and promotion only after Pass
+  -> instance-centric player alpha
   -> composition contract
   -> client/protocol extraction
   -> reference state + second product
@@ -466,8 +495,8 @@ proof gate
 
 - Priority: P0.
 - Repositories: `factorio-launcher`.
-- Status: BLOCKED on active proof completion.
-- [ ] Record the exact active safety gate and architecture-freeze status before
+- Status: ACTIVE governance guard while revalidation 02 is staged.
+- [x] Record the exact active safety gate and architecture-freeze status before
   every refactor task begins.
 - [ ] Confirm the proposed task does not change Play verdict semantics, evidence
   identity, candidate qualification, project-state determinism, or active queue
@@ -485,7 +514,9 @@ proof gate
 
 - Priority: P0/P1.
 - Repositories: all four, document/contract/fixture-first.
-- Prerequisite: active FacMan proof gate closed.
+- Prerequisite: no active operator evidence session. Document, contract, and
+  fixture proposals may proceed in isolation; source-moving implementation
+  waits for the current verdict or explicitly accepts fresh qualification.
 - Goal: define the smallest shared composition contract before moving code.
 - [ ] Produce a universal product-composition diagram.
 - [ ] Produce a repository and component ownership matrix with current owner,
@@ -2296,7 +2327,9 @@ Apply   = deterministic local verification + target mutation
 
 ## M0 — Architecture contract accepted
 
-- [ ] Active proof gate closed.
+- [x] Stable evidence I/O and candidate qualification 03 closed.
+- [ ] Revalidation 02 records `Pass`, `Fail`, or `Inconclusive`, or an explicit
+  candidate-reset decision accepts the cost of fresh qualification.
 - [ ] Composition, provider, SetupPort, resource, operation, presentation, and
   manifest proposals reviewed.
 - [ ] Incubator migration map complete.
@@ -2385,7 +2418,20 @@ Apply   = deterministic local verification + target mutation
 - [ ] No unknown outcome is represented as success or no-effect failure.
 - [ ] The next bounded task is clear; deferred work remains deferred.
 
-# First actionable queue after the active proof gate
+# Current completion programme and later platform backlog
+
+The canonical immediate order is:
+
+1. [ ] Keep revalidation 02 at `staged_not_prepared` until separately
+   authorized.
+2. [ ] Run an entirely fresh operator evidence session and record exactly
+   `Pass`, `Fail`, or `Inconclusive`.
+3. [ ] After Pass only, qualify and promote one exact data-described route.
+4. [ ] Build the instance-centric player alpha and validate the golden journey.
+5. [ ] Select bounded platform-refactor items below from observed product needs.
+
+The broader platform sequence remains planned backlog rather than an
+automatically active queue:
 
 1. [ ] Start `UNIVERSAL-PRODUCT-COMPOSITION-CONTRACT-01` as a
    document/contract/fixture-only task.
