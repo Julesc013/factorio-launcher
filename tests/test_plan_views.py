@@ -43,7 +43,16 @@ class PlanViewTests(unittest.TestCase):
 
     def test_ready_work_requires_completed_dependencies(self) -> None:
         invalid = copy.deepcopy(self.plan)
-        invalid["workunit"][1]["depends_on"] = [invalid["workunit"][2]["id"]]
+        ready = next(
+            item for item in invalid["workunit"] if item["status"] == "ready"
+        )
+        incomplete = next(
+            item
+            for item in invalid["workunit"]
+            if item["status"] not in {"complete", "cancelled"}
+            and item["id"] != ready["id"]
+        )
+        ready["depends_on"] = [incomplete["id"]]
         errors = generate_plan_views.validate_plan(invalid)
         self.assertTrue(
             any("ready with incomplete dependencies" in error for error in errors),

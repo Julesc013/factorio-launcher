@@ -276,6 +276,9 @@ def collect() -> dict[str, Any]:
                 status["h1_candidate_revision"],
             ),
             "canonical_main": status["canonical_main_revision"],
+            "promotion_source": status["promotion_source_revision"],
+            "planning_promotion": status["planning_promotion_revision"],
+            "dev_synchronization": status["dev_synchronization_revision"],
             "runtime_candidate": status["runtime_candidate_revision"],
             "qualification_source": status["qualification_source_revision"],
             "qualification_evidence": status[
@@ -292,6 +295,9 @@ def collect() -> dict[str, Any]:
             "universal_setup": pins["universal_setup"]["revision"],
         },
         "provider_pins": pins,
+        "canonical_plan_and_truth_closeout": status[
+            "canonical_plan_and_truth_closeout"
+        ],
         "command_law": command_law(),
         "capabilities": capabilities,
         "scorecard": scorecard_state(status, pins, capabilities),
@@ -385,6 +391,9 @@ def current_state_toml(data: dict[str, Any]) -> str:
         "[revisions]",
         f"observed_dev = {toml_string(revisions['factorio_launcher'])}",
         f"canonical_main = {toml_string(revisions['canonical_main'])}",
+        f"promotion_source = {toml_string(revisions['promotion_source'])}",
+        f"planning_promotion = {toml_string(revisions['planning_promotion'])}",
+        f"dev_synchronization = {toml_string(revisions['dev_synchronization'])}",
         f"runtime_candidate = {toml_string(revisions['runtime_candidate'])}",
         f"qualification_source = {toml_string(revisions['qualification_source'])}",
         f"qualification_evidence = {toml_string(revisions['qualification_evidence'])}",
@@ -933,6 +942,63 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical status has the wrong schema")
     if status.get("completed_wave") != "m2":
         problems.append("canonical status must record completed M2 technical wave")
+    revision_fields = (
+        "current_dev_revision",
+        "canonical_main_revision",
+        "promotion_source_revision",
+        "planning_promotion_revision",
+        "dev_synchronization_revision",
+        "runtime_candidate_revision",
+        "qualification_source_revision",
+        "qualification_evidence_revision",
+        "qualification_integration_revision",
+        "truth_closeout_revision",
+        "observed_branch_head",
+    )
+    for field in revision_fields:
+        value = status.get(field)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
+            problems.append(f"{field} must be an exact lowercase Git revision")
+    if status.get("current_dev_revision") != status.get("dev_synchronization_revision"):
+        problems.append("current dev must equal the recorded dev synchronization revision")
+    if status.get("canonical_main_revision") != status.get("planning_promotion_revision"):
+        problems.append("canonical main must equal the recorded planning promotion revision")
+    if status.get("observed_branch_head") != status.get("current_dev_revision"):
+        problems.append("observed branch head must equal current dev")
+    if status.get("truth_closeout_revision") != status.get("dev_synchronization_revision"):
+        problems.append("truth closeout must bind the reviewed dev synchronization revision")
+    closeout = status.get("canonical_plan_and_truth_closeout", {})
+    expected_closeout_roles = {
+        "promotion_source_revision": status.get("promotion_source_revision"),
+        "canonical_main_revision": status.get("canonical_main_revision"),
+        "planning_promotion_revision": status.get("planning_promotion_revision"),
+        "dev_synchronization_revision": status.get("dev_synchronization_revision"),
+    }
+    for field, expected in expected_closeout_roles.items():
+        if closeout.get(field) != expected:
+            problems.append(f"canonical plan truth closeout {field} must be {expected!r}")
+    if closeout.get("external_gate") != (
+        "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+    ):
+        problems.append("canonical plan truth closeout must observe revalidation-02")
+    if closeout.get("external_gate_stage") != "staged_not_prepared":
+        problems.append("canonical plan truth closeout must preserve staged_not_prepared")
+    for field in (
+        "prepare_authorized",
+        "factorio_execution",
+        "observer_capture",
+        "permit_issuance",
+        "route_promotion",
+        "setup_mutation",
+        "credential_authority",
+        "network_authority",
+        "signing",
+        "publication",
+    ):
+        if closeout.get(field) is not False:
+            problems.append(f"canonical plan truth closeout must keep {field} false")
+    if closeout.get("human_verdict") != "unset":
+        problems.append("canonical plan truth closeout must keep human verdict unset")
     phase_contracts = {
         "product_convergence": {
             "checkpoint": "product-convergence",
