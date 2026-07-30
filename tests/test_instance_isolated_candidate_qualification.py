@@ -56,6 +56,40 @@ def artifact_values() -> dict[str, dict[str, object]]:
 
 
 class InstanceIsolatedCandidateQualificationTests(unittest.TestCase):
+    def test_producer_is_source_bound_to_qualification_04(self) -> None:
+        self.assertEqual(
+            QUALIFICATION.QUALIFICATION_WORK_UNIT,
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
+        )
+        self.assertEqual(
+            QUALIFICATION.REPORT_SCHEMA,
+            "facman.instance_isolated_candidate_qualification.v3",
+        )
+        self.assertEqual(
+            ROUTE.work_unit,
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
+        )
+        self.assertEqual(
+            ROUTE.qualification_schema,
+            "facman.play_candidate_qualification_binding.v3",
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            args = argparse.Namespace(
+                task_root=(
+                    root
+                    / "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+                ),
+                candidate_build=root / "candidate-build",
+            )
+
+            with self.assertRaisesRegex(
+                QUALIFICATION.QualificationError,
+                "not the exact qualification-04 root",
+            ):
+                QUALIFICATION.qualify(args)
+
     def test_qualification_value_is_closed_hash_bound_and_reloadable(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -473,6 +507,14 @@ class InstanceIsolatedCandidateQualificationTests(unittest.TestCase):
             )
             report = json.loads(
                 Path(result["qualification_report"]).read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                report["qualification_work_unit"],
+                "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
+            )
+            self.assertEqual(
+                report["work_unit"],
+                "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
             )
             self.assertFalse(report["authority_promotion"])
             self.assertFalse(report["human_verdict"])

@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `observer_self_test_import_closure` and the active WorkUnit is `FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `windows_instance_isolated_candidate_qualification_04` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

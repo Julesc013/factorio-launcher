@@ -232,6 +232,9 @@ def collect() -> dict[str, Any]:
         "observer_self_test_import_closure_01": status[
             "observer_self_test_import_closure_01"
         ],
+        "windows_instance_isolated_candidate_qualification_04": status[
+            "windows_instance_isolated_candidate_qualification_04"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -1381,6 +1384,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "revalidation_02_superseded_before_prepare_import_closure_repair_active",
+        },
+        "windows_instance_isolated_candidate_qualification_04": {
+            "checkpoint": "windows-instance-isolated-candidate-qualification-04",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
+            "last_closed": "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
+            "phase_status": "active",
+            "safety": "observer_import_closure_accepted_qualification_04_producer_binding_active_no_product_authority",
+            "execution_reason": "qualification_04_producer_binding_active_before_remote_source_closure_no_product_authority",
+            "truth_scope": "observer_import_closure_accepted_qualification_04_producer_binding_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "qualification_04_producer_binding_active_before_remote_source_closure",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",

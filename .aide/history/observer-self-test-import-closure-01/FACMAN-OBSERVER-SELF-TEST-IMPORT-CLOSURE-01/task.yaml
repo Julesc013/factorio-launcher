@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01
 title: Close observer self-test script-path imports
-status: active
-lifecycle_state: active
-planning_state: active
+status: closed
+lifecycle_state: archived
+planning_state: complete
 created_at: 2026-07-30T18:25:50Z
 owner: Jules
 objective: >
@@ -86,3 +86,5 @@ closeout_checklist:
   - qualification-04 and revalidation-03 remain separate successor WorkUnits
   - structured commit check passes
 active_at: 2026-07-30T18:25:50Z
+closed_at: 2026-07-30T19:11:00Z
+archived_at: 2026-07-30T19:16:08Z

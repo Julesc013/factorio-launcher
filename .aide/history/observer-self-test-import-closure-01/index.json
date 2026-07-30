@@ -1,0 +1,20 @@
+{
+  "checkpoint": "observer-self-test-import-closure-01",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "b1835ac99fc6fe98973a5810f8ab540113866f38689949f6cc297e9e8177011b",
+        "evidence/integration.md": "b1b3905750a8dc9b8c55ee0e6f89f51c7db3d0d93096fb3bf2d06c8320360f41",
+        "evidence/negative-control.md": "854c7779d6e7980db8082c5d49fc223bdb63c312f318652b0cca6cda527a9269",
+        "evidence/remaining-risks.md": "a7a5bc8894391967671b52a76ff0c3d2f8e9cade7d21ddbd1921b28162a6d9d9",
+        "evidence/validation.md": "865e272b4f4ccbbd199d467abf343429cfc66691320329c58788a26f52c006fc",
+        "status.yaml": "dac32d8883a0d477d1da3b03e9d647428714cb90f35d8ce81984bb649cbac892",
+        "task.yaml": "8215f407375b1821385f7b63bfd057379ac56b457fd97d38969c49fc975cbcc1"
+      },
+      "task_id": "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
+    }
+  ]
+}

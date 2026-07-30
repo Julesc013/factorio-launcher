@@ -4,7 +4,19 @@ Date: 31 July 2026
 
 WorkUnit: `FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01`
 
-State: local implementation validated; review and `dev` integration pending
+State: accepted on hosted `dev`
+
+```text
+task revision             78859b13b6a1072f025814906fd6d39ef8642c01
+pull request              #98
+dev integration           3b33efafc7c7027b6c66122b2f0f41194ac26ff3
+PR CI                     30571753937 PASS
+PR code security          30571753929 PASS
+PR security policy        30571753913 PASS
+exact-dev CI              30572849875 PASS
+exact-dev code security   30572849784 PASS
+exact-dev security policy 30572849793 PASS
+```
 
 ## Purpose
 

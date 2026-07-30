@@ -1,13 +1,13 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
-current_checkpoint = "observer-self-test-import-closure-01"
+current_checkpoint = "windows-instance-isolated-candidate-qualification-04"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
-last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+last_closed_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
 current_dev_revision = "f0b9bac022e428fb19db27a2e320941c9e193899"
 canonical_main_revision = "133da925af13d475c959a336e0b0eec0427a0381"
 promotion_source_revision = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
@@ -34,7 +34,7 @@ known_blockers = [
   "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
   "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
   "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
-  "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01 is the active bounded source repair; qualification 04 and revalidation 03 must establish a fresh source and evidence chain before real Play.",
+  "The observer import-closure repair is accepted on exact remote dev; qualification 04 is active and must first integrate its literal producer WorkUnit binding before fresh remote source closure.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -98,25 +98,25 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "observer_self_test_import_closure"
+phase = "windows_instance_isolated_candidate_qualification_04"
 phase_status = "active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
-next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+current_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "revalidation_02_superseded_before_prepare_observer_import_closure_repair_active_no_product_authority"
+truth_scope = "observer_import_closure_accepted_qualification_04_producer_binding_active_no_product_authority"
 canonical_main_promotion = true
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "revalidation_02_superseded_before_prepare_observer_import_closure_repair_active_no_product_authority"
+safety_authority = "observer_import_closure_accepted_qualification_04_producer_binding_active_no_product_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -1840,7 +1840,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "observer_import_closure_repair_active_no_product_authority"
+reason = "qualification_04_producer_binding_active_before_remote_source_closure_no_product_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1848,7 +1848,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "revalidation_02_superseded_before_prepare_import_closure_repair_active"
+current_gate_status = "qualification_04_producer_binding_active_before_remote_source_closure"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
@@ -2022,7 +2022,7 @@ signing = false
 publication = false
 
 [observer_self_test_import_closure_01]
-status = "active_bounded_source_repair"
+status = "accepted_hosted_dev_integration"
 work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
 previous_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
 next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
@@ -2039,6 +2039,38 @@ observer_profile_change = false
 etw_policy_change = false
 provider_pin_change = false
 route_change = false
+prepare = false
+wpr_execution = false
+observer_capture = false
+permit_issuance = false
+factorio_execution = false
+human_verdict = "unset"
+route_authority = false
+authority_promotion = false
+task_revision = "78859b13b6a1072f025814906fd6d39ef8642c01"
+pull_request = 98
+dev_integration_revision = "3b33efafc7c7027b6c66122b2f0f41194ac26ff3"
+pull_request_ci_run = "30571753937"
+pull_request_code_security_run = "30571753929"
+pull_request_security_policy_run = "30571753913"
+dev_ci_run = "30572849875"
+dev_code_security_run = "30572849784"
+dev_security_policy_run = "30572849793"
+
+[windows_instance_isolated_candidate_qualification_04]
+status = "active_producer_binding_before_remote_source_closure"
+work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+previous_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
+next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
+reviewed_source_input_revision = "3b33efafc7c7027b6c66122b2f0f41194ac26ff3"
+producer_work_unit_binding = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+producer_binding_kind = "literal_source_bound_no_ambient_override"
+producer_binding_integrated = false
+remote_source_closure = "not_started"
+qualification_generated = false
+historical_qualification_03_preserved = true
+historical_revalidation_02_preserved = true
+provider_pin_change = false
 prepare = false
 wpr_execution = false
 observer_capture = false

@@ -19,6 +19,7 @@ PROMOTION_SOURCE = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 REVALIDATION = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
 REPAIR = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
+QUALIFICATION_04 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
 
 
 def load_toml(path: Path) -> dict:
@@ -55,10 +56,10 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
         self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
 
-    def test_plan_observes_bounded_import_closure_repair(self) -> None:
+    def test_plan_observes_qualification_04_producer_binding(self) -> None:
         gate = next(item for item in self.plan["gate"] if item["status"] == "active")
-        self.assertEqual(gate["external_ref"], REPAIR)
-        self.assertEqual(gate["stage"], "source_repair")
+        self.assertEqual(gate["external_ref"], QUALIFICATION_04)
+        self.assertEqual(gate["stage"], "producer_binding_update")
         self.assertEqual(gate["owner"], "Jules")
         self.assertFalse(gate["operator_assignment_required"])
 
@@ -83,9 +84,22 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertFalse(revalidation["factorio_execution"])
         repair = self.status["observer_self_test_import_closure_01"]
         self.assertEqual(repair["work_unit"], REPAIR)
+        self.assertEqual(repair["status"], "accepted_hosted_dev_integration")
         self.assertTrue(repair["fresh_qualification_required"])
         self.assertFalse(repair["observer_capture"])
         self.assertFalse(repair["authority_promotion"])
+        qualification_04 = self.status[
+            "windows_instance_isolated_candidate_qualification_04"
+        ]
+        self.assertEqual(qualification_04["work_unit"], QUALIFICATION_04)
+        self.assertEqual(
+            qualification_04["producer_work_unit_binding"],
+            QUALIFICATION_04,
+        )
+        self.assertFalse(qualification_04["producer_binding_integrated"])
+        self.assertEqual(qualification_04["remote_source_closure"], "not_started")
+        self.assertFalse(qualification_04["qualification_generated"])
+        self.assertFalse(qualification_04["authority_promotion"])
         closeout = self.status["canonical_plan_and_truth_closeout"]
         self.assertEqual(closeout["external_gate"], REVALIDATION)
         self.assertEqual(closeout["external_gate_stage"], "staged_not_prepared")

@@ -30,10 +30,15 @@ clones at the exact retained Launcher and Setup pins, used the retained
 unmodified native build for native package-runtime proof, and placed transient
 test output under the WorkUnit-local temporary root.
 
-## Integration evidence pending
+## Integration evidence
 
 ```text
-structured commit check
-hosted pull-request matrix and security checks
-reviewed dev integration
+structured commit check                                      PASS
+PR #98 exact-head CI 30571753937                            PASS
+PR #98 exact-head code security 30571753929                 PASS
+PR #98 exact-head security policy 30571753913               PASS
+dev integration 3b33efafc7c7027b6c66122b2f0f41194ac26ff3 PASS
+exact-dev CI 30572849875                                    PASS
+exact-dev code security 30572849784                         PASS
+exact-dev security policy 30572849793                       PASS
 ```
