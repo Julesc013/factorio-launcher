@@ -1,0 +1,19 @@
+{
+  "checkpoint": "windows-instance-isolated-play-revalidation-02-superseded-before-prepare",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "3e4945c9074f9a0f5432bece81b2bfa5c12d38fd8f0d357e0ca7145a6bb93437",
+        "evidence/remaining-risks.md": "416865fb4f7dd2df04701f2a6b78d7fd10f194929ab5f04ec1a7e13de68eae56",
+        "evidence/source-bound-observer-import-closure-defect.md": "6e1323a884a5523c841ec88fb538e695cfce5bacef3055d612f7d1bc5fd0f853",
+        "evidence/validation.md": "7427f515e6dad323c794e88cd0b8db7c63a36c3e405faa6757fc2e8816d3e29c",
+        "status.yaml": "71a2c327fcd61e23e980fc34459282b932d3c62b25c99ed771cc0679e7828261",
+        "task.yaml": "9b799ec3101576ab99be455050cada9674c1d51483e1f4ccfa6d5b5221aa92b4"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+    }
+  ]
+}

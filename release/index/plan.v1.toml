@@ -68,17 +68,17 @@ exit = [
 
 [[gate]]
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
-title = "Preserve the staged revalidation-02 gate before C1 implementation"
+title = "Repair observer self-test import closure before fresh qualification"
 status = "active"
-owner = "unassigned"
-external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+owner = "Jules"
+external_ref = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
 source = ".aide/queue/index.yaml"
-observed = "2026-07-29"
-stage = "staged_not_prepared"
-operator_assignment_required = true
-authority_boundary = "No prepare, baseline, observer capture, permit, Factorio execution, human verdict, route promotion, Setup mutation, credential or network use, signing, or publication."
-summary = "Qualification-03 is closed. Revalidation-02 is active and remains staged but not prepared. Internal planning must not mutate its queue, reinterpret its evidence, or begin C1 implementation."
-exit = "A named operator receives separate exact-stage prepare authority, the fresh two-launch procedure records a reviewed verdict, and route availability remains subject to its own exact capability and promotion WorkUnit."
+observed = "2026-07-31"
+stage = "source_repair"
+operator_assignment_required = false
+authority_boundary = "Source repair only. No prepare, WPR, observer capture, permit, Factorio execution, human verdict, route promotion, Setup mutation, credential or network use, signing, or publication."
+summary = "Revalidation-02 is superseded before prepare by the import-closure defect. Repair script-path closure, then establish qualification-04 and revalidation-03 from fresh source and evidence."
+exit = "The exact no-PYTHONPATH script-path regression and affected validation pass, the bounded repair reaches reviewed remote dev, and qualification-04 begins from that published source without reusing or modifying revalidation-02."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"

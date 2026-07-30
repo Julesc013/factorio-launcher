@@ -61,12 +61,12 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 
 ### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — ACTIVE
 
-Qualification-03 is closed. Revalidation-02 is active and remains staged but not prepared. Internal planning must not mutate its queue, reinterpret its evidence, or begin C1 implementation.
+Revalidation-02 is superseded before prepare by the import-closure defect. Repair script-path closure, then establish qualification-04 and revalidation-03 from fresh source and evidence.
 
-- Owner: `unassigned`
-- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`
+- Owner: `Jules`
+- External task observed: `FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01`
 - Source: `.aide/queue/index.yaml`
-- Exit: A named operator receives separate exact-stage prepare authority, the fresh two-launch procedure records a reviewed verdict, and route availability remains subject to its own exact capability and promotion WorkUnit.
+- Exit: The exact no-PYTHONPATH script-path regression and affected validation pass, the bounded repair reaches reviewed remote dev, and qualification-04 begins from that published source without reusing or modifying revalidation-02.
 
 ## Active work units
 

@@ -229,6 +229,9 @@ def collect() -> dict[str, Any]:
         "windows_instance_isolated_play_revalidation_02": status[
             "windows_instance_isolated_play_revalidation_02"
         ],
+        "observer_self_test_import_closure_01": status[
+            "observer_self_test_import_closure_01"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -1365,6 +1368,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "revalidation_02_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive",
+        },
+        "observer_self_test_import_closure": {
+            "checkpoint": "observer-self-test-import-closure-01",
+            "active": "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
+            "phase_status": "active",
+            "safety": "revalidation_02_superseded_before_prepare_observer_import_closure_repair_active_no_product_authority",
+            "execution_reason": "observer_import_closure_repair_active_no_product_authority",
+            "truth_scope": "revalidation_02_superseded_before_prepare_observer_import_closure_repair_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_02_superseded_before_prepare_import_closure_repair_active",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
