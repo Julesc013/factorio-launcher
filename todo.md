@@ -61,12 +61,12 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 
 ### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — ACTIVE
 
-Revalidation-02 is superseded before prepare by the import-closure defect. Repair script-path closure, then establish qualification-04 and revalidation-03 from fresh source and evidence.
+The import-closure repair is integrated. Bind the frozen producer literally to qualification-04, integrate that source, then perform fresh remote source closure and qualification without reusing qualification-03.
 
 - Owner: `Jules`
-- External task observed: `FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01`
+- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04`
 - Source: `.aide/queue/index.yaml`
-- Exit: The exact no-PYTHONPATH script-path regression and affected validation pass, the bounded repair reaches reviewed remote dev, and qualification-04 begins from that published source without reusing or modifying revalidation-02.
+- Exit: A reviewed producer binding reaches remote dev, fresh empty-root closure and qualification pass at exact pins, and revalidation-03 receives new immutable qualification inputs without any runtime authority.
 
 ## Active work units
 

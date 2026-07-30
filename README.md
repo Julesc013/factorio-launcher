@@ -54,17 +54,17 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `observer_self_test_import_closure`. **Active WorkUnit:** `FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01`. **Next:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04`.
+**Phase:** `windows_instance_isolated_candidate_qualification_04`. **Active WorkUnit:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04`. **Next:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 302 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 304 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `observer_import_closure_repair_active_no_product_authority`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `qualification_04_producer_binding_active_before_remote_source_closure_no_product_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

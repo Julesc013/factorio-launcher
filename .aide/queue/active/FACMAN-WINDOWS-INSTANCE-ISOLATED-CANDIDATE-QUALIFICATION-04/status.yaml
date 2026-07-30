@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-07-30T18:25:51Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04/evidence/
+active_at: 2026-07-30T19:15:37Z

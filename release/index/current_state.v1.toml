@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-dev"
-phase = "observer_self_test_import_closure"
+phase = "windows_instance_isolated_candidate_qualification_04"
 phase_status = "active"
-checkpoint = "observer-self-test-import-closure-01"
-active_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
-next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
-last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+checkpoint = "windows-instance-isolated-candidate-qualification-04"
+active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
+last_closed_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
 next_authority_gate = "real-play-isolation"
 
 [revisions]
@@ -29,7 +29,7 @@ runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
 execution = "unavailable"
-execution_reason = "observer_import_closure_repair_active_no_product_authority"
+execution_reason = "qualification_04_producer_binding_active_before_remote_source_closure_no_product_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -92,7 +92,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01",
+  "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
 ]
 awaiting_operator = [
 ]
@@ -104,10 +104,9 @@ verified_pending_closeout = [
 ]
 planned = [
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
-  "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
   "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
 ]
-archived_task_count = 74
+archived_task_count = 75
 
 [blockers]
 items = [
@@ -122,7 +121,7 @@ items = [
   "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
   "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
   "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
-  "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01 is the active bounded source repair; qualification 04 and revalidation 03 must establish a fresh source and evidence chain before real Play.",
+  "The observer import-closure repair is accepted on exact remote dev; qualification 04 is active and must first integrate its literal producer WorkUnit binding before fresh remote source closure.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
