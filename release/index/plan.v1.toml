@@ -68,17 +68,17 @@ exit = [
 
 [[gate]]
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
-title = "Bind and qualify the repaired source as qualification-04"
+title = "Repair the qualification-04 stage binding filename"
 status = "active"
 owner = "Jules"
 external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
 source = ".aide/queue/index.yaml"
 observed = "2026-07-31"
-stage = "producer_binding_update"
+stage = "stage_handoff_binding_filename_repair"
 operator_assignment_required = false
 authority_boundary = "Qualification source and evidence only. No prepare, WPR, observer capture, permit, Factorio execution, human verdict, route promotion, Setup mutation, credential or network use, signing, or publication."
-summary = "The import-closure repair is integrated. Bind the frozen producer literally to qualification-04, integrate that source, then perform fresh remote source closure and qualification without reusing qualification-03."
-exit = "A reviewed producer binding reaches remote dev, fresh empty-root closure and qualification pass at exact pins, and revalidation-03 receives new immutable qualification inputs without any runtime authority."
+summary = "The producer, v3 contracts, remote closure, and a diagnostic qualification passed. Preserve that chain as superseded before stage, repair the v3 filename, then regenerate from fresh source."
+exit = "The reviewed stage-handoff repair reaches remote dev, a fresh empty-root closure and qualification pass at exact pins, and revalidation-03 is staged with qualification-binding.v3.json without any runtime authority."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"

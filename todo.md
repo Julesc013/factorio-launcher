@@ -61,12 +61,12 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 
 ### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — ACTIVE
 
-The import-closure repair is integrated. Bind the frozen producer literally to qualification-04, integrate that source, then perform fresh remote source closure and qualification without reusing qualification-03.
+The producer, v3 contracts, remote closure, and a diagnostic qualification passed. Preserve that chain as superseded before stage, repair the v3 filename, then regenerate from fresh source.
 
 - Owner: `Jules`
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04`
 - Source: `.aide/queue/index.yaml`
-- Exit: A reviewed producer binding reaches remote dev, fresh empty-root closure and qualification pass at exact pins, and revalidation-03 receives new immutable qualification inputs without any runtime authority.
+- Exit: The reviewed stage-handoff repair reaches remote dev, a fresh empty-root closure and qualification pass at exact pins, and revalidation-03 is staged with qualification-binding.v3.json without any runtime authority.
 
 ## Active work units
 

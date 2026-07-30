@@ -45,6 +45,7 @@ from tools.play_verdict_route import (
 
 CONFIG_SCHEMA = "factorio.instance_isolated_verdict_coordinator_config.v2"
 PREPARED_SCHEMA = "factorio.instance_isolated_prepared_launch.v1"
+QUALIFICATION_BINDING_FILENAME = "qualification-binding.v3.json"
 CONFIG_KEYS = {
     "schema",
     "task_root",
@@ -679,7 +680,7 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
         source_build, artifact_root, qualification, evidence_io
     )
     staged_io = EvidenceIo(artifact_paths["evidence_probe"])
-    binding_copy = task_root / "artifacts" / "qualification-binding.v2.json"
+    binding_copy = task_root / "artifacts" / QUALIFICATION_BINDING_FILENAME
     binding_hash = file_payload_sha256(
         evidence_io.hash_file(qualification_source)
     )

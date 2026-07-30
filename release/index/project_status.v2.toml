@@ -34,7 +34,7 @@ known_blockers = [
   "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
   "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
   "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
-  "The observer import-closure repair is accepted on exact remote dev; qualification 04 is active and must first integrate its literal producer WorkUnit binding before fresh remote source closure.",
+  "The qualification-04 producer and v3 contracts are accepted on remote dev and fresh source closure passed; the first qualification is diagnostic because the coordinator selected a historical v2 stage filename.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
@@ -109,14 +109,14 @@ next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "observer_import_closure_accepted_qualification_04_producer_binding_active_no_product_authority"
+truth_scope = "qualification_04_diagnostic_superseded_before_stage_handoff_binding_filename_repair_active_no_product_authority"
 canonical_main_promotion = true
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
-safety_authority = "observer_import_closure_accepted_qualification_04_producer_binding_active_no_product_authority"
+safety_authority = "qualification_04_diagnostic_superseded_before_stage_handoff_binding_filename_repair_active_no_product_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -1840,7 +1840,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "qualification_04_producer_binding_active_before_remote_source_closure_no_product_authority"
+reason = "qualification_04_stage_handoff_binding_filename_repair_active_no_product_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1848,7 +1848,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "qualification_04_producer_binding_active_before_remote_source_closure"
+current_gate_status = "qualification_04_stage_handoff_binding_filename_repair_active"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
@@ -2058,16 +2058,50 @@ dev_code_security_run = "30572849784"
 dev_security_policy_run = "30572849793"
 
 [windows_instance_isolated_candidate_qualification_04]
-status = "active_producer_binding_before_remote_source_closure"
+status = "active_stage_handoff_binding_filename_repair"
 work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
 previous_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
 next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
 reviewed_source_input_revision = "3b33efafc7c7027b6c66122b2f0f41194ac26ff3"
 producer_work_unit_binding = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
 producer_binding_kind = "literal_source_bound_no_ambient_override"
-producer_binding_integrated = false
-remote_source_closure = "not_started"
-qualification_generated = false
+producer_task_revision = "c8bc937f1190d1068745a255b9d28ff24a499c0c"
+producer_pull_request = 99
+producer_dev_integration_revision = "569883a86c50ca203ccbecec6d37216f22f7c6a0"
+producer_binding_integrated = true
+producer_pr_ci_run = "30575090336"
+producer_pr_schema_check_run = "30575090335"
+producer_pr_code_security_run = "30575090328"
+producer_pr_security_policy_run = "30575090250"
+producer_dev_ci_run = "30576115373"
+producer_dev_schema_check_run = "30576115655"
+producer_dev_code_security_run = "30576115573"
+producer_dev_security_policy_run = "30576116097"
+remote_source_closure = "pass_superseded_by_stage_binding_filename_defect"
+remote_source_closure_facman_revision = "569883a86c50ca203ccbecec6d37216f22f7c6a0"
+remote_source_closure_launcher_revision = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+remote_source_closure_setup_revision = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+remote_source_closure_report_sha256 = "300ed1c9dac88d8d69085b79ed23e394cd9f9ed24096a5d727b1cf3bcb78b54c"
+remote_source_closure_package_sha256 = "c9015800c2ab569810bdf4cc15628f8df19ca4d922d1043113ab4a2d41082baf"
+remote_source_closure_provenance_sha256 = "c5c8b8d8d0b07fdd2a130af9a322c2fac1678ed7bcfacf23b6877f39416b33"
+remote_source_closure_long_path_precondition = "explicit_core_longpaths_true"
+qualification_generated = true
+qualification_disposition = "superseded_before_stage"
+qualification_digest = "b6d1e7b030a17cf5279d363c341a8405526363217c96928d78d199d6a073363b"
+qualification_report_digest = "8116af7b8d9df1089e6211aca42273e44279f62eb1f77af0397301194373cb9d"
+qualification_binding_sha256 = "3f2de719929065d4442546e66fb1729dbd8badac6c6bd79aa4c975a6570ded6f"
+qualification_report_sha256 = "ce681351c27957dc54168a987e741bdc3f5f2fcee151f5055946eac665da950f"
+factorio_executable_sha256 = "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b"
+factorio_source_archive_sha256 = "ad36e0591e336400e731d5b400038e37c8361fdc71c76c0f6db96ee31741b4c2"
+factorio_authentication_digest = "d777bf268f0f0795b1d622eed07482d5cf2b3158b9edbc7c8d7c2f7ff4dd930c"
+instance_spec_digest = "4cae0b49f6b3f85cf9defdfe7e0c57ff9d0ed855e9cc81a54e1cef05400bea79"
+instance_binding_digest = "c2f8563d7e08a6c6c6cd9a368fb88033c5f1a3e8ee76dfee8552b6d8d3820b26"
+instance_readiness_digest = "0f9c22f6d9557ba3ae89196d75ea2273ed02d8d037b642638822360a5efe9e55"
+stage_started = false
+stage_handoff_defect = "v3_binding_would_be_staged_under_historical_v2_filename"
+stage_handoff_repair = "active"
+stage_handoff_target_filename = "qualification-binding.v3.json"
+historical_v2_filename_emitted = false
 historical_qualification_03_preserved = true
 historical_revalidation_02_preserved = true
 provider_pin_change = false
