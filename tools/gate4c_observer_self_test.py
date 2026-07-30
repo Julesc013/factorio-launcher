@@ -23,6 +23,10 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+ROOT_TEXT = str(ROOT)
+if ROOT_TEXT not in sys.path:
+    sys.path.insert(0, ROOT_TEXT)
+
 SPEC = importlib.util.spec_from_file_location(
     "gate4c_verdict_preflight", ROOT / "tools/gate4c_verdict_preflight.py"
 )

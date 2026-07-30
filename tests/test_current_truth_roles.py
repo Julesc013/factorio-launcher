@@ -18,6 +18,7 @@ DEV = "f0b9bac022e428fb19db27a2e320941c9e193899"
 PROMOTION_SOURCE = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 REVALIDATION = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+REPAIR = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
 
 
 def load_toml(path: Path) -> dict:
@@ -54,12 +55,12 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
         self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
 
-    def test_plan_observes_revalidation_without_assigning_an_operator(self) -> None:
+    def test_plan_observes_bounded_import_closure_repair(self) -> None:
         gate = next(item for item in self.plan["gate"] if item["status"] == "active")
-        self.assertEqual(gate["external_ref"], REVALIDATION)
-        self.assertEqual(gate["stage"], "staged_not_prepared")
-        self.assertEqual(gate["owner"], "unassigned")
-        self.assertTrue(gate["operator_assignment_required"])
+        self.assertEqual(gate["external_ref"], REPAIR)
+        self.assertEqual(gate["stage"], "source_repair")
+        self.assertEqual(gate["owner"], "Jules")
+        self.assertFalse(gate["operator_assignment_required"])
 
     def test_candidate_and_authority_bindings_remain_unpromoted(self) -> None:
         qualification = self.status[
@@ -75,6 +76,16 @@ class CurrentTruthRoleTests(unittest.TestCase):
             revalidation["staged_candidate_digest"],
             "f7ef4783dd153b1445ec3cd9882134fc0ccb14a19fe3494186b7fe95b721de9d",
         )
+        self.assertEqual(revalidation["status"], "superseded_before_prepare")
+        self.assertEqual(revalidation["observer_self_test"], "not_started")
+        self.assertEqual(revalidation["observer_evidence"], "none")
+        self.assertFalse(revalidation["coordinator_prepare"])
+        self.assertFalse(revalidation["factorio_execution"])
+        repair = self.status["observer_self_test_import_closure_01"]
+        self.assertEqual(repair["work_unit"], REPAIR)
+        self.assertTrue(repair["fresh_qualification_required"])
+        self.assertFalse(repair["observer_capture"])
+        self.assertFalse(repair["authority_promotion"])
         closeout = self.status["canonical_plan_and_truth_closeout"]
         self.assertEqual(closeout["external_gate"], REVALIDATION)
         self.assertEqual(closeout["external_gate_stage"], "staged_not_prepared")

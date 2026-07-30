@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-dev"
-phase = "windows_instance_isolated_play_revalidation_02"
+phase = "observer_self_test_import_closure"
 phase_status = "active"
-checkpoint = "windows-instance-isolated-play-revalidation-02"
-active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
-next_work_unit = "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01"
-last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+checkpoint = "observer-self-test-import-closure-01"
+active_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
+next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
 next_authority_gate = "real-play-isolation"
 
 [revisions]
@@ -29,7 +29,7 @@ runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
 execution = "unavailable"
-execution_reason = "exact_candidate_staged_for_separately_authorized_operator_revalidation_no_product_play_authority"
+execution_reason = "observer_import_closure_repair_active_no_product_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -92,7 +92,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+  "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01",
 ]
 awaiting_operator = [
 ]
@@ -104,8 +104,10 @@ verified_pending_closeout = [
 ]
 planned = [
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
+  "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
+  "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
 ]
-archived_task_count = 73
+archived_task_count = 74
 
 [blockers]
 items = [
@@ -118,7 +120,9 @@ items = [
   "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
   "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
   "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
-  "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted, and revalidation 02 is staged but not prepared.",
+  "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
+  "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
+  "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01 is the active bounded source repair; qualification 04 and revalidation 03 must establish a fresh source and evidence chain before real Play.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",

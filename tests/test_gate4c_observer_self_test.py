@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -23,6 +25,34 @@ SPEC.loader.exec_module(OBSERVER)
 
 
 class Gate4CObserverSelfTestTests(unittest.TestCase):
+    def test_observer_self_test_script_has_explicit_import_closure(self) -> None:
+        script = (ROOT / "tools" / "gate4c_observer_self_test.py").resolve()
+        self.assertTrue(script.is_absolute())
+
+        environment = os.environ.copy()
+        environment.pop("PYTHONPATH", None)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--help",
+            ],
+            cwd=ROOT,
+            env=environment,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("ModuleNotFoundError", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
     def observer_validation_fixture(
         self, root: Path, *, generated_at: str = "2026-07-22T13:00:00Z"
     ) -> tuple[Path, dict[str, object], dict[str, object], dict[str, object]]:
