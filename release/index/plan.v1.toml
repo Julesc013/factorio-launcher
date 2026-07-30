@@ -68,17 +68,17 @@ exit = [
 
 [[gate]]
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
-title = "Repair the qualification-04 stage binding filename"
+title = "Conduct repaired instance-isolated Play revalidation"
 status = "active"
-owner = "Jules"
-external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+owner = "unassigned"
+external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
 source = ".aide/queue/index.yaml"
 observed = "2026-07-31"
-stage = "stage_handoff_binding_filename_repair"
-operator_assignment_required = false
-authority_boundary = "Qualification source and evidence only. No prepare, WPR, observer capture, permit, Factorio execution, human verdict, route promotion, Setup mutation, credential or network use, signing, or publication."
-summary = "The producer, v3 contracts, remote closure, and a diagnostic qualification passed. Preserve that chain as superseded before stage, repair the v3 filename, then regenerate from fresh source."
-exit = "The reviewed stage-handoff repair reaches remote dev, a fresh empty-root closure and qualification pass at exact pins, and revalidation-03 is staged with qualification-binding.v3.json without any runtime authority."
+stage = "staged_not_prepared"
+operator_assignment_required = true
+authority_boundary = "Exact repaired candidate staged only. No prepare, observer/WPR, permit, Factorio, verdict, route, Setup, credential/network, signing, or publication authority."
+summary = "Qualification-04 passed at repaired remote dev and revalidation-03 is staged with the v3 binding. Next: operator designation, elevated self-test, and separate prepare authority."
+exit = "A separately authorized two-launch procedure records exactly Pass, Fail, or Inconclusive. Any later Pass grants no route authority by itself and proceeds only to the exact capability and route-promotion WorkUnits."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"

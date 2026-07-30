@@ -9,12 +9,12 @@ items:
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
-  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04
-    status: active
-    lifecycle_state: active
-    title: Qualify the import-closed instance-isolated candidate
-    task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04/task.yaml
-    evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04/evidence
+  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03
+    status: awaiting_operator
+    lifecycle_state: awaiting_operator
+    title: Perform repaired instance-isolated Play revalidation
+    task: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03/task.yaml
+    evidence: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked
@@ -27,9 +27,3 @@ items:
     title: Permit-backed managed installation reconciliation
     task: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence
-  - id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03
-    status: planned
-    lifecycle_state: planned
-    title: Perform repaired instance-isolated Play revalidation
-    task: .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03/task.yaml
-    evidence: .aide/queue/next/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03/evidence

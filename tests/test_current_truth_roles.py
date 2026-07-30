@@ -17,7 +17,8 @@ MAIN = "133da925af13d475c959a336e0b0eec0427a0381"
 DEV = "f0b9bac022e428fb19db27a2e320941c9e193899"
 PROMOTION_SOURCE = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-REVALIDATION = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+REVALIDATION_02 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
+REVALIDATION_03 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
 REPAIR = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
 QUALIFICATION_04 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
 
@@ -56,12 +57,12 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
         self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
 
-    def test_plan_observes_qualification_04_stage_handoff_repair(self) -> None:
+    def test_plan_observes_staged_revalidation_03(self) -> None:
         gate = next(item for item in self.plan["gate"] if item["status"] == "active")
-        self.assertEqual(gate["external_ref"], QUALIFICATION_04)
-        self.assertEqual(gate["stage"], "stage_handoff_binding_filename_repair")
-        self.assertEqual(gate["owner"], "Jules")
-        self.assertFalse(gate["operator_assignment_required"])
+        self.assertEqual(gate["external_ref"], REVALIDATION_03)
+        self.assertEqual(gate["stage"], "staged_not_prepared")
+        self.assertEqual(gate["owner"], "unassigned")
+        self.assertTrue(gate["operator_assignment_required"])
 
     def test_candidate_and_authority_bindings_remain_unpromoted(self) -> None:
         qualification = self.status[
@@ -103,21 +104,21 @@ class CurrentTruthRoleTests(unittest.TestCase):
         )
         self.assertEqual(
             qualification_04["remote_source_closure"],
-            "pass_superseded_by_stage_binding_filename_defect",
+            "pass_exact_repaired_composition",
         )
         self.assertTrue(qualification_04["qualification_generated"])
         self.assertEqual(
             qualification_04["qualification_disposition"],
-            "superseded_before_stage",
+            "accepted_for_revalidation_03_stage",
         )
         self.assertEqual(
             qualification_04["qualification_digest"],
-            "b6d1e7b030a17cf5279d363c341a8405526363217c96928d78d199d6a073363b",
+            "49732ad3a785a1341f642b9cfd99c01a78bbb199f6a3ef8b88b8a7acd79d9868",
         )
-        self.assertFalse(qualification_04["stage_started"])
+        self.assertTrue(qualification_04["stage_started"])
         self.assertEqual(
-            qualification_04["stage_handoff_defect"],
-            "v3_binding_would_be_staged_under_historical_v2_filename",
+            qualification_04["stage_handoff_repair_dev_integration_revision"],
+            "ab159b8ced48ecbaaa1d8f37bb1b4687c6b4c679",
         )
         self.assertEqual(
             qualification_04["stage_handoff_target_filename"],
@@ -125,8 +126,32 @@ class CurrentTruthRoleTests(unittest.TestCase):
         )
         self.assertFalse(qualification_04["historical_v2_filename_emitted"])
         self.assertFalse(qualification_04["authority_promotion"])
+        revalidation_03 = self.status[
+            "windows_instance_isolated_play_revalidation_03"
+        ]
+        self.assertEqual(revalidation_03["work_unit"], REVALIDATION_03)
+        self.assertEqual(revalidation_03["status"], "staged_not_prepared")
+        self.assertEqual(
+            revalidation_03["qualification_digest"],
+            "49732ad3a785a1341f642b9cfd99c01a78bbb199f6a3ef8b88b8a7acd79d9868",
+        )
+        self.assertEqual(
+            revalidation_03["staged_candidate_digest"],
+            "b2e8335fa372e8f796af939e426a0cc3c7f98a68497e8fe9326e8b7f1da5a35c",
+        )
+        self.assertEqual(
+            revalidation_03["staged_qualification_filename"],
+            "qualification-binding.v3.json",
+        )
+        self.assertFalse(revalidation_03["historical_v2_binding_exists"])
+        self.assertEqual(revalidation_03["operator"], "unassigned")
+        self.assertTrue(revalidation_03["operator_assignment_required"])
+        self.assertFalse(revalidation_03["coordinator_prepare"])
+        self.assertFalse(revalidation_03["observer_capture"])
+        self.assertFalse(revalidation_03["factorio_execution"])
+        self.assertFalse(revalidation_03["authority_promotion"])
         closeout = self.status["canonical_plan_and_truth_closeout"]
-        self.assertEqual(closeout["external_gate"], REVALIDATION)
+        self.assertEqual(closeout["external_gate"], REVALIDATION_03)
         self.assertEqual(closeout["external_gate_stage"], "staged_not_prepared")
         self.assertEqual(closeout["operator"], "unassigned")
         self.assertEqual(closeout["human_verdict"], "unset")
