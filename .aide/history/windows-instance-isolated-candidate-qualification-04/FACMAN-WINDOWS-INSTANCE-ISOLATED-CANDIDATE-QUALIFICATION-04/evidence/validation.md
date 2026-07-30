@@ -128,3 +128,40 @@ and bound their exact paths for the final zero-required-blocker promotion
 run. This validation-runner gap is separate test-infrastructure debt; the
 stage-filename repair did not change `tools/dev.py`, CMake targets, archive
 code, or obligation policy.
+
+## Accepted repair integration
+
+```text
+task revision                    56383bf5c0b07945da8bac0243ea89a6553e5468
+PR                              #100
+dev integration                 ab159b8ced48ecbaaa1d8f37bb1b4687c6b4c679
+
+PR CI                           PASS 30581330008
+PR code-security                PASS 30581330016
+PR security-policy              PASS 30581330030
+
+integrated-dev CI               PASS 30582314527
+integrated-dev code-security    PASS 30582314612
+integrated-dev security-policy  PASS 30582314361
+```
+
+## Final repaired closure and qualification
+
+```text
+FacMan                           ab159b8ced48ecbaaa1d8f37bb1b4687c6b4c679
+Universal Launcher              7fc25340623131ba86c08dca4fb8a43b18a4520d
+Universal Setup                 3048128963dc718a7c38c1cfcdda9e813a23b0db
+closure report SHA-256          e6f9be1c563a06a8ef28a005e982e92dc52b41532b98b4cd2d08881dce1df56f
+package artifact SHA-256        239a0c56751195bc3d1858ae5dae722859b2abfd1b7c1f9f806154613bd9301e
+provenance SHA-256              b2db0c038edfa8e34804741c0eb2b03820b9b0786426068be07f3b024f6885d5
+qualification digest            49732ad3a785a1341f642b9cfd99c01a78bbb199f6a3ef8b88b8a7acd79d9868
+qualification report digest     04efedc73010b6dc09c9c92c9b2f6f7499db9c7a23f5696e2bc1baaa772a137f
+qualification binding SHA-256   ea30efc379fc026d64e6a9611f941d2a68cf3caf527088b75f370d27af5271cd
+qualification report SHA-256    df9ee8e9730626fd1e9c209ecf56bff77652bea29d97a84359e18e18fa8520a1
+```
+
+The final stage-only handoff completed with 16 files, 63,878,491 bytes, no
+reparse points, the v3 qualification filename, and staged-candidate digest
+`b2e8335fa372e8f796af939e426a0cc3c7f98a68497e8fe9326e8b7f1da5a35c`.
+No prepare, observer, WPR, permit, Factorio, verdict, or authority action
+occurred.

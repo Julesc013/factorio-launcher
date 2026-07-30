@@ -3,10 +3,19 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `windows_instance_isolated_candidate_qualification_04` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `windows_instance_isolated_play_revalidation_03` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The accepted
+[`qualification-04 checkpoint`](windows-instance-isolated-candidate-qualification-04.md)
+preserves the diagnostic v3-to-v2 filename finding, the reviewed repair, fresh
+remote closure, and fresh accepted qualification. Its successor
+[`revalidation-03 staged checkpoint`](windows-instance-isolated-play-revalidation-03-staged.md)
+binds the exact 16-file stage and two fresh operation IDs while retaining
+`staged_not_prepared`, an unassigned operator, no verdict, and no route
+authority.
 
 The evidence-only
 [`PR #34 Gate 0 dev integration`](pr-34-gate-0-dev-integration.md) binds the

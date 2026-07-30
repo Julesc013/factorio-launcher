@@ -5,8 +5,8 @@ Date: 31 July 2026
 WorkUnit:
 `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04`
 
-State: diagnostic qualification superseded before stage; stage-handoff
-binding-filename repair active
+State: accepted after reviewed stage-handoff repair, fresh remote source
+closure, fresh qualification, and exact revalidation-03 stage-only handoff
 
 ## Purpose
 
@@ -18,7 +18,11 @@ The producer and append-only v3 contracts are integrated on remote `dev`.
 Fresh remote source closure and a first qualification-04 passed. Before
 coordinator staging began, source inspection found that the coordinator would
 copy the v3 binding under the historical v2 filename. That first
-qualification is preserved as diagnostic and superseded before stage.
+qualification remains preserved as diagnostic and superseded before stage.
+
+PR #100 integrated the bounded filename repair. A second, entirely fresh
+remote closure and qualification then passed against that exact repaired
+composition. Only the second chain entered the new revalidation-03 stage.
 
 ## Reviewed source input
 
@@ -245,3 +249,184 @@ Setup mutation             false
 credential/network use     false
 signing/publication         false
 ```
+
+## Accepted stage-handoff repair
+
+The bounded repair reached remote `dev` through PR #100:
+
+```text
+task revision
+56383bf5c0b07945da8bac0243ea89a6553e5468
+
+dev integration
+ab159b8ced48ecbaaa1d8f37bb1b4687c6b4c679
+
+PR CI
+30581330008
+
+PR code-security
+30581330016
+
+PR security-policy
+30581330030
+
+integrated-dev CI
+30582314527
+
+integrated-dev code-security
+30582314612
+
+integrated-dev security-policy
+30582314361
+```
+
+The exact-head and exact-integrated workflow sets passed. The accepted change
+does not alter candidate policy, provider pins, observer policy, ETW
+configuration, route identity, or runtime authority.
+
+## Final repaired remote source closure
+
+New empty roots reconstructed the exact repaired composition:
+
+```text
+FacMan
+ab159b8ced48ecbaaa1d8f37bb1b4687c6b4c679
+
+Universal Launcher
+7fc25340623131ba86c08dca4fb8a43b18a4520d
+
+Universal Setup
+3048128963dc718a7c38c1cfcdda9e813a23b0db
+
+closure report SHA-256
+e6f9be1c563a06a8ef28a005e982e92dc52b41532b98b4cd2d08881dce1df56f
+
+package artifact SHA-256
+239a0c56751195bc3d1858ae5dae722859b2abfd1b7c1f9f806154613bd9301e
+
+provenance SHA-256
+b2db0c038edfa8e34804741c0eb2b03820b9b0786426068be07f3b024f6885d5
+```
+
+The detached HTTPS clones remained clean. Package tests passed 14/14 with no
+required skips. FacMan passed 58 native and 569 Python tests; Universal
+Launcher passed 5 native tests; Universal Setup passed 16 native tests.
+
+Machine-local roots:
+
+```text
+detached source clones
+C:\Users\Jules\AppData\Local\Temp\facman-q04-final3-clones
+
+clean build
+C:\Users\Jules\AppData\Local\Temp\facman-q04-final3-build
+
+closure evidence
+C:\Users\Jules\AppData\Local\Temp\facman-q04-final3-evidence
+
+qualification
+C:\Users\Jules\AppData\Local\Temp\facman-q04-final3-qualification\
+FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04
+
+qualification process TEMP/TMP
+C:\Users\Jules\AppData\Local\Temp\facman-q04-final3-qualification-temp
+```
+
+These roots are evidence inputs or outputs, not disposable build scratch.
+They must not be mutated, normalized, repaired, or substituted in place.
+
+## Accepted qualification-04
+
+The fresh repaired chain produced:
+
+```text
+qualification digest
+49732ad3a785a1341f642b9cfd99c01a78bbb199f6a3ef8b88b8a7acd79d9868
+
+report digest
+04efedc73010b6dc09c9c92c9b2f6f7499db9c7a23f5696e2bc1baaa772a137f
+
+qualification binding file SHA-256
+ea30efc379fc026d64e6a9611f941d2a68cf3caf527088b75f370d27af5271cd
+
+qualification report file SHA-256
+df9ee8e9730626fd1e9c209ecf56bff77652bea29d97a84359e18e18fa8520a1
+
+Factorio executable SHA-256
+d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b
+
+Factorio source archive SHA-256
+ad36e0591e336400e731d5b400038e37c8361fdc71c76c0f6db96ee31741b4c2
+
+Factorio authentication digest
+7229cd0bdb2b783eb8c87d549e5c10c26463fad68228a9cd51c4961a8c077c16
+
+instance spec digest
+4cae0b49f6b3f85cf9defdfe7e0c57ff9d0ed855e9cc81a54e1cef05400bea79
+
+qualification instance binding digest
+bb411c9713635c470fdc17d894e577ea4a11caf34c48bfa34dee37bc34741f11
+
+qualification readiness digest
+5ff1eb065811b37eb253d8dc7d151b307bfbe9f87ae57e56892cb2896fac21cf
+```
+
+The binding identifies
+`FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03` and grants no
+authority.
+
+## Exact stage-only handoff
+
+The first stage invocation stopped before creating artifacts because the
+frozen path auditor requires the exact task root to exist. Its diagnostic
+stderr is preserved separately. The exact empty task root was then created
+and the same stage command was rerun with new task-local TEMP/TMP isolation.
+That corrected invocation completed with empty stderr.
+
+The stage is:
+
+```text
+root
+C:\Users\Jules\AppData\Local\Temp\facman-revalidation03-stage-final\
+FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03
+
+files
+16
+
+total bytes
+63,878,491
+
+unexpected files
+0
+
+reparse points
+0
+
+qualification filename
+artifacts\qualification-binding.v3.json
+
+historical v2 binding
+absent
+
+staged qualification SHA-256
+ea30efc379fc026d64e6a9611f941d2a68cf3caf527088b75f370d27af5271cd
+
+staged-candidate digest
+b2e8335fa372e8f796af939e426a0cc3c7f98a68497e8fe9326e8b7f1da5a35c
+
+staged-candidate file SHA-256
+7caa9fa1204f80f70b0b88935abc2ba99a7e41a030e672cb83f3da82af7c06c6
+
+coordinator configuration SHA-256
+31cf5523243130f8b13cb7df6dc3c93e5edade9bee0146fac7d0ad4bee22cc8e
+
+artifact manifest SHA-256
+fc2be64f4463d1c705aa766de8f34a8d95e13a273058e81e06f52db918ab96f9
+```
+
+The frozen config validator reloaded the exact stage successfully. All source
+clones remained clean, the protected Factorio/FacMan/Steam inventory was
+empty, and WPR reported that it was not recording.
+
+Qualification-04 is therefore closed as accepted. The active authority gate
+is revalidation-03 at `staged_not_prepared`.

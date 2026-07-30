@@ -61,12 +61,12 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 
 ### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — ACTIVE
 
-The producer, v3 contracts, remote closure, and a diagnostic qualification passed. Preserve that chain as superseded before stage, repair the v3 filename, then regenerate from fresh source.
+Qualification-04 passed at repaired remote dev and revalidation-03 is staged with the v3 binding. Next: operator designation, elevated self-test, and separate prepare authority.
 
-- Owner: `Jules`
-- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04`
+- Owner: `unassigned`
+- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03`
 - Source: `.aide/queue/index.yaml`
-- Exit: The reviewed stage-handoff repair reaches remote dev, a fresh empty-root closure and qualification pass at exact pins, and revalidation-03 is staged with qualification-binding.v3.json without any runtime authority.
+- Exit: A separately authorized two-launch procedure records exactly Pass, Fail, or Inconclusive. Any later Pass grants no route authority by itself and proceeds only to the exact capability and route-promotion WorkUnits.
 
 ## Active work units
 

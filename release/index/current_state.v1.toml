@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-dev"
-phase = "windows_instance_isolated_candidate_qualification_04"
-phase_status = "active"
-checkpoint = "windows-instance-isolated-candidate-qualification-04"
-active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
-next_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
-last_closed_work_unit = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
+phase = "windows_instance_isolated_play_revalidation_03"
+phase_status = "awaiting_operator_gate"
+checkpoint = "windows-instance-isolated-play-revalidation-03-staged"
+active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
+next_work_unit = "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01"
+last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
 next_authority_gate = "real-play-isolation"
 
 [revisions]
@@ -29,7 +29,7 @@ runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
 execution = "unavailable"
-execution_reason = "qualification_04_stage_handoff_binding_filename_repair_active_no_product_authority"
+execution_reason = "qualification_04_accepted_revalidation_03_staged_not_prepared_no_product_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -92,9 +92,9 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
 ]
 awaiting_operator = [
+  "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
 ]
 blocked = [
   "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
@@ -104,9 +104,8 @@ verified_pending_closeout = [
 ]
 planned = [
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
-  "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
 ]
-archived_task_count = 75
+archived_task_count = 76
 
 [blockers]
 items = [
@@ -121,7 +120,7 @@ items = [
   "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
   "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
   "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
-  "The qualification-04 producer and v3 contracts are accepted on remote dev and fresh source closure passed; the first qualification is diagnostic because the coordinator selected a historical v2 stage filename.",
+  "Qualification-04 is accepted against the repaired remote dev composition; revalidation-03 is staged with the exact v3 binding and remains staged_not_prepared with no observer, permit, execution, verdict, or route authority.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
