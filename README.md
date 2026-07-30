@@ -64,7 +64,7 @@ M3 existing-portable adoption is authorised backlog after the playable alpha, no
 This reviewed and reproduced dev-integrated tree enumerates 125 commands, 304 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `qualification_04_producer_binding_active_before_remote_source_closure_no_product_authority`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `qualification_04_stage_handoff_binding_filename_repair_active_no_product_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

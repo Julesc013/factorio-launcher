@@ -29,7 +29,7 @@ runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 playability = "not_yet_playable"
 user_workflow = "advanced_command_surface_only"
 execution = "unavailable"
-execution_reason = "qualification_04_producer_binding_active_before_remote_source_closure_no_product_authority"
+execution_reason = "qualification_04_stage_handoff_binding_filename_repair_active_no_product_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -121,7 +121,7 @@ items = [
   "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
   "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
   "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
-  "The observer import-closure repair is accepted on exact remote dev; qualification 04 is active and must first integrate its literal producer WorkUnit binding before fresh remote source closure.",
+  "The qualification-04 producer and v3 contracts are accepted on remote dev and fresh source closure passed; the first qualification is diagnostic because the coordinator selected a historical v2 stage filename.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",

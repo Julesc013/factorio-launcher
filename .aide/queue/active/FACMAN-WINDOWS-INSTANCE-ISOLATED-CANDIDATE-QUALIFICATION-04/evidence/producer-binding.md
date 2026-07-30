@@ -40,6 +40,24 @@ FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03
 The accepted v2 schemas remain unchanged and continue to describe the
 historical qualification-03/revalidation-02 chain.
 
-The source update must reach reviewed remote `dev` before remote source
-closure. Qualification evidence will not be generated from this local
-worktree.
+The source update reached reviewed remote `dev`:
+
+```text
+task revision
+c8bc937f1190d1068745a255b9d28ff24a499c0c
+
+PR
+#99
+
+dev integration
+569883a86c50ca203ccbecec6d37216f22f7c6a0
+```
+
+The exact PR head and integrated `dev` passed CI, schema, code-security, and
+security-policy workflows. Fresh remote source closure and a diagnostic
+qualification then proved the producer and v3 schemas, but the coordinator
+stage handoff was stopped before invocation because it would have copied the
+v3 binding under `qualification-binding.v2.json`.
+
+That diagnostic chain is preserved and superseded before stage. It is not
+silently reused after the coordinator repair.

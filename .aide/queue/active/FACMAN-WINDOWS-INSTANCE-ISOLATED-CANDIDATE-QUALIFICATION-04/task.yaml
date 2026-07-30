@@ -7,9 +7,10 @@ planning_state: active
 created_at: 2026-07-30T18:25:51Z
 owner: Jules
 objective: >
-  Bind the frozen producer to qualification-04 through a reviewed source
-  update, then perform fresh remote source closure and generate a new
-  qualification without overwriting qualification-03.
+  Bind the frozen producer to qualification-04, preserve the first diagnostic
+  qualification that exposed the v3-to-v2 stage-filename defect, integrate the
+  bounded coordinator repair, then perform fresh remote source closure,
+  qualification, and stage-only handoff without overwriting historical chains.
 allowed_paths:
   - .aide/queue/**
   - .aide/history/**
@@ -22,10 +23,12 @@ allowed_paths:
   - todo.md
   - tools/project_state.py
   - tools/instance_isolated_candidate_qualification.py
+  - tools/instance_isolated_verdict_coordinator.py
   - tools/play_verdict_route.py
   - contracts/schema/factorio/play_candidate_qualification_binding.v3.schema.json
   - contracts/schema/factorio/instance_isolated_candidate_qualification.v3.schema.json
   - tests/test_instance_isolated_candidate_qualification.py
+  - tests/test_instance_isolated_verdict_coordinator.py
   - tests/test_aide_compaction.py
   - tests/test_aide_target_truth.py
   - tests/test_current_truth_roles.py
@@ -62,6 +65,7 @@ architecture_invariants:
   - qualification-03 and its digests remain historical and immutable
   - the producer is literally source-bound to qualification-04 before source closure and cannot accept an ambient WorkUnit override
   - versioned v3 bindings identify revalidation-03 without rewriting the accepted v2 qualification-03 and revalidation-02 contracts
+  - stage preserves the v3 qualification filename and never labels v3 bytes as a historical v2 binding
   - only reviewed remote source refs and exact provider pins may enter qualification-04
   - source closure build artifact Factorio source and instance bindings are fresh
   - qualification grants no prepare Factorio permit verdict or route authority
@@ -73,6 +77,7 @@ commit_template: .aide/git/commit-template.md
 closeout_checklist:
   - observer import-closure repair is reviewed integrated and remotely reachable
   - qualification producer exact-root binding is reviewed integrated and remotely reachable
+  - coordinator stage handoff preserves the v3 binding filename through a reviewed remote integration
   - empty-root source closure binds exact FacMan Launcher and Setup revisions
   - clean build and fresh qualification records pass
   - new qualification digest is recorded without overwriting qualification-03

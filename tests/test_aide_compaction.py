@@ -190,7 +190,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "observer_import_closure_accepted_qualification_04_producer_binding_active_no_product_authority",
+            "qualification_04_diagnostic_superseded_before_stage_handoff_binding_filename_repair_active_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(

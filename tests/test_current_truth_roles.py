@@ -56,10 +56,10 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
         self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
 
-    def test_plan_observes_qualification_04_producer_binding(self) -> None:
+    def test_plan_observes_qualification_04_stage_handoff_repair(self) -> None:
         gate = next(item for item in self.plan["gate"] if item["status"] == "active")
         self.assertEqual(gate["external_ref"], QUALIFICATION_04)
-        self.assertEqual(gate["stage"], "producer_binding_update")
+        self.assertEqual(gate["stage"], "stage_handoff_binding_filename_repair")
         self.assertEqual(gate["owner"], "Jules")
         self.assertFalse(gate["operator_assignment_required"])
 
@@ -96,9 +96,34 @@ class CurrentTruthRoleTests(unittest.TestCase):
             qualification_04["producer_work_unit_binding"],
             QUALIFICATION_04,
         )
-        self.assertFalse(qualification_04["producer_binding_integrated"])
-        self.assertEqual(qualification_04["remote_source_closure"], "not_started")
-        self.assertFalse(qualification_04["qualification_generated"])
+        self.assertTrue(qualification_04["producer_binding_integrated"])
+        self.assertEqual(
+            qualification_04["producer_dev_integration_revision"],
+            "569883a86c50ca203ccbecec6d37216f22f7c6a0",
+        )
+        self.assertEqual(
+            qualification_04["remote_source_closure"],
+            "pass_superseded_by_stage_binding_filename_defect",
+        )
+        self.assertTrue(qualification_04["qualification_generated"])
+        self.assertEqual(
+            qualification_04["qualification_disposition"],
+            "superseded_before_stage",
+        )
+        self.assertEqual(
+            qualification_04["qualification_digest"],
+            "b6d1e7b030a17cf5279d363c341a8405526363217c96928d78d199d6a073363b",
+        )
+        self.assertFalse(qualification_04["stage_started"])
+        self.assertEqual(
+            qualification_04["stage_handoff_defect"],
+            "v3_binding_would_be_staged_under_historical_v2_filename",
+        )
+        self.assertEqual(
+            qualification_04["stage_handoff_target_filename"],
+            "qualification-binding.v3.json",
+        )
+        self.assertFalse(qualification_04["historical_v2_filename_emitted"])
         self.assertFalse(qualification_04["authority_promotion"])
         closeout = self.status["canonical_plan_and_truth_closeout"]
         self.assertEqual(closeout["external_gate"], REVALIDATION)
