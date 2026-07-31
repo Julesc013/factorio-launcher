@@ -1,0 +1,74 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05
+title: Qualify the qualification-bound instance-isolated candidate
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-31T17:52:15Z
+owner: Jules
+objective: >
+  Perform fresh remote-only three-repository source closure and qualify the exact integrated observer-route repair without granting execution authority.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/history/**
+  - .aide/memory/**
+  - release/index/**
+  - docs/release/checkpoints/**
+  - README.md
+  - docs/roadmap.md
+  - docs/platform/support_matrix.md
+  - todo.md
+  - tools/project_state.py
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tests/test_current_truth_roles.py
+  - tests/test_plan_views.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+affected_python_tests:
+  - tests.test_gate4c_observer_self_test
+  - tests.test_instance_isolated_candidate_qualification
+  - tests.test_instance_isolated_verdict_coordinator
+  - tests.test_play_verdict_route
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_current_truth_roles
+  - tests.test_plan_views
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - qualification-04 and revalidation-03 remain historical and immutable
+  - the exact integrated FacMan dev revision and reviewed ULK and USK pins are reconstructed from canonical remotes in new empty roots
+  - qualification v4 identifies qualification-05 and revalidation-04 without rewriting any historical schema or record
+  - candidate build Factorio source and instance bindings are freshly authenticated
+  - qualification grants no observer prepare process permit verdict or route authority
+  - provider network access is limited to remote source closure and does not repin either provider
+depends_on:
+  - FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - observer-route repair is reviewed integrated and remotely reachable
+  - new empty-root remote source closure binds exact FacMan Launcher and Setup revisions
+  - clean build and package proof pass without required skips
+  - fresh qualification-05 binding and report validate under v4 schemas
+  - new qualification digest is recorded without overwriting historical qualification digests
+  - revalidation-04 is created as a separate stage-only successor WorkUnit
+  - no WPR observer prepare process permit verdict or authority action occurs
+active_at: 2026-07-31T17:52:15Z
+verified_pending_closeout_at: 2026-07-31T18:18:44Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-07-31T18:19:03Z
+closed_at: 2026-07-31T18:19:03Z
+archived_at: 2026-07-31T18:19:04Z

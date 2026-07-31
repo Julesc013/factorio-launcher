@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-07-31T17:52:15Z
+result: PASS
+evidence_path: .aide/history/windows-instance-isolated-candidate-qualification-05/FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05/evidence/
+active_at: 2026-07-31T17:52:15Z
+verified_pending_closeout_at: 2026-07-31T18:18:44Z
+implementation_state: implemented
+reviewed_at: 2026-07-31T18:19:03Z
+closed_at: 2026-07-31T18:19:03Z
+archived_at: 2026-07-31T18:19:04Z

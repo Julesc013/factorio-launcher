@@ -19,9 +19,11 @@ PROMOTION_SOURCE = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 REVALIDATION_02 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
 REVALIDATION_03 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
+REVALIDATION_04 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
 REPAIR = "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01"
 QUALIFICATION_04 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
 ROUTE_BINDING_REPAIR = "FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01"
+QUALIFICATION_05 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05"
 
 
 def load_toml(path: Path) -> dict:
@@ -58,12 +60,12 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
         self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
 
-    def test_plan_observes_bounded_route_binding_repair(self) -> None:
+    def test_plan_observes_staged_revalidation_04(self) -> None:
         gate = next(item for item in self.plan["gate"] if item["status"] == "active")
-        self.assertEqual(gate["external_ref"], ROUTE_BINDING_REPAIR)
-        self.assertEqual(gate["stage"], "source_repair_active")
-        self.assertEqual(gate["owner"], "Codex")
-        self.assertFalse(gate["operator_assignment_required"])
+        self.assertEqual(gate["external_ref"], REVALIDATION_04)
+        self.assertEqual(gate["stage"], "staged_not_prepared")
+        self.assertEqual(gate["owner"], "unassigned")
+        self.assertTrue(gate["operator_assignment_required"])
 
     def test_candidate_and_authority_bindings_remain_unpromoted(self) -> None:
         qualification = self.status[
@@ -173,8 +175,44 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertFalse(route_repair["wpr_execution"])
         self.assertFalse(route_repair["factorio_execution"])
         self.assertFalse(route_repair["authority_promotion"])
+        qualification_05 = self.status[
+            "windows_instance_isolated_candidate_qualification_05"
+        ]
+        self.assertEqual(qualification_05["work_unit"], QUALIFICATION_05)
+        self.assertEqual(
+            qualification_05["remote_source_closure_facman_revision"],
+            "8f495d63b412a3af5a22305d9d8b424efd4303d2",
+        )
+        self.assertEqual(
+            qualification_05["qualification_digest"],
+            "eaea8e2bbc03268f49f0fa8c077e329edae317c3757ef42a628a05da06cf1788",
+        )
+        self.assertFalse(qualification_05["factorio_execution"])
+        self.assertFalse(qualification_05["authority_promotion"])
+        revalidation_04 = self.status[
+            "windows_instance_isolated_play_revalidation_04"
+        ]
+        self.assertEqual(revalidation_04["work_unit"], REVALIDATION_04)
+        self.assertEqual(
+            revalidation_04["status"],
+            "active_staged_not_prepared_awaiting_operator_designation",
+        )
+        self.assertEqual(
+            revalidation_04["staged_candidate_digest"],
+            "060bbeaea354bc39a9601208e89b8a2fe066cdeef0ffffb2e0174514838e4249",
+        )
+        self.assertEqual(
+            revalidation_04["staged_qualification_filename"],
+            "qualification-binding.v4.json",
+        )
+        self.assertEqual(revalidation_04["operator"], "unassigned")
+        self.assertTrue(revalidation_04["operator_assignment_required"])
+        self.assertFalse(revalidation_04["coordinator_prepare"])
+        self.assertEqual(revalidation_04["observer_self_test"], "not_started")
+        self.assertFalse(revalidation_04["factorio_execution"])
+        self.assertFalse(revalidation_04["authority_promotion"])
         closeout = self.status["canonical_plan_and_truth_closeout"]
-        self.assertEqual(closeout["external_gate"], REVALIDATION_03)
+        self.assertEqual(closeout["external_gate"], REVALIDATION_04)
         self.assertEqual(closeout["external_gate_stage"], "staged_not_prepared")
         self.assertEqual(closeout["operator"], "unassigned")
         self.assertEqual(closeout["human_verdict"], "unset")

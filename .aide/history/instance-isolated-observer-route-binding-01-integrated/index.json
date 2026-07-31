@@ -1,0 +1,19 @@
+{
+  "checkpoint": "instance-isolated-observer-route-binding-01-integrated",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "d6b0399c49ad13f7c97553fea018447b1c7318cfb07ae9a60bd37aee6b680512",
+        "evidence/implementation-and-local-validation.md": "b0e82dcf208f7af6ab84d54ae3593e65cc253f9076e9271eb00e312f6d98b9a3",
+        "evidence/remaining-risks.md": "6b77827d3b995eb2b70f9842691bd72e3c7a5337fd303ffb477d3554ad72762b",
+        "evidence/validation.md": "b100970d87934ec59e109896518d9eba25e03ca7ea00c1cee060ebbea21bec57",
+        "status.yaml": "c149a5a377e2d41ee9d316d2cdeced8bf97b9e6f067dca7a601ee8684068a379",
+        "task.yaml": "4f73a6352bd74a201d5a0524827a9225479423ce94da4fe91511a554d7885863"
+      },
+      "task_id": "FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01"
+    }
+  ]
+}
