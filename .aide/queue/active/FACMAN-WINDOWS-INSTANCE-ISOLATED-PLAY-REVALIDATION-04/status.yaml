@@ -1,0 +1,10 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04
+status: awaiting_operator
+lifecycle_state: awaiting_operator
+planning_state: awaiting_operator
+created_at: 2026-07-31T18:19:02Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04/evidence/
+active_at: 2026-07-31T18:19:04Z
+awaiting_operator_at: 2026-07-31T19:00:03Z

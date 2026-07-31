@@ -241,6 +241,12 @@ def collect() -> dict[str, Any]:
         "instance_isolated_observer_route_binding_01": status[
             "instance_isolated_observer_route_binding_01"
         ],
+        "windows_instance_isolated_candidate_qualification_05": status[
+            "windows_instance_isolated_candidate_qualification_05"
+        ],
+        "windows_instance_isolated_play_revalidation_04": status[
+            "windows_instance_isolated_play_revalidation_04"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -990,9 +996,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         if closeout.get(field) != expected:
             problems.append(f"canonical plan truth closeout {field} must be {expected!r}")
     if closeout.get("external_gate") != (
-        "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
+        "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
     ):
-        problems.append("canonical plan truth closeout must observe revalidation-03")
+        problems.append("canonical plan truth closeout must observe revalidation-04")
     if closeout.get("external_gate_stage") != "staged_not_prepared":
         problems.append("canonical plan truth closeout must preserve staged_not_prepared")
     for field in (
@@ -1429,6 +1435,32 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "revalidation_03_superseded_before_observer_self_test_route_binding_repair_active",
+        },
+        "windows_instance_isolated_candidate_qualification_05": {
+            "checkpoint": "windows-instance-isolated-candidate-qualification-05",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            "last_closed": "FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
+            "phase_status": "active",
+            "safety": "observer_route_binding_repair_accepted_fresh_qualification_05_active_no_product_authority",
+            "execution_reason": "fresh_remote_only_qualification_05_active_no_product_play_authority",
+            "truth_scope": "observer_route_binding_repair_accepted_fresh_qualification_05_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "qualification_05_active_before_revalidation_04_stage",
+        },
+        "windows_instance_isolated_play_revalidation_04": {
+            "checkpoint": "windows-instance-isolated-play-revalidation-04-staged",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            "next": "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+            "phase_status": "awaiting_operator_gate",
+            "safety": "qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_authority",
+            "execution_reason": "qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_play_authority",
+            "truth_scope": "qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_04_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
