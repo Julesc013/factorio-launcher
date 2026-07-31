@@ -55,7 +55,7 @@ constexpr const char* kInstanceComparisonSchema =
 constexpr const char* kWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-03";
 constexpr const char* kInstanceIsolatedWorkUnit =
-    "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02";
+    "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04";
 constexpr const char* kObserverStartRepairWorkUnit =
     "FACMAN-HERMETIC-STANDALONE-PLAY-OBSERVER-START-REPAIR-01";
 constexpr const char* kPrivilegeRepairWorkUnit =
@@ -2547,8 +2547,24 @@ int route_binding_self_test()
 #else
     try {
         const VerdictRouteBinding legacy = route_for_work_unit(kWorkUnit);
+        constexpr const char* kExpectedInstanceIsolatedWorkUnit =
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04";
         const VerdictRouteBinding isolated =
-            route_for_work_unit(kInstanceIsolatedWorkUnit);
+            route_for_work_unit(kExpectedInstanceIsolatedWorkUnit);
+        bool rejected_revalidation02 = false;
+        try {
+            (void)route_for_work_unit(
+                "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02");
+        } catch (const std::exception&) {
+            rejected_revalidation02 = true;
+        }
+        bool rejected_revalidation03 = false;
+        try {
+            (void)route_for_work_unit(
+                "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03");
+        } catch (const std::exception&) {
+            rejected_revalidation03 = true;
+        }
         bool rejected_unknown = false;
         try {
             (void)route_for_work_unit("FACMAN-UNREVIEWED-PLAY");
@@ -2565,8 +2581,12 @@ int route_binding_self_test()
                 launch::kInstanceIsolatedCandidatePolicyDigest ||
             std::string(isolated.isolation_mode) !=
                 launch::kInstanceIsolatedCandidateIsolation ||
+            std::string(isolated.work_unit) !=
+                kExpectedInstanceIsolatedWorkUnit ||
             route_protected_resource_ids(isolated.kind).size() != 12U ||
             route_automated_controls(isolated.kind).empty() ||
+            !rejected_revalidation02 ||
+            !rejected_revalidation03 ||
             !rejected_unknown) {
             std::cerr
                 << "Gate 4C closed route binding self-test failed.\n";

@@ -1026,7 +1026,7 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             )
             self.assertEqual(
                 qualification_copy.name,
-                "qualification-binding.v3.json",
+                "qualification-binding.v4.json",
             )
             self.assertTrue(qualification_copy.is_file())
             self.assertFalse(

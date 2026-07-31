@@ -1,0 +1,70 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01
+title: Close qualification-bound observer and native route identity
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-07-31T16:39:06Z
+owner: Codex
+objective: >
+  Bind the instance-isolated observer self-test and native session route to the immutable qualification-05/revalidation-04 contract without executing WPR, prepare, permits, Factorio, verdicts, or route promotion.
+allowed_paths:
+  - .aide/queue/**
+  - contracts/schema/factorio/play_candidate_qualification_binding.v4.schema.json
+  - contracts/schema/factorio/instance_isolated_candidate_qualification.v4.schema.json
+  - tools/gate4c_observer_self_test.py
+  - tools/play_verdict_route.py
+  - tools/instance_isolated_candidate_qualification.py
+  - tools/instance_isolated_verdict_coordinator.py
+  - tools/project_state.py
+  - tests/test_gate4c_observer_self_test.py
+  - tests/test_play_verdict_route.py
+  - tests/test_instance_isolated_candidate_qualification.py
+  - tests/test_instance_isolated_verdict_coordinator.py
+  - tests/native/gate4c_verdict_harness.cpp
+  - release/index/**
+  - docs/release/checkpoints/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+affected_python_tests:
+  - tests.test_gate4c_observer_self_test
+  - tests.test_play_verdict_route
+  - tests.test_instance_isolated_candidate_qualification
+  - tests.test_instance_isolated_verdict_coordinator
+  - tests.test_current_truth_roles
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - revalidation-03 remains immutable and superseded before observer self-test
+  - instance-isolated observer identity comes only from an exact staged qualification binding
+  - native routing accepts exactly revalidation-04 and rejects historical attempts
+  - hermetic Verdict-03 remains distinct and explicitly supported
+  - tests do not start WPR acquire a lease issue a permit or execute Factorio
+  - source repair changes no observer capture policy or route authority
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - exact no-PYTHONPATH script-path import closure passes
+  - qualification-bound identity projection and negative controls pass
+  - native successor route and historical rejection controls pass
+  - non-executing cross-component conformance passes
+  - affected and strict validation pass without WPR or Factorio execution
+  - revalidation-03 is preserved as superseded before observer self-test
+  - qualification-05 and revalidation-04 are explicit successors
+  - no authority flag changes
+  - structured commit check passes
+active_at: 2026-07-31T16:39:07Z
+verified_pending_closeout_at: 2026-07-31T17:01:03Z
+implementation_state: implemented
+result: PASS

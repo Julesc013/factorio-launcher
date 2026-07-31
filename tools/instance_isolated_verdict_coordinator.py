@@ -45,7 +45,7 @@ from tools.play_verdict_route import (
 
 CONFIG_SCHEMA = "factorio.instance_isolated_verdict_coordinator_config.v2"
 PREPARED_SCHEMA = "factorio.instance_isolated_prepared_launch.v1"
-QUALIFICATION_BINDING_FILENAME = "qualification-binding.v3.json"
+QUALIFICATION_BINDING_FILENAME = "qualification-binding.v4.json"
 CONFIG_KEYS = {
     "schema",
     "task_root",

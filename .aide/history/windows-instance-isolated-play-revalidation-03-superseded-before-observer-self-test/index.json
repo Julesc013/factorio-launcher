@@ -1,0 +1,18 @@
+{
+  "checkpoint": "windows-instance-isolated-play-revalidation-03-superseded-before-observer-self-test",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/operator-designation.md": "3db4b1d13210474f67c6314104967be3b7402a20f918be72187b897414f692a2",
+        "evidence/source-bound-observer-route-binding-defect.md": "b39eb859dedf22fdaedda5847cbde37db4070024df9d8af4440e3bcd33727dc3",
+        "evidence/stage-binding.md": "6c328c136ac8a3c77680c0848dcf0778d534ab26d447996552dd7a455663765f",
+        "status.yaml": "da69980dbde3183f13ed0824061bcd491a5f4a469a2f54ddef68611473730c0e",
+        "task.yaml": "17ed9d6163ebb96c96ec380915f2a8cd473d50e963a8f3aa78599236c53b3520"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
+    }
+  ]
+}

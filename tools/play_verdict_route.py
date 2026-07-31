@@ -17,7 +17,8 @@ from typing import Any, Mapping
 QUALIFICATION_SCHEMA_V1 = "facman.play_candidate_qualification_binding.v1"
 QUALIFICATION_SCHEMA_V2 = "facman.play_candidate_qualification_binding.v2"
 QUALIFICATION_SCHEMA_V3 = "facman.play_candidate_qualification_binding.v3"
-QUALIFICATION_SCHEMA = QUALIFICATION_SCHEMA_V3
+QUALIFICATION_SCHEMA_V4 = "facman.play_candidate_qualification_binding.v4"
+QUALIFICATION_SCHEMA = QUALIFICATION_SCHEMA_V4
 CANONICALIZATION = "facman.sorted-json.v1"
 LOWERCASE_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 LOWERCASE_COMMIT = re.compile(r"^[0-9a-f]{40}$")
@@ -120,7 +121,7 @@ HERMETIC_VERDICT03 = PlayVerdictRoute(
 
 INSTANCE_ISOLATED_REVALIDATION = PlayVerdictRoute(
     route_id="windows-instance-isolated-revalidation",
-    work_unit="FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
+    work_unit="FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
     preflight_schema="factorio.instance_isolated_play_verdict_preflight.v2",
     policy_digest=(
         "8d8189a9e8fc9ff7e479f7dda1adf0ea"
@@ -178,7 +179,7 @@ INSTANCE_ISOLATED_REVALIDATION = PlayVerdictRoute(
             "registry.factorio_uninstall",
         }
     ),
-    qualification_schema=QUALIFICATION_SCHEMA_V3,
+    qualification_schema=QUALIFICATION_SCHEMA_V4,
     required_artifacts=frozenset(
         {
             "facman",

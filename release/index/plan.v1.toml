@@ -68,17 +68,17 @@ exit = [
 
 [[gate]]
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
-title = "Conduct repaired instance-isolated Play revalidation"
+title = "Repair qualification-bound observer and native route identity"
 status = "active"
-owner = "unassigned"
-external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
+owner = "Codex"
+external_ref = "FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01"
 source = ".aide/queue/index.yaml"
-observed = "2026-07-31"
-stage = "staged_not_prepared"
-operator_assignment_required = true
-authority_boundary = "Exact repaired candidate staged only. No prepare, observer/WPR, permit, Factorio, verdict, route, Setup, credential/network, signing, or publication authority."
-summary = "Qualification-04 passed at repaired remote dev and revalidation-03 is staged with the v3 binding. Next: operator designation, elevated self-test, and separate prepare authority."
-exit = "A separately authorized two-launch procedure records exactly Pass, Fail, or Inconclusive. Any later Pass grants no route authority by itself and proceeds only to the exact capability and route-promotion WorkUnits."
+observed = "2026-08-01"
+stage = "source_repair_active"
+operator_assignment_required = false
+authority_boundary = "Source, immutable successor contract, and non-executing regression repair only. No observer/WPR, prepare, permit, Factorio, verdict, route, Setup, credential/network, signing, or publication authority."
+summary = "Revalidation-03 is preserved as superseded before observer start. Repair the Python qualification binding and native revalidation-04 session route, then integrate before qualification-05."
+exit = "The exact script-path and binding negative controls, native successor-route smoke, affected tests, strict checks, and hosted review pass; the repair reaches dev without authority expansion."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"

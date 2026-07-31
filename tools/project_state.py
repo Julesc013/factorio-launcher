@@ -238,6 +238,9 @@ def collect() -> dict[str, Any]:
         "windows_instance_isolated_play_revalidation_03": status[
             "windows_instance_isolated_play_revalidation_03"
         ],
+        "instance_isolated_observer_route_binding_01": status[
+            "instance_isolated_observer_route_binding_01"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -1413,6 +1416,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "revalidation_03_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive",
+        },
+        "instance_isolated_observer_route_binding": {
+            "checkpoint": "instance-isolated-observer-route-binding-01",
+            "active": "FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            "phase_status": "active",
+            "safety": "revalidation_03_superseded_before_observer_self_test_route_binding_repair_active_no_product_authority",
+            "execution_reason": "observer_and_native_route_binding_repair_active_no_product_play_authority",
+            "truth_scope": "revalidation_03_superseded_before_observer_self_test_route_binding_repair_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_03_superseded_before_observer_self_test_route_binding_repair_active",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
