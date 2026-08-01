@@ -263,19 +263,28 @@ evidence = [
 id = "FACMAN-JOURNEYS-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Specify the C1 positive and paired failure journeys"
-status = "ready"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "product-maintainer"
 repos = ["factorio-launcher", "universal-launcher"]
 depends_on = ["FACMAN-C1-CUTLINE-01"]
 decision_blockers = []
+branch = "task/facman-journeys-01"
+base_revision = "4620ebe8a382960d48e82a0a5ff90230a8f70588"
 outcome = "Define J01 from an existing install to Play and the stale-readiness refusal/rescan path with budgets, accessibility, evidence, and exclusions."
 acceptance = [
   "The journey records persona, starting state, platform, connectivity, decision count, claims, failure path, budget, accessibility, evidence, and exclusions.",
   "The negative path changes the installation after readiness and proves FacMan refuses stale authority.",
+  "Frontend or response loss never becomes success or ordinary cancellation; exact operation inspection, truthful recovery, and fresh-authority relaunch are required.",
+  "Fixture semantics and later separately authorized live acceptance are distinct, and this WorkUnit grants no live Play authority.",
 ]
-evidence = []
+evidence = [
+  "docs/product/facman_c1_journeys.md",
+  "docs/release/checkpoints/facman-journeys-01.md",
+  "release/index/plan.v1.toml",
+  "tests/test_plan_views.py",
+]
 
 [[workunit]]
 id = "CLAIM-LEDGER-01"

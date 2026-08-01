@@ -21,8 +21,8 @@ last_reviewed: 2026-08-01
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 1/3 including external gates
-- Ready: 2/10
-- Near-term work units: 5/5
+- Ready: 1/10
+- Near-term work units: 4/5
 
 ## North star
 
@@ -76,14 +76,11 @@ _No internal work unit is active. An authority-only external gate does not block
 
 ## Ready queue
 
-1. `FACMAN-JOURNEYS-01` [P0/M] — Specify the C1 positive and paired failure journeys
-   - Owner: `product-maintainer`; outcome: Define J01 from an existing install to Play and the stale-readiness refusal/rescan path with budgets, accessibility, evidence, and exclusions.
-2. `INSTANCE-VIEW-MINIMUM-01` [P1/M] — Freeze the FacMan-local C1 presentation minimum
+1. `INSTANCE-VIEW-MINIMUM-01` [P1/M] — Freeze the FacMan-local C1 presentation minimum
    - Owner: `product-maintainer`; outcome: Define facman.presentation.v0 snapshots and actions for the four pages, Launch Deck, Activity, refusal, and recovery states without toolkit types or a universal ABI.
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-JOURNEYS-01` — ready; depends on `FACMAN-C1-CUTLINE-01`
 - [ ] `INSTANCE-VIEW-MINIMUM-01` — ready; depends on `FACMAN-C1-CUTLINE-01`
 - [ ] `C1-FIXTURE-VERTICAL-SLICE-01` — planned; depends on `FACMAN-JOURNEYS-01`, `INSTANCE-VIEW-MINIMUM-01`
 - [ ] `FACMAN-WINFORMS-C1-SHELL-01` — planned; depends on `C1-FIXTURE-VERTICAL-SLICE-01`
@@ -131,6 +128,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `PLAN-CANON-01` — Establish the canonical plan and generated operational views
 - [x] `FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01` — Reconcile canonical plan and revision-role truth
 - [x] `FACMAN-C1-CUTLINE-01` — Ratify the playable-instance cut-line
+- [x] `FACMAN-JOURNEYS-01` — Specify the C1 positive and paired failure journeys
 
 ## Validation commands
 

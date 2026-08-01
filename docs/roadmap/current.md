@@ -62,8 +62,8 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `product-maintainer`; dependencies: `PLAN-CANON-01`
   - Outcome: Turn the proposed C1 inclusions, exclusions, reference-lane rule, and release exit into a reviewed release contract.
-- [ ] **FACMAN-JOURNEYS-01** — Specify the C1 positive and paired failure journeys
-  - State: `ready`; priority/size: `P0/M`
+- [x] **FACMAN-JOURNEYS-01** — Specify the C1 positive and paired failure journeys
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-C1-CUTLINE-01`
   - Outcome: Define J01 from an existing install to Play and the stale-readiness refusal/rescan path with budgets, accessibility, evidence, and exclusions.
 - [ ] **INSTANCE-VIEW-MINIMUM-01** — Freeze the FacMan-local C1 presentation minimum
