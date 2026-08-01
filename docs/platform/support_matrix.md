@@ -42,7 +42,7 @@ evidence-backed status table above.
 | Platform | Support level | Artifact |
 | --- | ---: | --- |
 | Windows modern WinUI | Primary target | installer + portable ZIP |
-| Windows legacy WinForms | Legacy best-effort | portable ZIP + optional installer |
+| Windows 10/11 x64 WinForms | Supported C1 reference target | portable ZIP |
 | macOS modern SwiftUI | Primary modern target | signed/notarized universal `.app` |
 | macOS legacy AppKit | Legacy target | x86_64 AppKit `.app` |
 | macOS 10.10-10.12 Intel | Experimental legacy | CLI/basic GUI only if tested |

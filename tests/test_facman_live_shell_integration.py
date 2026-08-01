@@ -25,12 +25,17 @@ class FacManLiveShellIntegrationTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         self.assertIn("3 shells", completed.stdout)
 
-    def test_workunit_closes_and_windows_candidate_is_ready(self) -> None:
+    def test_workunit_closes_and_windows_candidate_is_active(self) -> None:
         with (ROOT / "release/index/plan.v1.toml").open("rb") as handle:
             plan = tomllib.load(handle)
         work = {item["id"]: item for item in plan["workunit"]}
         self.assertEqual(work["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]["status"], "complete")
-        self.assertEqual(work["C1-WINDOWS-RELEASE-CANDIDATE-01"]["status"], "ready")
+        candidate = work["C1-WINDOWS-RELEASE-CANDIDATE-01"]
+        self.assertEqual(candidate["status"], "active")
+        self.assertEqual(candidate["branch"], "task/c1-windows-release-candidate-01")
+        self.assertEqual(
+            candidate["base_revision"], "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8"
+        )
         self.assertIn(
             "FACMAN-C1-LIVE-SHELL-INTEGRATION-01",
             work["C1-WINDOWS-RELEASE-CANDIDATE-01"]["depends_on"],
@@ -39,7 +44,10 @@ class FacManLiveShellIntegrationTests(unittest.TestCase):
     def test_current_truth_keeps_live_play_unavailable(self) -> None:
         with (ROOT / "release/index/current_state.v1.toml").open("rb") as handle:
             state = tomllib.load(handle)
-        self.assertEqual(state["revisions"]["observed_dev"], "8f99e968e336b10eef3665a01f21f9c94a0a24e6")
+        self.assertEqual(
+            state["revisions"]["observed_dev"],
+            "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
+        )
         self.assertEqual(state["product"]["execution"], "unavailable")
         self.assertEqual(state["scorecard"]["accepted_real_play_routes"], 0)
         self.assertNotEqual(state["product"]["user_workflow"], "advanced_command_surface_only")

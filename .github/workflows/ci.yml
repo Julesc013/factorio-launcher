@@ -203,7 +203,7 @@ jobs:
           cmake --build build/native-smoke --config Release --parallel
           ctest --test-dir build/native-smoke -C Release --output-on-failure
       - name: Build WinForms shell
-        run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Debug
+        run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Release /p:Platform=x64
       - name: Smoke WinForms command client
         run: python tools/winforms_command_client_smoke.py
       - name: Run Windows Python unit tests
@@ -228,6 +228,24 @@ jobs:
         run: |
           python tools/package_build.py --profile windows_legacy_winforms_x64 --out build/packages --build-root build/native-smoke
           python tools/package_runtime_smoke.py --root build/packages/windows_legacy_winforms_x64
+      - name: Construct provisional Windows C1 release candidate
+        run: >-
+          python tools/windows_c1_release_candidate.py
+          --build-root build/native-smoke
+          --out build/c1-windows-rc/packages
+          --dist build/c1-windows-rc/dist
+          --evidence build/c1-windows-rc/evidence.v1.json
+      - name: Preserve unsigned Windows C1 release-candidate evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-c1-release-candidate-${{ github.sha }}
+          path: |
+            build/c1-windows-rc/dist/*.zip
+            build/c1-windows-rc/dist/*.sha256
+            build/c1-windows-rc/dist/*.provenance.v1.json
+            build/c1-windows-rc/evidence.v1.json
+          if-no-files-found: error
+          retention-days: 14
 
   macos-archive-core:
     runs-on: macos-15-intel

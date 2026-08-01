@@ -20,8 +20,8 @@ last_reviewed: 2026-08-01
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 1/3 including external gates
-- Ready: 1/10
+- WIP: 2/3 including external gates
+- Ready: 0/10
 - Near-term work units: 1/5
 
 ## North star
@@ -72,16 +72,16 @@ Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isola
 
 ## Active work units
 
-_No internal work unit is active. An authority-only external gate does not block ready product work._
+- [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
+  - Owner: `release-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
 
 ## Ready queue
 
-1. `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
-   - Owner: `release-maintainer`; outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — ready; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
 
 ## Blocking decisions
 

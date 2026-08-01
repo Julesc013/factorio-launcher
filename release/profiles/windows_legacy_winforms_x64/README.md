@@ -1,4 +1,6 @@
-# Windows Legacy WinForms x64 Release Profile
+# Windows 10/11 WinForms x64 Release Profile
 
-This profile is a distribution contract for the Windows WinForms x64 lane. It
-does not publish or sign an installer by itself.
+This profile is the distribution contract for the supported C1 reference
+technology on Windows 10/11 x64. Its current artifacts remain unsigned,
+unpublished release-candidate evidence until clean-machine, accessibility,
+exact-route, signing, and publication claims are independently satisfied.

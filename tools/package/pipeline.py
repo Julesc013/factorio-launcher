@@ -588,7 +588,8 @@ def resolve_source_target(source_target: str, build_root: Path) -> Path:
     names = source_target_candidates(source_target)
     if source_target == "apps/gui/windows/winforms":
         names = ["FacMan.WinForms.exe"]
-        roots = [ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Debug"]
+        output_root = ROOT / "apps" / "gui" / "windows" / "winforms" / "bin"
+        roots = [output_root / "Release", output_root / "Debug"]
     else:
         configurations = ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]
         roots = [build_root, *[build_root / configuration for configuration in configurations]]

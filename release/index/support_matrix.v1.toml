@@ -102,7 +102,7 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "windows_legacy_winforms_x64"
-minimum_os = "windows_7_sp1"
+minimum_os = "windows_10_22h2"
 runtime_floor = ".NET Framework 4.8"
 frontend_family = "winforms"
 compile_proof = "remote_ci"

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.windows_c1_release_candidate.v1",
+  "title": "FacMan Windows C1 Release Candidate Evidence",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "source_revision",
+    "profile_id",
+    "target",
+    "artifact",
+    "package",
+    "qualification",
+    "claims",
+    "blockers"
+  ],
+  "properties": {
+    "schema": { "const": "facman.windows_c1_release_candidate.v1" },
+    "status": { "enum": ["provisional", "pass", "fail"] },
+    "source_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "profile_id": { "const": "windows_legacy_winforms_x64" },
+    "target": {
+      "type": "object",
+      "required": ["os", "architecture", "frontend", "transport"],
+      "properties": {
+        "os": { "const": "windows_10_11" },
+        "architecture": { "const": "x64" },
+        "frontend": { "const": "winforms_net_framework_4_8" },
+        "transport": { "const": "bounded_process_rpc" }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["name", "size", "sha256", "checksum_file", "signed", "published"],
+      "properties": {
+        "name": { "type": "string", "pattern": "\\.zip$" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "checksum_file": { "type": "string", "pattern": "\\.sha256$" },
+        "signed": { "const": false },
+        "published": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "package": {
+      "type": "object",
+      "required": [
+        "component_closure",
+        "hash_manifest",
+        "sbom",
+        "licenses_notices",
+        "release_notes",
+        "support_export",
+        "live_presentation_mode",
+        "explicit_evidence_mode",
+        "source_clean"
+      ],
+      "properties": {
+        "component_closure": { "const": "pass" },
+        "hash_manifest": { "const": "pass" },
+        "sbom": { "const": "pass" },
+        "licenses_notices": { "const": "pass" },
+        "release_notes": { "const": "pass" },
+        "support_export": { "const": "pass" },
+        "live_presentation_mode": { "const": "pass" },
+        "explicit_evidence_mode": { "const": "pass" },
+        "source_clean": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "qualification": {
+      "type": "object",
+      "required": [
+        "hosted_package",
+        "windows_10_clean_machine",
+        "windows_11_clean_machine",
+        "accessibility",
+        "scaling",
+        "relocation",
+        "diagnostic_redaction",
+        "live_play"
+      ],
+      "properties": {
+        "hosted_package": { "const": "pass" },
+        "windows_10_clean_machine": { "enum": ["not_run", "pass", "fail"] },
+        "windows_11_clean_machine": { "enum": ["not_run", "pass", "fail"] },
+        "accessibility": { "enum": ["not_run", "pass", "fail"] },
+        "scaling": { "enum": ["not_run", "pass", "fail"] },
+        "relocation": { "enum": ["not_run", "pass", "fail"] },
+        "diagnostic_redaction": { "enum": ["not_run", "pass", "fail"] },
+        "live_play": { "enum": ["blocked_by_exact_route_authority", "pass", "fail"] }
+      },
+      "additionalProperties": false
+    },
+    "claims": {
+      "type": "object",
+      "required": ["release_candidate", "supported_release", "live_play", "signed", "published"],
+      "properties": {
+        "release_candidate": { "const": false },
+        "supported_release": { "const": false },
+        "live_play": { "const": false },
+        "signed": { "const": false },
+        "published": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}
