@@ -1,0 +1,293 @@
+{
+  "active_page": "instances",
+  "authority_scope": "unavailable",
+  "contract": "facman.presentation.v0",
+  "fixture_state": "refused",
+  "generated_at": "2026-08-01T12:01:00Z",
+  "launch_deck": {
+    "instance_id": "instance.c1-vanilla",
+    "instance_name": "C1 Vanilla",
+    "journey_state": "refused",
+    "last_run": null,
+    "operation_id": null,
+    "primary_action": {
+      "accessibility_label": "Play",
+      "action_id": "instance.play",
+      "availability": "refused",
+      "backend_owned": true,
+      "command_id": "run.execute",
+      "confirmation": "none",
+      "effects": [
+        "process_execution"
+      ],
+      "label": "Play",
+      "refusal": {
+        "actions": [
+          {
+            "accessibility_label": "Rescan readiness",
+            "action_id": "instance.readiness.refresh",
+            "availability": "available",
+            "backend_owned": true,
+            "command_id": "instances.readiness",
+            "confirmation": "none",
+            "effects": [
+              "read_only"
+            ],
+            "label": "Rescan readiness",
+            "refusal": null,
+            "role": "secondary"
+          }
+        ],
+        "code": "readiness.stale",
+        "current_readiness_revision": 8,
+        "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
+        "observed_readiness_revision": 7,
+        "title": "Readiness changed"
+      },
+      "role": "primary"
+    },
+    "recovery_id": null,
+    "refusal": {
+      "actions": [
+        {
+          "accessibility_label": "Rescan readiness",
+          "action_id": "instance.readiness.refresh",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "instances.readiness",
+          "confirmation": "none",
+          "effects": [
+            "read_only"
+          ],
+          "label": "Rescan readiness",
+          "refusal": null,
+          "role": "secondary"
+        }
+      ],
+      "code": "readiness.stale",
+      "current_readiness_revision": 8,
+      "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
+      "observed_readiness_revision": 7,
+      "title": "Readiness changed"
+    },
+    "secondary_actions": [
+      {
+        "accessibility_label": "Rescan readiness",
+        "action_id": "instance.readiness.refresh",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "instances.readiness",
+        "confirmation": "none",
+        "effects": [
+          "read_only"
+        ],
+        "label": "Rescan readiness",
+        "refusal": null,
+        "role": "secondary"
+      }
+    ],
+    "status_text": "Play unavailable: readiness changed"
+  },
+  "navigation": [
+    {
+      "accessibility_label": "Instances page",
+      "label": "Instances",
+      "page_id": "instances"
+    },
+    {
+      "accessibility_label": "Installations page",
+      "label": "Installations",
+      "page_id": "installations"
+    },
+    {
+      "accessibility_label": "Activity page",
+      "label": "Activity",
+      "page_id": "activity"
+    },
+    {
+      "accessibility_label": "Settings and About page",
+      "label": "Settings / About",
+      "page_id": "settings_about"
+    }
+  ],
+  "pages": {
+    "activity": {
+      "actions": [],
+      "operations": [],
+      "summary": "No active operations."
+    },
+    "installations": {
+      "actions": [
+        {
+          "accessibility_label": "Scan for installations",
+          "action_id": "installation.scan",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "installs.scan",
+          "confirmation": "none",
+          "effects": [
+            "read_only"
+          ],
+          "label": "Scan for installations",
+          "refusal": null,
+          "role": "secondary"
+        }
+      ],
+      "page_id": "installations",
+      "state": "ready",
+      "summary": "1 existing standalone installation; FacMan will not repair or update it.",
+      "title": "Installations"
+    },
+    "instances": {
+      "actions": [
+        {
+          "accessibility_label": "Create instance",
+          "action_id": "instance.create",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "instances.create",
+          "confirmation": "explicit",
+          "effects": [
+            "local_write"
+          ],
+          "label": "Create instance",
+          "refusal": null,
+          "role": "secondary"
+        }
+      ],
+      "items": [
+        {
+          "instance_id": "instance.c1-vanilla",
+          "journey_state": "refused",
+          "name": "C1 Vanilla",
+          "selected": true
+        }
+      ],
+      "summary": "1 isolated vanilla instance"
+    },
+    "settings_about": {
+      "actions": [
+        {
+          "accessibility_label": "Product details",
+          "action_id": "product.inspect",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "product.inspect",
+          "confirmation": "none",
+          "effects": [
+            "read_only"
+          ],
+          "label": "Product details",
+          "refusal": null,
+          "role": "secondary"
+        }
+      ],
+      "page_id": "settings_about",
+      "state": "ready",
+      "summary": "FacMan 0.1 C1; System Native or FacMan OEM+ appearance.",
+      "title": "Settings / About"
+    }
+  },
+  "recovery": {
+    "actions": [],
+    "operation_id": null,
+    "reason_code": null,
+    "recovery_id": null,
+    "state": "clear",
+    "summary": "No recovery action is required."
+  },
+  "refusal": {
+    "actions": [
+      {
+        "accessibility_label": "Rescan readiness",
+        "action_id": "instance.readiness.refresh",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "instances.readiness",
+        "confirmation": "none",
+        "effects": [
+          "read_only"
+        ],
+        "label": "Rescan readiness",
+        "refusal": null,
+        "role": "secondary"
+      }
+    ],
+    "code": "readiness.stale",
+    "current_readiness_revision": 8,
+    "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
+    "observed_readiness_revision": 7,
+    "title": "Readiness changed"
+  },
+  "revision": 11,
+  "selected_instance": {
+    "actions": [
+      {
+        "accessibility_label": "Rescan readiness",
+        "action_id": "instance.readiness.refresh",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "instances.readiness",
+        "confirmation": "none",
+        "effects": [
+          "read_only"
+        ],
+        "label": "Rescan readiness",
+        "refusal": null,
+        "role": "secondary"
+      }
+    ],
+    "installation": {
+      "installation_id": "installation.standalone-2.0.77",
+      "kind": "standalone",
+      "label": "Factorio 2.0.77 standalone",
+      "version": "2.0.77"
+    },
+    "instance_id": "instance.c1-vanilla",
+    "journey_state": "refused",
+    "last_run": null,
+    "name": "C1 Vanilla",
+    "operation_id": null,
+    "readiness": {
+      "blockers": [
+        {
+          "actions": [
+            {
+              "accessibility_label": "Rescan readiness",
+              "action_id": "instance.readiness.refresh",
+              "availability": "available",
+              "backend_owned": true,
+              "command_id": "instances.readiness",
+              "confirmation": "none",
+              "effects": [
+                "read_only"
+              ],
+              "label": "Rescan readiness",
+              "refusal": null,
+              "role": "secondary"
+            }
+          ],
+          "code": "readiness.stale",
+          "current_readiness_revision": 8,
+          "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
+          "observed_readiness_revision": 7,
+          "title": "Readiness changed"
+        }
+      ],
+      "checked_at": "2026-08-01T12:01:00Z",
+      "evidence_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 8,
+      "state": "stale",
+      "summary": "Readiness is stale and must be rescanned."
+    },
+    "recovery_id": null
+  },
+  "snapshot_id": "shell.refused",
+  "transport": {
+    "frontend_disconnect": "operation_continues",
+    "journal_owner": "facman_backend",
+    "mode": "bounded_process_rpc",
+    "route_authority": "unchanged",
+    "session_owner": "facman_backend"
+  }
+}

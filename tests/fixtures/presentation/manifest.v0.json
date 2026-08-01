@@ -1,0 +1,31 @@
+{
+  "contract": "facman.presentation.v0",
+  "schema": "facman.presentation_fixture_manifest.v0",
+  "states": [
+    {
+      "path": "tests/fixtures/presentation/positive.facman.presentation.v0.json",
+      "sha256": "6b201800d012f65bd55ae4ef68e476463be353732780d202ef58621f95188519",
+      "state": "positive"
+    },
+    {
+      "path": "tests/fixtures/presentation/refused.facman.presentation.v0.json",
+      "sha256": "66daaf0bb58720f388373a669b0ae94d50bf065c275c71a9fe31c73cc5e066a6",
+      "state": "refused"
+    },
+    {
+      "path": "tests/fixtures/presentation/running.facman.presentation.v0.json",
+      "sha256": "6270887e57b7f3c12c12235bfa6a7a8cbf9bf43cfc348c442ebca68312fea85a",
+      "state": "running"
+    },
+    {
+      "path": "tests/fixtures/presentation/exited.facman.presentation.v0.json",
+      "sha256": "dd60183be40fa7632cae54495db7c8b7e48dfff47680eca4a4a29c4c2d338770",
+      "state": "exited"
+    },
+    {
+      "path": "tests/fixtures/presentation/interrupted.facman.presentation.v0.json",
+      "sha256": "bf0462b15e17db30216ea8dc8e2f85e73aa2c58cfd028fc80e5b2a22cfeb7773",
+      "state": "interrupted"
+    }
+  ]
+}

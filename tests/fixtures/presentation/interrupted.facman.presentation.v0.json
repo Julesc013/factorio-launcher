@@ -1,0 +1,307 @@
+{
+  "active_page": "instances",
+  "authority_scope": "unavailable",
+  "contract": "facman.presentation.v0",
+  "fixture_state": "interrupted",
+  "generated_at": "2026-08-01T12:06:10Z",
+  "launch_deck": {
+    "instance_id": "instance.c1-vanilla",
+    "instance_name": "C1 Vanilla",
+    "journey_state": "interrupted",
+    "last_run": {
+      "ended_at": "2026-08-01T12:06:00Z",
+      "exit_code": null,
+      "operation_id": "operation.fixture-play-001",
+      "outcome": "interrupted",
+      "started_at": "2026-08-01T12:02:00Z"
+    },
+    "operation_id": "operation.fixture-play-001",
+    "primary_action": {
+      "accessibility_label": "Inspect recovery",
+      "action_id": "recovery.inspect",
+      "availability": "available",
+      "backend_owned": true,
+      "command_id": "workspace.recovery.inspect",
+      "confirmation": "none",
+      "effects": [
+        "read_only"
+      ],
+      "label": "Inspect recovery",
+      "refusal": null,
+      "role": "recovery"
+    },
+    "recovery_id": "recovery.fixture-play-001",
+    "refusal": null,
+    "secondary_actions": [
+      {
+        "accessibility_label": "Recover operation",
+        "action_id": "recovery.apply",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "workspace.recovery.apply",
+        "confirmation": "explicit",
+        "effects": [
+          "local_write"
+        ],
+        "label": "Recover operation",
+        "refusal": null,
+        "role": "recovery"
+      }
+    ],
+    "status_text": "Recovery required after interruption"
+  },
+  "navigation": [
+    {
+      "accessibility_label": "Instances page",
+      "label": "Instances",
+      "page_id": "instances"
+    },
+    {
+      "accessibility_label": "Installations page",
+      "label": "Installations",
+      "page_id": "installations"
+    },
+    {
+      "accessibility_label": "Activity page",
+      "label": "Activity",
+      "page_id": "activity"
+    },
+    {
+      "accessibility_label": "Settings and About page",
+      "label": "Settings / About",
+      "page_id": "settings_about"
+    }
+  ],
+  "pages": {
+    "activity": {
+      "actions": [
+        {
+          "accessibility_label": "Inspect recovery",
+          "action_id": "recovery.inspect",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "workspace.recovery.inspect",
+          "confirmation": "none",
+          "effects": [
+            "read_only"
+          ],
+          "label": "Inspect recovery",
+          "refusal": null,
+          "role": "recovery"
+        },
+        {
+          "accessibility_label": "Recover operation",
+          "action_id": "recovery.apply",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "workspace.recovery.apply",
+          "confirmation": "explicit",
+          "effects": [
+            "local_write"
+          ],
+          "label": "Recover operation",
+          "refusal": null,
+          "role": "recovery"
+        }
+      ],
+      "operations": [
+        {
+          "backend_operation_owner": "facman_backend",
+          "ended_at": "2026-08-01T12:06:00Z",
+          "frontend_disconnect": "observe_or_recover",
+          "instance_id": "instance.c1-vanilla",
+          "kind": "fixture_play",
+          "operation_id": "operation.fixture-play-001",
+          "phase": "finalize",
+          "progress": {
+            "completed": 3,
+            "total": 3,
+            "unit": "steps"
+          },
+          "recovery_id": "recovery.fixture-play-001",
+          "started_at": "2026-08-01T12:02:00Z",
+          "status": "interrupted",
+          "summary": "Frontend reconnected to an interrupted backend operation.",
+          "terminal_outcome": "interrupted"
+        }
+      ],
+      "summary": "1 interrupted operation requires recovery."
+    },
+    "installations": {
+      "actions": [
+        {
+          "accessibility_label": "Scan for installations",
+          "action_id": "installation.scan",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "installs.scan",
+          "confirmation": "none",
+          "effects": [
+            "read_only"
+          ],
+          "label": "Scan for installations",
+          "refusal": null,
+          "role": "secondary"
+        }
+      ],
+      "page_id": "installations",
+      "state": "ready",
+      "summary": "1 existing standalone installation; FacMan will not repair or update it.",
+      "title": "Installations"
+    },
+    "instances": {
+      "actions": [
+        {
+          "accessibility_label": "Create instance",
+          "action_id": "instance.create",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "instances.create",
+          "confirmation": "explicit",
+          "effects": [
+            "local_write"
+          ],
+          "label": "Create instance",
+          "refusal": null,
+          "role": "secondary"
+        }
+      ],
+      "items": [
+        {
+          "instance_id": "instance.c1-vanilla",
+          "journey_state": "interrupted",
+          "name": "C1 Vanilla",
+          "selected": true
+        }
+      ],
+      "summary": "1 isolated vanilla instance"
+    },
+    "settings_about": {
+      "actions": [
+        {
+          "accessibility_label": "Product details",
+          "action_id": "product.inspect",
+          "availability": "available",
+          "backend_owned": true,
+          "command_id": "product.inspect",
+          "confirmation": "none",
+          "effects": [
+            "read_only"
+          ],
+          "label": "Product details",
+          "refusal": null,
+          "role": "secondary"
+        }
+      ],
+      "page_id": "settings_about",
+      "state": "ready",
+      "summary": "FacMan 0.1 C1; System Native or FacMan OEM+ appearance.",
+      "title": "Settings / About"
+    }
+  },
+  "recovery": {
+    "actions": [
+      {
+        "accessibility_label": "Inspect recovery",
+        "action_id": "recovery.inspect",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "workspace.recovery.inspect",
+        "confirmation": "none",
+        "effects": [
+          "read_only"
+        ],
+        "label": "Inspect recovery",
+        "refusal": null,
+        "role": "recovery"
+      },
+      {
+        "accessibility_label": "Recover operation",
+        "action_id": "recovery.apply",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "workspace.recovery.apply",
+        "confirmation": "explicit",
+        "effects": [
+          "local_write"
+        ],
+        "label": "Recover operation",
+        "refusal": null,
+        "role": "recovery"
+      }
+    ],
+    "operation_id": "operation.fixture-play-001",
+    "reason_code": "operation.interrupted",
+    "recovery_id": "recovery.fixture-play-001",
+    "state": "required",
+    "summary": "The backend operation ended without an ordinary completion record."
+  },
+  "refusal": null,
+  "revision": 14,
+  "selected_instance": {
+    "actions": [
+      {
+        "accessibility_label": "Inspect recovery",
+        "action_id": "recovery.inspect",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "workspace.recovery.inspect",
+        "confirmation": "none",
+        "effects": [
+          "read_only"
+        ],
+        "label": "Inspect recovery",
+        "refusal": null,
+        "role": "recovery"
+      },
+      {
+        "accessibility_label": "Recover operation",
+        "action_id": "recovery.apply",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "workspace.recovery.apply",
+        "confirmation": "explicit",
+        "effects": [
+          "local_write"
+        ],
+        "label": "Recover operation",
+        "refusal": null,
+        "role": "recovery"
+      }
+    ],
+    "installation": {
+      "installation_id": "installation.standalone-2.0.77",
+      "kind": "standalone",
+      "label": "Factorio 2.0.77 standalone",
+      "version": "2.0.77"
+    },
+    "instance_id": "instance.c1-vanilla",
+    "journey_state": "interrupted",
+    "last_run": {
+      "ended_at": "2026-08-01T12:06:00Z",
+      "exit_code": null,
+      "operation_id": "operation.fixture-play-001",
+      "outcome": "interrupted",
+      "started_at": "2026-08-01T12:02:00Z"
+    },
+    "name": "C1 Vanilla",
+    "operation_id": "operation.fixture-play-001",
+    "readiness": {
+      "blockers": [],
+      "checked_at": "2026-08-01T12:00:00Z",
+      "evidence_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 7,
+      "state": "ready",
+      "summary": "Ready for the deterministic fixture Play journey."
+    },
+    "recovery_id": "recovery.fixture-play-001"
+  },
+  "snapshot_id": "shell.interrupted",
+  "transport": {
+    "frontend_disconnect": "operation_continues",
+    "journal_owner": "facman_backend",
+    "mode": "bounded_process_rpc",
+    "route_authority": "unchanged",
+    "session_owner": "facman_backend"
+  }
+}

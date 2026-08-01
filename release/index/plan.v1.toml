@@ -300,13 +300,15 @@ evidence = []
 id = "INSTANCE-VIEW-MINIMUM-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Freeze the FacMan-local C1 presentation minimum"
-status = "ready"
+status = "complete"
 priority = "P1"
 size = "M"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-C1-CUTLINE-01"]
 decision_blockers = []
+branch = "task/instance-view-minimum-01"
+base_revision = "4620ebe8a382960d48e82a0a5ff90230a8f70588"
 outcome = "Define facman.presentation.v0 snapshots and actions for the four pages, Launch Deck, Activity, refusal, and recovery states without toolkit types or a universal ABI."
 acceptance = [
   "The contract contains only ShellSnapshot, instance list/summary, readiness, Launch Deck, actions, Activity, operations, and recovery concepts required by C1.",
@@ -314,7 +316,14 @@ acceptance = [
   "The process transport remains bounded and backend operation ownership is explicit.",
   "No WinForms, AppKit, GTK, direct-client, daemon, or Universal Launcher type enters the semantic contract.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/instance-view-minimum-01.md",
+  "docs/product/facman_presentation_v0.md",
+  "contracts/schema/ui/facman.presentation.v0.schema.json",
+  "tests/fixtures/presentation/manifest.v0.json",
+  "tools/facman_presentation_check.py",
+  "tests/test_facman_presentation.py",
+]
 
 [[workunit]]
 id = "CONTRACT-MATURITY-01"
