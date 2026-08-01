@@ -66,8 +66,8 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-C1-CUTLINE-01`
   - Outcome: Define J01 from an existing install to Play and the stale-readiness refusal/rescan path with budgets, accessibility, evidence, and exclusions.
-- [ ] **INSTANCE-VIEW-MINIMUM-01** — Freeze the FacMan-local C1 presentation minimum
-  - State: `ready`; priority/size: `P1/M`
+- [x] **INSTANCE-VIEW-MINIMUM-01** — Freeze the FacMan-local C1 presentation minimum
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-C1-CUTLINE-01`
   - Outcome: Define facman.presentation.v0 snapshots and actions for the four pages, Launch Deck, Activity, refusal, and recovery states without toolkit types or a universal ABI.
 - [ ] **C1-FIXTURE-VERTICAL-SLICE-01** — Complete the fixture-backed C1 player journey
