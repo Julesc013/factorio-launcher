@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-07-29"
+last_reviewed = "2026-08-01"
 active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
@@ -10,10 +10,11 @@ next_workunit_limit = 5
 archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
 operating_model = "docs/roadmap/planning-operating-model.md"
 interface_design_system = "docs/product/interface_design_system.md"
+c1_release_contract = "docs/product/facman_c1_release_contract.md"
 north_star = "A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state."
 
 source_of_truth = [
-  "docs/product/charter.md and accepted invariants",
+  "docs/product/facman_c1_release_contract.md and accepted invariants",
   "accepted architecture decision records",
   "product journeys and claim ledgers",
   "release/index/plan.v1.toml",
@@ -29,8 +30,8 @@ title = "Playable instance"
 status = "active"
 owner = "maintainer"
 objective = "Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance."
-platform_cut = "Exactly one reference platform lane; select it in DEC-C1-REFERENCE-LANE before implementation."
-frontend_cut = "CLI plus one reference GUI that shares semantic actions but uses the selected platform's native controls and conventions. Cross-frontend parity is a separate C1P milestone."
+platform_cut = "Windows 10/11 x64 WinForms is the supported reference. macOS 10.13+ x86_64 AppKit and one frozen Linux x64 GTK 3/X11 baseline are previews until independently qualified."
+frontend_cut = "Four native pages and a persistent Launch Deck use experimental facman.presentation.v0 over bounded process RPC. Advanced retains the generated command explorer; direct-client and universal-ABI work is deferred."
 journeys = ["J01-existing-install-to-play"]
 claim_seed = [
   "FACMAN-CLAIM-001",
@@ -41,26 +42,27 @@ claim_seed = [
   "FACMAN-CLAIM-010",
 ]
 cut_line = [
-  "Discover and select one supported existing-install class without mutation.",
-  "Create one authority-safe isolated instance.",
-  "Show summary, readiness, and a specific explanation for blocked readiness.",
-  "Run launch preflight and an explicit Play action.",
-  "Reach the Factorio main menu without loading a save.",
-  "Supervise the process and record exit, operation history, and recovery state.",
-  "Expose the stable workflow through the CLI and one hand-designed reference GUI with native control behavior, a System Native recovery appearance, and platform accessibility semantics.",
+  "Discover and select one supported existing standalone installation without mutation.",
+  "Create or select one authority-safe isolated vanilla instance backed by that installation.",
+  "Expose only Instances, Installations, Activity, and Settings/About as top-level product pages, with a persistent Launch Deck and Advanced command explorer.",
+  "Show instance summary, readiness, installation/version/content identity, last run, recovery state, and one specific actionable blocker when Play is unavailable.",
+  "Run launch preflight and an explicit Play action only when the exact route has authority; otherwise present the structured refusal without executing.",
+  "Reach the Factorio main menu, supervise the session in the backend, record exit and last-run history, relaunch, and expose truthful recovery after interruption.",
+  "Project the same semantic journey through native WinForms, AppKit, and GTK 3 controls while keeping support claims evidence-based and Windows as the reference lane.",
 ]
 non_goals = [
   "Managed Factorio installation, repair, move, or uninstall.",
   "Factorio updates, FacMan self-update, and update-channel policy.",
   "Mod Portal, public download workflows, accounts, or credential storage.",
   "Automatic mutation of foreign-owned installations.",
-  "Executable or arbitrary-layout themes, a marketplace, news authority, or remote control.",
-  "Multiple release-grade GUIs, modern-shell completion, or classic-platform parity.",
-  "A stable public SDK or a universal contract claim.",
+  "Executable or arbitrary-layout themes, custom chrome, custom fonts, a marketplace, news authority, or remote control.",
+  "WinUI, SwiftUI, Qt 6, Windows x86, macOS i386/10.9, Linux i686, and Wayland-native release claims.",
+  "Steam-specific execution, managed modsets, save synchronization, servers, development tooling, daemons, plugins, or a stable public SDK.",
+  "A direct-client rewrite, permanent universal presentation ABI, or new service protocol before C1.",
 ]
 exit = [
-  "J01 passes its positive and paired failure journey on the selected reference lane.",
-  "Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, scaling, contrast, and accessible-name checks for the reference GUI.",
+  "J01 passes its positive and paired failure journey on Windows x64 WinForms; preview artifacts make no live Play or stable support claim without equivalent platform evidence.",
+  "Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, 100/150/200-percent scaling, contrast, focus, and accessible-name checks for WinForms.",
   "Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.",
   "A clean checkout can reconstruct the tested release evidence without hidden machine state.",
   "No C1 non-goal has entered the release dependency graph.",
@@ -70,15 +72,33 @@ exit = [
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
 title = "Conduct exact instance-isolated Play revalidation 04"
 status = "active"
-owner = "unassigned"
+owner = "Jules"
 external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
 source = ".aide/queue/index.yaml"
 observed = "2026-08-01"
 stage = "staged_not_prepared"
-operator_assignment_required = true
-authority_boundary = "Qualification-05 and the exact revalidation-04 stage are accepted without execution authority. A fresh operator designation and separately authorized observer self-test are required before any prepare request."
-summary = "Revalidation-04 is staged from qualification-05 at the exact Windows 2.0.77 standalone instance-isolated route. No operator, observer evidence, prepare, permit, execution, verdict, or route authority exists."
-exit = "A freshly designated operator completes the exact observer self-test and separately authorized two-launch procedure, recording Pass, Fail, or Inconclusive without inferring route authority."
+operator_assignment_required = false
+gate_scope = "authority_only"
+blocks = [
+  "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+  "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+  "C1-LIVE-PLAY-ACCEPTANCE-01",
+]
+non_blocking_work = [
+  "FACMAN-C1-CUTLINE-01",
+  "FACMAN-JOURNEYS-01",
+  "INSTANCE-VIEW-MINIMUM-01",
+  "C1-FIXTURE-VERTICAL-SLICE-01",
+  "FACMAN-WINFORMS-C1-SHELL-01",
+  "FACMAN-CLASSIC-PREVIEW-SHELLS-01",
+  "C1-WINDOWS-PACKAGE-01",
+  "C1-PREVIEW-PACKAGES-01",
+  "C1-ACCESSIBILITY-QUALIFICATION-01",
+  "C1-SUPPORT-DOCUMENTATION-01",
+]
+authority_boundary = "Qualification-05 and revalidation-04 staging grant no execution authority. Jules is operator only; observer, prepare, permit, execution, verdict, and route promotion remain separately authorized."
+summary = "Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isolated route. Jules is operator, but observer, prepare, permit, execution, verdict, and route authority remain absent."
+exit = "Complete the separately authorized observer and two-launch procedure without inferring route authority. Shell, fixture, accessibility, package, and documentation work continue independently."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"
@@ -98,7 +118,7 @@ exit = [
 id = "EPIC-C1-DEFINITION"
 release = "FACMAN-C1"
 title = "C1 release definition"
-status = "planned"
+status = "active"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 outcome = "Make the playable-instance cut-line, journeys, exclusions, and user proof unambiguous."
@@ -123,15 +143,15 @@ exit = [
 [[epic]]
 id = "EPIC-PLATFORM-QUALIFICATION"
 release = "FACMAN-C1"
-title = "Reference platform qualification"
-status = "planned"
+title = "Classic native preview shells"
+status = "active"
 owner = "platform-maintainer"
 repos = ["factorio-launcher", "universal-launcher"]
-outcome = "Select one reference lane and separate product capability from frontend and platform qualification."
+outcome = "Project the frozen FacMan-local C1 presentation semantics through native AppKit and GTK 3 shells without changing the qualified runtime."
 exit = [
-  "The C1 reference lane has explicit promotion, support, and kill criteria.",
-  "The reference GUI names its framework, governing HIG, platform convention profile, appearance mode, and capability fallbacks.",
-  "Classic-shell design and legacy-platform qualification are tracked separately.",
+  "AppKit and GTK 3 complete the shared fixture journey with native controls.",
+  "Each preview has runtime, package, accessibility, support, and kill criteria.",
+  "Preview availability remains distinct from live Play and stable support.",
 ]
 
 [[epic]]
@@ -209,27 +229,41 @@ evidence = [
 id = "FACMAN-C1-CUTLINE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Ratify the playable-instance cut-line"
-status = "ready"
+status = "complete"
 priority = "P0"
 size = "S"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["PLAN-CANON-01"]
 decision_blockers = []
+branch = "task/facman-c1-cutline-01"
+base_revision = "239f9c04822f83bdab6b9c3dd191cfaa337f7b23"
 outcome = "Turn the proposed C1 inclusions, exclusions, reference-lane rule, and release exit into a reviewed release contract."
 acceptance = [
   "Every included behavior is necessary for the first meaningful user outcome.",
   "Every exclusion names the later capability level or revisit trigger.",
-  "C1, frontend parity C1P, and platform qualification are not conflated.",
-  "The UI cut-line distinguishes portable semantics, native presentation, constrained OEM+ branding, accessibility, and optional custom themes.",
+  "Windows support, AppKit/GTK preview availability, and later stable platform promotion are not conflated.",
+  "The UI cut-line distinguishes FacMan-local portable semantics, native presentation, constrained OEM+ branding, accessibility, and deferred custom themes.",
+  "Revalidation-04 has gate_scope authority_only and blocks only exact route capability, Windows route promotion, and C1 live Play acceptance.",
+  "The qualified runtime and provider revisions remain frozen while fixture-backed UI, packaging, accessibility, and documentation work continue.",
+  "Routine task-branch development is mechanically classified separately from repository authority and product authority.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/facman-c1-cutline-01.md",
+  "docs/product/facman_c1_release_contract.md",
+  "release/index/plan.v1.toml",
+  ".aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04/evidence/operator-designation.md",
+  ".aide/policies/git-workflow.yaml",
+  ".aide/git/helper-policy.yaml",
+  "docs/development/repository-branch-governance.md",
+  "tests/test_plan_views.py",
+]
 
 [[workunit]]
 id = "FACMAN-JOURNEYS-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Specify the C1 positive and paired failure journeys"
-status = "planned"
+status = "ready"
 priority = "P0"
 size = "M"
 owner = "product-maintainer"
@@ -247,14 +281,14 @@ evidence = []
 id = "CLAIM-LEDGER-01"
 epic = "EPIC-RELEASE-TRUTH"
 title = "Create the first product-claim ledger"
-status = "planned"
+status = "cancelled"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
 depends_on = ["FACMAN-JOURNEYS-01"]
 decision_blockers = []
-outcome = "Record the first ten product claims with scope, owner, maturity, evidence, invalidation, and release impact."
+outcome = "Defer a separate claim-ledger programme; each C1 vertical slice lands its bounded claims and evidence with the slice."
 acceptance = [
   "Every C1 journey assertion maps to a claim.",
   "Claim maturity cannot advance without the required evidence class.",
@@ -263,22 +297,22 @@ acceptance = [
 evidence = []
 
 [[workunit]]
-id = "PLATFORM-LANES-01"
-epic = "EPIC-PLATFORM-QUALIFICATION"
-title = "Define platform lanes and choose the C1 reference lane"
-status = "planned"
+id = "INSTANCE-VIEW-MINIMUM-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Freeze the FacMan-local C1 presentation minimum"
+status = "ready"
 priority = "P1"
 size = "M"
-owner = "platform-maintainer"
-repos = ["factorio-launcher", "universal-launcher"]
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
 depends_on = ["FACMAN-C1-CUTLINE-01"]
 decision_blockers = []
-outcome = "Classify supported, compatible, experimental, and rejected lanes with promotion and kill criteria; resolve the C1 reference lane."
+outcome = "Define facman.presentation.v0 snapshots and actions for the four pages, Launch Deck, Activity, refusal, and recovery states without toolkit types or a universal ABI."
 acceptance = [
-  "The chosen reference lane is evidence-backed and named in the C1 release.",
-  "Product capability and frontend parity remain orthogonal to platform qualification.",
-  "Framework capability and deployment-version fallbacks are explicit rather than inferred from framework names.",
-  "Legacy architecture work has bounded value, testability, and exit criteria.",
+  "The contract contains only ShellSnapshot, instance list/summary, readiness, Launch Deck, actions, Activity, operations, and recovery concepts required by C1.",
+  "Positive, refused, running, exited, and interrupted fixtures are deterministic.",
+  "The process transport remains bounded and backend operation ownership is explicit.",
+  "No WinForms, AppKit, GTK, direct-client, daemon, or Universal Launcher type enters the semantic contract.",
 ]
 evidence = []
 
@@ -286,14 +320,14 @@ evidence = []
 id = "CONTRACT-MATURITY-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Define contract maturity and migration gates"
-status = "planned"
+status = "cancelled"
 priority = "P1"
 size = "M"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup", "dominium"]
 depends_on = ["CLAIM-LEDGER-01"]
 decision_blockers = []
-outcome = "Create the contract-maturity registry and the independently mergeable producer/consumer migration protocol."
+outcome = "Defer permanent contract-maturity machinery until C1 and a second product consumer demonstrate measured need."
 acceptance = [
   "One real consumer can qualify an experimental contract without implying universal stability.",
   "A second real consumer is required for second-consumer qualification.",
@@ -301,27 +335,84 @@ acceptance = [
 ]
 evidence = []
 
+[[workunit]]
+id = "C1-FIXTURE-VERTICAL-SLICE-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Complete the fixture-backed C1 player journey"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-JOURNEYS-01", "INSTANCE-VIEW-MINIMUM-01"]
+decision_blockers = []
+outcome = "Exercise the complete select/create, readiness, Play/refusal, running, exit, relaunch, and recovery journey without requiring live Play authority."
+acceptance = [
+  "The positive and stale-readiness refusal journeys use deterministic presentation fixtures.",
+  "Unavailable Play renders the exact structured refusal and never executes.",
+  "Frontend closure cannot rewrite backend operation outcome as cancellation.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-WINFORMS-C1-SHELL-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Build the four-page WinForms C1 product shell"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["C1-FIXTURE-VERTICAL-SLICE-01"]
+decision_blockers = []
+outcome = "Replace the command explorer as home with native Instances, Installations, Activity, Settings/About, and a persistent Launch Deck; retain the explorer under Advanced."
+acceptance = [
+  "The complete fixture journey is keyboard-operable with access keys, focus order, accessible names, System Native mode, and 100/150/200-percent scaling.",
+  "Readiness, exact refusal, running/exited state, last run, relaunch, and recovery are visible.",
+  "A portable Windows ZIP prototype is constructed without changing qualified runtime identities.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-CLASSIC-PREVIEW-SHELLS-01"
+epic = "EPIC-PLATFORM-QUALIFICATION"
+title = "Build AppKit and GTK 3 C1 preview shells"
+status = "planned"
+priority = "P1"
+size = "L"
+owner = "platform-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["INSTANCE-VIEW-MINIMUM-01"]
+decision_blockers = []
+outcome = "Project the same C1 fixture journey through an AppKit runtime bundle and GTK 3/X11 package prototype using native controls and bounded process RPC."
+acceptance = [
+  "AppKit x86_64 runs as an actual macOS 10.13+ bundle and GTK 3 x64 runs on the frozen X11 baseline.",
+  "Both shells preserve native menus, controls, keyboard behavior, System Native recovery, and OEM+ Launch Deck semantics.",
+  "Neither preview claims live Play or stable support without independent evidence.",
+]
+evidence = []
+
 [[decision]]
 id = "DEC-C1-REFERENCE-LANE"
 title = "Select the C1 reference platform lane"
-status = "open"
+status = "accepted"
 owner = "platform-maintainer"
-due_workunit = "PLATFORM-LANES-01"
-resolution_workunit = "PLATFORM-LANES-01"
+due_workunit = "FACMAN-C1-CUTLINE-01"
+resolution_workunit = "FACMAN-C1-CUTLINE-01"
 question = "Which platform, architecture, frontend, and packaging combination is the single C1 release reference?"
-default = "Use Windows x64 with the direct client and the smallest existing GUI surface unless qualification evidence rejects it."
+default = "Use Windows 10/11 x64 WinForms with the bounded process transport as the supported reference; AppKit x86_64 and GTK 3/X11 x64 remain preview lanes until independently qualified."
 de_scope = "If no lane qualifies within the C1 budget, ship the CLI journey as an internal evidence release and defer the GUI claim."
 
 [[decision]]
 id = "DEC-C1-OPERATION-LIFETIME"
 title = "Choose the smallest truthful operation-lifetime model for C1"
-status = "open"
+status = "accepted"
 owner = "architecture-maintainer"
-due_workunit = "C1-VERTICAL-SLICE-01"
-resolution_workunit = "OPERATION-DEATH-SPIKE-01"
-question = "Can direct-client operation ownership prove interrupted-operation outcomes, or is a separate durable owner required?"
-default = "Keep direct-client ownership and persist the minimum journal needed for inspect/recover."
-de_scope = "Do not introduce a daemon unless the death/restart spike proves direct ownership cannot satisfy the C1 claim."
+due_workunit = "C1-FIXTURE-VERTICAL-SLICE-01"
+resolution_workunit = "FACMAN-C1-CUTLINE-01"
+question = "What is the smallest truthful process and operation-lifetime model for C1?"
+default = "Keep the existing bounded process RPC for C1 and make the backend operation own the process session and journal so closing a frontend cannot rewrite the outcome as ordinary cancellation."
+de_scope = "Do not introduce direct bindings, a daemon, or a new service protocol before C1; revisit the transport only after measured post-C1 evidence or a second consumer requires it."
 
 [[risk]]
 id = "RISK-PLAN-DRIFT"
@@ -346,9 +437,15 @@ mitigation = "Separate contract maturity from product capability and require exp
 
 [[later]]
 id = "DIRECT-CLIENT-SPIKE-01"
-summary = "Prove the smallest direct-client path from selected instance to Factorio main menu."
-rationale = "Needed after C1 definition; not part of plan-system bootstrapping."
-trigger = "C1 journey and reference lane are ratified."
+summary = "Measure whether direct bindings or a durable host improve the qualified C1 process transport."
+rationale = "C1 deliberately retains bounded process RPC; replacement must demonstrate measured value without invalidating qualified runtime evidence casually."
+trigger = "C1 ships and operation-death evidence identifies a concrete transport limitation."
+
+[[later]]
+id = "CONTRACT-MATURITY-POST-C1"
+summary = "Decide which facman.presentation.v0 concepts merit promotion into Universal Launcher."
+rationale = "A FacMan-local experimental contract and a second concrete consumer must precede permanent universal presentation governance."
+trigger = "C1 ships and a second product consumer demonstrates shared semantic pressure."
 
 [[later]]
 id = "OPERATION-DEATH-SPIKE-01"
@@ -357,16 +454,22 @@ rationale = "Evidence decides whether direct ownership is sufficient or a durabl
 trigger = "J01 failure states and operation claims are declared."
 
 [[later]]
-id = "INSTANCE-VIEW-MINIMUM-01"
-summary = "Freeze the minimal semantic UI core and hand-design only the instance list, summary, readiness, Launch Deck, Activity, and recovery views required by C1."
-rationale = "Sharing immutable view/action meaning while adapting native presentation prevents toolkit types or generic forms from defining backend or primary-product scope."
-trigger = "Reference frontend, HIG profile, appearance policy, and stable workflow semantics are selected."
+id = "C1-LIVE-PLAY-ACCEPTANCE-01"
+summary = "Run the complete live Play journey after exact route authority exists."
+rationale = "Fixture product work proceeds independently; live acceptance remains bound to the exact promoted route."
+trigger = "Revalidation-04 passes and the exact route capability and Windows route promotion are accepted."
 
 [[later]]
-id = "C1-VERTICAL-SLICE-01"
-summary = "Implement the complete C1 positive and paired failure path."
-rationale = "Vertical proof follows definition, claims, platform selection, and contract boundaries."
-trigger = "All five next work units reach accepted completion."
+id = "C1-WINDOWS-PACKAGE-01"
+summary = "Qualify the portable Windows C1 package on a clean machine."
+rationale = "Package qualification follows the complete WinForms shell and does not wait on unrelated preview stability."
+trigger = "FACMAN-WINFORMS-C1-SHELL-01 completes."
+
+[[later]]
+id = "C1-PREVIEW-PACKAGES-01"
+summary = "Qualify AppKit and GTK preview packages at their evidence-supported tiers."
+rationale = "Preview packaging follows real bundle/package runtime smoke and preserves honest support labels."
+trigger = "FACMAN-CLASSIC-PREVIEW-SHELLS-01 completes."
 
 [[later]]
 id = "C1-USER-VALIDATION-01"

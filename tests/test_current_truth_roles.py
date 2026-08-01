@@ -12,6 +12,15 @@ ROOT = Path(__file__).resolve().parents[1]
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 CURRENT_STATE_PATH = ROOT / "release" / "index" / "current_state.v1.toml"
 PLAN_PATH = ROOT / "release" / "index" / "plan.v1.toml"
+OPERATOR_DESIGNATION_PATH = (
+    ROOT
+    / ".aide"
+    / "queue"
+    / "active"
+    / "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
+    / "evidence"
+    / "operator-designation.md"
+)
 
 MAIN = "133da925af13d475c959a336e0b0eec0427a0381"
 DEV = "f0b9bac022e428fb19db27a2e320941c9e193899"
@@ -64,8 +73,32 @@ class CurrentTruthRoleTests(unittest.TestCase):
         gate = next(item for item in self.plan["gate"] if item["status"] == "active")
         self.assertEqual(gate["external_ref"], REVALIDATION_04)
         self.assertEqual(gate["stage"], "staged_not_prepared")
-        self.assertEqual(gate["owner"], "unassigned")
-        self.assertTrue(gate["operator_assignment_required"])
+        self.assertEqual(gate["owner"], "Jules")
+        self.assertFalse(gate["operator_assignment_required"])
+        self.assertEqual(gate["gate_scope"], "authority_only")
+        self.assertEqual(
+            gate["blocks"],
+            [
+                "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+                "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+                "C1-LIVE-PLAY-ACCEPTANCE-01",
+            ],
+        )
+
+    def test_revalidation_04_operator_designation_is_bounded(self) -> None:
+        designation = OPERATOR_DESIGNATION_PATH.read_text(encoding="utf-8")
+        self.assertIn("I, Jules, designate myself", designation)
+        self.assertIn(
+            "eaea8e2bbc03268f49f0fa8c077e329edae317c3757ef42a628a05da06cf1788",
+            designation,
+        )
+        self.assertIn(
+            "060bbeaea354bc39a9601208e89b8a2fe066cdeef0ffffb2e0174514838e4249",
+            designation,
+        )
+        self.assertIn("It does not authorize:", designation)
+        self.assertIn("Factorio execution", designation)
+        self.assertIn("route promotion", designation)
 
     def test_candidate_and_authority_bindings_remain_unpromoted(self) -> None:
         qualification = self.status[
@@ -195,7 +228,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revalidation_04["work_unit"], REVALIDATION_04)
         self.assertEqual(
             revalidation_04["status"],
-            "active_staged_not_prepared_awaiting_operator_designation",
+            "active_staged_not_prepared_operator_designated",
         )
         self.assertEqual(
             revalidation_04["staged_candidate_digest"],
@@ -205,8 +238,12 @@ class CurrentTruthRoleTests(unittest.TestCase):
             revalidation_04["staged_qualification_filename"],
             "qualification-binding.v4.json",
         )
-        self.assertEqual(revalidation_04["operator"], "unassigned")
-        self.assertTrue(revalidation_04["operator_assignment_required"])
+        self.assertEqual(revalidation_04["operator"], "Jules")
+        self.assertFalse(revalidation_04["operator_assignment_required"])
+        self.assertEqual(
+            revalidation_04["operator_designation"],
+            "accepted_for_revalidation_04_only",
+        )
         self.assertFalse(revalidation_04["coordinator_prepare"])
         self.assertEqual(revalidation_04["observer_self_test"], "not_started")
         self.assertFalse(revalidation_04["factorio_execution"])
@@ -214,7 +251,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         closeout = self.status["canonical_plan_and_truth_closeout"]
         self.assertEqual(closeout["external_gate"], REVALIDATION_04)
         self.assertEqual(closeout["external_gate_stage"], "staged_not_prepared")
-        self.assertEqual(closeout["operator"], "unassigned")
+        self.assertEqual(closeout["operator"], "Jules")
         self.assertEqual(closeout["human_verdict"], "unset")
         for field in (
             "prepare_authorized",

@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-C1
-last_reviewed: 2026-07-29
+last_reviewed: 2026-08-01
 ---
 
 # FacMan execution dashboard
@@ -18,10 +18,10 @@ last_reviewed: 2026-07-29
 - Canonical plan: `release/index/plan.v1.toml`
 - Operating model: `docs/roadmap/planning-operating-model.md`
 - Interface design system: `docs/product/interface_design_system.md`
-- Detailed archive: `docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md`
+- C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 1/3 including external gates
-- Ready: 1/10
+- Ready: 2/10
 - Near-term work units: 5/5
 
 ## North star
@@ -32,20 +32,19 @@ A user can safely discover or create a Factorio installation, create an isolated
 
 Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance.
 
-- Platform cut: Exactly one reference platform lane; select it in DEC-C1-REFERENCE-LANE before implementation.
-- Frontend cut: CLI plus one reference GUI that shares semantic actions but uses the selected platform's native controls and conventions. Cross-frontend parity is a separate C1P milestone.
+- Platform cut: Windows 10/11 x64 WinForms is the supported reference. macOS 10.13+ x86_64 AppKit and one frozen Linux x64 GTK 3/X11 baseline are previews until independently qualified.
+- Frontend cut: Four native pages and a persistent Launch Deck use experimental facman.presentation.v0 over bounded process RPC. Advanced retains the generated command explorer; direct-client and universal-ABI work is deferred.
 - Release-blocking journey: `J01-existing-install-to-play`
-- Claim status: seed identifiers only; `CLAIM-LEDGER-01` must establish maturity and evidence.
 
 ### Product cut-line
 
-- [ ] Discover and select one supported existing-install class without mutation.
-- [ ] Create one authority-safe isolated instance.
-- [ ] Show summary, readiness, and a specific explanation for blocked readiness.
-- [ ] Run launch preflight and an explicit Play action.
-- [ ] Reach the Factorio main menu without loading a save.
-- [ ] Supervise the process and record exit, operation history, and recovery state.
-- [ ] Expose the stable workflow through the CLI and one hand-designed reference GUI with native control behavior, a System Native recovery appearance, and platform accessibility semantics.
+- [ ] Discover and select one supported existing standalone installation without mutation.
+- [ ] Create or select one authority-safe isolated vanilla instance backed by that installation.
+- [ ] Expose only Instances, Installations, Activity, and Settings/About as top-level product pages, with a persistent Launch Deck and Advanced command explorer.
+- [ ] Show instance summary, readiness, installation/version/content identity, last run, recovery state, and one specific actionable blocker when Play is unavailable.
+- [ ] Run launch preflight and an explicit Play action only when the exact route has authority; otherwise present the structured refusal without executing.
+- [ ] Reach the Factorio main menu, supervise the session in the backend, record exit and last-run history, relaunch, and expose truthful recovery after interruption.
+- [ ] Project the same semantic journey through native WinForms, AppKit, and GTK 3 controls while keeping support claims evidence-based and Windows as the reference lane.
 
 ### Explicit non-goals
 
@@ -53,60 +52,62 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 - Factorio updates, FacMan self-update, and update-channel policy.
 - Mod Portal, public download workflows, accounts, or credential storage.
 - Automatic mutation of foreign-owned installations.
-- Executable or arbitrary-layout themes, a marketplace, news authority, or remote control.
-- Multiple release-grade GUIs, modern-shell completion, or classic-platform parity.
-- A stable public SDK or a universal contract claim.
+- Executable or arbitrary-layout themes, custom chrome, custom fonts, a marketplace, news authority, or remote control.
+- WinUI, SwiftUI, Qt 6, Windows x86, macOS i386/10.9, Linux i686, and Wayland-native release claims.
+- Steam-specific execution, managed modsets, save synchronization, servers, development tooling, daemons, plugins, or a stable public SDK.
+- A direct-client rewrite, permanent universal presentation ABI, or new service protocol before C1.
 
 ## Current external gate
 
 ### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — ACTIVE
 
-Revalidation-04 is staged from qualification-05 at the exact Windows 2.0.77 standalone instance-isolated route. No operator, observer evidence, prepare, permit, execution, verdict, or route authority exists.
+Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isolated route. Jules is operator, but observer, prepare, permit, execution, verdict, and route authority remain absent.
 
-- Owner: `unassigned`
-- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`
-- Source: `.aide/queue/index.yaml`
-- Exit: A freshly designated operator completes the exact observer self-test and separately authorized two-launch procedure, recording Pass, Fail, or Inconclusive without inferring route authority.
+- Owner: `Jules`; scope: `authority_only`
+- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/queue/index.yaml`
+- Blocks only:
+  `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
+- Non-blocking product work: 10 named items may continue independently.
+- Exit: Complete the separately authorized observer and two-launch procedure without inferring route authority. Shell, fixture, accessibility, package, and documentation work continue independently.
 
 ## Active work units
 
-_No internal work unit is active; the external gate holds current WIP._
+_No internal work unit is active. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
-1. `FACMAN-C1-CUTLINE-01` [P0/S] — Ratify the playable-instance cut-line
-   - Owner: `product-maintainer`
-   - Outcome: Turn the proposed C1 inclusions, exclusions, reference-lane rule, and release exit into a reviewed release contract.
+1. `FACMAN-JOURNEYS-01` [P0/M] — Specify the C1 positive and paired failure journeys
+   - Owner: `product-maintainer`; outcome: Define J01 from an existing install to Play and the stale-readiness refusal/rescan path with budgets, accessibility, evidence, and exclusions.
+2. `INSTANCE-VIEW-MINIMUM-01` [P1/M] — Freeze the FacMan-local C1 presentation minimum
+   - Owner: `product-maintainer`; outcome: Define facman.presentation.v0 snapshots and actions for the four pages, Launch Deck, Activity, refusal, and recovery states without toolkit types or a universal ABI.
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-C1-CUTLINE-01` — ready; depends on `PLAN-CANON-01`
-- [ ] `FACMAN-JOURNEYS-01` — planned; depends on `FACMAN-C1-CUTLINE-01`
-- [ ] `CLAIM-LEDGER-01` — planned; depends on `FACMAN-JOURNEYS-01`
-- [ ] `PLATFORM-LANES-01` — planned; depends on `FACMAN-C1-CUTLINE-01`
-- [ ] `CONTRACT-MATURITY-01` — planned; depends on `CLAIM-LEDGER-01`
+- [ ] `FACMAN-JOURNEYS-01` — ready; depends on `FACMAN-C1-CUTLINE-01`
+- [ ] `INSTANCE-VIEW-MINIMUM-01` — ready; depends on `FACMAN-C1-CUTLINE-01`
+- [ ] `C1-FIXTURE-VERTICAL-SLICE-01` — planned; depends on `FACMAN-JOURNEYS-01`, `INSTANCE-VIEW-MINIMUM-01`
+- [ ] `FACMAN-WINFORMS-C1-SHELL-01` — planned; depends on `C1-FIXTURE-VERTICAL-SLICE-01`
+- [ ] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — planned; depends on `INSTANCE-VIEW-MINIMUM-01`
 
 ## Blocking decisions
 
-### DEC-C1-REFERENCE-LANE — OPEN
+### DEC-C1-REFERENCE-LANE — ACCEPTED
 
 Which platform, architecture, frontend, and packaging combination is the single C1 release reference?
 
 - Owner: `platform-maintainer`
-- Due by: `PLATFORM-LANES-01`
-- Resolution work: `PLATFORM-LANES-01`
-- Default: Use Windows x64 with the direct client and the smallest existing GUI surface unless qualification evidence rejects it.
+- Due by: `FACMAN-C1-CUTLINE-01`; resolution work: `FACMAN-C1-CUTLINE-01`
+- Default: Use Windows 10/11 x64 WinForms with the bounded process transport as the supported reference; AppKit x86_64 and GTK 3/X11 x64 remain preview lanes until independently qualified.
 - De-scope: If no lane qualifies within the C1 budget, ship the CLI journey as an internal evidence release and defer the GUI claim.
 
-### DEC-C1-OPERATION-LIFETIME — OPEN
+### DEC-C1-OPERATION-LIFETIME — ACCEPTED
 
-Can direct-client operation ownership prove interrupted-operation outcomes, or is a separate durable owner required?
+What is the smallest truthful process and operation-lifetime model for C1?
 
 - Owner: `architecture-maintainer`
-- Due by: `C1-VERTICAL-SLICE-01`
-- Resolution work: `OPERATION-DEATH-SPIKE-01`
-- Default: Keep direct-client ownership and persist the minimum journal needed for inspect/recover.
-- De-scope: Do not introduce a daemon unless the death/restart spike proves direct ownership cannot satisfy the C1 claim.
+- Due by: `C1-FIXTURE-VERTICAL-SLICE-01`; resolution work: `FACMAN-C1-CUTLINE-01`
+- Default: Keep the existing bounded process RPC for C1 and make the backend operation own the process session and journal so closing a frontend cannot rewrite the outcome as ordinary cancellation.
+- De-scope: Do not introduce direct bindings, a daemon, or a new service protocol before C1; revisit the transport only after measured post-C1 evidence or a second consumer requires it.
 
 ## Current risks
 
@@ -119,8 +120,8 @@ Can direct-client operation ownership prove interrupted-operation outcomes, or i
 
 ## Release exit
 
-- [ ] J01 passes its positive and paired failure journey on the selected reference lane.
-- [ ] Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, scaling, contrast, and accessible-name checks for the reference GUI.
+- [ ] J01 passes its positive and paired failure journey on Windows x64 WinForms; preview artifacts make no live Play or stable support claim without equivalent platform evidence.
+- [ ] Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, 100/150/200-percent scaling, contrast, focus, and accessible-name checks for WinForms.
 - [ ] Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.
 - [ ] A clean checkout can reconstruct the tested release evidence without hidden machine state.
 - [ ] No C1 non-goal has entered the release dependency graph.
@@ -129,6 +130,7 @@ Can direct-client operation ownership prove interrupted-operation outcomes, or i
 
 - [x] `PLAN-CANON-01` — Establish the canonical plan and generated operational views
 - [x] `FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01` — Reconcile canonical plan and revision-role truth
+- [x] `FACMAN-C1-CUTLINE-01` — Ratify the playable-instance cut-line
 
 ## Validation commands
 
@@ -142,8 +144,7 @@ py -3 -m unittest tests.test_plan_views
 - Do not hand-edit this generated view.
 - Do not start a planned item as if it were ready.
 - Do not exceed WIP by relabeling work as research or documentation.
+- An authority-only gate blocks only its named authorities; it is not a global product mutex.
 - Do not infer stable contracts from fixture or single-consumer evidence.
 - Do not add C1 scope without explicit scope substitution.
 - Do not treat archived checklist items as authorized work.
-- Do not merge cross-repository migrations as one inseparable change.
-- Do invalidate evidence when its contract, adapter, fixture, package, platform, or workflow changes.

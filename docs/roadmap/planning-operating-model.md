@@ -412,10 +412,12 @@ references, arbitrary layouts, or privileged capabilities. Themes, game mods,
 presentation contributions, provider connectors, and first-party static
 modules are separate trust classes.
 
-C1 keeps one hand-designed reference GUI. C1P later proves the same semantic
-positive/failure journey through WinForms, AppKit, and GTK 3. Theme v1 follows
-stable classic evidence. WinUI 3, SwiftUI, and Qt Quick/Kirigami remain modern
-projections after the shared view/action/operation model is stable.
+C1 keeps WinForms as its supported reference GUI and may ship AppKit and GTK 3
+as explicitly labelled previews against the same FacMan-local experimental
+semantics. A preview artifact does not acquire a stable support or live Play
+claim without its own evidence. Theme v1 follows stable classic evidence.
+WinUI 3, SwiftUI, and Qt Quick/Kirigami remain modern projections after the
+shared view/action/operation model is stable.
 
 Accessibility is a release property, not a theme feature. Supported shells
 require keyboard, screen-reader, scaling, contrast, focus, status, motion, and
@@ -501,10 +503,18 @@ Default limits:
 
 - one active release;
 - one active architecture epic;
-- one active work unit per repository;
+- one active work unit per repository by default, or two when their recorded
+  path ownership is disjoint and one is a native frontend/package projection;
 - three active work units total;
 - ten ready work units;
 - one large cross-repository migration.
+
+An external gate consumes WIP capacity but is never a global mutex unless its
+record explicitly says so. An `authority_only` gate must enumerate the exact
+authority-bearing outcomes it blocks and the product work that remains
+independent. Revalidation may therefore block route capability, route
+promotion, and live acceptance while fixture journeys, native shells,
+packaging, accessibility, refusal/recovery UI, and documentation proceed.
 
 Sizes:
 
@@ -805,6 +815,8 @@ The following candidates remain Later until that sequence completes:
     native control behavior.
 18. Themes are data-only and cannot acquire layout, command, network,
     filesystem, setup, process, or credential authority.
+19. One gate blocks only its enumerated authority; an operator gate cannot
+    freeze unrelated product work.
 
 These rules are deliberately harder to satisfy than adding another task. That
 is the point: FacMan should optimize for truthful user outcomes and recoverable

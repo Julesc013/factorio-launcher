@@ -1,5 +1,25 @@
 # Repository branch governance
 
+## Authority classification
+
+Routine reversible development is automatic when a bounded WorkUnit and its
+mechanical guards exist. This includes fetch, creating `task/*` from the
+recorded exact reviewed revision, task worktrees, in-scope edits and checks,
+ordinary commits, non-protected task-branch pushes, draft pull requests, and
+cleanup of abandoned local task branches or worktrees.
+
+Task-branch creation requires an existing `ready` or `active` WorkUnit, an
+exact recorded base match, a non-conflicting `task/*` name, a clean current
+worktree, and no protected-ref change. These checks replace human confirmation;
+they do not bypass validation.
+
+Merging into `dev` or `main`, direct protected-ref updates, force-push or
+published-history rewrites, release tags, signing, and publication require
+explicit repository authority. Credentials, authenticated product writes,
+Setup or foreign-installation mutation, permit issuance, Factorio execution,
+observer capture, human verdict, and route promotion remain separately
+authorized product actions.
+
 FacMan, Universal Launcher, and Universal Setup ship as one pinned product
 train, but they intentionally do not use identical branch models.
 
@@ -38,8 +58,9 @@ clean compatibility proof are accepted.
 - Provider work starts from a real FacMan or Dominium consumer need; equal
   weekly commit counts are not a goal.
 - Universal Setup remains the only install-mutation authority.
-- A FacMan integration branch should contain no more than one open authority
-  gate or one completed-but-unpromoted WorkUnit train.
+- An open FacMan authority gate may coexist with bounded product task branches.
+  The gate blocks only its enumerated authority and the plan's WIP and
+  path-ownership limits govern unrelated development.
 - Local validation verifies revisions without switching provider branches.
   Alignment is a separate explicit operation.
 - Detached worktrees are valid proof inputs and must pass the same exact-HEAD
