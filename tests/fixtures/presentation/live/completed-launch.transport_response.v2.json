@@ -1,0 +1,27 @@
+{
+  "schema": "facman.transport_response.v2",
+  "protocol_version": 2,
+  "request_id": "gtk-live-presentation-regression",
+  "command": "run.execute",
+  "outcome": "ok",
+  "payload": {
+    "schema": "factorio.launch_session.v1",
+    "session_id": "session.completed.fixture",
+    "complete": true
+  },
+  "error": null,
+  "diagnostics": [],
+  "effects": [],
+  "operation": {
+    "schema": "ulk.operation_outcome.v1",
+    "operation_id": "operation.completed.fixture",
+    "attempt_id": "attempt.completed.fixture",
+    "outcome": "completed",
+    "effects_may_have_occurred": true,
+    "recovery": {
+      "required": false,
+      "transaction_id": "",
+      "inspect_command": ""
+    }
+  }
+}

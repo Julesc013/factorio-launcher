@@ -28,7 +28,11 @@ static gchar *facman_preview_json_escape(const gchar *value)
     return g_string_free(escaped, FALSE);
 }
 
-gchar *facman_preview_generated_rpc_request(const gchar *workspace, const gchar *command)
+gchar *facman_preview_generated_rpc_request_with_payload(
+    const gchar *workspace,
+    const gchar *command,
+    const gchar *payload_json,
+    gboolean dry_run)
 {
     gchar *escaped_workspace = facman_preview_json_escape(workspace);
     gchar *escaped_command = facman_preview_json_escape(
@@ -41,12 +45,19 @@ gchar *facman_preview_generated_rpc_request(const gchar *workspace, const gchar 
         "{\"schema\":\"facman.transport_request.v2\",\"protocol_version\":2,"
         "\"request_id\":\"%s\",\"operation_id\":\"%s\","
         "\"attempt_id\":\"%s\",\"workspace\":\"%s\","
-        "\"command\":\"%s\",\"dry_run\":true,\"payload\":{}}",
-        request_id, operation_id, attempt_id, escaped_workspace, escaped_command);
+        "\"command\":\"%s\",\"dry_run\":%s,\"payload\":%s}",
+        request_id, operation_id, attempt_id, escaped_workspace, escaped_command,
+        dry_run ? "true" : "false",
+        payload_json != NULL && *payload_json != '\0' ? payload_json : "{}");
     g_free(escaped_workspace);
     g_free(escaped_command);
     g_free(request_id);
     g_free(operation_id);
     g_free(attempt_id);
     return request;
+}
+
+gchar *facman_preview_generated_rpc_request(const gchar *workspace, const gchar *command)
+{
+    return facman_preview_generated_rpc_request_with_payload(workspace, command, "{}", TRUE);
 }

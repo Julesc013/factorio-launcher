@@ -4,6 +4,7 @@
 #import "MainWindowController.h"
 #import "CommandClient.h"
 #import "FacManGeneratedCommandCatalog.h"
+#import "FacManLivePresentation.h"
 #import "FacManPreviewFixture.h"
 
 @interface MainWindowController ()
@@ -25,6 +26,11 @@
 @property(nonatomic, strong) NSBox *launchDeck;
 @property(nonatomic, strong) NSPopUpButton *appearancePopup;
 @property(nonatomic, strong) FacManPreviewFixture *fixture;
+@property(nonatomic, strong) FacManLivePresentation *livePresentation;
+@property(nonatomic, assign) BOOL evidenceMode;
+@property(nonatomic, strong) NSTextField *instanceSummaryLabel;
+@property(nonatomic, strong) NSTextField *installationSummaryLabel;
+@property(nonatomic, strong) NSMutableArray<NSButton *> *evidenceButtons;
 @property(nonatomic, copy) NSString *retainedLastRun;
 @property(nonatomic, assign) BOOL relaunched;
 @end
@@ -47,9 +53,14 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
         _commandClient = [[FacManCommandClient alloc] init];
         _inputFields = [NSMutableDictionary dictionary];
         _fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
+        _livePresentation = [[FacManLivePresentation alloc] initWithCommandClient:_commandClient];
+        NSString *presentationMode = [[[NSProcessInfo processInfo] environment] objectForKey:@"FACMAN_PRESENTATION_MODE"];
+        _evidenceMode = presentationMode != nil && [presentationMode caseInsensitiveCompare:@"evidence"] == NSOrderedSame;
+        _evidenceButtons = [NSMutableArray array];
         [self buildLayout];
         [self loadDefaults];
         [self renderFixture];
+        if (!_evidenceMode) [self refreshLivePresentation];
     }
     return self;
 }
@@ -75,7 +86,9 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
     NSBox *deck = [[NSBox alloc] initWithFrame:NSMakeRect(12, 12, width - 24, 166)];
     self.launchDeck = deck;
     [deck setAutoresizingMask:(NSViewWidthSizable | NSViewMaxYMargin)];
-    [deck setTitle:@"Launch Deck — C1 Vanilla · fixture only"];
+    [deck setTitle:self.evidenceMode
+        ? @"Launch Deck — EXPLICIT EVIDENCE / DEVELOPMENT MODE"
+        : @"Launch Deck — LIVE BACKEND MODE"];
     [deck setAccessibilityLabel:@"Persistent Launch Deck for selected instance C1 Vanilla"];
     [content addSubview:deck];
     self.deckStatus = [self addLabel:@"" toView:deck frame:NSMakeRect(16, 110, 480, 24)];
@@ -92,7 +105,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 {
     NSView *view = [self addTab:@"Instances" toTabs:self.productTabs];
     [self addLabel:@"Instances" toView:view frame:NSMakeRect(20, 350, 360, 28)];
-    [self addLabel:@"C1 Vanilla — selected" toView:view frame:NSMakeRect(20, 300, 420, 26)];
+    self.instanceSummaryLabel = [self addLabel:@"Inspecting backend instances…" toView:view frame:NSMakeRect(20, 300, 760, 26)];
     [self addActionButton:@"Create instance…" selector:@selector(createFixtureInstance:) toView:view frame:NSMakeRect(20, 250, 180, 32)];
     [self addActionButton:@"Select C1 Vanilla" selector:@selector(selectFixtureInstance:) toView:view frame:NSMakeRect(212, 250, 180, 32)];
 }
@@ -101,7 +114,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 {
     NSView *view = [self addTab:@"Installations" toTabs:self.productTabs];
     [self addLabel:@"Installations" toView:view frame:NSMakeRect(20, 350, 360, 28)];
-    [self addLabel:@"Factorio 2.0.77 standalone — existing; never repaired or updated by this preview" toView:view frame:NSMakeRect(20, 300, 760, 26)];
+    self.installationSummaryLabel = [self addLabel:@"Inspecting backend installations…" toView:view frame:NSMakeRect(20, 300, 760, 26)];
     [self addActionButton:@"Scan for installations" selector:@selector(rescanFixture:) toView:view frame:NSMakeRect(20, 250, 200, 32)];
 }
 
@@ -110,16 +123,19 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
     NSView *view = [self addTab:@"Activity" toTabs:self.productTabs];
     self.pageTitle = [self addLabel:@"Activity" toView:view frame:NSMakeRect(20, 350, 360, 28)];
     self.pageSummary = [self addLabel:@"" toView:view frame:NSMakeRect(20, 300, 760, 26)];
-    [self addActionButton:@"Finish fixture run" selector:@selector(finishFixture:) toView:view frame:NSMakeRect(20, 250, 180, 32)];
-    [self addActionButton:@"Simulate interruption" selector:@selector(interruptFixture:) toView:view frame:NSMakeRect(212, 250, 180, 32)];
-    [self addActionButton:@"Recover operation" selector:@selector(recoverFixture:) toView:view frame:NSMakeRect(404, 250, 180, 32)];
+    NSButton *finish = [self addActionButton:@"Finish fixture run" selector:@selector(finishFixture:) toView:view frame:NSMakeRect(20, 250, 180, 32)];
+    NSButton *interrupt = [self addActionButton:@"Simulate interruption" selector:@selector(interruptFixture:) toView:view frame:NSMakeRect(212, 250, 180, 32)];
+    [self.evidenceButtons addObjectsFromArray:@[ finish, interrupt ]];
 }
 
 - (void)addSettingsPage
 {
     NSView *view = [self addTab:@"Settings / About" toTabs:self.productTabs];
     [self addLabel:@"FacMan 0.1 C1 classic preview" toView:view frame:NSMakeRect(20, 350, 520, 28)];
-    [self addLabel:@"AppKit x86_64 · macOS 10.13+ · preview only · no live Play authority" toView:view frame:NSMakeRect(20, 312, 720, 24)];
+    [self addLabel:(self.evidenceMode
+        ? @"EXPLICIT EVIDENCE / DEVELOPMENT MODE · unchanged deterministic fixtures · no live Play authority"
+        : @"LIVE BACKEND MODE · bounded process RPC · backend-gated exact Play route · preview support lane")
+             toView:view frame:NSMakeRect(20, 312, 900, 24)];
     [self addLabel:@"Appearance" toView:view frame:NSMakeRect(20, 260, 120, 24)];
     self.appearancePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(150, 256, 220, 30) pullsDown:NO];
     [self.appearancePopup addItemsWithTitles:@[ @"System Native", @"FacMan OEM+ Launch Deck" ]];
@@ -313,37 +329,68 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
     [button setTarget:self];
     [button setAction:selector];
     [button setAccessibilityLabel:title];
-    [button setAccessibilityHelp:@"Fixture-only preview action; no live Factorio process is started."];
+    [button setAccessibilityHelp:self.evidenceMode
+        ? @"Explicit evidence/development fixture action; no live process is started."
+        : @"Backend-derived action over bounded process RPC; backend admission remains authoritative."];
     [view addSubview:button];
     return button;
 }
 
 - (void)renderFixture
 {
-    [self.deckStatus setStringValue:self.fixture.statusText];
-    [self.deckReadiness setStringValue:[@"Readiness: " stringByAppendingString:self.fixture.readiness]];
-    NSString *lastRun = [self.retainedLastRun length] > 0 ? self.retainedLastRun : self.fixture.lastRun;
+    FacManPreviewState state = self.evidenceMode ? self.fixture.state : self.livePresentation.state;
+    NSString *statusText = self.evidenceMode ? self.fixture.statusText : self.livePresentation.statusText;
+    NSString *readiness = self.evidenceMode ? self.fixture.readiness : self.livePresentation.readiness;
+    NSString *primaryLabel = self.evidenceMode ? self.fixture.primaryLabel : self.livePresentation.primaryLabel;
+    NSString *primaryAccessibilityLabel = self.evidenceMode ? self.fixture.primaryAccessibilityLabel : self.livePresentation.primaryAccessibilityLabel;
+    NSString *activitySummary = self.evidenceMode ? self.fixture.activitySummary : self.livePresentation.activitySummary;
+    NSString *operation = self.evidenceMode ? self.fixture.operationId : self.livePresentation.operationId;
+    NSString *lastRun = self.evidenceMode
+        ? ([self.retainedLastRun length] > 0 ? self.retainedLastRun : self.fixture.lastRun)
+        : self.livePresentation.lastRun;
+    [self.deckStatus setStringValue:statusText];
+    [self.deckReadiness setStringValue:[@"Readiness: " stringByAppendingString:readiness]];
     [self.deckLastRun setStringValue:[@"Last Run: " stringByAppendingString:lastRun]];
-    NSString *operation = self.fixture.operationId;
-    if (self.relaunched && self.fixture.state == FacManPreviewStateRunning) operation = @"operation.fixture-play-002";
+    if (self.evidenceMode && self.relaunched && state == FacManPreviewStateRunning) operation = @"operation.fixture-play-002";
     [self.deckOperation setStringValue:[operation length] > 0
         ? [@"Operation: " stringByAppendingString:operation]
         : @"Operation: none"];
-    [self.deckPrimary setTitle:self.fixture.primaryLabel];
-    [self.deckPrimary setAccessibilityLabel:self.fixture.primaryAccessibilityLabel];
-    [self.deckPrimary setEnabled:self.fixture.primaryEnabled];
-    NSString *secondary = @"Make readiness stale";
-    if (self.fixture.state == FacManPreviewStateStaleReadiness) secondary = @"Rescan readiness";
-    if (self.fixture.state == FacManPreviewStateInterrupted) secondary = @"Recover operation";
+    [self.deckPrimary setTitle:primaryLabel];
+    [self.deckPrimary setAccessibilityLabel:primaryAccessibilityLabel];
+    [self.deckPrimary setEnabled:self.evidenceMode ? self.fixture.primaryEnabled : self.livePresentation.primaryEnabled];
+    NSString *secondary = self.evidenceMode ? @"Make readiness stale" : @"Refresh backend state";
+    if (state == FacManPreviewStateStaleReadiness) secondary = @"Rescan readiness";
+    if (state == FacManPreviewStateInterrupted) secondary = @"Recover operation";
     [self.deckSecondary setTitle:secondary];
     [self.deckSecondary setAccessibilityLabel:secondary];
-    [self.pageSummary setStringValue:self.fixture.activitySummary];
+    [self.pageSummary setStringValue:activitySummary];
+    if (!self.evidenceMode) {
+        [self.instanceSummaryLabel setStringValue:self.livePresentation.instanceSummary ?: @""];
+        [self.installationSummaryLabel setStringValue:self.livePresentation.installationSummary ?: @""];
+    }
+    for (NSButton *button in self.evidenceButtons) [button setHidden:!self.evidenceMode];
     NSAccessibilityPostNotification(self.deckStatus, NSAccessibilityValueChangedNotification);
 }
 
 - (void)invokePrimary:(id)sender
 {
     (void)sender;
+    if (!self.evidenceMode) {
+        if (self.livePresentation.recoveryRequired) { [self showActivity:nil]; return; }
+        if (!self.livePresentation.primaryEnabled) {
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert setMessageText:self.livePresentation.refusalCode ?: @"Play unavailable"];
+            [alert setInformativeText:self.livePresentation.refusalDetail ?: @"Backend did not enable Play."];
+            [alert addButtonWithTitle:@"OK"];
+            [alert runModal];
+            return;
+        }
+        [self.deckPrimary setEnabled:NO];
+        [self.livePresentation playWithWorkspace:[self.workspaceField stringValue]
+                                         cliPath:[self.cliPathField stringValue]
+                                      completion:^{ [self renderFixture]; }];
+        return;
+    }
     switch (self.fixture.state) {
         case FacManPreviewStateStaleReadiness: {
             NSAlert *alert = [[NSAlert alloc] init];
@@ -376,6 +423,16 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)invokeSecondary:(id)sender
 {
     (void)sender;
+    if (!self.evidenceMode) {
+        if (self.livePresentation.recoveryRequired) {
+            [self.livePresentation recoverWithWorkspace:[self.workspaceField stringValue]
+                                                 cliPath:[self.cliPathField stringValue]
+                                              completion:^{ [self renderFixture]; }];
+        } else {
+            [self refreshLivePresentation];
+        }
+        return;
+    }
     if (self.fixture.state == FacManPreviewStateInterrupted) {
         [self recoverFixture:nil];
     } else if (self.fixture.state == FacManPreviewStateStaleReadiness) {
@@ -395,6 +452,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)rescanFixture:(id)sender
 {
     (void)sender;
+    if (!self.evidenceMode) { [self refreshLivePresentation]; return; }
     self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
     [self renderFixture];
 }
@@ -402,6 +460,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)finishFixture:(id)sender
 {
     (void)sender;
+    if (!self.evidenceMode) return;
     if (self.fixture.state != FacManPreviewStateRunning) return;
     self.retainedLastRun = self.relaunched
         ? @"Exited normally · code 0 · operation.fixture-play-002"
@@ -413,6 +472,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)interruptFixture:(id)sender
 {
     (void)sender;
+    if (!self.evidenceMode) return;
     self.retainedLastRun = @"Interrupted · outcome unknown · operation.fixture-play-001";
     self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateInterrupted];
     [self renderFixture];
@@ -422,6 +482,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)recoverFixture:(id)sender
 {
     (void)sender;
+    if (!self.evidenceMode) { [self invokeSecondary:nil]; return; }
     if (self.fixture.state != FacManPreviewStateInterrupted) return;
     self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
     [self renderFixture];
@@ -430,6 +491,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)createFixtureInstance:(id)sender
 {
     (void)sender;
+    if (!self.evidenceMode) { [self runCommandId:@"instances.create" sender:nil]; return; }
     self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
     [self renderFixture];
 }
@@ -437,8 +499,17 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)selectFixtureInstance:(id)sender
 {
     (void)sender;
+    if (!self.evidenceMode) { [self refreshLivePresentation]; return; }
     self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
     [self renderFixture];
+}
+
+- (void)refreshLivePresentation
+{
+    [self.deckStatus setStringValue:@"Inspecting workspace, installations, instances, readiness, Activity, Last Run, and recovery…"];
+    [self.livePresentation refreshWithWorkspace:[self.workspaceField stringValue]
+                                        cliPath:[self.cliPathField stringValue]
+                                     completion:^{ [self renderFixture]; }];
 }
 
 - (void)changeAppearance:(id)sender
@@ -527,6 +598,8 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
                                       FacManVisualizationTitle(command.renderer), command.riskTier, command.effects,
                                       [result displayText]]];
                                   if (sender != nil) [sender setEnabled:YES];
+                                  if (!self.evidenceMode && [commandId isEqualToString:@"instances.create"] && !result.refused)
+                                      [self refreshLivePresentation];
                               }];
 }
 

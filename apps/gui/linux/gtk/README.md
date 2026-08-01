@@ -1,7 +1,9 @@
 # Linux GTK 3/X11 C1 preview
 
-This is the native GTK 3 projection of the deterministic FacMan C1 fixture
-journey for the frozen Linux x64/X11 preview lane. It is not a live Play,
+This is the native GTK 3 projection of backend-derived FacMan C1 state over the
+existing bounded process RPC for the frozen Linux x64/X11 preview lane.
+Deterministic fixtures remain only behind explicit
+`FACMAN_PRESENTATION_MODE=evidence`. It is not a live Play,
 runtime-qualification, package-publication, or stable-support claim.
 
 The shell uses native GTK 3 widgets for Instances, Installations, Activity,
@@ -11,7 +13,7 @@ ATK names/descriptions preserve GTK keyboard and accessibility conventions.
 System Native is the safe default. FacMan OEM+ applies only a semantic Launch
 Deck class and Control-0 restores System Native.
 
-Fixture controls cover selection/create, readiness, exact `stale_readiness`
+Explicit evidence controls cover selection/create, readiness, exact `stale_readiness`
 refusal before effects, backend-owned running/exited state, Last Run, relaunch
 with a distinct operation ID, and interruption/recovery. They start no Factorio
 process. Advanced `product.inspect` uses a fixed `rpc --stdio` child process

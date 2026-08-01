@@ -286,6 +286,7 @@ def collect() -> dict[str, Any]:
         "build_and_development_truth": status["build_and_development_truth"],
         "transport_outcome_semantics": status["transport_outcome_semantics"],
         "play_candidate_runtime_separation": status["play_candidate_runtime_separation"],
+        "facman_c1_shell_integration": status["facman_c1_shell_integration"],
         "release": status["release"],
         "validation": status["validation"],
         "current_revisions": {
@@ -363,6 +364,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
     build_truth = data["build_and_development_truth"]
     transport = data["transport_outcome_semantics"]
     separation = data["play_candidate_runtime_separation"]
+    shells = data["facman_c1_shell_integration"]
     active_automated = [
         record["id"]
         for record in queue["records"]
@@ -430,6 +432,19 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"release = {toml_string(data['release']['status'])}",
         f"release_authenticity = {toml_string(data['release']['authenticity'])}",
         f"safe_beta = {str(bool(data['safe_beta'])).lower()}",
+        "",
+        "[shells]",
+        f"work_unit = {toml_string(shells['work_unit'])}",
+        f"status = {toml_string(shells['status'])}",
+        f"windows = {toml_string(shells['windows'])}",
+        f"appkit = {toml_string(shells['appkit'])}",
+        f"gtk = {toml_string(shells['gtk'])}",
+        f"presentation = {toml_string(shells['presentation'])}",
+        f"transport = {toml_string(shells['transport'])}",
+        f"evidence_mode = {toml_string(shells['evidence_mode'])}",
+        f"play = {toml_string(shells['play'])}",
+        f"last_run = {toml_string(shells['last_run'])}",
+        f"recovery = {toml_string(shells['recovery'])}",
         "",
         "[transport]",
         f"operation_contract = {toml_string(transport['operation_contract'])}",
@@ -1516,7 +1531,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     readiness = status.get("readiness", {})
     expected_readiness = {
         "playability": "not_yet_playable",
-        "user_workflow": "advanced_command_surface_only",
+        "user_workflow": "native_c1_shell_backend_projection_release_candidate_ready",
         "safety_authority": phase_contract["safety"],
         "platform_support": "windows_first_alpha_planned",
         "release_authenticity": "not_proven_unsigned",

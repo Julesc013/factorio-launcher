@@ -64,6 +64,11 @@
         "actions": {
           "type": "array",
           "items": { "$ref": "#/$defs/ActionDescriptor" }
+        },
+        "items": {
+          "description": "Optional backend-derived inventory rows. Fixture records omit this member.",
+          "type": "array",
+          "items": { "type": "object" }
         }
       },
       "additionalProperties": false
@@ -407,7 +412,11 @@
         "revision": { "type": "integer", "minimum": 0 },
         "generated_at": { "type": "string", "format": "date-time" },
         "fixture_state": { "$ref": "#/$defs/JourneyState" },
-        "authority_scope": { "enum": ["fixture_only", "unavailable"] },
+        "authority_scope": { "enum": ["fixture_only", "unavailable", "backend_derived"] },
+        "source_mode": {
+          "description": "Optional source marker; its absence means an unchanged evidence fixture.",
+          "enum": ["evidence_fixture", "live_backend"]
+        },
         "transport": {
           "type": "object",
           "required": ["mode", "session_owner", "journal_owner", "frontend_disconnect", "route_authority"],

@@ -72,6 +72,19 @@ void facman_gtk_rpc_invoke(
     FacManGtkRpcCompletion completion,
     gpointer user_data)
 {
+    facman_gtk_rpc_invoke_payload(
+        cli_path, workspace, command, "{}", TRUE, completion, user_data);
+}
+
+void facman_gtk_rpc_invoke_payload(
+    const gchar *cli_path,
+    const gchar *workspace,
+    const gchar *command,
+    const gchar *payload_json,
+    gboolean dry_run,
+    FacManGtkRpcCompletion completion,
+    gpointer user_data)
+{
     const gchar *configured = cli_path != NULL ? cli_path : "";
     if (*configured == '\0') configured = g_getenv("FACMAN_CLI");
     if (configured == NULL || *configured == '\0') configured = "facman";
@@ -90,7 +103,8 @@ void facman_gtk_rpc_invoke(
         return;
     }
 
-    gchar *request = facman_preview_generated_rpc_request(workspace, command);
+    gchar *request = facman_preview_generated_rpc_request_with_payload(
+        workspace, command, payload_json, dry_run);
 
     FacManGtkRpcCall *call = g_new0(FacManGtkRpcCall, 1);
     call->process = process;

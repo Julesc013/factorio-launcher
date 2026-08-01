@@ -1,7 +1,9 @@
 # macOS AppKit C1 preview
 
-This is the native AppKit projection of the deterministic FacMan C1 fixture
-journey. It targets x86_64 and macOS 10.13 or later. It is a preview lane: the
+This is the native AppKit projection of backend-derived FacMan C1 state through
+the existing bounded process RPC. Deterministic fixtures remain only behind
+explicit `FACMAN_PRESENTATION_MODE=evidence`. It targets x86_64 and macOS
+10.13 or later. It is a preview lane: the
 source and bundle prototype do not claim live Play, signed/notarized packaging,
 runtime qualification, or stable support.
 
@@ -13,7 +15,7 @@ explicit accessibility labels cover keyboard and assistive-technology paths.
 System Native is the safe default; FacMan OEM+ changes only the Launch Deck and
 Command-0 restores System Native immediately.
 
-The fixture controls demonstrate selection/create, readiness, exact
+The explicitly labelled evidence controls demonstrate selection/create, readiness, exact
 `stale_readiness` refusal before effects, backend-owned running/exited state,
 Last Run, relaunch with a distinct operation ID, and interruption/recovery.
 They start no Factorio process. Advanced commands use the existing bounded

@@ -13,3 +13,12 @@ void facman_gtk_rpc_invoke(
     const gchar *command,
     FacManGtkRpcCompletion completion,
     gpointer user_data);
+
+void facman_gtk_rpc_invoke_payload(
+    const gchar *cli_path,
+    const gchar *workspace,
+    const gchar *command,
+    const gchar *payload_json,
+    gboolean dry_run,
+    FacManGtkRpcCompletion completion,
+    gpointer user_data);

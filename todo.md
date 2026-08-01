@@ -21,8 +21,8 @@ last_reviewed: 2026-08-01
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 1/3 including external gates
-- Ready: 0/10
-- Near-term work units: 0/5
+- Ready: 1/10
+- Near-term work units: 1/5
 
 ## North star
 
@@ -67,7 +67,7 @@ Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isola
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/queue/index.yaml`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
-- Non-blocking product work: 10 named items may continue independently.
+- Non-blocking product work: 12 named items may continue independently.
 - Exit: Complete the separately authorized observer and two-launch procedure without inferring route authority. Shell, fixture, accessibility, package, and documentation work continue independently.
 
 ## Active work units
@@ -76,10 +76,12 @@ _No internal work unit is active. An authority-only external gate does not block
 
 ## Ready queue
 
-_No work unit satisfies the Definition of Ready._
+1. `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
+   - Owner: `release-maintainer`; outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
 
 ## Critical path after the current unit
 
+- [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — ready; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
 
 ## Blocking decisions
 
@@ -128,6 +130,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `C1-FIXTURE-VERTICAL-SLICE-01` — Complete the fixture-backed C1 player journey
 - [x] `FACMAN-WINFORMS-C1-SHELL-01` — Build the four-page WinForms C1 product shell
 - [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells
+- [x] `FACMAN-C1-LIVE-SHELL-INTEGRATION-01` — Integrate backend-derived presentation into all three C1 shells
 
 ## Validation commands
 

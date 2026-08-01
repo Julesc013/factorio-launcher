@@ -114,6 +114,16 @@ typedef NS_ENUM(NSInteger, FacManCommandStatus) {
                  cliPath:(NSString *)cliPath
               completion:(void (^)(FacManCommandResult *result))completion;
 
+// Used only by the product Launch Deck after a fresh backend readiness record
+// enables the exact registered route. This bypasses frontend display status,
+// never registry identity or backend admission.
+- (void)executeExactRegisteredCommandId:(NSString *)commandId
+                                 inputs:(NSDictionary<NSString *, NSString *> *)inputs
+                              workspace:(NSString *)workspace
+                                cliPath:(NSString *)cliPath
+                         backendEnabled:(BOOL)backendEnabled
+                             completion:(void (^)(FacManCommandResult *result))completion;
+
 - (void)cancelCurrentCommand;
 
 @end
