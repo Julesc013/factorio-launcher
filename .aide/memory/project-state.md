@@ -102,7 +102,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `308` / `242`;
+- schemas / refusal codes: `309` / `242`;
 - command catalog digest: `f29ea66effb76d4b45beaf307ab13750dfa808d3fc0b03848d2f62fa2f505e20`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
@@ -136,7 +136,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.
 - Qualification-05 is accepted and revalidation-04 is staged but not prepared; Jules is designated as operator, while observer capture, prepare, permit, execution, verdict, and route authority remain separately gated.
 - The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.
-- AppKit remains compile-only until an actual bundle runtime invocation is recorded.
+- AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 
 ## Authorities

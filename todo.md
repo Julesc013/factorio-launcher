@@ -18,8 +18,8 @@ last_reviewed: 2026-08-01
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 2/3 including external gates
-- Ready: 1/10
+- WIP: 3/3 including external gates
+- Ready: 0/10
 - Near-term work units: 2/5
 
 ## North star
@@ -73,15 +73,16 @@ Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isola
 - [ ] `C1-PREVIEW-RUNTIME-PACKAGES-01` [P1/L] — Qualify AppKit and GTK native preview runtime packages
   - Owner: `platform-maintainer`; repositories: `factorio-launcher`
   - Outcome: Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims.
+- [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
+  - Owner: `release-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
 
 ## Ready queue
 
-1. `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
-   - Owner: `release-maintainer`; outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — ready; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
 
 ## Blocking decisions
 
@@ -141,7 +142,6 @@ py -3 -m unittest tests.test_plan_views
 
 ## Rules of engagement
 
-- Do not hand-edit this generated view.
 - Do not start a planned item as if it were ready.
 - Do not exceed WIP by relabeling work as research or documentation.
 - An authority-only gate blocks only its named authorities; it is not a global product mutex.

@@ -3,9 +3,9 @@ id = "windows_legacy_winforms_x64"
 lane = "windows_legacy_winforms"
 target_os = "windows"
 target_arch = "x64"
-minimum_os = "windows_7_sp1"
+minimum_os = "windows_10_22h2"
 runtime_floor = ".NET Framework 4.8"
-support_tier = "legacy_best_effort"
+support_tier = "package_preview"
 package_types = ["portable_zip", "installer", "self_extracting_bootstrapper"]
 install_modes = ["portable", "user", "system"]
 package_manifest = "release/packaging/windows/facman_portable.v1.toml"
@@ -17,6 +17,12 @@ content_path = "content/factorio"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 bundles_factorio_binaries = false
 credential_storage = false
+
+[proof]
+runner = "windows-2022"
+architecture = "x86_64"
+deployment_target = "windows_10_22h2"
+package_format = "portable_zip"
 
 [frontends]
 gui = "apps/gui/windows/winforms"

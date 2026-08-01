@@ -17,12 +17,12 @@ content_path = "content/factorio"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 bundles_factorio_binaries = false
 credential_storage = false
-runtime_claim = "compile_only_no_bundle_runtime_proof"
+runtime_claim = "provisional_bundle_smoke_no_runtime_qualification"
 publication = false
 
 [preview_qualification]
 workunit = "C1-PREVIEW-RUNTIME-PACKAGES-01"
-status = "frontend_prototype_evidence_pending"
+status = "frontend_prototype_evidence_integrated"
 proof_command = "python tools/classic_preview_package_proof.py appkit"
 claim_ceiling = "non_promoting_frontend_fixture_prototype"
 artifact_scope = "frontend_only_prototype"

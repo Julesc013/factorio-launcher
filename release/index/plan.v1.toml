@@ -513,13 +513,15 @@ evidence = [
 id = "C1-WINDOWS-RELEASE-CANDIDATE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Construct and qualify the Windows C1 release candidate"
-status = "ready"
+status = "active"
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
 decision_blockers = []
+branch = "task/c1-windows-release-candidate-01"
+base_revision = "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8"
 outcome = "Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance."
 acceptance = [
   "A clean checkout constructs the portable Windows x64 candidate and records exact source, dependency, component, and artifact identities.",
@@ -527,7 +529,13 @@ acceptance = [
   "The candidate remains fail-closed when live Play authority is absent and makes no signed, published, AppKit, GTK, or stable-support claim beyond recorded evidence.",
   "If the exact Play route becomes available through its separate authority procedure, final acceptance consumes that evidence without changing frontend policy, transport, provider pins, or route identity.",
 ]
-evidence = []
+evidence = [
+  "docs/release/facman-0.1.0-windows-release-candidate.md",
+  "tools/windows_c1_release_candidate.py",
+  "contracts/schema/release/windows_c1_release_candidate.v1.schema.json",
+  "tests/test_windows_c1_release_candidate.py",
+  ".github/workflows/ci.yml",
+]
 
 [[decision]]
 id = "DEC-C1-REFERENCE-LANE"
