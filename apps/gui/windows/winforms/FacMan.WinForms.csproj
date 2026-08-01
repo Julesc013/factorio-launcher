@@ -1,16 +1,19 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <OutputType>WinExe</OutputType>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <RootNamespace>FacMan.WinForms</RootNamespace>
     <AssemblyName>FacMan.WinForms</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <OutputPath>bin\Debug\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>bin\Release\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
@@ -28,6 +31,25 @@
     <Compile Include="CommandClient.cs" />
     <Compile Include="CliProcessClient.cs" />
     <Compile Include="OperationalVisualization.cs" />
+    <Compile Include="C1Presentation.cs" />
+    <Compile Include="C1ShellForm.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\..\tests\fixtures\presentation\positive.facman.presentation.v0.json">
+      <LogicalName>FacMan.WinForms.Fixtures.positive.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\tests\fixtures\presentation\refused.facman.presentation.v0.json">
+      <LogicalName>FacMan.WinForms.Fixtures.refused.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\tests\fixtures\presentation\running.facman.presentation.v0.json">
+      <LogicalName>FacMan.WinForms.Fixtures.running.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\tests\fixtures\presentation\exited.facman.presentation.v0.json">
+      <LogicalName>FacMan.WinForms.Fixtures.exited.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\tests\fixtures\presentation\interrupted.facman.presentation.v0.json">
+      <LogicalName>FacMan.WinForms.Fixtures.interrupted.json</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

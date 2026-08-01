@@ -385,20 +385,32 @@ evidence = [
 id = "FACMAN-WINFORMS-C1-SHELL-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Build the four-page WinForms C1 product shell"
-status = "planned"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["C1-FIXTURE-VERTICAL-SLICE-01"]
 decision_blockers = []
+branch = "task/facman-winforms-c1-shell-01"
+base_revision = "94fd1b9565c300bbc0e274f8d40083d967c367db"
 outcome = "Replace the command explorer as home with native Instances, Installations, Activity, Settings/About, and a persistent Launch Deck; retain the explorer under Advanced."
 acceptance = [
   "The complete fixture journey is keyboard-operable with access keys, focus order, accessible names, System Native mode, and 100/150/200-percent scaling.",
   "Readiness, exact refusal, running/exited state, last run, relaunch, and recovery are visible.",
   "A portable Windows ZIP prototype is constructed without changing qualified runtime identities.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/facman-winforms-c1-shell-01.md",
+  "docs/product/facman_winforms_c1_shell.md",
+  "apps/gui/windows/winforms/C1ShellForm.cs",
+  "apps/gui/windows/winforms/C1Presentation.cs",
+  "apps/gui/windows/winforms/app.manifest",
+  "tools/facman_winforms_c1_check.py",
+  "tools/winforms_c1_runtime_smoke.py",
+  "tools/build_winforms_c1_portable.py",
+  "tests/test_facman_winforms_c1_shell.py",
+]
 
 [[workunit]]
 id = "FACMAN-CLASSIC-PREVIEW-SHELLS-01"

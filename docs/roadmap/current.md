@@ -74,8 +74,8 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-JOURNEYS-01`, `INSTANCE-VIEW-MINIMUM-01`
   - Outcome: Exercise the complete select/create, readiness, Play/refusal, running, exit, relaunch, and recovery journey without requiring live Play authority.
-- [ ] **FACMAN-WINFORMS-C1-SHELL-01** — Build the four-page WinForms C1 product shell
-  - State: `planned`; priority/size: `P0/L`
+- [x] **FACMAN-WINFORMS-C1-SHELL-01** — Build the four-page WinForms C1 product shell
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `product-maintainer`; dependencies: `C1-FIXTURE-VERTICAL-SLICE-01`
   - Outcome: Replace the command explorer as home with native Instances, Installations, Activity, Settings/About, and a persistent Launch Deck; retain the explorer under Advanced.
 

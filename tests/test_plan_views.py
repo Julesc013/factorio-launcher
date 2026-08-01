@@ -172,6 +172,41 @@ class PlanViewTests(unittest.TestCase):
         ):
             self.assertIn(marker, contract)
 
+    def test_winforms_c1_shell_is_complete_and_authority_bounded(self) -> None:
+        workunit = next(
+            item
+            for item in self.plan["workunit"]
+            if item["id"] == "FACMAN-WINFORMS-C1-SHELL-01"
+        )
+        self.assertEqual(workunit["status"], "complete")
+        self.assertEqual(workunit["branch"], "task/facman-winforms-c1-shell-01")
+        self.assertEqual(
+            workunit["base_revision"],
+            "94fd1b9565c300bbc0e274f8d40083d967c367db",
+        )
+        self.assertIn(
+            "tools/facman_winforms_c1_check.py", workunit["evidence"]
+        )
+        contract = (
+            generate_plan_views.ROOT / "docs/product/facman_winforms_c1_shell.md"
+        ).read_text(encoding="utf-8")
+        normalized = " ".join(contract.split())
+        for marker in (
+            "Windows 10 and Windows 11 x64",
+            "Instances",
+            "Installations",
+            "Activity",
+            "Settings / About",
+            "Launch Deck",
+            "`stale_readiness`",
+            "Last Run",
+            "Per-Monitor V2",
+            "fixture_only",
+            "starts no Factorio process",
+            "Universal Launcher ABI",
+        ):
+            self.assertIn(marker, normalized)
+
     def test_dependency_cycle_is_rejected(self) -> None:
         invalid = copy.deepcopy(self.plan)
         invalid["workunit"][0]["depends_on"] = [invalid["workunit"][1]["id"]]
@@ -188,12 +223,10 @@ class PlanViewTests(unittest.TestCase):
         )
         ready["status"] = "ready"
         incomplete = next(
-            item
-            for item in invalid["workunit"]
-            if item["status"] not in {"complete", "cancelled"}
-            and item["id"] != ready["id"]
+            item for item in invalid["workunit"]
+            if item["id"] == ready["depends_on"][0]
         )
-        ready["depends_on"] = [incomplete["id"]]
+        incomplete["status"] = "planned"
         errors = generate_plan_views.validate_plan(invalid)
         self.assertTrue(
             any("ready with incomplete dependencies" in error for error in errors),
