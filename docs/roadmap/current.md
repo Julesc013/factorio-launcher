@@ -100,6 +100,10 @@ Owner: `platform-maintainer`. Repositories: `factorio-launcher`, `universal-laun
   - State: `complete`; priority/size: `P1/L`
   - Owner: `platform-maintainer`; dependencies: `INSTANCE-VIEW-MINIMUM-01`
   - Outcome: Project the same C1 fixture journey through an AppKit runtime bundle and GTK 3/X11 package prototype using native controls and bounded process RPC.
+- [ ] **C1-PREVIEW-RUNTIME-PACKAGES-01** — Qualify AppKit and GTK native preview runtime packages
+  - State: `active`; priority/size: `P1/L`
+  - Owner: `platform-maintainer`; dependencies: `FACMAN-CLASSIC-PREVIEW-SHELLS-01`
+  - Outcome: Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims.
 
 #### EPIC-CONTRACT-GOVERNANCE — Contract maturity and cross-repository migration (planned)
 
@@ -133,8 +137,6 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: Revalidation-04 passes and the exact route capability and Windows route promotion are accepted.
 - **C1-WINDOWS-PACKAGE-01** — Qualify the portable Windows C1 package on a clean machine.
   - Revisit: FACMAN-WINFORMS-C1-SHELL-01 completes.
-- **C1-PREVIEW-PACKAGES-01** — Qualify AppKit and GTK preview packages at their evidence-supported tiers.
-  - Revisit: FACMAN-CLASSIC-PREVIEW-SHELLS-01 completes.
 - **C1-USER-VALIDATION-01** — Observe target users completing the C1 journey and record friction and false assumptions.
   - Revisit: The C1 vertical slice passes clean reconstruction.
 - **C1-RELEASE-RECONSTRUCTION-01** — Reproduce the C1 release and evidence from a clean checkout and controlled environment.

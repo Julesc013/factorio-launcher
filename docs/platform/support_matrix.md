@@ -29,7 +29,7 @@ Compile, runtime, package, publication, and support are independent claims. The 
 | `macos_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `windows_legacy_winforms_x64` | passed | passed | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `macos_legacy_appkit_x64` | passed | not_proven | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `linux_x11_gtk_x64` | deferred | deferred | contract_only | unpublished | unavailable | `-` |
+| `linux_x11_gtk_x64` | passed | not_proven | contract_only | unpublished | unavailable | `8f99e968e336b10eef3665a01f21f9c94a0a24e6` |
 | `portable_cli_x64` | passed | contract_tested | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `portable_tui_x64` | opt_in_only | not_proven | not_built | unpublished | experimental | `-` |
 <!-- FACMAN-SUPPORT-STATUS:END -->

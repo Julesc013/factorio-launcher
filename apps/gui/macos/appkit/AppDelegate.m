@@ -3,6 +3,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "MainWindowController.h"
+#include <stdio.h>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property(nonatomic, strong) MainWindowController *mainWindowController;
@@ -16,6 +17,14 @@
     self.mainWindowController = [[MainWindowController alloc] init];
     [self installMenus];
     [self.mainWindowController showWindow:self];
+    if ([[[NSProcessInfo processInfo] arguments] containsObject:@"--facman-preview-self-test"]) {
+        [self.mainWindowController runPreviewSelfTestWithCompletion:^(NSString *report) {
+            fputs([[report stringByAppendingString:@"\n"] UTF8String], stdout);
+            fflush(stdout);
+            [NSApp terminate:nil];
+        }];
+        return;
+    }
     [NSApp activateIgnoringOtherApps:YES];
 }
 

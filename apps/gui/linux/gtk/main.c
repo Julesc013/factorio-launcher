@@ -31,8 +31,13 @@ typedef struct {
     GtkAccelGroup *accelerators;
     FacManPreviewState state;
     gboolean relaunched;
+    gboolean self_test;
+    gboolean expect_timeout;
     gchar *retained_last_run;
+    gchar *probe_report;
 } FacManGtkShell;
+
+static gboolean preview_self_test = FALSE;
 
 static void set_accessibility(GtkWidget *widget, const gchar *name, const gchar *description)
 {
@@ -362,8 +367,141 @@ static void destroy_shell(gpointer data)
 {
     FacManGtkShell *shell = data;
     g_free(shell->retained_last_run);
+    g_free(shell->probe_report);
     g_clear_object(&shell->accelerators);
     g_free(shell);
+}
+
+static gboolean has_accelerator(FacManGtkShell *shell, guint key)
+{
+    GtkAccelKey *entries = NULL;
+    return gtk_accel_group_query(shell->accelerators, key, GDK_CONTROL_MASK, &entries) > 0;
+}
+
+static gboolean at_spi_bus_available(void)
+{
+    GError *error = NULL;
+    GDBusProxy *proxy = g_dbus_proxy_new_for_bus_sync(
+        G_BUS_TYPE_SESSION,
+        G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+        NULL,
+        "org.a11y.Bus",
+        "/org/a11y/bus",
+        "org.a11y.Bus",
+        NULL,
+        &error);
+    if (proxy == NULL) {
+        g_clear_error(&error);
+        return FALSE;
+    }
+    GVariant *address = g_dbus_proxy_call_sync(
+        proxy, "GetAddress", NULL, G_DBUS_CALL_FLAGS_NONE, 5000, NULL, &error);
+    gboolean available = address != NULL;
+    if (address != NULL) g_variant_unref(address);
+    g_clear_error(&error);
+    g_object_unref(proxy);
+    return available;
+}
+
+static void runtime_probe_completed(const gchar *result, gpointer user_data)
+{
+    FacManGtkShell *shell = user_data;
+    gboolean rpc_pass = shell->expect_timeout
+        ? g_strstr_len(result, -1, "outcome_unknown") != NULL
+        : g_strstr_len(result, -1, "operation.preview-rpc-001") != NULL;
+    g_print("%s\n", shell->probe_report);
+    g_print("bounded_rpc=%s\n", rpc_pass ? "pass" : "fail");
+    g_print("rpc_timeout=%s\n", shell->expect_timeout ? (rpc_pass ? "pass" : "fail") : "not_requested");
+    g_print("process_transport=rpc --stdio\n");
+    fflush(stdout);
+    g_application_quit(G_APPLICATION(shell->application));
+}
+
+static void run_runtime_probe(FacManGtkShell *shell)
+{
+    GString *facts = g_string_new(
+        "schema=facman.classic_preview_runtime_probe.v1\n"
+        "platform=gtk\n"
+        "authority=fixture_only\n"
+        "live_play=false\n");
+    GList *pages = gtk_container_get_children(GTK_CONTAINER(shell->stack));
+    g_string_append_printf(facts, "pages=%s\n", g_list_length(pages) == 5 ? "pass" : "fail");
+    g_list_free(pages);
+    gboolean menu_pass = has_accelerator(shell, GDK_KEY_0)
+        && has_accelerator(shell, GDK_KEY_1)
+        && has_accelerator(shell, GDK_KEY_2)
+        && has_accelerator(shell, GDK_KEY_3)
+        && has_accelerator(shell, GDK_KEY_4)
+        && has_accelerator(shell, GDK_KEY_5);
+    g_string_append_printf(facts, "menu_keyboard=%s\n", menu_pass ? "pass" : "fail");
+
+    gtk_window_resize(GTK_WINDOW(shell->window), 920, 640);
+    while (gtk_events_pending()) gtk_main_iteration();
+    gint width = 0;
+    gint height = 0;
+    gtk_window_get_size(GTK_WINDOW(shell->window), &width, &height);
+    g_string_append_printf(facts, "resize=%s\n", width >= 800 && height >= 500 ? "pass" : "fail");
+    gtk_widget_grab_focus(shell->deck_primary);
+    gboolean focus_pass = gtk_window_get_focus(GTK_WINDOW(shell->window)) == shell->deck_primary;
+    show_page(shell, "activity");
+    show_page(shell, "instances");
+    gtk_widget_grab_focus(shell->deck_primary);
+    focus_pass = focus_pass && gtk_window_get_focus(GTK_WINDOW(shell->window)) == shell->deck_primary;
+    g_string_append_printf(facts, "focus_restoration=%s\n", focus_pass ? "pass" : "fail");
+
+    appearance_oem(NULL, shell);
+    gboolean appearance_pass = gtk_style_context_has_class(
+        gtk_widget_get_style_context(shell->deck), "facman-oem-launch-deck");
+    appearance_system_native(NULL, shell);
+    appearance_pass = appearance_pass && !gtk_style_context_has_class(
+        gtk_widget_get_style_context(shell->deck), "facman-oem-launch-deck");
+    g_string_append_printf(facts, "appearance_recovery=%s\n", appearance_pass ? "pass" : "fail");
+
+    AtkObject *deck_accessible = gtk_widget_get_accessible(shell->deck);
+    AtkObject *play_accessible = gtk_widget_get_accessible(shell->deck_primary);
+    gboolean accessibility_pass = atk_object_get_name(deck_accessible) != NULL
+        && atk_object_get_name(play_accessible) != NULL
+        && atk_object_get_role(play_accessible) != ATK_ROLE_INVALID;
+    g_string_append_printf(facts, "accessibility=%s\n", accessibility_pass ? "pass" : "fail");
+    gchar *theme_name = NULL;
+    g_object_get(gtk_settings_get_default(), "gtk-theme-name", &theme_name, NULL);
+    gchar *lower_theme = theme_name != NULL ? g_ascii_strdown(theme_name, -1) : NULL;
+    gboolean high_contrast = lower_theme != NULL && g_strrstr(lower_theme, "highcontrast") != NULL;
+    const gchar *gtk_modules = g_getenv("GTK_MODULES");
+    gboolean at_spi_bridge = gtk_modules != NULL
+        && g_strrstr(gtk_modules, "atk-bridge") != NULL
+        && g_strcmp0(g_getenv("NO_AT_BRIDGE"), "1") != 0
+        && at_spi_bus_available();
+    g_string_append_printf(facts, "high_contrast=%s\n", high_contrast ? "pass" : "fail");
+    g_string_append_printf(facts, "at_spi_bridge=%s\n", at_spi_bridge ? "pass" : "fail");
+    g_free(lower_theme);
+    g_free(theme_name);
+
+    shell->state = FACMAN_PREVIEW_READY;
+    render_fixture(shell);
+    primary_action(NULL, shell);
+    gboolean fixture_pass = shell->state == FACMAN_PREVIEW_RUNNING;
+    finish_fixture(NULL, shell);
+    fixture_pass = fixture_pass && shell->state == FACMAN_PREVIEW_EXITED;
+    primary_action(NULL, shell);
+    fixture_pass = fixture_pass && shell->state == FACMAN_PREVIEW_RUNNING && shell->relaunched;
+    interrupt_fixture(NULL, shell);
+    fixture_pass = fixture_pass && shell->state == FACMAN_PREVIEW_INTERRUPTED;
+    recover_fixture(NULL, shell);
+    fixture_pass = fixture_pass && shell->state == FACMAN_PREVIEW_READY;
+    shell->state = FACMAN_PREVIEW_STALE_READINESS;
+    render_fixture(shell);
+    const FacManPreviewRecord *stale = facman_preview_record(shell->state);
+    fixture_pass = fixture_pass && g_strcmp0(stale->refusal_code, "stale_readiness") == 0;
+    g_string_append_printf(facts, "fixture_journey=%s\n", fixture_pass ? "pass" : "fail");
+    g_string_append(facts, "stale_refusal=stale_readiness");
+
+    shell->probe_report = g_string_free(facts, FALSE);
+    shell->expect_timeout = g_getenv("FACMAN_PREVIEW_EXPECT_TIMEOUT") != NULL;
+    facman_gtk_rpc_invoke(
+        gtk_entry_get_text(GTK_ENTRY(shell->cli_path)),
+        gtk_entry_get_text(GTK_ENTRY(shell->workspace)),
+        "product.inspect", runtime_probe_completed, shell);
 }
 
 static GtkWidget *build_launch_deck(FacManGtkShell *shell)
@@ -399,6 +537,7 @@ static void activate(GtkApplication *application, gpointer user_data)
     FacManGtkShell *shell = g_new0(FacManGtkShell, 1);
     shell->application = application;
     shell->state = FACMAN_PREVIEW_READY;
+    shell->self_test = preview_self_test;
     shell->window = gtk_application_window_new(application);
     gtk_window_set_title(GTK_WINDOW(shell->window), "FacMan GTK 3 C1 Preview");
     gtk_window_set_default_size(GTK_WINDOW(shell->window), 1040, 720);
@@ -418,10 +557,19 @@ static void activate(GtkApplication *application, gpointer user_data)
     render_fixture(shell);
     g_object_set_data_full(G_OBJECT(shell->window), "facman-shell", shell, destroy_shell);
     gtk_widget_show_all(shell->window);
+    if (shell->self_test) run_runtime_probe(shell);
 }
 
 int main(int argc, char **argv)
 {
+    for (int index = 1; index < argc; ++index) {
+        if (g_strcmp0(argv[index], "--facman-preview-self-test") == 0) {
+            preview_self_test = TRUE;
+            for (int shift = index; shift + 1 < argc; ++shift) argv[shift] = argv[shift + 1];
+            --argc;
+            --index;
+        }
+    }
     GtkApplication *application = gtk_application_new(
         "io.github.julesc013.facman.preview", FACMAN_APPLICATION_FLAGS);
     g_signal_connect(application, "activate", G_CALLBACK(activate), NULL);

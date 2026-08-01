@@ -20,6 +20,27 @@ credential_storage = false
 runtime_claim = "compile_only_no_bundle_runtime_proof"
 publication = false
 
+[preview_qualification]
+workunit = "C1-PREVIEW-RUNTIME-PACKAGES-01"
+status = "frontend_prototype_evidence_pending"
+proof_command = "python tools/classic_preview_package_proof.py appkit"
+claim_ceiling = "non_promoting_frontend_fixture_prototype"
+artifact_scope = "frontend_only_prototype"
+profile_contract_satisfied = false
+backend_included = false
+contracts_included = false
+licenses_included = false
+clean_machine_product_package = false
+rpc_dependency = "external_test_fixture_not_shipped"
+included_components = ["appkit_frontend_bundle", "prototype_manifest"]
+excluded_components = ["facman_cli", "universal_libraries", "product_contracts", "product_content", "license_bundle"]
+signing = "deferred_outside_pull_request_code"
+notarization = "deferred_outside_pull_request_code"
+credential_absence = "no_signed_notarized_publication_or_stable_support_claim"
+toolchain_pin = "exact_supported_legacy_xcode_not_pinned_blocker"
+live_play = false
+stable_support = false
+
 [frontends]
 gui = "apps/gui/macos/appkit"
 cli = "apps/cli"

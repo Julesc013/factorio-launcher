@@ -10,4 +10,5 @@
 - (void)showSettingsAbout:(id)sender;
 - (void)showAdvanced:(id)sender;
 - (void)restoreSystemNative:(id)sender;
+- (void)runPreviewSelfTestWithCompletion:(void (^)(NSString *report))completion;
 @end

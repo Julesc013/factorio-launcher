@@ -47,6 +47,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
         _commandClient = [[FacManCommandClient alloc] init];
         _inputFields = [NSMutableDictionary dictionary];
         _fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
+        [window setFrameAutosaveName:@"FacManC1PreviewMainWindow"];
         [self buildLayout];
         [self loadDefaults];
         [self renderFixture];
@@ -445,7 +446,8 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 {
     (void)sender;
     if ([self.appearancePopup indexOfSelectedItem] == 0) {
-        [self.launchDeck setTransparent:YES];
+        [self.launchDeck setBoxType:NSBoxPrimary];
+        [self.launchDeck setTransparent:NO];
     } else {
         [self.launchDeck setBoxType:NSBoxCustom];
         [self.launchDeck setTransparent:NO];
@@ -465,6 +467,98 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
 - (void)showActivity:(id)sender { (void)sender; [self.productTabs selectTabViewItemAtIndex:2]; }
 - (void)showSettingsAbout:(id)sender { (void)sender; [self.productTabs selectTabViewItemAtIndex:3]; }
 - (void)showAdvanced:(id)sender { (void)sender; [self.productTabs selectTabViewItemAtIndex:4]; }
+
+- (void)runPreviewSelfTestWithCompletion:(void (^)(NSString *report))completion
+{
+    NSMutableArray<NSString *> *facts = [NSMutableArray arrayWithArray:@[
+        @"schema=facman.classic_preview_runtime_probe.v1",
+        @"platform=appkit",
+        @"authority=fixture_only",
+        @"live_play=false"
+    ]];
+    BOOL pagesPass = [self.productTabs numberOfTabViewItems] == 5;
+    [facts addObject:[NSString stringWithFormat:@"pages=%@", pagesPass ? @"pass" : @"fail"]];
+
+    NSMutableSet<NSString *> *menuKeys = [NSMutableSet set];
+    for (NSMenuItem *rootItem in [[NSApp mainMenu] itemArray]) {
+        for (NSMenuItem *item in [[[rootItem submenu] itemArray] copy]) {
+            if ([[item keyEquivalent] length] > 0
+                && ([item keyEquivalentModifierMask] & NSEventModifierFlagCommand) != 0)
+                [menuKeys addObject:[item keyEquivalent]];
+        }
+    }
+    BOOL menuPass = YES;
+    for (NSString *key in @[ @"0", @"1", @"2", @"3", @"4", @"5" ]) {
+        if (![menuKeys containsObject:key]) menuPass = NO;
+    }
+    [facts addObject:[NSString stringWithFormat:@"menu_keyboard=%@", menuPass ? @"pass" : @"fail"]];
+
+    NSRect originalFrame = [[self window] frame];
+    [[self window] setFrame:NSMakeRect(originalFrame.origin.x, originalFrame.origin.y, 920, 640) display:YES];
+    NSSize resized = [[[self window] contentView] bounds].size;
+    BOOL resizePass = resized.width >= 800 && resized.height >= 500;
+    [facts addObject:[NSString stringWithFormat:@"resize=%@", resizePass ? @"pass" : @"fail"]];
+    BOOL focusPass = [[self window] makeFirstResponder:self.deckPrimary]
+        && [[self window] firstResponder] == self.deckPrimary;
+    [self showActivity:nil];
+    [self showInstances:nil];
+    focusPass = focusPass && [[self window] makeFirstResponder:self.deckPrimary]
+        && [[self window] firstResponder] == self.deckPrimary;
+    [facts addObject:[NSString stringWithFormat:@"focus_restoration=%@", focusPass ? @"pass" : @"fail"]];
+
+    NSString *probeFrame = @"FacManC1PreviewProbeFrame";
+    [[self window] saveFrameUsingName:probeFrame];
+    [[self window] setFrame:NSMakeRect(originalFrame.origin.x, originalFrame.origin.y, 760, 520) display:NO];
+    BOOL restorationPass = [[self window] setFrameUsingName:probeFrame];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:[@"NSWindow Frame " stringByAppendingString:probeFrame]];
+    [facts addObject:[NSString stringWithFormat:@"window_restoration=%@", restorationPass ? @"pass" : @"fail"]];
+
+    [self.appearancePopup selectItemAtIndex:1];
+    [self changeAppearance:nil];
+    BOOL appearancePass = ![self.launchDeck isTransparent]
+        && [self.launchDeck boxType] == NSBoxCustom;
+    [self restoreSystemNative:nil];
+    appearancePass = appearancePass && ![self.launchDeck isTransparent]
+        && [self.launchDeck boxType] == NSBoxPrimary
+        && [self.appearancePopup indexOfSelectedItem] == 0;
+    [facts addObject:[NSString stringWithFormat:@"appearance_recovery=%@", appearancePass ? @"pass" : @"fail"]];
+
+    BOOL accessibilityPass = [[self.deckPrimary accessibilityLabel] length] > 0
+        && [[self.launchDeck accessibilityLabel] length] > 0
+        && [[self.resultView accessibilityLabel] length] > 0;
+    [facts addObject:[NSString stringWithFormat:@"accessibility=%@", accessibilityPass ? @"pass" : @"fail"]];
+
+    self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
+    [self renderFixture];
+    [self invokePrimary:nil];
+    BOOL fixturePass = self.fixture.state == FacManPreviewStateRunning;
+    [self finishFixture:nil];
+    fixturePass = fixturePass && self.fixture.state == FacManPreviewStateExited;
+    [self invokePrimary:nil];
+    fixturePass = fixturePass && self.fixture.state == FacManPreviewStateRunning && self.relaunched;
+    [self interruptFixture:nil];
+    fixturePass = fixturePass && self.fixture.state == FacManPreviewStateInterrupted
+        && [self.fixture.recoveryId isEqualToString:@"recovery.fixture-play-001"];
+    [self recoverFixture:nil];
+    fixturePass = fixturePass && self.fixture.state == FacManPreviewStateReady;
+    [self loadStaleFixture:nil];
+    fixturePass = fixturePass && self.fixture.state == FacManPreviewStateStaleReadiness
+        && [self.fixture.refusalCode isEqualToString:@"stale_readiness"];
+    [facts addObject:[NSString stringWithFormat:@"fixture_journey=%@", fixturePass ? @"pass" : @"fail"]];
+    [facts addObject:[NSString stringWithFormat:@"stale_refusal=%@", self.fixture.refusalCode]];
+
+    [self.commandClient executeCommandId:@"product.inspect"
+                                  inputs:@{}
+                               workspace:@""
+                                 cliPath:[self.cliPathField stringValue]
+                              completion:^(FacManCommandResult *result) {
+                                  BOOL rpcPass = !result.refused
+                                      && [result.operationOutcome isEqualToString:@"completed"];
+                                  [facts addObject:[NSString stringWithFormat:@"bounded_rpc=%@", rpcPass ? @"pass" : @"fail"]];
+                                  [facts addObject:@"process_transport=rpc --stdio"];
+                                  completion([facts componentsJoinedByString:@"\n"]);
+                              }];
+}
 
 - (void)addButton:(NSString *)title commandId:(NSString *)commandId toView:(NSView *)view frame:(NSRect)frame
 {

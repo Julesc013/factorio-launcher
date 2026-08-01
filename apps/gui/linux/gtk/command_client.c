@@ -4,7 +4,12 @@
 #include "command_client.h"
 #include "generated_rpc_request.h"
 
+#include <errno.h>
+#include <signal.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 enum {
     FACMAN_RPC_TIMEOUT_SECONDS = 30,
@@ -25,8 +30,33 @@ static gboolean facman_gtk_rpc_timeout(gpointer user_data)
     FacManGtkRpcCall *call = user_data;
     call->timeout_id = 0;
     g_cancellable_cancel(call->cancellable);
+    const gchar *identifier = g_subprocess_get_identifier(call->process);
+    if (identifier != NULL) {
+        gchar *end = NULL;
+        errno = 0;
+        long pid = strtol(identifier, &end, 10);
+        if (errno == 0 && end != identifier && *end == '\0' && pid > 1)
+            (void)kill((pid_t)-pid, SIGTERM);
+    }
     g_subprocess_force_exit(call->process);
     return G_SOURCE_REMOVE;
+}
+
+static void facman_gtk_rpc_child_setup(gpointer user_data)
+{
+    (void)user_data;
+    (void)setpgid(0, 0);
+}
+
+static guint facman_gtk_rpc_timeout_seconds(void)
+{
+    const gchar *configured = g_getenv("FACMAN_PREVIEW_RPC_TIMEOUT_SECONDS");
+    if (configured == NULL || *configured == '\0') return FACMAN_RPC_TIMEOUT_SECONDS;
+    gchar *end = NULL;
+    unsigned long value = strtoul(configured, &end, 10);
+    if (end == configured || *end != '\0' || value == 0 || value > FACMAN_RPC_TIMEOUT_SECONDS)
+        return FACMAN_RPC_TIMEOUT_SECONDS;
+    return (guint)value;
 }
 
 static void facman_gtk_rpc_complete(GObject *source, GAsyncResult *result, gpointer user_data)
@@ -77,10 +107,11 @@ void facman_gtk_rpc_invoke(
     if (configured == NULL || *configured == '\0') configured = "facman";
     const gchar *argv[] = { configured, "rpc", "--stdio", NULL };
     GError *error = NULL;
-    GSubprocess *process = g_subprocess_newv(
-        argv,
-        G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE | G_SUBPROCESS_FLAGS_STDERR_PIPE,
-        &error);
+    GSubprocessLauncher *launcher = g_subprocess_launcher_new(
+        G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE | G_SUBPROCESS_FLAGS_STDERR_PIPE);
+    g_subprocess_launcher_set_child_setup(launcher, facman_gtk_rpc_child_setup, NULL, NULL);
+    GSubprocess *process = g_subprocess_launcher_spawnv(launcher, argv, &error);
+    g_object_unref(launcher);
     if (process == NULL) {
         gchar *message = g_strdup_printf("frontend_backend_unavailable: %s",
             error != NULL ? error->message : "could not start facman");
@@ -97,7 +128,7 @@ void facman_gtk_rpc_invoke(
     call->cancellable = g_cancellable_new();
     call->completion = completion;
     call->user_data = user_data;
-    call->timeout_id = g_timeout_add_seconds(FACMAN_RPC_TIMEOUT_SECONDS, facman_gtk_rpc_timeout, call);
+    call->timeout_id = g_timeout_add_seconds(facman_gtk_rpc_timeout_seconds(), facman_gtk_rpc_timeout, call);
     g_subprocess_communicate_utf8_async(
         process, request, call->cancellable, facman_gtk_rpc_complete, call);
     g_free(request);
