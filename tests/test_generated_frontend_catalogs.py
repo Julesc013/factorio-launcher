@@ -80,6 +80,8 @@ class GeneratedFrontendCatalogTests(unittest.TestCase):
         self.assertNotIn('command.Id == "', winforms_client)
         self.assertIn("FacManGeneratedCommandCatalog()", appkit_client)
         self.assertIn("FacManGeneratedPayload", appkit_client)
+        appkit_header = (ROOT / "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h").read_text(encoding="utf-8")
+        self.assertIn('extern "C" {', appkit_header)
         self.assertNotIn("FacManPayloadForCommand", appkit_client)
         self.assertNotIn("FacManArgumentsForCommand", appkit_client)
         self.assertIn("CollectGeneratedInputs", winforms_form)

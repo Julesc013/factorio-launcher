@@ -29,11 +29,11 @@
   "canonical_plan_and_truth_closeout": {
     "canonical_main_revision": "133da925af13d475c959a336e0b0eec0427a0381",
     "credential_authority": false,
-    "dev_synchronization_revision": "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
-    "exact_dev_ci_run": "30719469528",
-    "exact_dev_code_security_run": "30719469539",
-    "exact_dev_schema_check_run": "30719469532",
-    "exact_dev_security_policy_run": "30719469522",
+    "dev_synchronization_revision": "8b260d07e5182d4ccfa0156b434948b5080caaa1",
+    "exact_dev_ci_run": "30721617455",
+    "exact_dev_code_security_run": "30721617448",
+    "exact_dev_schema_check_run": "30721617447",
+    "exact_dev_security_policy_run": "30721617449",
     "exact_main_ci_run": "30380264099",
     "exact_main_code_security_run": "30380263435",
     "exact_main_schema_check_run": "30380263776",
@@ -53,7 +53,7 @@
     "publication": false,
     "route_promotion": false,
     "setup_mutation": false,
-    "shared_tree_identity": "f4805d9139a9bbbb44efabff790e6b853fab1f6a",
+    "shared_tree_identity": "a182327ae6c79b52bf4874912bd672fa3934e607",
     "signing": false,
     "status": "accepted_current_dev_integration_main_historical",
     "trees_equal": false,
@@ -503,11 +503,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba",
+    "catalog_digest": "f29ea66effb76d4b45beaf307ab13750dfa808d3fc0b03848d2f62fa2f505e20",
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 308
+    "schemas": 309
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -519,17 +519,17 @@
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "canonical_main": "133da925af13d475c959a336e0b0eec0427a0381",
-    "dev_synchronization": "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
-    "factorio_launcher": "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
+    "dev_synchronization": "8b260d07e5182d4ccfa0156b434948b5080caaa1",
+    "factorio_launcher": "8b260d07e5182d4ccfa0156b434948b5080caaa1",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "observed_branch_head": "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
+    "observed_branch_head": "8b260d07e5182d4ccfa0156b434948b5080caaa1",
     "planning_promotion": "133da925af13d475c959a336e0b0eec0427a0381",
     "promotion_source": "29f1a97410cb999f7691d5daa1f4b2afa82f0149",
     "qualification_evidence": "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
     "qualification_integration": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "qualification_source": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
-    "truth_closeout": "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
+    "truth_closeout": "8b260d07e5182d4ccfa0156b434948b5080caaa1",
     "universal_launcher": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
     "universal_setup": "3048128963dc718a7c38c1cfcdda9e813a23b0db"
   },
@@ -1331,7 +1331,7 @@
     "Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.",
     "Qualification-05 is accepted and revalidation-04 is staged but not prepared; Jules is designated as operator, while observer capture, prepare, permit, execution, verdict, and route authority remain separately gated.",
     "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
-    "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
+    "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
   ],
   "last_closed_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
@@ -2226,7 +2226,7 @@
     },
     {
       "compile_status": "passed",
-      "evidence_revision": "d00456069eb509eabf6a63f831aadbd19813413f",
+      "evidence_revision": "a40301ccfa57dfbf5ca057784022cd127ddbc539",
       "frontend_family": "appkit",
       "id": "macos_legacy_appkit_x64",
       "package_status": "contract_only",
@@ -2235,13 +2235,13 @@
       "support_status": "experimental"
     },
     {
-      "compile_status": "deferred",
-      "evidence_revision": "",
+      "compile_status": "passed",
+      "evidence_revision": "a40301ccfa57dfbf5ca057784022cd127ddbc539",
       "frontend_family": "gtk",
       "id": "linux_x11_gtk_x64",
       "package_status": "contract_only",
       "publication_status": "unpublished",
-      "runtime_status": "deferred",
+      "runtime_status": "not_proven",
       "support_status": "unavailable"
     },
     {

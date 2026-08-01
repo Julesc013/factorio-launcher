@@ -46,7 +46,7 @@ class FacManLiveShellIntegrationTests(unittest.TestCase):
             state = tomllib.load(handle)
         self.assertEqual(
             state["revisions"]["observed_dev"],
-            "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
+            "8b260d07e5182d4ccfa0156b434948b5080caaa1",
         )
         self.assertEqual(state["product"]["execution"], "unavailable")
         self.assertEqual(state["scorecard"]["accepted_real_play_routes"], 0)
