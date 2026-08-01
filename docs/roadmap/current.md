@@ -96,8 +96,8 @@ Project the frozen FacMan-local C1 presentation semantics through native AppKit 
 
 Owner: `platform-maintainer`. Repositories: `factorio-launcher`, `universal-launcher`.
 
-- [ ] **FACMAN-CLASSIC-PREVIEW-SHELLS-01** — Build AppKit and GTK 3 C1 preview shells
-  - State: `planned`; priority/size: `P1/L`
+- [x] **FACMAN-CLASSIC-PREVIEW-SHELLS-01** — Build AppKit and GTK 3 C1 preview shells
+  - State: `complete`; priority/size: `P1/L`
   - Owner: `platform-maintainer`; dependencies: `INSTANCE-VIEW-MINIMUM-01`
   - Outcome: Project the same C1 fixture journey through an AppKit runtime bundle and GTK 3/X11 package prototype using native controls and bounded process RPC.
 

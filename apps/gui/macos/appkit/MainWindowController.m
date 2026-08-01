@@ -4,6 +4,7 @@
 #import "MainWindowController.h"
 #import "CommandClient.h"
 #import "FacManGeneratedCommandCatalog.h"
+#import "FacManPreviewFixture.h"
 
 @interface MainWindowController ()
 @property(nonatomic, strong) FacManCommandClient *commandClient;
@@ -12,6 +13,20 @@
 @property(nonatomic, strong) NSTextView *resultView;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSTextField *> *inputFields;
 @property(nonatomic, strong) NSPopUpButton *commandPopup;
+@property(nonatomic, strong) NSTabView *productTabs;
+@property(nonatomic, strong) NSTextField *pageTitle;
+@property(nonatomic, strong) NSTextField *pageSummary;
+@property(nonatomic, strong) NSTextField *deckStatus;
+@property(nonatomic, strong) NSTextField *deckReadiness;
+@property(nonatomic, strong) NSTextField *deckLastRun;
+@property(nonatomic, strong) NSTextField *deckOperation;
+@property(nonatomic, strong) NSButton *deckPrimary;
+@property(nonatomic, strong) NSButton *deckSecondary;
+@property(nonatomic, strong) NSBox *launchDeck;
+@property(nonatomic, strong) NSPopUpButton *appearancePopup;
+@property(nonatomic, strong) FacManPreviewFixture *fixture;
+@property(nonatomic, copy) NSString *retainedLastRun;
+@property(nonatomic, assign) BOOL relaunched;
 @end
 
 static NSString *FacManStatusText(FacManCommandStatus status);
@@ -31,9 +46,10 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
     if (self) {
         _commandClient = [[FacManCommandClient alloc] init];
         _inputFields = [NSMutableDictionary dictionary];
+        _fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
         [self buildLayout];
         [self loadDefaults];
-        [self renderText:@"Ready. Configure a facman executable if it is not bundled with this AppKit app."];
+        [self renderFixture];
     }
     return self;
 }
@@ -47,50 +63,99 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
     CGFloat width = NSWidth([content bounds]);
     CGFloat height = NSHeight([content bounds]);
 
-    NSView *bar = [[NSView alloc] initWithFrame:NSMakeRect(0, height - 72, width, 72)];
-    [bar setAutoresizingMask:(NSViewWidthSizable | NSViewMinYMargin)];
-    [content addSubview:bar];
-    [self addLabel:@"CLI path" toView:bar frame:NSMakeRect(12, 42, 72, 20)];
-    self.cliPathField = [self addTextFieldToView:bar key:nil frame:NSMakeRect(88, 38, width - 360, 24) placeholder:@""];
-    [self addButton:@"Status" commandId:@"workspace.status" toView:bar frame:NSMakeRect(width - 250, 36, 104, 28)];
-    [self addButton:@"Product" commandId:@"product.inspect" toView:bar frame:NSMakeRect(width - 136, 36, 104, 28)];
+    self.productTabs = [[NSTabView alloc] initWithFrame:NSMakeRect(12, 190, width - 24, height - 202)];
+    [self.productTabs setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+    [content addSubview:self.productTabs];
+    [self addInstancesPage];
+    [self addInstallationsPage];
+    [self addActivityPage];
+    [self addSettingsPage];
+    [self addAdvancedPage];
 
-    [self addLabel:@"Workspace" toView:bar frame:NSMakeRect(12, 12, 72, 20)];
-    self.workspaceField = [self addTextFieldToView:bar key:nil frame:NSMakeRect(88, 8, width - 360, 24) placeholder:@""];
-    [self addLabel:@"Transport: CLI JSON" toView:bar frame:NSMakeRect(width - 250, 10, 110, 20)];
-    NSButton *cancel = [[NSButton alloc] initWithFrame:NSMakeRect(width - 132, 6, 100, 28)];
-    [cancel setTitle:@"Cancel"];
-    [cancel setTarget:self];
-    [cancel setAction:@selector(cancelCommand:)];
-    [bar addSubview:cancel];
+    NSBox *deck = [[NSBox alloc] initWithFrame:NSMakeRect(12, 12, width - 24, 166)];
+    self.launchDeck = deck;
+    [deck setAutoresizingMask:(NSViewWidthSizable | NSViewMaxYMargin)];
+    [deck setTitle:@"Launch Deck — C1 Vanilla · fixture only"];
+    [deck setAccessibilityLabel:@"Persistent Launch Deck for selected instance C1 Vanilla"];
+    [content addSubview:deck];
+    self.deckStatus = [self addLabel:@"" toView:deck frame:NSMakeRect(16, 110, 480, 24)];
+    [self.deckStatus setFont:[NSFont boldSystemFontOfSize:14.0]];
+    self.deckReadiness = [self addLabel:@"" toView:deck frame:NSMakeRect(16, 82, 620, 22)];
+    self.deckLastRun = [self addLabel:@"" toView:deck frame:NSMakeRect(16, 54, 620, 22)];
+    self.deckOperation = [self addLabel:@"" toView:deck frame:NSMakeRect(16, 26, 620, 22)];
+    self.deckPrimary = [self addActionButton:@"Play" selector:@selector(invokePrimary:) toView:deck frame:NSMakeRect(width - 298, 82, 250, 34)];
+    self.deckSecondary = [self addActionButton:@"Make readiness stale" selector:@selector(invokeSecondary:) toView:deck frame:NSMakeRect(width - 298, 40, 250, 30)];
+    [self.deckPrimary setKeyEquivalent:@"\r"];
+}
 
-    NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(0, 220, width, height - 292)];
-    [tabs setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
-    [content addSubview:tabs];
-    [self addDashboardTab:tabs];
-    [self addDoctorTab:tabs];
-    [self addInstallsTab:tabs];
-    [self addInstancesTab:tabs];
-    [self addGeneratedTab:@"Snapshots" prefixes:@[ @"snapshots." ] toTabs:tabs];
-    [self addGeneratedTab:@"Profiles" prefixes:@[ @"profiles.", @"templates." ] toTabs:tabs];
-    [self addLaunchPlanTab:tabs];
-    [self addGeneratedTab:@"Mods" prefixes:@[ @"mods.", @"modsets." ] toTabs:tabs];
-    [self addGeneratedTab:@"Saves" prefixes:@[ @"saves." ] toTabs:tabs];
-    [self addGeneratedTab:@"Servers" prefixes:@[ @"servers." ] toTabs:tabs];
-    [self addDiagnosticsTab:tabs];
-    [self addGeneratedTab:@"Recovery" prefixes:@[ @"workspace.recovery.", @"workspace.migration." ] toTabs:tabs];
-    [self addGeneratedTab:@"Capabilities" prefixes:@[ @"capabilities.", @"workspace." ] toTabs:tabs];
-    [self addSettingsTab:tabs];
+- (void)addInstancesPage
+{
+    NSView *view = [self addTab:@"Instances" toTabs:self.productTabs];
+    [self addLabel:@"Instances" toView:view frame:NSMakeRect(20, 350, 360, 28)];
+    [self addLabel:@"C1 Vanilla — selected" toView:view frame:NSMakeRect(20, 300, 420, 26)];
+    [self addActionButton:@"Create instance…" selector:@selector(createFixtureInstance:) toView:view frame:NSMakeRect(20, 250, 180, 32)];
+    [self addActionButton:@"Select C1 Vanilla" selector:@selector(selectFixtureInstance:) toView:view frame:NSMakeRect(212, 250, 180, 32)];
+}
 
-    NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, width, 220)];
-    [scroll setAutoresizingMask:(NSViewWidthSizable | NSViewMaxYMargin)];
+- (void)addInstallationsPage
+{
+    NSView *view = [self addTab:@"Installations" toTabs:self.productTabs];
+    [self addLabel:@"Installations" toView:view frame:NSMakeRect(20, 350, 360, 28)];
+    [self addLabel:@"Factorio 2.0.77 standalone — existing; never repaired or updated by this preview" toView:view frame:NSMakeRect(20, 300, 760, 26)];
+    [self addActionButton:@"Scan for installations" selector:@selector(rescanFixture:) toView:view frame:NSMakeRect(20, 250, 200, 32)];
+}
+
+- (void)addActivityPage
+{
+    NSView *view = [self addTab:@"Activity" toTabs:self.productTabs];
+    self.pageTitle = [self addLabel:@"Activity" toView:view frame:NSMakeRect(20, 350, 360, 28)];
+    self.pageSummary = [self addLabel:@"" toView:view frame:NSMakeRect(20, 300, 760, 26)];
+    [self addActionButton:@"Finish fixture run" selector:@selector(finishFixture:) toView:view frame:NSMakeRect(20, 250, 180, 32)];
+    [self addActionButton:@"Simulate interruption" selector:@selector(interruptFixture:) toView:view frame:NSMakeRect(212, 250, 180, 32)];
+    [self addActionButton:@"Recover operation" selector:@selector(recoverFixture:) toView:view frame:NSMakeRect(404, 250, 180, 32)];
+}
+
+- (void)addSettingsPage
+{
+    NSView *view = [self addTab:@"Settings / About" toTabs:self.productTabs];
+    [self addLabel:@"FacMan 0.1 C1 classic preview" toView:view frame:NSMakeRect(20, 350, 520, 28)];
+    [self addLabel:@"AppKit x86_64 · macOS 10.13+ · preview only · no live Play authority" toView:view frame:NSMakeRect(20, 312, 720, 24)];
+    [self addLabel:@"Appearance" toView:view frame:NSMakeRect(20, 260, 120, 24)];
+    self.appearancePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(150, 256, 220, 30) pullsDown:NO];
+    [self.appearancePopup addItemsWithTitles:@[ @"System Native", @"FacMan OEM+ Launch Deck" ]];
+    [self.appearancePopup setTarget:self];
+    [self.appearancePopup setAction:@selector(changeAppearance:)];
+    [self.appearancePopup setAccessibilityLabel:@"Appearance mode"];
+    [view addSubview:self.appearancePopup];
+}
+
+- (void)addAdvancedPage
+{
+    NSView *view = [self addTab:@"Advanced" toTabs:self.productTabs];
+    [self addLabel:@"Bounded process RPC command explorer" toView:view frame:NSMakeRect(16, 360, 420, 24)];
+    [self addLabel:@"Generated categories include Snapshots, Profiles, Servers, recovery, and diagnostics."
+             toView:view frame:NSMakeRect(450, 360, 520, 24)];
+    [self addLabel:@"CLI path" toView:view frame:NSMakeRect(16, 324, 72, 20)];
+    [self addLabel:@"Transport: CLI JSON" toView:view frame:NSMakeRect(620, 324, 180, 20)];
+    self.cliPathField = [self addTextFieldToView:view key:nil frame:NSMakeRect(96, 320, 500, 24) placeholder:@""];
+    [self addLabel:@"Workspace" toView:view frame:NSMakeRect(16, 292, 72, 20)];
+    self.workspaceField = [self addTextFieldToView:view key:nil frame:NSMakeRect(96, 288, 500, 24) placeholder:@""];
+    self.commandPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(16, 246, 360, 28) pullsDown:NO];
+    for (FacManCommandDefinition *command in [FacManCommandClient catalog]) {
+        [self.commandPopup addItemWithTitle:command.commandId];
+        [[self.commandPopup lastItem] setRepresentedObject:command.commandId];
+    }
+    [self.commandPopup setAccessibilityLabel:@"Advanced generated command"];
+    [view addSubview:self.commandPopup];
+    [self addActionButton:@"Run command" selector:@selector(runSelectedCommand:) toView:view frame:NSMakeRect(388, 244, 140, 32)];
+    NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(16, 12, 940, 220)];
     [scroll setHasVerticalScroller:YES];
-    [scroll setHasHorizontalScroller:YES];
     self.resultView = [[NSTextView alloc] initWithFrame:[[scroll contentView] bounds]];
     [self.resultView setEditable:NO];
     [self.resultView setFont:[NSFont userFixedPitchFontOfSize:12.0]];
+    [self.resultView setAccessibilityLabel:@"Advanced command result"];
     [scroll setDocumentView:self.resultView];
-    [content addSubview:scroll];
+    [view addSubview:scroll];
 }
 
 - (void)addDashboardTab:(NSTabView *)tabs
@@ -227,7 +292,7 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
     return field;
 }
 
-- (void)addLabel:(NSString *)text toView:(NSView *)view frame:(NSRect)frame
+- (NSTextField *)addLabel:(NSString *)text toView:(NSView *)view frame:(NSRect)frame
 {
     NSTextField *label = [[NSTextField alloc] initWithFrame:frame];
     [label setStringValue:text];
@@ -236,7 +301,170 @@ static NSString *FacManVisualizationTitle(NSString *renderer);
     [label setDrawsBackground:NO];
     [label setAccessibilityLabel:text];
     [view addSubview:label];
+    return label;
 }
+
+- (NSButton *)addActionButton:(NSString *)title selector:(SEL)selector toView:(NSView *)view frame:(NSRect)frame
+{
+    NSButton *button = [[NSButton alloc] initWithFrame:frame];
+    [button setTitle:title];
+    [button setButtonType:NSButtonTypeMomentaryPushIn];
+    [button setBezelStyle:NSBezelStyleRounded];
+    [button setTarget:self];
+    [button setAction:selector];
+    [button setAccessibilityLabel:title];
+    [button setAccessibilityHelp:@"Fixture-only preview action; no live Factorio process is started."];
+    [view addSubview:button];
+    return button;
+}
+
+- (void)renderFixture
+{
+    [self.deckStatus setStringValue:self.fixture.statusText];
+    [self.deckReadiness setStringValue:[@"Readiness: " stringByAppendingString:self.fixture.readiness]];
+    NSString *lastRun = [self.retainedLastRun length] > 0 ? self.retainedLastRun : self.fixture.lastRun;
+    [self.deckLastRun setStringValue:[@"Last Run: " stringByAppendingString:lastRun]];
+    NSString *operation = self.fixture.operationId;
+    if (self.relaunched && self.fixture.state == FacManPreviewStateRunning) operation = @"operation.fixture-play-002";
+    [self.deckOperation setStringValue:[operation length] > 0
+        ? [@"Operation: " stringByAppendingString:operation]
+        : @"Operation: none"];
+    [self.deckPrimary setTitle:self.fixture.primaryLabel];
+    [self.deckPrimary setAccessibilityLabel:self.fixture.primaryAccessibilityLabel];
+    [self.deckPrimary setEnabled:self.fixture.primaryEnabled];
+    NSString *secondary = @"Make readiness stale";
+    if (self.fixture.state == FacManPreviewStateStaleReadiness) secondary = @"Rescan readiness";
+    if (self.fixture.state == FacManPreviewStateInterrupted) secondary = @"Recover operation";
+    [self.deckSecondary setTitle:secondary];
+    [self.deckSecondary setAccessibilityLabel:secondary];
+    [self.pageSummary setStringValue:self.fixture.activitySummary];
+    NSAccessibilityPostNotification(self.deckStatus, NSAccessibilityValueChangedNotification);
+}
+
+- (void)invokePrimary:(id)sender
+{
+    (void)sender;
+    switch (self.fixture.state) {
+        case FacManPreviewStateStaleReadiness: {
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert setMessageText:@"Readiness changed"];
+            [alert setInformativeText:@"stale_readiness — Play was refused before effects because observed revision 7 is stale; current revision is 8. Rescan readiness before retrying."];
+            [alert addButtonWithTitle:@"OK"];
+            [alert runModal];
+            break;
+        }
+        case FacManPreviewStateRunning:
+            [self showActivity:nil];
+            break;
+        case FacManPreviewStateInterrupted:
+            [self showActivity:nil];
+            break;
+        case FacManPreviewStateExited:
+            self.relaunched = YES;
+            self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateRunning];
+            [self renderFixture];
+            break;
+        case FacManPreviewStateReady:
+        default:
+            self.relaunched = NO;
+            self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateRunning];
+            [self renderFixture];
+            break;
+    }
+}
+
+- (void)invokeSecondary:(id)sender
+{
+    (void)sender;
+    if (self.fixture.state == FacManPreviewStateInterrupted) {
+        [self recoverFixture:nil];
+    } else if (self.fixture.state == FacManPreviewStateStaleReadiness) {
+        [self rescanFixture:nil];
+    } else {
+        [self loadStaleFixture:nil];
+    }
+}
+
+- (void)loadStaleFixture:(id)sender
+{
+    (void)sender;
+    self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateStaleReadiness];
+    [self renderFixture];
+}
+
+- (void)rescanFixture:(id)sender
+{
+    (void)sender;
+    self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
+    [self renderFixture];
+}
+
+- (void)finishFixture:(id)sender
+{
+    (void)sender;
+    if (self.fixture.state != FacManPreviewStateRunning) return;
+    self.retainedLastRun = self.relaunched
+        ? @"Exited normally · code 0 · operation.fixture-play-002"
+        : @"Exited normally · code 0 · operation.fixture-play-001";
+    self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateExited];
+    [self renderFixture];
+}
+
+- (void)interruptFixture:(id)sender
+{
+    (void)sender;
+    self.retainedLastRun = @"Interrupted · outcome unknown · operation.fixture-play-001";
+    self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateInterrupted];
+    [self renderFixture];
+    [self showActivity:nil];
+}
+
+- (void)recoverFixture:(id)sender
+{
+    (void)sender;
+    if (self.fixture.state != FacManPreviewStateInterrupted) return;
+    self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
+    [self renderFixture];
+}
+
+- (void)createFixtureInstance:(id)sender
+{
+    (void)sender;
+    self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
+    [self renderFixture];
+}
+
+- (void)selectFixtureInstance:(id)sender
+{
+    (void)sender;
+    self.fixture = [FacManPreviewFixture fixtureForState:FacManPreviewStateReady];
+    [self renderFixture];
+}
+
+- (void)changeAppearance:(id)sender
+{
+    (void)sender;
+    if ([self.appearancePopup indexOfSelectedItem] == 0) {
+        [self.launchDeck setTransparent:YES];
+    } else {
+        [self.launchDeck setBoxType:NSBoxCustom];
+        [self.launchDeck setTransparent:NO];
+        [self.launchDeck setFillColor:[NSColor colorWithCalibratedRed:0.84 green:0.90 blue:0.98 alpha:1.0]];
+    }
+}
+
+- (void)restoreSystemNative:(id)sender
+{
+    (void)sender;
+    [self.appearancePopup selectItemAtIndex:0];
+    [self changeAppearance:nil];
+}
+
+- (void)showInstances:(id)sender { (void)sender; [self.productTabs selectTabViewItemAtIndex:0]; }
+- (void)showInstallations:(id)sender { (void)sender; [self.productTabs selectTabViewItemAtIndex:1]; }
+- (void)showActivity:(id)sender { (void)sender; [self.productTabs selectTabViewItemAtIndex:2]; }
+- (void)showSettingsAbout:(id)sender { (void)sender; [self.productTabs selectTabViewItemAtIndex:3]; }
+- (void)showAdvanced:(id)sender { (void)sender; [self.productTabs selectTabViewItemAtIndex:4]; }
 
 - (void)addButton:(NSString *)title commandId:(NSString *)commandId toView:(NSView *)view frame:(NSRect)frame
 {

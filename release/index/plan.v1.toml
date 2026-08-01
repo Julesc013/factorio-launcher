@@ -404,20 +404,29 @@ evidence = []
 id = "FACMAN-CLASSIC-PREVIEW-SHELLS-01"
 epic = "EPIC-PLATFORM-QUALIFICATION"
 title = "Build AppKit and GTK 3 C1 preview shells"
-status = "planned"
+status = "complete"
 priority = "P1"
 size = "L"
 owner = "platform-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["INSTANCE-VIEW-MINIMUM-01"]
 decision_blockers = []
+branch = "task/facman-classic-preview-shells-01"
+base_revision = "94fd1b9565c300bbc0e274f8d40083d967c367db"
 outcome = "Project the same C1 fixture journey through an AppKit runtime bundle and GTK 3/X11 package prototype using native controls and bounded process RPC."
 acceptance = [
   "AppKit x86_64 runs as an actual macOS 10.13+ bundle and GTK 3 x64 runs on the frozen X11 baseline.",
   "Both shells preserve native menus, controls, keyboard behavior, System Native recovery, and OEM+ Launch Deck semantics.",
   "Neither preview claims live Play or stable support without independent evidence.",
 ]
-evidence = []
+evidence = [
+  "docs/product/facman_classic_preview_shells.md",
+  "docs/release/checkpoints/facman-classic-preview-shells-01.md",
+  "apps/gui/macos/appkit/CMakeLists.txt",
+  "apps/gui/linux/gtk/meson.build",
+  "tools/classic_preview_shell_check.py",
+  "tests/test_classic_preview_shells.py",
+]
 
 [[decision]]
 id = "DEC-C1-REFERENCE-LANE"

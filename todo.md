@@ -22,7 +22,7 @@ last_reviewed: 2026-08-01
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 1/3 including external gates
 - Ready: 0/10
-- Near-term work units: 2/5
+- Near-term work units: 1/5
 
 ## North star
 
@@ -81,7 +81,6 @@ _No work unit satisfies the Definition of Ready._
 ## Critical path after the current unit
 
 - [ ] `FACMAN-WINFORMS-C1-SHELL-01` — planned; depends on `C1-FIXTURE-VERTICAL-SLICE-01`
-- [ ] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — planned; depends on `INSTANCE-VIEW-MINIMUM-01`
 
 ## Blocking decisions
 
@@ -128,6 +127,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-JOURNEYS-01` — Specify the C1 positive and paired failure journeys
 - [x] `INSTANCE-VIEW-MINIMUM-01` — Freeze the FacMan-local C1 presentation minimum
 - [x] `C1-FIXTURE-VERTICAL-SLICE-01` — Complete the fixture-backed C1 player journey
+- [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells
 
 ## Validation commands
 
