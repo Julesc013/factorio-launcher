@@ -5,7 +5,7 @@ target_os = "linux"
 target_arch = "x64"
 minimum_os = "oldest_supported_x11_base"
 runtime_floor = "GTK 3 compatible desktop runtime"
-support_tier = "compatibility_desktop"
+support_tier = "package_preview"
 package_types = ["appimage", "tarball"]
 install_modes = ["portable", "user", "system"]
 package_manifest = "release/packaging/linux/appimage.v1.toml"
@@ -17,6 +17,7 @@ content_path = "content/factorio"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 bundles_factorio_binaries = false
 credential_storage = false
+runtime_claim = "package_prototype_no_runtime_qualification"
 
 [frontends]
 gui = "apps/gui/linux/gtk"

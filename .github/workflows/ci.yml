@@ -48,8 +48,20 @@ jobs:
         run: |
           cmake --build build/native-release --parallel
           ctest --test-dir build/native-release --output-on-failure
+      - name: Install GTK preview build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends libgtk-3-dev meson ninja-build
+      - name: Configure and build GTK preview
+        run: |
+          meson setup build/gtk-preview apps/gui/linux/gtk --buildtype=debug --werror
+          meson compile -C build/gtk-preview
       - name: Run clang-tidy on changed first-party modules
-        run: python tools/clang_tidy_changed.py --base HEAD^ --build-root build/native-smoke
+        run: >-
+          python tools/clang_tidy_changed.py
+          --base HEAD^
+          --build-root build/native-smoke
+          --additional-build-root build/gtk-preview
       - name: Configure sanitized full-core proof
         run: >-
           cmake -S . -B build/core-sanitized
