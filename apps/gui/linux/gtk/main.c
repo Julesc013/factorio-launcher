@@ -7,6 +7,12 @@
 #include "command_client.h"
 #include "preview_model.h"
 
+#if GLIB_CHECK_VERSION(2, 74, 0)
+#define FACMAN_APPLICATION_FLAGS G_APPLICATION_DEFAULT_FLAGS
+#else
+#define FACMAN_APPLICATION_FLAGS G_APPLICATION_FLAGS_NONE
+#endif
+
 typedef struct {
     GtkApplication *application;
     GtkWidget *window;
@@ -417,7 +423,7 @@ static void activate(GtkApplication *application, gpointer user_data)
 int main(int argc, char **argv)
 {
     GtkApplication *application = gtk_application_new(
-        "io.github.julesc013.facman.preview", G_APPLICATION_FLAGS_NONE);
+        "io.github.julesc013.facman.preview", FACMAN_APPLICATION_FLAGS);
     g_signal_connect(application, "activate", G_CALLBACK(activate), NULL);
     int status = g_application_run(G_APPLICATION(application), argc, argv);
     g_object_unref(application);

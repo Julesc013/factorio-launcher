@@ -36,6 +36,13 @@ class ClassicPreviewShellTests(unittest.TestCase):
         self.assertIn("g_object_unref(buffer)", main)
         self.assertIn("g_subprocess_force_exit(call->process)", client)
 
+    def test_gtk_application_flags_cover_old_and_current_glib(self) -> None:
+        main = (ROOT / "apps/gui/linux/gtk/main.c").read_text(encoding="utf-8")
+        self.assertIn("GLIB_CHECK_VERSION(2, 74, 0)", main)
+        self.assertIn("G_APPLICATION_DEFAULT_FLAGS", main)
+        self.assertIn("G_APPLICATION_FLAGS_NONE", main)
+        self.assertIn("FACMAN_APPLICATION_FLAGS", main)
+
     def test_appkit_is_an_x64_10_13_bundle_prototype(self) -> None:
         root = ROOT / "apps/gui/macos/appkit"
         with (root / "Info.plist").open("rb") as handle:

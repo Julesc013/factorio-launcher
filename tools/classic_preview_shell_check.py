@@ -106,6 +106,8 @@ def validate() -> list[str]:
         "gtk_menu_bar_new", "GDK_KEY_1", "GDK_KEY_5", "atk_object_set_name",
         "atk_object_set_description", "System Native", "OEM+ Launch Deck",
         "g_object_ref(shell->rpc_result)", "g_object_unref(buffer)",
+        "GLIB_CHECK_VERSION(2, 74, 0)", "G_APPLICATION_DEFAULT_FLAGS",
+        "G_APPLICATION_FLAGS_NONE", "FACMAN_APPLICATION_FLAGS",
     ), "GTK shell", problems)
     _require(gtk_transport, (
         '"rpc", "--stdio"', "FACMAN_RPC_TIMEOUT_SECONDS", "FACMAN_RPC_STDOUT_LIMIT",
