@@ -83,6 +83,62 @@ class PlanViewTests(unittest.TestCase):
             "239f9c04822f83bdab6b9c3dd191cfaa337f7b23",
         )
 
+    def test_c1_journey_contract_is_complete_and_authority_bounded(self) -> None:
+        journey = next(
+            item
+            for item in self.plan["workunit"]
+            if item["id"] == "FACMAN-JOURNEYS-01"
+        )
+        self.assertEqual(journey["status"], "complete")
+        self.assertEqual(journey["branch"], "task/facman-journeys-01")
+        self.assertEqual(
+            journey["base_revision"],
+            "4620ebe8a382960d48e82a0a5ff90230a8f70588",
+        )
+
+        contract_path = generate_plan_views.ROOT / "docs/product/facman_c1_journeys.md"
+        checkpoint_path = (
+            generate_plan_views.ROOT
+            / "docs/release/checkpoints/facman-journeys-01.md"
+        )
+        self.assertIn(
+            "docs/product/facman_c1_journeys.md", journey["evidence"]
+        )
+        self.assertTrue(contract_path.is_file())
+        self.assertTrue(checkpoint_path.is_file())
+
+        contract = contract_path.read_text(encoding="utf-8")
+        for marker in (
+            "J01-P — positive existing-install-to-Play journey",
+            "J01-F — stale-readiness refusal and rescan",
+            "J01-I — interruption and recovery expectations",
+            "at most four major player decisions",
+            "structured code `stale_readiness`",
+            "No Factorio process starts",
+            "outcome_unknown",
+            "cancellation_requested_but_completed",
+            "Keyboard and accessibility contract",
+            "Bounded claims and evidence mapping",
+            "FACMAN-CLAIM-001",
+            "J01-FIXTURE-STALE-01",
+            "Explicit exclusions",
+            "grants no live Play authority",
+        ):
+            self.assertIn(marker, contract)
+
+    def test_journey_contract_keeps_fixture_and_live_evidence_distinct(self) -> None:
+        contract = (
+            generate_plan_views.ROOT / "docs/product/facman_c1_journeys.md"
+        ).read_text(encoding="utf-8")
+        normalized = " ".join(contract.split())
+        self.assertIn("Deterministic fixture", contract)
+        self.assertIn("Later live acceptance", contract)
+        self.assertIn(
+            "Current maturity from this specification is `declared`", normalized
+        )
+        self.assertIn("Fixture evidence never substitutes for live", normalized)
+        self.assertIn("Windows evidence never promotes AppKit or GTK", normalized)
+
     def test_dependency_cycle_is_rejected(self) -> None:
         invalid = copy.deepcopy(self.plan)
         invalid["workunit"][0]["depends_on"] = [invalid["workunit"][1]["id"]]
