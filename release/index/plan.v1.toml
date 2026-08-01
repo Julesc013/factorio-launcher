@@ -357,20 +357,29 @@ evidence = []
 id = "C1-FIXTURE-VERTICAL-SLICE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Complete the fixture-backed C1 player journey"
-status = "planned"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-JOURNEYS-01", "INSTANCE-VIEW-MINIMUM-01"]
 decision_blockers = []
+branch = "task/c1-fixture-vertical-slice-01"
+base_revision = "0cef638e407fd43b240d985ca9f3482238949c8c"
 outcome = "Exercise the complete select/create, readiness, Play/refusal, running, exit, relaunch, and recovery journey without requiring live Play authority."
 acceptance = [
   "The positive and stale-readiness refusal journeys use deterministic presentation fixtures.",
   "Unavailable Play renders the exact structured refusal and never executes.",
   "Frontend closure cannot rewrite backend operation outcome as cancellation.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/c1-fixture-vertical-slice-01.md",
+  "docs/product/facman_c1_fixture_vertical_slice.md",
+  "tools/generate_facman_fixture_journeys.py",
+  "tools/facman_fixture_journey_check.py",
+  "tests/fixtures/presentation/journeys/manifest.v0.json",
+  "tests/test_facman_fixture_journey.py",
+]
 
 [[workunit]]
 id = "FACMAN-WINFORMS-C1-SHELL-01"

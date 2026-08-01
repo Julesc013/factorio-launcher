@@ -38,7 +38,7 @@
             "role": "secondary"
           }
         ],
-        "code": "readiness.stale",
+        "code": "stale_readiness",
         "current_readiness_revision": 8,
         "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
         "observed_readiness_revision": 7,
@@ -64,7 +64,7 @@
           "role": "secondary"
         }
       ],
-      "code": "readiness.stale",
+      "code": "stale_readiness",
       "current_readiness_revision": 8,
       "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
       "observed_readiness_revision": 7,
@@ -213,7 +213,7 @@
         "role": "secondary"
       }
     ],
-    "code": "readiness.stale",
+    "code": "stale_readiness",
     "current_readiness_revision": 8,
     "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
     "observed_readiness_revision": 7,
@@ -267,7 +267,7 @@
               "role": "secondary"
             }
           ],
-          "code": "readiness.stale",
+          "code": "stale_readiness",
           "current_readiness_revision": 8,
           "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
           "observed_readiness_revision": 7,

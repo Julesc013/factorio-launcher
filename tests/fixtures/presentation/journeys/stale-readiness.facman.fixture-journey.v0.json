@@ -1,0 +1,164 @@
+{
+  "authority_scope": "fixture_only",
+  "claims": [
+    "FACMAN-CLAIM-001",
+    "FACMAN-CLAIM-010"
+  ],
+  "evidence_id": "J01-FIXTURE-STALE-01",
+  "fixture_process_starts": 0,
+  "journey_id": "J01-F",
+  "live_process_starts": 0,
+  "ordinary_cancellation_observed": false,
+  "schema": "facman.fixture_journey.v0",
+  "steps": [
+    {
+      "assertion": "The same selected instance is retained.",
+      "client_outcome": "not_started",
+      "event": "instance.select_or_create",
+      "fixture_process_starts": 0,
+      "index": 1,
+      "last_run_outcome": null,
+      "live_process_starts": 0,
+      "operation_id": null,
+      "operation_status": null,
+      "ordinary_cancellation_observed": false,
+      "play_availability": "available",
+      "play_effects": [
+        "fixture_process"
+      ],
+      "presentation_state": "positive",
+      "readiness_revision": 7,
+      "readiness_state": "ready",
+      "recovery_id": null,
+      "recovery_state": "clear",
+      "refusal_code": null,
+      "selected_instance_id": "instance.c1-vanilla",
+      "snapshot_id": "shell.positive",
+      "snapshot_revision": 10
+    },
+    {
+      "assertion": "Readiness revision 7 is initially current.",
+      "client_outcome": "not_started",
+      "event": "readiness.show",
+      "fixture_process_starts": 0,
+      "index": 2,
+      "last_run_outcome": null,
+      "live_process_starts": 0,
+      "operation_id": null,
+      "operation_status": null,
+      "ordinary_cancellation_observed": false,
+      "play_availability": "available",
+      "play_effects": [
+        "fixture_process"
+      ],
+      "presentation_state": "positive",
+      "readiness_revision": 7,
+      "readiness_state": "ready",
+      "recovery_id": null,
+      "recovery_state": "clear",
+      "refusal_code": null,
+      "selected_instance_id": "instance.c1-vanilla",
+      "snapshot_id": "shell.positive",
+      "snapshot_revision": 10
+    },
+    {
+      "assertion": "Dependency drift invalidates the observed readiness.",
+      "client_outcome": "not_started",
+      "event": "dependency.change",
+      "fixture_process_starts": 0,
+      "index": 3,
+      "last_run_outcome": null,
+      "live_process_starts": 0,
+      "operation_id": null,
+      "operation_status": null,
+      "ordinary_cancellation_observed": false,
+      "play_availability": "refused",
+      "play_effects": [
+        "process_execution"
+      ],
+      "presentation_state": "refused",
+      "readiness_revision": 8,
+      "readiness_state": "stale",
+      "recovery_id": null,
+      "recovery_state": "clear",
+      "refusal_code": "stale_readiness",
+      "selected_instance_id": "instance.c1-vanilla",
+      "snapshot_id": "shell.refused",
+      "snapshot_revision": 11
+    },
+    {
+      "assertion": "The exact structured refusal is returned before any process start.",
+      "client_outcome": "refused",
+      "event": "play.refused",
+      "fixture_process_starts": 0,
+      "index": 4,
+      "last_run_outcome": null,
+      "live_process_starts": 0,
+      "operation_id": null,
+      "operation_status": null,
+      "ordinary_cancellation_observed": false,
+      "play_availability": "refused",
+      "play_effects": [
+        "process_execution"
+      ],
+      "presentation_state": "refused",
+      "readiness_revision": 8,
+      "readiness_state": "stale",
+      "recovery_id": null,
+      "recovery_state": "clear",
+      "refusal_code": "stale_readiness",
+      "selected_instance_id": "instance.c1-vanilla",
+      "snapshot_id": "shell.refused",
+      "snapshot_revision": 11
+    },
+    {
+      "assertion": "A read-only rescan advances readiness without auto-launching.",
+      "client_outcome": "not_started",
+      "event": "readiness.rescan",
+      "fixture_process_starts": 0,
+      "index": 5,
+      "last_run_outcome": null,
+      "live_process_starts": 0,
+      "operation_id": null,
+      "operation_status": null,
+      "ordinary_cancellation_observed": false,
+      "play_availability": "available",
+      "play_effects": [
+        "fixture_process"
+      ],
+      "presentation_state": "positive",
+      "readiness_revision": 8,
+      "readiness_state": "ready",
+      "recovery_id": null,
+      "recovery_state": "clear",
+      "refusal_code": null,
+      "selected_instance_id": "instance.c1-vanilla",
+      "snapshot_id": "shell.rescanned",
+      "snapshot_revision": 15
+    }
+  ],
+  "structured_refusal": {
+    "actions": [
+      {
+        "accessibility_label": "Rescan readiness",
+        "action_id": "instance.readiness.refresh",
+        "availability": "available",
+        "backend_owned": true,
+        "command_id": "instances.readiness",
+        "confirmation": "none",
+        "effects": [
+          "read_only"
+        ],
+        "label": "Rescan readiness",
+        "refusal": null,
+        "role": "secondary"
+      }
+    ],
+    "code": "stale_readiness",
+    "current_readiness_revision": 8,
+    "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
+    "observed_readiness_revision": 7,
+    "title": "Readiness changed"
+  },
+  "transport": "bounded_process_rpc"
+}

@@ -70,8 +70,8 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-C1-CUTLINE-01`
   - Outcome: Define facman.presentation.v0 snapshots and actions for the four pages, Launch Deck, Activity, refusal, and recovery states without toolkit types or a universal ABI.
-- [ ] **C1-FIXTURE-VERTICAL-SLICE-01** — Complete the fixture-backed C1 player journey
-  - State: `planned`; priority/size: `P0/M`
+- [x] **C1-FIXTURE-VERTICAL-SLICE-01** — Complete the fixture-backed C1 player journey
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-JOURNEYS-01`, `INSTANCE-VIEW-MINIMUM-01`
   - Outcome: Exercise the complete select/create, readiness, Play/refusal, running, exit, relaunch, and recovery journey without requiring live Play authority.
 - [ ] **FACMAN-WINFORMS-C1-SHELL-01** — Build the four-page WinForms C1 product shell

@@ -98,7 +98,7 @@ def play_action() -> dict[str, Any]:
 
 def stale_refusal() -> dict[str, Any]:
     return {
-        "code": "readiness.stale",
+        "code": "stale_readiness",
         "title": "Readiness changed",
         "detail": "Play was refused because readiness revision 7 is stale; rescan revision 8 before retrying.",
         "observed_readiness_revision": 7,
