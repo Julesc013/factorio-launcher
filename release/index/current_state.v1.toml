@@ -121,7 +121,7 @@ items = [
   "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
   "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
   "Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.",
-  "Qualification-05 is accepted and revalidation-04 is staged but not prepared; it requires a fresh explicit operator designation and separately authorized observer self-test.",
+  "Qualification-05 is accepted and revalidation-04 is staged but not prepared; Jules is designated as operator, while observer capture, prepare, permit, execution, verdict, and route authority remain separately gated.",
   "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",

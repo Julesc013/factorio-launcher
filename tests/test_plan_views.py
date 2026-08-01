@@ -34,6 +34,55 @@ class PlanViewTests(unittest.TestCase):
         self.assertIn("System Native", content)
         self.assertIn("OEM+", content)
 
+    def test_c1_release_contract_is_a_validated_source(self) -> None:
+        path = generate_plan_views.ROOT / self.plan["c1_release_contract"]
+        self.assertTrue(path.is_file(), path)
+        content = path.read_text(encoding="utf-8")
+        self.assertIn("facman.presentation.v0", content)
+        self.assertIn("Authority-only Play gate", content)
+        self.assertIn("System Native", content)
+
+    def test_play_gate_blocks_only_named_authorities(self) -> None:
+        gate = self.plan["gate"][0]
+        self.assertEqual(gate["gate_scope"], "authority_only")
+        self.assertEqual(
+            gate["blocks"],
+            [
+                "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+                "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+                "C1-LIVE-PLAY-ACCEPTANCE-01",
+            ],
+        )
+        self.assertIn("FACMAN-WINFORMS-C1-SHELL-01", gate["non_blocking_work"])
+        self.assertIn(
+            "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
+        )
+        dashboard = generate_plan_views.render_dashboard(self.plan)
+        self.assertIn("scope: `authority_only`", dashboard)
+        self.assertNotIn("external gate holds current WIP", dashboard)
+
+    def test_gate_scope_and_overlap_are_rejected(self) -> None:
+        invalid = copy.deepcopy(self.plan)
+        invalid["gate"][0]["gate_scope"] = "global_mutex"
+        invalid["gate"][0]["non_blocking_work"].append(
+            invalid["gate"][0]["blocks"][0]
+        )
+        errors = generate_plan_views.validate_plan(invalid)
+        self.assertTrue(any("invalid gate_scope" in error for error in errors), errors)
+        self.assertTrue(any("both block and permit" in error for error in errors), errors)
+
+    def test_task_branch_binding_is_mechanical(self) -> None:
+        cutline = next(
+            item
+            for item in self.plan["workunit"]
+            if item["id"] == "FACMAN-C1-CUTLINE-01"
+        )
+        self.assertEqual(cutline["branch"], "task/facman-c1-cutline-01")
+        self.assertEqual(
+            cutline["base_revision"],
+            "239f9c04822f83bdab6b9c3dd191cfaa337f7b23",
+        )
+
     def test_dependency_cycle_is_rejected(self) -> None:
         invalid = copy.deepcopy(self.plan)
         invalid["workunit"][0]["depends_on"] = [invalid["workunit"][1]["id"]]
@@ -44,8 +93,11 @@ class PlanViewTests(unittest.TestCase):
     def test_ready_work_requires_completed_dependencies(self) -> None:
         invalid = copy.deepcopy(self.plan)
         ready = next(
-            item for item in invalid["workunit"] if item["status"] == "ready"
+            item
+            for item in invalid["workunit"]
+            if item["status"] not in {"complete", "cancelled"}
         )
+        ready["status"] = "ready"
         incomplete = next(
             item
             for item in invalid["workunit"]

@@ -9,6 +9,7 @@ operating_mode:
   live_repo_no_mutation_without_explicit_apply: true
   fixture_mutation_allowed: true
   no_remote_push_without_explicit_push_flag: true
+  routine_task_actions_require_no_operator_approval: true
 commands:
   sync:
     purpose: Inspect branch/upstream state and recommend safe sync actions.
@@ -33,6 +34,11 @@ commands:
     purpose: Generate the current safe Git helper recommendation.
     default_mode: dry_run
     mutates_by_default: false
+  task_branch:
+    purpose: Create or share a bounded task branch after mechanical WorkUnit and exact-base checks.
+    default_mode: explicit_command
+    operator_confirmation_required: false
+    protected_ref_mutation: false
 protected_roles:
   - canonical
   - integration
@@ -48,6 +54,18 @@ safety_rules:
   - no_force_push
   - no_delete_protected_branches
   - no_live_remote_mutation_in_tests
+  - no_operator_confirmation_for_qualified_task_branch_actions
+task_branch_creation:
+  branch_pattern: task/*
+  allowed_workunit_states:
+    - ready
+    - active
+  required_checks:
+    - workunit_exists
+    - requested_base_equals_workunit_base_revision
+    - branch_absent_or_at_requested_base
+    - clean_worktree
+    - protected_refs_unchanged
 evidence_required:
   - helper plan
   - validation result
@@ -66,8 +84,9 @@ validation_recommendations:
     - py -3 .aide/scripts/aide_lite.py pack-status
 push_policy:
   force_push: forbidden
-  remote_push_default: forbidden
-  remote_push_future_gate: explicit_push_flag_and_operator_review
+  protected_ref_push: explicit_repository_authority_only
+  non_protected_task_branch_push: automatic_after_mechanical_checks
+  draft_pull_request_write: automatic_for_bounded_task_branch
 prune_policy:
   protected_roles_never_prune: true
   ancestor_containment_required: true

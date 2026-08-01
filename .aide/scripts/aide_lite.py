@@ -20699,7 +20699,16 @@ def git_workflow_policy_paths() -> list[str]:
 def validate_git_policy_files(repo_root: Path) -> list[Check]:
     checks: list[Check] = []
     required_markers = {
-        GIT_WORKFLOW_POLICY_PATH: ["aide.git-workflow-policy.v0", "canonical_branch: main", "integration_branch: dev", "no remote push in Q28"],
+        GIT_WORKFLOW_POLICY_PATH: [
+            "aide.git-workflow-policy.v0",
+            "canonical_branch: main",
+            "integration_branch: dev",
+            "no remote push in Q28",
+            "task_branch_creation:",
+            "operator_confirmation_required: false",
+            "repository_authority:",
+            "product_authority:",
+        ],
         BRANCH_ROLES_POLICY_PATH: ["canonical:", "integration:", "task:", "release:", "hotfix:", "deploy:", "unknown:", "canonical_release_truth: false"],
         PROMOTION_RULES_POLICY_PATH: ["task_to_dev:", "dev_to_main:", "review packet", "changelog preview"],
         SYNC_POLICY_PATH: ["no_implicit_merge_during_sync", "no_automatic_remote_mutation_in_q28", "do_not_treat_dev_as_canonical_truth"],
@@ -21322,6 +21331,8 @@ def validate_git_helper_policy_files(repo_root: Path) -> list[Check]:
             "require_ancestor_containment_before_prune",
             "no_force_push",
             "no_delete_protected_branches",
+            "routine_task_actions_require_no_operator_approval",
+            "non_protected_task_branch_push: automatic_after_mechanical_checks",
         ],
         GIT_HELPER_COMMANDS_MD_PATH: [
             "git plan",
@@ -21331,6 +21342,7 @@ def validate_git_helper_policy_files(repo_root: Path) -> list[Check]:
             "git prune",
             "dry-run",
             "ancestor containment",
+            "Automatic Task-Branch Actions",
         ],
     }
     for rel, markers in required_markers.items():

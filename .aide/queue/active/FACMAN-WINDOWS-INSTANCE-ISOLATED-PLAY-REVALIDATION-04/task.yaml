@@ -5,7 +5,7 @@ status: awaiting_operator
 lifecycle_state: awaiting_operator
 planning_state: awaiting_operator
 created_at: 2026-07-31T18:19:02Z
-owner: unassigned
+owner: Jules
 objective: >
   Create one exact immutable revalidation-04 stage from qualification-05 without observer, prepare, permit, Factorio execution, verdict, or route authority.
 allowed_paths:
@@ -47,7 +47,7 @@ architecture_invariants:
   - qualification-05 is the only qualification admitted to the revalidation-04 stage
   - qualification-04 revalidation-03 and all earlier chains remain immutable
   - stage preserves qualification-binding.v4.json and exact candidate artifacts
-  - operator remains unassigned until a fresh explicit revalidation-04 designation
+  - Jules is designated only as the revalidation-04 operator; the designation grants no observer, prepare, permit, execution, verdict, or route authority
   - stage does not run the observer acquire an execution-state lease prepare issue a permit start Factorio record a verdict or promote a route
 depends_on:
   - FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05
@@ -59,7 +59,8 @@ closeout_checklist:
   - candidate artifacts and manifest are copied from the exact source-closure build
   - staged-candidate digest and configuration digest are recorded
   - stage inventory is closed and has no reparse points or unexpected files
-  - operator remains unassigned and observer self-test is not started
+  - the bounded Jules operator designation is recorded and observer self-test is not started
   - no WPR prepare baseline permit Factorio verdict or authority action occurs
 active_at: 2026-07-31T18:19:04Z
 awaiting_operator_at: 2026-07-31T19:00:03Z
+operator_designated_at: 2026-08-01T05:47:35Z

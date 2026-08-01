@@ -36,7 +36,8 @@ complete coordinator result with fresh operation IDs.
 ## Authority boundary
 
 ```text
-operator              unassigned
+operator              Jules
+designation           accepted for revalidation-04 only
 observer self-test    not started
 WPR/ETW               not started
 prepare               false
@@ -46,6 +47,11 @@ Factorio execution    false
 human verdict         unset
 route authority       false
 ```
+
+The designation authorizes recording Jules's operator identity and fresh
+non-mutating volatile prechecks only. It does not authorize observer
+acquisition, WPR/ETW capture, `prepare`, baseline capture, permit issuance,
+Factorio execution, a human verdict, or route promotion.
 
 ## Repository closeout validation
 

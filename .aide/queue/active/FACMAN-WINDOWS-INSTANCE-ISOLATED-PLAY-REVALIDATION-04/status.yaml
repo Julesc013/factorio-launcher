@@ -8,3 +8,6 @@ result: PENDING
 evidence_path: .aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04/evidence/
 active_at: 2026-07-31T18:19:04Z
 awaiting_operator_at: 2026-07-31T19:00:03Z
+operator: Jules
+operator_designation: accepted_for_revalidation_04_only
+operator_designated_at: 2026-08-01T05:47:35Z

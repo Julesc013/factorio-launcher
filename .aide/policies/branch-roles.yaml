@@ -63,7 +63,7 @@ roles:
     allowed_targets:
       - dev
       - main
-    remote_tracking_policy: local by default, remote only when shared or resumable
+    remote_tracking_policy: local creation and non-protected remote sharing are routine when the WorkUnit and exact-base guards pass
     validation_required: task-local validation, evidence, and commit checks
     promotion_target: dev
     pruning_policy: prune only after contained in dev or main
@@ -237,7 +237,9 @@ branch_name_rules:
     role: task
     short_lived: true
     local_by_default: true
-    remote_only_if_shared_or_resumable: true
+    automatic_creation_from_recorded_exact_base: true
+    automatic_non_protected_push: true
+    operator_confirmation_required: false
     default_target: dev
     delete_only_after_contained_in_dev_or_main: true
   release/*:

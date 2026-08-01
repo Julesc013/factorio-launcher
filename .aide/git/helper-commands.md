@@ -14,6 +14,23 @@ this phase.
 - Protected roles are `canonical`, `integration`, `release`, and `deploy`.
 - Prune eligibility requires `git merge-base --is-ancestor <branch> <target>`.
 
+## Automatic Task-Branch Actions
+
+Routine reversible development actions do not require human confirmation.
+Creating a `task/*` branch is allowed when the WorkUnit exists in `ready` or
+`active` state, its recorded exact base equals the requested base, the branch
+is absent or already at that revision, the current worktree is clean, and no
+protected ref changes. The same classification covers task worktrees, bounded
+edits and checks, ordinary commits, non-protected task-branch pushes, and draft
+pull-request creation or updates.
+
+`--apply` remains an explicit command-intent flag for helpers; it is not a
+repository-authority approval. Merge into `dev` or `main`, protected-ref
+updates, published-history rewrites, release tags, signing, and publication
+remain explicit repository authority. Credentials, Setup/foreign mutation,
+permits, Factorio execution, observer capture, verdicts, and route promotion
+remain separate product authority.
+
 ## Commands
 
 ```text
@@ -80,5 +97,7 @@ repositories.
 
 ## Q29 Boundary
 
-Q29 does not create AIDE `dev`, merge into `main`, push remotes, delete live
-branches, call GitHub, install CI, publish releases, or call providers/models.
+Q29 does not create AIDE `dev`, merge into `main`, update protected refs,
+force-push, install CI, publish releases, or call providers/models. The later
+automatic task-branch classification above does not weaken this historical
+protected-branch boundary.
