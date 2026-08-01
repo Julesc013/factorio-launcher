@@ -12,13 +12,19 @@ rm -f -- "${FACMAN_PREVIEW_ORCA_MARKER}" "${FACMAN_PREVIEW_ORCA_MARKER}.log" \
 orca --replace --no-setup >"${FACMAN_PREVIEW_ORCA_MARKER}.log" 2>&1 &
 orca_pid=$!
 app_pid=""
-cleanup() {
-  if [[ -n "${app_pid}" ]]; then
-    kill "${app_pid}" 2>/dev/null || true
-    wait "${app_pid}" 2>/dev/null || true
+terminate_child() {
+  local pid="$1"
+  if [[ -z "${pid}" ]]; then
+    return
   fi
-  kill "${orca_pid}" 2>/dev/null || true
-  wait "${orca_pid}" 2>/dev/null || true
+  kill "${pid}" 2>/dev/null || true
+  sleep 0.25
+  kill -KILL "${pid}" 2>/dev/null || true
+  wait "${pid}" 2>/dev/null || true
+}
+cleanup() {
+  terminate_child "${app_pid}"
+  terminate_child "${orca_pid}"
 }
 trap cleanup EXIT INT TERM
 
@@ -38,7 +44,7 @@ NO_AT_BRIDGE=0 \
 app_pid=$!
 
 probe_passed=false
-for _ in {1..30}; do
+for _ in {1..20}; do
   if ! kill -0 "${app_pid}" 2>/dev/null; then
     break
   fi
