@@ -73,7 +73,7 @@
     "qualification": {
       "type": "object",
       "required": [
-        "hosted_package",
+        "package_construction",
         "windows_10_clean_machine",
         "windows_11_clean_machine",
         "accessibility",
@@ -83,7 +83,7 @@
         "live_play"
       ],
       "properties": {
-        "hosted_package": { "const": "pass" },
+        "package_construction": { "const": "pass" },
         "windows_10_clean_machine": { "enum": ["not_run", "pass", "fail"] },
         "windows_11_clean_machine": { "enum": ["not_run", "pass", "fail"] },
         "accessibility": { "enum": ["not_run", "pass", "fail"] },

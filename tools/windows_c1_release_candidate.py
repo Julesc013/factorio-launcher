@@ -166,7 +166,7 @@ def evidence_report(
             "source_clean": True,
         },
         "qualification": {
-            "hosted_package": "pass",
+            "package_construction": "pass",
             "windows_10_clean_machine": "not_run",
             "windows_11_clean_machine": "not_run",
             "accessibility": "not_run",
