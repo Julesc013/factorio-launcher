@@ -443,6 +443,36 @@ evidence = [
 ]
 
 [[workunit]]
+id = "C1-PREVIEW-RUNTIME-PACKAGES-01"
+epic = "EPIC-PLATFORM-QUALIFICATION"
+title = "Qualify AppKit and GTK native preview runtime packages"
+status = "active"
+priority = "P1"
+size = "L"
+owner = "platform-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-CLASSIC-PREVIEW-SHELLS-01"]
+decision_blockers = []
+branch = "task/c1-preview-runtime-packages-01"
+base_revision = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"
+outcome = "Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims."
+acceptance = [
+  "Ordinary pull-request CI receives no signing credentials and emits only unsigned provisional evidence; trusted signing remains deferred to a separately reviewed protected/manual workflow.",
+  "Each artifact is explicitly a frontend-only prototype with an external RPC fixture; it excludes backend/CLI/contracts/licenses and cannot claim full profile closure or clean-machine product packaging.",
+  "GTK evidence requires fresh Orca liveness plus an external AT-SPI query of the running FacMan window, Launch Deck, and Play names/roles before the application exits.",
+  "Proof rejects dirty source and records source_dirty false; AppKit retains an explicit completion blocker until an exact supported legacy Xcode/SDK/clang toolchain is pinned.",
+  "All current evidence remains provisional and promotes no runtime, product-package, accessibility, support, stable-support, or live Play claim.",
+]
+evidence = [
+  "docs/product/facman_classic_preview_qualification.md",
+  "docs/release/checkpoints/c1-preview-runtime-packages-01.md",
+  "tools/classic_preview_package_proof.py",
+  "contracts/schema/release/classic_preview_package_proof.v1.schema.json",
+  ".github/workflows/ci.yml",
+  "tests/test_classic_preview_package_proof.py",
+]
+
+[[workunit]]
 id = "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Integrate backend-derived presentation into all three C1 shells"
@@ -571,12 +601,6 @@ id = "C1-WINDOWS-PACKAGE-01"
 summary = "Qualify the portable Windows C1 package on a clean machine."
 rationale = "Package qualification follows the complete WinForms shell and does not wait on unrelated preview stability."
 trigger = "FACMAN-WINFORMS-C1-SHELL-01 completes."
-
-[[later]]
-id = "C1-PREVIEW-PACKAGES-01"
-summary = "Qualify AppKit and GTK preview packages at their evidence-supported tiers."
-rationale = "Preview packaging follows real bundle/package runtime smoke and preserves honest support labels."
-trigger = "FACMAN-CLASSIC-PREVIEW-SHELLS-01 completes."
 
 [[later]]
 id = "C1-USER-VALIDATION-01"

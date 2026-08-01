@@ -51,12 +51,31 @@ jobs:
       - name: Install GTK preview build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends libgtk-3-dev meson ninja-build
+          sudo apt-get install --no-install-recommends \
+            at-spi2-core dbus-x11 gir1.2-atspi-2.0 gnome-themes-extra \
+            libatk-adaptor libgtk-3-dev meson ninja-build orca python3-gi xvfb
       - name: Configure, build, and test GTK preview
         run: |
-          meson setup build/gtk-preview apps/gui/linux/gtk --buildtype=debug --werror
+          meson setup build/gtk-preview apps/gui/linux/gtk --prefix=/usr --buildtype=debug --werror
           meson compile -C build/gtk-preview
           meson test -C build/gtk-preview --print-errorlogs
+      - name: Run GTK native runtime, accessibility, relocation, and package proof
+        run: >-
+          python tools/classic_preview_package_proof.py gtk
+          --build-root build/gtk-preview
+          --stage-root build/gtk-preview-package/stage
+          --dist build/gtk-preview-package/dist
+          --evidence build/gtk-preview-package/evidence.v1.json
+      - name: Preserve GTK preview package proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-gtk3-x64-preview-${{ github.sha }}
+          path: |
+            build/gtk-preview-package/dist/*.tar.gz
+            build/gtk-preview-package/dist/*.sha256
+            build/gtk-preview-package/evidence.v1.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Run clang-tidy on changed first-party modules
         run: >-
           python tools/clang_tidy_changed.py
@@ -328,31 +347,25 @@ jobs:
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v6
-      - name: Compile AppKit shell sources
-        run: |
-          mkdir -p build/appkit-smoke
-          clang -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
-            -Iapps/gui/macos/appkit \
-            -framework Cocoa \
-            -c apps/gui/macos/appkit/AppDelegate.m \
-            -o build/appkit-smoke/AppDelegate.o
-          clang -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
-            -Iapps/gui/macos/appkit \
-            -framework Cocoa \
-            -c apps/gui/macos/appkit/MainWindowController.m \
-            -o build/appkit-smoke/MainWindowController.o
-          clang++ -std=c++17 -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
-            -Iapps/gui/macos/appkit \
-            -framework Cocoa \
-            -c apps/gui/macos/appkit/CommandClient.mm \
-            -o build/appkit-smoke/CommandClient.o
-          clang -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
-            -Iapps/gui/macos/appkit \
-            -framework Cocoa \
-            -c apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m \
-            -o build/appkit-smoke/FacManGeneratedCommandCatalog.o
-          clang++ -std=c++17 -fobjc-arc -fblocks -fmodules -mmacosx-version-min=10.13 \
-            -Iapps/gui/macos/appkit \
-            -framework Cocoa \
-            -c apps/gui/macos/appkit/CliProcessClient.mm \
-            -o build/appkit-smoke/CliProcessClient.o
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install locked proof validators
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Build and run AppKit native runtime, relocation, and package proof
+        run: >-
+          python tools/classic_preview_package_proof.py appkit
+          --build-root build/appkit-preview
+          --stage-root build/appkit-preview-package/stage
+          --dist build/appkit-preview-package/dist
+          --evidence build/appkit-preview-package/evidence.v1.json
+      - name: Preserve unsigned AppKit preview package proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-appkit-x64-preview-${{ github.sha }}
+          path: |
+            build/appkit-preview-package/dist/*.tar.gz
+            build/appkit-preview-package/dist/*.sha256
+            build/appkit-preview-package/evidence.v1.json
+          if-no-files-found: error
+          retention-days: 14

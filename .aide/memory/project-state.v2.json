@@ -503,11 +503,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba",
+    "catalog_digest": "f29ea66effb76d4b45beaf307ab13750dfa808d3fc0b03848d2f62fa2f505e20",
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 307
+    "schemas": 308
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -2235,13 +2235,13 @@
       "support_status": "experimental"
     },
     {
-      "compile_status": "deferred",
-      "evidence_revision": "",
+      "compile_status": "passed",
+      "evidence_revision": "8f99e968e336b10eef3665a01f21f9c94a0a24e6",
       "frontend_family": "gtk",
       "id": "linux_x11_gtk_x64",
       "package_status": "contract_only",
       "publication_status": "unpublished",
-      "runtime_status": "deferred",
+      "runtime_status": "not_proven",
       "support_status": "unavailable"
     },
     {

@@ -92,7 +92,9 @@ class MacosPackageProofContractTests(unittest.TestCase):
         ]:
             self.assertIn(anchor, proof)
         appkit_job = workflow.split("appkit-compile:", 1)[1]
-        self.assertNotIn("FacMan.app", appkit_job)
+        self.assertIn("classic_preview_package_proof.py appkit", appkit_job)
+        self.assertIn("macos-appkit-x64-preview-${{ github.sha }}", appkit_job)
+        self.assertIn("build/appkit-preview-package/evidence.v1.json", appkit_job)
         self.assertNotIn("open ", appkit_job)
 
     def test_application_maps_macos_profile_to_setup_authority(self) -> None:

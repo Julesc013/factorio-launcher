@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/release/classic_preview_package_proof.v1.schema.json",
+  "title": "FacMan classic preview native runtime and package proof",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "platform",
+    "profile_id",
+    "target_os",
+    "target_arch",
+    "source_revision",
+    "source_dirty",
+    "runner",
+    "artifact_scope",
+    "toolchain",
+    "blockers",
+    "artifact",
+    "binary",
+    "runtime",
+    "package",
+    "signing",
+    "notarization",
+    "claims"
+  ],
+  "properties": {
+    "schema": { "const": "facman.classic_preview_package_proof.v1" },
+    "status": { "const": "provisional" },
+    "platform": { "enum": ["appkit", "gtk"] },
+    "profile_id": { "enum": ["macos_legacy_appkit_x64", "linux_x11_gtk_x64"] },
+    "target_os": { "enum": ["macos", "linux"] },
+    "target_arch": { "const": "x64" },
+    "source_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "source_dirty": { "const": false },
+    "runner": { "type": "string", "minLength": 1 },
+    "artifact_scope": { "const": "frontend_only_prototype" },
+    "toolchain": {
+      "type": "object",
+      "required": ["identity", "pin_status"],
+      "properties": {
+        "identity": { "type": "string", "minLength": 1 },
+        "pin_status": {
+          "enum": ["hosted_image_label_only", "mutable_macos_runner_blocker"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "blockers": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "frontend_only_no_backend_closure",
+          "credential_operations_deferred",
+          "trusted_checksum_signing_workflow_deferred",
+          "exact_supported_legacy_xcode_not_pinned"
+        ]
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["name", "format", "size", "sha256", "checksum_file", "signature_file"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "format": { "const": "tar.gz" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/Sha256" },
+        "checksum_file": { "type": "string", "minLength": 1 },
+        "signature_file": { "type": "null" }
+      },
+      "additionalProperties": false
+    },
+    "binary": {
+      "type": "object",
+      "required": ["identity", "architectures", "deployment_floor", "dependencies", "rpath", "runpath"],
+      "properties": {
+        "identity": { "type": "string", "minLength": 1 },
+        "architectures": { "const": ["x86_64"] },
+        "deployment_floor": { "type": "string", "minLength": 1 },
+        "dependencies": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rpath": { "type": "null" },
+        "runpath": { "type": "null" }
+      },
+      "additionalProperties": false
+    },
+    "runtime": {
+      "type": "object",
+      "required": [
+        "probe",
+        "relocated_probe",
+        "menu_keyboard",
+        "resize",
+        "focus_restoration",
+        "bounded_rpc",
+        "fixture_journey",
+        "accessibility",
+        "appearance_recovery",
+        "at_spi_bridge",
+        "orca",
+        "high_contrast",
+        "timeout_process_tree",
+        "external_at_spi",
+        "live_play"
+      ],
+      "properties": {
+        "probe": { "const": "pass" },
+        "relocated_probe": { "const": "pass" },
+        "menu_keyboard": { "const": "pass" },
+        "resize": { "const": "pass" },
+        "focus_restoration": { "const": "pass" },
+        "bounded_rpc": { "const": "pass" },
+        "fixture_journey": { "const": "pass" },
+        "accessibility": { "const": "pass" },
+        "appearance_recovery": { "const": "pass" },
+        "at_spi_bridge": { "enum": ["pass", "not_applicable"] },
+        "orca": { "enum": ["pass", "not_applicable"] },
+        "high_contrast": { "enum": ["pass", "not_applicable"] },
+        "timeout_process_tree": { "enum": ["pass", "not_applicable"] },
+        "external_at_spi": { "enum": ["pass", "not_applicable"] },
+        "live_play": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "package": {
+      "type": "object",
+      "required": [
+        "manifest",
+        "manifest_sha256",
+        "file_count",
+        "relocated",
+        "checksum_verified",
+        "profile_contract_satisfied",
+        "clean_machine_backend_closure"
+      ],
+      "properties": {
+        "manifest": { "type": "string", "minLength": 1 },
+        "manifest_sha256": { "$ref": "#/$defs/Sha256" },
+        "file_count": { "type": "integer", "minimum": 1 },
+        "relocated": { "const": true },
+        "checksum_verified": { "const": true },
+        "profile_contract_satisfied": { "const": false },
+        "clean_machine_backend_closure": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "signing": { "$ref": "#/$defs/OptionalCredentialProof" },
+    "notarization": { "$ref": "#/$defs/OptionalCredentialProof" },
+    "claims": {
+      "type": "object",
+      "required": ["compile", "runtime", "package", "accessibility", "support", "live_play"],
+      "properties": {
+        "compile": { "const": "provisional" },
+        "runtime": { "const": "frontend_fixture_preview" },
+        "package": { "const": "frontend_prototype_only" },
+        "accessibility": { "const": "provisional" },
+        "support": { "const": "unavailable" },
+        "live_play": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "OptionalCredentialProof": {
+      "type": "object",
+      "required": ["status", "reason"],
+      "properties": {
+        "status": { "const": "not_requested" },
+        "reason": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
