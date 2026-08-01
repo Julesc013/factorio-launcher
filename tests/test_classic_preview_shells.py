@@ -63,6 +63,7 @@ class ClassicPreviewShellTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("executable('facman-gui-gtk'", meson)
+        self.assertIn("facman-live-presentation-payload-scope", meson)
         self.assertIn("Exec=facman-gui-gtk", desktop)
 
     def test_preview_profiles_do_not_claim_runtime_qualification(self) -> None:

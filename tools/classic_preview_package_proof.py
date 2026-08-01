@@ -376,6 +376,7 @@ def run_appkit_probe(binary: Path, mock: Path, cwd: Path) -> dict[str, str]:
     cwd.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env["FACMAN_CLI"] = str(mock)
+    env["FACMAN_PRESENTATION_MODE"] = "evidence"
     completed = run([str(binary), "--facman-preview-self-test"], cwd=cwd, env=env, timeout=45)
     probe = parse_probe(completed.stdout)
     require_probe(probe)
@@ -395,6 +396,7 @@ def run_gtk_probe(
         stale.unlink(missing_ok=True)
     env = os.environ.copy()
     env["FACMAN_CLI"] = str(mock)
+    env["FACMAN_PRESENTATION_MODE"] = "evidence"
     env["FACMAN_PREVIEW_ORCA_MARKER"] = str(marker)
     env["FACMAN_PREVIEW_ATSPI_REPORT"] = str(at_spi_report)
     env["FACMAN_PREVIEW_ATSPI_RELEASE_FILE"] = str(at_spi_release)

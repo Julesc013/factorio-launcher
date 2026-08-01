@@ -65,7 +65,7 @@ This reviewed and reproduced dev-integrated tree enumerates 125 commands, 308 sc
 
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_play_authority`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Readiness is playability `not_yet_playable`, workflow `native_c1_shell_backend_projection_release_candidate_ready`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

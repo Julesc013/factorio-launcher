@@ -91,6 +91,8 @@ non_blocking_work = [
   "C1-FIXTURE-VERTICAL-SLICE-01",
   "FACMAN-WINFORMS-C1-SHELL-01",
   "FACMAN-CLASSIC-PREVIEW-SHELLS-01",
+  "FACMAN-C1-LIVE-SHELL-INTEGRATION-01",
+  "C1-WINDOWS-RELEASE-CANDIDATE-01",
   "C1-WINDOWS-PACKAGE-01",
   "C1-PREVIEW-PACKAGES-01",
   "C1-ACCESSIBILITY-QUALIFICATION-01",
@@ -469,6 +471,63 @@ evidence = [
   ".github/workflows/ci.yml",
   "tests/test_classic_preview_package_proof.py",
 ]
+
+[[workunit]]
+id = "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Integrate backend-derived presentation into all three C1 shells"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-WINFORMS-C1-SHELL-01", "FACMAN-CLASSIC-PREVIEW-SHELLS-01"]
+decision_blockers = []
+branch = "task/facman-c1-live-shell-integration-01"
+base_revision = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"
+outcome = "Replace fixture-only production behavior with FacMan-local backend-derived presentation over the existing bounded process RPC while keeping fixtures only in explicit evidence/development mode."
+acceptance = [
+  "WinForms, AppKit, and GTK inspect workspace, installation, instance, readiness, Activity, Last Run, and recovery records from registered backend commands.",
+  "Play rechecks workspace evidence and dispatches only exact registered run.execute after the backend enables it; exact backend refusals remain visible without execution.",
+  "Last Run persists only as a workspace-revision-bound non-authoritative view copy of a backend-completed launch session, while incomplete backend journals govern recovery across frontend restart.",
+  "Deterministic fixtures remain unchanged and are reachable only through explicitly labelled FACMAN_PRESENTATION_MODE=evidence mode.",
+  "No daemon, direct client, new protocol, frontend policy, auto-retry, auto-recovery, auto-launch, provider-pin, route, or authority change is introduced.",
+]
+evidence = [
+  "docs/product/facman_c1_live_shell_integration.md",
+  "docs/release/checkpoints/facman-c1-live-shell-integration-01.md",
+  "apps/gui/windows/winforms/C1LivePresentationStore.cs",
+  "apps/gui/macos/appkit/FacManLivePresentation.m",
+  "apps/gui/linux/gtk/main.c",
+  "apps/gui/linux/gtk/generated_live_presentation.c",
+  "apps/gui/linux/gtk/generated_live_presentation.h",
+  "apps/gui/linux/gtk/live_presentation_test.c",
+  "tests/fixtures/presentation/live/completed-launch.transport_response.v2.json",
+  "tests/fixtures/presentation/live/recovery-history.transport_response.v2.json",
+  "tools/generate_classic_preview_rpc.py",
+  "tools/facman_live_shell_integration_check.py",
+  "tests/test_facman_live_shell_integration.py",
+]
+
+[[workunit]]
+id = "C1-WINDOWS-RELEASE-CANDIDATE-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Construct and qualify the Windows C1 release candidate"
+status = "ready"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
+decision_blockers = []
+outcome = "Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance."
+acceptance = [
+  "A clean checkout constructs the portable Windows x64 candidate and records exact source, dependency, component, and artifact identities.",
+  "The backend-derived Instances-to-Launch-Deck journey, keyboard/accessibility path, 100/150/200-percent scaling, structured refusal, Activity, Last Run, and recovery views pass on the supported reference lane.",
+  "The candidate remains fail-closed when live Play authority is absent and makes no signed, published, AppKit, GTK, or stable-support claim beyond recorded evidence.",
+  "If the exact Play route becomes available through its separate authority procedure, final acceptance consumes that evidence without changing frontend policy, transport, provider pins, or route identity.",
+]
+evidence = []
 
 [[decision]]
 id = "DEC-C1-REFERENCE-LANE"

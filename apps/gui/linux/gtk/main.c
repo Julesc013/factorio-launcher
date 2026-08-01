@@ -5,6 +5,7 @@
 #include <gtk/gtk.h>
 
 #include "command_client.h"
+#include "generated_live_presentation.h"
 #include "preview_model.h"
 
 #if GLIB_CHECK_VERSION(2, 74, 0)
@@ -25,6 +26,9 @@ typedef struct {
     GtkWidget *deck_primary;
     GtkWidget *deck_secondary;
     GtkWidget *activity_summary;
+    GtkWidget *instance_summary;
+    GtkWidget *installation_summary;
+    GtkWidget *evidence_actions;
     GtkWidget *cli_path;
     GtkWidget *workspace;
     GtkTextBuffer *rpc_result;
@@ -33,11 +37,84 @@ typedef struct {
     gboolean relaunched;
     gboolean self_test;
     gboolean expect_timeout;
-    gchar *retained_last_run;
     gchar *probe_report;
+    gboolean evidence_mode;
+    gboolean live_execution_available;
+    gboolean live_recovery_required;
+    gint live_refresh_step;
+    gchar *retained_last_run;
+    gchar *live_instance_id;
+    gchar *live_install_id;
+    gchar *live_readiness_digest;
+    gchar *live_readiness;
+    gchar *live_status;
+    gchar *live_activity;
+    gchar *live_operation_id;
+    gchar *live_recovery_id;
+    gchar *live_recovery_transaction_id;
+    gchar *live_refusal_code;
+    gchar *live_refusal_detail;
+    gchar *pending_last_run;
+    gchar *pending_last_run_session_id;
 } FacManGtkShell;
 
 static gboolean preview_self_test = FALSE;
+
+static void refresh_live(FacManGtkShell *shell);
+static void render_fixture(FacManGtkShell *shell);
+
+static void replace_text(gchar **target, const gchar *value)
+{
+    g_free(*target);
+    *target = g_strdup(value != NULL ? value : "");
+}
+
+static gchar *live_cache_path(void)
+{
+    return g_build_filename(g_get_user_data_dir(), "facman", "presentation-cache.v0.ini", NULL);
+}
+
+static void load_view_only_last_run(FacManGtkShell *shell)
+{
+    g_free(shell->retained_last_run);
+    shell->retained_last_run = NULL;
+    gchar *path = live_cache_path();
+    GKeyFile *cache = g_key_file_new();
+    if (g_key_file_load_from_file(cache, path, G_KEY_FILE_NONE, NULL)) {
+        gchar *authority = g_key_file_get_string(cache, "last_run", "authority", NULL);
+        gchar *workspace = g_key_file_get_string(cache, "last_run", "workspace", NULL);
+        gchar *digest = g_key_file_get_string(cache, "last_run", "readiness_digest", NULL);
+        if (g_strcmp0(authority, "non_authoritative_view_copy") == 0 &&
+            g_strcmp0(workspace, gtk_entry_get_text(GTK_ENTRY(shell->workspace))) == 0 &&
+            g_strcmp0(digest, shell->live_readiness_digest) == 0)
+            shell->retained_last_run = g_key_file_get_string(cache, "last_run", "summary", NULL);
+        g_free(digest); g_free(workspace); g_free(authority);
+    }
+    g_key_file_unref(cache);
+    g_free(path);
+}
+
+static void save_view_only_last_run(FacManGtkShell *shell, const gchar *session_id)
+{
+    if (shell->retained_last_run == NULL) return;
+    gchar *path = live_cache_path();
+    gchar *directory = g_path_get_dirname(path);
+    g_mkdir_with_parents(directory, 0700);
+    GKeyFile *cache = g_key_file_new();
+    g_key_file_set_string(cache, "last_run", "authority", "non_authoritative_view_copy");
+    g_key_file_set_string(cache, "last_run", "source", "completed_factorio_launch_session_v1");
+    g_key_file_set_string(cache, "last_run", "workspace", gtk_entry_get_text(GTK_ENTRY(shell->workspace)));
+    g_key_file_set_string(cache, "last_run", "readiness_digest", shell->live_readiness_digest != NULL ? shell->live_readiness_digest : "");
+    g_key_file_set_string(cache, "last_run", "session_id", session_id != NULL ? session_id : "");
+    g_key_file_set_string(cache, "last_run", "summary", shell->retained_last_run);
+    gsize length = 0;
+    gchar *contents = g_key_file_to_data(cache, &length, NULL);
+    g_file_set_contents(path, contents, (gssize)length, NULL);
+    g_free(contents);
+    g_key_file_unref(cache);
+    g_free(directory);
+    g_free(path);
+}
 
 static void set_accessibility(GtkWidget *widget, const gchar *name, const gchar *description)
 {
@@ -69,36 +146,294 @@ static void menu_page(GtkMenuItem *item, gpointer user_data)
 static void render_fixture(FacManGtkShell *shell)
 {
     const FacManPreviewRecord *record = facman_preview_record(shell->state);
-    gchar *readiness = g_strdup_printf("Readiness: %s", record->readiness);
-    const gchar *last_run = shell->retained_last_run != NULL ? shell->retained_last_run : record->last_run;
+    const gchar *readiness_text = shell->evidence_mode ? record->readiness : shell->live_readiness;
+    const gchar *status_text = shell->evidence_mode ? record->status_text : shell->live_status;
+    const gchar *activity_text = shell->evidence_mode ? record->activity_summary : shell->live_activity;
+    const gchar *primary_label = shell->evidence_mode ? record->primary_label :
+        (shell->state == FACMAN_PREVIEW_EXITED ? "Relaunch" :
+         shell->state == FACMAN_PREVIEW_INTERRUPTED ? "Inspect recovery" : "Play");
+    const gchar *operation_id = shell->evidence_mode ? record->operation_id : shell->live_operation_id;
+    gchar *readiness = g_strdup_printf("Readiness: %s", readiness_text != NULL ? readiness_text : "Unavailable");
+    const gchar *last_run = shell->retained_last_run != NULL ? shell->retained_last_run :
+        (shell->evidence_mode ? record->last_run : "No backend-completed run recorded");
     gchar *last = g_strdup_printf("Last Run: %s", last_run);
-    const gchar *operation_id = record->operation_id;
-    if (shell->relaunched && shell->state == FACMAN_PREVIEW_RUNNING)
+    if (operation_id == NULL) operation_id = "";
+    if (shell->evidence_mode && shell->relaunched && shell->state == FACMAN_PREVIEW_RUNNING)
         operation_id = "operation.fixture-play-002";
     gchar *operation = g_strdup_printf("Operation: %s", *operation_id != '\0' ? operation_id : "none");
-    gtk_label_set_text(GTK_LABEL(shell->deck_status), record->status_text);
+    gtk_label_set_text(GTK_LABEL(shell->deck_status), status_text != NULL ? status_text : "Backend state unavailable");
     gtk_label_set_text(GTK_LABEL(shell->deck_readiness), readiness);
     gtk_label_set_text(GTK_LABEL(shell->deck_last_run), last);
     gtk_label_set_text(GTK_LABEL(shell->deck_operation), operation);
-    gtk_label_set_text(GTK_LABEL(shell->activity_summary), record->activity_summary);
-    gtk_button_set_label(GTK_BUTTON(shell->deck_primary), record->primary_label);
-    set_accessibility(shell->deck_primary, record->primary_accessibility_label,
-        "Fixture-only preview action; no live Factorio process is started.");
-    const gchar *secondary = "Make readiness stale";
+    gtk_label_set_text(GTK_LABEL(shell->activity_summary), activity_text != NULL ? activity_text : "No active operation.");
+    gtk_button_set_label(GTK_BUTTON(shell->deck_primary), primary_label);
+    gtk_widget_set_sensitive(shell->deck_primary,
+        shell->evidence_mode || shell->live_execution_available || shell->live_recovery_required);
+    set_accessibility(shell->deck_primary,
+        shell->evidence_mode ? record->primary_accessibility_label : primary_label,
+        shell->evidence_mode ? "Explicit evidence/development fixture action; no live process is started."
+                             : "Exact registered backend route; backend readiness and admission remain authoritative.");
+    const gchar *secondary = shell->evidence_mode ? "Make readiness stale" : "Refresh backend state";
     if (shell->state == FACMAN_PREVIEW_STALE_READINESS) secondary = "Rescan readiness";
     if (shell->state == FACMAN_PREVIEW_INTERRUPTED) secondary = "Recover operation";
     gtk_button_set_label(GTK_BUTTON(shell->deck_secondary), secondary);
     set_accessibility(shell->deck_secondary, secondary,
-        "Safe fixture transition; no live Factorio process is started.");
+        shell->evidence_mode ? "Safe fixture transition; no live process is started."
+                             : "Refresh backend-derived presentation or explicitly recover; never auto-launch.");
+    if (shell->evidence_actions != NULL)
+        gtk_widget_set_visible(shell->evidence_actions, shell->evidence_mode);
     g_free(readiness);
     g_free(last);
     g_free(operation);
+}
+
+static void live_refuse(FacManGtkShell *shell, const gchar *code, const gchar *detail)
+{
+    shell->state = FACMAN_PREVIEW_STALE_READINESS;
+    shell->live_execution_available = FALSE;
+    replace_text(&shell->live_refusal_code, code != NULL && *code != '\0' ? code : "play_route_unavailable");
+    replace_text(&shell->live_refusal_detail, detail != NULL && *detail != '\0'
+        ? detail : "The backend did not enable the exact registered Play route.");
+    gchar *status = g_strdup_printf("Play unavailable — %s",
+        code != NULL && *code != '\0' ? code : "play_route_unavailable");
+    replace_text(&shell->live_status, status);
+    g_free(status);
+    replace_text(&shell->live_activity, "No process was started by the frontend.");
+}
+
+static gboolean rpc_ok(const gchar *result)
+{
+    gchar *outcome = facman_record_text(result, "outcome");
+    gboolean ok = g_strcmp0(outcome, "ok") == 0;
+    g_free(outcome);
+    return ok;
+}
+
+static void live_refresh_completed(const gchar *result, gpointer user_data)
+{
+    FacManGtkShell *shell = user_data;
+    if (!rpc_ok(result)) {
+        gchar *code = facman_error_text(result, "code");
+        gchar *message = facman_error_text(result, "message");
+        live_refuse(shell, code, message);
+        g_free(code);
+        g_free(message);
+        render_fixture(shell);
+        return;
+    }
+    const gchar *cli = gtk_entry_get_text(GTK_ENTRY(shell->cli_path));
+    const gchar *workspace = gtk_entry_get_text(GTK_ENTRY(shell->workspace));
+    switch (shell->live_refresh_step++) {
+        case 0:
+            facman_gtk_rpc_invoke(cli, workspace, "installs.scan", live_refresh_completed, shell);
+            return;
+        case 1: {
+            gchar *install_id = facman_payload_text(result, "install_id");
+            if (*install_id == '\0') { g_free(install_id); install_id = facman_payload_text(result, "id"); }
+            gchar *version = facman_payload_text(result, "version");
+            replace_text(&shell->live_install_id, install_id);
+            gchar *summary = *install_id == '\0' ? g_strdup("No supported installation discovered") :
+                g_strdup_printf("Selected backend installation %s · version %s", install_id, *version != '\0' ? version : "unknown");
+            gtk_label_set_text(GTK_LABEL(shell->installation_summary), summary);
+            g_free(summary); g_free(version); g_free(install_id);
+            facman_gtk_rpc_invoke(cli, workspace, "instance.list", live_refresh_completed, shell);
+            return;
+        }
+        case 2: {
+            gchar *instance_id = facman_payload_text(result, "instance_id");
+            if (*instance_id == '\0') { g_free(instance_id); instance_id = facman_payload_text(result, "id"); }
+            replace_text(&shell->live_instance_id, instance_id);
+            if (*instance_id == '\0') {
+                gtk_label_set_text(GTK_LABEL(shell->instance_summary), "No backend instance; create one to continue");
+                live_refuse(shell, "no_instance_selected", "Select or create an instance before Play.");
+                g_free(instance_id);
+                render_fixture(shell);
+                return;
+            }
+            gchar *payload = facman_instance_payload(instance_id);
+            g_free(instance_id);
+            facman_gtk_rpc_invoke_payload(cli, workspace, "instances.inspect", payload, TRUE, live_refresh_completed, shell);
+            g_free(payload);
+            return;
+        }
+        case 3: {
+            gchar *name = facman_payload_text(result, "display_name");
+            gchar *summary = g_strdup_printf("%s — selected backend instance %s",
+                *name != '\0' ? name : shell->live_instance_id, shell->live_instance_id);
+            gtk_label_set_text(GTK_LABEL(shell->instance_summary), summary);
+            g_free(summary); g_free(name);
+            gchar *payload = facman_instance_payload(shell->live_instance_id);
+            facman_gtk_rpc_invoke_payload(cli, workspace, "instances.readiness", payload, TRUE, live_refresh_completed, shell);
+            g_free(payload);
+            return;
+        }
+        case 4: {
+            gchar *digest = facman_payload_text(result, "readiness_digest");
+            gchar *overall = facman_payload_text(result, "overall_state");
+            gchar *freshness = facman_payload_text(result, "freshness");
+            gchar *authority = facman_payload_text(result, "play_authority_state");
+            gchar *summary = g_strdup_printf("%s · freshness %s · Play authority %s",
+                *overall != '\0' ? overall : "unavailable",
+                *freshness != '\0' ? freshness : "unknown",
+                *authority != '\0' ? authority : "unavailable");
+            replace_text(&shell->live_readiness_digest, digest);
+            replace_text(&shell->live_readiness, summary);
+            load_view_only_last_run(shell);
+            if (shell->pending_last_run != NULL) {
+                shell->retained_last_run = g_strdup(shell->pending_last_run);
+                save_view_only_last_run(shell, shell->pending_last_run_session_id);
+                g_clear_pointer(&shell->pending_last_run, g_free);
+                g_clear_pointer(&shell->pending_last_run_session_id, g_free);
+            }
+            shell->live_execution_available = facman_payload_boolean(result, "execution_available");
+            shell->state = shell->live_execution_available
+                ? (shell->retained_last_run != NULL ? FACMAN_PREVIEW_EXITED : FACMAN_PREVIEW_READY)
+                : FACMAN_PREVIEW_STALE_READINESS;
+            if (shell->live_execution_available) {
+                replace_text(&shell->live_status, "Backend enabled exact registered Play route");
+                replace_text(&shell->live_refusal_code, "");
+                replace_text(&shell->live_refusal_detail, "");
+            } else {
+                gchar *code = facman_payload_text(result, "code");
+                gchar *detail = facman_payload_text(result, "detail");
+                live_refuse(shell, code, detail);
+                g_free(code); g_free(detail);
+            }
+            g_free(summary); g_free(authority); g_free(freshness); g_free(overall); g_free(digest);
+            facman_gtk_rpc_invoke(cli, workspace, "workspace.recovery.inspect", live_refresh_completed, shell);
+            return;
+        }
+        case 5: {
+            shell->live_recovery_required = facman_payload_recovery_required(result);
+            if (shell->live_recovery_required) {
+                gchar *transaction_id = facman_payload_recovery_text(result, "transaction_id");
+                if (*transaction_id == '\0') { g_free(transaction_id); transaction_id = facman_payload_recovery_text(result, "id"); }
+                gchar *operation_id = facman_payload_recovery_text(result, "command_id");
+                g_clear_pointer(&shell->retained_last_run, g_free);
+                replace_text(&shell->live_recovery_transaction_id, transaction_id);
+                replace_text(&shell->live_recovery_id, transaction_id);
+                replace_text(&shell->live_operation_id, operation_id);
+                replace_text(&shell->live_status, "Backend recovery required after interruption");
+                replace_text(&shell->live_activity, "A backend journal transaction requires explicit recovery.");
+                shell->state = FACMAN_PREVIEW_INTERRUPTED;
+                g_free(operation_id); g_free(transaction_id);
+            } else {
+                replace_text(&shell->live_recovery_transaction_id, "");
+                replace_text(&shell->live_recovery_id, "");
+                replace_text(&shell->live_operation_id, "");
+                replace_text(&shell->live_activity, shell->retained_last_run != NULL
+                    ? "Last backend-completed run retained as a non-authoritative view copy."
+                    : "No active backend recovery operation.");
+            }
+            render_fixture(shell);
+            return;
+        }
+        default:
+            return;
+    }
+}
+
+static void refresh_live(FacManGtkShell *shell)
+{
+    shell->live_refresh_step = 0;
+    replace_text(&shell->live_status, "Inspecting workspace, installations, instances, readiness, Activity, Last Run, and recovery…");
+    render_fixture(shell);
+    facman_gtk_rpc_invoke(
+        gtk_entry_get_text(GTK_ENTRY(shell->cli_path)),
+        gtk_entry_get_text(GTK_ENTRY(shell->workspace)),
+        "workspace.status", live_refresh_completed, shell);
+}
+
+static void live_play_completed(const gchar *result, gpointer user_data)
+{
+    FacManGtkShell *shell = user_data;
+    if (!rpc_ok(result)) {
+        gchar *code = facman_error_text(result, "code");
+        gchar *message = facman_error_text(result, "message");
+        live_refuse(shell, code, message);
+        g_free(message); g_free(code);
+    } else {
+        gchar *schema = facman_payload_text(result, "schema");
+        gboolean completed_session = g_strcmp0(schema, "factorio.launch_session.v1") == 0 &&
+            facman_payload_boolean(result, "complete");
+        g_free(schema);
+        if (completed_session) {
+            gchar *session_id = facman_payload_text(result, "session_id");
+            replace_text(&shell->pending_last_run_session_id, session_id);
+            g_free(shell->pending_last_run);
+            shell->pending_last_run = g_strdup_printf(
+                "Exited · backend-completed session %s · non-authoritative view copy",
+                *session_id != '\0' ? session_id : "unknown");
+            g_free(session_id);
+        }
+    }
+    refresh_live(shell);
+}
+
+static void live_play_readiness_completed(const gchar *result, gpointer user_data)
+{
+    FacManGtkShell *shell = user_data;
+    gchar *current = facman_payload_text(result, "readiness_digest");
+    gboolean enabled = rpc_ok(result) && facman_payload_boolean(result, "execution_available");
+    if (g_strcmp0(current, shell->live_readiness_digest) != 0) {
+        replace_text(&shell->live_readiness_digest, current);
+        live_refuse(shell, "stale_readiness", "Workspace evidence changed; readiness was refreshed and no process started.");
+        render_fixture(shell);
+    } else if (!enabled) {
+        gchar *code = facman_payload_text(result, "code");
+        gchar *detail = facman_payload_text(result, "detail");
+        live_refuse(shell, code, detail);
+        render_fixture(shell);
+        g_free(detail); g_free(code);
+    } else {
+        gchar *payload = facman_instance_payload(shell->live_instance_id);
+        facman_gtk_rpc_invoke_payload(
+            gtk_entry_get_text(GTK_ENTRY(shell->cli_path)),
+            gtk_entry_get_text(GTK_ENTRY(shell->workspace)),
+            "run.execute", payload, FALSE, live_play_completed, shell);
+        g_free(payload);
+    }
+    g_free(current);
+}
+
+static void live_recovery_completed(const gchar *result, gpointer user_data)
+{
+    FacManGtkShell *shell = user_data;
+    if (!rpc_ok(result)) {
+        gchar *code = facman_error_text(result, "code");
+        gchar *message = facman_error_text(result, "message");
+        live_refuse(shell, code, message);
+        g_free(message); g_free(code);
+        render_fixture(shell);
+        return;
+    }
+    refresh_live(shell);
 }
 
 static void primary_action(GtkButton *button, gpointer user_data)
 {
     (void)button;
     FacManGtkShell *shell = user_data;
+    if (!shell->evidence_mode) {
+        if (shell->live_recovery_required) { show_page(shell, "activity"); return; }
+        if (!shell->live_execution_available) {
+            GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(shell->window),
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+                "%s", shell->live_refusal_code != NULL ? shell->live_refusal_code : "Play unavailable");
+            gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%s",
+                shell->live_refusal_detail != NULL ? shell->live_refusal_detail : "Backend did not enable Play.");
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+            return;
+        }
+        gchar *payload = facman_instance_payload(shell->live_instance_id);
+        facman_gtk_rpc_invoke_payload(
+            gtk_entry_get_text(GTK_ENTRY(shell->cli_path)),
+            gtk_entry_get_text(GTK_ENTRY(shell->workspace)),
+            "instances.readiness", payload, TRUE, live_play_readiness_completed, shell);
+        g_free(payload);
+        return;
+    }
     switch (shell->state) {
         case FACMAN_PREVIEW_STALE_READINESS: {
             GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(shell->window),
@@ -132,6 +467,28 @@ static void secondary_action(GtkButton *button, gpointer user_data)
 {
     (void)button;
     FacManGtkShell *shell = user_data;
+    if (!shell->evidence_mode) {
+        if (shell->live_recovery_required && shell->live_recovery_transaction_id != NULL &&
+            *shell->live_recovery_transaction_id != '\0') {
+            GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(shell->window),
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK_CANCEL,
+                "Recover backend transaction %s?", shell->live_recovery_transaction_id);
+            gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+                "Recovery is explicit and will not auto-launch Factorio.");
+            gint answer = gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+            if (answer != GTK_RESPONSE_OK) return;
+            gchar *payload = facman_recovery_payload(shell->live_recovery_transaction_id);
+            facman_gtk_rpc_invoke_payload(
+                gtk_entry_get_text(GTK_ENTRY(shell->cli_path)),
+                gtk_entry_get_text(GTK_ENTRY(shell->workspace)),
+                "workspace.recovery.apply", payload, FALSE, live_recovery_completed, shell);
+            g_free(payload);
+        } else {
+            refresh_live(shell);
+        }
+        return;
+    }
     if (shell->state == FACMAN_PREVIEW_INTERRUPTED || shell->state == FACMAN_PREVIEW_STALE_READINESS)
         shell->state = FACMAN_PREVIEW_READY;
     else
@@ -143,14 +500,55 @@ static void select_instance(GtkButton *button, gpointer user_data)
 {
     (void)button;
     FacManGtkShell *shell = user_data;
+    if (!shell->evidence_mode) { refresh_live(shell); return; }
     shell->state = FACMAN_PREVIEW_READY;
     render_fixture(shell);
+}
+
+static void create_instance(GtkButton *button, gpointer user_data)
+{
+    (void)button;
+    FacManGtkShell *shell = user_data;
+    if (shell->evidence_mode) { select_instance(NULL, shell); return; }
+    if (shell->live_install_id == NULL || *shell->live_install_id == '\0') {
+        live_refuse(shell, "no_installation_selected", "Scan and register a supported installation before creating an instance.");
+        render_fixture(shell);
+        return;
+    }
+    GtkWidget *dialog = gtk_dialog_new_with_buttons("Create backend instance", GTK_WINDOW(shell->window),
+        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+        "_Cancel", GTK_RESPONSE_CANCEL, "_Create", GTK_RESPONSE_OK, NULL);
+    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    GtkWidget *id = gtk_entry_new();
+    GtkWidget *name = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(id), "c1-vanilla");
+    gtk_entry_set_text(GTK_ENTRY(name), "C1 Vanilla");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(id), "portable instance id");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(name), "display name");
+    gtk_box_pack_start(GTK_BOX(content), label("Instance ID", 0.0f), FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(content), id, FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(content), label("Display name", 0.0f), FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(content), name, FALSE, FALSE, 2);
+    gtk_widget_show_all(content);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK) {
+        gchar *payload = facman_create_instance_payload(
+            gtk_entry_get_text(GTK_ENTRY(id)),
+            gtk_entry_get_text(GTK_ENTRY(name)),
+            shell->live_install_id);
+        facman_gtk_rpc_invoke_payload(
+            gtk_entry_get_text(GTK_ENTRY(shell->cli_path)),
+            gtk_entry_get_text(GTK_ENTRY(shell->workspace)),
+            "instance.create", payload, FALSE, live_recovery_completed, shell);
+        g_free(payload);
+    }
+    gtk_widget_destroy(dialog);
 }
 
 static void finish_fixture(GtkButton *button, gpointer user_data)
 {
     (void)button;
     FacManGtkShell *shell = user_data;
+    if (!shell->evidence_mode) return;
     if (shell->state != FACMAN_PREVIEW_RUNNING) return;
     g_free(shell->retained_last_run);
     shell->retained_last_run = g_strdup(shell->relaunched
@@ -164,6 +562,7 @@ static void interrupt_fixture(GtkButton *button, gpointer user_data)
 {
     (void)button;
     FacManGtkShell *shell = user_data;
+    if (!shell->evidence_mode) return;
     g_free(shell->retained_last_run);
     shell->retained_last_run = g_strdup("Interrupted · outcome unknown · operation.fixture-play-001");
     shell->state = FACMAN_PREVIEW_INTERRUPTED;
@@ -175,6 +574,7 @@ static void recover_fixture(GtkButton *button, gpointer user_data)
 {
     (void)button;
     FacManGtkShell *shell = user_data;
+    if (!shell->evidence_mode) { secondary_action(NULL, shell); return; }
     if (shell->state != FACMAN_PREVIEW_INTERRUPTED) return;
     shell->state = FACMAN_PREVIEW_READY;
     render_fixture(shell);
@@ -240,14 +640,18 @@ static GtkWidget *page_box(const gchar *title, const gchar *summary)
 
 static void add_pages(FacManGtkShell *shell)
 {
-    GtkWidget *instances = page_box("Instances", "C1 Vanilla — selected · 1 isolated vanilla instance");
+    GtkWidget *instances = page_box("Instances", shell->evidence_mode
+        ? "EXPLICIT EVIDENCE / DEVELOPMENT MODE — deterministic fixture"
+        : "LIVE BACKEND MODE — registered instance records");
+    shell->instance_summary = label("Inspecting backend instances…", 0.0f);
+    gtk_box_pack_start(GTK_BOX(instances), shell->instance_summary, FALSE, FALSE, 0);
     GtkWidget *instance_actions = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_button_box_set_layout(GTK_BUTTON_BOX(instance_actions), GTK_BUTTONBOX_START);
     GtkWidget *create = gtk_button_new_with_mnemonic("_Create instance…");
     GtkWidget *select = gtk_button_new_with_mnemonic("_Select C1 Vanilla");
     set_accessibility(create, "Create instance", "Create/select fixture instance preview");
     set_accessibility(select, "Select C1 Vanilla", "Select fixture instance C1 Vanilla");
-    g_signal_connect(create, "clicked", G_CALLBACK(select_instance), shell);
+    g_signal_connect(create, "clicked", G_CALLBACK(create_instance), shell);
     g_signal_connect(select, "clicked", G_CALLBACK(select_instance), shell);
     gtk_container_add(GTK_CONTAINER(instance_actions), create);
     gtk_container_add(GTK_CONTAINER(instance_actions), select);
@@ -255,7 +659,9 @@ static void add_pages(FacManGtkShell *shell)
     gtk_stack_add_titled(GTK_STACK(shell->stack), instances, "instances", "Instances");
 
     GtkWidget *installations = page_box("Installations",
-        "Factorio 2.0.77 standalone — existing; this preview never repairs or updates it.");
+        "Read-only backend discovery; this preview never repairs or updates an installation.");
+    shell->installation_summary = label("Inspecting backend installations…", 0.0f);
+    gtk_box_pack_start(GTK_BOX(installations), shell->installation_summary, FALSE, FALSE, 0);
     GtkWidget *scan = gtk_button_new_with_mnemonic("_Scan for installations");
     set_accessibility(scan, "Scan for installations", "Refresh deterministic installation/readiness fixture");
     g_signal_connect(scan, "clicked", G_CALLBACK(select_instance), shell);
@@ -266,6 +672,7 @@ static void add_pages(FacManGtkShell *shell)
     shell->activity_summary = label("No active operations.", 0.0f);
     gtk_box_pack_start(GTK_BOX(activity), shell->activity_summary, FALSE, FALSE, 0);
     GtkWidget *activity_actions = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
+    shell->evidence_actions = activity_actions;
     gtk_button_box_set_layout(GTK_BUTTON_BOX(activity_actions), GTK_BUTTONBOX_START);
     GtkWidget *finish = gtk_button_new_with_mnemonic("_Finish fixture run");
     GtkWidget *interrupt = gtk_button_new_with_mnemonic("Simulate _interruption");
@@ -282,8 +689,9 @@ static void add_pages(FacManGtkShell *shell)
     gtk_box_pack_start(GTK_BOX(activity), activity_actions, FALSE, FALSE, 0);
     gtk_stack_add_titled(GTK_STACK(shell->stack), activity, "activity", "Activity");
 
-    GtkWidget *settings = page_box("Settings / About",
-        "FacMan 0.1 C1 · GTK 3/X11 x64 preview · no live Play or stable support claim");
+    GtkWidget *settings = page_box("Settings / About", shell->evidence_mode
+        ? "EXPLICIT EVIDENCE / DEVELOPMENT MODE · unchanged fixtures · no live Play authority"
+        : "LIVE BACKEND MODE · bounded process RPC · backend-gated Play · GTK preview support lane");
     gtk_box_pack_start(GTK_BOX(settings), label(
         "Appearance: System Native by default; FacMan OEM+ affects only Launch Deck semantics. "
         "Use Appearance → System Native to recover immediately.", 0.0f), FALSE, FALSE, 0);
@@ -368,14 +776,29 @@ static void destroy_shell(gpointer data)
     FacManGtkShell *shell = data;
     g_free(shell->retained_last_run);
     g_free(shell->probe_report);
+    g_free(shell->live_instance_id);
+    g_free(shell->live_install_id);
+    g_free(shell->live_readiness_digest);
+    g_free(shell->live_readiness);
+    g_free(shell->live_status);
+    g_free(shell->live_activity);
+    g_free(shell->live_operation_id);
+    g_free(shell->live_recovery_id);
+    g_free(shell->live_recovery_transaction_id);
+    g_free(shell->live_refusal_code);
+    g_free(shell->live_refusal_detail);
+    g_free(shell->pending_last_run);
+    g_free(shell->pending_last_run_session_id);
     g_clear_object(&shell->accelerators);
     g_free(shell);
 }
 
 static gboolean has_accelerator(FacManGtkShell *shell, guint key)
 {
-    GtkAccelKey *entries = NULL;
-    return gtk_accel_group_query(shell->accelerators, key, GDK_CONTROL_MASK, &entries) > 0;
+    guint entry_count = 0;
+    GtkAccelGroupEntry *entries = gtk_accel_group_query(
+        shell->accelerators, key, GDK_CONTROL_MASK, &entry_count);
+    return entries != NULL && entry_count > 0;
 }
 
 static gboolean at_spi_bus_available(void)
@@ -506,7 +929,9 @@ static void run_runtime_probe(FacManGtkShell *shell)
 
 static GtkWidget *build_launch_deck(FacManGtkShell *shell)
 {
-    shell->deck = gtk_frame_new("Launch Deck — C1 Vanilla · fixture only");
+    shell->deck = gtk_frame_new(shell->evidence_mode
+        ? "Launch Deck — EXPLICIT EVIDENCE / DEVELOPMENT MODE"
+        : "Launch Deck — LIVE BACKEND MODE");
     set_accessibility(shell->deck, "Persistent Launch Deck for selected instance C1 Vanilla",
         "Selected instance readiness, primary action, operation, Last Run, and recovery state");
     GtkWidget *grid = gtk_grid_new();
@@ -538,6 +963,12 @@ static void activate(GtkApplication *application, gpointer user_data)
     shell->application = application;
     shell->state = FACMAN_PREVIEW_READY;
     shell->self_test = preview_self_test;
+    shell->evidence_mode = g_ascii_strcasecmp(g_getenv("FACMAN_PRESENTATION_MODE") != NULL
+        ? g_getenv("FACMAN_PRESENTATION_MODE") : "", "evidence") == 0;
+    replace_text(&shell->live_readiness, "Not inspected");
+    replace_text(&shell->live_status, "Backend workspace has not been inspected");
+    replace_text(&shell->live_activity, "No backend activity inspected");
+    replace_text(&shell->live_operation_id, "");
     shell->window = gtk_application_window_new(application);
     gtk_window_set_title(GTK_WINDOW(shell->window), "FacMan GTK 3 C1 Preview");
     gtk_window_set_default_size(GTK_WINDOW(shell->window), 1040, 720);
@@ -557,6 +988,7 @@ static void activate(GtkApplication *application, gpointer user_data)
     render_fixture(shell);
     g_object_set_data_full(G_OBJECT(shell->window), "facman-shell", shell, destroy_shell);
     gtk_widget_show_all(shell->window);
+    if (!shell->evidence_mode) refresh_live(shell);
     if (shell->self_test) run_runtime_probe(shell);
 }
 

@@ -124,6 +124,7 @@ def validate() -> list[str]:
     _require(meson, (
         "dependency('gtk+-3.0', version: '>=3.22'", "executable('facman-gui-gtk'",
         "install: true", "io.github.julesc013.facman.preview.desktop",
+        "facman-live-presentation-payload-scope", "live_presentation_test.c",
     ), "GTK package prototype", problems)
     desktop = _text(GTK / "io.github.julesc013.facman.preview.desktop")
     if "Exec=facman-gui-gtk" not in desktop or "Terminal=false" not in desktop:

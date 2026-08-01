@@ -16,6 +16,7 @@ add_executable(FacMan MACOSX_BUNDLE
   AppDelegate.m
   MainWindowController.m
   FacManPreviewFixture.m
+  FacManLivePresentation.m
   CommandClient.mm
   CliProcessClient.mm
   FacManGeneratedCommandCatalog.m)

@@ -78,6 +78,14 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/L`
   - Owner: `product-maintainer`; dependencies: `C1-FIXTURE-VERTICAL-SLICE-01`
   - Outcome: Replace the command explorer as home with native Instances, Installations, Activity, Settings/About, and a persistent Launch Deck; retain the explorer under Advanced.
+- [x] **FACMAN-C1-LIVE-SHELL-INTEGRATION-01** — Integrate backend-derived presentation into all three C1 shells
+  - State: `complete`; priority/size: `P0/L`
+  - Owner: `product-maintainer`; dependencies: `FACMAN-WINFORMS-C1-SHELL-01`, `FACMAN-CLASSIC-PREVIEW-SHELLS-01`
+  - Outcome: Replace fixture-only production behavior with FacMan-local backend-derived presentation over the existing bounded process RPC while keeping fixtures only in explicit evidence/development mode.
+- [ ] **C1-WINDOWS-RELEASE-CANDIDATE-01** — Construct and qualify the Windows C1 release candidate
+  - State: `ready`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
+  - Outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
 
 #### EPIC-RELEASE-TRUTH — Claims and release truth (planned)
 

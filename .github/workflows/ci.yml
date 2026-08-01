@@ -54,10 +54,11 @@ jobs:
           sudo apt-get install --no-install-recommends \
             at-spi2-core dbus-x11 gir1.2-atspi-2.0 gnome-themes-extra \
             libatk-adaptor libgtk-3-dev meson ninja-build orca python3-gi xvfb
-      - name: Configure and build GTK preview
+      - name: Configure, build, and test GTK preview
         run: |
           meson setup build/gtk-preview apps/gui/linux/gtk --prefix=/usr --buildtype=debug --werror
           meson compile -C build/gtk-preview
+          meson test -C build/gtk-preview --print-errorlogs
       - name: Run GTK native runtime, accessibility, relocation, and package proof
         run: >-
           python tools/classic_preview_package_proof.py gtk
