@@ -558,7 +558,6 @@ def render_dashboard(plan: dict[str, Any]) -> str:
             "",
             "## Rules of engagement",
             "",
-            "- Do not hand-edit this generated view.",
             "- Do not start a planned item as if it were ready.",
             "- Do not exceed WIP by relabeling work as research or documentation.",
             "- An authority-only gate blocks only its named authorities; it is not a global product mutex.",
