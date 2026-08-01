@@ -139,6 +139,39 @@ class PlanViewTests(unittest.TestCase):
         self.assertIn("Fixture evidence never substitutes for live", normalized)
         self.assertIn("Windows evidence never promotes AppKit or GTK", normalized)
 
+    def test_fixture_vertical_slice_is_complete_and_exactly_based(self) -> None:
+        workunit = next(
+            item
+            for item in self.plan["workunit"]
+            if item["id"] == "C1-FIXTURE-VERTICAL-SLICE-01"
+        )
+        self.assertEqual(workunit["status"], "complete")
+        self.assertEqual(
+            workunit["branch"], "task/c1-fixture-vertical-slice-01"
+        )
+        self.assertEqual(
+            workunit["base_revision"],
+            "0cef638e407fd43b240d985ca9f3482238949c8c",
+        )
+        self.assertIn(
+            "tests/fixtures/presentation/journeys/manifest.v0.json",
+            workunit["evidence"],
+        )
+        contract = (
+            generate_plan_views.ROOT
+            / "docs/product/facman_c1_fixture_vertical_slice.md"
+        ).read_text(encoding="utf-8")
+        for marker in (
+            "J01-FIXTURE-POSITIVE-01",
+            "J01-FIXTURE-STALE-01",
+            "J01-FIXTURE-INTERRUPTED-01",
+            "`stale_readiness`",
+            "`outcome_unknown`",
+            "starts no Factorio process",
+            "grants no live Play",
+        ):
+            self.assertIn(marker, contract)
+
     def test_dependency_cycle_is_rejected(self) -> None:
         invalid = copy.deepcopy(self.plan)
         invalid["workunit"][0]["depends_on"] = [invalid["workunit"][1]["id"]]

@@ -23,6 +23,7 @@ class FacManPresentationTests(unittest.TestCase):
         snapshot = copy.deepcopy(
             generate_presentation_fixtures.snapshots()["refused"]
         )
+        self.assertEqual(snapshot["refusal"]["code"], "stale_readiness")
         snapshot["refusal"]["current_readiness_revision"] = 7
         problems = facman_presentation_check.validate_snapshot(snapshot, "refused")
         self.assertTrue(any("must exceed observed" in problem for problem in problems))
