@@ -889,7 +889,10 @@ static void run_runtime_probe(FacManGtkShell *shell)
     gchar *theme_name = NULL;
     g_object_get(gtk_settings_get_default(), "gtk-theme-name", &theme_name, NULL);
     gchar *lower_theme = theme_name != NULL ? g_ascii_strdown(theme_name, -1) : NULL;
-    gboolean high_contrast = lower_theme != NULL && g_strrstr(lower_theme, "highcontrast") != NULL;
+    const gchar *theme_override = g_getenv("GTK_THEME");
+    gchar *lower_override = theme_override != NULL ? g_ascii_strdown(theme_override, -1) : NULL;
+    gboolean high_contrast = (lower_theme != NULL && g_strrstr(lower_theme, "highcontrast") != NULL)
+        || (lower_override != NULL && g_strrstr(lower_override, "highcontrast") != NULL);
     const gchar *gtk_modules = g_getenv("GTK_MODULES");
     gboolean at_spi_bridge = gtk_modules != NULL
         && g_strrstr(gtk_modules, "atk-bridge") != NULL
@@ -897,6 +900,7 @@ static void run_runtime_probe(FacManGtkShell *shell)
         && at_spi_bus_available();
     g_string_append_printf(facts, "high_contrast=%s\n", high_contrast ? "pass" : "fail");
     g_string_append_printf(facts, "at_spi_bridge=%s\n", at_spi_bridge ? "pass" : "fail");
+    g_free(lower_override);
     g_free(lower_theme);
     g_free(theme_name);
 

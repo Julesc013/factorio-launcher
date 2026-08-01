@@ -180,6 +180,7 @@ class ClassicPreviewPackageProofTests(unittest.TestCase):
         self.assertIn("kill((pid_t)-pid, SIGTERM)", gtk_client)
         self.assertIn("FACMAN_PREVIEW_RPC_TIMEOUT_SECONDS", gtk_client)
         self.assertIn('"org.a11y.Bus"', gtk_main)
+        self.assertIn('g_getenv("GTK_THEME")', gtk_main)
         at_spi = (ROOT / "tools/ci/gtk_atspi_probe.py").read_text(encoding="utf-8")
         session = (ROOT / "tools/ci/gtk_preview_accessibility_session.sh").read_text(encoding="utf-8")
         self.assertIn("Atspi.get_desktop(0)", at_spi)
