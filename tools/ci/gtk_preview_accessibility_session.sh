@@ -38,11 +38,12 @@ NO_AT_BRIDGE=0 \
 app_pid=$!
 
 probe_passed=false
-for _ in {1..40}; do
+for _ in {1..30}; do
   if ! kill -0 "${app_pid}" 2>/dev/null; then
     break
   fi
-  if /usr/bin/python3 "$(dirname "$0")/gtk_atspi_probe.py" \
+  if timeout --signal=KILL 1s \
+      /usr/bin/python3 "$(dirname "$0")/gtk_atspi_probe.py" \
       --output "${FACMAN_PREVIEW_ATSPI_REPORT}"; then
     probe_passed=true
     break

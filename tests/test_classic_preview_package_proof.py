@@ -185,6 +185,7 @@ class ClassicPreviewPackageProofTests(unittest.TestCase):
         self.assertIn("Atspi.get_desktop(0)", at_spi)
         self.assertIn("primary_role != \"push button\"", at_spi)
         self.assertIn('rm -f -- "${FACMAN_PREVIEW_ORCA_MARKER}"', session)
+        self.assertIn("timeout --signal=KILL 1s", session)
 
     def test_ci_runs_both_hosted_preview_proofs(self) -> None:
         workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
