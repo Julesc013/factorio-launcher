@@ -4,14 +4,16 @@ This is the supported C1 reference presentation for Windows 10/11 x64. It
 targets .NET Framework 4.8, uses native Windows controls and System Native
 appearance, declares Per-Monitor V2 DPI awareness, and remains a thin frontend.
 It must not own install mutation, mod resolution, launch-plan generation, or
-live Play authority.
+live Play authority. Production state is backend-derived over the existing
+bounded process RPC; the backend must enable and admit exact `run.execute`.
 
 `C1ShellForm` is the product entrypoint. It exposes Instances, Installations,
 Activity, and Settings/About as the four player-facing pages, with a persistent
 Launch Deck. The deterministic `facman.presentation.v0` fixtures are embedded
-in the executable so readiness, exact `stale_readiness` refusal, running,
+only for explicit `FACMAN_PRESENTATION_MODE=evidence` review of readiness,
+exact `stale_readiness` refusal, running,
 ordinary exit, Last Run, relaunch, interruption, and recovery can be reviewed
-without a live process route.
+without a live process route. Live mode never uses them as production state.
 
 ## Advanced command explorer
 

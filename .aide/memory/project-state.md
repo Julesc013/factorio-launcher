@@ -29,7 +29,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Readiness dimensions
 
 - playability: `not_yet_playable`;
-- user workflow: `advanced_command_surface_only`;
+- user workflow: `native_c1_shell_backend_projection_release_candidate_ready`;
 - safety authority: `qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_authority`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
@@ -135,7 +135,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.
 - Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.
 - Qualification-05 is accepted and revalidation-04 is staged but not prepared; Jules is designated as operator, while observer capture, prepare, permit, execution, verdict, and route authority remain separately gated.
-- The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
+- The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.
 - AppKit remains compile-only until an actual bundle runtime invocation is recorded.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 

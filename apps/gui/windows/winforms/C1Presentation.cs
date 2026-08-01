@@ -27,6 +27,14 @@ namespace FacMan.WinForms
         public string Contract { get { return Text("contract"); } }
         public string FixtureState { get { return Text("fixture_state"); } }
         public string AuthorityScope { get { return Text("authority_scope"); } }
+        public string SourceMode
+        {
+            get
+            {
+                string mode = Text("source_mode");
+                return String.IsNullOrWhiteSpace(mode) ? "evidence_fixture" : mode;
+            }
+        }
 
         public string Text(params string[] path)
         {
@@ -53,7 +61,9 @@ namespace FacMan.WinForms
         public IList<object> Records(params string[] path)
         {
             object[] values = Value(path) as object[];
-            return values == null ? new List<object>().AsReadOnly() : Array.AsReadOnly(values);
+            if (values != null) return Array.AsReadOnly(values);
+            IList<object> list = Value(path) as IList<object>;
+            return list == null ? new List<object>().AsReadOnly() : new List<object>(list).AsReadOnly();
         }
 
         private object Value(params string[] path)
@@ -79,6 +89,19 @@ namespace FacMan.WinForms
             if (presentation.Contract != "facman.presentation.v0")
                 throw new InvalidDataException("Unsupported presentation contract: " + presentation.Contract);
             return presentation;
+        }
+
+        internal IDictionary<string, object> CloneRecord()
+        {
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            serializer.MaxJsonLength = 1024 * 1024;
+            return serializer.DeserializeObject(serializer.Serialize(root)) as IDictionary<string, object>;
+        }
+
+        internal static C1Presentation FromRecord(IDictionary<string, object> record)
+        {
+            if (record == null) throw new ArgumentNullException("record");
+            return new C1Presentation(record);
         }
     }
 

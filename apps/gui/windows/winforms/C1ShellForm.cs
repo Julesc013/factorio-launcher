@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FacMan.WinForms
@@ -15,7 +17,10 @@ namespace FacMan.WinForms
     /// </summary>
     public sealed class C1ShellForm : Form
     {
-        private readonly C1FixturePresentationStore presentationStore;
+        private readonly C1FixturePresentationStore fixtureStore;
+        private readonly C1LivePresentationStore liveStore;
+        private readonly CancellationTokenSource lifetime = new CancellationTokenSource();
+        private readonly bool evidenceMode;
         private readonly ToolTip toolTip;
         private TabControl pages;
         private ListView instancesList;
@@ -34,6 +39,7 @@ namespace FacMan.WinForms
         private Label deckReadiness;
         private Label deckLastRun;
         private Label deckRefusal;
+        private Label deckSourceNotice;
         private Button primaryAction;
         private Button secondaryAction;
         private ToolStripStatusLabel statusLabel;
@@ -41,7 +47,12 @@ namespace FacMan.WinForms
 
         public C1ShellForm()
         {
-            presentationStore = new C1FixturePresentationStore();
+            evidenceMode = String.Equals(
+                Environment.GetEnvironmentVariable("FACMAN_PRESENTATION_MODE"),
+                "evidence",
+                StringComparison.OrdinalIgnoreCase);
+            fixtureStore = new C1FixturePresentationStore();
+            liveStore = new C1LivePresentationStore();
             toolTip = new ToolTip();
 
             Text = "FacMan";
@@ -58,6 +69,8 @@ namespace FacMan.WinForms
 
             BuildLayout();
             RenderPresentation();
+            Shown += async delegate { if (!evidenceMode) await RefreshLiveAsync(); };
+            FormClosed += delegate { lifetime.Cancel(); lifetime.Dispose(); };
         }
 
         private void BuildLayout()
@@ -109,13 +122,25 @@ namespace FacMan.WinForms
             navigate.DropDownItems.Add(NavigationItem("A&dvanced", Keys.Control | Keys.D5, 4));
             menu.Items.Add(navigate);
 
-            ToolStripMenuItem evidence = new ToolStripMenuItem("&Evidence");
-            evidence.DropDownItems.Add(EvidenceItem("&Ready", "positive"));
-            evidence.DropDownItems.Add(EvidenceItem("Stale &readiness", "refused"));
-            evidence.DropDownItems.Add(EvidenceItem("R&unning", "running"));
-            evidence.DropDownItems.Add(EvidenceItem("E&xited / Last Run", "exited"));
-            evidence.DropDownItems.Add(EvidenceItem("&Interrupted / recovery", "interrupted"));
-            menu.Items.Add(evidence);
+            if (evidenceMode)
+            {
+                ToolStripMenuItem evidence = new ToolStripMenuItem("&Evidence mode");
+                evidence.DropDownItems.Add(EvidenceItem("&Ready", "positive"));
+                evidence.DropDownItems.Add(EvidenceItem("Stale &readiness", "refused"));
+                evidence.DropDownItems.Add(EvidenceItem("R&unning", "running"));
+                evidence.DropDownItems.Add(EvidenceItem("E&xited / Last Run", "exited"));
+                evidence.DropDownItems.Add(EvidenceItem("&Interrupted / recovery", "interrupted"));
+                menu.Items.Add(evidence);
+            }
+            else
+            {
+                ToolStripMenuItem live = new ToolStripMenuItem("&Live backend");
+                ToolStripMenuItem refresh = new ToolStripMenuItem("&Refresh workspace");
+                refresh.ShortcutKeys = Keys.F5;
+                refresh.Click += async delegate { await RefreshLiveAsync(); };
+                live.DropDownItems.Add(refresh);
+                menu.Items.Add(live);
+            }
             menu.AccessibleName = "FacMan application menu";
             return menu;
         }
@@ -159,6 +184,14 @@ namespace FacMan.WinForms
             instancesList.Columns.Add("Readiness", 130);
             instancesList.Columns.Add("Journey state", 150);
             instancesList.Columns.Add("Installation", 360);
+            instancesList.SelectedIndexChanged += async delegate
+            {
+                if (rendering || evidenceMode || instancesList.SelectedItems.Count == 0) return;
+                string instanceId = Convert.ToString(instancesList.SelectedItems[0].Tag);
+                if (String.IsNullOrWhiteSpace(instanceId)) return;
+                await liveStore.SelectInstanceAsync(instanceId, lifetime.Token);
+                RenderPresentation();
+            };
             layout.Controls.Add(instancesList, 0, 2);
 
             readinessSummary = BodyLabel("Selected instance readiness");
@@ -269,7 +302,7 @@ namespace FacMan.WinForms
             evidenceState.AccessibleName = "Deterministic evidence state";
             evidenceState.AccessibleDescription =
                 "Selects one embedded fixture for presentation review; it is not a live product action.";
-            foreach (string state in presentationStore.States) evidenceState.Items.Add(state);
+            foreach (string state in fixtureStore.States) evidenceState.Items.Add(state);
             chooserLabel.Click += delegate { evidenceState.Focus(); };
             evidenceState.SelectedIndexChanged += delegate
             {
@@ -278,12 +311,13 @@ namespace FacMan.WinForms
             };
             chooser.Controls.Add(chooserLabel);
             chooser.Controls.Add(evidenceState);
+            chooser.Visible = evidenceMode;
             layout.Controls.Add(chooser, 0, 3);
 
             Label boundary = BodyLabel("C1 authority boundary");
-            boundary.Text =
-                "The embedded journey starts no live Factorio process and grants no route, permit, verdict, " +
-                "promotion, publication, daemon, direct-client, transport-rewrite, or Universal Launcher ABI authority.";
+            boundary.Text = evidenceMode
+                ? "Explicit evidence/development mode uses unchanged deterministic fixtures and starts no live process."
+                : "Live mode derives state from bounded process RPC. It grants no route, permit, verdict, promotion, publication, daemon, direct-client, transport rewrite, or Universal Launcher ABI authority.";
             layout.Controls.Add(boundary, 0, 4);
             return page;
         }
@@ -362,11 +396,10 @@ namespace FacMan.WinForms
             actions.Controls.Add(secondaryAction);
             layout.Controls.Add(actions, 3, 1);
 
-            Label notice = DeckLabel("Fixture authority notice");
-            notice.Text = "Deterministic fixture presentation — no live Play authority.";
-            notice.ForeColor = SystemColors.GrayText;
-            layout.SetColumnSpan(notice, 4);
-            layout.Controls.Add(notice, 0, 2);
+            deckSourceNotice = DeckLabel("Presentation source and authority notice");
+            deckSourceNotice.ForeColor = SystemColors.GrayText;
+            layout.SetColumnSpan(deckSourceNotice, 4);
+            layout.Controls.Add(deckSourceNotice, 0, 2);
             return deck;
         }
 
@@ -375,7 +408,7 @@ namespace FacMan.WinForms
             rendering = true;
             try
             {
-                C1Presentation view = presentationStore.Current;
+                C1Presentation view = CurrentView;
                 string name = view.Text("selected_instance", "name");
                 string journey = view.Text("selected_instance", "journey_state");
                 string readiness = view.Text("selected_instance", "readiness", "state");
@@ -384,12 +417,23 @@ namespace FacMan.WinForms
 
                 instancesSummary.Text = view.Text("pages", "instances", "summary");
                 instancesList.Items.Clear();
-                ListViewItem instance = new ListViewItem(name);
-                instance.SubItems.Add(readiness);
-                instance.SubItems.Add(journey);
-                instance.SubItems.Add(installation);
-                instance.Selected = true;
-                instancesList.Items.Add(instance);
+                IList<object> instanceItems = view.Records("pages", "instances", "items");
+                foreach (object value in instanceItems)
+                {
+                    IDictionary<string, object> item = value as IDictionary<string, object>;
+                    if (item == null) continue;
+                    string itemName = RecordText(item, "name");
+                    string itemJourney = RecordText(item, "journey_state");
+                    bool selected = String.Equals(RecordText(item, "instance_id"), view.Text("selected_instance", "instance_id"), StringComparison.Ordinal);
+                    ListViewItem instance = new ListViewItem(itemName);
+                    instance.Name = RecordText(item, "instance_id");
+                    instance.Tag = RecordText(item, "instance_id");
+                    instance.SubItems.Add(selected ? readiness : "Select to inspect");
+                    instance.SubItems.Add(itemJourney);
+                    instance.SubItems.Add(selected ? installation : "Backend record");
+                    instance.Selected = selected;
+                    instancesList.Items.Add(instance);
+                }
                 readinessSummary.Text = "Readiness: " + readiness + " (revision " +
                     view.Number("selected_instance", "readiness", "revision") + ")\r\n" + readinessText;
 
@@ -399,10 +443,27 @@ namespace FacMan.WinForms
 
                 installationsSummary.Text = view.Text("pages", "installations", "summary");
                 installationsList.Items.Clear();
-                ListViewItem install = new ListViewItem(installation);
-                install.SubItems.Add(view.Text("selected_instance", "installation", "kind"));
-                install.SubItems.Add(view.Text("selected_instance", "installation", "version"));
-                installationsList.Items.Add(install);
+                IList<object> installItems = view.Records("pages", "installations", "items");
+                if (installItems.Count == 0)
+                {
+                    ListViewItem install = new ListViewItem(installation);
+                    install.SubItems.Add(view.Text("selected_instance", "installation", "kind"));
+                    install.SubItems.Add(view.Text("selected_instance", "installation", "version"));
+                    installationsList.Items.Add(install);
+                }
+                else
+                {
+                    foreach (object value in installItems)
+                    {
+                        IDictionary<string, object> item = value as IDictionary<string, object>;
+                        if (item == null) continue;
+                        string installId = FirstRecordText(item, "install_id", "id");
+                        ListViewItem install = new ListViewItem(installId);
+                        install.SubItems.Add(FirstRecordText(item, "source", "ownership", "kind"));
+                        install.SubItems.Add(FirstRecordText(item, "version", "observed_version"));
+                        installationsList.Items.Add(install);
+                    }
+                }
 
                 activitySummary.Text = view.Text("pages", "activity", "summary");
                 RenderOperations(view);
@@ -424,9 +485,12 @@ namespace FacMan.WinForms
                 AcceptButton = primaryAction;
 
                 evidenceScope.Text = "Presentation: " + view.Contract + "\r\n" +
-                    "Fixture state: " + view.FixtureState + "\r\nAuthority scope: " + view.AuthorityScope;
-                evidenceState.SelectedItem = view.FixtureState;
-                Announce("Showing " + view.FixtureState + " fixture state.");
+                    "Source mode: " + view.SourceMode + "\r\nAuthority scope: " + view.AuthorityScope;
+                if (evidenceMode) evidenceState.SelectedItem = view.FixtureState;
+                deckSourceNotice.Text = evidenceMode
+                    ? "EXPLICIT EVIDENCE / DEVELOPMENT MODE — unchanged deterministic fixture; no live Play authority."
+                    : "LIVE BACKEND MODE — state is derived from registered bounded RPC commands; Play remains backend gated.";
+                Announce(evidenceMode ? "Showing " + view.FixtureState + " evidence fixture." : "Showing backend-derived workspace state.");
             }
             finally
             {
@@ -485,15 +549,22 @@ namespace FacMan.WinForms
             button.Tag = RecordText(action, "action_id");
             button.AccessibleName = RecordText(action, "accessibility_label");
             button.AccessibleDescription = primary
-                ? "Launch Deck primary action. Backend-owned semantics; fixture-only execution in this prototype."
+                ? (evidenceMode
+                    ? "Launch Deck primary action in explicit deterministic evidence mode."
+                    : "Launch Deck primary action. Exact backend-owned command and refusal semantics.")
                 : "Launch Deck secondary action. Backend-owned semantics.";
             button.Enabled = availability == "available" || availability == "refused";
             toolTip.SetToolTip(button, RecordText(action, "command_id") + " | " + availability);
         }
 
-        private void InvokeAction(string actionId)
+        private async void InvokeAction(string actionId)
         {
-            C1Presentation view = presentationStore.Current;
+            C1Presentation view = CurrentView;
+            if (!evidenceMode)
+            {
+                await InvokeLiveActionAsync(actionId);
+                return;
+            }
             if (actionId == "instance.play" && view.FixtureState == "refused")
             {
                 string message = RefusalText(view);
@@ -507,7 +578,7 @@ namespace FacMan.WinForms
                     "Select the deterministic C1 Vanilla fixture instance? No live files will be changed.",
                     "Create fixture instance", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
                 if (answer != DialogResult.OK) return;
-                presentationStore.Select("positive");
+                fixtureStore.Select("positive");
             }
             else if (actionId == "activity.show_operation" || actionId == "recovery.inspect")
             {
@@ -522,19 +593,124 @@ namespace FacMan.WinForms
                     "Recover the deterministic fixture record? Recovery does not auto-launch.",
                     "Recover operation", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
                 if (answer != DialogResult.OK) return;
-                presentationStore.Apply(actionId);
+                fixtureStore.Apply(actionId);
             }
             else
             {
-                presentationStore.Apply(actionId);
+                fixtureStore.Apply(actionId);
             }
             RenderPresentation();
         }
 
         private void SelectEvidenceState(string state)
         {
-            presentationStore.Select(state);
+            if (!evidenceMode) return;
+            fixtureStore.Select(state);
             RenderPresentation();
+        }
+
+        private C1Presentation CurrentView
+        {
+            get { return evidenceMode ? fixtureStore.Current : liveStore.Current; }
+        }
+
+        private async Task RefreshLiveAsync()
+        {
+            Announce("Inspecting backend workspace...");
+            Enabled = false;
+            try
+            {
+                await liveStore.RefreshAsync(lifetime.Token);
+                RenderPresentation();
+            }
+            finally
+            {
+                Enabled = true;
+            }
+        }
+
+        private async Task InvokeLiveActionAsync(string actionId)
+        {
+            if (actionId == "activity.show_operation" || actionId == "recovery.inspect")
+            {
+                pages.SelectedIndex = 2;
+                await RefreshLiveAsync();
+                activityList.Focus();
+                return;
+            }
+            if (actionId == "instance.readiness.refresh" || actionId == "installation.scan")
+            {
+                await RefreshLiveAsync();
+                return;
+            }
+            if (actionId == "instance.create")
+            {
+                string installId = liveStore.FirstInstallId;
+                if (String.IsNullOrWhiteSpace(installId))
+                {
+                    MessageBox.Show(this, "Scan and register a supported installation before creating an instance.", "No installation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                string instanceId = Prompt("New instance", "Portable instance ID:", "c1-vanilla");
+                if (instanceId == null) return;
+                string displayName = Prompt("New instance", "Display name:", "C1 Vanilla");
+                if (displayName == null) return;
+                DialogResult answer = MessageBox.Show(this,
+                    "Create " + displayName + " from backend installation " + installId + "?",
+                    "Create instance", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (answer != DialogResult.OK) return;
+                CommandResult created = await liveStore.CreateInstanceAsync(instanceId, displayName, installId, lifetime.Token);
+                ShowResultIfRefused(created, "Instance creation refused");
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "recovery.apply")
+            {
+                string transactionId = liveStore.RecoveryTransactionId;
+                if (String.IsNullOrWhiteSpace(transactionId)) return;
+                DialogResult answer = MessageBox.Show(this,
+                    "Apply the backend recovery plan for " + transactionId + "? Recovery will not auto-launch Factorio.",
+                    "Recover operation", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                if (answer != DialogResult.OK) return;
+                CommandResult recovered = await liveStore.ApplyRecoveryAsync(transactionId, lifetime.Token);
+                ShowResultIfRefused(recovered, "Recovery refused");
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "instance.play")
+            {
+                Announce("Revalidating backend readiness before Play...");
+                CommandResult result = await liveStore.PlayAsync(lifetime.Token);
+                if (result.Refused)
+                    MessageBox.Show(this, result.RefusalCode + "\r\n" + result.RefusalReason, "Play refused", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                RenderPresentation();
+            }
+        }
+
+        private void ShowResultIfRefused(CommandResult result, string title)
+        {
+            if (result != null && result.Refused)
+                MessageBox.Show(this, result.RefusalCode + "\r\n" + result.RefusalReason, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        private string Prompt(string title, string label, string initialValue)
+        {
+            using (Form prompt = new Form())
+            {
+                prompt.Text = title;
+                prompt.ClientSize = new Size(430, 118);
+                prompt.StartPosition = FormStartPosition.CenterParent;
+                prompt.FormBorderStyle = FormBorderStyle.FixedDialog;
+                prompt.MaximizeBox = false;
+                prompt.MinimizeBox = false;
+                Label caption = new Label { Text = label, Left = 12, Top = 14, Width = 400 };
+                TextBox value = new TextBox { Text = initialValue, Left = 12, Top = 40, Width = 400 };
+                Button ok = new Button { Text = "OK", DialogResult = DialogResult.OK, Left = 250, Top = 76, Width = 75 };
+                Button cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 337, Top = 76, Width = 75 };
+                prompt.Controls.Add(caption); prompt.Controls.Add(value); prompt.Controls.Add(ok); prompt.Controls.Add(cancel);
+                prompt.AcceptButton = ok; prompt.CancelButton = cancel;
+                return prompt.ShowDialog(this) == DialogResult.OK && !String.IsNullOrWhiteSpace(value.Text) ? value.Text.Trim() : null;
+            }
         }
 
         private void Announce(string message)
@@ -666,6 +842,16 @@ namespace FacMan.WinForms
             object value;
             return record != null && record.TryGetValue(key, out value) && value != null
                 ? Convert.ToString(value) : String.Empty;
+        }
+
+        private static string FirstRecordText(IDictionary<string, object> record, params string[] keys)
+        {
+            foreach (string key in keys)
+            {
+                string value = RecordText(record, key);
+                if (!String.IsNullOrWhiteSpace(value)) return value;
+            }
+            return String.Empty;
         }
     }
 }

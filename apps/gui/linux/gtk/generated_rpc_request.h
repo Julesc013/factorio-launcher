@@ -6,4 +6,9 @@
 
 #include <glib.h>
 
+gchar *facman_preview_generated_rpc_request_with_payload(
+    const gchar *workspace,
+    const gchar *command,
+    const gchar *payload_json,
+    gboolean dry_run);
 gchar *facman_preview_generated_rpc_request(const gchar *workspace, const gchar *command);

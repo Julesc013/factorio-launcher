@@ -8,17 +8,17 @@ accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
 active_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
 last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05"
-current_dev_revision = "f0b9bac022e428fb19db27a2e320941c9e193899"
+current_dev_revision = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"
 canonical_main_revision = "133da925af13d475c959a336e0b0eec0427a0381"
 promotion_source_revision = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
 planning_promotion_revision = "133da925af13d475c959a336e0b0eec0427a0381"
-dev_synchronization_revision = "f0b9bac022e428fb19db27a2e320941c9e193899"
+dev_synchronization_revision = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout_revision = "f0b9bac022e428fb19db27a2e320941c9e193899"
-observed_branch_head = "f0b9bac022e428fb19db27a2e320941c9e193899"
+truth_closeout_revision = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"
+observed_branch_head = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -36,7 +36,7 @@ known_blockers = [
   "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
   "Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.",
   "Qualification-05 is accepted and revalidation-04 is staged but not prepared; Jules is designated as operator, while observer capture, prepare, permit, execution, verdict, and route authority remain separately gated.",
-  "The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.",
+  "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
   "AppKit remains compile-only until an actual bundle runtime invocation is recorded.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
 ]
@@ -60,7 +60,7 @@ work_unit = "FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01"
 promotion_source_revision = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
 canonical_main_revision = "133da925af13d475c959a336e0b0eec0427a0381"
 planning_promotion_revision = "133da925af13d475c959a336e0b0eec0427a0381"
-dev_synchronization_revision = "f0b9bac022e428fb19db27a2e320941c9e193899"
+dev_synchronization_revision = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"
 shared_tree_identity = "431181449a4284ef93f0eaf9a2d5328fee7c9ab8"
 main_is_ancestor_of_dev = true
 trees_equal = true
@@ -116,12 +116,25 @@ local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
-user_workflow = "advanced_command_surface_only"
+user_workflow = "native_c1_shell_backend_projection_release_candidate_ready"
 safety_authority = "qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
 user_validation = "not_started"
+
+[facman_c1_shell_integration]
+work_unit = "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
+status = "complete_backend_derived_presentation"
+windows = "supported_reference_shell_complete_release_candidate_ready"
+appkit = "native_preview_shell_complete_runtime_qualification_pending"
+gtk = "native_preview_shell_complete_runtime_qualification_pending"
+presentation = "facman.presentation.v0_local_experimental"
+transport = "existing_bounded_process_rpc"
+evidence_mode = "explicit_facman_presentation_mode_evidence"
+play = "backend_gated_exact_registered_route_currently_unavailable"
+last_run = "backend_completed_session_view_copy_non_authoritative_revision_bound"
+recovery = "backend_journal_inspect_explicit_apply_no_auto_launch"
 
 [instance_product_program]
 status = "gate2_read_only_projection_complete"
