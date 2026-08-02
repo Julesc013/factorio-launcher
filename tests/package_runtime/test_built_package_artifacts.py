@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -140,6 +141,20 @@ class BuiltPackageArtifactTests(unittest.TestCase):
         for root in [self.portable_cli]:
             for path in text_payloads(root):
                 self.assertNotIn(forbidden, path.read_text(encoding="utf-8"))
+
+    def test_package_text_excludes_concrete_developer_machine_paths(self) -> None:
+        patterns = (
+            re.compile(r"[a-z]:[\\/]users[\\/][^\\/\r\n<>]{1,64}[\\/]", re.IGNORECASE),
+            re.compile(r"[a-z]:[\\/]projects[\\/]", re.IGNORECASE),
+            re.compile(r"(?<![a-z0-9])/(?:home|users)/[^/\r\n<>]{1,64}/", re.IGNORECASE),
+        )
+        for root in [self.portable_cli]:
+            for path in text_payloads(root):
+                text = path.read_text(encoding="utf-8", errors="ignore")
+                self.assertFalse(
+                    any(pattern.search(text) for pattern in patterns),
+                    path.relative_to(root).as_posix(),
+                )
 
 
 class BuiltPackageOutputOwnershipTests(unittest.TestCase):

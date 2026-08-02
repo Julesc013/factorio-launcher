@@ -222,12 +222,27 @@ def copy_support_payloads(
     profile: dict[str, Any],
     install_root: Path,
 ) -> None:
-    copy_tree(install_root / "share" / "doc" / "facman" / "release", package_root / "docs" / "release")
+    copy_release_documents(
+        install_root / "share" / "doc" / "facman" / "release",
+        package_root / "docs" / "release",
+    )
     copy_tree(install_root / "share" / "facman" / "release", package_root / "release")
     copy_file(install_root / "share" / "doc" / "facman" / "README.md", package_root / "docs" / "README.md")
     licenses = install_root / "share" / "doc" / "facman" / "licenses"
     for license_name in string_list(profile.get("licenses")):
         copy_file(licenses / Path(license_name).name, package_root / "licenses" / Path(license_name).name)
+
+
+def copy_release_documents(source: Path, destination: Path) -> None:
+    if not source.is_dir():
+        raise ValueError(f"missing release-document directory: {source}")
+    destination.mkdir(parents=True, exist_ok=True)
+    # Nested checkpoint evidence is repository provenance, not product documentation.
+    for path in sorted(source.iterdir(), key=lambda item: item.name):
+        if path.is_symlink():
+            raise ValueError(f"release document must not be linked: {path}")
+        if path.is_file():
+            copy_file(path, destination / path.name)
 
 
 def write_package_manifest(

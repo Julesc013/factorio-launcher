@@ -55,6 +55,14 @@ BLOCKERS = (
     "exact_live_play_route_authority_absent",
     "authenticode_signing_and_publication_deferred",
 )
+WINDOWS_DEVELOPER_PATHS = (
+    re.compile(rb"[a-z]:\\users\\[^\\\r\n<>]{1,64}\\", re.IGNORECASE),
+    re.compile(rb"[a-z]:\\projects\\", re.IGNORECASE),
+    re.compile(rb"[a-z]:\\a\\factorio-launcher\\", re.IGNORECASE),
+)
+UNIX_DEVELOPER_PATHS = (
+    re.compile(rb"(?<![a-z0-9])/(?:home|users)/[^/\r\n<>]{1,64}/", re.IGNORECASE),
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -130,6 +138,7 @@ def inspect_candidate(
         "source revision",
     )
     require_equal(build_info.get("source_dirty"), False, "clean source")
+    require_no_developer_machine_paths(package_root)
     if package_hash_manifest.verify_manifest(package_root):
         raise ValueError("candidate package hash manifest failed verification")
     provenance = artifact.with_name(artifact.name + ".provenance.v1.json")
@@ -183,6 +192,7 @@ def evidence_report(
             "live_presentation_mode": "pass",
             "explicit_evidence_mode": "pass",
             "source_clean": True,
+            "developer_machine_paths": "absent",
         },
         "qualification": {
             "package_construction": "pass",
@@ -231,6 +241,17 @@ def require_source_boundaries() -> None:
         raise ValueError("support export command is absent from the generated backend catalog")
     if 'InvokeRegisteredAsync("run.execute"' not in live_store:
         raise ValueError("WinForms live presentation does not dispatch the exact registered route")
+
+
+def require_no_developer_machine_paths(root: Path) -> None:
+    for path in sorted(candidate for candidate in root.rglob("*") if candidate.is_file()):
+        payload = path.read_bytes().replace(b"\x00", b"")
+        windows_payload = payload.replace(b"/", b"\\")
+        if any(pattern.search(windows_payload) for pattern in WINDOWS_DEVELOPER_PATHS) or any(
+            pattern.search(payload) for pattern in UNIX_DEVELOPER_PATHS
+        ):
+            relative = path.relative_to(root).as_posix()
+            raise ValueError(f"candidate contains a developer-machine path: {relative}")
 
 
 def require_equal(actual: Any, expected: Any, label: str) -> None:

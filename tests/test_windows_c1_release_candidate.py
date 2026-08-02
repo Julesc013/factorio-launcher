@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from tools import json_contract, windows_c1_release_candidate
+from tools.package import pipeline as package_pipeline
 
 
 class WindowsC1ReleaseCandidateTests(unittest.TestCase):
@@ -154,11 +155,38 @@ class WindowsC1ReleaseCandidateTests(unittest.TestCase):
             ),
         )
         self.assertEqual("pass", report["package"]["component_closure"])
+        self.assertEqual("absent", report["package"]["developer_machine_paths"])
         self.assertFalse(report["claims"]["release_candidate"])
         self.assertFalse(report["claims"]["supported_release"])
         self.assertEqual(
             "blocked_by_exact_route_authority", report["qualification"]["live_play"]
         )
+
+    def test_candidate_rejects_concrete_developer_machine_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            leaked = root / "docs/release/checkpoints/historical.md"
+            leaked.parent.mkdir(parents=True)
+            leaked.write_text(
+                "stage: C:\\Users\\OperatorName\\AppData\\Local\\Temp\\facman-stage\\\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "developer-machine path"):
+                windows_c1_release_candidate.require_no_developer_machine_paths(root)
+
+    def test_packaged_release_documents_exclude_historical_checkpoint_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            source = root / "source"
+            destination = root / "destination"
+            source.mkdir()
+            (source / "release-notes.md").write_text("release\n", encoding="utf-8")
+            checkpoint = source / "checkpoints/historical.md"
+            checkpoint.parent.mkdir()
+            checkpoint.write_text("host evidence\n", encoding="utf-8")
+            package_pipeline.copy_release_documents(source, destination)
+            self.assertTrue((destination / "release-notes.md").is_file())
+            self.assertFalse((destination / "checkpoints").exists())
 
     def test_required_closure_includes_shell_backend_pins_and_release_material(self) -> None:
         required = set(windows_c1_release_candidate.REQUIRED_PATHS)
