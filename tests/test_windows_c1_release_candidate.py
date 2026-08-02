@@ -59,9 +59,81 @@ class WindowsC1ReleaseCandidateTests(unittest.TestCase):
                     return_value=[],
                 ),
             ):
-                report = windows_c1_release_candidate.inspect_candidate(package, artifact)
+                report = windows_c1_release_candidate.inspect_candidate(
+                    package, artifact, revision
+                )
         self.assertEqual(revision, report["source_revision"])
         self.assertEqual("pass", report["qualification"]["package_construction"])
+
+    def test_candidate_inspection_rejects_unexpected_source_revision(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            package = root / "package"
+            for relative in windows_c1_release_candidate.REQUIRED_PATHS:
+                path = package / relative
+                if Path(relative).suffix or relative.startswith("licenses/"):
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text("fixture\n", encoding="utf-8")
+                else:
+                    path.mkdir(parents=True, exist_ok=True)
+            revision = "2" * 40
+            (package / "manifest/package.v1.toml").write_text(
+                'profile_id = "windows_legacy_winforms_x64"\n'
+                'target_os = "windows"\n'
+                'target_arch = "x64"\n'
+                'entrypoint = "bin/FacMan.WinForms.exe"\n'
+                f'source_revision = "{revision}"\n',
+                encoding="utf-8",
+            )
+            (package / "manifest/build_info.v1.json").write_text(
+                json.dumps({"source_commit": revision, "source_dirty": False}),
+                encoding="utf-8",
+            )
+            artifact = root / "FacMan-0.1.0-windows-x64-portable.zip"
+            artifact.write_bytes(b"candidate")
+            with self.assertRaisesRegex(ValueError, "candidate source revision"):
+                windows_c1_release_candidate.inspect_candidate(
+                    package, artifact, "3" * 40
+                )
+
+    def test_expected_source_revision_requires_exact_sha(self) -> None:
+        for revision in ("", "1" * 39, "A" * 40, "G" * 40, "1" * 41):
+            with self.subTest(revision=revision):
+                with self.assertRaisesRegex(ValueError, "40 lowercase hexadecimal"):
+                    windows_c1_release_candidate.require_revision(revision)
+
+    def test_repository_revision_is_an_exact_sha(self) -> None:
+        self.assertRegex(
+            windows_c1_release_candidate.repository_revision(), r"^[0-9a-f]{40}$"
+        )
+
+    def test_ci_binds_checkout_candidate_and_artifact_to_same_source(self) -> None:
+        workflow = (windows_c1_release_candidate.ROOT / ".github/workflows/ci.yml").read_text(
+            encoding="utf-8"
+        )
+        immutable_source = "${{ github.event.pull_request.head.sha || github.sha }}"
+        self.assertIn(f"FACMAN_CI_SOURCE_SHA: {immutable_source}", workflow)
+        self.assertIn(f"ref: {immutable_source}", workflow)
+        self.assertIn(f'--expected-source-revision "{immutable_source}"', workflow)
+        self.assertIn(f"windows-c1-release-candidate-{immutable_source}", workflow)
+
+    def test_ci_provenance_prefers_explicit_checked_out_source(self) -> None:
+        revision = "4" * 40
+        with mock.patch.dict(
+            "os.environ",
+            {
+                "GITHUB_ACTIONS": "true",
+                "GITHUB_SHA": "5" * 40,
+                "FACMAN_CI_SOURCE_SHA": revision,
+                "GITHUB_RUN_ID": "1",
+                "GITHUB_RUN_ATTEMPT": "1",
+                "GITHUB_WORKFLOW": "ci",
+                "GITHUB_REPOSITORY": "Julesc013/factorio-launcher",
+            },
+            clear=True,
+        ):
+            identity = windows_c1_release_candidate.provenance_build.ci_identity(revision)
+        self.assertEqual(revision, identity["source_sha"])
 
     def test_provisional_report_contains_package_proof_without_release_claim(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
