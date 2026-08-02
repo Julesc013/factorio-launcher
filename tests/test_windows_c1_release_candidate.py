@@ -188,6 +188,24 @@ class WindowsC1ReleaseCandidateTests(unittest.TestCase):
             self.assertTrue((destination / "release-notes.md").is_file())
             self.assertFalse((destination / "checkpoints").exists())
 
+    def test_packaged_release_metadata_excludes_repository_execution_truth(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            profile = package_pipeline.load_toml(
+                windows_c1_release_candidate.ROOT
+                / "release/profiles/windows_legacy_winforms_x64/profile.toml"
+            )
+            package_pipeline.copy_release_metadata(
+                windows_c1_release_candidate.ROOT / "release",
+                root / "release",
+                profile,
+            )
+            self.assertTrue((root / "release/index/release_index.v1.toml").is_file())
+            self.assertTrue((root / profile["package_manifest"]).is_file())
+            self.assertFalse((root / "release/index/project_status.v2.toml").exists())
+            self.assertFalse((root / "release/index/plan.v1.toml").exists())
+            windows_c1_release_candidate.require_no_developer_machine_paths(root)
+
     def test_required_closure_includes_shell_backend_pins_and_release_material(self) -> None:
         required = set(windows_c1_release_candidate.REQUIRED_PATHS)
         self.assertTrue(
