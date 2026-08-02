@@ -197,8 +197,11 @@ jobs:
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman.exe
       FACMAN_TUI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman-tui.exe
+      FACMAN_CI_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -254,10 +257,11 @@ jobs:
           --out build/c1-windows-rc/packages
           --dist build/c1-windows-rc/dist
           --evidence build/c1-windows-rc/evidence.v1.json
+          --expected-source-revision "${{ github.event.pull_request.head.sha || github.sha }}"
       - name: Preserve unsigned Windows C1 release-candidate evidence
         uses: actions/upload-artifact@v4
         with:
-          name: windows-c1-release-candidate-${{ github.sha }}
+          name: windows-c1-release-candidate-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             build/c1-windows-rc/dist/*.zip
             build/c1-windows-rc/dist/*.sha256

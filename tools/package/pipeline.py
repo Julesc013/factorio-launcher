@@ -222,12 +222,58 @@ def copy_support_payloads(
     profile: dict[str, Any],
     install_root: Path,
 ) -> None:
-    copy_tree(install_root / "share" / "doc" / "facman" / "release", package_root / "docs" / "release")
-    copy_tree(install_root / "share" / "facman" / "release", package_root / "release")
+    copy_release_documents(
+        install_root / "share" / "doc" / "facman" / "release",
+        package_root / "docs" / "release",
+    )
+    copy_release_metadata(
+        install_root / "share" / "facman" / "release",
+        package_root / "release",
+        profile,
+    )
     copy_file(install_root / "share" / "doc" / "facman" / "README.md", package_root / "docs" / "README.md")
     licenses = install_root / "share" / "doc" / "facman" / "licenses"
     for license_name in string_list(profile.get("licenses")):
         copy_file(licenses / Path(license_name).name, package_root / "licenses" / Path(license_name).name)
+
+
+def copy_release_documents(source: Path, destination: Path) -> None:
+    if not source.is_dir():
+        raise ValueError(f"missing release-document directory: {source}")
+    destination.mkdir(parents=True, exist_ok=True)
+    # Nested checkpoint evidence is repository provenance, not product documentation.
+    for path in sorted(source.iterdir(), key=lambda item: item.name):
+        if path.is_symlink():
+            raise ValueError(f"release document must not be linked: {path}")
+        if path.is_file():
+            copy_file(path, destination / path.name)
+
+
+def copy_release_metadata(
+    source: Path, destination: Path, profile: dict[str, Any]
+) -> None:
+    release_index_path = source / "index" / "release_index.v1.toml"
+    release_index = load_toml(release_index_path)
+    references = {
+        "release/index/release_index.v1.toml",
+        str(profile.get("package_manifest", "")),
+    }
+    for value in release_index.values():
+        if isinstance(value, str) and value.startswith("release/"):
+            references.add(value)
+        elif isinstance(value, list):
+            references.update(
+                item for item in value if isinstance(item, str) and item.startswith("release/")
+            )
+    for relative in sorted(references):
+        normalized = normalize_destination(relative)
+        if not normalized.startswith("release/"):
+            raise ValueError(f"release metadata path must remain under release/: {relative}")
+        destination_relative = PurePosixPath(normalized).relative_to("release")
+        copy_file(
+            source.joinpath(*destination_relative.parts),
+            destination.joinpath(*destination_relative.parts),
+        )
 
 
 def write_package_manifest(

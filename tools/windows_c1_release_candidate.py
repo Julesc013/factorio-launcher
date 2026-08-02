@@ -8,6 +8,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -53,6 +55,14 @@ BLOCKERS = (
     "exact_live_play_route_authority_absent",
     "authenticode_signing_and_publication_deferred",
 )
+WINDOWS_DEVELOPER_PATHS = (
+    re.compile(rb"[a-z]:\\users\\[^\\\r\n<>]{1,64}\\", re.IGNORECASE),
+    re.compile(rb"[a-z]:\\projects\\", re.IGNORECASE),
+    re.compile(rb"[a-z]:\\a\\factorio-launcher\\", re.IGNORECASE),
+)
+UNIX_DEVELOPER_PATHS = (
+    re.compile(rb"(?<![a-z0-9])/(?:home|users)/[^/\r\n<>]{1,64}/", re.IGNORECASE),
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -61,6 +71,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--dist", type=Path, required=True)
     parser.add_argument("--evidence", type=Path, required=True)
+    parser.add_argument("--expected-source-revision", required=True)
     parser.add_argument("--allow-dirty", action="store_true")
     args = parser.parse_args(argv)
     try:
@@ -68,6 +79,7 @@ def main(argv: list[str] | None = None) -> int:
             build_root=args.build_root.resolve(),
             out_root=args.out.resolve(),
             dist_root=args.dist.resolve(),
+            expected_source_revision=args.expected_source_revision,
             allow_dirty=args.allow_dirty,
         )
         evidence = args.evidence.resolve()
@@ -81,8 +93,15 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def construct(
-    *, build_root: Path, out_root: Path, dist_root: Path, allow_dirty: bool = False
+    *,
+    build_root: Path,
+    out_root: Path,
+    dist_root: Path,
+    expected_source_revision: str,
+    allow_dirty: bool = False,
 ) -> dict[str, Any]:
+    expected_source_revision = require_revision(expected_source_revision)
+    require_equal(repository_revision(), expected_source_revision, "checked-out source revision")
     package_root = package_build.build_profile(
         profile_id=PROFILE_ID,
         out_root=out_root,
@@ -96,12 +115,15 @@ def construct(
     artifact = artifacts[0]
     checksum = artifact.with_name(artifact.name + ".sha256")
     checksum.write_text(f"{sha256(artifact)}  {artifact.name}\n", encoding="utf-8", newline="\n")
-    return inspect_candidate(package_root, artifact)
+    return inspect_candidate(package_root, artifact, expected_source_revision)
 
 
-def inspect_candidate(package_root: Path, artifact: Path) -> dict[str, Any]:
+def inspect_candidate(
+    package_root: Path, artifact: Path, expected_source_revision: str
+) -> dict[str, Any]:
     package_root = package_root.resolve()
     artifact = artifact.resolve()
+    expected_source_revision = require_revision(expected_source_revision)
     require_paths(package_root)
     package = load_toml(package_root / "manifest/package.v1.toml")
     build_info = load_json(package_root / "manifest/build_info.v1.json")
@@ -110,7 +132,13 @@ def inspect_candidate(package_root: Path, artifact: Path) -> dict[str, Any]:
     require_equal(package.get("target_arch"), "x64", "target architecture")
     require_equal(package.get("entrypoint"), "bin/FacMan.WinForms.exe", "entrypoint")
     require_equal(package.get("source_revision"), build_info.get("source_commit"), "source identity")
+    require_equal(
+        package.get("source_revision"),
+        expected_source_revision,
+        "source revision",
+    )
     require_equal(build_info.get("source_dirty"), False, "clean source")
+    require_no_developer_machine_paths(package_root)
     if package_hash_manifest.verify_manifest(package_root):
         raise ValueError("candidate package hash manifest failed verification")
     provenance = artifact.with_name(artifact.name + ".provenance.v1.json")
@@ -164,6 +192,7 @@ def evidence_report(
             "live_presentation_mode": "pass",
             "explicit_evidence_mode": "pass",
             "source_clean": True,
+            "developer_machine_paths": "absent",
         },
         "qualification": {
             "package_construction": "pass",
@@ -214,9 +243,41 @@ def require_source_boundaries() -> None:
         raise ValueError("WinForms live presentation does not dispatch the exact registered route")
 
 
+def require_no_developer_machine_paths(root: Path) -> None:
+    for path in sorted(candidate for candidate in root.rglob("*") if candidate.is_file()):
+        payload = path.read_bytes().replace(b"\x00", b"")
+        windows_payload = payload.replace(b"/", b"\\")
+        if any(pattern.search(windows_payload) for pattern in WINDOWS_DEVELOPER_PATHS) or any(
+            pattern.search(payload) for pattern in UNIX_DEVELOPER_PATHS
+        ):
+            relative = path.relative_to(root).as_posix()
+            raise ValueError(f"candidate contains a developer-machine path: {relative}")
+
+
 def require_equal(actual: Any, expected: Any, label: str) -> None:
     if actual != expected:
         raise ValueError(f"candidate {label} must be {expected!r}, got {actual!r}")
+
+
+def require_revision(value: str) -> str:
+    if re.fullmatch(r"[0-9a-f]{40}", value) is None:
+        raise ValueError("expected source revision must be exactly 40 lowercase hexadecimal characters")
+    return value
+
+
+def repository_revision() -> str:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ValueError("cannot resolve the checked-out source revision") from exc
+    return require_revision(completed.stdout.strip())
 
 
 def load_json(path: Path) -> dict[str, Any]:
