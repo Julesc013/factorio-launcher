@@ -130,7 +130,7 @@ reachability = "optional"
             ) -> subprocess.CompletedProcess[str]:
                 del cwd, label
                 calls.append(command)
-                if command[:2] == ["git", "clone"]:
+                if command[:4] == ["git", "-c", "core.longpaths=true", "clone"]:
                     destination.mkdir()
                 return subprocess.CompletedProcess(command, 0, "", "")
 
@@ -158,9 +158,23 @@ reachability = "optional"
             ):
                 observation = remote_source_closure.clone_exact(spec, destination)
 
+        self.assertEqual(
+            calls[0][:4],
+            ["git", "-c", "core.longpaths=true", "clone"],
+        )
         self.assertIn("--no-local", calls[0])
         self.assertIn("--no-checkout", calls[0])
-        self.assertEqual(calls[1], ["git", "checkout", "--detach", spec.pin])
+        self.assertEqual(
+            calls[1],
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "checkout",
+                "--detach",
+                spec.pin,
+            ],
+        )
         self.assertTrue(observation["detached"])
         self.assertFalse(observation["local_clone"])
 
@@ -336,6 +350,7 @@ reachability = "optional"
         )
 
         self.assertEqual(json_contract.validate(report, schema), [])
+        self.assertTrue(report["clone_policy"]["git_core_longpaths"])
 
 
 def ctest_record(label: str, count: int, *, extra: str = "") -> dict[str, object]:
