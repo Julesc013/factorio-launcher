@@ -114,6 +114,7 @@ namespace FacMan.WinForms.C1Smoke
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Environment.SetEnvironmentVariable("FACMAN_PRESENTATION_MODE", "evidence");
             C1FixturePresentationStore store = new C1FixturePresentationStore();
             Require(store.States.Count == 5, "five fixture states required");
             Require(store.Select("refused").Text("refusal", "code") == "stale_readiness", "exact stale refusal required");
