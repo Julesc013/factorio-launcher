@@ -7,13 +7,13 @@ import hashlib
 import json
 import os
 import shutil
-import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from tests.native_cli import invoke
+from tests.windows_junction import create_junction
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
@@ -197,14 +197,7 @@ class WindowsDiscoveryProviderTests(unittest.TestCase):
             external = root / "external-library"
             shutil.copytree(FIXTURE_INSTALL, external / "steamapps" / "common" / "Factorio")
             linked = root / "linked-library"
-            completed = subprocess.run(
-                ["cmd", "/c", "mklink", "/J", str(linked), str(external)],
-                check=False,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+            create_junction(linked, external)
             (steam / "steamapps").mkdir(parents=True)
             (steam / "steamapps" / "libraryfolders.vdf").write_text(
                 f'"libraryfolders" {{ "1" {{ "path" "{vdf_path(linked)}" }} }}\n',

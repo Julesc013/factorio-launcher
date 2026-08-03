@@ -33,6 +33,7 @@
     <Compile Include="BoundedByteChannel.cs" />
     <Compile Include="StrictTransportJson.cs" />
     <Compile Include="TransportResponseDecoder.cs" />
+    <Compile Include="PackagedBackendIdentity.cs" />
     <Compile Include="WindowsContainedProcess.cs" />
     <Compile Include="CliProcessClient.cs" />
     <Compile Include="OperationalVisualization.cs" />

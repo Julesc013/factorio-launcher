@@ -3,24 +3,24 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/remote-source-closure-proof-01
-- current_commit: 24643466515bef20f6f6e296b77e6f7352df1803
+- current_branch: task/c1-backend-identity-01
+- current_commit: 7ebbfa37b23ee173cbb15f399935d0e035e79375
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
 - canonical_branch: main
 - integration_branch: dev
-- recommended_next_action: continue bounded task work, validate locally, and plan future landing to dev
+- recommended_next_action: classify dirty tree before branch-sensitive work
 
 ## Branch Summary
 
-- local_branches: 13
-- remote_branches: 35
+- local_branches: 8
+- remote_branches: 44
 - tags_count: 2
 
 ## Warnings
 
-- none
+- dirty_tree_detected
 
 ## Q28 Boundary
 

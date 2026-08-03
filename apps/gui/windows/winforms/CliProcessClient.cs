@@ -13,17 +13,28 @@ namespace FacMan.WinForms
     {
         private readonly TransportOptions options;
         private readonly Func<TransportIdentity> identityFactory;
+#if FACMAN_TRANSPORT_HARNESS
+        private readonly Func<string, PackagedBackendIdentity> backendIdentityFactory;
+        private readonly bool requirePackagedBackendIdentity;
+#endif
 
         public CliProcessClient()
-            : this(new TransportOptions(), TransportIdentity.Create)
+            : this(new TransportOptions())
         {
         }
 
         public CliProcessClient(TransportOptions options)
-            : this(options, TransportIdentity.Create)
         {
+            if (options == null) throw new ArgumentNullException("options");
+            this.options = options;
+            identityFactory = TransportIdentity.Create;
+#if FACMAN_TRANSPORT_HARNESS
+            backendIdentityFactory = delegate { return PackagedBackendIdentity.OpenProduction(); };
+            requirePackagedBackendIdentity = true;
+#endif
         }
 
+#if FACMAN_TRANSPORT_HARNESS
         internal CliProcessClient(
             TransportOptions options,
             Func<TransportIdentity> identityFactory)
@@ -32,7 +43,10 @@ namespace FacMan.WinForms
             if (identityFactory == null) throw new ArgumentNullException("identityFactory");
             this.options = options;
             this.identityFactory = identityFactory;
+            backendIdentityFactory = PackagedBackendIdentity.OpenUntrustedTransportTest;
+            requirePackagedBackendIdentity = false;
         }
+#endif
 
         public async Task<CommandResult> InvokeAsync(
             CommandDefinition command,
@@ -43,6 +57,116 @@ namespace FacMan.WinForms
         {
             if (command == null) throw new ArgumentNullException("command");
             TransportIdentity identity = identityFactory();
+            if (cancellationToken.IsCancellationRequested)
+                return CommandResult.CancelledBeforeDispatch(
+                    command.Id,
+                    command.BackendId,
+                    identity.OperationId,
+                    identity.AttemptId,
+                    "The backend command was cancelled before dispatch.");
+
+            PackagedBackendIdentity backend;
+            try
+            {
+#if FACMAN_TRANSPORT_HARNESS
+                // configuredCliPath is accepted for source compatibility only.
+                backend = backendIdentityFactory(configuredCliPath);
+#else
+                // configuredCliPath is accepted for source compatibility only.
+                // Ordinary builds have no executable-path injection seam.
+                backend = PackagedBackendIdentity.OpenProduction();
+#endif
+            }
+            catch (Exception ex)
+            {
+                return LocalRefusal(
+                    command,
+                    identity,
+                    "frontend_backend_identity_unavailable",
+                    "The packaged backend identity could not be established: " + ex.Message);
+            }
+
+            using (backend)
+            {
+                DateTime deadline = DateTime.UtcNow + options.OperationTimeout;
+#if FACMAN_TRANSPORT_HARNESS
+                if (requirePackagedBackendIdentity)
+#endif
+                {
+                    CommandDefinition inspect = GeneratedCommandCatalog.Find("product.inspect");
+                    bool callerIsInspect =
+                        String.Equals(command.BackendId, inspect.BackendId, StringComparison.Ordinal);
+                    TransportIdentity inspectIdentity = callerIsInspect ? identity : identityFactory();
+                    CommandResult inspection = await InvokeCoreAsync(
+                        inspect,
+                        callerIsInspect ? payload : new Dictionary<string, object>(),
+                        workspace,
+                        inspectIdentity,
+                        backend,
+                        deadline,
+                        cancellationToken).ConfigureAwait(false);
+                    if (cancellationToken.IsCancellationRequested &&
+                        inspection.OperationOutcome == "cancelled_before_dispatch")
+                        return CommandResult.CancelledBeforeDispatch(
+                            command.Id,
+                            command.BackendId,
+                            identity.OperationId,
+                            identity.AttemptId,
+                            "The backend command was cancelled before dispatch.");
+                    try
+                    {
+                        backend.ValidateHandshake(inspection);
+                    }
+                    catch (Exception ex)
+                    {
+                        return LocalRefusal(
+                            command,
+                            identity,
+                            "frontend_backend_identity_unavailable",
+                            "The packaged backend identity preflight failed: " + ex.Message);
+                    }
+                    if (callerIsInspect) return inspection;
+                    if (String.Equals(command.BackendId, "run.execute", StringComparison.Ordinal))
+                    {
+                        CommandDefinition runRoute = GeneratedCommandCatalog.Find("run.execute");
+                        if (runRoute.Status != CommandStatus.Implemented ||
+                            !String.Equals(
+                                runRoute.Availability, "available", StringComparison.Ordinal))
+                            return LocalRefusal(
+                                command,
+                                identity,
+                                "frontend_backend_identity_unavailable",
+                                "The verified backend identity does not enable run.execute: " +
+                                runRoute.DeferredReason);
+                    }
+                    if (DateTime.UtcNow >= deadline - options.CleanupReserve)
+                        return LocalRefusal(
+                            command,
+                            identity,
+                            "frontend_backend_identity_unavailable",
+                            "The packaged backend identity preflight exhausted the dispatch budget.");
+                }
+
+                return await InvokeCoreAsync(
+                    command,
+                    payload,
+                    workspace,
+                    identity,
+                    backend,
+                    deadline,
+                    cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        private async Task<CommandResult> InvokeCoreAsync(
+            CommandDefinition command,
+            IDictionary<string, object> payload,
+            string workspace,
+            TransportIdentity identity,
+            PackagedBackendIdentity backend,
+            DateTime deadline,
+            CancellationToken cancellationToken)
+        {
             if (cancellationToken.IsCancellationRequested)
                 return CommandResult.CancelledBeforeDispatch(
                     command.Id,
@@ -72,15 +196,14 @@ namespace FacMan.WinForms
                     "The transport request exceeds the exact raw-byte budget of " +
                     options.MaximumRequestBytes.ToString() + " bytes.");
 
-            string executable = ResolveExecutable(configuredCliPath);
+            string executable = backend.ExecutablePath;
             if (String.IsNullOrWhiteSpace(executable))
                 return LocalRefusal(
                     command,
                     identity,
                     "frontend_backend_unavailable",
-                    "No facman CLI executable is configured, colocated, or available through FACMAN_CLI.");
+                    "No package-bound facman CLI executable is available.");
 
-            DateTime deadline = DateTime.UtcNow + options.OperationTimeout;
             DateTime dispatchDeadline = deadline - options.CleanupReserve;
             TransportDispatchState state = TransportDispatchState.NotStarted;
             WindowsContainedProcess process = null;
@@ -88,7 +211,11 @@ namespace FacMan.WinForms
             BoundedByteChannel stderr = null;
             try
             {
-                process = WindowsContainedProcess.StartSuspended(executable, "rpc --stdio");
+                process = WindowsContainedProcess.StartSuspended(
+                    executable,
+                    "rpc --stdio",
+                    backend.RevalidateImmediatelyBeforeProcessCreation,
+                    backend.ValidateCreatedSuspendedProcess);
                 state = TransportDispatchState.ProcessStartedRequestNotWritten;
                 stdout = BoundedByteChannel.Start(
                     process.StandardOutput, options.MaximumStdoutBytes);
@@ -483,19 +610,5 @@ namespace FacMan.WinForms
                 identity.AttemptId);
         }
 
-        private static string ResolveExecutable(string configuredCliPath)
-        {
-            if (!String.IsNullOrWhiteSpace(configuredCliPath) && File.Exists(configuredCliPath.Trim()))
-                return configuredCliPath.Trim();
-            string envPath = Environment.GetEnvironmentVariable("FACMAN_CLI");
-            if (!String.IsNullOrWhiteSpace(envPath) && File.Exists(envPath.Trim()))
-                return envPath.Trim();
-            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            string colocatedExe = Path.Combine(baseDirectory, "facman.exe");
-            if (File.Exists(colocatedExe)) return colocatedExe;
-            string colocated = Path.Combine(baseDirectory, "facman");
-            if (File.Exists(colocated)) return colocated;
-            return "facman";
-        }
     }
 }

@@ -260,6 +260,7 @@ def collect() -> dict[str, Any]:
         "winforms_c1_transport_hardening_01": status[
             "winforms_c1_transport_hardening_01"
         ],
+        "c1_backend_identity_01": status["c1_backend_identity_01"],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -1524,6 +1525,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "transport_hardening_active_revalidation_04_historical",
+        },
+        "c1_backend_identity_01": {
+            "checkpoint": "c1-backend-identity-01",
+            "active": "FACMAN-C1-BACKEND-IDENTITY-01",
+            "last_closed": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+            "next": "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+            "phase_status": "verified_pending_closeout",
+            "safety": "transport_hardening_accepted_backend_identity_verified_pending_closeout_no_product_authority",
+            "execution_reason": "backend_identity_verified_pending_closeout_no_product_play_authority",
+            "truth_scope": "transport_hardening_accepted_backend_identity_verified_pending_closeout_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "backend_identity_verified_pending_closeout_revalidation_04_historical",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",

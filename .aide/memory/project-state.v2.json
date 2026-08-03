@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+  "active_work_unit": "FACMAN-C1-BACKEND-IDENTITY-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -26,10 +26,49 @@
     "validated_parent_revision": "31264a99b428c2d34d9f21a39f0878b1eb75775a",
     "work_unit": "FACMAN-BUILD-AND-DEVELOPMENT-TRUTH-01"
   },
-  "canonical_plan_and_truth_closeout": {
-    "canonical_main_revision": "133da925af13d475c959a336e0b0eec0427a0381",
+  "c1_backend_identity_01": {
+    "base_revision": "7ebbfa37b23ee173cbb15f399935d0e035e79375",
+    "branch": "task/c1-backend-identity-01",
+    "candidate_identity_change": false,
+    "checkpoint": "docs/release/checkpoints/c1-backend-identity-01.md",
+    "command_catalog_sha256": "ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec",
+    "contract_set_sha256": "30998a41f9b3b702e50265925dd0fb2f8469460769c94b6bab7f5fe17887f7c3",
     "credential_authority": false,
-    "dev_synchronization_revision": "84a0d496b1d4b71ad239e720390e914005dd4611",
+    "development_override": "explicit_untrusted_non_release_only",
+    "factorio_execution": false,
+    "frontend_binding": "windows_x64_winforms_parent_mediated",
+    "human_verdict": "unset",
+    "native_debug_tests": 59,
+    "native_release_tests": 59,
+    "network_authority": false,
+    "next_work_unit": "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+    "observer_capture": false,
+    "open_production_evidence": "release_compiled_structural_source_check_not_packaged_gui_execution",
+    "package_authenticity": "not_proven_unsigned",
+    "package_files_verified": 399,
+    "package_integrity": "sha256_consistent",
+    "package_profile": "windows_legacy_winforms_x64",
+    "permit_issuance": false,
+    "prepare": false,
+    "previous_work_unit": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+    "production_resolution": "package_relative_exact_manifest_identity",
+    "promotion_python_tests": 707,
+    "provider_pin_change": false,
+    "publication": false,
+    "required_obligation_skips": 0,
+    "route_authority": false,
+    "setup_mutation_authority": false,
+    "signing": false,
+    "standalone_native_verifier": "not_promoted_cross_platform_snapshot_and_posix_binding_unproven",
+    "status": "verified_pending_closeout",
+    "successor_stage_created": false,
+    "unknown_obligation_skips": 0,
+    "work_unit": "FACMAN-C1-BACKEND-IDENTITY-01"
+  },
+  "canonical_plan_and_truth_closeout": {
+    "canonical_main_revision": "bfac7ce41f19856522b5f9603320f444b8f45094",
+    "credential_authority": false,
+    "dev_synchronization_revision": "7ebbfa37b23ee173cbb15f399935d0e035e79375",
     "exact_dev_ci_run": "30723334329",
     "exact_dev_code_security_run": "30723334370",
     "exact_dev_schema_check_run": "30723334359",
@@ -47,9 +86,9 @@
     "observer_capture": false,
     "operator": "Jules",
     "permit_issuance": false,
-    "planning_promotion_revision": "133da925af13d475c959a336e0b0eec0427a0381",
+    "planning_promotion_revision": "bfac7ce41f19856522b5f9603320f444b8f45094",
     "prepare_authorized": false,
-    "promotion_source_revision": "29f1a97410cb999f7691d5daa1f4b2afa82f0149",
+    "promotion_source_revision": "c026e873135636acb4da53c41e7a3ad7aa916cae",
     "publication": false,
     "route_promotion": false,
     "setup_mutation": false,
@@ -372,6 +411,11 @@
       "limitation": "does not execute Factorio or prove operator usability"
     },
     {
+      "claim": "WinForms parent backend binding",
+      "level": "local Windows candidate",
+      "limitation": "unsigned; GUI bind structural-only; standalone/POSIX/network unproven; no Play authority"
+    },
+    {
       "claim": "Functional TUI packages run on three x64 targets",
       "level": "target CI proven preview",
       "limitation": "unsigned and unpublished; no OS-neutral or ARM64 claim"
@@ -503,11 +547,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "f29ea66effb76d4b45beaf307ab13750dfa808d3fc0b03848d2f62fa2f505e20",
+    "catalog_digest": "ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec",
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 309
+    "schemas": 310
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -515,26 +559,26 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "winforms-c1-transport-hardening-01-active",
+  "current_checkpoint": "c1-backend-identity-01",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
-    "canonical_main": "133da925af13d475c959a336e0b0eec0427a0381",
-    "dev_synchronization": "84a0d496b1d4b71ad239e720390e914005dd4611",
-    "factorio_launcher": "84a0d496b1d4b71ad239e720390e914005dd4611",
+    "canonical_main": "bfac7ce41f19856522b5f9603320f444b8f45094",
+    "dev_synchronization": "7ebbfa37b23ee173cbb15f399935d0e035e79375",
+    "factorio_launcher": "7ebbfa37b23ee173cbb15f399935d0e035e79375",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "observed_branch_head": "84a0d496b1d4b71ad239e720390e914005dd4611",
-    "planning_promotion": "133da925af13d475c959a336e0b0eec0427a0381",
-    "promotion_source": "29f1a97410cb999f7691d5daa1f4b2afa82f0149",
+    "observed_branch_head": "7ebbfa37b23ee173cbb15f399935d0e035e79375",
+    "planning_promotion": "bfac7ce41f19856522b5f9603320f444b8f45094",
+    "promotion_source": "c026e873135636acb4da53c41e7a3ad7aa916cae",
     "qualification_evidence": "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
     "qualification_integration": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "qualification_source": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
-    "truth_closeout": "84a0d496b1d4b71ad239e720390e914005dd4611",
+    "truth_closeout": "7ebbfa37b23ee173cbb15f399935d0e035e79375",
     "universal_launcher": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
     "universal_setup": "3048128963dc718a7c38c1cfcdda9e813a23b0db"
   },
   "execution": {
-    "current_gate_status": "transport_hardening_active_revalidation_04_historical",
+    "current_gate_status": "backend_identity_verified_pending_closeout_revalidation_04_historical",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -542,7 +586,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "winforms_transport_hardening_active_no_product_play_authority",
+    "reason": "backend_identity_verified_pending_closeout_no_product_play_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -1332,9 +1376,11 @@
     "Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.",
     "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
     "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
-    "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher."
+    "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
+    "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
+    "The local backend-identity package is source-dirty, unsigned, unpublished, and cannot authenticate a publisher or serve as canonical integration evidence."
   ],
-  "last_closed_work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+  "last_closed_work_unit": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2335,17 +2381,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+    "current_work_unit": "FACMAN-C1-BACKEND-IDENTITY-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-C1-BACKEND-IDENTITY-01",
-    "phase": "winforms_c1_transport_hardening_01",
-    "phase_status": "active",
+    "next_work_unit": "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+    "phase": "c1_backend_identity_01",
+    "phase_status": "verified_pending_closeout",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "revalidation_04_superseded_transport_hardening_active_no_product_authority"
+    "truth_scope": "transport_hardening_accepted_backend_identity_verified_pending_closeout_no_product_authority"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -2387,7 +2433,7 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 80,
+    "archived_task_count": 81,
     "counts": {
       "blocked": 2,
       "planned": 1,
@@ -2396,16 +2442,16 @@
     "current": null,
     "records": [
       {
+        "id": "FACMAN-C1-BACKEND-IDENTITY-01",
+        "lifecycle_state": "verified_pending_closeout",
+        "queue": "active",
+        "status": "verified_pending_closeout"
+      },
+      {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
-      },
-      {
-        "id": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
-        "lifecycle_state": "verified_pending_closeout",
-        "queue": "active",
-        "status": "verified_pending_closeout"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
@@ -2443,7 +2489,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "revalidation_04_superseded_transport_hardening_active_no_product_authority",
+    "safety_authority": "transport_hardening_accepted_backend_identity_verified_pending_closeout_no_product_authority",
     "user_validation": "not_started",
     "user_workflow": "native_c1_shell_backend_projection_release_candidate_ready"
   },
@@ -3110,6 +3156,9 @@
     "credential_authority": false,
     "factorio_execution": false,
     "human_verdict": "unset",
+    "merge_first_parent": "bfac7ce41f19856522b5f9603320f444b8f45094",
+    "merge_revision": "7ebbfa37b23ee173cbb15f399935d0e035e79375",
+    "merge_second_parent": "a90720ca994352f8a327399be718ab2feca91256",
     "network_authority": false,
     "next_work_unit": "FACMAN-C1-BACKEND-IDENTITY-01",
     "observer_capture": false,
@@ -3117,12 +3166,15 @@
     "prepare": false,
     "provider_pin_change": false,
     "publication": false,
+    "pull_request": 119,
     "repository": "factorio-launcher",
     "route_authority": false,
     "setup_mutation_authority": false,
     "signing": false,
-    "status": "active",
+    "status": "accepted_merged_dev",
     "successor_stage_created": false,
+    "task_head_contained": true,
+    "task_head_revision": "a90720ca994352f8a327399be718ab2feca91256",
     "work_unit": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
     "workspace_root_authority_change": false
   }

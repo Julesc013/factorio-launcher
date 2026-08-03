@@ -34,13 +34,11 @@ namespace FacMan.WinForms
         {
             template = new C1FixturePresentationStore().Select("positive");
             Workspace = Environment.GetEnvironmentVariable("FACMAN_WORKSPACE") ?? String.Empty;
-            CliPath = Environment.GetEnvironmentVariable("FACMAN_CLI") ?? String.Empty;
             Current = BuildPresentation("Backend state has not been inspected yet.");
         }
 
         public C1Presentation Current { get; private set; }
         public string Workspace { get; set; }
-        public string CliPath { get; set; }
         public string SelectedInstanceId { get; private set; }
         public bool Busy { get; private set; }
         public string LastRefusal { get; private set; }
@@ -212,7 +210,12 @@ namespace FacMan.WinForms
                 return Task.FromResult(CommandResult.Refusal(commandId, commandId, "frontend_route_not_registered", "The exact backend route is not present in the generated registry."));
             if (requireBackendEnablement && !Boolean(readiness, "execution_available"))
                 return Task.FromResult(CommandResult.Refusal(commandId, command.BackendId, "frontend_route_not_enabled", "The backend readiness record did not enable this exact route."));
-            return transport.InvokeAsync(command, payload ?? new Dictionary<string, object>(), Workspace, CliPath, cancellationToken);
+            return transport.InvokeAsync(
+                command,
+                payload ?? new Dictionary<string, object>(),
+                Workspace,
+                String.Empty,
+                cancellationToken);
         }
 
         private void SelectExistingInstance()

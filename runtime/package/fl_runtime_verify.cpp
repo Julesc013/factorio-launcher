@@ -8,6 +8,7 @@
 #include "fl_sha256.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstring>
 #include <filesystem>
@@ -16,6 +17,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -29,6 +31,7 @@ namespace fs = std::filesystem;
 namespace {
 
 fs::path g_package_root;
+fs::path g_executable_path;
 std::string g_package_root_text;
 
 void set_detail(char* detail, size_t capacity, const std::string& value)
@@ -201,6 +204,9 @@ struct PackageIdentity {
     std::string linkage;
     std::string entrypoint;
     std::string source_revision;
+    bool source_dirty = false;
+    std::string universal_launcher_revision;
+    std::string universal_setup_revision;
 };
 
 bool load_package_identity(
@@ -247,6 +253,9 @@ bool load_package_identity(
     identity.linkage = values["linkage_model"];
     identity.entrypoint = values["entrypoint"];
     identity.source_revision = values["source_revision"];
+    identity.source_dirty = values["source_dirty"] == "true";
+    identity.universal_launcher_revision = values["universal_launcher_revision"];
+    identity.universal_setup_revision = values["universal_setup_revision"];
 
     struct Expected {
         const char* profile;
@@ -431,6 +440,104 @@ bool component_semantics_match(
     return true;
 }
 
+bool contract_set_digest(
+    const fs::path& root,
+    const std::map<std::string, std::string>& declared,
+    std::string& digest,
+    std::string& error)
+{
+    facman::base::Sha256Hasher hasher;
+    const unsigned char separator = 0;
+    std::size_t contract_count = 0;
+    for (const auto& entry : declared) {
+        const std::string& relative = entry.first;
+        if (relative.rfind("contracts/schema/", 0) != 0) {
+            continue;
+        }
+        ++contract_count;
+        hasher.update(
+            reinterpret_cast<const unsigned char*>(relative.data()),
+            relative.size());
+        hasher.update(&separator, 1);
+
+        std::ifstream input(root / fs::u8path(relative), std::ios::binary);
+        if (!input) {
+            error = "cannot open packaged contract schema: " + relative;
+            return false;
+        }
+        std::array<char, 8192> buffer {};
+        bool pending_carriage_return = false;
+        while (input) {
+            input.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+            const std::streamsize count = input.gcount();
+            std::vector<unsigned char> normalized;
+            normalized.reserve(static_cast<std::size_t>(count) + 1U);
+            for (std::streamsize index = 0; index < count; ++index) {
+                const unsigned char byte = static_cast<unsigned char>(buffer[static_cast<std::size_t>(index)]);
+                if (byte == '\r') {
+                    if (pending_carriage_return) normalized.push_back('\n');
+                    pending_carriage_return = true;
+                    continue;
+                }
+                if (byte == '\n') {
+                    normalized.push_back('\n');
+                    pending_carriage_return = false;
+                    continue;
+                }
+                if (pending_carriage_return) {
+                    normalized.push_back('\n');
+                    pending_carriage_return = false;
+                }
+                normalized.push_back(byte);
+            }
+            if (!normalized.empty()) hasher.update(normalized.data(), normalized.size());
+        }
+        if (input.bad()) {
+            error = "cannot read packaged contract schema: " + relative;
+            return false;
+        }
+        if (pending_carriage_return) {
+            const unsigned char newline = '\n';
+            hasher.update(&newline, 1);
+        }
+        hasher.update(&separator, 1);
+    }
+    if (contract_count == 0) {
+        error = "package contains no contract schemas";
+        return false;
+    }
+    digest = hasher.finish();
+    return true;
+}
+
+bool executable_identity(
+    const fs::path& root,
+    const fs::path& executable,
+    const std::map<std::string, std::string>& declared,
+    std::string& relative,
+    std::string& digest,
+    std::string& error)
+{
+    if (executable.empty()) {
+        error = "running executable path is not configured";
+        return false;
+    }
+    std::error_code relative_error;
+    const fs::path relative_path = fs::relative(executable, root, relative_error);
+    relative = relative_error ? std::string() : relative_path.generic_string();
+    if (relative_error || !is_safe_relative(relative)) {
+        error = "running executable is outside the package root";
+        return false;
+    }
+    const auto declared_digest = declared.find(relative);
+    if (declared_digest == declared.end()) {
+        error = "running executable is absent from the package hash closure: " + relative;
+        return false;
+    }
+    digest = declared_digest->second;
+    return true;
+}
+
 fs::path running_executable(const char* executable_path)
 {
 #ifdef _WIN32
@@ -449,12 +556,176 @@ fs::path running_executable(const char* executable_path)
     return error ? fs::u8path(executable_path) : absolute;
 }
 
+facman::package::RuntimePackageEvidence inspect_package_impl(
+    const fs::path& package_root,
+    const fs::path& executable_path)
+{
+    facman::package::RuntimePackageEvidence evidence;
+    if (package_root.empty()) {
+        evidence.detail = "package root is not configured";
+        return evidence;
+    }
+
+    const fs::path manifest_path = package_root / "manifest" / "package.v1.toml";
+    std::error_code packaged_error;
+    evidence.packaged = fs::is_regular_file(manifest_path, packaged_error);
+    if (!evidence.packaged) {
+        evidence.detail = "running executable is not in a built package";
+        return evidence;
+    }
+
+    const fs::path required[] = {
+        manifest_path,
+        package_root / "manifest" / "build_info.v1.json",
+        package_root / "manifest" / "components.v1.json",
+        package_root / "manifest" / "hashes.sha256",
+        package_root / "release" / "index" / "workspace_lock.v1.toml",
+    };
+    for (const fs::path& path : required) {
+        if (!fs::exists(path)) {
+            evidence.detail = "missing required package path: " +
+                path.lexically_relative(package_root).generic_string();
+            return evidence;
+        }
+    }
+    evidence.manifest_sha256 = facman::base::sha256_hex_file(required[0]);
+    evidence.closure_sha256 = facman::base::sha256_hex_file(required[3]);
+
+    PackageIdentity identity;
+    std::map<std::string, std::string> manifest_values;
+    std::string identity_error;
+    if (!load_package_identity(required[0], identity, manifest_values, identity_error)) {
+        evidence.detail = identity_error;
+        return evidence;
+    }
+    evidence.profile_id = identity.profile;
+    evidence.source_revision = identity.source_revision;
+    evidence.source_dirty = identity.source_dirty;
+    evidence.source_dirty_known = true;
+    evidence.universal_launcher_revision = identity.universal_launcher_revision;
+    evidence.universal_setup_revision = identity.universal_setup_revision;
+
+    std::map<std::string, std::string> workspace_pins;
+    if (!load_workspace_pins(required[4], workspace_pins, identity_error)) {
+        evidence.detail = identity_error;
+        return evidence;
+    }
+    if (manifest_values["proof_baseline_revision"] != workspace_pins["factorio_binding"] ||
+        manifest_values["universal_launcher_revision"] != workspace_pins["universal_launcher"] ||
+        manifest_values["universal_setup_revision"] != workspace_pins["universal_setup"]) {
+        evidence.detail = "package source revisions disagree with workspace lock";
+        return evidence;
+    }
+
+    std::error_code error;
+    const fs::path canonical_root = fs::canonical(package_root, error);
+    if (error) {
+        evidence.detail = "cannot resolve package root: " + error.message();
+        return evidence;
+    }
+
+    std::ifstream input(required[3], std::ios::binary);
+    if (!input) {
+        evidence.detail = "cannot open manifest/hashes.sha256";
+        return evidence;
+    }
+
+    std::map<std::string, std::string> declared;
+    std::string line;
+    size_t line_number = 0;
+    while (std::getline(input, line)) {
+        ++line_number;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (line.size() < 67 || line.substr(64, 2) != "  ") {
+            evidence.detail = "invalid hash manifest line " + std::to_string(line_number);
+            return evidence;
+        }
+        std::string expected = line.substr(0, 64);
+        std::string relative = line.substr(66);
+        if (!is_hex_digest(expected) || !is_safe_relative(relative) ||
+            relative == "manifest/hashes.sha256") {
+            evidence.detail = "unsafe or invalid hash manifest line " + std::to_string(line_number);
+            return evidence;
+        }
+        std::transform(expected.begin(), expected.end(), expected.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        if (!declared.emplace(relative, expected).second) {
+            evidence.detail = "duplicate hash manifest path: " + relative;
+            return evidence;
+        }
+
+        const fs::path candidate = package_root / fs::u8path(relative);
+        if (!fs::is_regular_file(candidate) || is_reparse_or_symlink(candidate)) {
+            evidence.detail = "missing or unsafe hashed file: " + relative;
+            return evidence;
+        }
+        const fs::path canonical_candidate = fs::canonical(candidate, error);
+        if (error || !is_within(canonical_root, canonical_candidate)) {
+            evidence.detail = "hashed file escapes package root: " + relative;
+            return evidence;
+        }
+        const std::string actual = facman::base::sha256_hex_file(candidate);
+        if (actual != expected) {
+            evidence.detail = "SHA-256 mismatch: " + relative;
+            return evidence;
+        }
+    }
+    if (!input.eof()) {
+        evidence.detail = "cannot read manifest/hashes.sha256";
+        return evidence;
+    }
+
+    std::set<std::string> actual_files;
+    std::string collect_error;
+    if (!collect_package_files(package_root, actual_files, collect_error)) {
+        evidence.detail = collect_error;
+        return evidence;
+    }
+    std::set<std::string> declared_files;
+    for (const auto& entry : declared) declared_files.insert(entry.first);
+    if (actual_files != declared_files) {
+        evidence.detail = "hash manifest does not close over the package file set";
+        return evidence;
+    }
+    std::string component_error;
+    if (!component_semantics_match(package_root, identity, declared, component_error)) {
+        evidence.detail = component_error;
+        return evidence;
+    }
+    if (!executable_identity(
+            package_root,
+            executable_path,
+            declared,
+            evidence.backend_relative_path,
+            evidence.backend_sha256,
+            component_error)) {
+        evidence.detail = component_error;
+        return evidence;
+    }
+    if (!contract_set_digest(
+            package_root,
+            declared,
+            evidence.contract_set_sha256,
+            component_error)) {
+        evidence.detail = component_error;
+        return evidence;
+    }
+
+    evidence.files_verified = declared.size();
+    evidence.verified = true;
+    evidence.detail = "package contents match the unsigned SHA-256 manifest";
+    return evidence;
+}
+
 } // namespace
 
 extern "C" void fl_runtime_set_executable_path(const char* executable_path)
 {
-    fs::path executable = running_executable(executable_path);
-    g_package_root = executable.empty() ? fs::path() : executable.parent_path().parent_path();
+    g_executable_path = running_executable(executable_path);
+    g_package_root = g_executable_path.empty()
+        ? fs::path()
+        : g_executable_path.parent_path().parent_path();
     g_package_root_text = g_package_root.empty() ? std::string() : g_package_root.u8string();
 }
 
@@ -465,7 +736,34 @@ extern "C" const char* fl_runtime_package_root(void)
 
 extern "C" int fl_runtime_is_packaged(void)
 {
-    return !g_package_root.empty() && fs::is_regular_file(g_package_root / "manifest" / "package.v1.toml");
+    std::error_code error;
+    return !g_package_root.empty() &&
+        fs::is_regular_file(g_package_root / "manifest" / "package.v1.toml", error) &&
+        !error;
+}
+
+facman::package::RuntimePackageEvidence facman::package::inspect_package(
+    const std::filesystem::path& package_root,
+    const std::filesystem::path& executable_path)
+{
+    try {
+        return inspect_package_impl(package_root, executable_path);
+    } catch (const std::exception& error) {
+        RuntimePackageEvidence evidence;
+        evidence.packaged = !package_root.empty();
+        evidence.detail = std::string("package verification error: ") + error.what();
+        return evidence;
+    } catch (...) {
+        RuntimePackageEvidence evidence;
+        evidence.packaged = !package_root.empty();
+        evidence.detail = "package verification error: unknown failure";
+        return evidence;
+    }
+}
+
+facman::package::RuntimePackageEvidence facman::package::inspect_runtime_package(void)
+{
+    return inspect_package(g_package_root, g_executable_path);
 }
 
 extern "C" int fl_runtime_verify_package(
@@ -473,130 +771,9 @@ extern "C" int fl_runtime_verify_package(
     size_t detail_capacity,
     size_t* files_verified)
 {
-    try {
-    if (files_verified != nullptr) {
-        *files_verified = 0;
-    }
-    if (g_package_root.empty()) {
-        set_detail(detail, detail_capacity, "package root is not configured");
-        return 0;
-    }
-
-    const fs::path required[] = {
-        g_package_root / "manifest" / "package.v1.toml",
-        g_package_root / "manifest" / "build_info.v1.json",
-        g_package_root / "manifest" / "components.v1.json",
-        g_package_root / "manifest" / "hashes.sha256",
-        g_package_root / "release" / "index" / "workspace_lock.v1.toml",
-    };
-    for (const fs::path& path : required) {
-        if (!fs::exists(path)) {
-            set_detail(detail, detail_capacity, "missing required package path: " + path.lexically_relative(g_package_root).generic_string());
-            return 0;
-        }
-    }
-    PackageIdentity identity;
-    std::map<std::string, std::string> manifest_values;
-    std::string identity_error;
-    if (!load_package_identity(required[0], identity, manifest_values, identity_error)) {
-        set_detail(detail, detail_capacity, identity_error);
-        return 0;
-    }
-    std::map<std::string, std::string> workspace_pins;
-    if (!load_workspace_pins(required[4], workspace_pins, identity_error)) {
-        set_detail(detail, detail_capacity, identity_error);
-        return 0;
-    }
-    if (manifest_values["proof_baseline_revision"] != workspace_pins["factorio_binding"] ||
-        manifest_values["universal_launcher_revision"] != workspace_pins["universal_launcher"] ||
-        manifest_values["universal_setup_revision"] != workspace_pins["universal_setup"]) {
-        set_detail(detail, detail_capacity, "package source revisions disagree with workspace lock");
-        return 0;
-    }
-
-    std::error_code error;
-    const fs::path canonical_root = fs::canonical(g_package_root, error);
-    if (error) {
-        set_detail(detail, detail_capacity, "cannot resolve package root: " + error.message());
-        return 0;
-    }
-
-    std::ifstream input(g_package_root / "manifest" / "hashes.sha256", std::ios::binary);
-    if (!input) {
-        set_detail(detail, detail_capacity, "cannot open manifest/hashes.sha256");
-        return 0;
-    }
-
-    std::map<std::string, std::string> declared;
-    std::string line;
-    size_t line_number = 0;
-    while (std::getline(input, line)) {
-        ++line_number;
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-        if (line.size() < 67 || line.substr(64, 2) != "  ") {
-            set_detail(detail, detail_capacity, "invalid hash manifest line " + std::to_string(line_number));
-            return 0;
-        }
-        std::string expected = line.substr(0, 64);
-        std::string relative = line.substr(66);
-        if (!is_hex_digest(expected) || !is_safe_relative(relative) || relative == "manifest/hashes.sha256") {
-            set_detail(detail, detail_capacity, "unsafe or invalid hash manifest line " + std::to_string(line_number));
-            return 0;
-        }
-        std::transform(expected.begin(), expected.end(), expected.begin(), [](unsigned char ch) {
-            return static_cast<char>(std::tolower(ch));
-        });
-        if (!declared.emplace(relative, expected).second) {
-            set_detail(detail, detail_capacity, "duplicate hash manifest path: " + relative);
-            return 0;
-        }
-
-        const fs::path candidate = g_package_root / fs::u8path(relative);
-        if (!fs::is_regular_file(candidate) || is_reparse_or_symlink(candidate)) {
-            set_detail(detail, detail_capacity, "missing or unsafe hashed file: " + relative);
-            return 0;
-        }
-        const fs::path canonical_candidate = fs::canonical(candidate, error);
-        if (error || !is_within(canonical_root, canonical_candidate)) {
-            set_detail(detail, detail_capacity, "hashed file escapes package root: " + relative);
-            return 0;
-        }
-        std::string actual = facman::base::sha256_hex_file(candidate);
-        if (actual != expected) {
-            set_detail(detail, detail_capacity, "SHA-256 mismatch: " + relative);
-            return 0;
-        }
-    }
-
-    std::set<std::string> actual_files;
-    std::string collect_error;
-    if (!collect_package_files(g_package_root, actual_files, collect_error)) {
-        set_detail(detail, detail_capacity, collect_error);
-        return 0;
-    }
-    std::set<std::string> declared_files;
-    for (const auto& entry : declared) declared_files.insert(entry.first);
-    if (actual_files != declared_files) {
-        set_detail(detail, detail_capacity, "hash manifest does not close over the package file set");
-        return 0;
-    }
-    std::string component_error;
-    if (!component_semantics_match(g_package_root, identity, declared, component_error)) {
-        set_detail(detail, detail_capacity, component_error);
-        return 0;
-    }
-    if (files_verified != nullptr) {
-        *files_verified = declared.size();
-    }
-    set_detail(detail, detail_capacity, "package contents match the unsigned SHA-256 manifest");
-    return 1;
-    } catch (const std::exception& error) {
-        set_detail(detail, detail_capacity, std::string("package verification error: ") + error.what());
-        return 0;
-    } catch (...) {
-        set_detail(detail, detail_capacity, "package verification error: unknown failure");
-        return 0;
-    }
+    const facman::package::RuntimePackageEvidence evidence =
+        facman::package::inspect_runtime_package();
+    if (files_verified != nullptr) *files_verified = evidence.files_verified;
+    set_detail(detail, detail_capacity, evidence.detail);
+    return evidence.verified ? 1 : 0;
 }

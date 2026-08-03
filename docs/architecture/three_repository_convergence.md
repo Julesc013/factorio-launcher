@@ -8,6 +8,11 @@ Repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
 
 External proof consumer: `dominium`
 
+The later multi-consumer productization decision, including Compact Cassette
+Catalogue and capability-selective provider consumption, is recorded in
+`docs/architecture/universal_multi_consumer_productization.md`. That record
+extends this convergence strategy without changing its authority boundary.
+
 ## Verdict
 
 The repository split is correct. The implementation distribution is not yet

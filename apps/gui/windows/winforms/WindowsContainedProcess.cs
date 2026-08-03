@@ -62,7 +62,11 @@ namespace FacMan.WinForms
         internal int ProcessId { get; private set; }
         internal Task<int> ExitTask { get; private set; }
 
-        internal static WindowsContainedProcess StartSuspended(string executable, string arguments)
+        internal static WindowsContainedProcess StartSuspended(
+            string executable,
+            string arguments,
+            Action revalidateImmediatelyBeforeCreateProcess,
+            Action<IntPtr> validateCreatedSuspendedProcess)
         {
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
                 throw new PlatformNotSupportedException("WinForms containment requires Windows.");
@@ -102,6 +106,11 @@ namespace FacMan.WinForms
                 ProcessInformation process;
                 StringBuilder commandLine = new StringBuilder(
                     QuoteCommandLineArgument(executable) + " " + (arguments ?? String.Empty));
+                if (revalidateImmediatelyBeforeCreateProcess == null)
+                    throw new ArgumentNullException("revalidateImmediatelyBeforeCreateProcess");
+                if (validateCreatedSuspendedProcess == null)
+                    throw new ArgumentNullException("validateCreatedSuspendedProcess");
+                revalidateImmediatelyBeforeCreateProcess();
                 bool created = CreateProcess(
                     executable,
                     commandLine,
@@ -116,6 +125,7 @@ namespace FacMan.WinForms
                 if (!created) throw new Win32Exception(Marshal.GetLastWin32Error());
                 processHandle = process.Process;
                 threadHandle = process.Thread;
+                validateCreatedSuspendedProcess(processHandle);
 
                 jobHandle = CreateJobObject(IntPtr.Zero, null);
                 if (jobHandle == IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error());

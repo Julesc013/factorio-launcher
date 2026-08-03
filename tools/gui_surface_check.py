@@ -131,6 +131,7 @@ def check_winforms_shell() -> list[str]:
         root / "BoundedByteChannel.cs",
         root / "StrictTransportJson.cs",
         root / "TransportResponseDecoder.cs",
+        root / "PackagedBackendIdentity.cs",
         root / "WindowsContainedProcess.cs",
         transport,
     ]
@@ -151,6 +152,7 @@ def check_winforms_shell() -> list[str]:
         "BoundedByteChannel.cs",
         "StrictTransportJson.cs",
         "TransportResponseDecoder.cs",
+        "PackagedBackendIdentity.cs",
         "WindowsContainedProcess.cs",
         "CliProcessClient.cs",
         "MainForm.cs",

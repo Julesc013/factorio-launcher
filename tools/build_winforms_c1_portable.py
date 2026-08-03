@@ -28,8 +28,9 @@ def prototype_files(executable: Path, cli: Path | None = None) -> dict[str, byte
             "\n"
             "The product shell embeds deterministic facman.presentation.v0 fixtures.\n"
             "Fixture Play starts no Factorio process and grants no live Play authority.\n"
-            "The generated command explorer is available under Advanced and requires a\n"
-            "compatible facman.exe beside this application or through FACMAN_CLI.\n"
+            "The generated command explorer is available under Advanced. Production\n"
+            "dispatch requires the full package manifest and hash-closed bin/facman.exe;\n"
+            "this presentation prototype intentionally grants no backend override.\n"
             "This archive is unsigned, unpublished, and not a release artifact.\n"
         ).encode("utf-8"),
     }

@@ -6,12 +6,12 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
 from tests.native_cli import invoke
+from tests.windows_junction import create_junction
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
@@ -277,14 +277,7 @@ class ManagedPathSafetyTests(unittest.TestCase):
             (workspace / "instances").mkdir(parents=True)
             link = workspace / "instances" / "linked-instance"
             if os.name == "nt":
-                completed = subprocess.run(
-                    ["cmd", "/c", "mklink", "/J", str(link), str(external)],
-                    check=False,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+                create_junction(link, external)
             else:
                 os.symlink(external, link, target_is_directory=True)
             code, _stdout, _stderr = invoke(

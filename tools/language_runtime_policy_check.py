@@ -14,6 +14,7 @@ ALLOWED_CSHARP_ROOTS = (
     ROOT / "apps" / "gui" / "windows" / "winforms",
     ROOT / "apps" / "gui" / "windows" / "winui",
     ROOT / "tests" / "frontend_harness",
+    ROOT / "tests" / "winforms_backend_identity_harness",
     ROOT / "tests" / "winforms_transport_harness",
 )
 ALLOWED_SWIFT_ROOTS = (ROOT / "apps" / "gui" / "macos" / "swiftui",)

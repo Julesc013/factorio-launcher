@@ -36,6 +36,7 @@ def validate() -> list[str]:
             "BoundedByteChannel.cs",
             "StrictTransportJson.cs",
             "TransportResponseDecoder.cs",
+            "PackagedBackendIdentity.cs",
             "WindowsContainedProcess.cs",
         )
     )
@@ -62,6 +63,14 @@ def validate() -> list[str]:
         "CreateSuspended",
         "JobObjectLimitKillOnJobClose",
         "AssignProcessToJobObject",
+        "PackagedBackendIdentity.OpenProduction",
+        "frontend_backend_identity_unavailable",
+        "FileFlagOpenReparsePoint",
+        "GetFileInformationByHandle",
+        "manifest/hashes.sha256",
+        "GeneratedCommandCatalog.CommandCatalogSha256",
+        "GeneratedCommandCatalog.ContractSetSha256",
+        "RevalidateImmediatelyBeforeProcessCreation",
     ):
         if anchor not in windows_transport:
             problems.append(f"WinForms CLI process transport missing: {anchor}")
@@ -71,6 +80,20 @@ def validate() -> list[str]:
         problems.append("WinForms transport retains a taskkill shell fallback")
     if "JoinArguments(" in windows_transport or "QuoteArgument(" in windows_transport:
         problems.append("WinForms machine transport retains CLI argument reconstruction")
+    production_client = (winforms / "CliProcessClient.cs").read_text(encoding="utf-8")
+    production_form = (winforms / "MainForm.cs").read_text(encoding="utf-8")
+    live_store = (winforms / "C1LivePresentationStore.cs").read_text(encoding="utf-8")
+    for forbidden in (
+        'Environment.GetEnvironmentVariable("FACMAN_CLI")',
+        "ResolveExecutable(",
+        "AppDomain.CurrentDomain.BaseDirectory",
+        'return "facman";',
+        "BrowseCliPath(",
+    ):
+        if forbidden in production_client or forbidden in production_form or forbidden in live_store:
+            problems.append(f"WinForms production backend substitution remains: {forbidden}")
+    if "OpenUntrustedTransportTest" not in production_client or "internal CliProcessClient(" not in production_client:
+        problems.append("WinForms synthetic transport override is not explicit and internal")
     if "async void RunCommand" not in windows_form or "await commandClient.ExecuteAsync(" not in windows_form:
         problems.append("WinForms command execution can block the UI thread")
 

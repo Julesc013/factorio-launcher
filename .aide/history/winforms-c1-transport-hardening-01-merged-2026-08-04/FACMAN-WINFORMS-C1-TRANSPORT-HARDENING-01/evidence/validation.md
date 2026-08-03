@@ -95,3 +95,23 @@ to the platforms that call it before canonical MSVC qualification.
 - Revalidation-04 remains superseded immutable history.
 - No successor stage, observer, prepare, permit, execution, verdict, route,
   Setup mutation, credentials, network, signing, or publication was enabled.
+
+## Merged-dev closeout
+
+- Pull request: `#119`.
+- Merge revision: `7ebbfa37b23ee173cbb15f399935d0e035e79375`.
+- First parent: `bfac7ce41f19856522b5f9603320f444b8f45094`.
+- Second parent and exact task head:
+  `a90720ca994352f8a327399be718ab2feca91256`.
+- `git merge-base --is-ancestor a90720c 7ebbfa3`: pass; the complete task
+  head is contained by the merge.
+- Local `dev` and `origin/dev` both resolved to the exact merge revision at
+  closeout inspection.
+- The only local worktree was the clean `dev` worktree at the merge revision;
+  no contained task worktree or local transport-hardening branch remained to
+  remove. The published remote task ref is not deleted by this local closeout.
+- ULK and USK consumer pins remain, respectively,
+  `7fc25340623131ba86c08dca4fb8a43b18a4520d` and
+  `3048128963dc718a7c38c1cfcdda9e813a23b0db`.
+- Closeout grants no provider repin, product execution, Setup mutation,
+  successor route, signing, publication, credential, or network authority.

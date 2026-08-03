@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-03"
+last_reviewed = "2026-08-04"
 active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
@@ -324,7 +324,12 @@ acceptance = [
   "Claim maturity cannot advance without the required evidence class.",
   "Generated release surfaces cannot imply unsupported claims.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/c1-backend-identity-01.md",
+  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/activation.md",
+  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/validation.md",
+  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/remaining-risks.md",
+]
 
 [[workunit]]
 id = "INSTANCE-VIEW-MINIMUM-01"
@@ -532,7 +537,7 @@ evidence = [
 id = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Harden the WinForms C1 process-transport boundary"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "product-maintainer"
@@ -550,21 +555,23 @@ acceptance = [
 ]
 evidence = [
   "docs/release/checkpoints/winforms-c1-transport-hardening-01.md",
-  ".aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence/activation.md",
-  ".aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence/validation.md",
+  ".aide/history/winforms-c1-transport-hardening-01-merged-2026-08-04/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence/activation.md",
+  ".aide/history/winforms-c1-transport-hardening-01-merged-2026-08-04/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence/validation.md",
 ]
 
 [[workunit]]
 id = "FACMAN-C1-BACKEND-IDENTITY-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Bind the C1 shell to the exact packaged backend identity"
-status = "planned"
+status = "verified_pending_closeout"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
 decision_blockers = []
+branch = "task/c1-backend-identity-01"
+base_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
 outcome = "Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action."
 acceptance = [
   "Backend resolution is package-relative and rejects PATH, working-directory, environment, or stale-copy substitution.",
@@ -572,7 +579,12 @@ acceptance = [
   "Missing, malformed, stale, or mismatched identity produces one structured unavailable/refusal state and starts no Factorio process.",
   "The work changes no consumed provider pin, active candidate identity, Play route, permit/issuer, observer/evidence contract, signing state, or publication authority.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/c1-backend-identity-01.md",
+  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/activation.md",
+  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/validation.md",
+  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/remaining-risks.md",
+]
 
 [[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"

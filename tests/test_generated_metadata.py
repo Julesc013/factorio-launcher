@@ -3,11 +3,37 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import tomllib
 import unittest
+from pathlib import Path
 
 from tools.codegen import generate_metadata
+
+
+def canonical_schema_tree_digest() -> str:
+    hasher = hashlib.sha256()
+    paths = sorted(
+        (path for path in generate_metadata.SCHEMA_ROOT.rglob("*") if path.is_file()),
+        key=lambda path: path.relative_to(generate_metadata.ROOT).as_posix(),
+    )
+    for path in paths:
+        relative_path = path.relative_to(generate_metadata.ROOT).as_posix()
+        contents = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        hasher.update(relative_path.encode("utf-8"))
+        hasher.update(b"\0")
+        hasher.update(contents)
+        hasher.update(b"\0")
+    return hasher.hexdigest()
+
+
+def generated_value(text: str, pattern: str) -> str:
+    match = re.search(pattern, text, flags=re.MULTILINE)
+    if match is None:
+        raise AssertionError(f"generated digest constant not found: {pattern}")
+    return match.group(1)
 
 
 class GeneratedMetadataTests(unittest.TestCase):
@@ -50,6 +76,64 @@ class GeneratedMetadataTests(unittest.TestCase):
         for key in ["canonical_version", "filename_version"]:
             self.assertEqual(build[key], version[key])
             self.assertIn(version[key], header)
+
+    def test_generated_digest_constants_match_canonical_inputs(self) -> None:
+        _index, _version, commands, command_catalog_digest = generate_metadata.load_sources()
+        contract_set_digest = canonical_schema_tree_digest()
+        self.assertRegex(command_catalog_digest, r"^[0-9a-f]{64}$")
+        self.assertRegex(contract_set_digest, r"^[0-9a-f]{64}$")
+        self.assertEqual(generate_metadata.contract_set_digest(commands), contract_set_digest)
+
+        for output_name in ("catalog_json", "grammar_json", "frontend_json"):
+            generated = json.loads(
+                generate_metadata.OUTPUTS[output_name].read_text(encoding="utf-8")
+            )
+            self.assertEqual(generated["source_digest"], command_catalog_digest)
+
+        version_header = generate_metadata.OUTPUTS["version_header"].read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(
+            generated_value(
+                version_header,
+                r'^#define FACMAN_COMMAND_CATALOG_SHA256 "([0-9a-f]{64})"$',
+            ),
+            command_catalog_digest,
+        )
+        self.assertEqual(
+            generated_value(
+                version_header,
+                r'^#define FACMAN_CONTRACT_SET_SHA256 "([0-9a-f]{64})"$',
+            ),
+            contract_set_digest,
+        )
+
+        winforms_catalog = generate_metadata.OUTPUTS["winforms_catalog"].read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(
+            generated_value(
+                winforms_catalog,
+                r'public static string CommandCatalogSha256 \{ get \{ return "([0-9a-f]{64})"; \} \}',
+            ),
+            command_catalog_digest,
+        )
+        self.assertEqual(
+            generated_value(
+                winforms_catalog,
+                r'public static string ContractSetSha256 \{ get \{ return "([0-9a-f]{64})"; \} \}',
+            ),
+            contract_set_digest,
+        )
+
+    def test_digest_framing_normalizes_line_endings(self) -> None:
+        expected = hashlib.sha256(b"contracts/schema/example.json\0value\n\0").hexdigest()
+        for contents in (b"value\n", b"value\r\n", b"value\r"):
+            hasher = hashlib.sha256()
+            generate_metadata.digest_entry(
+                hasher, Path("contracts/schema/example.json"), contents
+            )
+            self.assertEqual(hasher.hexdigest(), expected)
 
 
 if __name__ == "__main__":

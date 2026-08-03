@@ -1,0 +1,136 @@
+schema = "facman.universal_provider_contract_wave.v1"
+programme_id = "UNIVERSAL-PLATFORM-MULTI-CONSUMER-PRODUCTIZATION"
+reviewed_on = "2026-08-04"
+status = "active_contract_design"
+phase = "contract_design_only"
+architecture = "docs/architecture/universal_multi_consumer_productization.md"
+consumer_requirements = "release/index/universal_consumer_requirements.v1.toml"
+workunit_count = 3
+workunit_ids = [
+  "ULK-PRODUCT-COMPOSITION-CONTRACT-01",
+  "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
+  "SYNTHETIC-PRODUCT-TCK-01",
+]
+implementation_moved = false
+provider_code_implemented = false
+product_code_implemented = false
+provider_repository_branches_created = false
+provider_repository_tasks_created = false
+provider_repository_worktrees_created = false
+
+[audit_gate]
+dominium_audit_complete = true
+c3_audit_complete = true
+consumer_requirements_concrete = true
+
+[target_repository_baselines]
+universal_launcher = "417c8b705d7b1a320091aa20954e382dcb62be4c"
+universal_setup = "1a3fe548d278da038b96579363c1ddb7d92edeee"
+use = "immutable_contract_design_input_not_consumer_pin"
+
+[consumer_pins]
+universal_launcher = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_setup = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+changed = false
+repin_requires_separate_workunit = true
+
+[authority]
+provider_repin = false
+real_setup_mutation = false
+product_execution = false
+signing = false
+publication = false
+successor_route = false
+
+[[workunit]]
+id = "ULK-PRODUCT-COMPOSITION-CONTRACT-01"
+target_repository = "universal-launcher"
+target_baseline = "417c8b705d7b1a320091aa20954e382dcb62be4c"
+status = "active_contract_design"
+scope = "Define additive product-neutral composition contracts and vocabulary; do not implement them in the provider repository."
+contract_ids = [
+  "ulk.product_descriptor.v2",
+  "ulk.entrypoint.v1",
+  "ulk.launch_capability.v1",
+  "ulk.product_composition.v1",
+  "ulk.contract_set_identity.v1",
+]
+capability_vocabulary = [
+  "single_process",
+  "open_document",
+  "multi_instance",
+  "profile_selection",
+  "artifact_sets",
+  "session_supervision",
+  "background_service",
+  "server",
+]
+forbidden_product_kinds = ["game", "catalogue", "simulation"]
+provider_repository_branch_created = false
+provider_repository_task_created = false
+implementation_started = false
+
+[[workunit]]
+id = "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01"
+target_repository = "universal-setup"
+target_baseline = "1a3fe548d278da038b96579363c1ddb7d92edeee"
+status = "active_contract_design"
+scope = "Define additive product-neutral package and recipe contracts; do not implement them in the provider repository."
+contract_ids = [
+  "usk.product_package.v1",
+  "usk.setup_recipe.v1",
+  "usk.component_manifest.v1",
+  "usk.source_manifest.v1",
+]
+compatibility_rule_target = "usk.installed_state.v1"
+contract_fields = [
+  "product_id",
+  "product_version",
+  "publisher identity/reference",
+  "component IDs",
+  "platform/architecture",
+  "entry paths and hashes",
+  "source identity",
+  "target policy",
+  "mutable versus immutable paths",
+  "data/config roots",
+  "migration requirements",
+  "install/repair/update/uninstall support",
+  "rollback/recovery disposition",
+  "license/SBOM/provenance references",
+]
+product_specific_names_allowed = false
+provider_repository_branch_created = false
+provider_repository_task_created = false
+implementation_started = false
+
+[[workunit]]
+id = "SYNTHETIC-PRODUCT-TCK-01"
+target_repository = "unassigned_contract_fixture_location"
+target_baseline = "not_applicable"
+status = "active_contract_design"
+scope = "Define a tiny neutral fixture product and TCK proof obligations; do not implement or execute the fixture."
+proof_obligations = [
+  "package authoring",
+  "inspection",
+  "plan preview",
+  "installation fixture",
+  "reference composition",
+  "launch preview",
+  "structured refusal",
+  "recovery fixture",
+]
+forbidden_product_vocabulary = [
+  "factorio",
+  "dominium",
+  "domino",
+  "c3",
+  "cassette",
+  "catalogue",
+  "game",
+  "simulation",
+]
+provider_repository_branch_created = false
+provider_repository_task_created = false
+implementation_started = false
+fixture_executed = false

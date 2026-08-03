@@ -3,12 +3,48 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_product.v1.schema.json",
   "title": "Factorio Product",
   "type": "object",
-  "required": ["product_id", "display_name", "binding", "capabilities"],
+  "required": [
+    "schema",
+    "command",
+    "product_id",
+    "display_name",
+    "public_name",
+    "binding_id",
+    "unofficial",
+    "status",
+    "capabilities",
+    "boundaries",
+    "backend_identity"
+  ],
   "properties": {
-    "product_id": { "const": "factorio" },
-    "display_name": { "type": "string" },
-    "binding": { "type": "string" },
-    "capabilities": { "type": "array", "items": { "type": "string" } }
+    "schema": {"const": "factorio.product.v1"},
+    "command": {"enum": ["product.inspect", "factorio.product.inspect"]},
+    "product_id": {"const": "factorio"},
+    "display_name": {"const": "Factorio"},
+    "public_name": {"type": "string", "minLength": 1},
+    "binding_id": {"const": "flb.factorio"},
+    "unofficial": {"const": true},
+    "status": {"const": "ok"},
+    "capabilities": {"type": "array", "items": {"type": "string"}},
+    "boundaries": {
+      "type": "object",
+      "required": [
+        "bundles_factorio_binaries",
+        "repairs_foreign_installs",
+        "uninstalls_foreign_installs",
+        "uses_official_branding",
+        "default_run_mode"
+      ],
+      "properties": {
+        "bundles_factorio_binaries": {"const": false},
+        "repairs_foreign_installs": {"const": false},
+        "uninstalls_foreign_installs": {"const": false},
+        "uses_official_branding": {"const": false},
+        "default_run_mode": {"const": "dry-run"}
+      },
+      "additionalProperties": false
+    },
+    "backend_identity": {"$ref": "facman_backend_identity.v1.schema.json"}
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }
