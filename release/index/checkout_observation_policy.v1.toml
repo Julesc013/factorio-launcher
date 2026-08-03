@@ -1,0 +1,27 @@
+schema = "facman.checkout_observation_policy.v1"
+id = "facman_checkout_observation_policy_v1"
+
+# A checkout observation is deliberately offline. The remote-tracking ref is
+# local evidence only; remote source closure requires the separate empty-clone
+# fetched proof in tools/remote_source_closure.py.
+remote_evidence_classification = "local_tracking_ref_only"
+fetch_performed = false
+source_closure_proven = false
+lazy_fetch_allowed = false
+
+# Evidence-producing Git reads fail closed before HEAD, pin, reachability, or
+# ABI claims when repository-local provenance can redirect config or objects.
+local_config_includes_allowed = false
+local_object_alternates_allowed = false
+shallow_checkout_allowed = false
+partial_clone_allowed = false
+
+[[line_ending_profile]]
+id = "lf_checkout"
+core_autocrlf = "input"
+core_eol = "lf"
+
+[[line_ending_profile]]
+id = "windows_checkout"
+core_autocrlf = "true"
+core_eol = "native"

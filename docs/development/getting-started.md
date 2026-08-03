@@ -33,6 +33,40 @@ See [Build Root Hygiene](build-root-hygiene.md).
 
 Current project truth is generated into `.aide/memory/project-state.v2.json`.
 Run `py -3 tools/project_state.py --write` after changing its canonical inputs.
-The compact present-tense view is `release/index/current_state.v1.toml`.
+The compact tracked view is `release/index/current_state.v1.toml`. Its revision
+fields are reviewed-checkpoint compatibility fields, not a claim about the live
+checkout containing the file.
+
+Generate live checkout/provider truth outside the source tree after aligning
+the sibling repositories:
+
+```powershell
+$observationRoot = "E:\Temporary\FacMan\FACMAN-CURRENT-TRUTH-01\observation"
+py -3 tools/current_checkout_observation.py `
+  --provider-root universal_launcher=..\universal-launcher `
+  --provider-root universal_setup=..\universal-setup `
+  --expected-source-sha (git rev-parse HEAD) `
+  --line-ending-profile windows_checkout `
+  --output-dir $observationRoot
+```
+
+The command emits canonical JSON and a Markdown rendering from the same data.
+The output root must be outside FacMan and every passed provider checkout, so
+artifact generation cannot dirty a repository after observing it as clean.
+Every evidence-producing Git read uses the selected profile from
+`release/index/checkout_observation_policy.v1.toml`; the effective
+`core.autocrlf` and `core.eol` values and the policy digest are recorded. The
+command disables lazy fetching and fails before HEAD, pin, reachability, or ABI
+claims when it finds repository-local config includes, object alternates, a
+shallow checkout, partial-clone/promisor config, or promisor pack markers.
+
+The command performs no fetch. `origin/main` evidence is explicitly
+`local_tracking_ref_only`, with `fetch_performed=false` and `fetched_at=null`.
+It therefore does not prove current remote state or source closure. Use
+`tools/remote_source_closure.py` for the separate fetched, empty-clone
+source-closure proof. It also fails closed on a dirty or unexpected FacMan
+checkout, provider pin drift, origin mismatch, a missing local tracking ref,
+an unreachable pin, or an unavailable ABI declaration.
+
 Archived AIDE history is discoverable through `.aide/history/<checkpoint>/index.json`
 but excluded from normal context packets.

@@ -24,7 +24,7 @@ class PlanViewTests(unittest.TestCase):
     def test_dashboard_remains_bounded(self) -> None:
         line_count = len(generate_plan_views.render_dashboard(self.plan).splitlines())
         self.assertGreaterEqual(line_count, 80)
-        self.assertLessEqual(line_count, 150)
+        self.assertLessEqual(line_count, 160)
 
     def test_interface_design_system_is_a_validated_source(self) -> None:
         path = generate_plan_views.ROOT / self.plan["interface_design_system"]
@@ -65,6 +65,139 @@ class PlanViewTests(unittest.TestCase):
         self.assertIn("no successor or convergence WorkUnit is activated", dashboard)
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
+
+    def test_truth_hierarchy_keeps_run_prompts_subordinate(self) -> None:
+        self.assertEqual(
+            self.plan["source_of_truth"],
+            [
+                "release/index/plan.v1.toml canonical execution graph",
+                "release/index/component_ownership.v1.toml permanent authority",
+                "release/index/workspace_lock.v1.toml exact consumed identities",
+                "release/index/current_state.v1.toml reviewed checkpoint state",
+                "durable architecture, contracts, safety invariants, journeys, and claim policy",
+                "out-of-tree live checkout observation within its offline claim boundary",
+                "run-specific generated prompt and run profile",
+                "historical reports, archived plans, research notes, and prior prompts",
+            ],
+        )
+
+    def test_pre_c1_hardening_precedes_packaged_live_acceptance(self) -> None:
+        workunits = {item["id"]: item for item in self.plan["workunit"]}
+        prerequisite_ids = (
+            "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+        )
+        promotion_id = (
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
+        )
+        for workunit_id in prerequisite_ids[:2]:
+            workunit = workunits[workunit_id]
+            self.assertEqual(workunit["status"], "planned")
+            self.assertEqual(
+                workunit["depends_on"], ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
+            )
+            self.assertNotIn("activation_after", workunit)
+            self.assertEqual(workunit["repos"], ["factorio-launcher"])
+
+        workspace = workunits["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]
+        self.assertEqual(workspace["status"], "planned")
+        self.assertEqual(workspace["depends_on"], list(prerequisite_ids[:2]))
+
+        candidate = workunits["C1-WINDOWS-RELEASE-CANDIDATE-01"]
+        self.assertEqual(candidate["status"], "active")
+        self.assertEqual(candidate["branch"], "task/c1-windows-release-candidate-01")
+        self.assertEqual(
+            candidate["base_revision"],
+            "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
+        )
+        self.assertIn(
+            "FACMAN-WORKSPACE-ROOT-AUTHORITY-01", candidate["depends_on"]
+        )
+        gate = self.plan["gate"][0]
+        self.assertEqual(gate["status"], "blocked")
+        self.assertEqual(
+            gate["external_ref"],
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
+        )
+        self.assertEqual(gate["stage"], "superseded_before_observer_self_test")
+        self.assertFalse(gate["operator_assignment_required"])
+        self.assertEqual(
+            gate["blocks"],
+            [
+                "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+                "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+                "C1-LIVE-PLAY-ACCEPTANCE-01",
+            ],
+        )
+        for workunit_id in prerequisite_ids:
+            self.assertIn(workunit_id, gate["non_blocking_work"])
+        self.assertNotIn("C1-WINDOWS-PACKAGE-01", gate["non_blocking_work"])
+
+        successor_ids = (
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+            "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
+        )
+        self.assertEqual(
+            workunits[successor_ids[0]]["depends_on"],
+            ["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"],
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["depends_on"], [successor_ids[0]]
+        )
+        self.assertEqual(
+            workunits[successor_ids[2]]["depends_on"], [successor_ids[1]]
+        )
+        for workunit_id in successor_ids:
+            self.assertEqual(workunits[workunit_id]["status"], "planned")
+            self.assertIn(workunit_id, gate["non_blocking_work"])
+
+        self.assertEqual(
+            self.plan["release"][0]["release_sequence"],
+            [
+                "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01 and FACMAN-C1-BACKEND-IDENTITY-01",
+                "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+                "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+                "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+                "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
+                "fresh stage, observer, prepare, permit, two launches, and human verdict",
+                "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01 then FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01 after Pass",
+                "C1-WINDOWS-PACKAGE-01 then C1-LIVE-PLAY-ACCEPTANCE-01",
+                "C1-WINDOWS-CLEAN-QUALIFICATION-01",
+                "keyboard, DPI, high-contrast, and accessibility acceptance",
+                "signing or explicit unsigned-preview classification, then C1 publication",
+            ],
+        )
+        later = {item["id"]: item for item in self.plan["later"]}
+        self.assertIn(
+            "fresh successor Play qualification passes",
+            later["C1-LIVE-PLAY-ACCEPTANCE-01"]["trigger"],
+        )
+        self.assertIn(
+            "all three pre-C1",
+            later["C1-WINDOWS-PACKAGE-01"]["trigger"],
+        )
+        self.assertEqual(
+            later["C1-WINDOWS-CLEAN-QUALIFICATION-01"]["trigger"],
+            "C1-LIVE-PLAY-ACCEPTANCE-01 is accepted for the exact packaged candidate.",
+        )
+
+    def test_gated_activation_cannot_be_marked_non_blocking(self) -> None:
+        invalid = copy.deepcopy(self.plan)
+        workunit_id = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
+        invalid_workunit = next(
+            item for item in invalid["workunit"] if item["id"] == workunit_id
+        )
+        invalid_workunit["activation_after"] = invalid["gate"][0]["blocks"][0]
+        errors = generate_plan_views.validate_plan(invalid)
+        self.assertTrue(
+            any(
+                f"{workunit_id} cannot be gate-non-blocking" in error
+                for error in errors
+            ),
+            errors,
+        )
 
     def test_gate_scope_and_overlap_are_rejected(self) -> None:
         invalid = copy.deepcopy(self.plan)

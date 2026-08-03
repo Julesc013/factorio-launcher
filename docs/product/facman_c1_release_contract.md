@@ -4,6 +4,7 @@ schema_version: "1.0"
 status: accepted
 release: FacMan-0.1.0-C1
 accepted: 2026-08-01
+last_reviewed: 2026-08-03
 workunit: FACMAN-C1-CUTLINE-01
 ---
 
@@ -96,9 +97,52 @@ interrupted backend operation into ordinary cancellation.
 The process-transport exception exits after C1 only when direct bindings or a
 durable host demonstrate measured value.
 
+## Pre-packaged live acceptance prerequisites
+
+Three bounded work units now sit on the canonical C1 path before packaged live
+acceptance:
+
+```text
+FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01
+FACMAN-C1-BACKEND-IDENTITY-01
+FACMAN-WORKSPACE-ROOT-AUTHORITY-01
+```
+
+They must prove truthful bounded transport failure semantics, an exact
+package-relative backend/contract identity, and no-follow workspace-root
+ownership respectively. They retain the existing C1 process protocol and may
+not repin a provider, change the active Play candidate, widen Setup authority,
+or grant observer, permit, execution, route, signing, publication, or release
+authority.
+
+The Windows release-candidate work unit remains active and fail-closed.
+Revalidation-04 is superseded and archived before observer self-test; it is
+historical evidence, not a resumable gate. The release sequence is:
+
+```text
+transport hardening + backend identity
+-> workspace-root authority
+-> fresh successor route definition
+-> fresh remote-only source closure
+-> fresh successor qualification
+-> new stage -> observer -> prepare -> permit -> two launches -> verdict
+-> exact route capability and promotion after Pass
+-> exact Windows package and packaged live acceptance
+-> clean Windows 10/11 x64 qualification
+-> keyboard, DPI, high-contrast, and accessibility acceptance
+-> signing or explicit unsigned-preview classification
+-> C1 publication
+```
+
+Planning this sequence changes no candidate identity or authority state. The
+three hardening WorkUnits precede successor construction; every later stage is
+formed from fresh evidence and separate authority.
+
 ## Authority-only Play gate
 
-Revalidation-04 remains mandatory and blocks only:
+The retained revalidation-04 record remains blocked and historical. It cannot
+be restarted, resumed, prepared, or executed. Its former authority boundary
+continues to prevent accidental promotion of:
 
 ```text
 FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01
@@ -107,13 +151,16 @@ C1-LIVE-PLAY-ACCEPTANCE-01
 ```
 
 It does not block the C1 cut-line, journeys, presentation fixtures, native
-shells, refusal UI, Activity, recovery, packaging, accessibility, or support
-documentation. Until route promotion, Play presents the exact structured
-unavailable state and does not execute.
+shells, refusal UI, Activity, recovery, provisional candidate construction,
+preview packaging, accessibility work, support documentation, or the three
+pre-successor hardening WorkUnits. Until a fresh successor passes and its route
+is promoted, Play presents the exact structured unavailable state and does not
+execute.
 
-Jules is designated as the revalidation-04 operator. That designation grants
-no observer capture, `prepare`, permit, Factorio execution, human verdict, or
-route authority. Each remains separately authorized and recorded.
+Jules's retained revalidation-04 operator designation is historical only. It
+grants no observer capture, `prepare`, permit, Factorio execution, human
+verdict, route, signing, or publication authority. A successor requires a new
+WorkUnit, qualification, stage, and separately recorded authority chain.
 
 GUI-only changes do not invalidate route evidence unless they change the
 execution binary, launch plan, route policy, provider pin, instance binding,

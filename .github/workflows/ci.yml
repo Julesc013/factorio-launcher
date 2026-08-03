@@ -10,10 +10,12 @@ jobs:
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/native-smoke/facman
       FACMAN_TUI_EXE: ${{ github.workspace }}/build/native-smoke/facman-tui
+      FACMAN_CI_SOURCE_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -25,6 +27,24 @@ jobs:
           git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
+      - name: Record exact checkout and provider observation
+        run: >-
+          python tools/current_checkout_observation.py
+          --provider-root universal_launcher=../universal-launcher
+          --provider-root universal_setup=../universal-setup
+          --expected-source-sha "$FACMAN_CI_SOURCE_SHA"
+          --line-ending-profile lf_checkout
+          --output-dir "$RUNNER_TEMP/facman-current-checkout-observation"
+      - name: Preserve current checkout and provider observation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-checkout-observation-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.json
+            ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
+          if-no-files-found: error
+          retention-days: 14
       - name: Configure native core
         run: >-
           cmake -S . -B build/native-smoke

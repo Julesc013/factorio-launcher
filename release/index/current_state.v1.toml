@@ -9,6 +9,12 @@ next_work_unit = ""
 last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05"
 next_authority_gate = "real-play-isolation"
 
+[revision_snapshot]
+kind = "reviewed_checkpoint_truth"
+compatibility_fields = ["current_dev_revision", "observed_branch_head"]
+live_checkout_observation_tool = "tools/current_checkout_observation.py"
+live_checkout_claim = "generated_after_checkout_not_tracked"
+
 [revisions]
 observed_dev = "84a0d496b1d4b71ad239e720390e914005dd4611"
 canonical_main = "133da925af13d475c959a336e0b0eec0427a0381"

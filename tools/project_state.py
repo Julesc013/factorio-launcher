@@ -197,6 +197,16 @@ def collect() -> dict[str, Any]:
     return {
         "schema": "facman.project_state.v2",
         "product_version": status["product_version"],
+        "revision_snapshot": {
+            "kind": status["revision_snapshot_kind"],
+            "live_checkout_observation_tool": status[
+                "live_checkout_observation_tool"
+            ],
+            "compatibility_fields": [
+                "current_dev_revision",
+                "observed_branch_head",
+            ],
+        },
         "completed_wave": {
             "id": status["completed_wave"],
             "status": "complete",
@@ -407,6 +417,14 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"next_work_unit = {toml_string(data['product']['next_work_unit'])}",
         f"last_closed_work_unit = {toml_string(data['last_closed_work_unit'] or '')}",
         f"next_authority_gate = {toml_string(data['next_authority_gate'])}",
+        "",
+        "[revision_snapshot]",
+        f"kind = {toml_string(data['revision_snapshot']['kind'])}",
+        "compatibility_fields = "
+        f"{toml_array(data['revision_snapshot']['compatibility_fields'])}",
+        "live_checkout_observation_tool = "
+        f"{toml_string(data['revision_snapshot']['live_checkout_observation_tool'])}",
+        'live_checkout_claim = "generated_after_checkout_not_tracked"',
         "",
         "[revisions]",
         f"observed_dev = {toml_string(revisions['factorio_launcher'])}",
@@ -674,6 +692,11 @@ def markdown(data: dict[str, Any]) -> str:
         "Generated from `release/index/project_status.v2.toml`, the workspace lock,",
         "the command/refusal registries, capability policy, and support matrix.",
         "Edit canonical inputs, then run `py -3 tools/project_state.py --write`.",
+        "",
+        "Tracked revision fields describe the reviewed checkpoint and retain their",
+        "v1 compatibility names. They do not claim to be the live checkout HEAD.",
+        "Generate that fail-closed observation after checkout with",
+        "`tools/current_checkout_observation.py`.",
         "",
         "## Current product truth",
         "",
@@ -976,6 +999,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical status has the wrong schema")
     if status.get("completed_wave") != "m2":
         problems.append("canonical status must record completed M2 technical wave")
+    if status.get("revision_snapshot_kind") != "reviewed_checkpoint_truth":
+        problems.append("canonical status revision fields must be reviewed checkpoint truth")
+    if status.get("live_checkout_observation_tool") != "tools/current_checkout_observation.py":
+        problems.append("canonical status must name the out-of-tree checkout observation tool")
     revision_fields = (
         "current_dev_revision",
         "canonical_main_revision",
@@ -994,11 +1021,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
             problems.append(f"{field} must be an exact lowercase Git revision")
     if status.get("current_dev_revision") != status.get("dev_synchronization_revision"):
-        problems.append("current dev must equal the recorded dev synchronization revision")
+        problems.append(
+            "reviewed current dev checkpoint must equal the dev synchronization revision"
+        )
     if status.get("canonical_main_revision") != status.get("planning_promotion_revision"):
         problems.append("canonical main must equal the recorded planning promotion revision")
     if status.get("observed_branch_head") != status.get("current_dev_revision"):
-        problems.append("observed branch head must equal current dev")
+        problems.append(
+            "observed_branch_head compatibility field must equal the reviewed dev checkpoint"
+        )
     if status.get("truth_closeout_revision") != status.get("dev_synchronization_revision"):
         problems.append("truth closeout must bind the reviewed dev synchronization revision")
     closeout = status.get("canonical_plan_and_truth_closeout", {})

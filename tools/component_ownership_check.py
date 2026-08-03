@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import os
 import sys
 import tomllib
@@ -116,6 +117,14 @@ def check(*, require_siblings: bool = False) -> list[str]:
     problems = []
     if data.get("schema") != "facman.component_ownership.v1":
         problems.append("ownership manifest has the wrong schema")
+    reviewed_on = data.get("reviewed_on")
+    try:
+        parsed_reviewed_on = datetime.date.fromisoformat(str(reviewed_on))
+    except ValueError:
+        problems.append("ownership manifest reviewed_on must be an ISO date")
+    else:
+        if parsed_reviewed_on.isoformat() != reviewed_on:
+            problems.append("ownership manifest reviewed_on must use YYYY-MM-DD")
     if set(data.get("classification", [])) != OWNERS:
         problems.append("ownership manifest classification set is incomplete")
 

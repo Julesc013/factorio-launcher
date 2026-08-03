@@ -26,7 +26,7 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "133da925af13d475c959a336e0b0eec0427a0381"
-DEV = "84a0d496b1d4b71ad239e720390e914005dd4611"
+REVIEWED_DEV_CHECKPOINT = "84a0d496b1d4b71ad239e720390e914005dd4611"
 PROMOTION_SOURCE = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 REVALIDATION_02 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
@@ -49,13 +49,28 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.current = load_toml(CURRENT_STATE_PATH)
         self.plan = load_toml(PLAN_PATH)
 
-    def test_current_branch_roles_are_exact_and_distinct(self) -> None:
+    def test_reviewed_checkpoint_roles_are_exact_and_distinct(self) -> None:
+        self.assertEqual(
+            self.status["revision_snapshot_kind"], "reviewed_checkpoint_truth"
+        )
+        self.assertEqual(
+            self.status["live_checkout_observation_tool"],
+            "tools/current_checkout_observation.py",
+        )
         self.assertEqual(self.status["canonical_main_revision"], MAIN)
         self.assertEqual(self.status["planning_promotion_revision"], MAIN)
-        self.assertEqual(self.status["current_dev_revision"], DEV)
-        self.assertEqual(self.status["dev_synchronization_revision"], DEV)
-        self.assertEqual(self.status["truth_closeout_revision"], DEV)
-        self.assertEqual(self.status["observed_branch_head"], DEV)
+        self.assertEqual(
+            self.status["current_dev_revision"], REVIEWED_DEV_CHECKPOINT
+        )
+        self.assertEqual(
+            self.status["dev_synchronization_revision"], REVIEWED_DEV_CHECKPOINT
+        )
+        self.assertEqual(
+            self.status["truth_closeout_revision"], REVIEWED_DEV_CHECKPOINT
+        )
+        self.assertEqual(
+            self.status["observed_branch_head"], REVIEWED_DEV_CHECKPOINT
+        )
         self.assertEqual(self.status["promotion_source_revision"], PROMOTION_SOURCE)
         self.assertNotEqual(
             self.status["current_dev_revision"],
@@ -63,12 +78,23 @@ class CurrentTruthRoleTests(unittest.TestCase):
         )
 
     def test_generated_current_state_exposes_each_revision_role(self) -> None:
+        snapshot = self.current["revision_snapshot"]
+        self.assertEqual(snapshot["kind"], "reviewed_checkpoint_truth")
+        self.assertEqual(
+            snapshot["live_checkout_claim"], "generated_after_checkout_not_tracked"
+        )
+        self.assertEqual(
+            snapshot["live_checkout_observation_tool"],
+            "tools/current_checkout_observation.py",
+        )
         revisions = self.current["revisions"]
         self.assertEqual(revisions["canonical_main"], MAIN)
         self.assertEqual(revisions["planning_promotion"], MAIN)
-        self.assertEqual(revisions["observed_dev"], DEV)
-        self.assertEqual(revisions["dev_synchronization"], DEV)
-        self.assertEqual(revisions["truth_closeout"], DEV)
+        self.assertEqual(revisions["observed_dev"], REVIEWED_DEV_CHECKPOINT)
+        self.assertEqual(
+            revisions["dev_synchronization"], REVIEWED_DEV_CHECKPOINT
+        )
+        self.assertEqual(revisions["truth_closeout"], REVIEWED_DEV_CHECKPOINT)
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
         self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
 

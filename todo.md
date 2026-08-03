@@ -20,7 +20,7 @@ last_reviewed: 2026-08-03
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 2/3 including external gates
 - Ready: 0/10
-- Near-term work units: 2/5
+- Near-term work units: 8/6
 
 ## North star
 
@@ -65,7 +65,7 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
-- Non-blocking product work: 12 named items may continue independently.
+- Non-blocking product work: 17 named items may continue independently.
 - Exit: Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension.
 
 ## Active work units
@@ -83,6 +83,12 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
+- [ ] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
+- [ ] `FACMAN-C1-BACKEND-IDENTITY-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
+- [ ] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — planned; depends on `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
+- [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
+- [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
+- [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
 
 ## Blocking decisions
 
@@ -116,6 +122,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 ## Release exit
 
 - [ ] J01 passes its positive and paired failure journey on Windows x64 WinForms; preview artifacts make no live Play or stable support claim without equivalent platform evidence.
+- [ ] WinForms transport hardening, exact packaged-backend identity, and workspace-root authority pass before packaged live acceptance.
 - [ ] Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, 100/150/200-percent scaling, contrast, focus, and accessible-name checks for WinForms.
 - [ ] Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.
 - [ ] A clean checkout can reconstruct the tested release evidence without hidden machine state.
@@ -133,12 +140,8 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells
 - [x] `FACMAN-C1-LIVE-SHELL-INTEGRATION-01` — Integrate backend-derived presentation into all three C1 shells
 
-## Validation commands
-
-```powershell
-py -3 tools/generate_plan_views.py --check
-py -3 -m unittest tests.test_plan_views
-```
+## Validation
+`py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`
 
 ## Rules of engagement
 

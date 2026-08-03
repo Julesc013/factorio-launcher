@@ -45,6 +45,7 @@ def validate() -> list[str]:
         "windows-native-package:",
         "runs-on: windows-2022",
         "actions/checkout@v6",
+        "fetch-depth: 0",
         "actions/setup-python@v6",
         "microsoft/setup-msbuild@v3",
         "cmake -S . -B build/native-smoke",
@@ -66,10 +67,46 @@ def validate() -> list[str]:
         "Prepare no-link temporary root",
         "ctest --test-dir build/macos-native --output-on-failure",
         "python tools/macos_package_proof.py",
+        "Record exact checkout and provider observation",
+        "python tools/current_checkout_observation.py",
+        "--provider-root universal_launcher=../universal-launcher",
+        "--provider-root universal_setup=../universal-setup",
+        '--expected-source-sha "$FACMAN_CI_SOURCE_SHA"',
+        "--line-ending-profile lf_checkout",
+        "Preserve current checkout and provider observation",
+        "current-checkout-observation.v2.json",
+        "current-checkout-observation.v2.md",
     ]
     for anchor in required_ci:
         if anchor not in ci:
             problems.append(f"ci.yml is missing required proof anchor: {anchor}")
+
+    linux_native = ci.partition("  linux-native:")[2].partition("\n  linux-coverage:")[0]
+    required_live_observation = [
+        "FACMAN_CI_SOURCE_SHA: ${{ github.sha }}",
+        "fetch-depth: 0",
+        "persist-credentials: false",
+        "--line-ending-profile lf_checkout",
+        '--output-dir "$RUNNER_TEMP/facman-current-checkout-observation"',
+        "if: always()",
+        "if-no-files-found: error",
+    ]
+    for anchor in required_live_observation:
+        if anchor not in linux_native:
+            problems.append(
+                f"linux-native checkout observation is missing fail-closed anchor: {anchor}"
+            )
+    if "github.event.pull_request.head.sha" in linux_native:
+        problems.append(
+            "linux-native must retain the workflow SHA and PR merge-checkout semantics"
+        )
+    alignment_index = linux_native.find("Align dependency revisions to workspace lock")
+    observation_index = linux_native.find("Record exact checkout and provider observation")
+    upload_index = linux_native.find("Preserve current checkout and provider observation")
+    if not (0 <= alignment_index < observation_index < upload_index):
+        problems.append(
+            "linux-native must observe and preserve checkout truth after provider alignment"
+        )
 
     if "name: security-policy" not in security:
         problems.append("security workflow must be named security-policy")
@@ -83,6 +120,8 @@ def validate() -> list[str]:
         problems.append("required Linux package proof runner is missing")
     if not (ROOT / "tools" / "macos_package_proof.py").is_file():
         problems.append("required macOS package proof runner is missing")
+    if not (ROOT / "tools" / "current_checkout_observation.py").is_file():
+        problems.append("current checkout/provider observation runner is missing")
     cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")

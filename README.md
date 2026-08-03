@@ -191,9 +191,15 @@ This repo includes AIDE Lite as development governance tooling only. It is not
 part of the launcher runtime and must not be bundled in production packages.
 See [docs/architecture/aide_lite_integration.md](docs/architecture/aide_lite_integration.md).
 Current machine-readable truth is `.aide/memory/project-state.v2.json`; the
-compact present-tense product view is `release/index/current_state.v1.toml`,
-and the human summary is generated from the same canonical inputs. Closed task evidence is hash-indexed under
-`.aide/history/` and excluded from ordinary context packets.
+compact reviewed-checkpoint product view is
+`release/index/current_state.v1.toml`, and the human summary is generated from
+the same canonical inputs. Live checkout/provider identity is emitted outside
+the source tree by `tools/current_checkout_observation.py`. Its provider-ref
+evidence is an offline, policy-bound local tracking-ref observation, not a live
+remote query or the separate empty-clone source-closure proof; tracked state
+does not impersonate either. Closed task
+evidence is hash-indexed under `.aide/history/` and excluded from ordinary
+context packets.
 
 Before large native implementation work, review
 [docs/architecture/pre_code_structure_review.md](docs/architecture/pre_code_structure_review.md).

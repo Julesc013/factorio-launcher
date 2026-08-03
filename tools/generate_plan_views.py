@@ -176,11 +176,20 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         for field in ("title", "owner", "objective", "platform_cut", "frontend_cut"):
             if not release.get(field):
                 errors.append(f"{release_id} is missing {field}")
-        for field in ("cut_line", "non_goals", "exit", "journeys", "claim_seed"):
+        for field in (
+            "cut_line",
+            "release_sequence",
+            "non_goals",
+            "exit",
+            "journeys",
+            "claim_seed",
+        ):
             value = release.get(field)
             if not isinstance(value, list) or not value:
                 errors.append(f"{release_id} requires a non-empty {field}")
 
+    gate_block_ids: set[str] = set()
+    gate_non_blocking_ids: set[str] = set()
     for gate in _records(plan, "gate"):
         gate_id = gate.get("id", "<unknown-gate>")
         if gate.get("status") not in GATE_STATUSES:
@@ -199,6 +208,8 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         if not isinstance(non_blocking, list) or not non_blocking:
             errors.append(f"{gate_id} requires a non-empty non_blocking_work list")
             non_blocking = []
+        gate_block_ids.update(str(item) for item in blocks)
+        gate_non_blocking_ids.update(str(item) for item in non_blocking)
         if len(blocks) != len(set(blocks)):
             errors.append(f"{gate_id} blocks contains duplicate identifiers")
         if len(non_blocking) != len(set(non_blocking)):
@@ -285,12 +296,27 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
 
         dependencies = workunit.get("depends_on", [])
         blockers = workunit.get("decision_blockers", [])
+        activation_after = workunit.get("activation_after")
         if not isinstance(dependencies, list):
             errors.append(f"{workunit_id} depends_on must be a list")
             dependencies = []
         if not isinstance(blockers, list):
             errors.append(f"{workunit_id} decision_blockers must be a list")
             blockers = []
+        if activation_after is not None:
+            if (
+                not isinstance(activation_after, str)
+                or activation_after not in gate_block_ids
+            ):
+                errors.append(
+                    f"{workunit_id} activation_after references unknown gated "
+                    f"authority {activation_after}"
+                )
+            if workunit_id in gate_non_blocking_ids:
+                errors.append(
+                    f"{workunit_id} cannot be gate-non-blocking while activation "
+                    f"waits on {activation_after}"
+                )
 
         for dependency in dependencies:
             if dependency in later_ids:
@@ -508,8 +534,14 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     lines.extend(["", "## Critical path after the current unit", ""])
     for item in ready + planned:
         dependencies = ", ".join(f"`{value}`" for value in item["depends_on"]) or "none"
+        activation = (
+            f"; activates after `{item['activation_after']}`"
+            if item.get("activation_after")
+            else ""
+        )
         lines.append(
-            f"- [{_work_marker(item['status'])}] `{item['id']}` — {item['status']}; depends on {dependencies}"
+            f"- [{_work_marker(item['status'])}] `{item['id']}` — "
+            f"{item['status']}; depends on {dependencies}{activation}"
         )
 
     lines.extend(["", "## Blocking decisions", ""])
@@ -549,12 +581,8 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "## Validation commands",
-            "",
-            "```powershell",
-            "py -3 tools/generate_plan_views.py --check",
-            "py -3 -m unittest tests.test_plan_views",
-            "```",
+            "## Validation",
+            "`py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`",
             "",
             "## Rules of engagement",
             "",
@@ -621,10 +649,16 @@ def render_roadmap(plan: dict[str, Any]) -> str:
             continue
         for item in epic_work:
             dependencies = ", ".join(f"`{dep}`" for dep in item["depends_on"]) or "none"
+            activation = (
+                f"; activation after `{item['activation_after']}`"
+                if item.get("activation_after")
+                else ""
+            )
             lines.extend(
                 [
                     f"- [{_work_marker(item['status'])}] **{item['id']}** — {item['title']}",
-                    f"  - State: `{item['status']}`; priority/size: `{item['priority']}/{item['size']}`",
+                    f"  - State: `{item['status']}`; priority/size: "
+                    f"`{item['priority']}/{item['size']}`{activation}",
                     f"  - Owner: `{item['owner']}`; dependencies: {dependencies}",
                     f"  - Outcome: {item['outcome']}",
                 ]
