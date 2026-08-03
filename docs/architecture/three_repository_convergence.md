@@ -306,11 +306,16 @@ Every extraction follows the same train:
 
 1. A FacMan or Dominium need demonstrates the boundary.
 2. Product-specific and product-neutral behavior are separated.
-3. The provider lands additive contract, implementation and conformance proof.
-4. The provider change reaches canonical `main`.
-5. The product updates one exact pin in a separate, reversible change.
-6. Empty-clone source closure and consumer integration are proven.
-7. The product incubator is deleted or reduced to a thin compatibility adapter.
+3. The provider task lands additive contract, implementation and conformance
+   proof on provider `dev`.
+4. Consumer canaries test the exact provider `dev` SHA without changing any
+   tracked consumer lock.
+5. The provider `dev` change reaches canonical `main` through reviewed
+   promotion.
+6. The product updates one exact provider-`main` pin in a separate, reversible
+   adoption change.
+7. Empty-clone source closure and consumer integration are proven.
+8. The product incubator is deleted or reduced to a thin compatibility adapter.
 
 There is no atomic three-repository merge. Producer commits precede consumer
 switches; each switch can be reverted independently. A provider pin never
@@ -329,6 +334,7 @@ work that changes no consumed provider identity.
 The generated checkout observation must report, for both providers:
 
 - local `origin/main` tracking-ref revision;
+- local `origin/dev` tracking-ref revision and whether `main` is its ancestor;
 - exact consumed pin;
 - pin checkout match;
 - pin reachability from that local tracking ref;
@@ -348,8 +354,9 @@ fetched empty-clone proof. Tracked README text must not impersonate either.
 
 - One bounded concern per commit; code, contract, tests and focused docs stay
   together when separating them would make an intermediate commit invalid.
-- Provider branches start from verified `origin/main`; FacMan task branches
-  start from verified `origin/dev`.
+- Provider and FacMan task branches start from an exact verified `origin/dev`.
+- Provider `main` accepts reviewed `dev` promotions or explicit hotfixes only;
+  hotfixes are synchronized back to `dev` without force-resetting either ref.
 - Existing user changes and qualified worktrees remain untouched.
 - Every commit passes focused checks; every branch passes the complete
   repository suite before sharing.
@@ -362,7 +369,10 @@ fetched empty-clone proof. Tracked README text must not impersonate either.
 Do not:
 
 - merge the three repositories or create a fourth common repository;
-- create provider `dev` branches for symmetry;
+- copy unrelated FacMan commits into provider `dev` or create no-op provider
+  commits merely to show activity;
+- pin canonical product builds to provider `dev` rather than exact commits
+  reachable from provider `main`;
 - bulk-move FacMan runtime directories into ULK;
 - allow Dominium to retain a parallel generic Setup kernel;
 - universalize FacMan presentation before a second product proves the records;

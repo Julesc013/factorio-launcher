@@ -17,7 +17,7 @@ class ComponentOwnershipTests(unittest.TestCase):
             manifest = tomllib.load(handle)
         self.assertEqual(
             datetime.date.fromisoformat(manifest["reviewed_on"]),
-            datetime.date(2026, 8, 3),
+            datetime.date(2026, 8, 4),
         )
 
     def test_manifest_classifies_all_current_components(self) -> None:

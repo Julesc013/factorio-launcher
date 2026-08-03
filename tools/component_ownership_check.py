@@ -36,9 +36,9 @@ TEMPORARY_FIELDS = {
     "expires_at",
 }
 EXPECTED_BRANCH_MODELS = {
-    "factorio-launcher": "main + integration dev + short-lived task and promotion branches",
-    "universal-launcher": "main + short-lived task branches",
-    "universal-setup": "main + short-lived task branches",
+    "factorio-launcher": "main + integration dev + short-lived task and hotfix branches",
+    "universal-launcher": "main + integration dev + short-lived task and hotfix branches",
+    "universal-setup": "main + integration dev + short-lived task and hotfix branches",
 }
 
 
