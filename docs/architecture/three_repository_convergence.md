@@ -97,12 +97,27 @@ Product            -X-> direct installed-software mutation
 
 ## Permanent ownership
 
-| Owner | Permanent responsibilities | Explicit exclusions |
-| --- | --- | --- |
-| Universal Setup | Package/source inspection; target authority; install, verify, repair, update, move, uninstall, rollback and recovery; setup transactions; installed-state ownership and audit | Product rules and UI, launch sessions, mods, saves, accounts |
-| Universal Launcher | Command/client/transport contracts; owned results; durable operation identity/outcome; generic references and persistence; launch-plan staleness; execution sessions and process containment; launcher journals and preference mechanism | Setup mutation, Factorio/Dominium semantics, product presentation |
-| FacMan | Factorio discovery, installation classification, InstanceSpec/Binding, readiness, profiles, mods, saves, backups, launch intent/policy/evidence, product presentation, native shells, packaging | Generic setup engine or permanent generic launcher infrastructure |
-| Dominium | Product identity and compatibility, component recipes, product release policy, content packs, product launch/readiness interpretation and branded shells | Parallel generic setup/launcher kernels |
+Universal Setup permanently owns package and source inspection, target
+authority, every setup mutation and recovery operation, setup transactions,
+installed-state ownership, and audit. It excludes product rules and UI, launch
+sessions, mods, saves, and accounts.
+
+Universal Launcher permanently owns command, client, and transport contracts;
+owned results; durable operation identity and outcome; generic references and
+persistence; launch-plan staleness; execution sessions and process
+containment; launcher journals; and the preference mechanism. It excludes
+setup mutation, Factorio or Dominium semantics, and product presentation.
+
+FacMan permanently owns Factorio discovery, installation classification,
+InstanceSpec and Binding, readiness, profiles, mods, saves, backups, launch
+intent, policy and evidence, product presentation, native shells, and
+packaging. It excludes a generic setup engine and permanent generic launcher
+infrastructure.
+
+Dominium permanently owns product identity and compatibility, component
+recipes, product release policy, content packs, product launch and readiness
+interpretation, and branded shells. It excludes parallel generic setup or
+launcher kernels.
 
 The machine-readable authority is
 `release/index/component_ownership.v1.toml`. Every temporary incubator must
