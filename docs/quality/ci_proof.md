@@ -38,7 +38,8 @@ and update the checker in the same reviewed change.
 
 The observation upload runs even when observation validation fails, so a
 mismatch remains diagnosable without converting it into success. It is a CI
-artifact, not tracked state, a remote-status cache, or release authority.
+artifact outside every observed checkout, not tracked state, a remote-status
+cache, or release authority.
 
 Each selected package runner refuses the wrong host/architecture, any test
 failure, and any skipped required package test. The Windows runner also

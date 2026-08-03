@@ -50,6 +50,8 @@ py -3 tools/current_checkout_observation.py `
 ```
 
 The command emits canonical JSON and a Markdown rendering from the same data.
+The output root must be outside FacMan and every passed provider checkout, so
+artifact generation cannot dirty a repository after observing it as clean.
 It fails closed on a dirty or unexpected FacMan checkout, provider pin drift,
 origin mismatch, missing canonical ref, unreachable pin, or unavailable ABI
 declaration.

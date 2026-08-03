@@ -31,7 +31,11 @@ class CiProofTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn('SCHEMA = "facman.current_checkout_observation.v1"', text)
         self.assertIn('OUTPUT_STEM = "current-checkout-observation.v1"', text)
-        self.assertIn("--output-dir must be outside the source checkout", text)
+        self.assertIn(
+            "--output-dir must be outside every ",
+            text,
+        )
+        self.assertIn("observed source/provider checkout", text)
         self.assertIn("merge-base", text)
         self.assertIn("ABI_PATTERN", text)
 

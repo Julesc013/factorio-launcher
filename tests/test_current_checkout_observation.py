@@ -6,6 +6,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -235,6 +236,121 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         self.assertEqual(observation["result"]["status"], "pass")
         self.assertEqual(observation["source"]["head"], facman_head)
 
+    def test_inherited_alternate_index_and_object_stores_are_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            alternate_index = temporary / "alternate.index"
+            alternate_index.write_bytes(facman.joinpath(".git", "index").read_bytes())
+            facman.joinpath("truth.txt").write_text("hidden by alternate index\n", encoding="utf-8")
+            alternate_environment = os.environ.copy()
+            alternate_environment["GIT_INDEX_FILE"] = str(alternate_index)
+            subprocess.run(
+                ["git", "add", "truth.txt"],
+                cwd=facman,
+                env=alternate_environment,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            injected_objects = temporary / "injected-objects"
+            injected_objects.mkdir()
+            with mock.patch.dict(
+                "os.environ",
+                {
+                    "GIT_INDEX_FILE": str(alternate_index),
+                    "GIT_OBJECT_DIRECTORY": str(injected_objects),
+                    "GIT_ALTERNATE_OBJECT_DIRECTORIES": str(
+                        provider_roots["universal_setup"] / ".git" / "objects"
+                    ),
+                },
+            ):
+                observation = current_checkout_observation.collect_observation(
+                    facman,
+                    lock,
+                    provider_roots,
+                    expected_source_sha=facman_head,
+                    observed_at_utc="2026-08-03T00:00:00Z",
+                )
+
+        self.assertEqual(observation["source"]["head"], facman_head)
+        self.assertTrue(observation["source"]["dirty"])
+        self.assertTrue(observation["source"]["index_flags_clean"])
+        self.assertIn(
+            "factorio-launcher: checkout is dirty",
+            observation["result"]["problems"],
+        )
+
+    def test_replace_refs_cannot_change_pinned_abi_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            launcher = provider_roots["universal_launcher"]
+            pin = self.git(launcher, "rev-parse", "HEAD")
+            header = launcher / "include" / "ulk" / "ulk_types.h"
+            header.write_text(
+                "#define ULK_API_VERSION_MAJOR 9\n"
+                "#define ULK_API_VERSION_MINOR 9\n",
+                encoding="utf-8",
+            )
+            self.git(launcher, "add", "include/ulk/ulk_types.h")
+            replacement_tree = self.git(launcher, "write-tree")
+            replacement_commit = self.git(
+                launcher,
+                "commit-tree",
+                replacement_tree,
+                "-m",
+                "hostile replacement",
+            )
+            self.git(launcher, "reset", "--hard", pin)
+            self.git(launcher, "replace", pin, replacement_commit)
+            replaced_header = self.git(
+                launcher,
+                "show",
+                f"{pin}:include/ulk/ulk_types.h",
+            )
+            self.assertIn("API_VERSION_MAJOR 9", replaced_header)
+
+            observation = current_checkout_observation.collect_observation(
+                facman,
+                lock,
+                provider_roots,
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        launcher_observation = next(
+            provider
+            for provider in observation["providers"]
+            if provider["id"] == "universal_launcher"
+        )
+        versions = {
+            abi["id"]: abi["version"]
+            for abi in launcher_observation["abi_versions"]
+        }
+        self.assertEqual(observation["result"]["status"], "pass")
+        self.assertEqual(versions["ulk"], "1.6")
+
+    def test_git_line_ending_policy_is_explicit_for_each_platform(self) -> None:
+        completed = subprocess.CompletedProcess([], 0, "", "")
+        root = Path.cwd()
+        for platform, expected in (
+            ("nt", "core.autocrlf=true"),
+            ("posix", "core.autocrlf=input"),
+        ):
+            with self.subTest(platform=platform), mock.patch.object(
+                current_checkout_observation.os,
+                "name",
+                platform,
+            ), mock.patch.object(
+                current_checkout_observation.subprocess,
+                "run",
+                return_value=completed,
+            ) as run:
+                current_checkout_observation._run_git(root, "status")
+                command = run.call_args.args[0]
+                self.assertIn(expected, command)
+
     def test_remote_credentials_are_ignored_and_redacted(self) -> None:
         credentialed = (
             "https://token:secret@example.invalid/org/repository.git?access=secret"
@@ -273,6 +389,35 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         self.assertEqual(launcher["status"], "fail")
         self.assertIn(
             "provider universal_launcher: locked pin is not reachable from canonical origin/main",
+            observation["result"]["problems"],
+        )
+
+    def test_missing_canonical_remote_ref_is_unknown_and_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            launcher = provider_roots["universal_launcher"]
+            self.git(launcher, "update-ref", "-d", "refs/remotes/origin/main")
+            observation = current_checkout_observation.collect_observation(
+                facman,
+                lock,
+                provider_roots,
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        launcher_observation = next(
+            provider
+            for provider in observation["providers"]
+            if provider["id"] == "universal_launcher"
+        )
+        self.assertIsNone(launcher_observation["canonical_remote_head"])
+        self.assertIsNone(
+            launcher_observation["pin_reachable_from_canonical_ref"]
+        )
+        self.assertEqual(launcher_observation["status"], "fail")
+        self.assertIn(
+            "provider universal_launcher: canonical remote-tracking ref is unavailable",
             observation["result"]["problems"],
         )
 
@@ -377,6 +522,11 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw_temporary:
             temporary = Path(raw_temporary)
             facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            observed_roots = [facman, *provider_roots.values()]
+            indexes_before = {
+                root: root.joinpath(".git", "index").read_bytes()
+                for root in observed_roots
+            }
             output = temporary / "observation"
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(
                 io.StringIO()
@@ -431,6 +581,14 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
             failed_markdown_exists = failed_output.joinpath(
                 "current-checkout-observation.v1.md"
             ).is_file()
+            indexes_after = {
+                root: root.joinpath(".git", "index").read_bytes()
+                for root in observed_roots
+            }
+            statuses_after = {
+                root: self.git(root, "status", "--porcelain=v1")
+                for root in observed_roots
+            }
 
         self.assertEqual(result, 0)
         self.assertEqual(machine["result"]["status"], "pass")
@@ -443,6 +601,42 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         self.assertEqual(failed_result, 1)
         self.assertEqual(failed_machine["result"]["status"], "fail")
         self.assertTrue(failed_markdown_exists)
+        self.assertEqual(indexes_after, indexes_before)
+        self.assertEqual(statuses_after, {root: "" for root in observed_roots})
+
+    def test_cli_refuses_output_inside_any_observed_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            output = provider_roots["universal_launcher"] / "observation"
+            stderr = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(
+                stderr
+            ):
+                result = current_checkout_observation.main(
+                    [
+                        "--repository-root",
+                        str(facman),
+                        "--workspace-lock",
+                        str(lock),
+                        "--provider-root",
+                        f"universal_launcher={provider_roots['universal_launcher']}",
+                        "--provider-root",
+                        f"universal_setup={provider_roots['universal_setup']}",
+                        "--expected-source-sha",
+                        facman_head,
+                        "--output-dir",
+                        str(output),
+                    ]
+                )
+            output_exists = output.exists()
+
+        self.assertEqual(result, 2)
+        self.assertFalse(output_exists)
+        self.assertIn(
+            "--output-dir must be outside every observed source/provider checkout",
+            stderr.getvalue(),
+        )
 
 
 if __name__ == "__main__":

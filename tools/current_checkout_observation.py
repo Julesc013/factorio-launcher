@@ -738,9 +738,11 @@ def main(argv: list[str] | None = None) -> int:
         for problem in parse_problems:
             print(f"current-checkout-observation: {problem}", file=sys.stderr)
         return 2
-    if _is_within(output_dir, repository_root):
+    observed_roots = [repository_root, *provider_roots.values()]
+    if any(_is_within(output_dir, root) for root in observed_roots):
         print(
-            "current-checkout-observation: --output-dir must be outside the source checkout",
+            "current-checkout-observation: --output-dir must be outside every "
+            "observed source/provider checkout",
             file=sys.stderr,
         )
         return 2
