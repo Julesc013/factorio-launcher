@@ -7,6 +7,7 @@
     <AssemblyName>FacMan.Transport.Harness</AssemblyName>
     <OutputPath>bin\Harness\</OutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DefineConstants>$(DefineConstants);FACMAN_TRANSPORT_HARNESS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -20,6 +21,7 @@
     <Compile Include="..\..\apps\gui\windows\winforms\BoundedByteChannel.cs" Link="BoundedByteChannel.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\StrictTransportJson.cs" Link="StrictTransportJson.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\TransportResponseDecoder.cs" Link="TransportResponseDecoder.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\PackagedBackendIdentity.cs" Link="PackagedBackendIdentity.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\WindowsContainedProcess.cs" Link="WindowsContainedProcess.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\CliProcessClient.cs" Link="CliProcessClient.cs" />
     <Compile Include="TransportHarness.cs" />

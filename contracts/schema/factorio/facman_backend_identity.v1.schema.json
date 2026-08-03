@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/facman_backend_identity.v1.schema.json",
+  "title": "FacMan Packaged Backend Identity",
+  "type": "object",
+  "required": [
+    "schema",
+    "product_id",
+    "binding_id",
+    "backend_role",
+    "build",
+    "transport",
+    "command_catalog_sha256",
+    "contract_set_sha256",
+    "package",
+    "run_execute"
+  ],
+  "properties": {
+    "schema": {"const": "facman.backend_identity.v1"},
+    "product_id": {"const": "factorio"},
+    "binding_id": {"const": "flb.factorio"},
+    "backend_role": {"const": "facman_cli"},
+    "build": {
+      "type": "object",
+      "required": [
+        "source_revision",
+        "source_dirty",
+        "build_identity",
+        "universal_launcher_revision",
+        "universal_setup_revision"
+      ],
+      "properties": {
+        "source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "source_dirty": {"type": "boolean"},
+        "build_identity": {"type": "string", "minLength": 1},
+        "universal_launcher_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "universal_setup_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      },
+      "additionalProperties": false
+    },
+    "transport": {
+      "type": "object",
+      "required": ["protocol_version", "request_schema", "response_schema"],
+      "properties": {
+        "protocol_version": {"const": 2},
+        "request_schema": {"const": "facman.transport_request.v2"},
+        "response_schema": {"const": "facman.transport_response.v2"}
+      },
+      "additionalProperties": false
+    },
+    "command_catalog_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "contract_set_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "package": {
+      "type": "object",
+      "required": [
+        "mode",
+        "integrity",
+        "verified",
+        "profile_id",
+        "manifest_sha256",
+        "closure_sha256",
+        "contract_set_sha256",
+        "contract_set_matches_build",
+        "backend_relative_path",
+        "backend_sha256",
+        "source_revision",
+        "source_dirty",
+        "universal_launcher_revision",
+        "universal_setup_revision",
+        "build_matches_package",
+        "files_verified",
+        "authenticity",
+        "detail"
+      ],
+      "properties": {
+        "mode": {"enum": ["packaged", "source_checkout"]},
+        "integrity": {"enum": ["sha256_consistent", "verification_failed", "not_packaged"]},
+        "verified": {"type": "boolean"},
+        "profile_id": {"type": ["string", "null"]},
+        "manifest_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "closure_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "contract_set_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "contract_set_matches_build": {"type": "boolean"},
+        "backend_relative_path": {"type": ["string", "null"]},
+        "backend_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "source_revision": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+        "source_dirty": {"type": ["boolean", "null"]},
+        "universal_launcher_revision": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+        "universal_setup_revision": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+        "build_matches_package": {"type": "boolean"},
+        "files_verified": {"type": "integer", "minimum": 0},
+        "authenticity": {"enum": ["not_proven_unsigned", "not_applicable"]},
+        "detail": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "run_execute": {
+      "type": "object",
+      "required": ["command", "availability", "refusal_code", "enabled"],
+      "properties": {
+        "command": {"const": "run.execute"},
+        "availability": {"type": "string", "minLength": 1},
+        "refusal_code": {"type": "string"},
+        "enabled": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -10805,6 +10805,6 @@
   ],
   "owner": "factorio-launcher",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "f29ea66effb76d4b45beaf307ab13750dfa808d3fc0b03848d2f62fa2f505e20",
+  "source_digest": "ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec",
   "version": "facman-0.1.0+dev.contract"
 }

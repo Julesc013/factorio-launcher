@@ -3,24 +3,24 @@ product_version = "0.1.0-dev"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "winforms-c1-transport-hardening-01-active"
+current_checkpoint = "c1-backend-identity-01"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
-last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05"
-current_dev_revision = "84a0d496b1d4b71ad239e720390e914005dd4611"
-canonical_main_revision = "133da925af13d475c959a336e0b0eec0427a0381"
-promotion_source_revision = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
-planning_promotion_revision = "133da925af13d475c959a336e0b0eec0427a0381"
-dev_synchronization_revision = "84a0d496b1d4b71ad239e720390e914005dd4611"
+active_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
+last_closed_work_unit = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
+current_dev_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
+canonical_main_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
+promotion_source_revision = "c026e873135636acb4da53c41e7a3ad7aa916cae"
+planning_promotion_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
+dev_synchronization_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout_revision = "84a0d496b1d4b71ad239e720390e914005dd4611"
-observed_branch_head = "84a0d496b1d4b71ad239e720390e914005dd4611"
+truth_closeout_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
+observed_branch_head = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -41,6 +41,8 @@ known_blockers = [
   "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
   "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
+  "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
+  "The local backend-identity package is source-dirty, unsigned, unpublished, and cannot authenticate a publisher or serve as canonical integration evidence.",
 ]
 
 quarantined_capabilities = [
@@ -59,10 +61,10 @@ quarantined_capabilities = [
 [canonical_plan_and_truth_closeout]
 status = "accepted_current_dev_integration_main_historical"
 work_unit = "FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01"
-promotion_source_revision = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
-canonical_main_revision = "133da925af13d475c959a336e0b0eec0427a0381"
-planning_promotion_revision = "133da925af13d475c959a336e0b0eec0427a0381"
-dev_synchronization_revision = "84a0d496b1d4b71ad239e720390e914005dd4611"
+promotion_source_revision = "c026e873135636acb4da53c41e7a3ad7aa916cae"
+canonical_main_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
+planning_promotion_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
+dev_synchronization_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
 shared_tree_identity = "e67adadd53ad6ecbcdba35873b80908ed67eb87f"
 main_is_ancestor_of_dev = true
 trees_equal = false
@@ -101,25 +103,25 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "winforms_c1_transport_hardening_01"
-phase_status = "active"
+phase = "c1_backend_identity_01"
+phase_status = "verified_pending_closeout"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
-next_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
+current_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
+next_work_unit = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "revalidation_04_superseded_transport_hardening_active_no_product_authority"
+truth_scope = "transport_hardening_accepted_backend_identity_verified_pending_closeout_no_product_authority"
 canonical_main_promotion = true
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "native_c1_shell_backend_projection_release_candidate_ready"
-safety_authority = "revalidation_04_superseded_transport_hardening_active_no_product_authority"
+safety_authority = "transport_hardening_accepted_backend_identity_verified_pending_closeout_no_product_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -1856,7 +1858,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "winforms_transport_hardening_active_no_product_play_authority"
+reason = "backend_identity_verified_pending_closeout_no_product_play_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1864,7 +1866,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "transport_hardening_active_revalidation_04_historical"
+current_gate_status = "backend_identity_verified_pending_closeout_revalidation_04_historical"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
@@ -2331,15 +2333,60 @@ diagnostic_stage_disposition = "outer_result_stream_not_captured_not_admitted"
 diagnostic_stage_operation_ids_reused = false
 
 [winforms_c1_transport_hardening_01]
-status = "active"
+status = "accepted_merged_dev"
 work_unit = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
 branch = "task/winforms-c1-transport-hardening-01"
 base_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
+task_head_revision = "a90720ca994352f8a327399be718ab2feca91256"
+pull_request = 119
+merge_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
+merge_first_parent = "bfac7ce41f19856522b5f9603320f444b8f45094"
+merge_second_parent = "a90720ca994352f8a327399be718ab2feca91256"
+task_head_contained = true
 repository = "factorio-launcher"
 next_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
 provider_pin_change = false
 backend_identity_policy_change = false
 workspace_root_authority_change = false
+successor_stage_created = false
+observer_capture = false
+prepare = false
+permit_issuance = false
+factorio_execution = false
+human_verdict = "unset"
+route_authority = false
+setup_mutation_authority = false
+credential_authority = false
+network_authority = false
+signing = false
+publication = false
+
+[c1_backend_identity_01]
+status = "verified_pending_closeout"
+work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
+branch = "task/c1-backend-identity-01"
+base_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
+previous_work_unit = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
+next_work_unit = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
+checkpoint = "docs/release/checkpoints/c1-backend-identity-01.md"
+production_resolution = "package_relative_exact_manifest_identity"
+development_override = "explicit_untrusted_non_release_only"
+frontend_binding = "windows_x64_winforms_parent_mediated"
+package_profile = "windows_legacy_winforms_x64"
+package_integrity = "sha256_consistent"
+package_authenticity = "not_proven_unsigned"
+package_files_verified = 399
+command_catalog_sha256 = "ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec"
+contract_set_sha256 = "30998a41f9b3b702e50265925dd0fb2f8469460769c94b6bab7f5fe17887f7c3"
+native_debug_tests = 59
+native_release_tests = 59
+promotion_python_tests = 707
+required_obligation_skips = 0
+unknown_obligation_skips = 0
+open_production_evidence = "release_compiled_structural_source_check_not_packaged_gui_execution"
+standalone_native_verifier = "not_promoted_cross_platform_snapshot_and_posix_binding_unproven"
+provider_pin_change = false
+candidate_identity_change = false
 successor_stage_created = false
 observer_capture = false
 prepare = false

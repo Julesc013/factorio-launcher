@@ -22,6 +22,7 @@ VERSION = ROOT / "release/index/version.v1.toml"
 FRONTEND = ROOT / "contracts/command/frontend/frontend.required_commands.v1.toml"
 REQUEST_FIELDS_PATH = ROOT / "contracts/command/request_fields.v1.json"
 SETUP_WORKFLOW_PATH = ROOT / "contracts/command/frontend/setup.workflow.v1.json"
+SCHEMA_ROOT = ROOT / "contracts/schema"
 
 OUTPUTS = {
     "catalog_json": ROOT / "contracts/generated-index/command_catalog.v2.json",
@@ -164,11 +165,16 @@ def load_toml(path: Path) -> dict[str, Any]:
         return tomllib.load(handle)
 
 
-def digest_source(digest: Any, path: Path) -> None:
-    digest.update(path.relative_to(ROOT).as_posix().encode())
-    digest.update(b"\0")
-    digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
-    digest.update(b"\0")
+def digest_entry(hasher: Any, relative_path: Path, contents: bytes) -> None:
+    """Hash one repository-relative file using the canonical tree framing."""
+    hasher.update(relative_path.as_posix().encode("utf-8"))
+    hasher.update(b"\0")
+    hasher.update(contents.replace(b"\r\n", b"\n").replace(b"\r", b"\n"))
+    hasher.update(b"\0")
+
+
+def digest_source(hasher: Any, path: Path) -> None:
+    digest_entry(hasher, path.relative_to(ROOT), path.read_bytes())
 
 
 def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], str]:
@@ -184,9 +190,9 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
     runtime_ids = index.get("runtime_ids", {})
     registered = set(index.get("registered", []))
     commands: list[dict[str, Any]] = []
-    digest = hashlib.sha256()
+    command_catalog_hasher = hashlib.sha256()
     for path in [Path(__file__).resolve(), INDEX, VERSION, FRONTEND, REQUEST_FIELDS_PATH, SETUP_WORKFLOW_PATH]:
-        digest_source(digest, path)
+        digest_source(command_catalog_hasher, path)
     for name in files:
         path = INDEX.parent / str(name)
         if not path.is_file():
@@ -201,7 +207,7 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
         item["runtime_id"] = runtime_id
         item["registered"] = runtime_id in registered
         commands.append(item)
-        digest_source(digest, path)
+        digest_source(command_catalog_hasher, path)
     ids = [str(item["command_id"]) for item in commands]
     runtime = [str(item["runtime_id"]) for item in commands]
     if len(ids) != len(set(ids)) or len(runtime) != len(set(runtime)):
@@ -233,7 +239,7 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
         if invalid:
             raise ValueError(f"request field contract has invalid kinds for {command}: {invalid}")
     commands.sort(key=lambda item: str(item["command_id"]))
-    return index, version, commands, digest.hexdigest()
+    return index, version, commands, command_catalog_hasher.hexdigest()
 
 
 def c_identifier(value: str) -> str:
@@ -300,6 +306,42 @@ def request_schema(runtime_id: str) -> str:
     if required:
         schema["required"] = required
     return json.dumps(schema, indent=2, sort_keys=True) + "\n"
+
+
+def contract_set_digest(commands: list[dict[str, Any]]) -> str:
+    """Return the canonical digest of the complete contracts/schema tree.
+
+    Generator-owned request schemas are hashed from their canonical rendered
+    content. This makes one --write pass stable even when one of those schemas
+    was stale or did not exist before generation.
+    """
+    if not SCHEMA_ROOT.is_dir():
+        raise ValueError("contract schema root does not exist")
+
+    disk_schemas: dict[Path, Path] = {}
+    for path in SCHEMA_ROOT.rglob("*"):
+        if path.is_symlink():
+            raise ValueError(
+                f"contract schema tree cannot contain symlinks: {path.relative_to(ROOT)}"
+            )
+        if path.is_file():
+            disk_schemas[path.relative_to(ROOT)] = path
+
+    generated_schemas = {
+        Path(request_schema_path(str(item["runtime_id"]))): request_schema(
+            str(item["runtime_id"])
+        ).encode("utf-8")
+        for item in commands
+    }
+    hasher = hashlib.sha256()
+    for relative_path in sorted(
+        set(disk_schemas) | set(generated_schemas), key=lambda value: value.as_posix()
+    ):
+        contents = generated_schemas.get(relative_path)
+        if contents is None:
+            contents = disk_schemas[relative_path].read_bytes()
+        digest_entry(hasher, relative_path, contents)
+    return hasher.hexdigest()
 
 
 def cli_grammar(item: dict[str, Any]) -> dict[str, Any]:
@@ -391,12 +433,16 @@ def frontend_status(item: dict[str, Any]) -> str:
     return "CommandStatus.Implemented" if runtime_availability(item) == "available" else "CommandStatus.NotSupportedWithReason"
 
 
-def render_winforms_catalog(commands: list[dict[str, Any]], digest: str) -> str:
+def render_winforms_catalog(
+    commands: list[dict[str, Any]],
+    command_catalog_digest: str,
+    schema_contract_set_digest: str,
+) -> str:
     workflow = load_setup_workflow()
     workflow_json = json.dumps(workflow, separators=(",", ":"), sort_keys=True)
     workflow_text = setup_workflow_text(workflow)
     lines = [
-        f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}.",
+        f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}.",
         "// SPDX-FileCopyrightText: 2026 Jules C",
         "// SPDX-License-Identifier: MIT",
         "",
@@ -407,6 +453,8 @@ def render_winforms_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         "{",
         "    public static class GeneratedCommandCatalog",
         "    {",
+        f"        public static string CommandCatalogSha256 {{ get {{ return {c_string(command_catalog_digest)}; }} }}",
+        f"        public static string ContractSetSha256 {{ get {{ return {c_string(schema_contract_set_digest)}; }} }}",
         f"        public static string SetupWorkflowJson {{ get {{ return {c_string(workflow_json)}; }} }}",
         f"        public static string SetupWorkflowText {{ get {{ return {c_string(workflow_text)}; }} }}",
         "",
@@ -698,7 +746,13 @@ def runtime_availability(item: dict[str, Any]) -> str:
     return "available" if availability == "implemented" else availability
 
 
-def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[str, Any]], digest: str) -> dict[str, str]:
+def render(
+    index: dict[str, Any],
+    version: dict[str, Any],
+    commands: list[dict[str, Any]],
+    command_catalog_digest: str,
+    schema_contract_set_digest: str,
+) -> dict[str, str]:
     setup_workflow = load_setup_workflow()
     setup_workflow_json = json.dumps(setup_workflow, separators=(",", ":"), sort_keys=True)
     setup_workflow_display = setup_workflow_text(setup_workflow)
@@ -713,14 +767,14 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         catalog_commands.append(value)
     catalog = {
         "schema": "facman.generated_command_catalog.v2",
-        "source_digest": digest,
+        "source_digest": command_catalog_digest,
         "owner": index["owner"],
         "binding": index["binding"],
         "version": version["canonical_version"],
         "commands": catalog_commands,
     }
     header = [
-        f"/* Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}. */",
+        f"/* Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}. */",
         "#ifndef FACMAN_GENERATED_COMMAND_CATALOG_H",
         "#define FACMAN_GENERATED_COMMAND_CATALOG_H",
         "",
@@ -802,18 +856,20 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         "",
     ])
     version_header = [
-        f"/* Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}. */",
+        f"/* Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}. */",
         "#ifndef FACMAN_GENERATED_VERSION_H",
         "#define FACMAN_GENERATED_VERSION_H",
         f"#define FACMAN_VERSION_SEMVER {c_string(str(version['semver']))}",
         f"#define FACMAN_VERSION_CANONICAL {c_string(str(version['canonical_version']))}",
         f"#define FACMAN_VERSION_FILENAME {c_string(str(version['filename_version']))}",
         f"#define FACMAN_VERSION_COMPONENT {c_string(str(version['component_version']))}",
+        f"#define FACMAN_COMMAND_CATALOG_SHA256 {c_string(command_catalog_digest)}",
+        f"#define FACMAN_CONTRACT_SET_SHA256 {c_string(schema_contract_set_digest)}",
         "#endif",
         "",
     ]
     help_lines = [
-        f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}.",
+        f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}.",
         f"static const char* const kGeneratedSetupWorkflowJson = {c_string(setup_workflow_json)};",
         f"static const char* const kGeneratedSetupWorkflowText = {c_string(setup_workflow_display)};",
         "static const char* const kGeneratedCommandHelp[] = {",
@@ -834,11 +890,11 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
     full_paths = sorted({" ".join(value["cli_grammar"]["path"]) for value in public_grammars if value["cli_grammar"]["path"]})
     bash_words = " ".join(sorted(set(top_level + [part for path in full_paths for part in path.split()])))
     completions = {
-        "bash": f"# generated source-sha256: {digest}\n# full paths: {' | '.join(full_paths)}\ncomplete -W \"{bash_words}\" facman\n",
-        "zsh": f"#compdef facman\n# generated source-sha256: {digest}\n# full paths: {' | '.join(full_paths)}\n_arguments '1:command:({words})' '*:subcommand:({bash_words})'\n",
-        "fish": "# generated source-sha256: " + digest + "\n" + "\n".join(f"# path: {path}" for path in full_paths) + "\n" + "\n".join(f"complete -c facman -f -a {word}" for word in sorted(set(bash_words.split()))) + "\n",
+        "bash": f"# generated source-sha256: {command_catalog_digest}\n# full paths: {' | '.join(full_paths)}\ncomplete -W \"{bash_words}\" facman\n",
+        "zsh": f"#compdef facman\n# generated source-sha256: {command_catalog_digest}\n# full paths: {' | '.join(full_paths)}\n_arguments '1:command:({words})' '*:subcommand:({bash_words})'\n",
+        "fish": "# generated source-sha256: " + command_catalog_digest + "\n" + "\n".join(f"# path: {path}" for path in full_paths) + "\n" + "\n".join(f"complete -c facman -f -a {word}" for word in sorted(set(bash_words.split()))) + "\n",
         "powershell": (
-            f"# generated source-sha256: {digest}\n# full paths: {' | '.join(full_paths)}\n"
+            f"# generated source-sha256: {command_catalog_digest}\n# full paths: {' | '.join(full_paths)}\n"
             "Register-ArgumentCompleter -Native -CommandName facman -ScriptBlock { "
             f"param($wordToComplete) '{bash_words}'.Split(' ') | "
             "Where-Object { $_ -like \"$wordToComplete*\" } }\n"
@@ -847,7 +903,7 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
     docs = [
         "# Generated Command Catalog",
         "",
-        f"Source digest: `{digest}`.",
+        f"Source digest: `{command_catalog_digest}`.",
         "",
         "Do not edit this table directly. Edit the indexed command contracts and regenerate.",
         "",
@@ -865,7 +921,7 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
             f"{aliases} | {availability} | {effects} | `{item.get('cli', '')}` |"
         )
     docs.append("")
-    application_ids = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}."]
+    application_ids = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}."]
     seen_ids: set[str] = set()
     for item in commands:
         identifier = application_identifier(str(item["runtime_id"]))
@@ -874,7 +930,7 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
             seen_ids.add(identifier)
     application_ids.append("")
 
-    application_lookup = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}."]
+    application_lookup = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}."]
     for item in commands:
         runtime_id = str(item["runtime_id"])
         identifier = application_identifier(runtime_id)
@@ -889,7 +945,7 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         identifier = application_identifier(runtime_id)
         if identifier not in preferred_names or runtime_id == "product.inspect":
             preferred_names[identifier] = runtime_id
-    application_names = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}."]
+    application_names = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}."]
     for identifier, runtime_id in preferred_names.items():
         application_names.append(f"    case CommandId::{identifier}: return {c_string(runtime_id)};")
     application_names.append("")
@@ -899,7 +955,7 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         for item in commands
         if "workspace_write" in {str(effect) for effect in item.get("effects", [])}
     }
-    application_writes = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}."]
+    application_writes = [f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}."]
     for identifier in sorted(write_ids):
         application_writes.append(f"    case CommandId::{identifier}: return true;")
     application_writes.append("")
@@ -915,7 +971,7 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         "boolean_string": "boolean_string",
     }
     application_request_contracts = [
-        f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {digest}."
+        f"// Generated by tools/codegen/generate_metadata.py; source-sha256: {command_catalog_digest}."
     ]
     seen_request_contracts: set[str] = set()
     for item in commands:
@@ -961,11 +1017,11 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
         "application_names": "\n".join(application_names),
         "application_writes": "\n".join(application_writes),
         "application_request_contracts": "\n".join(application_request_contracts),
-        "grammar_json": json.dumps({"schema": "facman.command_cli_grammar.v2", "source_digest": digest, "commands": grammars}, indent=2, sort_keys=True) + "\n",
+        "grammar_json": json.dumps({"schema": "facman.command_cli_grammar.v2", "source_digest": command_catalog_digest, "commands": grammars}, indent=2, sort_keys=True) + "\n",
         "frontend_json": json.dumps(
             {
                 "schema": "facman.frontend_command_catalog.v1",
-                "source_digest": digest,
+                "source_digest": command_catalog_digest,
                 "workflows": [setup_workflow],
                 "commands": [
                     value
@@ -977,12 +1033,14 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
             sort_keys=True,
         ) + "\n",
     }
-    appkit_header, appkit_implementation = render_appkit_catalog(commands, digest)
+    appkit_header, appkit_implementation = render_appkit_catalog(commands, command_catalog_digest)
     rendered.update({
-        "winforms_catalog": render_winforms_catalog(commands, digest),
+        "winforms_catalog": render_winforms_catalog(
+            commands, command_catalog_digest, schema_contract_set_digest
+        ),
         "appkit_catalog_header": appkit_header,
         "appkit_catalog_implementation": appkit_implementation,
-        "tui_catalog": render_tui_catalog(commands, digest),
+        "tui_catalog": render_tui_catalog(commands, command_catalog_digest),
         "english_strings": render_english_strings(commands),
     })
     for item in commands:
@@ -991,8 +1049,15 @@ def render(index: dict[str, Any], version: dict[str, Any], commands: list[dict[s
 
 
 def generate(write: bool) -> list[str]:
-    index, version, commands, digest = load_sources()
-    rendered = render(index, version, commands, digest)
+    index, version, commands, command_catalog_digest = load_sources()
+    schema_contract_set_digest = contract_set_digest(commands)
+    rendered = render(
+        index,
+        version,
+        commands,
+        command_catalog_digest,
+        schema_contract_set_digest,
+    )
     outputs = dict(OUTPUTS)
     for item in commands:
         outputs[f"request_schema:{item['runtime_id']}"] = ROOT / request_schema_path(str(item["runtime_id"]))

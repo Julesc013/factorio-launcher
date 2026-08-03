@@ -246,6 +246,13 @@ facman_apply_policies(facman_operation_permit_fuzz)
 facman_native_test(flb_command_bridge_smoke flb_command_bridge_smoke.c "contract;integration")
 target_compile_definitions(flb_command_bridge_smoke PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_command_bridge_smoke PRIVATE flaunch_client_static flb_factorio_static)
+facman_native_test(
+  facman_runtime_package_identity_smoke
+  facman_runtime_package_identity_smoke.cpp
+  "contract;filesystem;package-runtime;security")
+target_compile_features(facman_runtime_package_identity_smoke PRIVATE cxx_std_17)
+target_link_libraries(facman_runtime_package_identity_smoke PRIVATE
+  flaunch_runtime_static facman_base_static)
 facman_native_test(fl_path_safety_smoke fl_path_safety_smoke.cpp "filesystem;fast-unit")
 target_compile_features(fl_path_safety_smoke PRIVATE cxx_std_17)
 target_link_libraries(fl_path_safety_smoke PRIVATE facman_base_static Threads::Threads)

@@ -3,10 +3,15 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `winforms_c1_transport_hardening_01` and the active WorkUnit is `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `c1_backend_identity_01` and the active WorkUnit is `FACMAN-C1-BACKEND-IDENTITY-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The locally verified, review-pending
+[`FacMan C1 backend identity 01`](c1-backend-identity-01.md) checkpoint binds
+the Windows WinForms parent to an exact packaged backend without enabling Play,
+Setup mutation, provider repins, signing, publication, or release authority.
 
 The accepted
 [`qualification-04 checkpoint`](windows-instance-isolated-candidate-qualification-04.md)

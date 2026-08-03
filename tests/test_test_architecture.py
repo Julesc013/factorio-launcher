@@ -189,6 +189,36 @@ class TestArchitectureTests(unittest.TestCase):
             ):
                 self.assertEqual(current, native_cli.facman_executable())
 
+    def test_raw_python_runner_excludes_newer_packaged_and_install_staging_binaries(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            canonical = root / "build" / "native-smoke" / "Debug" / "facman.exe"
+            packaged = root / "build" / "packages" / "profile" / "bin" / "facman.exe"
+            installed = (
+                root
+                / "build"
+                / "packages"
+                / ".install"
+                / "profile"
+                / "bin"
+                / "facman.exe"
+            )
+            for path, payload in (
+                (canonical, b"canonical"),
+                (packaged, b"packaged"),
+                (installed, b"installed"),
+            ):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(payload)
+            os.utime(canonical, ns=(1_000_000_000, 1_000_000_000))
+            os.utime(packaged, ns=(3_000_000_000, 3_000_000_000))
+            os.utime(installed, ns=(4_000_000_000, 4_000_000_000))
+            with (
+                mock.patch.object(native_cli, "ROOT", root),
+                mock.patch.dict("os.environ", {"FACMAN_CLI_EXE": ""}),
+            ):
+                self.assertEqual(canonical, native_cli.facman_executable())
+
     def test_raw_python_runner_caches_build_tree_discovery(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

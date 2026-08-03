@@ -1,0 +1,473 @@
+schema = "facman.c3_universal_consumer_profile.v1"
+id = "c3_universal_consumer_profile_01"
+task_id = "C3-UNIVERSAL-CONSUMER-PROFILE-01"
+audited_on = 2026-08-04
+source_repository = "D:/Projects/C3/compact-cassette-catalogue"
+snapshot_commit = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
+final_observed_head = "2d99b047058bcc017e7094231d39e5abe66afefd"
+capture_branch = "master"
+capture_tracking_ref = "origin/master"
+capture_tracking_commit = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
+read_only = true
+implementation_moved = false
+
+[capture_observation]
+head = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
+tracking_head = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
+worktree_dirty = true
+modified_count = 11
+untracked_count = 1
+modified = [
+  "src/C3.Infrastructure/C3.Infrastructure.vbproj",
+  "src/C3.WinForms/Features/Brands/frmBrandNew.vb",
+  "src/C3.WinForms/Features/Brands/frmBrands.vb",
+  "src/C3.WinForms/Features/CassetteModels/frmModelNew.vb",
+  "src/C3.WinForms/Features/CassetteModels/frmModels.vb",
+  "src/C3.WinForms/Features/Decks/frmDeckNew.vb",
+  "src/C3.WinForms/Features/Decks/frmDecks.vb",
+  "src/C3.WinForms/Features/Tapes/frmTapeNew.vb",
+  "src/C3.WinForms/Features/Tapes/frmTapes.vb",
+  "src/C3.WinForms/Shell/frmMain.vb",
+  "src/C3.WinForms/State/LegacyGlobalState.vb",
+]
+untracked = [
+  "src/C3.Infrastructure/CatalogueFiles/Xml/V1_1/LegacyCatalogueMetadataWriter.vb",
+]
+evidence_method = "immutable committed blobs read with git show and git grep against snapshot_commit"
+
+[final_observation]
+head = "2d99b047058bcc017e7094231d39e5abe66afefd"
+tracking_head = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
+ahead_of_tracking = 2
+worktree_dirty = true
+modified_count = 12
+untracked_count = 0
+modified = [
+  "src/C3.WinForms/Bootstrap/ApplicationEvents.vb",
+  "src/C3.WinForms/Features/Brands/frmBrandNew.vb",
+  "src/C3.WinForms/Features/Brands/frmBrands.vb",
+  "src/C3.WinForms/Features/CassetteModels/frmModelNew.vb",
+  "src/C3.WinForms/Features/CassetteModels/frmModels.vb",
+  "src/C3.WinForms/Features/Decks/frmDeckNew.vb",
+  "src/C3.WinForms/Features/Decks/frmDecks.vb",
+  "src/C3.WinForms/Features/Diagnostics/frmConsole.vb",
+  "src/C3.WinForms/Features/Tapes/frmTapeNew.vb",
+  "src/C3.WinForms/Features/Tapes/frmTapes.vb",
+  "src/C3.WinForms/Shell/frmMain.vb",
+  "src/C3.WinForms/State/LegacyGlobalState.vb",
+]
+caveat = "Concurrent writers advanced and modified C3 after capture; final_observed_head is not audit evidence."
+
+[result]
+status = "audit_complete"
+read_only = true
+implementation_moved = false
+consumer_repository_written = false
+provider_contract_implemented = false
+setup_integration_authorized = false
+ulk_integration_authorized = false
+next_step = "Complete and review every consumer audit before designing provider and product-binding contracts."
+
+[[profile_decision]]
+id = "legacy_x86_package_authoring"
+scope = "win-x86-net40"
+package_authoring = true
+external_usk_maintenance = "disabled_pending_native_proof"
+ulk = "absent"
+native_xp_product_proof = false
+native_xp_usk_proof = false
+decision = "Legacy x86 package-authoring only unless the exact C3 candidate and the exact USK runtime independently pass native Windows XP SP3 x86 proof."
+
+[[profile_decision]]
+id = "modern_x64_optional_maintenance"
+scope = "win-x64-net48"
+package_authoring = true
+external_usk_maintenance = "optional_after_contract"
+ulk = "absent"
+minimum_os_runtime_proof = false
+decision = "Modern x64 package-authoring with optional external USK maintenance behind a future versioned contract."
+
+[[profile_decision]]
+id = "launcher_boundary"
+scope = "all_lanes"
+package_authoring = false
+external_usk_maintenance = "not_applicable"
+ulk = "absent"
+activation_session_demonstrated = false
+decision = "ULK remains absent unless a later evidence-backed activation or session requirement is demonstrated."
+
+[[historical_commit]]
+id = "last_installer_snapshot"
+commit = "509c9ec29679e30dcdcb1f57d8874b850cee310c"
+subject = "Harden C3 1.2.0 portable release builds"
+classification = "characterization_only"
+
+[[historical_commit]]
+id = "installer_deprecated"
+commit = "bf3260987458a97dd3a4ed3db154f7992d9d48cc"
+subject = "DEPRECATED: installer and uninstaller archived and not reusable"
+classification = "delete_decision"
+
+[[historical_commit]]
+id = "installer_removed"
+commit = "08bb8da0d8d8d042fc75982510e56e81a08e38e8"
+subject = "chore(repo): retire obsolete installer projects"
+classification = "deleted_from_current_tree"
+
+[[data_boundary]]
+id = "application_payload"
+source = "build/package.ps1"
+classification = "replaceable_verified_product_payload"
+permanent_owner = "c3"
+contents = "Compact Cassette Catalogue.exe; executable config; C3.Catalogue.dll; C3.Infrastructure.dll; BUILD.txt; README.md; RELEASE_NOTES.md"
+preserve_on_uninstall = false
+universal_handling = "USK may deploy the modern-lane payload only as a complete verified closure and may never rebuild it."
+
+[[data_boundary]]
+id = "user_settings"
+source = "src/C3.WinForms/Configuration/MySettingsStore.vb; src/C3.WinForms/My Project/Settings.settings"
+classification = "preserved_user_data"
+permanent_owner = "c3_user"
+preserve_on_uninstall = true
+universal_handling = "USK and ULK must not rewrite or delete per-user settings."
+
+[[data_boundary]]
+id = "catalogue_xml"
+source = "spec/catalogue/v1.1.0; src/C3.Infrastructure/CatalogueFiles/Xml/V1_1"
+classification = "user_document"
+permanent_owner = "c3_user"
+preserve_on_uninstall = true
+universal_handling = "Universal components must not inspect, migrate, delete, or claim ownership of catalogue XML."
+
+[[data_boundary]]
+id = "catalogue_backup"
+source = "LegacyXmlCatalogueStore.Save"
+classification = "product_data_rollback"
+permanent_owner = "c3_user"
+preserve_on_uninstall = true
+universal_handling = "The .bak file is catalogue rollback and is distinct from package rollback."
+
+[[data_boundary]]
+id = "crash_reports"
+source = "CrashReportWriter.TryWrite"
+classification = "preserved_user_diagnostics"
+permanent_owner = "c3_user"
+location = "%LocalAppData%/C3/CrashReports"
+preserve_on_uninstall = true
+universal_handling = "USK repair, update, and uninstall must preserve reports."
+
+[[data_boundary]]
+id = "console_exports"
+source = "OutputConsoleToolStripMenuItem_Click"
+classification = "user_selected_diagnostic_export"
+permanent_owner = "c3_user"
+preserve_on_uninstall = true
+universal_handling = "Universal components must not delete files in the user-selected/default directory."
+
+[[matrix_row]]
+id = "C3-01"
+source = "build/lanes.json"
+symbol = "lanes[id=win-x86-net40]"
+responsibility = "Define the x86, .NET Framework 4.0, XP-targeted portable lane."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Validate the exact lane ID, project, x86 platform, v4.0 target, output directory, runtime claim, and portable distribution."
+dependency = "None for package authoring; native XP proof before widening runtime claims."
+rollback = "Continue publishing the existing verified portable ZIP."
+
+[[matrix_row]]
+id = "C3-02"
+source = "src/C3.WinForms/C3.WinForms.Net40.vbproj; src/C3.WinForms/Configuration/Net40/App.config; src/C3.WinForms/Configuration/Net40/app.manifest"
+symbol = "Release|x86; TargetFrameworkVersion=v4.0; requestedExecutionLevel=asInvoker"
+responsibility = "Build and configure the legacy x86/v4.0 application."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Run project-parity and I386/PE32 checks, then the full native XP manual suite."
+dependency = "VS2019 with the .NET Framework 4.0 targeting pack."
+rollback = "Revert the candidate and republish the prior complete x86 ZIP."
+
+[[matrix_row]]
+id = "C3-03"
+source = "build/lanes.json"
+symbol = "lanes[id=win-x64-net48]"
+responsibility = "Define the x64, .NET Framework 4.8, Windows 7-targeted portable lane."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Validate the exact lane ID, x64/v4.8 mapping, output directory, runtime claim, and package name."
+dependency = "None for package authoring."
+rollback = "Continue the standalone portable ZIP."
+
+[[matrix_row]]
+id = "C3-04"
+source = "src/C3.WinForms/C3.WinForms.Net48.vbproj; src/C3.WinForms/Configuration/Net48/App.config; src/C3.WinForms/Configuration/Net48/app.manifest"
+symbol = "Release|x64; TargetFrameworkVersion=v4.8; PerMonitorV2"
+responsibility = "Build and configure the modern x64 application and its DPI/runtime policy."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Run project parity, AMD64/PE32+ verification, and the Windows 7 SP1 manual suite."
+dependency = "An optional USK runtime must independently support the minimum OS."
+rollback = "Disable USK integration and launch the portable executable directly."
+
+[[matrix_row]]
+id = "C3-05"
+source = "build/build.ps1; build/resolve-msbuild.ps1"
+symbol = "dual-lane build loop; MSBuild resolver"
+responsibility = "Build both product lanes."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Exercise the existing dual-lane rebuild gate."
+dependency = "The authoritative VS2019 toolchain."
+rollback = "Build the previous C3 commit; USK must never rebuild C3."
+
+[[matrix_row]]
+id = "C3-06"
+source = "build/package.ps1"
+symbol = "per-lane staging and deterministic ZIP creation loop"
+responsibility = "Author deterministic product packages."
+permanent_owner = "c3"
+disposition = "adapt"
+characterization = "Package twice without rebuilding, then compare ZIP hashes, names, timestamps, and exact contents."
+dependency = "A future machine-readable product-binding/profile projection."
+rollback = "Remove the projection and retain the current ZIP workflow."
+
+[[matrix_row]]
+id = "C3-07"
+source = "build/verify-packages.ps1; artifacts/packages/SHA256SUMS.txt"
+symbol = "requiredEntries; hashRecords"
+responsibility = "Verify the seven-entry ZIP closure and archive SHA-256 values."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Require two ZIPs, exact entries, well-formed checksum records, and matching hashes."
+dependency = "USK must consume verified output and hashes instead of maintaining a second file list."
+rollback = "Reject the integration and use the verified portable asset."
+
+[[matrix_row]]
+id = "C3-08"
+source = "build/Version.props; build/sync-version.ps1; src/C3.WinForms/Generated/BuildInfo.g.vb; VERSION"
+symbol = "C3ProductVersion; C3AssemblyVersion; C3CatalogueFormatVersion; generated projections"
+responsibility = "Own product, assembly, catalogue-format, stage, and date identity."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Run build/verify-metadata.ps1 and compare every generated projection."
+dependency = "A future profile may project these values but cannot become authoritative."
+rollback = "Regenerate projections from build/Version.props."
+
+[[matrix_row]]
+id = "C3-09"
+source = "build/package.ps1"
+symbol = "payload array"
+responsibility = "Define the immutable seven-file application payload closure."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Check the exact archive entries and perform a clean extraction/assembly-load smoke test."
+dependency = "A USK product-binding contract for the modern lane."
+rollback = "Restore the prior complete closure, never individual files."
+
+[[matrix_row]]
+id = "C3-10"
+source = "src/C3.WinForms/My Project/Application.myapp; src/C3.WinForms/My Project/Application.Designer.vb"
+symbol = "MainForm=frmMain; SingleInstance=false; OnCreateMainForm"
+responsibility = "Start the standalone application directly in frmMain."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Direct-lane launch and clean-close characterization."
+dependency = "None; there is no ULK dependency."
+rollback = "Continue direct executable startup."
+
+[[matrix_row]]
+id = "C3-11"
+source = "repository tree at snapshot_commit"
+symbol = "negative search for command-line parser, activation handler, session handoff, and StartupNextInstance"
+responsibility = "Define the current launcher/session boundary."
+permanent_owner = "none_currently_required"
+disposition = "retain"
+characterization = "Static search plus direct startup test."
+dependency = "Reaudit only after an evidence-backed activation/session requirement appears."
+rollback = "There is no launcher integration to remove."
+
+[[matrix_row]]
+id = "C3-12"
+source = "src/C3.WinForms/Configuration/MySettingsStore.vb; src/C3.WinForms/My Project/Settings.settings"
+symbol = "ShowMessages; DefaultDirectory; UpdatePolicy; LastUpdateCheck; Save"
+responsibility = "Persist per-user messages, default directory, update intent, and last-check time."
+permanent_owner = "c3_user"
+disposition = "retain"
+characterization = "Save and reload settings in both lanes and on their minimum operating systems."
+dependency = "USK must classify settings as preserved user data."
+rollback = "Disable maintenance; never restore settings by replacing payload files."
+
+[[matrix_row]]
+id = "C3-13"
+source = "src/C3.Catalogue/Catalogues/CatalogueSession.vb; src/C3.Catalogue/Brands; src/C3.Catalogue/CassetteModels; src/C3.Catalogue/Decks; src/C3.Catalogue/Tapes"
+symbol = "CatalogueSession and typed product services"
+responsibility = "Own catalogue lifecycle, identity, dirty state, and product rules."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Run the existing session and domain characterization cases."
+dependency = "None."
+rollback = "Reopen the last verified catalogue or its user backup."
+
+[[matrix_row]]
+id = "C3-14"
+source = "spec/catalogue/v1.1.0; fixtures/catalogues/v1.1.0; src/C3.Infrastructure/CatalogueFiles/Xml/V1_1/LegacyCatalogueSchema.vb"
+symbol = "Catalogue format 1.1.0 contract and LegacyCatalogueSchema"
+responsibility = "Own the public catalogue XML contract and compatibility-sensitive keys."
+permanent_owner = "c3_user"
+disposition = "retain"
+characterization = "Validate the XSD plus valid, invalid, security, and culture fixtures."
+dependency = "USK must never inspect, migrate, or delete catalogue documents."
+rollback = "Restore the user-owned XML or backup."
+
+[[matrix_row]]
+id = "C3-15"
+source = "src/C3.Infrastructure/CatalogueFiles/Xml/V1_1/LegacyXmlCatalogueStore.vb"
+symbol = "LegacyXmlCatalogueStore.Load"
+responsibility = "Securely and boundedly load XML and calculate a revision."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Exercise malformed XML, external-entity, missing-version, unsupported-version, size, and structure failures."
+dependency = "None."
+rollback = "Leave the active catalogue untouched on failure."
+
+[[matrix_row]]
+id = "C3-16"
+source = "src/C3.Infrastructure/CatalogueFiles/Xml/V1_1/LegacyXmlCatalogueStore.vb"
+symbol = "LegacyXmlCatalogueStore.Save; File.Replace; backupPath"
+responsibility = "Transactionally persist catalogue data and provide data rollback."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Run StoreSavesTransactionally and add an explicit old-content .bak assertion."
+dependency = "None."
+rollback = "Use the catalogue .bak file; this is independent of package rollback."
+
+[[matrix_row]]
+id = "C3-17"
+source = "src/C3.Infrastructure/Diagnostics/CrashReportWriter.vb"
+symbol = "CrashReportWriter.TryWrite"
+responsibility = "Write LocalAppData C3 crash reports."
+permanent_owner = "c3_user"
+disposition = "retain"
+characterization = "Generate a synthetic exception and verify the report path and bounded content."
+dependency = "USK preserve-data policy."
+rollback = "Never delete reports during repair, update, or uninstall."
+
+[[matrix_row]]
+id = "C3-18"
+source = "src/C3.WinForms/Shell/frmMain.vb"
+symbol = "OutputConsoleToolStripMenuItem_Click"
+responsibility = "Export a diagnostic log to the user-selected/default directory."
+permanent_owner = "c3_user"
+disposition = "retain"
+characterization = "Verify bounded log output to the chosen directory."
+dependency = "USK preserve-data policy."
+rollback = "The user retains the exported file."
+
+[[matrix_row]]
+id = "C3-19"
+source = "src/C3.Infrastructure/Updates/UpdateCheckPolicy.vb; src/C3.Infrastructure/Updates/UpdateCheckSchedule.vb; src/C3.WinForms/Configuration/MySettingsStore.vb"
+symbol = "UpdateCheckPolicy; UpdateCheckSchedule; MySettingsStore.UpdatePolicy"
+responsibility = "Own user intent and startup, weekly, monthly, or never scheduling."
+permanent_owner = "c3"
+disposition = "adapt"
+characterization = "Retain UpdateScheduleOwnsPolicy and add provider-disabled/default-never behavior."
+dependency = "A future provider trigger/result contract."
+rollback = "Set policy to never and retain the manual releases link."
+
+[[matrix_row]]
+id = "C3-20"
+source = "src/C3.WinForms/Shell/frmMain.vb; src/C3.WinForms/State/LegacyGlobalState.vb"
+symbol = "checkUpdates; enableBestEffortTls; isNewerVersion; UPDATELINKCHECK"
+responsibility = "Discover versions directly through WebClient.OpenRead of the raw GitHub VERSION file."
+permanent_owner = "universal_setup_when_enabled"
+disposition = "move"
+characterization = "Test unavailable, current, available, and malformed fake-provider results and assert no direct network."
+dependency = "Completed audits followed by a versioned USK provider contract; initially modern x64 only."
+rollback = "Disable the provider and use the manual releases page."
+
+[[matrix_row]]
+id = "C3-21"
+source = "src/C3.WinForms/State/LegacyGlobalState.vb; src/C3.WinForms/Shell/frmMain.vb"
+symbol = "openWebLink; UPDATELINKDOWNLOAD; update menu handlers"
+responsibility = "Provide a manual browser fallback and product/help links."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Characterize network-blocked and browser-open failure paths."
+dependency = "None; the fallback may remain beside optional USK maintenance."
+rollback = "The user manually downloads the verified ZIP."
+
+[[matrix_row]]
+id = "C3-22"
+source = "current repository tree at snapshot_commit"
+symbol = "negative search for DownloadFile, ExtractToDirectory, registry, shortcut, and uninstall paths"
+responsibility = "Download, install, repair, update, and uninstall product payloads."
+permanent_owner = "universal_setup_for_enabled_profiles"
+disposition = "move"
+characterization = "Keep a static negative-boundary test and later run USK conformance tests."
+dependency = "USK product-binding, transaction, and preservation contracts."
+rollback = "Disable optional maintenance; the portable package remains authoritative."
+
+[[matrix_row]]
+id = "C3-23"
+source = "509c9ec29679e30dcdcb1f57d8874b850cee310c:Compact Cassette Catalogue Installer/frmMain.vb; varGlobals.vb; app.manifest"
+symbol = "btnInstall_Click and installer globals"
+responsibility = "Download a ZIP, extract in place, write HKLM uninstall data, and create common shortcuts."
+permanent_owner = "none_historical_only"
+disposition = "delete"
+characterization = "Assert the project remains absent from the current tree."
+dependency = "None; this code must not be a migration source."
+rollback = "Never restore it."
+
+[[matrix_row]]
+id = "C3-24"
+source = "509c9ec29679e30dcdcb1f57d8874b850cee310c:Compact Cassette Catalogue Installer/Compact Cassette Catalogue Installer.vbproj; app.manifest"
+symbol = "TargetFrameworkVersion=v4.6; requestedExecutionLevel=highestAvailable"
+responsibility = "Provide a purported legacy-lane installation runtime."
+permanent_owner = "none"
+disposition = "delete"
+characterization = "Historical inspection proves it cannot establish the XP lane."
+dependency = "A native XP-capable USK would require an independent implementation and proof."
+rollback = "Never restore it; use the portable x86 ZIP only."
+
+[[matrix_row]]
+id = "C3-25"
+source = "509c9ec29679e30dcdcb1f57d8874b850cee310c:Compact Cassette Catalogue Uninstaller/frmMain.vb"
+symbol = "btnUninstall_Click placeholder bodies"
+responsibility = "Purport to uninstall despite placeholder registry, file, and shortcut removal bodies."
+permanent_owner = "none_historical_only"
+disposition = "delete"
+characterization = "Assert the project remains absent and never treat its success form as evidence."
+dependency = "None."
+rollback = "Never restore it; use portable or manual removal."
+
+[[matrix_row]]
+id = "C3-26"
+source = "current repository tree at snapshot_commit"
+symbol = "negative search for product self-replacement"
+responsibility = "Replace the installed executable in place and provide runtime rollback."
+permanent_owner = "universal_setup_when_enabled"
+disposition = "move"
+characterization = "Assert C3 never writes or replaces its installed executable."
+dependency = "USK atomic switch, process-quiescence, integrity, and rollback contracts."
+rollback = "Disable USK and restore the prior complete portable directory."
+
+[[matrix_row]]
+id = "C3-27"
+source = "release/validation/1.2.1-beta.1.md"
+symbol = "candidate identity, package evidence, manual workflows, minimum operating-system evidence"
+responsibility = "Record candidate, package, manual-workflow, and minimum-OS evidence."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "Keep the gate blocked while any required row is unrun."
+dependency = "Exact candidate commit and artifact hashes."
+rollback = "Narrow or remove an unsupported compatibility claim."
+
+[[matrix_row]]
+id = "C3-28"
+source = "release/validation/1.2.0-beta.1.md"
+symbol = "historical validation and release boundary"
+responsibility = "Preserve historical evidence without promoting it to current proof."
+permanent_owner = "c3"
+disposition = "retain"
+characterization = "The record explicitly says the XP VM test was not run and the old installer was not the official XP path."
+dependency = "Historical evidence cannot satisfy current-candidate evidence."
+rollback = "Do not promote historical results."

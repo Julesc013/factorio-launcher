@@ -18,7 +18,16 @@ OUTPUTS = {
     ROOT / "docs" / "roadmap" / "current.md": "roadmap",
 }
 
-WORK_STATUSES = {"planned", "ready", "active", "blocked", "complete", "cancelled"}
+WORK_STATUSES = {
+    "planned",
+    "ready",
+    "active",
+    "verified_pending_closeout",
+    "blocked",
+    "complete",
+    "cancelled",
+}
+ACTIVE_WORK_STATUSES = {"active", "verified_pending_closeout"}
 EPIC_STATUSES = {"planned", "active", "blocked", "complete", "cancelled"}
 RELEASE_STATUSES = {"planned", "active", "complete", "cancelled"}
 GATE_STATUSES = {"planned", "active", "blocked", "complete", "cancelled"}
@@ -268,8 +277,9 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         size = workunit.get("size")
         if size not in SIZES:
             errors.append(f"{workunit_id} has invalid size")
-        if status in {"ready", "active"} and size == "XL":
-            errors.append(f"{workunit_id} is XL and cannot be {status}")
+        if status == "ready" or status in ACTIVE_WORK_STATUSES:
+            if size == "XL":
+                errors.append(f"{workunit_id} is XL and cannot be {status}")
         for field in ("title", "owner", "outcome"):
             if not workunit.get(field):
                 errors.append(f"{workunit_id} is missing {field}")
@@ -291,7 +301,11 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
                     f"{workunit_id} base_revision must be an exact lowercase Git revision"
                 )
 
-        if epic and status in {"ready", "active"} and epic.get("release") != active_release:
+        if (
+            epic
+            and (status == "ready" or status in ACTIVE_WORK_STATUSES)
+            and epic.get("release") != active_release
+        ):
             errors.append(f"{workunit_id} is {status} outside the active release")
 
         dependencies = workunit.get("depends_on", [])
@@ -340,10 +354,10 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
             elif status == "ready" and decisions[blocker].get("status") == "open":
                 errors.append(f"{workunit_id} is ready with open decision {blocker}")
 
-        if status == "complete":
+        if status in {"verified_pending_closeout", "complete"}:
             evidence = workunit.get("evidence", [])
             if not evidence:
-                errors.append(f"{workunit_id} is complete without evidence")
+                errors.append(f"{workunit_id} is {status} without evidence")
             for evidence_path in evidence:
                 if not isinstance(evidence_path, str):
                     errors.append(f"{workunit_id} has a non-string evidence path")
@@ -359,7 +373,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     active_work = [
         workunit["id"]
         for workunit in workunits.values()
-        if workunit.get("status") == "active"
+        if workunit.get("status") in ACTIVE_WORK_STATUSES
     ]
     active_gates = [
         gate["id"]
@@ -395,7 +409,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     active_large_migrations = [
         workunit["id"]
         for workunit in workunits.values()
-        if workunit.get("status") == "active"
+        if workunit.get("status") in ACTIVE_WORK_STATUSES
         and workunit.get("migration_class") == "large"
     ]
     if len(active_large_migrations) > plan.get("large_migration_limit", 0):
@@ -431,10 +445,16 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     releases = {item["id"]: item for item in _records(plan, "release")}
     release = releases[plan["active_release"]]
     workunits = _records(plan, "workunit")
-    active = [item for item in workunits if item["status"] == "active"]
+    active = [item for item in workunits if item["status"] in ACTIVE_WORK_STATUSES]
     ready = [item for item in workunits if item["status"] == "ready"]
     planned = [item for item in workunits if item["status"] == "planned"]
     completed = [item for item in workunits if item["status"] == "complete"]
+    pending = [
+        item
+        for item in workunits
+        if item["status"] not in {"complete", "cancelled"}
+    ]
+    queued = [item for item in pending if item["status"] not in ACTIVE_WORK_STATUSES]
     gates = [
         item for item in _records(plan, "gate") if item["status"] in {"active", "blocked"}
     ]
@@ -462,7 +482,8 @@ def render_dashboard(plan: dict[str, Any]) -> str:
         f"- Active release: `{release['id']}` — {release['title']}",
         f"- WIP: {len(active) + len([g for g in gates if g['status'] == 'active'])}/{plan['wip_limit']} including external gates",
         f"- Ready: {len(ready)}/{plan['ready_limit']}",
-        f"- Near-term work units: {len([w for w in workunits if w['status'] not in {'complete', 'cancelled'}])}/{plan['next_workunit_limit']}",
+        f"- Near-term queued work: {len(queued)}/{plan['next_workunit_limit']}; "
+        f"in-flight work: {len(active)}",
         "",
         "## North star",
         "",
@@ -503,19 +524,19 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     else:
         lines.extend(["_No active or blocked external gate._", ""])
 
-    lines.extend(["## Active work units", ""])
+    lines.extend(["## In-flight work units", ""])
     if active:
         for item in active:
             lines.extend(
                 [
                     f"- [{_work_marker(item['status'])}] `{item['id']}` [{item['priority']}/{item['size']}] — {item['title']}",
-                    f"  - Owner: `{item['owner']}`; repositories: {', '.join(f'`{repo}`' for repo in item['repos'])}",
+                    f"  - State: `{item['status']}`; owner: `{item['owner']}`; repositories: {', '.join(f'`{repo}`' for repo in item['repos'])}",
                     f"  - Outcome: {item['outcome']}",
                 ]
             )
     else:
         lines.append(
-            "_No internal work unit is active. An authority-only external gate "
+            "_No internal work unit is in flight. An authority-only external gate "
             "does not block ready product work._"
         )
 

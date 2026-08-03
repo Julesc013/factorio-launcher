@@ -7,6 +7,7 @@
 #include "facman/build_identity.hpp"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_runtime_locator.h"
 #include "fl_runtime_verify.h"
 
 #include <array>
@@ -124,11 +125,11 @@ ApplicationResult workspace_status(ApplicationContext& context)
     if (!lists(context, installs, instances, failure)) return failure;
     const auto workspace_record = context.workspace_repository().load();
     const std::size_t incomplete = transactions::incomplete_count(context.workspace());
-    const char* package_root = fl_runtime_package_root();
     std::array<char, 512> package_detail {};
     std::size_t files_verified = 0;
-    const bool packaged = package_root != nullptr && *package_root != '\0';
-    const bool package_ok = packaged && fl_runtime_verify_package(package_detail.data(), package_detail.size(), &files_verified) == 0;
+    const bool packaged = fl_runtime_is_packaged() != 0;
+    const bool package_ok = packaged &&
+        fl_runtime_verify_package(package_detail.data(), package_detail.size(), &files_verified) != 0;
 
     json::ObjectBuilder observations;
     observations.add_string("workspace", facman::platform::path_to_utf8(context.workspace()));

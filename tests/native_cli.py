@@ -27,7 +27,13 @@ def _discover_facman_executable(root: Path, explicit: str) -> Path:
     ]
     candidates: list[Path] = []
     for pattern in ("build/**/facman.exe", "build/**/facman"):
-        candidates.extend(path for path in root.glob(pattern) if path.is_file())
+        candidates.extend(
+            path
+            for path in root.glob(pattern)
+            if path.is_file()
+            and ".install" not in path.parts
+            and path.parent.name.lower() not in {"bin", "sbin"}
+        )
     if candidates:
         ranks = {path: index for index, path in enumerate(preferred)}
         unique = set(candidates)

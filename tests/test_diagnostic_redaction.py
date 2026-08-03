@@ -14,6 +14,7 @@ import zipfile
 from pathlib import Path
 
 from native_cli import facman_executable, invoke
+from tests.windows_junction import create_junction
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
@@ -208,14 +209,7 @@ class DiagnosticRedactionTests(unittest.TestCase):
             external.mkdir()
             (external / "secret.log").write_text("must not be selected\n", encoding="utf-8")
             linked = root / "logs" / "linked"
-            created = subprocess.run(
-                ["cmd", "/c", "mklink", "/J", str(linked), str(external)],
-                check=False,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            self.assertEqual(created.returncode, 0, created.stderr or created.stdout)
+            create_junction(linked, external)
             checked = subprocess.run(
                 [str(smoke), "--check-link-root", str(root)],
                 check=False,

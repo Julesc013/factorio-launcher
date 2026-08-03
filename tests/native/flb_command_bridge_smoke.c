@@ -187,6 +187,20 @@ int main(void)
     if (run_command(context, "factorio.product.inspect", 1, "\"binding_id\":\"flb.factorio\"") != 0) {
         return 21;
     }
+    if (run_command(context, "product.inspect", 1, "\"schema\":\"facman.backend_identity.v1\"") != 0 ||
+        run_command(context, "product.inspect", 1, "\"backend_role\":\"facman_cli\"") != 0 ||
+        run_command(context, "product.inspect", 1, "\"protocol_version\":2") != 0 ||
+        run_command(context, "product.inspect", 1, "\"request_schema\":\"facman.transport_request.v2\"") != 0 ||
+        run_command(context, "product.inspect", 1, "\"command_catalog_sha256\":\"") != 0 ||
+        run_command(context, "product.inspect", 1, "\"contract_set_sha256\":\"") != 0 ||
+        run_command(context, "product.inspect", 1, "\"mode\":\"source_checkout\"") != 0 ||
+        run_command(context, "product.inspect", 1, "\"integrity\":\"not_packaged\"") != 0 ||
+        run_command(context, "product.inspect", 1, "\"verified\":false") != 0 ||
+        run_command(context, "product.inspect", 1, "\"build_matches_package\":false") != 0 ||
+        run_command(context, "product.inspect", 1, "\"availability\":\"unavailable_until_isolation_proof\"") != 0 ||
+        run_command(context, "product.inspect", 1, "\"enabled\":false") != 0) {
+        return 42;
+    }
     if (run_command(context, "command_graph.inspect", 1, "\"command\":\"launch_plan.build\"") != 0) {
         return 22;
     }
