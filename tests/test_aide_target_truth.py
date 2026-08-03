@@ -60,7 +60,7 @@ native_direction:
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
         self.assertIn(
-            "phase: c1_backend_identity_01 (accepted_merged_dev_pending_main)",
+            "phase: c1_backend_identity_01 (accepted_canonical_integration)",
             text,
         )
         self.assertIn(
@@ -69,7 +69,7 @@ native_direction:
         )
         self.assertIn("next_work_unit: FACMAN-WORKSPACE-ROOT-AUTHORITY-01", text)
         self.assertIn(
-            "backend_identity_accepted_dev_pending_main_no_product_play_authority",
+            "backend_identity_accepted_canonical_no_product_play_authority",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

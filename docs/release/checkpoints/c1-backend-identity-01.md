@@ -1,9 +1,10 @@
 # FacMan C1 backend identity 01
 
-`FACMAN-C1-BACKEND-IDENTITY-01` is reviewed, closed, and accepted into `dev`.
-Task head `ead81c5502d6b4b6a5fa1a499e60537c2ab53dcd` was merged by
-`451dc6376d52ac2ddaf82c07ee95e423deec0829`. Canonical `main` promotion is
-pending; this checkpoint does not yet claim canonical integration.
+`FACMAN-C1-BACKEND-IDENTITY-01` is reviewed, closed, archived, and canonically
+integrated. Task head `ead81c5502d6b4b6a5fa1a499e60537c2ab53dcd` entered
+`dev` through `451dc6376d52ac2ddaf82c07ee95e423deec0829`; closeout revision
+`3fed61d3547b81605b1f1f0b22438c26e4026602` was promoted to `main` by
+`6538e519af3be221614879cc7f3323b9835dfae6`.
 
 The production WinForms shell now derives its backend only from the package
 containing the running GUI module. It accepts no configured executable,

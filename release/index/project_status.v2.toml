@@ -10,17 +10,17 @@ accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
 active_work_unit = ""
 last_closed_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
-current_dev_revision = "451dc6376d52ac2ddaf82c07ee95e423deec0829"
-canonical_main_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
+current_dev_revision = "3fed61d3547b81605b1f1f0b22438c26e4026602"
+canonical_main_revision = "6538e519af3be221614879cc7f3323b9835dfae6"
 promotion_source_revision = "c026e873135636acb4da53c41e7a3ad7aa916cae"
-planning_promotion_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
-dev_synchronization_revision = "451dc6376d52ac2ddaf82c07ee95e423deec0829"
+planning_promotion_revision = "6538e519af3be221614879cc7f3323b9835dfae6"
+dev_synchronization_revision = "3fed61d3547b81605b1f1f0b22438c26e4026602"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout_revision = "451dc6376d52ac2ddaf82c07ee95e423deec0829"
-observed_branch_head = "451dc6376d52ac2ddaf82c07ee95e423deec0829"
+truth_closeout_revision = "3fed61d3547b81605b1f1f0b22438c26e4026602"
+observed_branch_head = "3fed61d3547b81605b1f1f0b22438c26e4026602"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -62,9 +62,9 @@ quarantined_capabilities = [
 status = "accepted_current_dev_integration_main_historical"
 work_unit = "FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01"
 promotion_source_revision = "c026e873135636acb4da53c41e7a3ad7aa916cae"
-canonical_main_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
-planning_promotion_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
-dev_synchronization_revision = "451dc6376d52ac2ddaf82c07ee95e423deec0829"
+canonical_main_revision = "6538e519af3be221614879cc7f3323b9835dfae6"
+planning_promotion_revision = "6538e519af3be221614879cc7f3323b9835dfae6"
+dev_synchronization_revision = "3fed61d3547b81605b1f1f0b22438c26e4026602"
 shared_tree_identity = "e67adadd53ad6ecbcdba35873b80908ed67eb87f"
 main_is_ancestor_of_dev = true
 trees_equal = false
@@ -104,7 +104,7 @@ observed_player_journey_ids = []
 
 [product]
 phase = "c1_backend_identity_01"
-phase_status = "accepted_merged_dev_pending_main"
+phase_status = "accepted_canonical_integration"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
@@ -114,14 +114,14 @@ next_work_unit = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "transport_hardening_and_backend_identity_accepted_dev_pending_main_no_product_authority"
+truth_scope = "transport_hardening_and_backend_identity_accepted_canonical_no_product_authority"
 canonical_main_promotion = true
 local_counts_promoted = true
 
 [readiness]
 playability = "not_yet_playable"
 user_workflow = "native_c1_shell_backend_projection_release_candidate_ready"
-safety_authority = "transport_hardening_and_backend_identity_accepted_dev_pending_main_no_product_authority"
+safety_authority = "transport_hardening_and_backend_identity_accepted_canonical_no_product_authority"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -1858,7 +1858,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "backend_identity_accepted_dev_pending_main_no_product_play_authority"
+reason = "backend_identity_accepted_canonical_no_product_play_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1866,7 +1866,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "backend_identity_accepted_dev_pending_main_revalidation_04_historical"
+current_gate_status = "backend_identity_accepted_canonical_revalidation_04_historical"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
@@ -2362,13 +2362,16 @@ signing = false
 publication = false
 
 [c1_backend_identity_01]
-status = "accepted_merged_dev_pending_main"
+status = "accepted_canonical_integration"
 work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
 branch = "task/c1-backend-identity-01"
 base_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
 task_head_revision = "ead81c5502d6b4b6a5fa1a499e60537c2ab53dcd"
 dev_merge_revision = "451dc6376d52ac2ddaf82c07ee95e423deec0829"
+dev_closeout_revision = "3fed61d3547b81605b1f1f0b22438c26e4026602"
+canonical_merge_revision = "6538e519af3be221614879cc7f3323b9835dfae6"
 task_head_contained = true
+canonical_main_contains_task = true
 previous_work_unit = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
 next_work_unit = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 checkpoint = "docs/release/checkpoints/c1-backend-identity-01.md"

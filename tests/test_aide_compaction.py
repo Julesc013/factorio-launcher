@@ -201,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "transport_hardening_and_backend_identity_accepted_dev_pending_main_no_product_authority",
+            "transport_hardening_and_backend_identity_accepted_canonical_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
