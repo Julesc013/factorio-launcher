@@ -7,6 +7,12 @@ CI mirrors the bounded proof rather than implying release readiness.
   zero-skip `linux_portable_cli_x64` tarball proof. The proof records ELF,
   glibc/toolchain, dynamic dependency, relocation, integrity, and runtime
   evidence and uploads the unsigned, unpublished artifact and report.
+  Immediately after dependency alignment it also compares the actual checkout
+  with the workflow SHA (the merge commit for pull requests) and emits the
+  versioned checkout/provider
+  observation. The observation proves both provider checkouts equal their
+  workspace-lock pins, each pin is reachable from canonical `origin/main`, and
+  public ABI versions come from the locked pins' Git trees.
 - `windows-native-package` builds the native core on Windows, runs CTest and
   the Python suite, compiles WinForms, and runs the selected
   `windows_portable_cli_x64` package proof through a zero-skip wrapper.
@@ -29,6 +35,10 @@ CI mirrors the bounded proof rather than implying release readiness.
 `tools/ci_proof_check.py` makes these anchors part of strict validation. Future
 changes may replace the commands, but they must preserve equivalent evidence
 and update the checker in the same reviewed change.
+
+The observation upload runs even when observation validation fails, so a
+mismatch remains diagnosable without converting it into success. It is a CI
+artifact, not tracked state, a remote-status cache, or release authority.
 
 Each selected package runner refuses the wrong host/architecture, any test
 failure, and any skipped required package test. The Windows runner also

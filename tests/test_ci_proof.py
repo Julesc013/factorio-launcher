@@ -25,6 +25,16 @@ class CiProofTests(unittest.TestCase):
         self.assertIn('"h1_inference": "none"', text)
         self.assertIn('"execution_authority": "unchanged_not_authorized"', text)
 
+    def test_checkout_observation_is_versioned_and_out_of_tree(self) -> None:
+        text = (
+            ci_proof_check.ROOT / "tools" / "current_checkout_observation.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('SCHEMA = "facman.current_checkout_observation.v1"', text)
+        self.assertIn('OUTPUT_STEM = "current-checkout-observation.v1"', text)
+        self.assertIn("--output-dir must be outside the source checkout", text)
+        self.assertIn("merge-base", text)
+        self.assertIn("ABI_PATTERN", text)
+
 
 if __name__ == "__main__":
     unittest.main()
