@@ -532,13 +532,15 @@ evidence = [
 id = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Harden the WinForms C1 process-transport boundary"
-status = "planned"
+status = "active"
 priority = "P0"
 size = "M"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
 decision_blockers = []
+branch = "task/winforms-c1-transport-hardening-01"
+base_revision = "bfac7ce41f19856522b5f9603320f444b8f45094"
 outcome = "Make the existing WinForms bounded-process path classify malformed, mismatched, oversized, timed-out, interrupted, and unknown backend outcomes truthfully before packaged live acceptance."
 acceptance = [
   "The production WinForms request has bounded stdin, stdout, stderr, timeout, cancellation, and process-exit behavior with no unbounded wait or output accumulation.",
@@ -546,7 +548,11 @@ acceptance = [
   "Frontend or transport loss remains outcome_unknown until exact backend inspection establishes a terminal result; it is never rewritten as ordinary cancellation.",
   "The work retains the existing C1 process transport and changes no provider pin, service protocol, daemon policy, Play route, permit, candidate identity, or execution authority.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/winforms-c1-transport-hardening-01.md",
+  ".aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence/activation.md",
+  ".aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence/validation.md",
+]
 
 [[workunit]]
 id = "FACMAN-C1-BACKEND-IDENTITY-01"

@@ -18,7 +18,7 @@ last_reviewed: 2026-08-03
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 2/3 including external gates
+- WIP: 3/3 including external gates
 - Ready: 0/10
 - Near-term work units: 8/6
 
@@ -73,6 +73,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `C1-PREVIEW-RUNTIME-PACKAGES-01` [P1/L] — Qualify AppKit and GTK native preview runtime packages
   - Owner: `platform-maintainer`; repositories: `factorio-launcher`
   - Outcome: Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims.
+- [ ] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` [P0/M] — Harden the WinForms C1 process-transport boundary
+  - Owner: `product-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Make the existing WinForms bounded-process path classify malformed, mismatched, oversized, timed-out, interrupted, and unknown backend outcomes truthfully before packaged live acceptance.
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
   - Owner: `release-maintainer`; repositories: `factorio-launcher`
   - Outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
@@ -83,7 +86,6 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
 - [ ] `FACMAN-C1-BACKEND-IDENTITY-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
 - [ ] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — planned; depends on `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`

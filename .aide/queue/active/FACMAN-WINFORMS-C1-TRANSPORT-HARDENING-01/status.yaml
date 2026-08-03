@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-08-04T00:00:00Z
+active_at: 2026-08-04T00:00:00Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence/

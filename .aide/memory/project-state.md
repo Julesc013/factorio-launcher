@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `windows_instance_isolated_play_revalidation_04` / `standby_authority_gate_suspended`;
+- phase: `winforms_c1_transport_hardening_01` / `active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test`;
-- active WorkUnit: `none`;
-- next WorkUnit: ``;
+- checkpoint: `winforms-c1-transport-hardening-01-active`;
+- active WorkUnit: `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`;
+- next WorkUnit: `FACMAN-C1-BACKEND-IDENTITY-01`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;
+- truth scope: `revalidation_04_superseded_transport_hardening_active_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,7 +27,7 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_play_authority`;
+- execution: `unavailable` / `winforms_transport_hardening_active_no_product_play_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
@@ -35,7 +35,7 @@ Generate that fail-closed observation after checkout with
 
 - playability: `not_yet_playable`;
 - user workflow: `native_c1_shell_backend_projection_release_candidate_ready`;
-- safety authority: `qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority`;
+- safety authority: `revalidation_04_superseded_transport_hardening_active_no_product_authority`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;

@@ -83,7 +83,7 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `product-maintainer`; dependencies: `FACMAN-WINFORMS-C1-SHELL-01`, `FACMAN-CLASSIC-PREVIEW-SHELLS-01`
   - Outcome: Replace fixture-only production behavior with FacMan-local backend-derived presentation over the existing bounded process RPC while keeping fixtures only in explicit evidence/development mode.
 - [ ] **FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01** — Harden the WinForms C1 process-transport boundary
-  - State: `planned`; priority/size: `P0/M`
+  - State: `active`; priority/size: `P0/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Make the existing WinForms bounded-process path classify malformed, mismatched, oversized, timed-out, interrupted, and unknown backend outcomes truthfully before packaged live acceptance.
 - [ ] **FACMAN-C1-BACKEND-IDENTITY-01** — Bind the C1 shell to the exact packaged backend identity
