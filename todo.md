@@ -18,9 +18,9 @@ last_reviewed: 2026-08-04
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 2/3 including external gates
+- WIP: 0/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 4/6; in-flight work: 2
+- Near-term queued work: 6/6; in-flight work: 0
 
 ## North star
 
@@ -70,12 +70,7 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `C1-PREVIEW-RUNTIME-PACKAGES-01` [P1/L] — Qualify AppKit and GTK native preview runtime packages
-  - State: `active`; owner: `platform-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims.
-- [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
-  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
+_No internal work unit is in flight. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
@@ -87,6 +82,7 @@ _No work unit satisfies the Definition of Ready._
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
+- [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 
 ## Blocking decisions
 
@@ -133,6 +129,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-C1-CUTLINE-01` — Ratify the playable-instance cut-line
 - [x] `FACMAN-JOURNEYS-01` — Specify the C1 positive and paired failure journeys
 - [x] `INSTANCE-VIEW-MINIMUM-01` — Freeze the FacMan-local C1 presentation minimum
+- [x] `UNIVERSAL-BRANCH-MODEL-RATIFICATION-01` — Ratify the continuously integrated platform branch train
 - [x] `C1-FIXTURE-VERTICAL-SLICE-01` — Complete the fixture-backed C1 player journey
 - [x] `FACMAN-WINFORMS-C1-SHELL-01` — Build the four-page WinForms C1 product shell
 - [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells

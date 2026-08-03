@@ -1,6 +1,6 @@
 schema = "facman.component_ownership.v1"
 # Date of the latest whole-manifest authority review.
-reviewed_on = "2026-08-03"
+reviewed_on = "2026-08-04"
 classification = [
   "universal_setup",
   "universal_launcher",
@@ -13,19 +13,19 @@ classification = [
 
 [[repository]]
 id = "factorio-launcher"
-branch_model = "main + integration dev + short-lived task and promotion branches"
+branch_model = "main + integration dev + short-lived task and hotfix branches"
 runtime_role = "Factorio binding, FacMan product composition, and product frontends"
 install_mutation_authority = false
 
 [[repository]]
 id = "universal-launcher"
-branch_model = "main + short-lived task branches"
+branch_model = "main + integration dev + short-lived task and hotfix branches"
 runtime_role = "Product-neutral runnable-state orchestration and frontend-neutral clients"
 install_mutation_authority = false
 
 [[repository]]
 id = "universal-setup"
-branch_model = "main + short-lived task branches"
+branch_model = "main + integration dev + short-lived task and hotfix branches"
 runtime_role = "Product-neutral setup lifecycle, ownership, rollback, recovery, and audit"
 install_mutation_authority = true
 

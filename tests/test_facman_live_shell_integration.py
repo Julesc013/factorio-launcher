@@ -25,13 +25,13 @@ class FacManLiveShellIntegrationTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         self.assertIn("3 shells", completed.stdout)
 
-    def test_workunit_closes_and_windows_candidate_is_active(self) -> None:
+    def test_workunit_closes_and_windows_candidate_waits_for_workspace_authority(self) -> None:
         with (ROOT / "release/index/plan.v1.toml").open("rb") as handle:
             plan = tomllib.load(handle)
         work = {item["id"]: item for item in plan["workunit"]}
         self.assertEqual(work["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]["status"], "complete")
         candidate = work["C1-WINDOWS-RELEASE-CANDIDATE-01"]
-        self.assertEqual(candidate["status"], "active")
+        self.assertEqual(candidate["status"], "planned")
         self.assertEqual(candidate["branch"], "task/c1-windows-release-candidate-01")
         self.assertEqual(
             candidate["base_revision"], "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8"

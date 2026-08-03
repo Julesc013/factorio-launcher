@@ -204,10 +204,11 @@ class ClassicPreviewPackageProofTests(unittest.TestCase):
         ):
             self.assertIn(anchor, workflow)
 
-    def test_workunit_is_active_until_hosted_evidence_exists(self) -> None:
+    def test_workunit_is_blocked_until_external_evidence_exists(self) -> None:
         plan = (ROOT / "release/index/plan.v1.toml").read_text(encoding="utf-8")
         unit = plan.split('id = "C1-PREVIEW-RUNTIME-PACKAGES-01"', 1)[1].split("[[", 1)[0]
-        self.assertIn('status = "active"', unit)
+        self.assertIn('status = "blocked"', unit)
+        self.assertIn("external legacy AppKit toolchain pinning", unit)
         self.assertIn('base_revision = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"', unit)
         self.assertIn("All current evidence remains provisional", unit)
         self.assertIn("cannot claim full profile closure", unit)

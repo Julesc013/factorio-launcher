@@ -20,43 +20,65 @@ Setup or foreign-installation mutation, permit issuance, Factorio execution,
 observer capture, human verdict, and route promotion remain separately
 authorized product actions.
 
-FacMan, Universal Launcher, and Universal Setup ship as one pinned product
-train, but they intentionally do not use identical branch models.
+FacMan, Universal Launcher, and Universal Setup form a continuously integrated,
+independently releasable platform train. They use the same branch roles without
+coupling repository histories or consumer locks.
 
 | Repository | Canonical model | Reason |
 | --- | --- | --- |
-| FacMan | `main` + integration `dev` + short-lived task/promotion branches | Product gates and several product-owned changes may be integrated before a reviewed canonical promotion |
-| Universal Launcher | `main` + short-lived task branches | Provider contracts are independently validated and merged as bounded trunk changes |
-| Universal Setup | `main` + short-lived task branches | Setup lifecycle waves are independently validated and merged as bounded trunk changes |
+| FacMan | `main` + integration `dev` + short-lived `task/*` and `hotfix/*` branches | Product gates and product-owned changes integrate before reviewed canonical promotion |
+| Universal Launcher | `main` + integration `dev` + short-lived `task/*` and `hotfix/*` branches | Provider changes integrate continuously and remain independently releasable |
+| Universal Setup | `main` + integration `dev` + short-lived `task/*` and `hotfix/*` branches | Setup changes integrate continuously without opening product mutation authority |
 
-The absence of Universal `dev` branches is deliberate, not missing
-infrastructure. Do not create branch symmetry solely to make commit graphs look
-alike.
+For every repository, `main` is stable canonical source and `dev` is the green
+next integration train. `main` must always be an ancestor of `dev`. Normal
+`task/*` work starts from an exact recorded `dev` revision and targets `dev`.
+Only reviewed `dev -> main` promotions or explicit `hotfix/* -> main` changes
+target `main`; a hotfix is immediately synchronized back to `dev`. Release tags
+are created only from accepted `main`.
+
+Protected refs reject force pushes, deletion, and direct writes. A provider
+may have at most one completed-but-unpromoted WorkUnit on `dev`. This keeps
+provider `main` current without no-op commits or unrelated history copying.
 
 ## Provider-first product train
 
 Cross-repository work follows this order:
 
-1. implement a product-neutral contract in its owning Universal repository;
-2. pass that repository's independent validation;
-3. merge or otherwise select the reviewed provider revision;
-4. update FacMan's workspace and dependency locks in a separate consumer
-   change;
-5. reject local configure, verification and packaging if either Universal
+1. create the provider task branch from an exact recorded provider `dev`;
+2. implement a product-neutral contract and pass provider-local validation;
+3. merge the task to provider `dev` and run exact-SHA consumer canaries;
+4. promote the reviewed provider `dev` to provider `main`;
+5. open a separate consumer-adoption change for one exact provider pin;
+6. reject local configure, verification and packaging if either Universal
    checkout differs from the lock;
-6. reconstruct detached clean worktrees at the exact three revisions;
-7. run provider tests, the FacMan superbuild, installed/package proof and
+7. reconstruct detached clean worktrees at the exact three revisions;
+8. run provider tests, the FacMan superbuild, installed/package proof and
    cross-repository boundary checks;
-8. promote FacMan through its normal `dev` to `main` process.
+9. promote FacMan through its normal `dev` to `main` process.
 
 No cross-repository commit is atomic. The workspace lock is the product-train
 identity. A provider change is not part of FacMan until the consumer pin and
 clean compatibility proof are accepted.
 
+## Dependency tracks
+
+- Stable consumer builds use exact provider commits reachable from provider
+  `main`; tracked locks never point to `dev`.
+- Canary CI may test exact provider `dev` SHAs supplied as workflow inputs, but
+  writes observations out of tree and does not change the stable lock.
+- Adoption follows provider promotion through a separate bot-created or human
+  task branch and pull request. Automation may open or update that PR, but it
+  cannot approve, merge, publish, sign, or push a protected branch.
+
 ## Integration limits
 
 - Provider work starts from a real FacMan or Dominium consumer need; equal
   weekly commit counts are not a goal.
+- Provider `dev` moves only for reusable provider code, contracts, tests, SDKs,
+  tools, or documentation; product-only FacMan work creates no provider commit.
+- Compatibility evidence can move on every relevant consumer change even when
+  provider source does not.
 - Universal Setup remains the only install-mutation authority.
 - An open FacMan authority gate may coexist with bounded product task branches.
   The gate blocks only its enumerated authority and the plan's WIP and
