@@ -85,6 +85,7 @@ def validate() -> list[str]:
     required_live_observation = [
         "FACMAN_CI_SOURCE_SHA: ${{ github.sha }}",
         "fetch-depth: 0",
+        "persist-credentials: false",
         "--line-ending-profile lf_checkout",
         '--output-dir "$RUNNER_TEMP/facman-current-checkout-observation"',
         "if: always()",
