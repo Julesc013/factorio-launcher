@@ -45,6 +45,7 @@ def validate() -> list[str]:
         "windows-native-package:",
         "runs-on: windows-2022",
         "actions/checkout@v6",
+        "fetch-depth: 0",
         "actions/setup-python@v6",
         "microsoft/setup-msbuild@v3",
         "cmake -S . -B build/native-smoke",
@@ -71,9 +72,10 @@ def validate() -> list[str]:
         "--provider-root universal_launcher=../universal-launcher",
         "--provider-root universal_setup=../universal-setup",
         '--expected-source-sha "$FACMAN_CI_SOURCE_SHA"',
+        "--line-ending-profile lf_checkout",
         "Preserve current checkout and provider observation",
-        "current-checkout-observation.v1.json",
-        "current-checkout-observation.v1.md",
+        "current-checkout-observation.v2.json",
+        "current-checkout-observation.v2.md",
     ]
     for anchor in required_ci:
         if anchor not in ci:
@@ -82,6 +84,8 @@ def validate() -> list[str]:
     linux_native = ci.partition("  linux-native:")[2].partition("\n  linux-coverage:")[0]
     required_live_observation = [
         "FACMAN_CI_SOURCE_SHA: ${{ github.sha }}",
+        "fetch-depth: 0",
+        "--line-ending-profile lf_checkout",
         '--output-dir "$RUNNER_TEMP/facman-current-checkout-observation"',
         "if: always()",
         "if-no-files-found: error",

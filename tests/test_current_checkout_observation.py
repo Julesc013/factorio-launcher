@@ -108,7 +108,18 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         unreachable_launcher_pin: bool = False,
     ) -> tuple[Path, Path, dict[str, Path], str]:
         facman = temporary / "factorio-launcher"
-        facman_head = self.initialize_repository(facman)
+        self.initialize_repository(facman)
+        policy = facman / current_checkout_observation.POLICY_RELATIVE_PATH
+        policy.parent.mkdir(parents=True)
+        policy.write_bytes(
+            (
+                current_checkout_observation.ROOT
+                / current_checkout_observation.POLICY_RELATIVE_PATH
+            ).read_bytes()
+        )
+        self.git(facman, "add", policy.relative_to(facman).as_posix())
+        self.git(facman, "commit", "-m", "track checkout observation policy")
+        facman_head = self.git(facman, "rev-parse", "HEAD")
         launcher, launcher_remote, launcher_pin = self.initialize_provider(
             temporary,
             "universal_launcher",
@@ -146,14 +157,34 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
                 facman,
                 lock,
                 provider_roots,
+                line_ending_profile="lf_checkout",
                 expected_source_sha=facman_head,
                 observed_at_utc="2026-08-03T00:00:00Z",
             )
 
         self.assertEqual(
-            observation["schema"], "facman.current_checkout_observation.v1"
+            observation["schema"], "facman.current_checkout_observation.v2"
         )
         self.assertEqual(observation["git_ownership_mode"], "owner_verified")
+        self.assertEqual(
+            observation["observation_policy"]["line_ending_profile"],
+            {
+                "id": "lf_checkout",
+                "core_autocrlf": "input",
+                "core_eol": "lf",
+            },
+        )
+        self.assertEqual(
+            observation["remote_evidence"],
+            {
+                "classification": "local_tracking_ref_only",
+                "fetch_performed": False,
+                "fetched_at": None,
+                "source_closure_proven": False,
+                "source_closure_proof": "requires_separate_empty_clone_fetched_proof",
+                "source_closure_tool": "tools/remote_source_closure.py",
+            },
+        )
         self.assertEqual(
             observation["result"],
             {"status": "pass", "problem_count": 0, "problems": []},
@@ -170,8 +201,17 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
             self.assertTrue(provider["pin_checkout"])
             self.assertTrue(provider["pin_object_present"])
             self.assertTrue(provider["remote_matches_lock"])
-            self.assertTrue(provider["pin_reachable_from_canonical_ref"])
-            self.assertEqual(provider["canonical_remote_ref"], "refs/remotes/origin/main")
+            self.assertTrue(provider["pin_reachable_from_local_tracking_ref"])
+            self.assertEqual(provider["local_tracking_ref"], "refs/remotes/origin/main")
+            self.assertEqual(
+                provider["remote_evidence"]["classification"],
+                "local_tracking_ref_only",
+            )
+            self.assertFalse(provider["remote_evidence"]["fetch_performed"])
+            self.assertIsNone(provider["remote_evidence"]["fetched_at"])
+            self.assertEqual(
+                provider["checkout"]["evidence_safety"]["status"], "pass"
+            )
         self.assertEqual(
             [
                 (item["id"], item["version"])
@@ -281,6 +321,160 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
             observation["result"]["problems"],
         )
 
+    def test_repository_local_config_include_stops_evidence_before_head(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            included = temporary / "hostile.gitconfig"
+            included.write_text("[core]\n\tuseReplaceRefs = true\n", encoding="utf-8")
+            self.git(facman, "config", "include.path", str(included))
+
+            observation = current_checkout_observation.collect_observation(
+                facman,
+                lock,
+                provider_roots,
+                line_ending_profile="lf_checkout",
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        self.assertEqual(observation["result"]["status"], "fail")
+        self.assertIsNone(observation["source"]["head"])
+        self.assertEqual(
+            observation["source"]["evidence_safety"]["local_config_includes"],
+            ["include.path"],
+        )
+        self.assertIn(
+            "factorio-launcher: repository-local Git config includes are "
+            "forbidden: include.path",
+            observation["result"]["problems"],
+        )
+
+    def test_repository_local_object_alternate_stops_provider_object_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            launcher = provider_roots["universal_launcher"]
+            alternates = launcher / ".git" / "objects" / "info" / "alternates"
+            alternates.parent.mkdir(parents=True, exist_ok=True)
+            alternates.write_text(
+                str(provider_roots["universal_setup"] / ".git" / "objects") + "\n",
+                encoding="utf-8",
+            )
+
+            observation = current_checkout_observation.collect_observation(
+                facman,
+                lock,
+                provider_roots,
+                line_ending_profile="lf_checkout",
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        launcher_observation = next(
+            provider
+            for provider in observation["providers"]
+            if provider["id"] == "universal_launcher"
+        )
+        self.assertIsNone(launcher_observation["checkout"]["head"])
+        self.assertIsNone(launcher_observation["pin_object_present"])
+        self.assertEqual(launcher_observation["abi_versions"], [])
+        self.assertEqual(
+            launcher_observation["checkout"]["evidence_safety"]["object_alternates"]
+            [0]["kind"],
+            "alternates",
+        )
+        self.assertIn(
+            "provider universal_launcher: repository-local object alternates are forbidden",
+            observation["result"]["problems"],
+        )
+
+    def test_shallow_provider_is_reported_and_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            launcher = provider_roots["universal_launcher"]
+            remote = Path(self.git(launcher, "remote", "get-url", "origin"))
+            shallow = temporary / "universal_launcher_shallow"
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "--depth",
+                    "1",
+                    "--branch",
+                    "main",
+                    remote.as_uri(),
+                    str(shallow),
+                ],
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            self.git(shallow, "config", "remote.origin.url", str(remote.resolve()))
+            provider_roots["universal_launcher"] = shallow
+
+            observation = current_checkout_observation.collect_observation(
+                facman,
+                lock,
+                provider_roots,
+                line_ending_profile="lf_checkout",
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        launcher_observation = next(
+            provider
+            for provider in observation["providers"]
+            if provider["id"] == "universal_launcher"
+        )
+        self.assertTrue(
+            launcher_observation["checkout"]["evidence_safety"]["shallow"]
+        )
+        self.assertIsNone(launcher_observation["checkout"]["head"])
+        self.assertIn(
+            "provider universal_launcher: shallow repositories are forbidden",
+            observation["result"]["problems"],
+        )
+
+    def test_promisor_config_and_pack_marker_are_reported_and_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            setup = provider_roots["universal_setup"]
+            self.git(setup, "config", "remote.origin.promisor", "true")
+            marker = setup / ".git" / "objects" / "pack" / "synthetic.promisor"
+            marker.write_text("", encoding="utf-8")
+
+            observation = current_checkout_observation.collect_observation(
+                facman,
+                lock,
+                provider_roots,
+                line_ending_profile="lf_checkout",
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        setup_observation = next(
+            provider
+            for provider in observation["providers"]
+            if provider["id"] == "universal_setup"
+        )
+        safety = setup_observation["checkout"]["evidence_safety"]
+        self.assertEqual(safety["partial_clone_config"], ["remote.origin.promisor"])
+        self.assertEqual(safety["promisor_pack_markers"], ["synthetic.promisor"])
+        self.assertIsNone(setup_observation["checkout"]["head"])
+        self.assertIn(
+            "provider universal_setup: partial-clone or promisor Git config is "
+            "forbidden: remote.origin.promisor",
+            observation["result"]["problems"],
+        )
+        self.assertIn(
+            "provider universal_setup: promisor object packs are forbidden",
+            observation["result"]["problems"],
+        )
+
     def test_replace_refs_cannot_change_pinned_abi_identity(self) -> None:
         with tempfile.TemporaryDirectory() as raw_temporary:
             temporary = Path(raw_temporary)
@@ -331,25 +525,56 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         self.assertEqual(observation["result"]["status"], "pass")
         self.assertEqual(versions["ulk"], "1.6")
 
-    def test_git_line_ending_policy_is_explicit_for_each_platform(self) -> None:
+    def test_git_line_ending_policy_is_explicit_and_disables_lazy_fetch(self) -> None:
         completed = subprocess.CompletedProcess([], 0, "", "")
         root = Path.cwd()
-        for platform, expected in (
-            ("nt", "core.autocrlf=true"),
-            ("posix", "core.autocrlf=input"),
+        for profile, expected_autocrlf, expected_eol in (
+            ("windows_checkout", "core.autocrlf=true", "core.eol=native"),
+            ("lf_checkout", "core.autocrlf=input", "core.eol=lf"),
         ):
-            with self.subTest(platform=platform), mock.patch.object(
-                current_checkout_observation.os,
-                "name",
-                platform,
-            ), mock.patch.object(
+            with self.subTest(profile=profile), mock.patch.object(
                 current_checkout_observation.subprocess,
                 "run",
                 return_value=completed,
             ) as run:
-                current_checkout_observation._run_git(root, "status")
+                current_checkout_observation._run_git(
+                    root,
+                    "status",
+                    line_ending_policy={
+                        "id": profile,
+                        "core_autocrlf": expected_autocrlf.rsplit("=", 1)[1],
+                        "core_eol": expected_eol.rsplit("=", 1)[1],
+                    },
+                )
                 command = run.call_args.args[0]
-                self.assertIn(expected, command)
+                environment = run.call_args.kwargs["env"]
+                self.assertIn(expected_autocrlf, command)
+                self.assertIn(expected_eol, command)
+                self.assertEqual(environment["GIT_NO_LAZY_FETCH"], "1")
+
+    def test_unknown_line_ending_profile_fails_before_git_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            observation = current_checkout_observation.collect_observation(
+                facman,
+                lock,
+                provider_roots,
+                line_ending_profile="host_inferred",
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        self.assertEqual(observation["result"]["status"], "fail")
+        self.assertIsNone(observation["source"]["head"])
+        self.assertIsNone(
+            observation["observation_policy"]["line_ending_profile"]
+        )
+        self.assertIn(
+            "checkout observation policy must define the selected line-ending "
+            "profile exactly once: 'host_inferred'",
+            observation["result"]["problems"],
+        )
 
     def test_remote_credentials_are_ignored_and_redacted(self) -> None:
         credentialed = (
@@ -365,7 +590,7 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         self.assertNotIn("token", redacted)
         self.assertNotIn("secret", redacted)
 
-    def test_provider_pin_must_be_reachable_from_canonical_origin_main(self) -> None:
+    def test_provider_pin_must_be_reachable_from_local_origin_tracking_ref(self) -> None:
         with tempfile.TemporaryDirectory() as raw_temporary:
             temporary = Path(raw_temporary)
             facman, lock, provider_roots, facman_head = self.build_fixture(
@@ -385,14 +610,15 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
             if provider["id"] == "universal_launcher"
         )
         self.assertTrue(launcher["pin_checkout"])
-        self.assertFalse(launcher["pin_reachable_from_canonical_ref"])
+        self.assertFalse(launcher["pin_reachable_from_local_tracking_ref"])
         self.assertEqual(launcher["status"], "fail")
         self.assertIn(
-            "provider universal_launcher: locked pin is not reachable from canonical origin/main",
+            "provider universal_launcher: locked pin is not reachable from local "
+            "origin/main tracking evidence",
             observation["result"]["problems"],
         )
 
-    def test_missing_canonical_remote_ref_is_unknown_and_fails_closed(self) -> None:
+    def test_missing_local_tracking_ref_is_unknown_and_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as raw_temporary:
             temporary = Path(raw_temporary)
             facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
@@ -411,13 +637,13 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
             for provider in observation["providers"]
             if provider["id"] == "universal_launcher"
         )
-        self.assertIsNone(launcher_observation["canonical_remote_head"])
+        self.assertIsNone(launcher_observation["local_tracking_ref_head"])
         self.assertIsNone(
-            launcher_observation["pin_reachable_from_canonical_ref"]
+            launcher_observation["pin_reachable_from_local_tracking_ref"]
         )
         self.assertEqual(launcher_observation["status"], "fail")
         self.assertIn(
-            "provider universal_launcher: canonical remote-tracking ref is unavailable",
+            "provider universal_launcher: local origin tracking ref is unavailable",
             observation["result"]["problems"],
         )
 
@@ -543,12 +769,14 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
                         f"universal_setup={provider_roots['universal_setup']}",
                         "--expected-source-sha",
                         facman_head,
+                        "--line-ending-profile",
+                        "lf_checkout",
                         "--output-dir",
                         str(output),
                     ]
                 )
-            json_path = output / "current-checkout-observation.v1.json"
-            markdown_path = output / "current-checkout-observation.v1.md"
+            json_path = output / "current-checkout-observation.v2.json"
+            markdown_path = output / "current-checkout-observation.v2.md"
             json_text = json_path.read_text(encoding="utf-8")
             machine = json.loads(json_text)
             human = markdown_path.read_text(encoding="utf-8")
@@ -569,17 +797,19 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
                         f"universal_setup={provider_roots['universal_setup']}",
                         "--expected-source-sha",
                         "0" * 40,
+                        "--line-ending-profile",
+                        "lf_checkout",
                         "--output-dir",
                         str(failed_output),
                     ]
                 )
             failed_machine = json.loads(
                 failed_output.joinpath(
-                    "current-checkout-observation.v1.json"
+                    "current-checkout-observation.v2.json"
                 ).read_text(encoding="utf-8")
             )
             failed_markdown_exists = failed_output.joinpath(
-                "current-checkout-observation.v1.md"
+                "current-checkout-observation.v2.md"
             ).is_file()
             indexes_after = {
                 root: root.joinpath(".git", "index").read_bytes()
@@ -594,6 +824,10 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         self.assertEqual(machine["result"]["status"], "pass")
         self.assertIn(machine["source"]["head"], human)
         self.assertIn(machine["providers"][0]["pin"], human)
+        self.assertIn("local tracking-ref evidence only", human)
+        self.assertIn("Fetch performed: `false`", human)
+        self.assertIn("Fetched at: `null`", human)
+        self.assertIn("Source closure proven: `false`", human)
         self.assertEqual(
             current_checkout_observation.canonical_json(machine),
             json_text,
@@ -625,6 +859,8 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
                         f"universal_setup={provider_roots['universal_setup']}",
                         "--expected-source-sha",
                         facman_head,
+                        "--line-ending-profile",
+                        "lf_checkout",
                         "--output-dir",
                         str(output),
                     ]

@@ -194,8 +194,10 @@ Current machine-readable truth is `.aide/memory/project-state.v2.json`; the
 compact reviewed-checkpoint product view is
 `release/index/current_state.v1.toml`, and the human summary is generated from
 the same canonical inputs. Live checkout/provider identity is emitted outside
-the source tree by `tools/current_checkout_observation.py`; tracked state does
-not impersonate a self-referential HEAD or live remote query. Closed task
+the source tree by `tools/current_checkout_observation.py`. Its provider-ref
+evidence is an offline, policy-bound local tracking-ref observation, not a live
+remote query or the separate empty-clone source-closure proof; tracked state
+does not impersonate either. Closed task
 evidence is hash-indexed under `.aide/history/` and excluded from ordinary
 context packets.
 

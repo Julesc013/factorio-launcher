@@ -33,9 +33,16 @@ Live source truth is generated after checkout by
 `tools/current_checkout_observation.py`. The versioned JSON and Markdown
 artifacts derive the FacMan HEAD, branch, and dirty state from Git, compare an
 optional expected CI SHA, and inspect passed Universal sibling roots against
-the exact workspace-lock pins and canonical `origin/main` refs. Public provider
-ABI versions are read from the locked pins' Git trees, not mutable worktree
-files. No observed live SHA is maintained by hand in tracked project state.
+the exact workspace-lock pins and local `origin/main` tracking refs. The
+artifact records `local_tracking_ref_only`, `fetch_performed=false`, and
+`fetched_at=null`; this offline command neither queries current remote state nor
+proves source closure. That stronger claim belongs to the separate fetched,
+empty-clone `tools/remote_source_closure.py` proof. Public provider ABI versions
+are read from the locked pins' Git trees, not mutable worktree files. A tracked
+policy fixes and records line-ending behavior, lazy fetching is disabled, and
+repository-local includes, alternates, shallow history, and promisor/partial
+clone state fail closed before object evidence. No observed live SHA is
+maintained by hand in tracked project state.
 
 The next breaking project-state schema revision should replace the live-sounding
 compatibility field names. They remain in v1/v2 only to avoid changing existing

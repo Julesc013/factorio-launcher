@@ -29,8 +29,8 @@ class CiProofTests(unittest.TestCase):
         text = (
             ci_proof_check.ROOT / "tools" / "current_checkout_observation.py"
         ).read_text(encoding="utf-8")
-        self.assertIn('SCHEMA = "facman.current_checkout_observation.v1"', text)
-        self.assertIn('OUTPUT_STEM = "current-checkout-observation.v1"', text)
+        self.assertIn('SCHEMA = "facman.current_checkout_observation.v2"', text)
+        self.assertIn('OUTPUT_STEM = "current-checkout-observation.v2"', text)
         self.assertIn(
             "--output-dir must be outside every ",
             text,
@@ -38,6 +38,9 @@ class CiProofTests(unittest.TestCase):
         self.assertIn("observed source/provider checkout", text)
         self.assertIn("merge-base", text)
         self.assertIn("ABI_PATTERN", text)
+        self.assertIn('"GIT_NO_LAZY_FETCH": "1"', text)
+        self.assertIn('"local_tracking_ref_only"', text)
+        self.assertIn("POLICY_RELATIVE_PATH", text)
 
 
 if __name__ == "__main__":
