@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-C1
-last_reviewed: 2026-08-01
+last_reviewed: 2026-08-03
 ---
 
 # FacMan execution dashboard
@@ -18,7 +18,7 @@ last_reviewed: 2026-08-01
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 3/3 including external gates
+- WIP: 2/3 including external gates
 - Ready: 0/10
 - Near-term work units: 2/5
 
@@ -57,16 +57,16 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 
 ## Current external gate
 
-### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — ACTIVE
+### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — BLOCKED
 
-Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isolated route. Jules is operator, but observer, prepare, permit, execution, verdict, and route authority remain absent.
+Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began.
 
 - Owner: `Jules`; scope: `authority_only`
-- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/queue/index.yaml`
+- External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
 - Non-blocking product work: 12 named items may continue independently.
-- Exit: Complete the separately authorized observer and two-launch procedure without inferring route authority. Shell, fixture, accessibility, package, and documentation work continue independently.
+- Exit: Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension.
 
 ## Active work units
 

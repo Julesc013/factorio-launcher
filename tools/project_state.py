@@ -825,12 +825,13 @@ def markdown(data: dict[str, Any]) -> str:
 
 def readme_status(data: dict[str, Any]) -> str:
     law = data["command_law"]
-    active = data["active_work_unit"] or "none (operator gate required)"
+    active = data["active_work_unit"] or "none (standby)"
+    next_work_unit = data["product"]["next_work_unit"] or "none pending owner direction"
     return "\n".join([
         "## Current Status",
         "",
         f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
-        f"**Next:** `{data['product']['next_work_unit']}`.",
+        f"**Next:** `{next_work_unit}`.",
         "",
         f"> {data['product']['charter']}",
         "",
@@ -879,8 +880,8 @@ def roadmap_status(data: dict[str, Any]) -> str:
     first_step = (
         f"1. Complete `{active}`."
         if active else
-        "1. Promote the accepted Windows instance-isolated policy to canonical `main`, "
-        "synchronize its ancestry into `dev`, and only then activate its exact candidate."
+        "1. Stand by for further owner detail; do not reactivate revalidation-04 or "
+        "open a successor or multi-repository convergence WorkUnit."
     )
     return "\n".join([
         "## Current Product Sequence",
@@ -926,7 +927,7 @@ def support_status(data: dict[str, Any]) -> str:
 
 
 def release_status(data: dict[str, Any]) -> str:
-    active = data["active_work_unit"] or "none (operator gate required)"
+    active = data["active_work_unit"] or "none (standby)"
     return "\n".join([
         "## Current Boundary",
         "",
@@ -1465,17 +1466,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "qualification_05_active_before_revalidation_04_stage",
         },
         "windows_instance_isolated_play_revalidation_04": {
-            "checkpoint": "windows-instance-isolated-play-revalidation-04-staged",
-            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
+            "checkpoint": "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test",
+            "active": "",
             "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
-            "next": "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
-            "phase_status": "awaiting_operator_gate",
-            "safety": "qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_authority",
-            "execution_reason": "qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_play_authority",
-            "truth_scope": "qualification_05_accepted_revalidation_04_staged_not_prepared_no_product_authority",
+            "next": "",
+            "phase_status": "standby_authority_gate_suspended",
+            "safety": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority",
+            "execution_reason": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_play_authority",
+            "truth_scope": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority",
             "canonical_main_promotion": True,
             "canonical_integration": False,
-            "current_gate_status": "revalidation_04_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive",
+            "current_gate_status": "revalidation_04_superseded_before_observer_no_current_play_evidence_gate",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -3385,7 +3386,7 @@ def summary(data: dict[str, Any]) -> str:
         "FacMan product status",
         f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
         f"active_work_unit: {data['active_work_unit'] or 'none'}",
-        f"next_work_unit: {data['product']['next_work_unit']}",
+        f"next_work_unit: {data['product']['next_work_unit'] or 'none pending owner direction'}",
         f"Gate 4A hermetic Play policy: "
         f"{data['hermetic_standalone_play_policy']['status']} "
         f"({data['hermetic_standalone_play_policy']['policy_digest']})",

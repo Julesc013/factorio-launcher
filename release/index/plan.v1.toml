@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-01"
+last_reviewed = "2026-08-03"
 active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
@@ -71,12 +71,12 @@ exit = [
 [[gate]]
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
 title = "Conduct exact instance-isolated Play revalidation 04"
-status = "active"
+status = "blocked"
 owner = "Jules"
 external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
-source = ".aide/queue/index.yaml"
-observed = "2026-08-01"
-stage = "staged_not_prepared"
+source = ".aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json"
+observed = "2026-08-03"
+stage = "superseded_before_observer_self_test"
 operator_assignment_required = false
 gate_scope = "authority_only"
 blocks = [
@@ -98,9 +98,9 @@ non_blocking_work = [
   "C1-ACCESSIBILITY-QUALIFICATION-01",
   "C1-SUPPORT-DOCUMENTATION-01",
 ]
-authority_boundary = "Qualification-05 and revalidation-04 staging grant no execution authority. Jules is operator only; observer, prepare, permit, execution, verdict, and route promotion remain separately authorized."
-summary = "Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isolated route. Jules is operator, but observer, prepare, permit, execution, verdict, and route authority remain absent."
-exit = "Complete the separately authorized observer and two-launch procedure without inferring route authority. Shell, fixture, accessibility, package, and documentation work continue independently."
+authority_boundary = "Qualification-05 remains accepted, but the preserved revalidation-04 stage is superseded before observer self-test and grants no observer, prepare, permit, execution, verdict, route, signing, or publication authority."
+summary = "Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began."
+exit = "Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"
@@ -254,7 +254,7 @@ evidence = [
   "docs/release/checkpoints/facman-c1-cutline-01.md",
   "docs/product/facman_c1_release_contract.md",
   "release/index/plan.v1.toml",
-  ".aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04/evidence/operator-designation.md",
+  ".aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04/evidence/operator-designation.md",
   ".aide/policies/git-workflow.yaml",
   ".aide/git/helper-policy.yaml",
   "docs/development/repository-branch-governance.md",
@@ -602,7 +602,7 @@ trigger = "J01 failure states and operation claims are declared."
 id = "C1-LIVE-PLAY-ACCEPTANCE-01"
 summary = "Run the complete live Play journey after exact route authority exists."
 rationale = "Fixture product work proceeds independently; live acceptance remains bound to the exact promoted route."
-trigger = "Revalidation-04 passes and the exact route capability and Windows route promotion are accepted."
+trigger = "A reviewed successor to suspended revalidation-04 passes and the exact route capability and Windows route promotion are accepted."
 
 [[later]]
 id = "C1-WINDOWS-PACKAGE-01"

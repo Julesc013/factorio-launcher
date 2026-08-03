@@ -60,15 +60,13 @@ native_direction:
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         text = project_state.summary(project_state.collect())
         self.assertIn(
-            "phase: windows_instance_isolated_play_revalidation_04 (awaiting_operator_gate)",
+            "phase: windows_instance_isolated_play_revalidation_04 (standby_authority_gate_suspended)",
             text,
         )
+        self.assertIn("active_work_unit: none", text)
+        self.assertIn("next_work_unit: none pending owner direction", text)
         self.assertIn(
-            "active_work_unit: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
-            text,
-        )
-        self.assertIn(
-            "next_work_unit: FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+            "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_play_authority",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)
