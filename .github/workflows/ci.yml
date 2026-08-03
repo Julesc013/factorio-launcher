@@ -246,6 +246,8 @@ jobs:
           ctest --test-dir build/native-smoke -C Release --output-on-failure
       - name: Build WinForms shell
         run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Release /p:Platform=x64
+      - name: Run WinForms transport behavior matrix
+        run: python tools/winforms_transport_hardening_check.py
       - name: Smoke WinForms command client
         run: python tools/winforms_command_client_smoke.py
       - name: Run Windows Python unit tests
