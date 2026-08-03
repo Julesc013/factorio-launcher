@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-C1-BACKEND-IDENTITY-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-08-03T18:09:24Z
+result: PASS
+evidence_path: .aide/history/c1-backend-identity-01-merged-2026-08-04/FACMAN-C1-BACKEND-IDENTITY-01/evidence/
+active_at: 2026-08-03T18:10:35Z
+verified_pending_closeout_at: 2026-08-03T20:21:15Z
+implementation_state: implemented
+reviewed_at: 2026-08-03T21:04:25Z
+closed_at: 2026-08-03T21:04:29Z
+archived_at: 2026-08-03T21:04:35Z

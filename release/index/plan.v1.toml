@@ -563,7 +563,7 @@ evidence = [
 id = "FACMAN-C1-BACKEND-IDENTITY-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Bind the C1 shell to the exact packaged backend identity"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
@@ -581,9 +581,9 @@ acceptance = [
 ]
 evidence = [
   "docs/release/checkpoints/c1-backend-identity-01.md",
-  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/activation.md",
-  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/validation.md",
-  ".aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence/remaining-risks.md",
+  ".aide/history/c1-backend-identity-01-merged-2026-08-04/FACMAN-C1-BACKEND-IDENTITY-01/evidence/activation.md",
+  ".aide/history/c1-backend-identity-01-merged-2026-08-04/FACMAN-C1-BACKEND-IDENTITY-01/evidence/validation.md",
+  ".aide/history/c1-backend-identity-01-merged-2026-08-04/FACMAN-C1-BACKEND-IDENTITY-01/evidence/remaining-risks.md",
 ]
 
 [[workunit]]

@@ -1,0 +1,20 @@
+{
+  "checkpoint": "c1-backend-identity-01-merged-2026-08-04",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/activation.md": "d81f6af92c1c98f7dff36340099ef25c918e5a772e94e7d57ca3bbcaab5d6327",
+        "evidence/changed-files.md": "6e656be621ab40b098e7aeea7778c12d24e5c3508e332aac56fbf20cc884541e",
+        "evidence/python-test-obligations.v1.json": "7e4c22cb84cf4487dac723616b982e4acd2c77fb302b3cc14913898017967582",
+        "evidence/remaining-risks.md": "9a8f305009afcedc2e74aa9c4f6e1e0d309e4f795d121dd1ada66614f4eb6124",
+        "evidence/validation.md": "27c974bba26f1d52964440681191de4fe9eca5adf634dc07a093838918442354",
+        "status.yaml": "9ef9a56d1a7cf4eaff79e8f7908de71d80ff70c8ebdc3390774712fa56d0f7e4",
+        "task.yaml": "e003cfb3fc5343202a9a3bb1ea85aa90a7efcb418520b4905c6da688f0742a51"
+      },
+      "task_id": "FACMAN-C1-BACKEND-IDENTITY-01"
+    }
+  ]
+}

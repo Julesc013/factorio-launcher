@@ -18,9 +18,9 @@ last_reviewed: 2026-08-04
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 3/3 including external gates
+- WIP: 2/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 4/6; in-flight work: 3
+- Near-term queued work: 4/6; in-flight work: 2
 
 ## North star
 
@@ -73,9 +73,6 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `C1-PREVIEW-RUNTIME-PACKAGES-01` [P1/L] — Qualify AppKit and GTK native preview runtime packages
   - State: `active`; owner: `platform-maintainer`; repositories: `factorio-launcher`
   - Outcome: Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims.
-- [ ] `FACMAN-C1-BACKEND-IDENTITY-01` [P0/M] — Bind the C1 shell to the exact packaged backend identity
-  - State: `verified_pending_closeout`; owner: `architecture-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action.
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
   - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
   - Outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
@@ -141,6 +138,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells
 - [x] `FACMAN-C1-LIVE-SHELL-INTEGRATION-01` — Integrate backend-derived presentation into all three C1 shells
 - [x] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` — Harden the WinForms C1 process-transport boundary
+- [x] `FACMAN-C1-BACKEND-IDENTITY-01` — Bind the C1 shell to the exact packaged backend identity
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

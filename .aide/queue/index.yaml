@@ -3,12 +3,6 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
-  - id: FACMAN-C1-BACKEND-IDENTITY-01
-    status: verified_pending_closeout
-    lifecycle_state: verified_pending_closeout
-    title: Bind the C1 shell to the exact packaged backend identity
-    task: .aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/evidence
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
     status: blocked
     lifecycle_state: blocked

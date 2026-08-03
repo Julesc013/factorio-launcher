@@ -1,9 +1,9 @@
 # FacMan C1 backend identity 01
 
-`FACMAN-C1-BACKEND-IDENTITY-01` is a locally verified implementation candidate
-on `task/c1-backend-identity-01`, based on merged development revision
-`7ebbfa37b23ee173cbb15f399935d0e035e79375`. It is pending review and merge;
-this checkpoint is not canonical integration evidence.
+`FACMAN-C1-BACKEND-IDENTITY-01` is reviewed, closed, and accepted into `dev`.
+Task head `ead81c5502d6b4b6a5fa1a499e60537c2ab53dcd` was merged by
+`451dc6376d52ac2ddaf82c07ee95e423deec0829`. Canonical `main` promotion is
+pending; this checkpoint does not yet claim canonical integration.
 
 The production WinForms shell now derives its backend only from the package
 containing the running GUI module. It accepts no configured executable,

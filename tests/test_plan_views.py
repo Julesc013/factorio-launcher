@@ -61,7 +61,7 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 3/3 including external gates", dashboard)
+        self.assertIn("WIP: 2/3 including external gates", dashboard)
         pending = [
             item
             for item in self.plan["workunit"]
@@ -78,7 +78,10 @@ class PlanViewTests(unittest.TestCase):
             f"in-flight work: {len(in_flight)}",
             dashboard,
         )
-        self.assertIn("State: `verified_pending_closeout`", dashboard)
+        self.assertIn(
+            "[x] `FACMAN-C1-BACKEND-IDENTITY-01`",
+            dashboard,
+        )
         self.assertIn("no successor or convergence WorkUnit is activated", dashboard)
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
@@ -123,7 +126,7 @@ class PlanViewTests(unittest.TestCase):
         self.assertEqual(transport["repos"], ["factorio-launcher"])
 
         backend_identity = workunits["FACMAN-C1-BACKEND-IDENTITY-01"]
-        self.assertEqual(backend_identity["status"], "verified_pending_closeout")
+        self.assertEqual(backend_identity["status"], "complete")
         self.assertEqual(
             backend_identity["branch"], "task/c1-backend-identity-01"
         )

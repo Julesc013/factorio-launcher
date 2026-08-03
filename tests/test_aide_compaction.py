@@ -161,11 +161,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+            "FACMAN-C1-BACKEND-IDENTITY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
@@ -201,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "transport_hardening_accepted_backend_identity_verified_pending_closeout_no_product_authority",
+            "transport_hardening_and_backend_identity_accepted_dev_pending_main_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -569,7 +569,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+            "FACMAN-C1-BACKEND-IDENTITY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -958,11 +958,11 @@ class AideCompactionTests(unittest.TestCase):
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+            "FACMAN-C1-BACKEND-IDENTITY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

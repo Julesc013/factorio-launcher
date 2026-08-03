@@ -86,8 +86,8 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Make the existing WinForms bounded-process path classify malformed, mismatched, oversized, timed-out, interrupted, and unknown backend outcomes truthfully before packaged live acceptance.
-- [ ] **FACMAN-C1-BACKEND-IDENTITY-01** — Bind the C1 shell to the exact packaged backend identity
-  - State: `verified_pending_closeout`; priority/size: `P0/M`
+- [x] **FACMAN-C1-BACKEND-IDENTITY-01** — Bind the C1 shell to the exact packaged backend identity
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action.
 - [ ] **FACMAN-WORKSPACE-ROOT-AUTHORITY-01** — Make workspace-root ownership an explicit C1 authority
