@@ -60,6 +60,17 @@ itself. Live checkout and provider-head truth must therefore be emitted as a
 post-checkout CI/local observation artifact. Tracked project state records a
 reviewed checkpoint and the immutable identities used by that checkpoint.
 
+## Canonical truth order
+
+The convergence programme uses one durable order: canonical plan, component
+ownership, workspace lock, compact current state, durable architecture and
+contracts, out-of-tree live observation, run-specific generated prompt/profile,
+then historical report or archive. Each source remains bounded to its domain;
+for example, live checkout evidence can update a local HEAD fact but cannot
+change a pin or authority. Master prompts are run snapshots. Model, reasoning,
+and agent-topology choices belong to the generated run profile rather than this
+architecture or the canonical plan.
+
 ## Target system
 
 ```text
@@ -74,7 +85,7 @@ FacMan / Factorio                  Dominium
              |                           |
              v                           v
 Universal Launcher                Universal Setup
-commands and clients              source/package inspection
+commands and clients              installable package/source archives
 operation outcomes                target authority
 references and plans              install lifecycle
 execution sessions                transaction and recovery
@@ -97,10 +108,12 @@ Product            -X-> direct installed-software mutation
 
 ## Permanent ownership
 
-Universal Setup permanently owns package and source inspection, target
-authority, every setup mutation and recovery operation, setup transactions,
-installed-state ownership, and audit. It excludes product rules and UI, launch
-sessions, mods, saves, and accounts.
+Universal Setup permanently owns decoding and bounded materialization of
+installable-software package and source archives, target authority, every setup
+mutation and recovery operation, setup transactions, installed-state
+ownership, and audit. It excludes product rules and UI, launch sessions,
+Factorio mods/modpacks, saves/worlds/scenarios, snapshots, backups,
+diagnostic archives, and accounts.
 
 Universal Launcher permanently owns command, client, and transport contracts;
 owned results; durable operation identity and outcome; generic references and
@@ -109,10 +122,11 @@ containment; launcher journals; and the preference mechanism. It excludes
 setup mutation, Factorio or Dominium semantics, and product presentation.
 
 FacMan permanently owns Factorio discovery, installation classification,
-InstanceSpec and Binding, readiness, profiles, mods, saves, backups, launch
-intent, policy and evidence, product presentation, native shells, and
-packaging. It excludes a generic setup engine and permanent generic launcher
-infrastructure.
+InstanceSpec and Binding, readiness, profiles, mods/modsets/modpacks,
+saves/worlds/scenarios, snapshots, backups, diagnostic archives, launch intent,
+policy and evidence, product presentation, native shells, and packaging. It
+excludes a generic installable-software setup engine and permanent generic
+launcher infrastructure.
 
 Dominium permanently owns product identity and compatibility, component
 recipes, product release policy, content packs, product launch and readiness
@@ -274,22 +288,32 @@ There is no atomic three-repository merge. Producer commits precede consumer
 switches; each switch can be reverted independently. A provider pin never
 moves merely to make repositories appear equally active.
 
+The current FacMan observation branch, ULK owned-response branch, and USK
+strict-codec branch are independent trains and may merge independently once
+each is accepted. Provider-first ordering is mandatory only when a consumer
+adopts or repins a provider contract or implementation. It does not serialize
+independent documentation, observation, additive provider hardening, or other
+work that changes no consumed provider identity.
+
 ## Required provider-health observation
 
-The generated observation must report, for both providers:
+The generated checkout observation must report, for both providers:
 
-- canonical-main revision;
+- local `origin/main` tracking-ref revision;
 - exact consumed pin;
 - pin checkout match;
-- pin reachability from canonical main;
+- pin reachability from that local tracking ref;
 - public ABI version;
 - last accepted provider capability;
 - current consumer proof;
 - pending incubator extractions and their trigger;
 - whether any new product authority was opened.
 
-Unknown or unavailable Git/provider evidence is reported as unknown, never as
-healthy. Tracked README text must not impersonate a live remote query.
+It must also report `local_tracking_ref_only`, `fetch_performed=false`, and
+`fetched_at=null`. Unknown or unavailable Git/provider evidence is reported as
+unknown, never as healthy. This offline observation is not current remote
+evidence and cannot satisfy source closure; that claim requires the separate
+fetched empty-clone proof. Tracked README text must not impersonate either.
 
 ## Commit and review discipline
 

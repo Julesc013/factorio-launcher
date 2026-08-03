@@ -75,6 +75,25 @@ class ComponentOwnershipTests(unittest.TestCase):
         self.assertEqual(application["owner"], "factorio_binding")
         self.assertNotIn("final_owner", application)
 
+    def test_archive_ownership_distinguishes_setup_inputs_from_factorio_data(self) -> None:
+        with component_ownership_check.MANIFEST.open("rb") as handle:
+            manifest = tomllib.load(handle)
+        components = {
+            component["id"]: component for component in manifest["component"]
+        }
+        setup_contract = components["usk-runtime"]["public_contract"]
+        facman_contract = components["facman-archive"]["public_contract"]
+        self.assertIn("Installable-software package/source archive", setup_contract)
+        for product_term in (
+            "mods/modsets/modpacks",
+            "saves/worlds/scenarios",
+            "snapshots",
+            "backups",
+            "diagnostics",
+        ):
+            self.assertIn(product_term, facman_contract)
+            self.assertNotIn(product_term, setup_contract)
+
 
 if __name__ == "__main__":
     unittest.main()

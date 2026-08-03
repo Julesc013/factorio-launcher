@@ -5,6 +5,21 @@ Its target profile and memory must describe the implementation that exists at
 the current revision; bootstrap-era plans are not allowed to outrank live
 contracts, tests, or package evidence.
 
+## Canonical truth hierarchy
+
+The durable order is canonical plan, component ownership, workspace lock,
+compact current state, durable architecture/contracts/safety law, out-of-tree
+live checkout observation, run-specific generated prompt/profile, then
+historical reports and archives. Sources retain bounded roles: local live Git
+facts do not grant authority, while a reviewed checkpoint does not impersonate
+a live HEAD.
+
+Master prompts are generated run snapshots. They may assemble the durable
+sources for one execution, but cannot become a parallel plan or ownership
+authority. Model choice, reasoning effort, agent topology, and other agent
+settings belong in the generated run profile, not in durable architecture or
+the canonical plan.
+
 The executable root grammar is defined by `tools/structure_policy_check.py`.
 `.aide/policies/facman-root-authority.yaml` mirrors that grammar and is checked
 by `tools/aide_target_truth_check.py`. Retired roots are rejected in both

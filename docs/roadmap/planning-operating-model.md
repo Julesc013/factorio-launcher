@@ -3,7 +3,7 @@ document_id: FACMAN-PLANNING-OPERATING-MODEL
 schema_version: "1.0"
 status: governing-draft
 created: 2026-07-28
-last_reviewed: 2026-07-29
+last_reviewed: 2026-08-03
 canonical_plan: release/index/plan.v1.toml
 generated_dashboard: todo.md
 generated_roadmap: docs/roadmap/current.md
@@ -54,21 +54,31 @@ planning authority.
 
 ## 2. Source-of-truth hierarchy
 
-Conflicts are resolved in this order:
+For convergence and release execution, conflicts are resolved in this order:
 
-1. Product charter, safety invariants, ownership boundaries, and accepted
-   release policy.
-2. Accepted architecture decision records.
-3. Product journeys and product-claim ledgers.
-4. `release/index/plan.v1.toml`, the canonical execution graph.
-5. Bounded epic and work-unit specifications.
-6. The task queue and immutable evidence emitted by completed work.
-7. Generated views such as `todo.md` and `docs/roadmap/current.md`.
-8. The planning archive and research notes.
+1. `release/index/plan.v1.toml` — canonical execution intent, dependency graph,
+   cut line, gates, and status.
+2. `release/index/component_ownership.v1.toml` — permanent repository and
+   effect authority.
+3. `release/index/workspace_lock.v1.toml` — exact consumed source identities
+   and source-closure requirements.
+4. `release/index/current_state.v1.toml` — compact reviewed-checkpoint roles and
+   state, never a self-referential live-HEAD claim.
+5. Durable architecture, accepted contracts, safety invariants, product
+   journeys, and claim policy.
+6. Out-of-tree live checkout observation — current local Git facts within the
+   observer's explicit offline claim boundary.
+7. A run-specific generated prompt and run profile.
+8. Historical reports, archived plans, research notes, and prior prompts.
 
-A lower source may explain a higher source, but it may not silently override it.
-Generated views are disposable projections. The archive is a discovery source,
-not an executable backlog.
+Each source is authoritative only for its declared field: a live observation
+can correct a checkout fact without changing ownership, a provider pin, or a
+gate. A lower source may explain a higher source, but it may not silently
+override it. Generated views are disposable projections. A master prompt is a
+run snapshot, not durable project law; model selection, reasoning effort,
+delegation topology, and other agent settings belong in the generated profile
+for that run. Historical reports and archives are discovery sources, not an
+executable backlog.
 
 ## 3. Planning horizons
 

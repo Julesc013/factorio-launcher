@@ -41,7 +41,7 @@ id = "usk-runtime"
 repository = "universal-setup"
 path = "runtime/setup"
 owner = "universal_setup"
-public_contract = "Install, verify, repair, move, uninstall, rollback, recovery, ownership, and audit"
+public_contract = "Installable-software package/source archive decoding and bounded materialization; install, verify, repair, move, uninstall, rollback, recovery, ownership, and audit"
 
 [[component]]
 id = "usk-contracts"
@@ -118,7 +118,7 @@ id = "facman-archive"
 repository = "factorio-launcher"
 path = "runtime/archive"
 owner = "factorio_binding"
-public_contract = "Private bounded archive behavior for Factorio saves, mods, snapshots, and diagnostics"
+public_contract = "Private bounded archive behavior for Factorio mods/modsets/modpacks, saves/worlds/scenarios, snapshots, backups, and diagnostics"
 
 [[component]]
 id = "facman-base"
