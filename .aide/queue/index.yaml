@@ -9,6 +9,12 @@ items:
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
+  - id: FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01
+    status: active
+    lifecycle_state: active
+    title: Harden the WinForms C1 process-transport boundary
+    task: .aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked
