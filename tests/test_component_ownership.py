@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import copy
+import datetime
 import tomllib
 import unittest
 
@@ -11,6 +12,14 @@ from tools import component_ownership_check
 
 
 class ComponentOwnershipTests(unittest.TestCase):
+    def test_manifest_records_latest_whole_authority_review(self) -> None:
+        with component_ownership_check.MANIFEST.open("rb") as handle:
+            manifest = tomllib.load(handle)
+        self.assertEqual(
+            datetime.date.fromisoformat(manifest["reviewed_on"]),
+            datetime.date(2026, 8, 3),
+        )
+
     def test_manifest_classifies_all_current_components(self) -> None:
         self.assertEqual(component_ownership_check.check(), [])
 

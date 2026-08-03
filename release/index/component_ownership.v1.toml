@@ -1,5 +1,6 @@
 schema = "facman.component_ownership.v1"
-reviewed_on = "2026-07-25"
+# Date of the latest whole-manifest authority review.
+reviewed_on = "2026-08-03"
 classification = [
   "universal_setup",
   "universal_launcher",

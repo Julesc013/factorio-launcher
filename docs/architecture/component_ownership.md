@@ -2,6 +2,8 @@
 
 The machine-readable authority is
 [`release/index/component_ownership.v1.toml`](../../release/index/component_ownership.v1.toml).
+Its `reviewed_on` field records the latest whole-manifest authority review, not
+the file's creation date or the date of an incidental edit.
 `tools/component_ownership_check.py` rejects missing component coverage,
 ambiguous branch models, Setup authority outside Universal Setup, and
 temporary incubators without an extraction obligation.
