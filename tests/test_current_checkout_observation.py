@@ -152,6 +152,7 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         self.assertEqual(
             observation["schema"], "facman.current_checkout_observation.v1"
         )
+        self.assertEqual(observation["git_ownership_mode"], "owner_verified")
         self.assertEqual(
             observation["result"],
             {"status": "pass", "problem_count": 0, "problems": []},

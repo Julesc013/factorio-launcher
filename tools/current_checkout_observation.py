@@ -34,7 +34,11 @@ REQUIRED_ABI_IDS = {
 }
 
 
-def _run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def _run_git(
+    root: Path,
+    *args: str,
+    trust_root: bool = False,
+) -> subprocess.CompletedProcess[str]:
     environment = {
         key: value
         for key, value in os.environ.items()
@@ -48,18 +52,21 @@ def _run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
             "GIT_OPTIONAL_LOCKS": "0",
         }
     )
+    command = [
+        "git",
+        "--no-optional-locks",
+        "-c",
+        "core.fsmonitor=false",
+        "-c",
+        "core.useReplaceRefs=false",
+        "-c",
+        "core.ignoreStat=false",
+    ]
+    if trust_root:
+        command.extend(["-c", f"safe.directory={root}"])
+    command.extend(args)
     return subprocess.run(
-        [
-            "git",
-            "--no-optional-locks",
-            "-c",
-            "core.fsmonitor=false",
-            "-c",
-            "core.useReplaceRefs=false",
-            "-c",
-            "core.ignoreStat=false",
-            *args,
-        ],
+        command,
         cwd=root,
         env=environment,
         text=True,
@@ -69,14 +76,19 @@ def _run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _git_text(root: Path, *args: str) -> str | None:
-    completed = _run_git(root, *args)
+def _git_text(root: Path, *args: str, trust_root: bool = False) -> str | None:
+    completed = _run_git(root, *args, trust_root=trust_root)
     if completed.returncode != 0:
         return None
     return completed.stdout.strip()
 
 
-def _observe_checkout(root: Path, label: str) -> tuple[dict[str, Any], list[str]]:
+def _observe_checkout(
+    root: Path,
+    label: str,
+    *,
+    trust_root: bool = False,
+) -> tuple[dict[str, Any], list[str]]:
     problems: list[str] = []
     resolved = root.resolve()
     observation: dict[str, Any] = {
@@ -91,13 +103,26 @@ def _observe_checkout(root: Path, label: str) -> tuple[dict[str, Any], list[str]
         problems.append(f"{label}: repository root does not exist: {resolved}")
         return observation, problems
 
-    head = _git_text(resolved, "rev-parse", "--verify", "HEAD^{commit}")
+    head = _git_text(
+        resolved,
+        "rev-parse",
+        "--verify",
+        "HEAD^{commit}",
+        trust_root=trust_root,
+    )
     if head is None or SHA_PATTERN.fullmatch(head) is None:
         problems.append(f"{label}: cannot resolve an exact Git HEAD")
     else:
         observation["head"] = head
 
-    branch = _git_text(resolved, "symbolic-ref", "--quiet", "--short", "HEAD")
+    branch = _git_text(
+        resolved,
+        "symbolic-ref",
+        "--quiet",
+        "--short",
+        "HEAD",
+        trust_root=trust_root,
+    )
     observation["branch"] = branch or None
     observation["detached"] = branch is None
 
@@ -106,12 +131,13 @@ def _observe_checkout(root: Path, label: str) -> tuple[dict[str, Any], list[str]
         "status",
         "--porcelain=v1",
         "--untracked-files=normal",
+        trust_root=trust_root,
     )
     if status is None:
         problems.append(f"{label}: cannot inspect worktree cleanliness")
     else:
         observation["dirty"] = bool(status)
-    index_entries = _git_text(resolved, "ls-files", "-v")
+    index_entries = _git_text(resolved, "ls-files", "-v", trust_root=trust_root)
     if index_entries is None:
         problems.append(f"{label}: cannot inspect index flags")
     else:
@@ -178,11 +204,22 @@ def _discover_abi_versions(
     root: Path,
     label: str,
     revision: str,
+    *,
+    trust_root: bool = False,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     values: dict[str, dict[str, int]] = {}
     sources: dict[str, set[str]] = {}
     problems: list[str] = []
-    tree = _git_text(root, "ls-tree", "-r", "--name-only", revision, "--", "include")
+    tree = _git_text(
+        root,
+        "ls-tree",
+        "-r",
+        "--name-only",
+        revision,
+        "--",
+        "include",
+        trust_root=trust_root,
+    )
     if tree is None:
         return [], [f"{label}: cannot enumerate public headers from locked pin"]
 
@@ -192,7 +229,12 @@ def _discover_abi_versions(
     if not headers:
         return [], [f"{label}: locked pin has no public headers"]
     for header in headers:
-        text = _git_text(root, "show", f"{revision}:{header}")
+        text = _git_text(
+            root,
+            "show",
+            f"{revision}:{header}",
+            trust_root=trust_root,
+        )
         if text is None:
             problems.append(f"{label}: cannot read pinned ABI header {header}")
             continue
@@ -298,6 +340,8 @@ def _provider_components(lock: dict[str, Any]) -> tuple[list[dict[str, Any]], li
 def _observe_provider(
     component: dict[str, Any],
     root: Path | None,
+    *,
+    trust_root: bool = False,
 ) -> tuple[dict[str, Any], list[str]]:
     component_id = component["id"]
     label = f"provider {component_id}"
@@ -318,6 +362,7 @@ def _observe_provider(
             "branch": None,
             "detached": None,
             "dirty": None,
+            "index_flags_clean": None,
         },
         "pin_object_present": None,
         "pin_checkout": None,
@@ -332,7 +377,11 @@ def _observe_provider(
         return observation, problems
 
     resolved = root.resolve()
-    checkout, checkout_problems = _observe_checkout(resolved, label)
+    checkout, checkout_problems = _observe_checkout(
+        resolved,
+        label,
+        trust_root=trust_root,
+    )
     observation["checkout"] = checkout
     problems.extend(checkout_problems)
     if not resolved.is_dir():
@@ -345,6 +394,7 @@ def _observe_provider(
         "--no-includes",
         "--get",
         "remote.origin.url",
+        trust_root=trust_root,
     )
     observation["origin_remote"] = (
         _redact_remote(origin_remote) if origin_remote is not None else None
@@ -360,7 +410,13 @@ def _observe_provider(
             problems.append(f"{label}: origin remote does not match the workspace lock")
 
     pin = component["pin"]
-    pin_object = _run_git(resolved, "cat-file", "-e", f"{pin}^{{commit}}")
+    pin_object = _run_git(
+        resolved,
+        "cat-file",
+        "-e",
+        f"{pin}^{{commit}}",
+        trust_root=trust_root,
+    )
     pin_present = pin_object.returncode == 0
     observation["pin_object_present"] = pin_present
     if not pin_present:
@@ -380,21 +436,35 @@ def _observe_provider(
         canonical_ref = "refs/remotes/origin/" + required_ref.removeprefix("refs/heads/")
         observation["canonical_remote_ref"] = canonical_ref
         canonical_head = _git_text(
-            resolved, "rev-parse", "--verify", f"{canonical_ref}^{{commit}}"
+            resolved,
+            "rev-parse",
+            "--verify",
+            f"{canonical_ref}^{{commit}}",
+            trust_root=trust_root,
         )
         observation["canonical_remote_head"] = canonical_head
         if canonical_head is None:
             problems.append(f"{label}: canonical remote-tracking ref is unavailable")
         elif pin_present:
             reachable = _run_git(
-                resolved, "merge-base", "--is-ancestor", pin, canonical_ref
+                resolved,
+                "merge-base",
+                "--is-ancestor",
+                pin,
+                canonical_ref,
+                trust_root=trust_root,
             ).returncode == 0
             observation["pin_reachable_from_canonical_ref"] = reachable
             if not reachable:
                 problems.append(f"{label}: locked pin is not reachable from canonical origin/main")
 
     if pin_present:
-        abi_versions, abi_problems = _discover_abi_versions(resolved, label, pin)
+        abi_versions, abi_problems = _discover_abi_versions(
+            resolved,
+            label,
+            pin,
+            trust_root=trust_root,
+        )
     else:
         abi_versions = []
         abi_problems = [f"{label}: cannot inspect ABI declarations without locked pin"]
@@ -416,12 +486,17 @@ def collect_observation(
     *,
     expected_source_sha: str | None = None,
     observed_at_utc: str | None = None,
+    trust_passed_roots: bool = False,
 ) -> dict[str, Any]:
     repository_root = repository_root.resolve()
     workspace_lock = workspace_lock.resolve()
     problems: list[str] = []
 
-    source, source_problems = _observe_checkout(repository_root, "factorio-launcher")
+    source, source_problems = _observe_checkout(
+        repository_root,
+        "factorio-launcher",
+        trust_root=trust_passed_roots,
+    )
     problems.extend(source_problems)
     expected = expected_source_sha.strip().lower() if expected_source_sha else None
     expected_match: bool | None = None
@@ -461,7 +536,9 @@ def collect_observation(
     providers = []
     for component in components:
         provider, provider_problems = _observe_provider(
-            component, provider_roots.get(component["id"])
+            component,
+            provider_roots.get(component["id"]),
+            trust_root=trust_passed_roots,
         )
         providers.append(provider)
         problems.extend(provider_problems)
@@ -473,6 +550,9 @@ def collect_observation(
     return {
         "schema": SCHEMA,
         "observed_at_utc": observed_at,
+        "git_ownership_mode": (
+            "explicit_exact_roots" if trust_passed_roots else "owner_verified"
+        ),
         "source": source,
         "workspace_lock": {
             "path": str(workspace_lock),
@@ -514,6 +594,7 @@ def markdown(observation: dict[str, Any]) -> str:
         "",
         f"- Schema: `{observation['schema']}`",
         f"- Observed at: `{observation['observed_at_utc']}`",
+        f"- Git ownership mode: `{observation['git_ownership_mode']}`",
         f"- Overall status: **{result['status']}**",
         "",
         "This file is generated after checkout. It is not tracked project-state truth and",
@@ -632,6 +713,14 @@ def main(argv: list[str] | None = None) -> int:
         default=os.environ.get("FACMAN_CI_SOURCE_SHA"),
     )
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument(
+        "--trust-passed-roots",
+        action="store_true",
+        help=(
+            "Explicitly trust only the passed source/provider roots when Git "
+            "reports a different filesystem owner; recorded in the artifact."
+        ),
+    )
     args = parser.parse_args(argv)
 
     repository_root = Path(args.repository_root).resolve()
@@ -659,6 +748,7 @@ def main(argv: list[str] | None = None) -> int:
         workspace_lock,
         provider_roots,
         expected_source_sha=args.expected_source_sha,
+        trust_passed_roots=args.trust_passed_roots,
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / f"{OUTPUT_STEM}.json"
