@@ -61,6 +61,8 @@ def _run_git(
         "core.useReplaceRefs=false",
         "-c",
         "core.ignoreStat=false",
+        "-c",
+        f"core.autocrlf={'true' if os.name == 'nt' else 'input'}",
     ]
     if trust_root:
         command.extend(["-c", f"safe.directory={root}"])
