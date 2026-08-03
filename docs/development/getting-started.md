@@ -33,6 +33,26 @@ See [Build Root Hygiene](build-root-hygiene.md).
 
 Current project truth is generated into `.aide/memory/project-state.v2.json`.
 Run `py -3 tools/project_state.py --write` after changing its canonical inputs.
-The compact present-tense view is `release/index/current_state.v1.toml`.
+The compact tracked view is `release/index/current_state.v1.toml`. Its revision
+fields are reviewed-checkpoint compatibility fields, not a claim about the live
+checkout containing the file.
+
+Generate live checkout/provider truth outside the source tree after aligning
+the sibling repositories:
+
+```powershell
+$observationRoot = "E:\Temporary\FacMan\FACMAN-CURRENT-TRUTH-01\observation"
+py -3 tools/current_checkout_observation.py `
+  --provider-root universal_launcher=..\universal-launcher `
+  --provider-root universal_setup=..\universal-setup `
+  --expected-source-sha (git rev-parse HEAD) `
+  --output-dir $observationRoot
+```
+
+The command emits canonical JSON and a Markdown rendering from the same data.
+It fails closed on a dirty or unexpected FacMan checkout, provider pin drift,
+origin mismatch, missing canonical ref, unreachable pin, or unavailable ABI
+declaration.
+
 Archived AIDE history is discoverable through `.aide/history/<checkpoint>/index.json`
 but excluded from normal context packets.
