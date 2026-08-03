@@ -44,6 +44,9 @@ class PlanViewTests(unittest.TestCase):
 
     def test_play_gate_blocks_only_named_authorities(self) -> None:
         gate = self.plan["gate"][0]
+        self.assertEqual(gate["status"], "blocked")
+        self.assertEqual(gate["stage"], "superseded_before_observer_self_test")
+        self.assertIn(".aide/history/", gate["source"])
         self.assertEqual(gate["gate_scope"], "authority_only")
         self.assertEqual(
             gate["blocks"],
@@ -58,6 +61,8 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
+        self.assertIn("WIP: 2/3 including external gates", dashboard)
+        self.assertIn("no successor or convergence WorkUnit is activated", dashboard)
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
 
